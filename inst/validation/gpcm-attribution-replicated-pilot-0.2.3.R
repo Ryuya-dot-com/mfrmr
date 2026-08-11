@@ -88,7 +88,17 @@ mfrmr_gpcm_repilot_hash_file <- function(path) {
 }
 
 mfrmr_gpcm_repilot_package_content_identity <- function(package) {
-  package_root <- system.file(package = package)
+  namespace_root <- tryCatch(
+    getNamespaceInfo(asNamespace(package), "path"),
+    error = function(error) ""
+  )
+  package_root <- if (
+      nzchar(namespace_root) &&
+        file.exists(file.path(namespace_root, "DESCRIPTION"))) {
+    namespace_root
+  } else {
+    system.file(package = package)
+  }
   if (!nzchar(package_root) || !dir.exists(package_root)) {
     stop(sprintf("Cannot identify the loaded %s installation.", package),
          call. = FALSE)
@@ -97,6 +107,8 @@ mfrmr_gpcm_repilot_package_content_identity <- function(package) {
     file.path(package_root, "DESCRIPTION"),
     file.path(package_root, "NAMESPACE"),
     list.files(file.path(package_root, "R"), full.names = TRUE,
+               recursive = TRUE, all.files = TRUE, no.. = TRUE),
+    list.files(file.path(package_root, "src"), full.names = TRUE,
                recursive = TRUE, all.files = TRUE, no.. = TRUE),
     list.files(file.path(package_root, "libs"), full.names = TRUE,
                recursive = TRUE, all.files = TRUE, no.. = TRUE)

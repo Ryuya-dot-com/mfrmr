@@ -130,12 +130,18 @@ test_that("public workflow artifacts do not expose build-machine paths", {
     perl = TRUE
   )))
 
-  workflow_html <- system.file(
+  workflow_file <- system.file(
     "doc", "mfrmr-workflow.html",
     package = "mfrmr",
-    mustWork = TRUE
+    mustWork = FALSE
   )
-  html <- paste(readLines(workflow_html, warn = FALSE), collapse = "\n")
+  if (!nzchar(workflow_file)) {
+    workflow_file <- testthat::test_path(
+      "..", "..", "vignettes", "mfrmr-workflow.Rmd"
+    )
+  }
+  expect_true(file.exists(workflow_file))
+  html <- paste(readLines(workflow_file, warn = FALSE), collapse = "\n")
   expect_false(grepl(
     "[[:alpha:]]:[/\\\\](Users|Documents and Settings)[/\\\\]",
     html,

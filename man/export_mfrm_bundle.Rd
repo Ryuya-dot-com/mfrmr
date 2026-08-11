@@ -149,10 +149,13 @@ Depending on \code{include}, the exporter can write:
 \item manuscript-summary CSVs via \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}
 \item anchor CSV via \code{\link[=make_anchor_table]{make_anchor_table()}}
 \item manifest CSV/TXT via \code{\link[=build_mfrm_manifest]{build_mfrm_manifest()}}
+\item exact source-fit readiness CSVs with fit, component, and parameter scope
 \item visual warning/summary artifacts via \code{\link[=build_visual_summaries]{build_visual_summaries()}}
 \item prediction/forecast CSVs via \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, and \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}
 \item a package-native replay script via \code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}}
+\item replay-source readiness CSVs retained as provenance; the replayed fit
+recomputes its own readiness
 \item for latent-regression fits, a replay-side person-data CSV paired with the
 replay script
 \item a lightweight HTML report that bundles the exported tables/text and, for

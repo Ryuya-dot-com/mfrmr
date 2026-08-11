@@ -246,6 +246,13 @@
 #' The current implementation requires `slope_facet == step_facet` and
 #' identifies slopes by a sum-to-zero constraint on log slopes, so their
 #' geometric mean is 1.
+#' Under the default unconditional MML branch, the quadrature distribution fixes
+#' ability to a standard-normal reference scale. The geometric-mean-one slope
+#' constraint is therefore an additional, intentional relative-discrimination
+#' restriction: only \eqn{G - 1} slope contrasts are free, and a conventional
+#' fixed-ability-scale GPCM with a freely estimated common discrimination is
+#' outside this bounded branch. Under JML or active latent-regression MML, the
+#' same constraint also participates in resolving the ability/slope scale.
 #'
 #' With only two ordered categories (\eqn{K = 1}), the `RSM`/`PCM`
 #' branch reduces to the usual binary Rasch logit for the single category
@@ -3935,6 +3942,9 @@ make_anchor_table <- function(fit,
 #' - `approximation_notes`: method notes for SE/CI/reliability summaries
 #' - `diagnostic_basis`: guide to the statistical target of each diagnostic path
 #' - `fit_standardization`: guide to the df convention behind fit ZSTD values
+#' - `fit_readiness`, `fit_readiness_components`, and
+#'   `fit_readiness_parameters`: the source fit's versioned readiness decision;
+#'   diagnostic computation does not override a blocked or review-only fit
 #' - `marginal_fit`: optional strict marginal-fit companion based on
 #'   posterior-expected first-order category counts
 #' - `residual_pca_overall`: optional overall PCA object

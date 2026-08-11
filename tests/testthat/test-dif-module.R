@@ -156,6 +156,105 @@ test_that("analyze_dif refit keeps JML contrasts descriptive even when linked", 
   expect_true(all(dif$dif_table$ScaleLinkStatus == "linked"))
   expect_true(all(dif$dif_table$ReportingUse == "screening_only_linked_descriptive"))
   expect_equal(dif$config$method, "refit")
+  expect_identical(
+    dif$config$refit_identity_contract,
+    "baseline_response_and_estimation_controls_v1"
+  )
+  expect_equal(
+    dif$config$refit_rating_range,
+    c(fit$config$rating_min, fit$config$rating_max)
+  )
+})
+
+test_that("analyze_dif refit replays baseline score and estimation controls", {
+  local_dif_fixtures()
+  calls <- list()
+
+  testthat::local_mocked_bindings(
+    fit_mfrm = function(...) {
+      calls[[length(calls) + 1L]] <<- list(...)
+      stop("captured subgroup replay")
+    },
+    .package = "mfrmr"
+  )
+
+  dif <- analyze_dif(
+    fit,
+    diag,
+    facet = "Criterion",
+    group = "Group",
+    data = toy,
+    method = "refit"
+  )
+
+  expect_length(calls, 2L)
+  for (args in calls) {
+    expect_equal(args$rating_min, fit$config$rating_min)
+    expect_equal(args$rating_max, fit$config$rating_max)
+    expect_identical(args$slope_facet, fit$config$slope_facet)
+    expect_identical(args$quad_points, fit$config$replay_inputs$quad_points)
+    expect_identical(args$maxit, fit$config$replay_inputs$maxit)
+    expect_identical(args$reltol, fit$config$replay_inputs$reltol)
+    expect_identical(args$optimizer, fit$config$replay_inputs$optimizer)
+    expect_identical(args$mml_engine, fit$config$replay_inputs$mml_engine)
+  }
+  expect_true(all(vapply(
+    dif$group_fits,
+    function(x) all(x$LinkingStatus == "failed"),
+    logical(1)
+  )))
+})
+
+test_that("analyze_dif refit fails closed for unreplayable baseline structures", {
+  local_dif_fixtures()
+
+  population_fit <- fit
+  population_fit$config$population_active <- TRUE
+  expect_error(
+    analyze_dif(
+      population_fit,
+      diag,
+      facet = "Criterion",
+      group = "Group",
+      data = toy,
+      method = "refit"
+    ),
+    "active latent-regression"
+  )
+
+  interaction_fit <- fit
+  interaction_fit$config$facet_interactions <- "Rater:Criterion"
+  expect_error(
+    analyze_dif(
+      interaction_fit,
+      diag,
+      facet = "Criterion",
+      group = "Group",
+      data = toy,
+      method = "refit"
+    ),
+    "facet interactions"
+  )
+
+  group_anchor_fit <- fit
+  group_anchor_fit$config$replay_inputs$group_anchors <- data.frame(
+    Facet = "Rater",
+    Level = "R1",
+    Group = "Link",
+    GroupValue = 0,
+    stringsAsFactors = FALSE
+  )
+  expect_error(
+    analyze_dif(
+      group_anchor_fit,
+      diag,
+      facet = "Criterion",
+      group = "Group",
+      data = toy,
+      method = "refit"
+    ),
+    "group-anchor"
+  )
 })
 
 test_that("analyze_dif refit surfaces subgroup diagnostics failures", {

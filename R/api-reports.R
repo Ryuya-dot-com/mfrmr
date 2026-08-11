@@ -4848,6 +4848,8 @@ plot_bias_interaction <- function(x,
 #' @return
 #' An object of class `mfrm_apa_outputs` with:
 #' - `report_text`: APA-style Method/Results draft prose
+#' - `fit_readiness`, `fit_readiness_components`, and
+#'   `fit_readiness_parameters`: exact source-fit readiness provenance
 #' - `table_figure_notes`: consolidated draft notes for tables/visuals
 #' - `table_figure_captions`: draft caption candidates without figure numbering
 #' - `section_map`: package-native section table for manuscript assembly
@@ -4936,6 +4938,18 @@ build_apa_outputs <- function(fit,
     report_text = structure(
       as.character(contract$report_text),
       class = c("mfrm_apa_text", "character")
+    ),
+    fit_readiness = as.data.frame(
+      contract$readiness$fit %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      contract$readiness$components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      contract$readiness$parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
     ),
     table_figure_notes = as.character(contract$note_text),
     table_figure_captions = as.character(contract$caption_text),
@@ -5340,6 +5354,18 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
 
   out <- list(
     overview = overview,
+    fit_readiness = as.data.frame(
+      object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      object$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      object$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     components = stats_tbl,
     sections = sections_tbl,
     content_checks = content_checks,

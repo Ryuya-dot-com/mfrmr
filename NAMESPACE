@@ -349,81 +349,97 @@ export(unexpected_response_table)
 export(visual_reporting_template)
 export(write_mfrm_residual_file)
 export(write_mfrm_subset_file)
-importFrom(dplyr,across)
-importFrom(dplyr,all_of)
-importFrom(dplyr,any_of)
-importFrom(dplyr,arrange)
-importFrom(dplyr,bind_cols)
-importFrom(dplyr,bind_rows)
-importFrom(dplyr,case_when)
-importFrom(dplyr,coalesce)
-importFrom(dplyr,count)
-importFrom(dplyr,desc)
-importFrom(dplyr,distinct)
-importFrom(dplyr,everything)
-importFrom(dplyr,filter)
-importFrom(dplyr,group_by)
-importFrom(dplyr,if_all)
-importFrom(dplyr,inner_join)
-importFrom(dplyr,lag)
-importFrom(dplyr,last)
-importFrom(dplyr,left_join)
-importFrom(dplyr,mutate)
-importFrom(dplyr,n)
-importFrom(dplyr,n_distinct)
-importFrom(dplyr,pull)
-importFrom(dplyr,rename)
-importFrom(dplyr,row_number)
-importFrom(dplyr,rowwise)
-importFrom(dplyr,select)
-importFrom(dplyr,slice)
-importFrom(dplyr,slice_head)
-importFrom(dplyr,slice_tail)
-importFrom(dplyr,summarise)
-importFrom(dplyr,summarize)
-importFrom(dplyr,transmute)
-importFrom(dplyr,ungroup)
+importFrom(dplyr,
+  across,
+  all_of,
+  any_of,
+  arrange,
+  bind_cols,
+  bind_rows,
+  case_when,
+  coalesce,
+  count,
+  desc,
+  distinct,
+  everything,
+  filter,
+  group_by,
+  if_all,
+  inner_join,
+  lag,
+  last,
+  left_join,
+  mutate,
+  n,
+  n_distinct,
+  pull,
+  rename,
+  row_number,
+  rowwise,
+  select,
+  slice,
+  slice_head,
+  slice_tail,
+  summarise,
+  summarize,
+  transmute,
+  ungroup
+)
 importFrom(lifecycle,deprecate_soft)
-importFrom(psych,cor.smooth)
-importFrom(psych,describe)
-importFrom(psych,principal)
-importFrom(purrr,map)
-importFrom(purrr,map_dbl)
-importFrom(purrr,map_dfr)
-importFrom(purrr,pmap_chr)
+importFrom(psych,
+  cor.smooth,
+  describe,
+  principal
+)
+importFrom(purrr,
+  map,
+  map_dbl,
+  map_dfr,
+  pmap_chr
+)
 importFrom(rlang,.data)
-importFrom(stats,na.omit)
-importFrom(stats,optim)
-importFrom(stats,p.adjust)
-importFrom(stats,pchisq)
-importFrom(stats,pt)
-importFrom(stats,rnorm)
-importFrom(stats,sd)
-importFrom(stats,setNames)
-importFrom(stats,uniroot)
-importFrom(stringr,regex)
-importFrom(stringr,str_count)
-importFrom(stringr,str_detect)
-importFrom(stringr,str_extract)
-importFrom(stringr,str_pad)
-importFrom(stringr,str_replace)
-importFrom(stringr,str_replace_all)
-importFrom(stringr,str_trunc)
-importFrom(tibble,as_tibble)
-importFrom(tibble,column_to_rownames)
-importFrom(tibble,tibble)
-importFrom(tidyr,drop_na)
-importFrom(tidyr,expand_grid)
-importFrom(tidyr,pivot_wider)
-importFrom(tidyr,replace_na)
-importFrom(tidyr,unite)
-importFrom(utils,combn)
-importFrom(utils,data)
-importFrom(utils,globalVariables)
-importFrom(utils,head)
-importFrom(utils,modifyList)
-importFrom(utils,packageVersion)
-importFrom(utils,read.csv)
-importFrom(utils,tail)
-importFrom(utils,write.csv)
+importFrom(stats,
+  na.omit,
+  optim,
+  p.adjust,
+  pchisq,
+  pt,
+  rnorm,
+  sd,
+  setNames,
+  uniroot
+)
+importFrom(stringr,
+  regex,
+  str_count,
+  str_detect,
+  str_extract,
+  str_pad,
+  str_replace,
+  str_replace_all,
+  str_trunc
+)
+importFrom(tibble,
+  as_tibble,
+  column_to_rownames,
+  tibble
+)
+importFrom(tidyr,
+  drop_na,
+  expand_grid,
+  pivot_wider,
+  replace_na,
+  unite
+)
+importFrom(utils,
+  combn,
+  data,
+  globalVariables,
+  head,
+  modifyList,
+  packageVersion,
+  read.csv,
+  tail,
+  write.csv
+)
 useDynLib(mfrmr, .registration = TRUE)

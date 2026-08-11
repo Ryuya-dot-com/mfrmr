@@ -1072,6 +1072,28 @@ test_that("MML auto optimizer records shared probability workspace use", {
   expect_gte(fit$opt$evaluation_cache$GradientCacheHits, 1L)
 })
 
+test_that("direct optimizer cache keys are owned snapshots", {
+  evaluator <- local({
+    cached_par <- NULL
+    evaluations <- 0L
+    list(
+      value = function(par) {
+        if (!identical(par, cached_par)) {
+          cached_par <<- par + 0
+          evaluations <<- evaluations + 1L
+        }
+        sum(par^2)
+      },
+      evaluations = function() evaluations
+    )
+  })
+  par <- c(a = 1, b = 2)
+  expect_equal(evaluator$value(par), 5)
+  par[] <- c(3, 4)
+  expect_equal(evaluator$value(par), 25)
+  expect_identical(evaluator$evaluations(), 2L)
+})
+
 test_that("MML engine planner falls back only for unsupported combinations", {
   supported <- mfrmr:::resolve_mml_engine_plan(
     method = "MML",

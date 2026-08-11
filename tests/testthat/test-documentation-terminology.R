@@ -112,6 +112,30 @@ test_that("public documentation does not advertise later-release routes as curre
   expect_match(flat, "posterior scoring from an existing fitted object is a separate", fixed = TRUE)
 })
 
+test_that("public estimator vocabulary keeps JMLE as an input alias only", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  docs <- read_public_text(pkg_root, public_documentation_files(pkg_root))
+  public_text <- paste(unlist(docs, use.names = FALSE), collapse = "\n")
+
+  fit_help <- paste(readLines(
+    file.path(pkg_root, "man", "fit_mfrm.Rd"),
+    warn = FALSE,
+    encoding = "UTF-8"
+  ), collapse = "\n")
+  package_help <- paste(readLines(
+    file.path(pkg_root, "man", "mfrmr-package.Rd"),
+    warn = FALSE,
+    encoding = "UTF-8"
+  ), collapse = "\n")
+
+  expect_match(fit_help, 'method = c("MML", "JML", "JMLE")', fixed = TRUE)
+  expect_match(fit_help, '"JMLE"} is accepted as a', fixed = TRUE)
+  expect_match(package_help, '"JMLE"} as a backward-compatible alias', fixed = TRUE)
+  expect_false(grepl('method = "MMLE"', public_text, fixed = TRUE))
+  expect_false(grepl("\\bMMLE\\b", public_text, perl = TRUE))
+})
+
 test_that("ConQuest guidance states the external MML comparison boundary", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")

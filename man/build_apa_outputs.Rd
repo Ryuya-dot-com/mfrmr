@@ -27,6 +27,8 @@ build_apa_outputs(
 An object of class \code{mfrm_apa_outputs} with:
 \itemize{
 \item \code{report_text}: APA-style Method/Results draft prose
+\item \code{fit_readiness}, \code{fit_readiness_components}, and
+\code{fit_readiness_parameters}: exact source-fit readiness provenance
 \item \code{table_figure_notes}: consolidated draft notes for tables/visuals
 \item \code{table_figure_captions}: draft caption candidates without figure numbering
 \item \code{section_map}: package-native section table for manuscript assembly

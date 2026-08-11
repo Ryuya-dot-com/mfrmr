@@ -85,6 +85,9 @@ for bounded \code{GPCM})
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries
 \item \code{diagnostic_basis}: guide to the statistical target of each diagnostic path
 \item \code{fit_standardization}: guide to the df convention behind fit ZSTD values
+\item \code{fit_readiness}, \code{fit_readiness_components}, and
+\code{fit_readiness_parameters}: the source fit's versioned readiness decision;
+diagnostic computation does not override a blocked or review-only fit
 \item \code{marginal_fit}: optional strict marginal-fit companion based on
 posterior-expected first-order category counts
 \item \code{residual_pca_overall}: optional overall PCA object

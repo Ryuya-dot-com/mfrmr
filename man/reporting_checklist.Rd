@@ -89,6 +89,9 @@ inferential adequacy.
 \code{DraftReady = TRUE} means the item can be drafted into a report with the
 package's documented caveats. \code{ReadyForAPA} is a backward-compatible alias
 of the same flag; neither field certifies formal inferential adequacy.
+\item \code{fit_readiness}, \code{fit_readiness_components}, and
+\code{fit_readiness_parameters}: exact source-fit v3 readiness provenance;
+these fields are not re-derived from checklist completeness.
 \item \code{section_summary}: available items by section.
 \item The Global Fit section includes a "Fit/separation reporting boundary"
 row that points to \code{\link[=precision_review_report]{precision_review_report()}}, \code{\link[=fit_measures_table]{fit_measures_table()}},

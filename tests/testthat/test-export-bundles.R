@@ -671,6 +671,46 @@ test_that("build_mfrm_manifest captures reproducibility metadata", {
   expect_equal(manifest$summary$MethodUsed[[1]], "JML")
   expect_equal(manifest$summary$Observations[[1]], nrow(export_core_fixture$fit$prep$data))
   expect_equal(manifest$summary$Persons[[1]], export_core_fixture$fit$config$n_person)
+  convergence <- mfrmr:::mfrm_convergence_state(export_core_fixture$fit)
+  expect_identical(manifest$summary$Converged[[1]], convergence$code_converged)
+  expect_identical(
+    manifest$summary$InferenceReady[[1]],
+    convergence$inference_ready
+  )
+})
+
+test_that("manifest preserves the exact fail-closed readiness provenance", {
+  fit <- export_core_fixture$fit
+  manifest <- build_mfrm_manifest(
+    fit = fit,
+    diagnostics = export_core_fixture$diagnostics
+  )
+  source <- mfrmr:::mfrmr_get_readiness_record(fit)
+
+  expect_equal(manifest$readiness, source$fit)
+  expect_equal(manifest$readiness_components, source$components)
+  expect_equal(manifest$readiness_parameters, source$parameters)
+  expect_identical(
+    manifest$summary$ReadinessContractVersion[[1]],
+    source$fit$ReadinessContractVersion[[1]]
+  )
+  expect_identical(
+    manifest$summary$ReadinessReasonCodes[[1]],
+    source$fit$ReasonCodes[[1]]
+  )
+
+  legacy <- fit
+  legacy$readiness <- NULL
+  legacy_manifest <- build_mfrm_manifest(
+    fit = legacy,
+    diagnostics = export_core_fixture$diagnostics
+  )
+  expect_identical(legacy_manifest$readiness$FitReadiness[[1]], "legacy_unknown")
+  expect_false(legacy_manifest$readiness$InferenceReady[[1]])
+  expect_identical(
+    legacy_manifest$readiness$ReasonCodes[[1]],
+    "legacy_contract_missing"
+  )
 })
 
 test_that("build_mfrm_manifest and replay script support FACETS-mode runs", {
@@ -687,6 +727,36 @@ test_that("build_mfrm_manifest and replay script support FACETS-mode runs", {
   expect_match(replay$script, "analysis_data\\.csv")
   expect_match(replay$script, "estimate_bias\\(")
   expect_match(replay$script, "# posterior_basis = legacy_mml", fixed = TRUE)
+})
+
+test_that("replay preserves source readiness but recomputes replay readiness", {
+  fit <- export_core_fixture$fit
+  replay <- build_mfrm_replay_script(
+    fit,
+    diagnostics = export_core_fixture$diagnostics,
+    data_file = "analysis_data.csv"
+  )
+  source <- mfrmr:::mfrmr_get_readiness_record(fit)
+
+  expect_equal(replay$source_readiness, source$fit)
+  expect_equal(replay$source_readiness_components, source$components)
+  expect_equal(replay$source_readiness_parameters, source$parameters)
+  expect_match(
+    replay$script,
+    "Readiness provenance from the source fit",
+    fixed = TRUE
+  )
+  expect_match(
+    replay$script,
+    "Recompute readiness from the replayed fit; never inherit source status",
+    fixed = TRUE
+  )
+  expect_match(
+    replay$script,
+    "replay_readiness_matches_source",
+    fixed = TRUE
+  )
+  expect_silent(parse(text = replay$script))
 })
 
 test_that("build_mfrm_manifest records optional prediction artifacts", {
@@ -2688,12 +2758,30 @@ test_that("export_mfrm_bundle writes requested tables and html output", {
   expect_true(is.data.frame(bundle$written_files))
   expect_true(any(bundle$written_files$Component == "bundle_html"))
   expect_true(any(grepl("bundle_test_manifest_summary.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_manifest_readiness.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_manifest_readiness_components.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_manifest_readiness_parameters.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_checklist.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_facet_dashboard_detail.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_replay.R$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_replay_source_readiness.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_replay_source_readiness_components.csv$", bundle$written_files$Path)))
+  expect_true(any(grepl("bundle_test_replay_source_readiness_parameters.csv$", bundle$written_files$Path)))
   expect_true(any(grepl("bundle_test_visual_warning_counts.csv$", bundle$written_files$Path)))
   expect_true(file.exists(file.path(out_dir, "bundle_test_bundle.html")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_manifest.txt")))
+  exported_readiness <- utils::read.csv(
+    file.path(out_dir, "bundle_test_manifest_readiness.csv"),
+    stringsAsFactors = FALSE
+  )
+  expect_identical(
+    exported_readiness$ReadinessContractVersion[[1]],
+    bundle$manifest$readiness$ReadinessContractVersion[[1]]
+  )
+  expect_identical(
+    exported_readiness$ReasonCodes[[1]],
+    bundle$manifest$readiness$ReasonCodes[[1]]
+  )
   expect_true(file.exists(file.path(out_dir, "bundle_test_replay.R")))
   expect_true(file.exists(file.path(out_dir, "bundle_test_visual_warning_map.txt")))
 })

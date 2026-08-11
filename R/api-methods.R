@@ -734,6 +734,13 @@ summarize_residual_pca_bundle <- function(object, digits = 3, top_n = 10) {
     Facets = length(facet_names),
     OverallComponents = nrow(bundle_component_table(object, "overall_table")),
     FacetComponentRows = nrow(bundle_component_table(object, "by_facet_table")),
+    InferenceTier = as.character(object$InferenceTier %||% "exploratory"),
+    SupportsFormalInference = isTRUE(object$SupportsFormalInference),
+    PrimaryReportingEligible = isTRUE(object$PrimaryReportingEligible),
+    ReportingUse = as.character(object$ReportingUse %||% "screening_only"),
+    DecisionUse = as.character(
+      object$DecisionUse %||% "no_automatic_dimensionality_decision"
+    ),
     stringsAsFactors = FALSE
   )
   summarize_known_bundle(
@@ -742,7 +749,11 @@ summarize_residual_pca_bundle <- function(object, digits = 3, top_n = 10) {
     summary_candidates = character(0),
     preview_candidates = c("overall_table", "by_facet_table"),
     settings_candidates = character(0),
-    notes = "Residual PCA summary for unidimensionality checks (overall and/or by facet).",
+    notes = paste(
+      "Residual PCA is exploratory residual-structure screening",
+      "(overall and/or by facet), not a standalone dimensionality test or",
+      "an automatic decision about dimensions or subscores."
+    ),
     digits = digits,
     top_n = top_n,
     summary_override = summary_tbl
@@ -7003,6 +7014,8 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'
 #' @section Interpreting output:
 #' - `overview`: analysis scale, subset count, and residual-PCA mode.
+#' - `fit_readiness`: the source fit's versioned readiness row. Diagnostics do
+#'   not promote a blocked or review-only fit to inferential use.
 #' - `diagnostic_basis`: plain-language map of which fit path was computed and
 #'   what each path means statistically.
 #' - `overall_fit`: global fit indices.
@@ -7020,6 +7033,9 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'
 #' @return An object of class `summary.mfrm_diagnostics` with:
 #' - `overview`: design-level counts and residual-PCA mode
+#' - `fit_readiness`, `fit_readiness_components`, and
+#'   `fit_readiness_parameters`: readiness provenance inherited from the source
+#'   fit and retained separately from diagnostic-screening status
 #' - `status`: concise front-door status block for quick review
 #' - `key_warnings`: highest-priority warnings to review first
 #' - `next_actions`: recommended follow-up helpers
@@ -7110,6 +7126,33 @@ summary.mfrm_diagnostics <- function(object,
   marginal_available <- isTRUE(object$marginal_fit$available)
   marginal_pairwise_available <- isTRUE(object$marginal_fit$pairwise$available)
   diagnostic_mode <- as.character(object$diagnostic_mode %||% "legacy")
+  fit_readiness_tbl <- tibble::as_tibble(
+    object$fit_readiness %||% data.frame()
+  )
+  fit_readiness_components_tbl <- tibble::as_tibble(
+    object$fit_readiness_components %||% data.frame()
+  )
+  fit_readiness_parameters_tbl <- tibble::as_tibble(
+    object$fit_readiness_parameters %||% data.frame()
+  )
+  fit_readiness_known <- nrow(fit_readiness_tbl) == 1L &&
+    all(c("FitReadiness", "InferenceReady") %in% names(fit_readiness_tbl))
+  source_fit_state <- if (fit_readiness_known) {
+    as.character(fit_readiness_tbl$FitReadiness[1])
+  } else {
+    "not_available"
+  }
+  source_inference_ready <- fit_readiness_known &&
+    isTRUE(fit_readiness_tbl$InferenceReady[1])
+  source_fit_label <- switch(
+    source_fit_state,
+    ready = "ready; formal inference permitted by the fit gate",
+    ready_with_exclusions = "ready with exclusions; review parameter eligibility",
+    review = "review required; formal inference is not ready",
+    blocked = "blocked; formal inference is not ready",
+    legacy_unknown = "legacy readiness unknown; refit or re-audit required",
+    "readiness not available"
+  )
 
   n_obs <- nrow(obs_tbl)
   n_person <- if ("Person" %in% names(obs_tbl)) dplyr::n_distinct(obs_tbl$Person) else NA_integer_
@@ -7303,6 +7346,20 @@ summary.mfrm_diagnostics <- function(object,
   )
 
   key_warnings <- character(0)
+  if (fit_readiness_known && !source_inference_ready) {
+    key_warnings <- c(
+      key_warnings,
+      paste0(
+        "The source fit is ", source_fit_state,
+        " and is not inference-ready; all diagnostic outputs remain review-only."
+      )
+    )
+  } else if (!fit_readiness_known) {
+    key_warnings <- c(
+      key_warnings,
+      "Source-fit readiness is unavailable; do not use diagnostics to infer that the fit passed its numerical and identification gates."
+    )
+  }
   if (nrow(precision_review_tbl) > 0 && "Status" %in% names(precision_review_tbl)) {
     flagged_checks <- precision_review_tbl |>
       dplyr::filter(.data$Status %in% c("review", "warn"))
@@ -7393,6 +7450,12 @@ summary.mfrm_diagnostics <- function(object,
   next_actions <- c(
     "Inspect `diagnostic_basis` before comparing legacy residual evidence with strict marginal evidence."
   )
+  if (!source_inference_ready) {
+    next_actions <- c(
+      "Inspect `summary(fit)$readiness` and resolve the source-fit gate before interpreting diagnostic magnitudes substantively.",
+      next_actions
+    )
+  }
   if (!identical(as.character(precision_profile_tbl$Method[1] %||% NA_character_), "MML")) {
     next_actions <- c(
       next_actions,
@@ -7432,6 +7495,7 @@ summary.mfrm_diagnostics <- function(object,
   )
   status <- make_summary_block(
     "Overall status" = overall_status,
+    "Source fit readiness" = source_fit_label,
     "Diagnostic path" = diagnostic_mode,
     "Strict marginal fit" = strict_path_status,
     "Precision tier" = precision_tier,
@@ -7572,6 +7636,9 @@ summary.mfrm_diagnostics <- function(object,
   out <- list(
     overview = overview,
     status = status,
+    fit_readiness = fit_readiness_tbl,
+    fit_readiness_components = fit_readiness_components_tbl,
+    fit_readiness_parameters = fit_readiness_parameters_tbl,
     key_warnings = key_warnings,
     next_actions = next_actions,
     diagnostic_basis = diagnostic_basis_tbl,
@@ -8119,6 +8186,12 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `reporting_map`: where to get companion outputs for manuscript reporting.
 #' - `person_high` / `person_low` (opt-in for printing) and `facet_extremes`:
 #'   extreme estimates for focused review.
+#' - `facet_support_boundaries`: observed non-person facet levels whose retained
+#'   responses are constant at the minimum or maximum score. This is a data-
+#'   support warning, not by itself a proof that a parameter MLE is infinite.
+#' - `facet_recession_review`: non-person facet directions certified as
+#'   unbounded in an evaluated JML additive recession subspace. Joint rows are
+#'   relative directions under the fitted identification constraints.
 #'
 #' @section Typical workflow:
 #' 1. Review data and score support with [describe_mfrm_data()].
@@ -8175,6 +8248,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   checks, draft reporting)
 #' - `person_high` / `person_low`: highest and lowest person measures
 #' - `facet_extremes`: extreme facet-level estimates
+#' - `facet_support_boundaries`: observed boundary-constant non-person facet
+#'   levels, kept distinct from parameter-level recession conclusions
+#' - `facet_recession_review`: certified JML additive facet recession
+#'   directions, including audit scope and completeness
 #' - `caveats`: structured warning/review rows for score-support and
 #'   latent-regression population-model issues
 #' - `notes`: short interpretation notes
@@ -8260,6 +8337,81 @@ summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
   )
 }
 
+mfrm_summary_facet_support_boundaries <- function(object) {
+  boundary_levels <- as.data.frame(
+    object$data_review$boundary_levels %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(boundary_levels) == 0L) return(tibble::tibble())
+
+  keep <- intersect(
+    c(
+      "Facet", "Level", "ConstantScore", "BoundaryConstant",
+      "Observations", "WeightedN", "DistinctScores", "MinScore", "MaxScore"
+    ),
+    names(boundary_levels)
+  )
+  if (!all(c("Facet", "Level") %in% keep)) return(tibble::tibble())
+  tibble::as_tibble(boundary_levels[, keep, drop = FALSE])
+}
+
+mfrm_summary_facet_recession_review <- function(object) {
+  audits <- object$config$boundary_audit %||% list()
+  audit_names <- c("structural_additive", "joint_additive")
+  scope_labels <- c(
+    structural_additive = "structural_fixed_person",
+    joint_additive = "joint_person_structural"
+  )
+  rows <- lapply(audit_names, function(audit_name) {
+    audit <- audits[[audit_name]] %||% list()
+    targets <- as.data.frame(
+      audit$target_status %||% data.frame(),
+      stringsAsFactors = FALSE
+    )
+    required <- c(
+      "ParameterId", "ParameterClass", "Facet", "Level",
+      "OptimizerEstimate", "CandidateStatus", "EvaluationState", "ReasonCodes"
+    )
+    if (nrow(targets) == 0L || !all(required %in% names(targets))) {
+      return(data.frame())
+    }
+    keep <- as.character(targets$ParameterClass) == "facet" &
+      as.character(targets$CandidateStatus) %in%
+        c("unbounded_low", "unbounded_high", "unbounded_both") &
+      startsWith(as.character(targets$EvaluationState), "evaluated")
+    targets <- targets[keep, , drop = FALSE]
+    if (nrow(targets) == 0L) return(data.frame())
+    data.frame(
+      ParameterId = as.character(targets$ParameterId),
+      Facet = as.character(targets$Facet),
+      Level = as.character(targets$Level),
+      BoundaryStatus = as.character(targets$CandidateStatus),
+      OptimizerEstimate = suppressWarnings(as.numeric(targets$OptimizerEstimate)),
+      AuditScope = unname(scope_labels[[audit_name]]),
+      AuditComplete = isTRUE(audit$complete),
+      StatusBasis = "certified_in_audited_additive_subspace",
+      ReasonCodes = as.character(targets$ReasonCodes),
+      stringsAsFactors = FALSE
+    )
+  })
+  out <- dplyr::bind_rows(rows)
+  if (nrow(out) == 0L) return(tibble::tibble())
+
+  # A fixed-Person structural certificate is the narrower statement and is
+  # preferred when the same expanded parameter is also certified in the joint
+  # Person-structural audit. The joint-only rows remain relative directions
+  # under the fit's identification constraints, not independent levelwise MLEs.
+  out |>
+    dplyr::mutate(
+      AuditPriority = match(.data$AuditScope,
+                            c("structural_fixed_person", "joint_person_structural"))
+    ) |>
+    dplyr::arrange(.data$AuditPriority, .data$Facet, .data$Level) |>
+    dplyr::distinct(.data$ParameterId, .keep_all = TRUE) |>
+    dplyr::select(-"AuditPriority", -"ParameterId") |>
+    tibble::as_tibble()
+}
+
 mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (is.null(object$summary) || nrow(object$summary) == 0) {
     stop("`object` does not contain fit summary information.")
@@ -8274,10 +8426,13 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     overview$Method <- public_mfrm_method_label(overview$Method)
   }
   if (!"MethodUsed" %in% names(overview)) {
-    overview$MethodUsed <- as.character(config$method %||% NA_character_)
+    overview$MethodUsed <- public_mfrm_method_label(
+      config$method %||% NA_character_
+    )
   } else {
     missing_used <- is.na(overview$MethodUsed) | !nzchar(trimws(as.character(overview$MethodUsed)))
     overview$MethodUsed[missing_used] <- as.character(config$method %||% NA_character_)
+    overview$MethodUsed <- public_mfrm_method_label(overview$MethodUsed)
   }
   prep <- object$prep %||% list()
   data_review <- object$data_review %||% list()
@@ -8515,6 +8670,10 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       "legacy_estimate"
     }
     slope_overview <- tibble::tibble(
+      SlopeOwner = as.character(config$slope_facet %||% NA_character_)[1],
+      StepOwner = as.character(config$step_facet %||% NA_character_)[1],
+      OwnerInterpretation =
+        "model_conditional_discrimination_not_rater_consistency",
       Slopes = nrow(slope_tbl),
       ValueBasis = value_basis,
       ParameterStatus = parameter_status,
@@ -8650,6 +8809,8 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       dplyr::slice_head(n = top_n) |>
       dplyr::select("Facet", "Level", "Estimate")
   }
+  facet_support_boundaries <- mfrm_summary_facet_support_boundaries(object)
+  facet_recession_review <- mfrm_summary_facet_recession_review(object)
 
   person_high <- tibble::tibble()
   person_low <- tibble::tibble()
@@ -8732,13 +8893,41 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (nrow(slope_overview) > 0) {
     notes <- c(
       notes,
-      "GPCM discriminations use positive log-slope identification with geometric-mean-one scaling; primary summaries remain missing until parameter readiness is established, while finite optimizer traces are labelled separately."
+      paste(
+        "GPCM discriminations use positive log-slope identification with",
+        "geometric-mean-one scaling; primary summaries remain missing until",
+        "parameter readiness is established, while finite optimizer traces",
+        "are labelled separately. The configured slope owner identifies",
+        "model-conditional discrimination and must not be relabelled as",
+        "rater consistency."
+      )
     )
   }
   if (nrow(interaction_overview) > 0) {
     notes <- c(
       notes,
       "Facet interactions are model-estimated fixed effects with zero marginal sums; interpret them as deviations from the additive main-effects MFRM."
+    )
+  }
+  if (nrow(facet_support_boundaries) > 0L) {
+    notes <- c(
+      notes,
+      paste(
+        "Observed boundary-constant facet levels are support/separation warnings;",
+        "a finite optimizer or MML estimate does not by itself establish",
+        "regularization or an interior maximum for that facet parameter."
+      )
+    )
+  }
+  if (nrow(facet_recession_review) > 0L &&
+      any(facet_recession_review$AuditScope == "joint_person_structural")) {
+    notes <- c(
+      notes,
+      paste(
+        "Certified joint JML facet directions are relative, jointly identified",
+        "recession directions. Under sum-to-zero coding, compensating levels",
+        "can be flagged and must not be read as independent extreme-response levels."
+      )
     )
   }
   if (length(notes) == 0) {
@@ -9050,6 +9239,8 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     reporting_map = reporting_map,
     caveats = fit_caveats,
     facet_extremes = facet_extremes,
+    facet_support_boundaries = facet_support_boundaries,
+    facet_recession_review = facet_recession_review,
     person_high = person_high,
     person_low = person_low,
     notes = notes,
@@ -9703,6 +9894,40 @@ print.summary.mfrm_fit <- function(x, ...) {
     }
   } else {
     print_preparation_section(x$preparation_notes)
+  }
+
+  if (nrow(x$facet_support_boundaries %||% data.frame()) > 0L) {
+    cat("\nObserved boundary-constant facet support\n")
+    print(
+      round_numeric_df(
+        as.data.frame(x$facet_support_boundaries),
+        digits = digits
+      ),
+      row.names = FALSE
+    )
+    cat("  Data-support warning only; it is not by itself an infinite-parameter certificate.\n")
+  }
+  if (nrow(x$facet_recession_review %||% data.frame()) > 0L) {
+    cat("\nCertified JML facet recession directions\n")
+    recession <- as.data.frame(
+      x$facet_recession_review,
+      stringsAsFactors = FALSE
+    )
+    keep <- intersect(
+      c(
+        "Facet", "Level", "BoundaryStatus", "OptimizerEstimate",
+        "AuditScope", "AuditComplete", "StatusBasis"
+      ),
+      names(recession)
+    )
+    print(
+      round_numeric_df(recession[, keep, drop = FALSE], digits = digits),
+      row.names = FALSE
+    )
+    cat(paste(
+      "  Joint-scope rows are relative directions under identification;",
+      "finite optimizer values are numerical traces, not finite JML maxima.\n"
+    ))
   }
 
   if (identical(detail, "brief")) {

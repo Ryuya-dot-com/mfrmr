@@ -308,20 +308,21 @@ the finite optimizer values for compatibility and numerical diagnosis;
 \code{OptimizerLogEstimate} / \code{OptimizerEstimate} name that role explicitly.
 Read \code{ParameterStatus}, \code{PrimaryLogEstimate}, \code{PrimaryEstimate},
 \code{SEEligible}, \code{CIEligible}, and \code{ReasonCodes} before interpretation. A
-certified JML slope-only path receives a typed extended-real primary boundary. A
-separate bounded check can identify a competitive path in which additive
-coordinates and a pair of log slopes move together. That stronger warning
-remains \code{not_evaluated}, with no primary value, because it is not a global
-result for the non-concave GPCM likelihood. Failure to find either path is
-likewise not promoted to a finite joint-GPCM claim. The conditional JML
-boundary checks are not reused for MML. \code{diagnose_mfrm()} may retain
-observed-information and delta-method values in \code{Optimizer*SE} /
-\code{Optimizer*CI} columns, but ordinary \code{SE} / \code{CI} columns remain
-unavailable while parameter readiness is not established. The identification
-convention pins the geometric mean of finite optimizer slopes at 1.
+certified JML slope-only path receives a typed extended-real primary
+boundary. A separate bounded check can identify a competitive path in
+which additive coordinates and a pair of log slopes move together. That
+stronger warning remains \code{not_evaluated}, with no primary value, because
+it is not a global result for the non-concave GPCM likelihood. Failure to
+find either path is likewise not promoted to a finite joint-GPCM claim.
+The conditional JML boundary checks are not reused for MML.
+\code{diagnose_mfrm()} may retain observed-information and delta-method values
+in \code{Optimizer*SE} / \code{Optimizer*CI} columns, but ordinary \code{SE} / \code{CI}
+columns remain unavailable while parameter readiness is not established.
+The identification convention pins the geometric mean of finite optimizer
+slopes at 1.
 \item \code{readiness}: the versioned fit record, five component rows, and current
-parameter-level rows. The current parameter slice includes GPCM slopes; other
-non-Person parameter classes remain scheduled for later propagation.
+parameter-level rows. The current parameter slice includes GPCM slopes;
+other non-Person parameter classes remain scheduled for later propagation.
 \item \code{interactions}: model-estimated facet interaction effects and metadata
 when \code{facet_interactions} is supplied
 \item \code{population}: population-model metadata. Ordinary fits keep an inactive
@@ -397,6 +398,13 @@ a positive slope for the designated slope-facet level:
 The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes by a sum-to-zero constraint on log slopes, so their
 geometric mean is 1.
+Under the default unconditional MML branch, the quadrature distribution fixes
+ability to a standard-normal reference scale. The geometric-mean-one slope
+constraint is therefore an additional, intentional relative-discrimination
+restriction: only \eqn{G - 1} slope contrasts are free, and a conventional
+fixed-ability-scale GPCM with a freely estimated common discrimination is
+outside this bounded branch. Under JML or active latent-regression MML, the
+same constraint also participates in resolving the ability/slope scale.
 
 With only two ordered categories (\eqn{K = 1}), the \code{RSM}/\code{PCM}
 branch reduces to the usual binary Rasch logit for the single category
@@ -466,7 +474,7 @@ in the data-support review. That boundary absence is a review condition for
 the separate element-boundary contract, not by itself an unsupported free
 step contrast. By contrast, retaining an unobserved internal category in a
 polytomous fitted ladder creates an adjacent-step recession direction, so
-\code{fit_mfrm()} stops before optimization rather than reporting finite step
+\code{\link[=fit_mfrm]{fit_mfrm()}} stops before optimization rather than reporting finite step
 estimates for that ladder.
 If these bounds are omitted, the observed score range is used and the
 provenance is stored in \code{fit$prep} and \code{summary(fit)$settings_overview}.

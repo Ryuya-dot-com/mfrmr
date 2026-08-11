@@ -343,6 +343,13 @@
 #' identifies slopes on the log scale with geometric mean 1. This makes bounded
 #' `GPCM` a slope-aware sensitivity/extension route, not a replacement for the
 #' equal-weighting `RSM`/`PCM` interpretation.
+#' Under default unconditional MML, the ability distribution is already fixed to
+#' a standard-normal reference scale. Geometric-mean-one is consequently an
+#' additional relative-discrimination restriction with \eqn{G - 1} free slope
+#' contrasts; the conventional fixed-ability-scale GPCM case in which all slopes
+#' may share an estimated value other than 1 is outside this bounded branch.
+#' Under JML or active latent-regression MML, the same constraint also helps
+#' resolve the ability/slope scale.
 #'
 #' **Ordered-response scope**
 #'

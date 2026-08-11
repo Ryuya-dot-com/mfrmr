@@ -716,6 +716,23 @@ vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
 
 Free-slope GPCM fits are currently review-only at the parameter boundary gate.
+The current numerical score-rule work is deliberately bounded: the sealed v4
+calibration-only boundary completion passed its fixed score and transformation
+rules once and was independently validated without refitting. A no-execution
+seal now freezes that bounded rule for a future disjoint confirmation design.
+That design was executed once, without retry, after its dry-run runner,
+separate authorization, and runner-independent validator passed 74 no-fit
+checks. All 96/888/24/688 numerical rows pass their frozen score and Jacobian
+comparisons, but two of six fits reached the iteration limit and are blocked.
+The runner omitted fit readiness from its final aggregation and reported a
+false-positive candidate pass. The prospectively sealed validator also has a
+names-attribute false negative, but its independent fit gate still rejects the
+result. A no-fit retrospective review therefore records confirmation as
+rejected. The public fit remains review-only; retry, general tolerance,
+boundary proof, inference, and promotion are unauthorized.
+This work checks implementation mathematics; it does not promote free-slope
+fits, freeze a general tolerance, or substitute for a new disjoint confirmation
+family.
 For JML, a certified fixed-additive slope path is recorded as
 `unbounded_low`, `unbounded_high`, or `unbounded_both`; failure to certify that
 narrow path does not establish a finite joint Person--step--slope maximum. A
@@ -725,7 +742,24 @@ warning, but the slope remains `not_evaluated` and has no primary value because
 the non-concave GPCM likelihood has not been resolved globally. A negative
 result is limited to the checked path family and also does not establish a
 finite maximum. For MML, neither conditional JML result is reused as marginal-
-likelihood evidence. Inspect `fit$slopes$ParameterStatus` and
+likelihood evidence. A separate instrument now searches sufficient constant
+sum-zero slope paths at every node of the declared finite quadrature rule and
+reconstructs compatible Person-pattern boundary likelihoods. That instrument
+is not a continuous-integral or joint-coordinate proof and has no readiness
+effect; a positive or negative result still leaves free MML slopes
+`not_evaluated`. In one retrospective 40-dataset owner panel, its
+none-certified state was unchanged at 31, 61, and 91 quadrature points, but the
+panel contained no positive certified case. That result establishes neither a
+finite maximum nor the sensitivity of the sufficient test; it also freezes no
+quadrature tolerance or default. A separately predeclared deterministic
+challenge then found that the five-node positive construction was no longer
+certified at 31, 61, or 91 points for either slope owner: expanding extreme
+nodes make the current individual-response all-node condition too restrictive.
+MML slope readiness remains blocked while a broader Person-marginal path
+condition is developed. An internal analytic prototype can reconstruct that
+path's value, derivatives, surviving-node boundary, and leading tail term, but
+it does not yet prove the complete half-line and has no effect on fitted
+objects. Inspect `fit$slopes$ParameterStatus` and
 `PrimaryEstimate` before the
 finite optimizer traces in `Estimate`. Approximate covariance values can be
 retained under `Optimizer*SE` and `Optimizer*CI`, but ordinary slope SE/CI

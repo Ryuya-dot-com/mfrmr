@@ -8,9 +8,12 @@ confirmation, authorize model selection, or establish cross-engine solution
 agreement.
 
 The pilot checks the derivative of the package's retained marginal objective
-with an independently implemented central-difference algorithm. It does not
-independently reimplement the marginal likelihood itself; external objective
-and parameter agreement remain separate gates.
+with an independently implemented central-difference algorithm. For the exact
+reduction rows it also independently reimplements the category kernel,
+log-normalization, person-wise quadrature marginalization, and numeric common-
+coordinate score. It deliberately reuses the package's declared free-to-
+expanded parameter map and quadrature basis; those are audited separately and
+this is not external objective or parameter agreement.
 
 ## Identity
 
@@ -109,26 +112,31 @@ rule remain M2 work.
 
 ## Exact reductions
 
-| Reduction | Log-probability max difference | Probability max difference | Objective difference | Common-score max difference | Free dimensions |
-| --- | ---: | ---: | ---: | ---: | --- |
-| binary RSM = binary PCM | 0 | 0 | 0 | 0 | 3 / 3 |
-| unit-slope GPCM = PCM | 0 | 0 | 0 | 4.4131e-15 | 11 / 14; 11 common coordinates |
+| Reduction | Route log-probability | Route full probability | Route objective | Route common score | Oracle log-probability | Oracle full probability | Oracle objective | Oracle common score | Transform residual | Free dimensions |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| binary RSM = binary PCM | 0 | 0 | 0 | 0 | 0 | 7.7716e-16 | 0 | 2.4454e-9 | 0 | 3 / 3 |
+| unit-slope GPCM = PCM | 0 | 1.6653e-15 | 0 | 4.4131e-15 | 0 | 1.6653e-15 | 0 | 3.6040e-9 | 0 | 11 / 14; 11 common coordinates |
 
 For the second row, the three additional GPCM free log-slope coordinates are
-zero, so all four expanded slopes equal one. These exact regression checks
-cover the log-probability matrix, probability matrix, objective, and common
-analytic derivative coordinates under one identification.
+zero, so all four expanded log slopes are zero and all four positive slopes
+equal one. Expanded step matrices and all common free coordinates also agree
+exactly. The oracle recomputes the response kernel and marginal objective
+without calling the package likelihood; its score is a central difference of
+that oracle. These regression checks therefore cover observed log
+probabilities, full category probabilities, objective, common analytic score,
+and the parameter transformation under one identification.
 
 ## Fail-closed checks
 
-The repository test file `test-numerical-stationarity-pilot.R` passed 104
+The repository test file `test-numerical-stationarity-pilot.R` passed 115
 expectations in the targeted run. It covers:
 
 - fixed plan, fixture hashes, category support, and no source-time fitting;
 - canonical free-coordinate labels and an independent quadratic derivative;
 - missing, duplicate, and non-finite central-difference rows;
 - the analytic and numeric GPCM log/slope Jacobians;
-- exact binary and unit-slope reductions; and
+- exact binary and unit-slope reductions against the independent likelihood
+  oracle and the explicit free/expanded GPCM transformation; and
 - global rejection of incomplete score, Jacobian, reduction, or fixture
   evidence.
 

@@ -172,6 +172,47 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
   ))
 })
 
+test_that("fit-specific GPCM boundaries expose owner and primary-slope status", {
+  fit <- structure(
+    list(
+      config = list(
+        model = "GPCM",
+        slope_facet = "Rater",
+        step_facet = "Rater"
+      ),
+      summary = data.frame(Model = "GPCM"),
+      slopes = data.frame(
+        SlopeFacet = c("R1", "R2"),
+        ParameterStatus = c("not_evaluated", "not_evaluated"),
+        SEEligible = c(FALSE, FALSE),
+        stringsAsFactors = FALSE
+      )
+    ),
+    class = "mfrm_fit"
+  )
+
+  tbl <- gpcm_capability_boundary_table(
+    fit,
+    area = "Core fitting and summaries"
+  )
+
+  expect_equal(nrow(tbl), 1L)
+  expect_identical(tbl$SlopeOwner, "Rater")
+  expect_identical(tbl$StepOwner, "Rater")
+  expect_identical(
+    tbl$PrimarySlopeStatus,
+    "primary_slope_suppressed_optimizer_trace_only"
+  )
+  expect_identical(
+    tbl$SlopeUncertaintyStatus,
+    "not_eligible_per_parameter_readiness"
+  )
+  expect_identical(
+    tbl$OwnerInterpretation,
+    "model_conditional_discrimination_not_rater_consistency"
+  )
+})
+
 test_that("gpcm_capability_matrix filters by status", {
   full_tbl <- gpcm_capability_matrix()
   blocked_tbl <- gpcm_capability_matrix("blocked")
@@ -474,6 +515,50 @@ test_that("GPCM partial report, QC, export, and linking helpers return caveated 
   expect_true(any(dff$gpcm_boundary$Area == "Differential facet functioning screening under bounded GPCM"))
   dff_summary <- summary(dff)
   expect_true(nrow(dff_summary$gpcm_boundary) > 0)
+
+  refit_calls <- list()
+  dff_refit <- local({
+    testthat::local_mocked_bindings(
+      fit_mfrm = function(...) {
+        refit_calls[[length(refit_calls) + 1L]] <<- list(...)
+        stop("captured bounded-GPCM subgroup replay")
+      },
+      .package = "mfrmr"
+    )
+    analyze_dff(
+      fit,
+      diag,
+      facet = "Criterion",
+      group = "Group",
+      data = toy,
+      method = "refit",
+      min_obs = 1
+    )
+  })
+  expect_gt(length(refit_calls), 0L)
+  expect_true(all(vapply(
+    refit_calls,
+    function(args) {
+      identical(args$model, "GPCM") &&
+        identical(args$step_facet, "Criterion") &&
+        identical(args$slope_facet, "Criterion") &&
+        isTRUE(all.equal(args$rating_min, fit$config$rating_min)) &&
+        isTRUE(all.equal(args$rating_max, fit$config$rating_max)) &&
+        identical(args$quad_points, fit$config$replay_inputs$quad_points) &&
+        identical(args$maxit, fit$config$replay_inputs$maxit) &&
+        identical(args$mml_engine, fit$config$replay_inputs$mml_engine)
+    },
+    logical(1)
+  )))
+  expect_identical(
+    dff_refit$config$refit_identity_contract,
+    "baseline_response_and_estimation_controls_v1"
+  )
+  expect_identical(dff_refit$config$refit_slope_facet, "Criterion")
+  expect_equal(
+    dff_refit$config$refit_rating_range,
+    c(fit$config$rating_min, fit$config$rating_max)
+  )
 
   dff_report <- dif_report(dff)
   expect_s3_class(dff_report, "mfrm_dif_report")

@@ -1868,6 +1868,7 @@ mfrm_results_build <- function(ctx, include) {
     fit = fit,
     fit_summary = summaries$fit %||% NULL
   )
+  fit_readiness_record <- mfrmr_get_readiness_record(fit)
   status <- mfrm_results_add_readiness_status(status, readiness)
 
   table_index <- mfrm_results_table_index(tables)
@@ -1910,6 +1911,18 @@ mfrm_results_build <- function(ctx, include) {
     table_index = table_index,
     plot_map = plot_map,
     readiness = readiness,
+    fit_readiness = as.data.frame(
+      fit_readiness_record$fit, stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      fit_readiness_record$components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      fit_readiness_record$parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     triage = triage,
     next_actions = next_actions,
     status = status,
@@ -4756,6 +4769,18 @@ mfrm_report_build <- function(x, style) {
   actions <- mfrm_report_action_items(sx, sections, style)
   tables <- list(
     overview = sx$overview,
+    fit_readiness = as.data.frame(
+      x$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      x$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      x$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     first_screen = first_screen,
     report_index = report_index,
     template_index = template_index,
@@ -4795,6 +4820,18 @@ mfrm_report_build <- function(x, style) {
     title = mfrm_report_title(style),
     source_include = as.character(x$include %||% character(0)),
     summary = sx,
+    fit_readiness = as.data.frame(
+      x$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      x$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      x$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     first_screen = first_screen,
     report_index = report_index,
     template_index = template_index,
@@ -4990,6 +5027,18 @@ summary.mfrm_report <- function(object, top_n = 8,
 
   out <- list(
     overview = overview,
+    fit_readiness = as.data.frame(
+      object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      object$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      object$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     first_screen = first_rows,
     status_counts = status_counts,
     immediate_actions = immediate_actions,
@@ -5069,6 +5118,9 @@ mfrm_report_html <- function(report) {
 #' linking/anchor reporting templates, ZSTD-convention table,
 #' evidence-boundary table, next-action table, and optional Markdown or HTML
 #' report.
+#' The object and its table list retain the exact source-fit
+#' `fit_readiness*` tables from `mfrm_results()`; report synthesis does not
+#' reinterpret or upgrade them.
 #'
 #' @param x An [mfrm_results()] object.
 #' @param style Report emphasis. `"qc"` is the default first-screen report.
@@ -5341,6 +5393,9 @@ mfrm_results_export_summary_tables <- function(x) {
   tables <- list(
     overview = sx$overview,
     status = sx$status,
+    fit_readiness = sx$fit_readiness,
+    fit_readiness_components = sx$fit_readiness_components,
+    fit_readiness_parameters = sx$fit_readiness_parameters,
     component_index = sx$component_index,
     table_index = as.data.frame(x$table_index %||% sx$table_index, stringsAsFactors = FALSE),
     plot_map = sx$plot_map,
@@ -5899,6 +5954,9 @@ export_mfrm_results <- function(x,
 #' Start with `summary(res)`. The most useful fields are:
 #' - `overview`: input mode, model, method, table count, and plot-route count
 #' - `readiness`: separate analysis and plot-interpretation gates
+#' - `fit_readiness`, `fit_readiness_components`, and
+#'   `fit_readiness_parameters`: the exact source-fit readiness record retained
+#'   separately from the workflow-level `readiness` table
 #' - `triage`: first-screen signals ordered by unavailable/review/info/ok
 #' - `status`: which sections were available, skipped, or unsupported
 #' - `plot_map`: supported plot routes, availability, and interpretation status
@@ -6270,6 +6328,21 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
       fit_summary = object$summaries$fit %||% NULL
     )
   }
+  fit_readiness_record <- mfrmr_get_readiness_record(fit)
+  fit_readiness <- as.data.frame(
+    object$fit_readiness %||% fit_readiness_record$fit,
+    stringsAsFactors = FALSE
+  )
+  fit_readiness_components <- as.data.frame(
+    object$fit_readiness_components %||% fit_readiness_record$components %||%
+      data.frame(),
+    stringsAsFactors = FALSE
+  )
+  fit_readiness_parameters <- as.data.frame(
+    object$fit_readiness_parameters %||% fit_readiness_record$parameters %||%
+      mfrmr_readiness_empty_parameter_table(),
+    stringsAsFactors = FALSE
+  )
   triage <- as.data.frame(object$triage %||% data.frame(), stringsAsFactors = FALSE)
   next_actions <- as.data.frame(object$next_actions %||% data.frame(), stringsAsFactors = FALSE)
   mapping <- mfrm_results_mapping_table(object$input$mapping %||% NULL)
@@ -6282,6 +6355,9 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
     table_index = table_index,
     plot_map = plot_map,
     readiness = readiness,
+    fit_readiness = fit_readiness,
+    fit_readiness_components = fit_readiness_components,
+    fit_readiness_parameters = fit_readiness_parameters,
     triage = triage,
     next_actions = next_actions,
     mapping = mapping,

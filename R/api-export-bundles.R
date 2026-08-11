@@ -147,7 +147,13 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     emit("keep_original", isTRUE(ri$keep_original)),
     add_optional("missing_codes", ri$missing_codes),
     emit("model", as.character(ri$model %||% "RSM")),
-    emit("method", as.character(ri$method %||% "JML")),
+    emit(
+      "method",
+      as.character(public_mfrm_method_label(
+        ri$method %||% cfg$method_input %||% cfg$method %||% "JML",
+        default = "JML"
+      ))
+    ),
     add_optional("step_facet", ri$step_facet),
     add_optional("slope_facet", ri$slope_facet),
     "  anchors = anchors,",
@@ -407,6 +413,9 @@ validate_bias_results_input <- function(bias_results,
 #' @section Output:
 #' The returned bundle has class `mfrm_manifest` and includes:
 #' - `summary`: one-row analysis overview
+#' - `readiness`, `readiness_components`, and `readiness_parameters`: the
+#'   source fit's current readiness-contract record, its component audit, and
+#'   any parameter-level readiness rows
 #' - `environment`: package/R/platform metadata
 #' - `model_settings`: key-value model settings table
 #' - `source_columns`: key-value data-column table
@@ -428,6 +437,12 @@ validate_bias_results_input <- function(bias_results,
 #' the intended analysis. The `model_settings`, `source_columns`, and
 #' `estimation_control` tables are designed for reproducibility records and
 #' method write-up.
+#' `Converged` records the optimizer return-code decision; `InferenceReady`
+#' records the stricter readiness-contract decision. They need not agree.
+#' The `readiness` tables are provenance: they preserve the decision recorded
+#' for the source fit, including its contract version and reason codes. They do
+#' not make a subsequently replayed fit inference-ready; replay must recompute
+#' readiness from the replayed data and numerical result.
 #' Active latent-regression fits also record their population-model provenance
 #' there, including the fitted scoring basis, stored `population_formula`, and
 #' person-level contract used by the fitted population model. When categorical
@@ -524,10 +539,19 @@ build_mfrm_manifest <- function(fit,
   )
 
   convergence <- mfrm_convergence_state(fit)
+  readiness_tables <- mfrm_readiness_export_tables(fit)
+  readiness_fit <- readiness_tables$fit
+  manifest_method <- public_mfrm_method_label(
+    cfg$method_input %||% cfg$method %||% fit$summary$Method[1] %||%
+      NA_character_
+  )
+  manifest_method_used <- public_mfrm_method_label(
+    cfg$method %||% fit$summary$MethodUsed[1] %||% manifest_method
+  )
   summary_tbl <- data.frame(
     Model = as.character(cfg$model %||% NA_character_),
-    Method = as.character(cfg$method_input %||% cfg$method %||% NA_character_),
-    MethodUsed = as.character(cfg$method %||% NA_character_),
+    Method = as.character(manifest_method),
+    MethodUsed = as.character(manifest_method_used),
     Observations = as.integer(prep$n_obs %||% fit$summary$N[1] %||% NA_integer_),
     Persons = as.integer(prep$n_person %||% cfg$n_person %||% fit$summary$Persons[1] %||% NA_integer_),
     Facets = length(as.character(cfg$facet_names %||% character(0))),
@@ -536,9 +560,15 @@ build_mfrm_manifest <- function(fit,
     HasResidualPCA = export_has_residual_pca(diagnostics),
     FitPopulationActive = isTRUE(fit_population$active),
     FitPosteriorBasis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
-    Converged = convergence$inference_ready,
+    Converged = convergence$code_converged,
     OptimizerCodeZero = convergence$code_converged,
     ConvergenceSeverity = convergence$severity,
+    ReadinessContractVersion = as.character(
+      readiness_fit$ReadinessContractVersion[1]
+    ),
+    FitReadiness = as.character(readiness_fit$FitReadiness[1]),
+    InferenceReady = isTRUE(readiness_fit$InferenceReady[1]),
+    ReadinessReasonCodes = as.character(readiness_fit$ReasonCodes[1]),
     stringsAsFactors = FALSE
   )
 
@@ -567,8 +597,8 @@ build_mfrm_manifest <- function(fit,
 
   model_settings <- dashboard_settings_table(list(
     model = as.character(cfg$model %||% NA_character_),
-    method = as.character(cfg$method_input %||% cfg$method %||% NA_character_),
-    method_used = as.character(cfg$method %||% NA_character_),
+    method = as.character(manifest_method),
+    method_used = as.character(manifest_method_used),
     facet_names = paste(as.character(cfg$facet_names %||% character(0)), collapse = ", "),
     noncenter_facet = as.character(cfg$noncenter_facet %||% ""),
     step_facet = as.character(cfg$step_facet %||% ""),
@@ -787,6 +817,9 @@ build_mfrm_manifest <- function(fit,
 
   out <- list(
     summary = summary_tbl,
+    readiness = readiness_tables$fit,
+    readiness_components = readiness_tables$components,
+    readiness_parameters = readiness_tables$parameters,
     environment = environment_tbl,
     model_settings = model_settings,
     source_columns = source_columns,
@@ -815,6 +848,25 @@ build_mfrm_manifest <- function(fit,
 }
 
 # ---- helpers for manifest reproducibility --------------------------------
+
+# Keep the readiness export contract centralized. The adapter is deliberately
+# fail-closed: legacy objects are represented by the current contract's
+# `legacy_unknown` row rather than inheriting an old TRUE/FALSE scalar.
+#' @keywords internal
+#' @noRd
+mfrm_readiness_export_tables <- function(fit) {
+  record <- mfrmr_get_readiness_record(fit)
+  list(
+    fit = as.data.frame(record$fit, stringsAsFactors = FALSE),
+    components = as.data.frame(
+      record$components %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    parameters = as.data.frame(
+      record$parameters %||% mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    )
+  )
+}
 
 #' @keywords internal
 #' @noRd
@@ -992,8 +1044,14 @@ build_mfrm_session_info_table <- function() {
 #' - `summary`: a one-row overview of the chosen replay mode and whether bundle
 #'   export was included
 #' - `script`: the generated R code as a single string
+#' - `source_readiness`, `source_readiness_components`, and
+#'   `source_readiness_parameters`: readiness provenance from the source fit
 #' - `anchors` and `group_anchors`: the exact stored constraints that were
 #'   embedded into the script
+#'
+#' The source readiness row is not copied into the replayed fit. The generated
+#' script recomputes readiness and warns when its fit-level decision fields do
+#' not match the source record.
 #'
 #' If `ScriptMode` is `"facets"`, the script replays the higher-level
 #' [run_mfrm_facets()] workflow. If it is `"fit"`, the script uses
@@ -1138,13 +1196,22 @@ build_mfrm_replay_script <- function(fit,
   recorded_pkg_version <- as.character(
     cfg$replay_inputs$package_version %||% utils::packageVersion("mfrmr")
   )
+  replay_method <- public_mfrm_method_label(
+    cfg$method_input %||% cfg$method %||% fit$summary$Method[1] %||% "JML",
+    default = "JML"
+  )
+  replay_method_used <- public_mfrm_method_label(
+    cfg$method %||% fit$summary$MethodUsed[1] %||% replay_method,
+    default = replay_method
+  )
+  source_readiness <- mfrm_readiness_export_tables(fit)
   lines <- c(
     "#!/usr/bin/env Rscript",
     "# Generated by mfrmr::build_mfrm_replay_script()",
     paste0("# Model: ", as.character(cfg$model %||% NA_character_),
-           " | Method: ", as.character(cfg$method_input %||% cfg$method %||% NA_character_),
-           if (!identical(cfg$method_input %||% NULL, cfg$method %||% NULL)) {
-             paste0(" | ResolvedMethod: ", as.character(cfg$method %||% NA_character_))
+           " | Method: ", as.character(replay_method),
+           if (!identical(replay_method, replay_method_used)) {
+             paste0(" | ResolvedMethod: ", as.character(replay_method_used))
            } else {
              ""
            }),
@@ -1161,6 +1228,21 @@ build_mfrm_replay_script <- function(fit,
       recorded_pkg_version,
       "; you are running \", as.character(utils::packageVersion(\"mfrmr\")), \". \", ",
       "\"Estimates may differ.\")"
+    ),
+    "",
+    "# Readiness provenance from the source fit. This is evidence to compare,",
+    "# not a status to copy into the replayed fit.",
+    paste0(
+      "source_readiness <- ",
+      render_r_object_literal(source_readiness$fit)
+    ),
+    paste0(
+      "source_readiness_components <- ",
+      render_r_object_literal(source_readiness$components)
+    ),
+    paste0(
+      "source_readiness_parameters <- ",
+      render_r_object_literal(source_readiness$parameters)
     ),
     "",
     paste0("data <- utils::read.csv(", render_r_object_literal(as.character(data_file[1])), ", stringsAsFactors = FALSE)")
@@ -1212,7 +1294,7 @@ build_mfrm_replay_script <- function(fit,
       paste0("  rating_max = ", render_r_object_literal(as.integer(cfg$rating_max %||% NA_integer_)), ","),
 	    paste0("  keep_original = ", render_r_object_literal(isTRUE(cfg$keep_original)), ","),
 	    paste0("  model = ", render_r_object_literal(as.character(cfg$model %||% "RSM")), ","),
-	    paste0("  method = ", render_r_object_literal(as.character(cfg$method_input %||% cfg$method %||% "JML")), ","),
+	    paste0("  method = ", render_r_object_literal(as.character(replay_method)), ","),
 	    paste0("  step_facet = ", if (!is.null(cfg$step_facet) && nzchar(as.character(cfg$step_facet))) render_r_object_literal(as.character(cfg$step_facet)) else "NULL", ","),
 	    "  anchors = anchors,",
 	    "  group_anchors = group_anchors,",
@@ -1306,6 +1388,16 @@ build_mfrm_replay_script <- function(fit,
       )
     }
   }
+
+  lines <- c(
+    lines,
+    "",
+    "# Recompute readiness from the replayed fit; never inherit source status.",
+    "replay_readiness <- if (is.list(fit$readiness) && is.data.frame(fit$readiness$fit)) fit$readiness$fit else data.frame()",
+    "readiness_identity_fields <- c(\"ReadinessContractVersion\", \"ReadinessScope\", \"InputState\", \"EstimabilityState\", \"CategoryState\", \"BoundaryState\", \"NumericalState\", \"FitReadiness\", \"InferenceReady\", \"ReasonCodes\", \"AuditProvenance\")",
+    "replay_readiness_matches_source <- nrow(replay_readiness) == 1L && all(readiness_identity_fields %in% names(replay_readiness)) && isTRUE(all.equal(source_readiness[, readiness_identity_fields, drop = FALSE], replay_readiness[, readiness_identity_fields, drop = FALSE], check.attributes = FALSE))",
+    "if (!replay_readiness_matches_source) warning(\"Replayed fit readiness differs from the source readiness provenance; inspect both records before using inferential outputs.\", call. = FALSE)"
+  )
 
   if (length(bias_pairs) > 0) {
     bias_lines <- vapply(seq_along(bias_pairs), function(i) {
@@ -1491,6 +1583,18 @@ build_mfrm_replay_script <- function(fit,
     Anchors = nrow(anchor_df),
     GroupAnchors = nrow(group_anchor_df),
     IncludeBundle = isTRUE(include_bundle),
+    ReadinessContractVersion = as.character(
+      source_readiness$fit$ReadinessContractVersion[1]
+    ),
+    SourceFitReadiness = as.character(
+      source_readiness$fit$FitReadiness[1]
+    ),
+    SourceInferenceReady = isTRUE(
+      source_readiness$fit$InferenceReady[1]
+    ),
+    SourceReadinessReasonCodes = as.character(
+      source_readiness$fit$ReasonCodes[1]
+    ),
     stringsAsFactors = FALSE
   )
   settings <- dashboard_settings_table(list(
@@ -1532,6 +1636,9 @@ build_mfrm_replay_script <- function(fit,
   out <- list(
     summary = summary_tbl,
     script = script_text,
+    source_readiness = source_readiness$fit,
+    source_readiness_components = source_readiness$components,
+    source_readiness_parameters = source_readiness$parameters,
     settings = settings,
     gpcm_boundary = gpcm_capability_boundary_table(
       fit,
@@ -4305,10 +4412,13 @@ export_summary_appendix <- function(x,
 #' - manuscript-summary CSVs via [build_summary_table_bundle()]
 #' - anchor CSV via [make_anchor_table()]
 #' - manifest CSV/TXT via [build_mfrm_manifest()]
+#' - exact source-fit readiness CSVs with fit, component, and parameter scope
 #' - visual warning/summary artifacts via [build_visual_summaries()]
 #' - prediction/forecast CSVs via [predict_mfrm_population()],
 #'   [predict_mfrm_units()], and [sample_mfrm_plausible_values()]
 #' - a package-native replay script via [build_mfrm_replay_script()]
+#' - replay-source readiness CSVs retained as provenance; the replayed fit
+#'   recomputes its own readiness
 #' - for latent-regression fits, a replay-side person-data CSV paired with the
 #'   replay script
 #' - a lightweight HTML report that bundles the exported tables/text and, for
@@ -4970,6 +5080,19 @@ export_mfrm_bundle <- function(fit,
 
   if ("manifest" %in% include && !is.null(manifest)) {
     write_csv(manifest$summary, paste0(prefix, "_manifest_summary.csv"), "manifest_summary")
+    write_csv(manifest$readiness, paste0(prefix, "_manifest_readiness.csv"), "manifest_readiness")
+    if (nrow(as.data.frame(manifest$readiness_components, stringsAsFactors = FALSE)) > 0) {
+      write_csv(
+        manifest$readiness_components,
+        paste0(prefix, "_manifest_readiness_components.csv"),
+        "manifest_readiness_components"
+      )
+    }
+    write_csv(
+      manifest$readiness_parameters,
+      paste0(prefix, "_manifest_readiness_parameters.csv"),
+      "manifest_readiness_parameters"
+    )
     write_csv(manifest$environment, paste0(prefix, "_manifest_environment.csv"), "manifest_environment")
     write_csv(manifest$model_settings, paste0(prefix, "_manifest_model_settings.csv"), "manifest_model_settings")
     write_csv(manifest$source_columns, paste0(prefix, "_manifest_source_columns.csv"), "manifest_source_columns")
@@ -4988,6 +5111,13 @@ export_mfrm_bundle <- function(fit,
     }
     write_text(render_mfrm_manifest_text(manifest), paste0(prefix, "_manifest.txt"), "manifest_text")
     html_tables$manifest_summary <- manifest$summary
+    html_tables$manifest_readiness <- manifest$readiness
+    if (nrow(as.data.frame(manifest$readiness_components, stringsAsFactors = FALSE)) > 0) {
+      html_tables$manifest_readiness_components <- manifest$readiness_components
+    }
+    if (nrow(as.data.frame(manifest$readiness_parameters, stringsAsFactors = FALSE)) > 0) {
+      html_tables$manifest_readiness_parameters <- manifest$readiness_parameters
+    }
     html_tables$manifest_available_outputs <- manifest$available_outputs
     html_tables$manifest_settings <- manifest$settings
   }
@@ -5054,6 +5184,23 @@ export_mfrm_bundle <- function(fit,
       bundle_dir = "replayed_bundle",
       bundle_prefix = prefix
     )
+    write_csv(
+      replay$source_readiness,
+      paste0(prefix, "_replay_source_readiness.csv"),
+      "replay_source_readiness"
+    )
+    if (nrow(as.data.frame(replay$source_readiness_components, stringsAsFactors = FALSE)) > 0) {
+      write_csv(
+        replay$source_readiness_components,
+        paste0(prefix, "_replay_source_readiness_components.csv"),
+        "replay_source_readiness_components"
+      )
+    }
+    write_csv(
+      replay$source_readiness_parameters,
+      paste0(prefix, "_replay_source_readiness_parameters.csv"),
+      "replay_source_readiness_parameters"
+    )
     write_script(replay$script, paste0(prefix, "_replay.R"), "replay_script")
     html_text$replay_script <- replay$script
     replay_artifacts <- data.frame(
@@ -5063,6 +5210,37 @@ export_mfrm_bundle <- function(fit,
       Detail = "Executable package-native replay script.",
       stringsAsFactors = FALSE
     )
+    replay_artifacts <- rbind(
+      replay_artifacts,
+      data.frame(
+        Artifact = c(
+          "source_readiness",
+          "source_readiness_parameters"
+        ),
+        Format = "csv",
+        File = c(
+          paste0(prefix, "_replay_source_readiness.csv"),
+          paste0(prefix, "_replay_source_readiness_parameters.csv")
+        ),
+        Detail = c(
+          "Fit-level readiness provenance recorded before replay.",
+          "Parameter-level readiness provenance recorded before replay."
+        ),
+        stringsAsFactors = FALSE
+      )
+    )
+    if (nrow(as.data.frame(replay$source_readiness_components, stringsAsFactors = FALSE)) > 0) {
+      replay_artifacts <- rbind(
+        replay_artifacts,
+        data.frame(
+          Artifact = "source_readiness_components",
+          Format = "csv",
+          File = paste0(prefix, "_replay_source_readiness_components.csv"),
+          Detail = "Component-level readiness provenance recorded before replay.",
+          stringsAsFactors = FALSE
+        )
+      )
+    }
     if (!identical(replay_data_file, "your_data.csv")) {
       replay_artifacts <- rbind(
         replay_artifacts,
@@ -6055,6 +6233,9 @@ export_available_outputs_table <- function(diagnostics,
 render_mfrm_manifest_text <- function(manifest) {
   sections <- list(
     Summary = manifest$summary,
+    Readiness = manifest$readiness,
+    ReadinessComponents = manifest$readiness_components,
+    ReadinessParameters = manifest$readiness_parameters,
     Environment = manifest$environment,
     ModelSettings = manifest$model_settings,
     SourceColumns = manifest$source_columns,

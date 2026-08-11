@@ -265,6 +265,68 @@ test_that("new native fits store and consume one fit-readiness record", {
   )
 })
 
+test_that("PCM readiness propagates without upgrading numerical holds", {
+  data <- load_mfrmr_data("example_core")
+  fit_pcm <- function(method, maxit) {
+    suppressWarnings(fit_mfrm(
+      data,
+      person = "Person",
+      facets = c("Rater", "Criterion"),
+      score = "Score",
+      method = method,
+      model = "PCM",
+      step_facet = "Criterion",
+      quad_points = 7,
+      optimizer = "auto",
+      reltol = if (maxit == 1) 1e-12 else 1e-9,
+      maxit = maxit
+    ))
+  }
+  pairs <- lapply(c("JML", "MML"), function(method) {
+    list(
+      ready = fit_pcm(method, 120),
+      blocked = fit_pcm(method, 1)
+    )
+  })
+
+  for (pair in pairs) {
+    expect_identical(pair$ready$readiness$fit$FitReadiness, "ready")
+    expect_true(pair$ready$readiness$fit$InferenceReady)
+    expect_identical(pair$blocked$readiness$fit$FitReadiness, "blocked")
+    expect_false(pair$blocked$readiness$fit$InferenceReady)
+    expect_match(
+      pair$blocked$readiness$fit$ReasonCodes,
+      "iteration_limit",
+      fixed = TRUE
+    )
+  }
+
+  for (fit in do.call(c, pairs)) {
+    diagnostics <- suppressWarnings(diagnose_mfrm(
+      fit, residual_pca = "none"
+    ))
+    record <- mfrmr:::mfrmr_get_readiness_record(fit)
+    manifest <- build_mfrm_manifest(fit, diagnostics = diagnostics)
+    replay <- build_mfrm_replay_script(
+      fit,
+      diagnostics = diagnostics,
+      data_file = "analysis_data.csv"
+    )
+    results <- suppressWarnings(mfrm_results(
+      fit, diagnostics = diagnostics, include = "fit", compute = "never"
+    ))
+
+    expect_equal(manifest$readiness, record$fit)
+    expect_equal(replay$source_readiness, record$fit)
+    expect_identical(
+      as.character(results$readiness$Status[
+        results$readiness$Domain == "Fit"
+      ]),
+      record$fit$FitReadiness
+    )
+  }
+})
+
 test_that("legacy objects are not upgraded from the old scalar", {
   for (legacy_scalar in list(TRUE, FALSE, NA)) {
     legacy <- list(summary = data.frame(InferenceReady = legacy_scalar))
@@ -314,4 +376,67 @@ test_that("legacy objects fail closed at convergence, summary, and plot entry po
     fixed = TRUE
   )
   expect_identical(plotted$data$interpretation_status, "review_only")
+})
+
+test_that("a real serialized 0.2.2 fit cannot acquire current readiness", {
+  fixture_path <- testthat::test_path(
+    "fixtures", "mfrm-fit-0.2.2-pcm-jml.rds"
+  )
+  expect_true(file.exists(fixture_path))
+  fixture <- readRDS(fixture_path)
+  fit <- fixture$fit
+
+  expect_identical(
+    fixture$metadata$FixtureContract[[1]],
+    "mfrmr-saved-fit-migration-0.2.2-v1"
+  )
+  expect_identical(fixture$metadata$PackageVersion[[1]], "0.2.2")
+  expect_identical(
+    fixture$metadata$TarballSHA256[[1]],
+    "dddeaaba8d2d0684784fa774b349e8fa1d13570143341daad4aa31e2990e5d00"
+  )
+  expect_s3_class(fit, "mfrm_fit")
+  expect_null(fit$readiness)
+  expect_true(fit$summary$InferenceReady[[1]])
+
+  record <- mfrmr:::mfrmr_get_readiness_record(fit)
+  expect_identical(record$fit$FitReadiness[[1]], "legacy_unknown")
+  expect_false(record$fit$InferenceReady[[1]])
+  expect_identical(
+    record$fit$ReasonCodes[[1]], "legacy_contract_missing"
+  )
+  expect_match(
+    record$fit$AuditProvenance[[1]],
+    "source_inference_ready=TRUE",
+    fixed = TRUE
+  )
+
+  convergence <- mfrmr:::mfrm_convergence_state(fit)
+  expect_true(convergence$code_converged)
+  expect_false(convergence$inference_ready)
+  expect_identical(convergence$fit_readiness, "legacy_unknown")
+
+  fit_summary <- summary(fit)
+  expect_identical(
+    as.character(fit_summary$readiness$Status[
+      fit_summary$readiness$Domain == "Reporting"
+    ]),
+    "legacy_reaudit_or_refit_required"
+  )
+
+  diagnostics <- suppressWarnings(diagnose_mfrm(
+    fit, residual_pca = "none"
+  ))
+  manifest <- build_mfrm_manifest(fit, diagnostics = diagnostics)
+  replay <- build_mfrm_replay_script(
+    fit,
+    diagnostics = diagnostics,
+    data_file = "analysis_data.csv"
+  )
+  results <- suppressWarnings(mfrm_results(
+    fit, diagnostics = diagnostics, include = "fit", compute = "never"
+  ))
+  expect_equal(manifest$readiness, record$fit)
+  expect_equal(replay$source_readiness, record$fit)
+  expect_equal(results$fit_readiness, record$fit)
 })

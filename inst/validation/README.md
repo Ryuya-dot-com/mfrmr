@@ -45,6 +45,34 @@ but do not broaden current API scope.
   two-rater, category-support, extreme-score, numerical, and external-result
   boundaries. These are structural expected answers, not completed fits or
   release evidence.
+- `exact-model-reduction-closure-record-0.2.3.md`: structural closure of the
+  binary RSM/PCM and unit-slope GPCM/PCM identities using route-to-route
+  equality, an independently implemented marginal-likelihood oracle, explicit
+  free/expanded parameter-transform residuals, and fail-closed mutation tests.
+- `gpcm-extreme-and-surface-audit-0.2.3.md`: deterministic five-category
+  challenge separating JML infinite Person measures, MML prior-regularized
+  EAPs, boundary-constant Rater support, certified relative JML facet recession
+  directions, and central summary/diagnostic/plot readiness propagation. It
+  changes no GPCM capability status.
+- `maxit-ceiling-contract-0.2.3.R` and
+  `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
+  validator and evidence record enforcing a prespecified increasing ceiling
+  prefix, fixed specification identity, individual-fit readiness, and
+  first-eligible-run selection. Unit/runtime evidence is complete; row 8 stays
+  in review until the same rule is applied to the exact candidate.
+- `readiness-propagation-stable-slice-audit-0.2.3.md`: deterministic retained-
+  core RSM/PCM record showing exact v3 readiness provenance through manifest,
+  export, replay, results, report, checklist, and APA routes, plus the real
+  frozen-0.2.2 saved-fit migration and current-development fresh-session replay
+  result. Unresolved parameter, lower-adapter, and exact-candidate blockers
+  keep checklist row 23 in review.
+- `generate-legacy-0.2.2-fixture.R` and
+  `../../tests/testthat/fixtures/mfrm-fit-0.2.2-pcm-jml.rds`: hash-guarded
+  generator and compact real fit serialized under the frozen 0.2.2 tarball.
+- `validate-legacy-0.2.2-replay-roundtrip.R`: installs the current development
+  source in a temporary library, executes the generated replay in a fresh R
+  session, and requires independent readiness recomputation plus a source/new
+  mismatch warning.
 - `release-readiness.R`: release-readiness review. Source this file and run
   `mfrmr_release_readiness_review(pkg_dir = ".")` from the package root. The
   review checks version labels, metadata agreement, `--as-cran` provenance,
@@ -74,6 +102,129 @@ but do not broaden current API scope.
   numerical, recovery, information-criterion, dimensionality, external,
   public-contract, and engineering gates. A `draft` status is not permission
   to run confirmation or evidence that a gate passed.
+- `generalized-mfrm-model-ladder-0.2.3.md`: pre-M2 model-family and evidence-
+  dependency refinement. It names the current aligned single-owner relative-
+  slope GPCM, separates criterion- and rater-owned evidence, defines the four
+  required model-identity axes, and keeps multiplicative, multidimensional,
+  response-style, interaction, and local-dependence families outside the
+  current claim. Draft.63 adopts its scenario strata as evidence keys without
+  promoting any gate or adding a likelihood.
+- `gpcm-model-identity-contract-0.2.3.csv`: machine-readable Draft.63 mapping
+  from current and guarded generalized-MFRM strata to slope owner, step owner,
+  slope composition, latent dimension, estimator/ability-scale contract,
+  implementation status, evidence status, and permitted claim use.
+- `gpcm-owner-specific-pilot-0.2.3.R`: Draft.64--66 repository-only runner for
+  identity-stamped criterion-owned and rater-owned aligned GPCM smoke/pilot
+  cells across JML/MML and support-topology controls. It provides deterministic
+  shards, atomic one-row checkpoints, strict resume/completion validation, and
+  planned-denominator Monte Carlo summaries. The primary pilot is fixed at
+  `maxit = 400` and q=31; lower-node runs remain smoke-only or require a
+  separately registered sensitivity identity. The smoke execution is a
+  guarded software/evidence-schema check; the corrected 120-row pilot is
+  complete as calibration evidence, while threshold freeze and confirmation
+  remain unauthorized.
+- `gpcm-owner-specific-execution-contract-0.2.3.md`: Draft.66 corrected pilot
+  contract for the 24-cell/five-replicate manifest, non-adaptive stopping,
+  failed-replicate denominators, MCSE/Wilson reporting, deterministic sharding,
+  checkpoint identity, and hashed completion. It freezes execution structure,
+  not a recovery threshold or a confirmation decision.
+- `gpcm-owner-specific-pilot-record-0.2.3.md`: completed Draft.66 120-row
+  calibration record. It documents the superseded Draft.65 internal-category
+  recoding defect, the exact corrected identities and hashes, all failed-row
+  denominators, Wilson/MCSE summaries, weak-link recovery signals, and the
+  still-open boundary, integration, coverage, fit, DFF, and confirmation work.
+- `gpcm-owner-jml-optimizer-sensitivity-0.2.3.R`: historical Draft.66
+  common-data attribution runner. It crosses the 40 non-negative JML pilot
+  datasets with fixed BFGS/L-BFGS-B policies, traces non-representable slope
+  proposals, and writes a hashed calibration-only completion bundle. It is
+  pinned to the completed Draft.66 runtime and cannot be silently reused as a
+  current-runtime result.
+- `gpcm-owner-jml-boundary-rejection-recheck-0.2.3.R`: Draft.67 full 40-row
+  BFGS recheck after transactional parameter-cache updates and typed
+  non-representable-slope line-search rejection. It requires the validated
+  historical sensitivity bundle, retains exact data pairing, and records
+  artifact retention separately from convergence and inference readiness.
+- `gpcm-owner-jml-optimizer-attribution-record-0.2.3.md`: exact identity,
+  optimizer-pair, expansion-trace, implementation, and recheck record. It
+  distinguishes the recovered workload line-search accident from unresolved
+  criterion weak-bridge boundary risk and promotes no threshold or gate.
+- `gpcm-mml-integration-sensitivity-contract-0.2.3.md`: Draft.68 fixed
+  q=31/61/91 direct-MML sensitivity contract over 40 exact owner-pilot
+  datasets. It requires common q=91 likelihood evaluation, paired structural
+  and Person-estimand differences, dataset-level checkpoints, complete
+  denominators, and continued blocking of zero-common-Person controls.
+- `gpcm-mml-integration-sensitivity-0.2.3.R`: identity-stamped Draft.68 runner
+  implementing the 120-fit grid, common-grid reevaluation, finite-count/MCSE
+  summaries, exact three-arm data pairing, atomic checkpoint/resume, and
+  completion inventory. It cannot choose q adaptively or authorize
+  confirmation.
+- `gpcm-mml-integration-completion-validator-0.2.3.R`: independent post-run
+  validator for the Draft.68 bundle. It recomputes the exact artifact
+  inventory, regenerates the frozen dataset manifest, validates every atomic
+  checkpoint, and verifies q-grid/data pairing without mutating the bundle.
+- `gpcm-mml-integration-sensitivity-record-0.2.3.md`: completed calibration
+  record showing material q=31-to-dense-grid structural and Person-estimand
+  differences, nonmonotone optimizer review across node counts, close q=61
+  common-grid objectives, and the remaining need for direct q61-to-q91
+  parameter tolerance calibration on expanded independent data.
+- `gpcm-mml-slope-boundary-contract-0.2.3.md`: Draft.69 mathematical and
+  implementation contract for fixed-quadrature marginal GPCM slope-path
+  instrumentation. It derives the nodewise sufficient condition, boundary
+  likelihood reconstruction, exhaustive ordered-pair scope, fail-closed
+  limits, and explicit prohibition on continuous-integral, finite-MLE, or
+  readiness claims.
+- `gpcm-mml-slope-boundary-implementation-record-0.2.3.md`: exact Draft.69
+  runtime/source/test identities, positive and negative controls, direct
+  likelihood-path oracle results, distribution-check provenance, limitations,
+  and the then-pending cross-q owner calibration.
+- `gpcm-mml-boundary-grid-calibration-contract-0.2.3.md`: Draft.70
+  retrospective contract for applying the marginal slope-path instrument to
+  the exact Draft.68 q=31/61/91 panel and directly comparing q61 with q91.
+  It prohibits tolerance freeze, confirmation, and readiness use.
+- `gpcm-mml-boundary-grid-calibration-0.2.3.R`: identity-stamped Draft.70
+  runner with 40 atomic dataset checkpoints, q-grid state/direction/target
+  comparisons, direct structural and Person-estimand differences, exact
+  Draft.68 reproduction fields, and a complete SHA-256 inventory.
+- `gpcm-mml-boundary-grid-completion-validator-0.2.3.R`: separately sourced
+  validator that reconstructs the Draft.70 aggregates from checkpoints,
+  verifies all 49 listed artifacts and the frozen manifest/source panel, and
+  rechecks the non-confirmation controls.
+- `gpcm-mml-boundary-grid-calibration-record-0.2.3.md`: completed Draft.70
+  record. All 120 arms are none-certified and stable across q, the Draft.68
+  likelihoods reproduce exactly, and direct q61-to-q91 differences are
+  retained without converting the retrospective maxima into tolerances.
+- `gpcm-mml-boundary-challenge-contract-0.2.3.md`: Draft.71 prospective
+  deterministic challenge contract, frozen before dense-grid execution. It
+  separates both owners' forward/reverse positives, mixed negatives, and
+  zero-versus-`1e-8` discordant weights and prohibits expectation revision.
+- `gpcm-mml-boundary-challenge-0.2.3.R`: identity-stamped 10-dataset/30-arm
+  q=31/61/91 runner with deterministic input hashes, atomic checkpoints,
+  frozen-expectation fields, and non-propagating readiness controls.
+- `gpcm-mml-boundary-challenge-completion-validator-0.2.3.R`: independent
+  validator for all 17 Draft.71 artifacts, regenerated deterministic inputs,
+  checkpoint aggregates, expected q order, and non-promotion state.
+- `gpcm-mml-boundary-challenge-record-0.2.3.md`: completed concern record.
+  All 12 negative expectations pass, all 18 dense-grid positive expectations
+  fail, and expanding Gaussian--Hermite node support explains why the q=5
+  individual-response all-node certificate does not extend to q=31/61/91.
+  Readiness propagation is blocked pending broader Person-marginal geometry.
+- `gpcm-mml-person-marginal-path-contract-0.2.3.md`: Draft.72 corrective
+  derivation for exact finite-q Person-marginal value, derivative, curvature,
+  surviving-node boundary likelihood, leading tail coefficient, and the still-
+  required compact-interval/tail proof with outward numerical bounds.
+- `gpcm-mml-person-marginal-path-prototype-0.2.3.R`: non-production analytic
+  oracle. It retains adverse observation/Person-node derivative counts,
+  reconstructs the optimizer objective, and always returns false half-line,
+  tail, and readiness flags.
+- `gpcm-mml-person-marginal-path-prototype-record-0.2.3.md`: selected-point
+  formula verification and mechanism record. Negative Person-node derivatives
+  coexist with positive Person-marginal derivatives, and a generalized
+  boundary/tail calculation recovers the dense-grid positive path without
+  claiming the unsampled half-line.
+- `gpcm-literature-to-contract-0.2.3.md`: source-grounded mathematical and
+  implementation audit for the current bounded route, including the supplied
+  generalized-MFRM memorandum corrections, estimator-specific slope-scale
+  qualification, DFF/fit/sparse-data implications, and recent literature.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
@@ -141,6 +292,526 @@ but do not broaden current API scope.
   auto-optimizer hypothesis on the complete Person-size path, shows that BFGS
   does not repair panel/step/extreme cases, and refuses pure-dimension or
   capacity claims where topology, support, and phase timing remain confounded.
+- `jml-extreme-profile-limit-contract-0.2.3.md`: draft.73 mathematical and
+  output contract for profiling independently free typed extreme Persons to
+  the extended JML likelihood supremum while denying a finite full-vector MLE
+  or finite-item-bias-correction interpretation.
+- `jml-extreme-profile-limit-prototype-0.2.3.R` and its record: repository-only
+  RSM/PCM/aligned-owner-GPCM profile refit and finite-cap oracle. It preserves
+  raw fits, rejects constraint-coupled extremes, has no readiness effect, and
+  leaves recovery, uncertainty, external convention, and production gates
+  open.
+- `jml-extreme-profile-recovery-contract-0.2.3.md`: draft.74 paired structural
+  recovery contract. It freezes raw finite JML and extended profile-limit as
+  distinct estimator identities, excludes Person recovery, and keeps
+  adjustment and finite-item bias correction as separate factors.
+- `jml-extreme-profile-recovery-pilot-0.2.3.R` and its record: guarded
+  90-dataset RSM/PCM/aligned Criterion-owned GPCM calibration across two
+  exposure levels and three extreme fractions. It retains all paired
+  structural rows, withholds profile uncertainty and evidence readiness, and
+  selects no estimator or numeric threshold.
+- `tam-immer-jml-mode-comparison-contract-0.2.3.md`: Draft.75 source and
+  common-estimand contract for installed TAM 4.3-25, immer 1.5-13, and mfrmr
+  RSM/PCM JML modes. It separates original raw eligibility, extreme-score
+  adjustment, fuzzy Person/item estimating equations, and classical
+  postscaling.
+- `tam-immer-jml-mode-comparison-0.2.3.R` and its record: guarded 60-dataset
+  pilot declaration plus completed four-dataset normalization smoke. It
+  retains loaded-function hashes, every planned mode/failure/recovery row, and
+  no-extreme/extreme software identities while keeping all results
+  calibration-only and selecting no correction or tolerance.
+- `tam-immer-jml-factor-stress-contract-0.2.3.md`: Draft.76 factor and metric
+  contract for Persons, realized exposure, Raters, Criteria, categories,
+  assignment density, workload imbalance, endpoint rates, local dependence,
+  anchors, and missingness. It distinguishes response endpoints from extreme
+  Persons and correct-model recovery from misspecification robustness.
+- `tam-immer-jml-factor-stress-0.2.3.R` and its smoke record: completed
+  22-dataset RSM/PCM feasibility smoke plus the now-executed guarded
+  290-dataset pilot manifest. It
+  keeps bias, RMSE, rank recovery, truth-SD/RMSE recovery separation, fit
+  return, finite output, engine-labelled convergence, and evidence eligibility
+  separate. Common-surface coverage and reported facet separation remain
+  unavailable until covariance and definition contracts are aligned; anchor
+  cells stop before fitting until a common anchor basis exists.
+- `tam-immer-jml-factor-checkpoint-contract-0.2.3.md`: Draft.77 atomic
+  dataset-checkpoint, execution-identity, resume, and completion-marker
+  contract. Existing, unexpected, stale, mutated, or incomplete payloads fail
+  closed and a complete resumed run must reconstruct the same aggregate hash.
+- `tam-immer-jml-factor-pilot-record-0.2.3.md`: completed 290-dataset
+  five-replicate calibration record with 230 fitted cells, 40 structural
+  negative controls, 20 anchor guards, 2,070 method rows, and 39,406 metric
+  rows. It records factor aliasing, correction traces, method-specific
+  reference ratios, and the continuing no-threshold/no-selection boundary.
+- `tam-immer-jml-factor-pilot-review-0.2.3.R`: deterministic descriptive
+  review of mode accounting, metric eligibility, factor/mode/facet summaries,
+  reference RMSE ratios, rank/separation summaries, and common-cell correction
+  comparisons. Cross-mode summaries remain diagnostics, not a pooled estimand.
+- `tam-immer-jml-connected-design-contract-0.2.3.md` and
+  `tam-immer-jml-connected-design-0.2.3.R`: Draft.78 bridge-Person and
+  Rater-graph contract plus deterministic 36-dataset RSM/PCM structural smoke.
+  Assigned and observed graphs retain absolute bridge count, degree, density,
+  workload, components, shared-Person edge weights, and weighted algebraic
+  connectivity; fixed-degree and fixed-density slices remain conditional
+  contrasts.
+- `tam-immer-jml-connected-design-record-0.2.3.md`: completed Draft.78 record
+  with 30 connected nine-mode cells and six fail-closed structural negatives.
+  It establishes a usable low-exposure topology but freezes no bridge cutoff,
+  sample-size rule, correction, method ranking, or readiness state.
+- `tam-immer-jml-topology-calibration-contract-0.2.3.md` and
+  `tam-immer-jml-topology-calibration-0.2.3.R`: Draft.79 matched path, cycle,
+  distributed, and hub bridge allocations plus adversarial one-link loss,
+  graph-vulnerability metrics, atomic dataset checkpoints, exact resume, and a
+  guarded five-replicate manifest.
+- `tam-immer-jml-topology-calibration-record-0.2.3.md`: completed 36-dataset
+  structural smoke with 30 connected nine-mode cells, six fail-closed observed-
+  disconnected controls, and an independently reconstructed completion marker.
+  The unchanged replicated performance manifest remains unexecuted because
+  every connected smoke cell has natural extreme Persons and TAM convergence
+  evidence remains an iteration-ceiling proxy.
+- `gtheory-reconstruction-roadmap-0.2.3.md`: Draft.80 typed observed-score
+  G-theory/D-study reconstruction contract. It separates arbitrary mixed-model
+  syntax from object/facet/nesting/stratum/effect-map semantics; defines
+  component-specific crossed, nested, allocation, interval, boundary, and
+  multivariate covariance gates; and preserves the current simplified public
+  helpers without broadening 0.2.3 support.
+- `gtheory-design-algebra-contract-0.2.3.md`,
+  `gtheory-design-algebra-prototype-0.2.3.R`, and
+  `gtheory-design-algebra-record-0.2.3.md`: Draft.81 repository-only
+  random-intercept parser, typed effect-map builder, and component-wise
+  balanced p x i / p x r x i D-study oracle. It retains original nesting
+  syntax, raw negative components, and fail-closed unresolved/alias states;
+  it fits no model and changes no public helper.
+- `gtheory-balanced-estimation-contract-0.2.3.md`,
+  `gtheory-balanced-estimation-prototype-0.2.3.R`, and
+  `gtheory-balanced-estimation-record-0.2.3.md`: Draft.82 complete balanced
+  p x i / p x r x i ANOVA/MoM and matched `lme4` REML/ML prototype. It keeps
+  raw negative MoM, constrained likelihood boundary, typed interaction, and
+  current collapsed-residual identities separate; all interval, inference,
+  decision, nested, imbalanced, and missing-data claims remain open.
+- `gtheory-design-incidence-contract-0.2.3.md`,
+  `gtheory-design-incidence-audit-0.2.3.R`, and
+  `gtheory-design-incidence-record-0.2.3.md`: Draft.83a pre-fit observed-design
+  audit for canonical row/missingness identity, conditional nested levels,
+  global and pairwise connectivity, workload, cell replication, and
+  fixed-effect-equivalent component-rank increments. It marks estimation
+  eligibility unadjudicated and never forms a coefficient or decision-ready
+  result.
+- `gtheory-allocation-operator-contract-0.2.3.md`,
+  `gtheory-allocation-operator-prototype-0.2.3.R`, and
+  `gtheory-allocation-operator-record-0.2.3.md`: Draft.83b component-specific
+  planned-weight D-study algebra. It reduces to Draft.81 under uniform crossed
+  weights, uses conditional nested identities, preserves unequal unit results
+  and cross-unit sharing, and never treats transformed supplied components as
+  fitted, inferential, or decision-ready evidence.
+- `gtheory-covariance-information-contract-0.2.3.md`,
+  `gtheory-covariance-information-audit-0.2.3.R`, and
+  `gtheory-covariance-information-record-0.2.3.md`: Draft.83c1 covariance-
+  derivative and ML/REML expected-information rank audit plus exact-retained-
+  row lme4 point-fit binding. Structural covariance rank, incidence
+  connectivity, likelihood information, optimizer convergence, singularity,
+  and boundary regularity remain separate gates; no interval, coefficient, or
+  decision-ready claim is added.
+- `gtheory-glmmtmb-parity-contract-0.2.3.md`,
+  `gtheory-glmmtmb-parity-prototype-0.2.3.R`, and
+  `gtheory-glmmtmb-parity-record-0.2.3.md`: Draft.83c2 exact-retained-row,
+  matched Gaussian ML/REML glmmTMB/lme4 point-estimation comparison. Interior
+  crossed and nested fixtures agree under recorded smoke tolerances; a
+  positive-definite glmmTMB Hessian does not override a near-zero boundary or
+  material backend disagreement. No backend is selected and no recovery,
+  interval, coefficient, or public support claim is added.
+- `gtheory-ademp-registry-contract-0.2.3.md`,
+  `gtheory-ademp-registry-prototype-0.2.3.R`, and
+  `gtheory-ademp-registry-record-0.2.3.md`: Draft.83d1 pre-simulation ADEMP
+  registry, estimand/metric routing, paired smoke manifest, and exact failure-
+  denominator schema. Gaussian truth, finite observed-score projection,
+  missingness/local-dependence sensitivity, boundary/identification controls,
+  and blocked anchor semantics remain distinct. It runs no recovery
+  simulation and freezes no interval or replication count.
+- `gtheory-ademp-generator-contract-0.2.3.md`,
+  `gtheory-ademp-generator-prototype-0.2.3.R`, and
+  `gtheory-ademp-generator-record-0.2.3.md`: Draft.83d2a deterministic
+  generation layer for all 24 registry identities. Twenty-two scenarios
+  produce separately hashed full-potential, assigned, and analysis tables;
+  two nonzero-anchor scenarios return typed blocks. Exact assignment,
+  workload, bounded-score projection, missingness, local dependence, boundary,
+  nesting, and negative-control audits pass, but no backend fit, recovery,
+  interval, replication-count freeze, or support claim is made.
+- `gtheory-ademp-prefit-contract-0.2.3.md`,
+  `gtheory-ademp-prefit-prototype-0.2.3.R`, and
+  `gtheory-ademp-prefit-record-0.2.3.md`: Draft.83d2b0 exact scalable
+  structural pre-fit layer. Equality-pattern signatures reproduce feasible
+  dense covariance-rank results, audit the N=300 cell without dense derivative
+  matrices, and bind 19 eligible/3 blocked scenarios to 77 eligible/12 blocked
+  manifest units. No fit is authorized and no recovery or inference result is
+  recorded.
+- `gtheory-ademp-fit-contract-0.2.3.md`,
+  `gtheory-ademp-fit-prototype-0.2.3.R`, and
+  `gtheory-ademp-fit-record-0.2.3.md`: Draft.83d2b1 atomic point-fit execution
+  across all 89 manifest units. All 77 eligible attempts return and all 12
+  blocked units remain backend-free typed failures, but the near-zero variance
+  control yields four false-ready rows. Atomic accounting passes while the
+  zero-false-ready gate fails; recovery and inference remain blocked.
+- `gtheory-weak-information-calibration-contract-0.2.3.md`,
+  `gtheory-weak-information-calibration-prototype-0.2.3.R`, and
+  `gtheory-weak-information-calibration-record-0.2.3.md`: Draft.83d2b2a
+  truth-blind observable-diagnostic registry and 120-unit covering smoke.
+  Atomic accounting passes, while the prior whole-model gate produces 27/40
+  false-ready negative controls and 3/12 false-block positive controls. These
+  one-replicate counts reject that gate as a component-resolution rule but do
+  not freeze a threshold, minimum design, or operating characteristic.
+- `gtheory-weak-information-pilot-contract-0.2.3.md`,
+  `gtheory-weak-information-pilot-prototype-0.2.3.R`, and
+  `gtheory-weak-information-pilot-record-0.2.3.md`: Draft.83d2b2b0 replicated
+  pilot-plan and authorization firewall. Disjoint schema, feasibility,
+  calibration, and confirmation seed bands preserve scenario-replicate
+  independence and four-method pairing. A 24-fit schema run passes, while the
+  historical 3,000-fit feasibility identity was superseded before execution
+  and the 12,000-fit calibration and 24,000-fit confirmation phases remain
+  blocked. No rule is selected.
+- `gtheory-weak-information-inference-audit-0.2.3.md`,
+  `gtheory-weak-information-diagnostic-refit-prototype-0.2.3.R`, and
+  `gtheory-weak-information-diagnostic-refit-record-0.2.3.md`:
+  Draft.83d2b2b1a source-audited boundary-inference correction and viewed-
+  schema full/reduced refits. The former common target-relative-SE candidate
+  is withdrawn; raw ML/REML likelihood differences and backend-coordinate
+  local scales remain noninferential diagnostics. All 24 pairs return, while
+  the historical feasibility authorization is superseded before any reserved
+  seed is generated. A replacement bootstrap contract is required.
+- `gtheory-weak-information-bootstrap-contract-0.2.3.md`,
+  `gtheory-weak-information-bootstrap-prototype-0.2.3.R`, and
+  `gtheory-weak-information-bootstrap-record-0.2.3.md`: Draft.83d2b2b1b
+  exact-observed-design fitted-null parametric-bootstrap mechanics. The
+  12-route, `B=3` schema executes 96 full/reduced fits, preserves every design
+  and generated-response identity, and implements failure-aware plus-one
+  bounds. It is explicitly not finite-sample exact or operating-
+  characteristic evidence; resolution feasibility, production bootstrap
+  calibration, and all inference/readiness flags remain blocked.
+- `gtheory-weak-information-feasibility-contract-0.2.3.md`,
+  `gtheory-weak-information-feasibility-prototype-0.2.3.R`, and
+  `gtheory-weak-information-feasibility-record-0.2.3.md`: Draft.83d2b2b1c
+  replacement 3,000-row/6,000-fit descriptive-feasibility manifest, all-cell
+  viewed runtime telemetry, pair/dataset checkpoint contract, and narrow
+  execution authorization. No replicate-101--125 dataset is generated. The
+  120-pair runtime schema returns every route while retaining nine unavailable
+  common scores and timing as non-deterministic planning evidence.
+- `gtheory-weak-information-feasibility-runner-contract-0.2.3.md`,
+  `gtheory-weak-information-feasibility-runner-0.2.3.R`, and
+  `gtheory-weak-information-feasibility-execution-record-0.2.3.md`:
+  Draft.83d2b2b1d atomic execution of all 3,000 authorized pairs and 750
+  untouched replicate-101--125 datasets. A full resume reuses every route and
+  reproduces the scientific hash. Common-score availability is 2,804/3,000;
+  high-information material-negative likelihood differences and few-level
+  nuisance boundaries/weak ordering block any threshold or calibration
+  promotion. `FeasibilityEvidenceReady` means exact descriptive accounting
+  only; all inferential and D-study decision flags remain false.
+- `gtheory-weak-information-numerical-sensitivity-contract-0.2.3.md`,
+  `gtheory-weak-information-numerical-sensitivity-0.2.3.R`, and
+  `gtheory-weak-information-numerical-sensitivity-record-0.2.3.md`:
+  Draft.83d2b2b1e three-profile numerical audit of the already viewed 3,000
+  routes. All 9,000 profile pairs and 750 markers resume exactly. Same-
+  algorithm tightening is identical; lme4 bobyqa and glmmTMB BFGS behave in
+  opposite directions. Seven non-finite default replays were not defined by
+  the frozen finite-difference gate, so numerical-sensitivity and every
+  downstream readiness flag remain false.
+- `gtheory-weak-information-typed-replay-contract-0.2.3.md`,
+  `gtheory-weak-information-typed-replay-0.2.3.R`, and
+  `gtheory-weak-information-typed-replay-record-0.2.3.md`:
+  Draft.83d2b2b1f no-refit adjudication of the immutable b1d and b1e ledgers.
+  It records 2,993 finite matches, seven same-typed `NA_real_` diagnostic
+  states, and zero mismatches. `TypedReplayAdjudicationReady=TRUE` closes only
+  the missing state definition; b1e replay, numerical stabilization,
+  numerical-sensitivity evidence, calibration, and decisions remain false.
+- `gtheory-weak-information-glmmtmb-stabilization-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-stabilization-prototype-0.2.3.R`, and
+  `gtheory-weak-information-glmmtmb-stabilization-record-0.2.3.md`:
+  Draft.83d2b2b1g prospective six-profile DAG and exact 9,000-pair manifest
+  for the 1,500 viewed glmmTMB routes. It binds all ten start blocks,
+  same-model parent lineage, gradients, Richardson Hessians, and typed parent
+  failure without selecting a cutoff. The manifest is ready; runner,
+  execution, stabilization evidence, calibration, and decisions are not.
+- `gtheory-weak-information-glmmtmb-stabilization-runner-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-stabilization-runner-0.2.3.R`, and
+  `gtheory-weak-information-glmmtmb-stabilization-smoke-record-0.2.3.md`:
+  Draft.83d2b2b1g1 atomic six-profile base-route runner and 120-pair viewed
+  covering smoke. Twenty checkpoints and ten markers resume exactly. The
+  complete denominator includes 84 diagnostic-complete, 21 finite material-
+  negative, 11 non-finite, and four fit/dependency rows. Strict fixed-
+  coordinate snapshot failure in two BFGS fits blocks full execution; no
+  tolerance, optimizer, stabilization rule, or downstream readiness is added.
+- `gtheory-weak-information-glmmtmb-alignment-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-alignment-runner-0.2.3.R`, and
+  `gtheory-weak-information-glmmtmb-alignment-smoke-record-0.2.3.md`:
+  Draft.83d2b2b1g2 deterministic fixed-coordinate alignment and exact replay
+  of the same 120-pair denominator. All 240 returned fits align, all 80
+  dependent transfers verify, and no-fit resume reproduces. Four b1g1 returns
+  are recovered without changing common returned objectives, likelihoods, or
+  top-level parameter hashes. Fourteen non-finite and 21 material-negative
+  rows retain the numerical blocker; full execution and downstream readiness
+  remain false.
+- `gtheory-weak-information-glmmtmb-numerical-adjudication-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-numerical-adjudication-0.2.3.R`, and
+  `gtheory-weak-information-glmmtmb-numerical-adjudication-record-0.2.3.md`:
+  Draft.83d2b2b1g3 no-refit multi-axis adjudication of the exact b1g2 ledger.
+  All 120 raw full/reduced objectives are finite; 14 pairwise reported
+  likelihoods are curvature-masked under installed glmmTMB semantics. One
+  nonzero optimizer code, two gradient-surface hash mismatches, exact
+  sdreport/Richardson curvature agreement, the complete signed objective
+  partition, and 20 best-observed six-profile envelopes remain separate.
+  Stationarity, global optimality, full execution, and downstream readiness
+  remain false.
+- `gtheory-weak-information-glmmtmb-stationarity-instrumentation-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-stationarity-instrumentation-0.2.3.R`, and
+  `gtheory-weak-information-glmmtmb-stationarity-instrumentation-record-0.2.3.md`:
+  Draft.83d2b2b1g4 prospective raw-derivative replay and threshold-free
+  cross-profile adjudication. All 240 fits retain content-addressed parameter,
+  gradient, and Richardson sidecars; b1g2 fitted values and repeated
+  derivative hashes reproduce, and no-fit resume is exact. Spectral Hessian
+  positivity (224) remains separate from numerical Cholesky availability
+  (221) and direct Newton-step availability (218). Raw, objective-relative,
+  lme4-compatible, and Newton-type quantities remain distinct; no observed
+  value selects a cutoff or optimizer. Stationarity, full execution,
+  calibration, inference, and downstream readiness remain false.
+- `gtheory-weak-information-glmmtmb-stationarity-calibration-design-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-stationarity-calibration-design-0.2.3.R`,
+  and
+  `gtheory-weak-information-glmmtmb-stationarity-calibration-design-record-0.2.3.md`:
+  Draft.83d2b2b1g5 sealed calibration design. Finite stationarity, curvature,
+  profiled boundary limits, and statistical resolution are separate. Affine
+  fixtures verify Hessian-inertia and Newton-decrement identities. The
+  3,000-dataset reservation maps prospectively to 144,000 candidate fits and
+  24,000 reference problems, but no data, tolerance, rule, or downstream
+  execution is authorized.
+- `gtheory-weak-information-glmmtmb-stationarity-reference-calibration-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-stationarity-reference-calibration-0.2.3.R`,
+  and
+  `gtheory-weak-information-glmmtmb-stationarity-reference-calibration-record-0.2.3.md`:
+  Draft.83d2b2b1g6 analytic calibration and nonreserved reference replay.
+  An AD-independent central-difference ladder estimates componentwise
+  numerical resolution without using the AD gradient to choose its step, and
+  a hashed TMB random-effect start anchor removes evaluation-order dependence.
+  Six analytic objectives recover minimum, flat, saddle, and boundary states;
+  all four full/reduced objectives on nonreserved replicates 901--902 pass
+  three-algorithm consensus, derivative, curvature, nuisance-stationary
+  boundary-profile, and sidecar-integrity checks. Reference mechanics are now
+  frozen, but the stationarity rule, reserved calibration, full stabilization,
+  bootstrap, inference, and D-study decisions remain unauthorized.
+- `gtheory-weak-information-stationarity-calibration-authorization-audit-contract-0.2.3.md`,
+  `gtheory-weak-information-stationarity-calibration-authorization-audit-0.2.3.R`,
+  and
+  `gtheory-weak-information-stationarity-calibration-authorization-audit-record-0.2.3.md`:
+  Draft.83d2b2b1g7 fail-closed preauthorization audit. It retains six glmmTMB
+  and three lme4 profiles, correcting the prospective candidate-fit upper
+  bound from 144,000 to 108,000 while leaving 24,000 reference problems
+  unchanged. It freezes truth-blind candidate-state precedence and per-role
+  objective-only profile aggregation. Reference mechanics are ready for only
+  glmmTMB REML; acceptance policy, production boundary probe, runner, reserved
+  calibration 201--300, confirmation, inference, and D-study decisions remain
+  unauthorized.
+- `gtheory-weak-information-glmmtmb-ml-reference-coverage-contract-0.2.3.md`,
+  `gtheory-weak-information-glmmtmb-ml-reference-coverage-0.2.3.R`, and
+  `gtheory-weak-information-glmmtmb-ml-reference-coverage-record-0.2.3.md`:
+  Draft.83d2b2b1g8 nonreserved glmmTMB ML method-coverage replay. It binds
+  `REML=FALSE` and ML identity at contract, manifest, row, and sidecar levels,
+  reuses the b1g6 mechanics by exact function hash, and evaluates the same
+  generated data on a distinct likelihood surface. All four objectives and
+  both full-model boundary profiles pass, and a second complete replay is
+  identical. Reference coverage advances to two of four lanes; lme4 ML/REML,
+  calibration authorization, stationarity, inference, and D-study decisions
+  remain false.
+- `gtheory-weak-information-lme4-objective-reference-preflight-contract-0.2.3.md`,
+  `gtheory-weak-information-lme4-objective-reference-preflight-0.2.3.R`, and
+  `gtheory-weak-information-lme4-objective-reference-preflight-record-0.2.3.md`:
+  Draft.83d2b2b1g9 analytic lme4 objective preflight. A dense Gaussian oracle
+  independently reproduces theta-only profiled ML/REML objectives, analytic
+  gradients, fit-criterion accessors, evaluation-order stability, and exact-
+  zero full-to-reduced identities. Source-hashed controls exclude `devfun2()`
+  and `deviance(..., REML=TRUE)` as REML references in lme4 2.0.6. No
+  nonreserved data are read; the box solver, boundary profile, lme4 replay,
+  complete method coverage, calibration, inference, and D-study decisions
+  remain false.
+- `gtheory-weak-information-lme4-reference-coverage-contract-0.2.3.md`,
+  `gtheory-weak-information-lme4-reference-coverage-0.2.3.R`, and
+  `gtheory-weak-information-lme4-reference-coverage-record-0.2.3.md`:
+  Draft.83d2b2b1g10 nonreserved lme4 ML/REML reference replay. Three
+  box-constrained algorithms, a sparse independent Gaussian oracle, analytic
+  Newton polishing, raw KKT, free curvature, and seven-point nuisance-
+  reoptimized theta profiles pass for all eight full/reduced objectives on
+  replicates 901--902. A second replay is exact, closing four-of-four method
+  lanes. Calibration authorization, production stationarity, inference, and
+  D-study decisions remain false.
+- `gtheory-weak-information-stationarity-acceptance-policy-contract-0.2.3.md`,
+  `gtheory-weak-information-stationarity-acceptance-policy-0.2.3.R`, and
+  `gtheory-weak-information-stationarity-acceptance-policy-record-0.2.3.md`:
+  Draft.83d2b2b1g11 truth-blind policy freeze. Three primary score families
+  crossed with eight existing zones give 24 candidates. Safety false ready,
+  false boundary handoff, false unready, missed boundary, indeterminate,
+  not-evaluable, and reference-unresolved states retain separate primary-cell
+  accounting and one-sided exact-binomial bounds. An always-indeterminate
+  candidate cannot pass required decisive-class coverage. The policy and
+  four-lane receipts are frozen, but the production boundary probe, runner,
+  application threshold, calibration, confirmation, inference, and D-study
+  decisions remain false or unauthorized.
+- `gtheory-weak-information-production-boundary-probe-contract-0.2.3.md`,
+  `gtheory-weak-information-production-boundary-probe-0.2.3.R`, and
+  `gtheory-weak-information-production-boundary-probe-record-0.2.3.md`:
+  Draft.83d2b2b1g12 production boundary mechanics. lme4 theta zero and
+  glmmTMB log-SD limits retain coordinate-specific profiles; a common boundary
+  route requires nuisance reoptimization, monotone material improvement, and
+  full-profile/reduced-fit endpoint agreement. Flat, nonmonotone, mismatched,
+  and failed profiles remain typed. Eight tests with 120 expectations pass,
+  including lme4/glmmTMB x ML/REML fixtures. The runner, reserved calibration,
+  application threshold, confirmation, inference, and D-study decisions
+  remain false or unauthorized.
+- `gtheory-weak-information-stationarity-exact-resume-runner-contract-0.2.3.md`,
+  `gtheory-weak-information-stationarity-exact-resume-runner-0.2.3.R`, and
+  `gtheory-weak-information-stationarity-exact-resume-runner-record-0.2.3.md`:
+  Draft.83d2b2b1g13 exact-resume mechanics. One dataset-method checkpoint
+  contains every backend profile, both model roles, both references, and all
+  48 candidate decisions. Complete typed failure denominators, checkpoint and
+  dataset-marker integrity, three-unit interruption/resume, cold-run equality,
+  complete reuse, and corrupted-checkpoint repair pass in nine tests with 129
+  expectations on nonreserved fixtures 901--902. The sealed 201--300 workload
+  is countable but remains unexecutable; production evaluator adapters, its
+  reserved run manifest, threshold selection, confirmation, inference, and
+  D-study decisions remain false or unauthorized.
+- `gtheory-weak-information-production-adapter-preflight-contract-0.2.3.md`,
+  `gtheory-weak-information-production-adapter-preflight-0.2.3.R`, and
+  `gtheory-weak-information-production-adapter-preflight-record-0.2.3.md`:
+  Draft.83d2b2b1g14 response-free production preflight. The real
+  lme4/glmmTMB x ML/REML candidate/reference adapters complete one
+  nonreserved four-unit dry-run with exact 36-fit, 192-decision, and
+  eight-reference ledgers; one typed `start_snapshot` failure is retained.
+  Runtime, package, adapter, dependency, output-root, unit, and 100-shard
+  identities are frozen for the exact 3,000-dataset workload. Every reserved
+  shard remains `ExecutionAuthorized=FALSE`; calibration, threshold,
+  confirmation, inference, and D-study decisions remain false or
+  unauthorized.
+- `gtheory-weak-information-one-way-authorization-preflight-contract-0.2.3.md`,
+  `gtheory-weak-information-one-way-authorization-preflight-0.2.3.R`, and
+  `gtheory-weak-information-one-way-authorization-preflight-record-0.2.3.md`:
+  Draft.83d2b2b1g15 response-free authorization-readiness preflight. One
+  hundred prospective shard manifests exactly partition the sealed workload
+  but remain non-executable. The actual frozen output parent passes target-
+  absence, write, same-directory checked rename, identical readback, cleanup,
+  and capacity checks; conservative disk/time planning fixes one concurrent
+  shard and prohibits early stopping. Readiness and activation eligibility do
+  not issue an authorization record: replicate 201, calibration results,
+  threshold selection, confirmation, inference, and D-study decisions remain
+  false or unauthorized.
+- `gtheory-weak-information-monte-carlo-value-audit-contract-0.2.3.md`,
+  `gtheory-weak-information-monte-carlo-value-audit-0.2.3.R`, and
+  `gtheory-weak-information-monte-carlo-value-audit-record-0.2.3.md`:
+  Draft.83d2b2b1g15a response-free purpose/precision audit. It separates
+  3,000 independent datasets and 100 planned trials per primary cell from
+  dependent optimizer, candidate, and reference rows. Complete-denominator
+  binomial MCSE, zero-event upper bounds, event-detection probabilities,
+  paired-method precision, and future fixed-n illustrations reproduce. The
+  current design is retained for numerical-rule calibration only; achieved
+  precision, broad bias/RMSE/coverage, D-study operating characteristics,
+  authorization, and inference remain false or unavailable.
+- `gtheory-weak-information-preactivation-hardening-audit-contract-0.2.3.md`,
+  `gtheory-weak-information-preactivation-hardening-audit-0.2.3.R`, and
+  `gtheory-weak-information-preactivation-hardening-audit-record-0.2.3.md`:
+  Draft.83d2b2b1g16 response-free execution hardening audit. It proves that
+  the actual 9,756 phase-specific seed rows are unique, then uses nonreserved
+  replicate 901 to show that the current generator changes under a different
+  ambient RNG kind despite the same integer seed. It also separates portable
+  blocker identity from site-specific runtime snapshots and records missing
+  runtime, thread, process, reserved-runner, writer-lock, activation-root, and
+  per-shard-capacity contracts. Eight required gates block activation;
+  `LargeSimulationMayStart=FALSE`, and no calibration or confirmation response
+  is generated or inspected.
+- `gtheory-weak-information-rng-hardened-generator-contract-0.2.3.md`,
+  `gtheory-weak-information-rng-hardened-generator-0.2.3.R`, and
+  `gtheory-weak-information-rng-hardened-generator-record-0.2.3.md`:
+  Draft.83d2b2b1g17 nonreserved generator repair. A separately versioned
+  wrapper leaves the historical counterexample intact while explicitly fixing
+  and recording uniform, normal, and sample RNG kinds, retaining the parent
+  generator identity, and restoring caller state. All 30 scenarios at
+  replicate 901 agree across Mersenne-Twister and Wichmann-Hill caller states;
+  existing/no-seed/error restoration and identity mutation controls pass.
+  Reserved replicates are rejected. `HardenedGeneratorReady=TRUE` is
+  component-local: adapters are not rebased, `AuthorizationRNG01Closed=FALSE`,
+  `LargeSimulationMayStart=FALSE`, and no reserved response is generated.
+- `gtheory-weak-information-hardened-adapter-rebase-contract-0.2.3.md`,
+  `gtheory-weak-information-hardened-adapter-rebase-0.2.3.R`, and
+  `gtheory-weak-information-hardened-adapter-rebase-record-0.2.3.md`:
+  Draft.83d2b2b1g18 paired nonreserved production-adapter rebase. A new
+  descendant preparation and candidate/reference path uses the b1g17 generator
+  without modifying b1g14. Historical and hardened replicate-902 four-lane
+  executions agree on all numerical, state, selection, failure-denominator,
+  and reference-state fields after excluding identity columns that must change.
+  The hardened path retains 36 fits, 192 decisions, eight references, one typed
+  fit failure, zero unresolved references, and exact four-unit reuse.
+  `NonreservedAdapterRebaseReady=TRUE`, but reserved-manifest rebase is
+  deferred, `AuthorizationRNG01Closed=FALSE`, and no reserved response opens.
+- `gtheory-weak-information-hardened-reserved-lineage-contract-0.2.3.md`,
+  `gtheory-weak-information-hardened-reserved-lineage-0.2.3.R`, and
+  `gtheory-weak-information-hardened-reserved-lineage-record-0.2.3.md`:
+  Draft.83d2b2b1g19 response-free reserved-lineage rebase. The b1g14 workload
+  and shard partition reduce exactly, while each of 12,000 atomic-unit and 100
+  shard identities is recomputed with the hardened adapter/generator lineage.
+  Historical hashes remain explicit provenance and do not enter the active
+  registry. The 100 prospective manifests independently validate with response
+  generation, fitting, execution, output creation, and confirmation use false.
+  `ReservedManifestRebaseReady=TRUE` is narrow: no reserved adapter entry
+  point, extended runtime, or locked runner exists, so authorization and large
+  simulation remain false and replicate 201 remains sealed.
+- `gtheory-weak-information-authorization-kernel-contract-0.2.3.md`,
+  `gtheory-weak-information-authorization-kernel-0.2.3.R`,
+  `gtheory-weak-information-authorization-kernel-worker-0.2.3.R`, and
+  `gtheory-weak-information-authorization-kernel-record-0.2.3.md`:
+  Draft.83d2b2b1g20 consolidates shared preactivation infrastructure instead
+  of adding another model-specific gate. A reproducible isolated runtime,
+  explicit serial thread state, exclusive lock, initial/exact-resume marker,
+  unmarked-root rejection, and fresh filesystem/capacity probe pass. Nine
+  common gates are ready; only the actual reserved runner and separate
+  authorization record block. No response is generated and the target remains
+  absent. This is the stopping point for infrastructure-only decomposition.
+- `gtheory-weak-information-guarded-shard-runner-contract-0.2.3.md`,
+  `gtheory-weak-information-guarded-shard-runner-0.2.3.R`,
+  `gtheory-weak-information-guarded-shard-runner-worker-0.2.3.R`, and
+  `gtheory-weak-information-guarded-shard-runner-record-0.2.3.md`:
+  Draft.83d2b2b1g21 joins the real four-lane hardened evaluator/checkpoint
+  path to the isolated runtime, exclusive lock, and activation marker. A
+  nonreserved replicate-902 first run and exact resume preserve complete
+  denominators and b1g18 semantic results. `RUNNER-01` passes, while reserved
+  and confirmation replicates still fail before generation and
+  `AUTH-RECORD-01` remains the sole activation blocker.
+- `gtheory-weak-information-execution-authorization-decision-contract-0.2.3.md`,
+  `gtheory-weak-information-execution-authorization-decision-0.2.3.R`, and
+  `gtheory-weak-information-execution-authorization-decision-record-0.2.3.md`:
+  Draft.83d2b2b1g22 performs the explicit response-free go/no-go audit and
+  returns `no_go_refused_not_issued`. Exact-source inspection refines the
+  coarse b1g21 blocker: `RESERVED-ENTRY-01`, `ACTIVE-MANIFEST-01`, and
+  `SITE-RECEIPT-01` remain absent. No authorization, response, fit, or reserved
+  root is created; replicate 201 and large simulation stay prohibited.
+- `gtheory-weak-information-record-bound-entry-point-contract-0.2.3.md`,
+  `gtheory-weak-information-record-bound-entry-point-0.2.3.R`,
+  `gtheory-weak-information-record-bound-entry-point-worker-0.2.3.R`, and
+  `gtheory-weak-information-record-bound-entry-point-record-0.2.3.md`:
+  Draft.83d2b2b1g23 implements and nonreserved-reduces the three-level
+  generator/adapter/runner record-bound entry and exact R0201 active-manifest
+  conversion. Four tests with 75 assertions pass, but no production record,
+  active R0201 object, response, root, or lock exists. Fresh runtime/site
+  evidence and a separate six-gate one-shard issuance decision remain required.
+- `gtheory-weak-information-one-shard-issuance-contract-0.2.3.md`,
+  `gtheory-weak-information-one-shard-issuance-0.2.3.R`, and
+  `gtheory-weak-information-one-shard-issuance-record-0.2.3.md`:
+  Draft.83d2b2b1g24 refreshes exact runtime/site evidence and recomputes all
+  six b1g23 issuance gates. One observed GO issues only R0201 and derives its
+  unexecuted active manifest; an occupied-target control remains a hash-valid
+  NO-GO and cannot issue. No response, fit, checkpoint, root, or lock is
+  created, and large simulation remains prohibited pending complete R0201
+  execution and review.
+- `gtheory-multivariate-algebra-contract-0.2.3.md`,
+  `gtheory-multivariate-algebra-prototype-0.2.3.R`, and
+  `gtheory-multivariate-algebra-record-0.2.3.md`: future Draft.85a0 supplied-
+  matrix preflight. Effect-specific covariance and prospective allocation Gram
+  matrices form universe, relative-error, and absolute-error covariance before
+  weighted composite G/Phi. Common/partial/independent facet sharing, exact
+  one-stratum reduction, PSD/rank, and invalid-matrix controls are tested, but
+  no covariance is estimated and no public multivariate claim is added.
 - `jml-lp-attribution-pilot-0.2.3.R` and its record: draft.56 guarded
   attribution of LP-base, R-dispatch, and solver time, with independent GLPK
   parity over 40 PCM/RSM/bounded-GPCM conditional-additive targets. The
@@ -291,6 +962,146 @@ but do not broaden current API scope.
   the fixed fixture hashes, ten score-reference summaries, GPCM transformation
   audit, exact reductions, fail-closed tests, and the remaining score-tolerance
   and engine-parity work.
+- `gpcm-nonunit-score-oracle-0.2.3.R`: repository-only independent non-unit
+  GPCM slope/kernel/marginal-objective oracle at retained, high-dispersion,
+  and two finite slope-stress points. It is calibration-only, freezes no
+  general score tolerance, and never authorizes selection or confirmation.
+- `gpcm-nonunit-score-oracle-record-0.2.3.md`: bounded record of the four-point
+  non-unit GPCM oracle agreement, finite-difference step calibration,
+  fail-closed tests, and the owner/category/topology cells that remain before
+  rows 5--6 can leave review.
+- `gpcm-score-calibration-design-0.2.3.R`: no-execution eight-cell design and
+  fail-closed 128-row decision contract for Criterion/Rater-owned,
+  five-category, paired deterministic core/weak-link/workload/category-
+  imbalance GPCM score checks.
+- `gpcm-score-calibration-design-contract-0.2.3.md`: mathematical rationale,
+  five-point derivative ladder, parameter-class absolute/scaled/adaptive
+  margin rules, Jacobian caps, and authorization boundary for that bounded
+  calibration. It does not freeze the final general `NUM-SCORE-TOL`.
+- `gpcm-score-calibration-runner-0.2.3.R`: identity-bound dry-run-by-default
+  runner for the complete eight-cell/128-stratum score calibration. Execution
+  requires explicit authorization and cannot promote readiness or confirmation.
+- `gpcm-extreme-score-attribution-0.2.3.R`: post-result diagnostic that
+  independently reconstructs the Person-posterior GPCM sufficient-statistic
+  score when objective finite differences lose resolution at extreme slopes.
+- `gpcm-score-calibration-v2-record-0.2.3.md`: negative calibration record.
+  It retains the 128-row rejection, three extreme retained-slope traces,
+  step-ladder attribution, 48-row independent analytic-score agreement, and
+  the required finite-slope versus boundary-handoff split for v3.
+- `gpcm-score-v3-rule-contract-0.2.3.R`: no-execution fail-closed v3 rule
+  registry and 128-row decision schema. It separates the inclusive
+  `max(abs(z)) <= 3` finite-slope validation envelope from non-promoting
+  extreme-slope review and authorizes neither retrospective evaluation nor
+  confirmation.
+- `gpcm-score-v3-rule-contract-0.2.3.md`: mathematical interpretation of the
+  combined absolute-plus-relative/numerical-error rules, applicability
+  boundary, negative controls, and disjoint-confirmation requirement. V2
+  remains rejected and no general score tolerance is frozen.
+- `gpcm-score-v3-replay-runner-0.2.3.R`: exact-development-namespace,
+  identity-bound, dry-run-by-default replay runner. It evaluates finite
+  differences only inside the v3 slope envelope and records independent
+  analytic scores plus 384 entrywise Jacobian comparisons across the same
+  eight deterministic cells.
+- `gpcm-score-v3-replay-record-0.2.3.md`: audit record for the random-tie
+  reproducibility defect, invalidated pre-fix replay, corrected-payload v2
+  rejection/analytic attribution, and completed v3 calibration pass. It
+  preserves review-only extreme-slope handoffs and authorizes no confirmation.
+- `gpcm-score-v3-freeze-contract-0.2.3.R`: no-fit source-bound freeze seal. It
+  binds the numerical helper, eight other validation sources, the complete
+  package payload, all retained v2/attribution/v3 artifacts, and every evidence
+  denominator. It freezes the bounded rule only for disjoint confirmation and
+  does not authorize opening confirmation data.
+- `gpcm-score-v3-freeze-record-0.2.3.md`: mathematical and reproducibility
+  review of the source-chain omission, superseding source-bound identities,
+  unchanged numerical result, and the remaining disjoint-confirmation gate.
+- `gpcm-score-v3-confirmation-design-0.2.3.R`: no-fit sealed fixture and
+  denominator design for six disjoint exact-candidate cells. It fixes three
+  deterministic fixture hashes, 96 evidence strata, 560 coordinates, 24
+  points, and 376 Jacobian rows while keeping execution unauthorized.
+- `gpcm-score-v3-confirmation-design-record-0.2.3.md`: separation rationale,
+  fixed dimensions/hashes, complete denominators, and the fail-closed boundary
+  before a record-consuming runner and separate authorization decision exist.
+- `gpcm-score-v3-confirmation-runner-0.2.3.R`: dry-run-by-default execution
+  kernel binding the sealed design and frozen v3 numerical machinery. It
+  requires an exact separate authorization record and absent output target;
+  its decision checks class- and point-specific denominators.
+- `gpcm-score-v3-confirmation-authorization-0.2.3.R`: independent eleven-gate
+  NO-GO/one-target issuance decision. Default calls cannot authorize or open
+  confirmation; occupied targets and stale identities fail closed.
+- `gpcm-score-v3-confirmation-entry-record-0.2.3.md`: source identities,
+  negative-test coverage, actual `no_go_not_issued` state, and the one-fresh-
+  process/no-retry boundary for any later execution.
+- `gpcm-score-v3-confirmation-record-0.2.3.md`: complete one-time negative
+  result. It records the 8.88e-16 inclusive-boundary representation failure,
+  otherwise passing numerical components, review-only fits, and the missing
+  saved authorization-row provenance that prevents acceptance reuse.
+- `gpcm-score-v4-rule-contract-0.2.3.R`: prospective no-execution classifier
+  applying an IEEE-754 forward-error allowance only to constructed inclusive-
+  boundary points, retaining zero allowance for fitted solutions, and requiring
+  exact consumed authorization provenance in future results.
+- `gpcm-score-v4-rule-contract-0.2.3.md`: mathematical derivation, unchanged
+  numerical-rule boundary, calibration/confirmation separation, and remaining
+  review/freeze requirements for v4.
+- `gpcm-score-v4-retrospective-calibration-0.2.3.R`: no-fit evaluator binding
+  the immutable rejected v3 artifact, reconstructing all 24 slope vectors, and
+  refusing to invent the missing boundary finite difference or authorization.
+- `gpcm-score-v4-retrospective-calibration-record-0.2.3.md`: unique intended
+  reclassification, retained-extreme invariance, incomplete numerical evidence,
+  and the required new calibration-only completion fixture.
+- `gpcm-score-v4-boundary-completion-design-0.2.3.R`: no-fit single-scenario
+  calibration-only fixture sealing the missing 4/24/1/30 evidence denominator,
+  full owner-category support, and permanent confirmation ineligibility.
+- `gpcm-score-v4-boundary-completion-design-record-0.2.3.md`: fixture/source
+  hashes, representation bound, non-reuse rule, and runner/authorization
+  prerequisites before one-time completion execution.
+- `gpcm-score-v4-boundary-completion-runner-0.2.3.R`: dry-run-by-default
+  completion kernel that obtains the one missing finite difference, checks the
+  complete 4/24/1/30 denominator, and embeds the consumed authorization row.
+- `gpcm-score-v4-boundary-completion-authorization-0.2.3.R`: separate no-fit,
+  same-process, exact-target issuance decision binding source, payload, rule,
+  design, manifest, row hash, and target absence; default is NO-GO.
+- `gpcm-score-v4-boundary-completion-entry-record-0.2.3.md`: exact runner,
+  authorization, identity, and manifest hashes; 44 no-fit expectations; and
+  the historical pre-execution one-fresh-process boundary.
+- `gpcm-score-v4-boundary-completion-validator-0.2.3.R`: independent no-fit
+  artifact/source/manifest/authorization/denominator validator, including
+  issued- and consumed-row hashes, target resolution, and tamper rejection.
+- `gpcm-score-v4-boundary-completion-result-record-0.2.3.md`: immutable result
+  identity, complete 4/24/1/30 numerical pass, repository-relative target
+  disclosure, review-only fit status, and the pre-freeze result interpretation.
+- `gpcm-score-v4-freeze-contract-0.2.3.R`: no-fit six-source/two-artifact seal
+  for the unchanged bounded rule, retrospective and completion evidence,
+  authorization provenance, path-form disclosure, and non-promotion flags.
+- `gpcm-score-v4-freeze-record-0.2.3.md`: mathematical freeze review, exact
+  source/artifact identities, repository-relative target disclosure,
+  bounded-rule scope, and permission to design—but not execute—new disjoint
+  confirmation fixtures.
+- `gpcm-score-v4-confirmation-design-0.2.3.R`: no-fit three-fixture/six-scenario
+  v4 confirmation design with new identities, support/connectivity checks,
+  sparse/load-imbalanced assignments, and fixed 96/888/24/688 denominators.
+- `gpcm-score-v4-confirmation-design-record-0.2.3.md`: fixture hashes,
+  disjointness audit, assignment/category coverage, absolute future-target
+  requirement, and the still-closed execution boundary.
+- `gpcm-score-v4-confirmation-runner-0.2.3.R`: dry-run-by-default confirmation
+  kernel binding the six sealed scenarios and exact 96/888/24/688 denominator;
+  execution requires an exact unconsumed same-process authorization row.
+- `gpcm-score-v4-confirmation-authorization-0.2.3.R`: separate no-fit issuance
+  decision binding source, payload, freeze, design, rule, replay, fixtures,
+  manifest, prospective validator, absolute input path, target absence, and
+  issued-row identity.
+- `gpcm-score-v4-confirmation-validator-0.2.3.R`: runner-independent no-fit
+  result validator sealed before execution; it reconstructs denominator,
+  numerical aggregation, authorization hashes, absolute target, and all
+  non-promotion decisions.
+- `gpcm-score-v4-confirmation-entry-record-0.2.3.md`: source and manifest
+  identities, 74 no-fit expectations, absolute-path-before-normalization rule,
+  default NO-GO state, and the one-operation pre-execution boundary.
+- `gpcm-score-v4-confirmation-retrospective-audit-0.2.3.R`: immutable-artifact
+  no-fit audit separating complete numerical agreement from two blocked fits,
+  the runner false-positive, and the sealed validator names-attribute defect.
+- `gpcm-score-v4-confirmation-result-record-0.2.3.md`: artifact and
+  authorization hashes, numerical maxima, six fit outcomes, authoritative
+  rejection, no-retry rule, and non-promotion disposition.
 - `mml-engine-parity-pilot-0.2.3.R`: draft.13 repository-only G1 runner for
   fixed additive RSM/PCM direct, hybrid, raw-EM, and converged-EM-plus-common-
   direct-polish paths. It verifies the exact hashed EM-to-polish handoff,
@@ -329,10 +1140,86 @@ but do not broaden current API scope.
   convergence, and integration-stability identities are complete. The adapter
   cross-checks the objective, two independent free-dimension counts, final
   parameter vector, unit weights, exact bundle-to-export Person IDs, run metadata, convergence
-  evidence, and output fingerprints without parsing the free-form report.
+  evidence, and output fingerprints without parsing the free-form report. Its
+  `handoff_tolerance` controls only internal weight/history/export checks. The
+  deprecated `export_tolerance` alias is not an export-resolution estimate or
+  a cross-engine acceptance threshold; CSV rounding remains explicitly
+  unknown.
 - `external-ic-audit-0.2.3.R`: fixture checker for that normalizer, including
   a negative integration-comparison-identity case. A pass is unit/pilot
   evidence only and does not establish cross-engine likelihood equivalence.
+- `conquest-numeric-resolution-contract-0.2.3.R` and its companion contract
+  note:
+  repository-only raw-token and file-SHA-256 audit for the five native
+  ConQuest CSV outputs. It records lexical precision before floating-point
+  conversion, never infers a rounding rule from displayed digits, and keeps
+  lexical equality, numerical equality, established-resolution compatibility,
+  tolerance passage, and scientific equivalence as separate states. The
+  default remains `raw_tokens_retained_rounding_unestablished`.
+- `conquest-additive-mfrm-design-0.2.3.R` and its companion contract note:
+  no-fit complete-crossing Person/Rater/Criterion RSM/PCM design with fixed
+  96-Person/384-observation input, q=31/q=61 arms, independent 7/9 free-
+  dimension maps, native A-matrix requirement, raw-token handoff, and explicit
+  `no_go_design_only` decision. It neither fits mfrmr nor launches ConQuest;
+  the deliberately minimal 2-Rater/2-Criterion design keeps the strict MML
+  all-pattern audit tractable; the connected sparse/unequal-workload microcase
+  remains downstream.
+- `conquest-additive-mfrm-reference-preflight-0.2.3.R` and its companion
+  contract note: source-bound mfrmr-only q=31/q=61 RSM/PCM preflight for the
+  reduced complete-crossing design. It reconstructs the marginal likelihood
+  with an independent probability/Gauss-Hermite oracle, binds the full R
+  source tree by SHA-256, and verifies full local rank across all 512 reused
+  pattern/design evaluations. Four arms converge and agree with the oracle,
+  while `InferenceReady = FALSE` remains explicit because the current policy
+  treats the all-pattern result as local diagnostic evidence only. The
+  source-only result stays `no_go_native_matrix_and_candidate_missing` and
+  never launches ConQuest. The PCM reference exporter now distinguishes facet
+  rows from Criterion-owned step rows and the validator rejects any nonfinite
+  exported estimate.
+- `conquest-additive-native-runtime-probe-record-0.2.3.md`: bounded native
+  runtime correction against the SHA-matched installed ConQuest 5.47.5
+  executable. Restricted launches crashed during registry/settings XML writes,
+  but the user's Terminal run and the unsandboxed control completed normally.
+  The controlling state is `runtime_available_unsandboxed`; sandbox failure is
+  retained only as an environment-compatibility observation.
+- `conquest-native-runtime-support-handoff-0.2.3.md`: unsent, data-free support
+  handoff withdrawn after successful unsandboxed execution. It must not be
+  sent as a ConQuest product-failure report.
+- `conquest-additive-native-rsm-q31-review-0.2.3.R`,
+  `conquest-additive-native-pcm-q31-review-0.2.3.R`, and
+  `conquest-additive-native-four-arm-review-0.2.3.R`: read-only native-output
+  reviewers. They verify command/input identity, exact 7/9-dimensional A-matrix
+  bases, export labels and dimensions, raw-token retention, q31/q61 final-token
+  identity, and descriptive differences from the source-bound reference. They
+  also record that the history column named `LogLikelihood` contains positive
+  deviance. They never launch ConQuest or infer a rounding rule, tolerance, or
+  scientific equivalence.
+- `conquest-additive-native-four-arm-record-0.2.3.md`: four completed RSM/PCM
+  q31/q61 native arms and their corrected interpretation. All native A matrices
+  are exact; maximum displayed coordinate differences from mfrmr are below
+  `2.74e-6`, but the decision remains
+  `four_arm_native_outputs_ready_tolerance_and_candidate_missing` because raw
+  CSV rounding, a prespecified acceptance threshold, and candidate identity
+  are absent.
+- `conquest-additive-tolerance-adjudication-0.2.3.R` and its companion note:
+  no-fit separation of representation, optimizer, integration,
+  scientific-acceptance, and candidate-binding gates. Because the four-arm
+  differences are already opened, the adjudicator allows them to inform a
+  future candidate error budget but prohibits passing this same calibration
+  under a newly chosen `EXT-CQ-TOL`. It retains the broad external claim as a
+  future gate, restricts the current statement to descriptive calibration,
+  and authorizes neither a candidate run nor a sparse/simulation extension.
+- `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
+  function-hash-bound review of the official ConQuest, TAM, and immer
+  numerical controls. All three document within-fit stopping or integration
+  settings, but none supplies a cross-engine scientific-equivalence threshold.
+  The finding prevents optimizer tolerances from being recycled as
+  `EXT-CQ-TOL`.
+- `estimator-vocabulary-closure-record-0.2.3.md`: release-spine row 71
+  structural closure. It keeps `MML` and `JML` as the two canonical fitting
+  labels, retains `JMLE` only as an input alias, and prevents legacy `JMLE`
+  fields from leaking through summary, print, manifest, or replay outputs.
+  The closure changes no estimator or numerical result.
 - `conquest-binary-ladder-pilot-0.2.3.R`: draft.9 repository-only preparer and
   reviewer for strict binary q=7/15/31/61/91/121 runs plus a second q=31 run.
   It never launches ConQuest. It verifies shared input identity, uses the

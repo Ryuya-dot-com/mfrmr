@@ -61,6 +61,23 @@ test_that("GPCM diagnose_mfrm returns measures with caveat status", {
   ))
   expect_true(is.data.frame(diag$measures))
   expect_true(nrow(diag$measures) > 0L)
+  source_readiness <- mfrmr_get_readiness_record(.gpcm_fit)
+  expect_equal(diag$fit_readiness, source_readiness$fit)
+  expect_equal(diag$fit_readiness_components, source_readiness$components)
+  expect_equal(diag$fit_readiness_parameters, source_readiness$parameters)
+  diag_summary <- summary(diag)
+  expect_equal(
+    as.data.frame(diag_summary$fit_readiness),
+    as.data.frame(source_readiness$fit)
+  )
+  expect_true(any(grepl(
+    "source fit is review and is not inference-ready",
+    diag_summary$key_warnings,
+    fixed = TRUE
+  )))
+  diag_console <- capture.output(print(diag_summary))
+  expect_true(any(grepl("Source fit readiness", diag_console, fixed = TRUE)))
+  expect_true(any(grepl("review-only", diag_console, fixed = TRUE)))
   # The dashboard panel remains unavailable under GPCM; direct
   # fair_average_table() is supported with its own caveat.
   if (!is.null(diag$fair_average)) {
@@ -110,4 +127,69 @@ test_that("GPCM APA/QC reporting bundle returns with explicit caveats", {
   qc <- run_qc_pipeline(.gpcm_fit, diag)
   expect_s3_class(qc, "mfrm_qc_pipeline")
   expect_true(nrow(qc$gpcm_boundary) > 0)
+})
+
+test_that("five-category all-maximum persons and raters retain distinct contracts", {
+  skip_if_not_installed("lpSolve")
+  extreme <- expand.grid(
+    Person = sprintf("P%02d", 1:20),
+    Rater = paste0("R", 1:4),
+    Criterion = paste0("C", 1:4),
+    stringsAsFactors = FALSE
+  )
+  extreme$Score <- (
+    as.integer(sub("P", "", extreme$Person)) +
+      2L * as.integer(sub("R", "", extreme$Rater)) +
+      3L * as.integer(sub("C", "", extreme$Criterion))
+  ) %% 5L + 1L
+  extreme$Score[extreme$Person == "P01"] <- 5L
+  extreme$Score[extreme$Rater == "R1"] <- 5L
+
+  jml <- suppressMessages(suppressWarnings(fit_mfrm(
+    extreme, "Person", c("Rater", "Criterion"), "Score",
+    method = "JML", model = "GPCM",
+    step_facet = "Criterion", slope_facet = "Criterion",
+    maxit = 80L, reltol = 1e-9
+  )))
+  jml_person <- jml$facets$person[jml$facets$person$Person == "P01", , drop = FALSE]
+  expect_identical(jml_person$PrimaryEstimate, Inf)
+  expect_true(is.finite(jml_person$OptimizerEstimate))
+  expect_identical(jml_person$OptimizerEstimateUse, "numerical_trace_only")
+  expect_identical(jml_person$ParameterStatus, "unbounded_high")
+
+  jml_summary <- summary(jml, include_person = TRUE)
+  expect_identical(jml_summary$facet_support_boundaries$Level, "R1")
+  expect_true(jml_summary$facet_support_boundaries$BoundaryConstant)
+  rater_recession <- jml_summary$facet_recession_review[
+    jml_summary$facet_recession_review$Facet == "Rater", , drop = FALSE
+  ]
+  expect_identical(rater_recession$Level, paste0("R", 1:4))
+  expect_identical(
+    rater_recession$BoundaryStatus,
+    c("unbounded_low", rep("unbounded_high", 3L))
+  )
+  expect_true(all(rater_recession$AuditScope == "joint_person_structural"))
+  expect_false(any(rater_recession$AuditComplete))
+  jml_console <- capture.output(print(jml_summary))
+  expect_true(any(grepl("Observed boundary-constant facet support", jml_console)))
+  expect_true(any(grepl("Certified JML facet recession directions", jml_console)))
+  expect_true(any(grepl("numerical traces, not finite JML maxima", jml_console)))
+
+  mml <- suppressMessages(suppressWarnings(fit_mfrm(
+    extreme, "Person", c("Rater", "Criterion"), "Score",
+    method = "MML", model = "GPCM",
+    step_facet = "Criterion", slope_facet = "Criterion",
+    quad_points = 7L, maxit = 80L, reltol = 1e-9
+  )))
+  mml_person <- mml$facets$person[mml$facets$person$Person == "P01", , drop = FALSE]
+  expect_true(is.finite(mml_person$PrimaryEstimate))
+  expect_true(is.finite(mml_person$PosteriorSD))
+  expect_identical(mml_person$PrimaryEstimateBasis, "posterior_eap")
+  expect_identical(
+    mml_person$ReasonCodes,
+    "mml_extreme_response_prior_regularized"
+  )
+  mml_summary <- summary(mml, include_person = TRUE)
+  expect_identical(mml_summary$facet_support_boundaries$Level, "R1")
+  expect_equal(nrow(mml_summary$facet_recession_review), 0L)
 })

@@ -23,6 +23,10 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(res$status$Section == "diagnostics" & res$status$Status == "ok"))
   expect_true("fit" %in% names(res$components))
   expect_true(length(res$tables) > 0)
+  readiness_record <- mfrmr:::mfrmr_get_readiness_record(fit)
+  expect_equal(res$fit_readiness, readiness_record$fit)
+  expect_equal(res$fit_readiness_components, readiness_record$components)
+  expect_equal(res$fit_readiness_parameters, readiness_record$parameters)
 
   sx <- summary(res)
   expect_s3_class(sx, "summary.mfrm_results")
@@ -45,6 +49,9 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(any(sx$plot_map$Type == "fit_pathway" &
                     grepl("facet_labels = 'flagged'", sx$plot_map$Route, fixed = TRUE)))
   expect_true(any(sx$next_actions$Area == "Wright map"))
+  expect_equal(sx$fit_readiness, readiness_record$fit)
+  expect_equal(sx$fit_readiness_components, readiness_record$components)
+  expect_equal(sx$fit_readiness_parameters, readiness_record$parameters)
 
   primary_plot <- plot(res, draw = FALSE)
   expect_s3_class(primary_plot, "mfrm_plot_data")
@@ -79,6 +86,9 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
 
   report <- mfrm_report(res, style = "qc")
   expect_s3_class(report, "mfrm_report")
+  expect_equal(report$fit_readiness, readiness_record$fit)
+  expect_equal(report$fit_readiness_components, readiness_record$components)
+  expect_equal(report$fit_readiness_parameters, readiness_record$parameters)
   printed_report <- capture.output(print(report))
   expect_true(any(grepl("Read order: summary(report)", printed_report, fixed = TRUE)))
   expect_true(any(grepl("Detailed tables are available in report$tables.", printed_report, fixed = TRUE)))
@@ -86,6 +96,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_false(any(grepl("^Fit reporting templates$", printed_report)))
   report_summary <- summary(report)
   expect_s3_class(report_summary, "summary.mfrm_report")
+  expect_equal(report_summary$fit_readiness, readiness_record$fit)
   expect_true(all(c(
     "overview", "first_screen", "status_counts", "immediate_actions",
     "optional_sections", "claim_readiness", "report_gaps", "boundary_index",
@@ -378,6 +389,13 @@ test_that("export_mfrm_results writes privacy-labelled analysis archives", {
   expect_true(nrow(exported$written_files) > 0L)
   expect_true(all(file.exists(exported$written_files$Path)))
   expect_true(any(exported$written_files$Component == "summary_overview"))
+  expect_true(any(exported$written_files$Component == "summary_fit_readiness"))
+  expect_true(any(
+    exported$written_files$Component == "summary_fit_readiness_components"
+  ))
+  expect_true(any(
+    exported$written_files$Component == "summary_fit_readiness_parameters"
+  ))
   expect_true(any(exported$written_files$Component == "results_html"))
   expect_true(any(exported$written_files$Component == "results_rds"))
   expect_true(any(exported$written_files$Component == "replay_code"))
@@ -389,6 +407,24 @@ test_that("export_mfrm_results writes privacy-labelled analysis archives", {
   expect_false(exported$summary$ShareableWithoutReview[[1]])
   expect_true(exported$summary$SensitiveDataAcknowledged[[1]])
   expect_true(is.data.frame(exported$privacy_notice))
+
+  readiness_path <- exported$written_files$Path[
+    exported$written_files$Component == "summary_fit_readiness"
+  ][1]
+  exported_readiness <- utils::read.csv(
+    readiness_path,
+    stringsAsFactors = FALSE,
+    colClasses = "character",
+    na.strings = "NA"
+  )
+  expect_identical(
+    exported_readiness$ReadinessContractVersion[[1]],
+    res$fit_readiness$ReadinessContractVersion[[1]]
+  )
+  expect_identical(
+    exported_readiness$ReasonCodes[[1]],
+    res$fit_readiness$ReasonCodes[[1]]
+  )
 
   manifest_path <- exported$written_files$Path[exported$written_files$Component == "written_files"][1]
   manifest <- utils::read.csv(manifest_path, stringsAsFactors = FALSE)

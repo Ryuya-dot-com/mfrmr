@@ -5,8 +5,11 @@
 # the analytical score in the identified free coordinate system against an
 # independently implemented central-difference reference, audits the GPCM
 # log-slope transformation Jacobian, and checks exact binary/unit-slope
-# reductions. It calibrates a future gate only: it freezes no tolerance and
-# never authorizes confirmation or model selection.
+# reductions against a separately implemented category-kernel and marginal-
+# likelihood oracle. It calibrates a future score gate only: the exact-
+# reduction tolerances are structural unit-test tolerances, while no general
+# stationarity tolerance is frozen and confirmation/model selection remain
+# unauthorized.
 #
 # From the repository root:
 #
@@ -38,7 +41,8 @@ mfrmr_num_namespace <- function() {
     "with_preserved_rng_seed", "mfrm_loglik_mml", "mfrm_grad_mml",
     "build_param_sizes", "build_param_slices", "build_indices",
     "gauss_hermite_normal", "expand_params", "compute_base_eta",
-    "mfrm_mml_logprob_bundle", "category_prob_pcm"
+    "mfrm_mml_logprob_bundle", "category_prob_pcm",
+    "resolve_person_quadrature_basis", "materialize_population_spec"
   )
   available <- vapply(
     required,
@@ -599,7 +603,7 @@ mfrmr_num_gpcm_jacobian_audit <- function(fit, score_results) {
   )
 }
 
-mfrmr_num_logprob_bundle <- function(context, par) {
+mfrmr_num_logprob_bundle <- function(context, par, include_probs = FALSE) {
   params <- mfrmr_num_get("expand_params")(par, context$sizes, context$config)
   base_eta <- mfrmr_num_get("compute_base_eta")(
     context$idx, params, context$config
@@ -609,19 +613,114 @@ mfrmr_num_logprob_bundle <- function(context, par) {
     config = context$config,
     quad = context$quad,
     params = params,
-    base_eta = base_eta
+    base_eta = base_eta,
+    include_probs = isTRUE(include_probs)
   )
+}
+
+mfrmr_num_independent_pcm_oracle <- function(context, par) {
+  par <- as.numeric(par)
+  params <- mfrmr_num_get("expand_params")(
+    par, context$sizes, context$config
+  )
+  base_eta <- mfrmr_num_get("compute_base_eta")(
+    context$idx, params, context$config
+  )
+  quad_basis <- mfrmr_num_get("resolve_person_quadrature_basis")(
+    quad = context$quad,
+    population_spec = mfrmr_num_get("materialize_population_spec")(
+      context$config, params
+    ),
+    person_count = context$config$n_person
+  )
+  n_obs <- length(context$idx$score_k)
+  n_cat <- as.integer(context$config$n_cat)
+  k_values <- 0:(n_cat - 1L)
+  step_cum_obs <- if (identical(context$config$model, "RSM")) {
+    matrix(
+      c(0, cumsum(params$steps)),
+      nrow = n_obs,
+      ncol = n_cat,
+      byrow = TRUE
+    )
+  } else {
+    step_cum <- t(apply(
+      params$steps_mat,
+      1L,
+      function(value) c(0, cumsum(value))
+    ))
+    step_cum[context$idx$step_idx, , drop = FALSE]
+  }
+  observed <- cbind(seq_len(n_obs), context$idx$score_k + 1L)
+  log_prob_mat <- matrix(
+    NA_real_, nrow = n_obs, ncol = ncol(quad_basis$nodes)
+  )
+  probability_list <- vector("list", ncol(quad_basis$nodes))
+  for (node in seq_len(ncol(quad_basis$nodes))) {
+    eta <- base_eta + quad_basis$nodes[context$idx$person, node]
+    log_kernel <- outer(eta, k_values) - step_cum_obs
+    row_max <- apply(log_kernel, 1L, max)
+    log_normalizer <- row_max + log(rowSums(exp(log_kernel - row_max)))
+    probability <- exp(log_kernel - log_normalizer)
+    log_probability <- log_kernel[observed] - log_normalizer
+    if (!is.null(context$idx$weight)) {
+      log_probability <- log_probability * context$idx$weight
+    }
+    log_prob_mat[, node] <- log_probability
+    probability_list[[node]] <- probability
+  }
+  ll_by_person <- rowsum(
+    log_prob_mat, context$idx$person, reorder = FALSE
+  )
+  person_ids <- as.integer(rownames(ll_by_person))
+  log_joint <- quad_basis$log_weights[person_ids, , drop = FALSE] +
+    ll_by_person
+  row_max <- apply(log_joint, 1L, max)
+  objective <- -sum(
+    row_max + log(rowSums(exp(log_joint - row_max)))
+  )
+  list(
+    log_prob_mat = log_prob_mat,
+    probability_list = probability_list,
+    objective = objective
+  )
+}
+
+mfrmr_num_probability_difference <- function(left, right) {
+  mfrmr_num_assert(
+    is.list(left) && is.list(right) && length(left) == length(right) &&
+      length(left) > 0L,
+    "Probability lists must have the same positive length."
+  )
+  dimensions_match <- all(vapply(
+    seq_along(left),
+    function(index) identical(dim(left[[index]]), dim(right[[index]])),
+    logical(1L)
+  ))
+  if (!dimensions_match) return(NA_real_)
+  values <- unlist(Map(
+    function(x, y) as.numeric(x) - as.numeric(y),
+    left,
+    right
+  ), use.names = FALSE)
+  if (length(values) == 0L || any(!is.finite(values))) return(NA_real_)
+  max(abs(values))
 }
 
 mfrmr_num_reduction_row <- function(reduction_id, left_context, left_par,
                                     right_context, right_par,
-                                    common_right_coordinates) {
+                                    common_right_coordinates,
+                                    independent_oracle) {
   left_objective <- suppressWarnings(as.numeric(left_context$fn(left_par))[1])
   right_objective <- suppressWarnings(as.numeric(right_context$fn(right_par))[1])
   left_score <- suppressWarnings(as.numeric(left_context$gr(left_par)))
   right_score <- suppressWarnings(as.numeric(right_context$gr(right_par)))
-  left_bundle <- mfrmr_num_logprob_bundle(left_context, left_par)
-  right_bundle <- mfrmr_num_logprob_bundle(right_context, right_par)
+  left_bundle <- mfrmr_num_logprob_bundle(
+    left_context, left_par, include_probs = TRUE
+  )
+  right_bundle <- mfrmr_num_logprob_bundle(
+    right_context, right_par, include_probs = TRUE
+  )
   common_right_coordinates <- as.integer(common_right_coordinates)
   valid <- all(is.finite(c(left_objective, right_objective))) &&
     length(common_right_coordinates) > 0L &&
@@ -635,13 +734,25 @@ mfrmr_num_reduction_row <- function(reduction_id, left_context, left_par,
     identical(dim(left_bundle$log_prob_mat), dim(right_bundle$log_prob_mat)) &&
     all(is.finite(left_bundle$log_prob_mat)) &&
     all(is.finite(right_bundle$log_prob_mat))
+  oracle_valid <- is.list(independent_oracle) &&
+    is.matrix(independent_oracle$log_prob_mat) &&
+    identical(
+      dim(independent_oracle$log_prob_mat),
+      dim(left_bundle$log_prob_mat)
+    ) &&
+    is.list(independent_oracle$probability_list) &&
+    length(independent_oracle$probability_list) ==
+      length(left_bundle$prob_list) &&
+    is.finite(independent_oracle$objective)
   log_probability_difference <- if (valid) {
     max(abs(left_bundle$log_prob_mat - right_bundle$log_prob_mat))
   } else {
     NA_real_
   }
   probability_difference <- if (valid) {
-    max(abs(exp(left_bundle$log_prob_mat) - exp(right_bundle$log_prob_mat)))
+    mfrmr_num_probability_difference(
+      left_bundle$prob_list, right_bundle$prob_list
+    )
   } else {
     NA_real_
   }
@@ -655,9 +766,63 @@ mfrmr_num_reduction_row <- function(reduction_id, left_context, left_par,
   } else {
     NA_real_
   }
+  independent_log_probability_difference <- if (valid && oracle_valid) {
+    max(abs(c(
+      left_bundle$log_prob_mat - independent_oracle$log_prob_mat,
+      right_bundle$log_prob_mat - independent_oracle$log_prob_mat
+    )))
+  } else {
+    NA_real_
+  }
+  independent_probability_difference <- if (valid && oracle_valid) {
+    max(c(
+      mfrmr_num_probability_difference(
+        left_bundle$prob_list, independent_oracle$probability_list
+      ),
+      mfrmr_num_probability_difference(
+        right_bundle$prob_list, independent_oracle$probability_list
+      )
+    ))
+  } else {
+    NA_real_
+  }
+  independent_objective_difference <- if (valid && oracle_valid) {
+    max(abs(c(
+      left_objective - independent_oracle$objective,
+      right_objective - independent_oracle$objective
+    )))
+  } else {
+    NA_real_
+  }
+  independent_score <- if (valid && oracle_valid) {
+    mfrmr_num_central_gradient(
+      function(value) {
+        mfrmr_num_independent_pcm_oracle(left_context, value)$objective
+      },
+      left_par,
+      rel_step = mfrmr_num_primary_step
+    )
+  } else {
+    rep(NA_real_, length(left_score))
+  }
+  independent_score_difference <- if (
+    valid && length(independent_score) == length(left_score) &&
+      all(is.finite(independent_score))
+  ) {
+    max(abs(c(
+      left_score - independent_score,
+      right_score[common_right_coordinates] - independent_score
+    )))
+  } else {
+    NA_real_
+  }
   exact <- isTRUE(valid && log_probability_difference <= 1e-12 &&
     probability_difference <= 1e-12 && objective_difference <= 1e-10 &&
-    score_difference <= 1e-10)
+    score_difference <= 1e-10 && oracle_valid &&
+    independent_log_probability_difference <= 1e-12 &&
+    independent_probability_difference <= 1e-12 &&
+    independent_objective_difference <= 1e-10 &&
+    independent_score_difference <= 1e-6)
   data.frame(
     Specification = mfrmr_num_specification,
     ContractVersion = mfrmr_num_contract,
@@ -666,6 +831,13 @@ mfrmr_num_reduction_row <- function(reduction_id, left_context, left_par,
     ProbabilityMaxAbsDifference = probability_difference,
     ObjectiveAbsDifference = objective_difference,
     CommonScoreMaxAbsDifference = score_difference,
+    IndependentLogProbabilityMaxAbsDifference =
+      independent_log_probability_difference,
+    IndependentProbabilityMaxAbsDifference =
+      independent_probability_difference,
+    IndependentObjectiveAbsDifference = independent_objective_difference,
+    IndependentCommonScoreMaxAbsDifference =
+      independent_score_difference,
     LeftFreeDimension = length(left_par),
     RightFreeDimension = length(right_par),
     ComparedScoreCoordinates = length(common_right_coordinates),
@@ -690,13 +862,38 @@ mfrmr_num_reduction_audit <- function(fits) {
     "Binary RSM/PCM free-coordinate dimensions do not match."
   )
   binary_par <- as.numeric(fits$binary_rsm$opt$par)
+  binary_oracle <- mfrmr_num_independent_pcm_oracle(
+    binary_rsm, binary_par
+  )
   binary <- mfrmr_num_reduction_row(
     "binary_rsm_equals_pcm",
     binary_rsm,
     binary_par,
     binary_pcm,
     binary_par,
-    seq_along(binary_par)
+    seq_along(binary_par),
+    independent_oracle = binary_oracle
+  )
+  binary_rsm_params <- mfrmr_num_get("expand_params")(
+    binary_par, binary_rsm$sizes, binary_rsm$config
+  )
+  binary_pcm_params <- mfrmr_num_get("expand_params")(
+    binary_par, binary_pcm$sizes, binary_pcm$config
+  )
+  binary$CommonFreeCoordinateMaxAbsDifference <- 0
+  binary$ExpandedStepMaxAbsDifference <- max(abs(
+    matrix(
+      binary_rsm_params$steps,
+      nrow = nrow(binary_pcm_params$steps_mat),
+      ncol = length(binary_rsm_params$steps),
+      byrow = TRUE
+    ) - binary_pcm_params$steps_mat
+  ))
+  binary$ExpandedLogSlopeMaxAbsDifference <- NA_real_
+  binary$ExpandedSlopeMaxAbsDifferenceFromOne <- NA_real_
+  binary$TransformReductionObserved <- isTRUE(
+    binary$CommonFreeCoordinateMaxAbsDifference <= 1e-12 &&
+      binary$ExpandedStepMaxAbsDifference <= 1e-12
   )
 
   pcm <- mfrmr_num_fit_context(fits$pcm_core)
@@ -712,15 +909,47 @@ mfrmr_num_reduction_audit <- function(fits) {
     pcm_par,
     rep(0, as.integer(gpcm$sizes$log_slopes))
   )
+  unit_oracle <- mfrmr_num_independent_pcm_oracle(pcm, pcm_par)
   unit_slope <- mfrmr_num_reduction_row(
     "unit_slope_gpcm_equals_pcm",
     pcm,
     pcm_par,
     gpcm,
     gpcm_par,
-    seq_along(pcm_par)
+    seq_along(pcm_par),
+    independent_oracle = unit_oracle
   )
-  rbind(binary, unit_slope)
+  pcm_params <- mfrmr_num_get("expand_params")(
+    pcm_par, pcm$sizes, pcm$config
+  )
+  gpcm_params <- mfrmr_num_get("expand_params")(
+    gpcm_par, gpcm$sizes, gpcm$config
+  )
+  unit_slope$CommonFreeCoordinateMaxAbsDifference <- max(abs(
+    pcm_par - gpcm_par[seq_along(pcm_par)]
+  ))
+  unit_slope$ExpandedStepMaxAbsDifference <- max(abs(
+    pcm_params$steps_mat - gpcm_params$steps_mat
+  ))
+  unit_slope$ExpandedLogSlopeMaxAbsDifference <- max(abs(
+    gpcm_params$log_slopes
+  ))
+  unit_slope$ExpandedSlopeMaxAbsDifferenceFromOne <- max(abs(
+    gpcm_params$slopes - 1
+  ))
+  unit_slope$TransformReductionObserved <- isTRUE(
+    unit_slope$CommonFreeCoordinateMaxAbsDifference <= 1e-12 &&
+      unit_slope$ExpandedStepMaxAbsDifference <= 1e-12 &&
+      unit_slope$ExpandedLogSlopeMaxAbsDifference <= 1e-12 &&
+      unit_slope$ExpandedSlopeMaxAbsDifferenceFromOne <= 1e-12
+  )
+  out <- rbind(binary, unit_slope)
+  out$ExactReductionObserved <-
+    out$ExactReductionObserved & out$TransformReductionObserved
+  out$Status <- ifelse(
+    out$ExactReductionObserved, "review_exact", "rejected"
+  )
+  out
 }
 
 mfrmr_num_global_summary <- function(score_summary, jacobian_summary,
@@ -741,6 +970,17 @@ mfrmr_num_global_summary <- function(score_summary, jacobian_summary,
   )
   required_reduction <- c(
     "ReductionId", "Status", "ExactReductionObserved",
+    "TransformReductionObserved",
+    "LogProbabilityMaxAbsDifference", "ProbabilityMaxAbsDifference",
+    "ObjectiveAbsDifference", "CommonScoreMaxAbsDifference",
+    "IndependentLogProbabilityMaxAbsDifference",
+    "IndependentProbabilityMaxAbsDifference",
+    "IndependentObjectiveAbsDifference",
+    "IndependentCommonScoreMaxAbsDifference",
+    "CommonFreeCoordinateMaxAbsDifference",
+    "ExpandedStepMaxAbsDifference",
+    "ExpandedLogSlopeMaxAbsDifference",
+    "ExpandedSlopeMaxAbsDifferenceFromOne",
     "SelectionAuthorized", "ConfirmationAuthorized"
   )
   required_fixture <- c("FixtureId", "SHA256")
@@ -794,6 +1034,52 @@ mfrmr_num_global_summary <- function(score_summary, jacobian_summary,
   expected_reductions <- c(
     "binary_rsm_equals_pcm", "unit_slope_gpcm_equals_pcm"
   )
+  binary_row <- reduction_results[
+    reduction_results$ReductionId == "binary_rsm_equals_pcm",
+    ,
+    drop = FALSE
+  ]
+  unit_slope_row <- reduction_results[
+    reduction_results$ReductionId == "unit_slope_gpcm_equals_pcm",
+    ,
+    drop = FALSE
+  ]
+  reduction_numeric_complete <- nrow(binary_row) == 1L &&
+    nrow(unit_slope_row) == 1L &&
+    all(is.finite(c(
+      reduction_results$LogProbabilityMaxAbsDifference,
+      reduction_results$ProbabilityMaxAbsDifference,
+      reduction_results$ObjectiveAbsDifference,
+      reduction_results$CommonScoreMaxAbsDifference,
+      reduction_results$IndependentLogProbabilityMaxAbsDifference,
+      reduction_results$IndependentProbabilityMaxAbsDifference,
+      reduction_results$IndependentObjectiveAbsDifference,
+      reduction_results$IndependentCommonScoreMaxAbsDifference,
+      reduction_results$CommonFreeCoordinateMaxAbsDifference,
+      reduction_results$ExpandedStepMaxAbsDifference,
+      unit_slope_row$ExpandedLogSlopeMaxAbsDifference,
+      unit_slope_row$ExpandedSlopeMaxAbsDifferenceFromOne
+    ))) &&
+    all(reduction_results$LogProbabilityMaxAbsDifference <= 1e-12) &&
+    all(reduction_results$ProbabilityMaxAbsDifference <= 1e-12) &&
+    all(reduction_results$ObjectiveAbsDifference <= 1e-10) &&
+    all(reduction_results$CommonScoreMaxAbsDifference <= 1e-10) &&
+    all(
+      reduction_results$IndependentLogProbabilityMaxAbsDifference <= 1e-12
+    ) &&
+    all(
+      reduction_results$IndependentProbabilityMaxAbsDifference <= 1e-12
+    ) &&
+    all(reduction_results$IndependentObjectiveAbsDifference <= 1e-10) &&
+    all(
+      reduction_results$IndependentCommonScoreMaxAbsDifference <= 1e-6
+    ) &&
+    all(reduction_results$CommonFreeCoordinateMaxAbsDifference <= 1e-12) &&
+    all(reduction_results$ExpandedStepMaxAbsDifference <= 1e-12) &&
+    all(is.na(binary_row$ExpandedLogSlopeMaxAbsDifference)) &&
+    all(is.na(binary_row$ExpandedSlopeMaxAbsDifferenceFromOne)) &&
+    all(unit_slope_row$ExpandedLogSlopeMaxAbsDifference <= 1e-12) &&
+    all(unit_slope_row$ExpandedSlopeMaxAbsDifferenceFromOne <= 1e-12)
   reduction_complete <- nrow(reduction_results) == length(expected_reductions) &&
     all(!is.na(reduction_results$ReductionId)) && identical(
     sort(as.character(reduction_results$ReductionId)),
@@ -801,6 +1087,8 @@ mfrmr_num_global_summary <- function(score_summary, jacobian_summary,
   ) && !anyDuplicated(reduction_results$ReductionId) &&
     all(reduction_results$Status == "review_exact") &&
     all(reduction_results$ExactReductionObserved %in% TRUE) &&
+    all(reduction_results$TransformReductionObserved %in% TRUE) &&
+    reduction_numeric_complete &&
     all(reduction_results$SelectionAuthorized %in% FALSE) &&
     all(reduction_results$ConfirmationAuthorized %in% FALSE)
   expected_fixtures <- c("binary_fixed", "polytomous_fixed")

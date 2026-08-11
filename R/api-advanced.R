@@ -210,18 +210,97 @@ build_dff_summary <- function(tbl, method) {
 }
 
 resolve_dff_refit_controls <- function(fit) {
+  replay <- fit$config$replay_inputs %||% list()
   control <- fit$config$estimation_control %||% list()
+
+  population_active <- isTRUE(fit$config$population_active) ||
+    isTRUE(fit$config$population_spec$active) ||
+    !is.null(replay$population_formula)
+  if (population_active) {
+    stop(
+      "`analyze_dff(method = \"refit\")` cannot currently reproduce an active ",
+      "latent-regression population model within subgroup fits without changing ",
+      "the fitted population contract. Use `method = \"residual\"` for screening, ",
+      "or fit and link a prespecified subgroup population model outside ",
+      "`analyze_dff()`.",
+      call. = FALSE
+    )
+  }
+
+  interaction_terms <- unique(c(
+    as.character(fit$config$facet_interactions %||% character(0)),
+    names(fit$config$interaction_specs %||% list())
+  ))
+  interaction_terms <- interaction_terms[!is.na(interaction_terms) & nzchar(interaction_terms)]
+  if (length(interaction_terms) > 0L) {
+    stop(
+      "`analyze_dff(method = \"refit\")` cannot currently reproduce fitted ",
+      "facet interactions and anchor their subgroup interaction coordinates on ",
+      "a common scale. Use `method = \"residual\"` for screening, or refit and ",
+      "link the interaction model explicitly outside `analyze_dff()`.",
+      call. = FALSE
+    )
+  }
+
+  anchor_tables <- tryCatch(
+    extract_anchor_tables(fit$config),
+    error = function(e) list(groups = data.frame())
+  )
+  group_anchors <- as.data.frame(
+    replay$group_anchors %||% anchor_tables$groups %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(group_anchors) > 0L) {
+    stop(
+      "`analyze_dff(method = \"refit\")` cannot currently preserve a baseline ",
+      "group-anchor constraint while constructing its separate subgroup-linking ",
+      "anchors. Use `method = \"residual\"` for screening, or specify and audit ",
+      "the subgroup linking model outside `analyze_dff()`.",
+      call. = FALSE
+    )
+  }
+
+  rating_min <- suppressWarnings(as.numeric(
+    fit$config$rating_min %||% fit$prep$rating_min %||% NA_real_
+  )[1])
+  rating_max <- suppressWarnings(as.numeric(
+    fit$config$rating_max %||% fit$prep$rating_max %||% NA_real_
+  )[1])
+  if (!is.finite(rating_min) || !is.finite(rating_max) || rating_min >= rating_max) {
+    stop(
+      "`analyze_dff(method = \"refit\")` requires the baseline fit's resolved ",
+      "finite `rating_min` and `rating_max` so subgroup fits cannot redefine the ",
+      "observed score scale. Refit the baseline model with the current mfrmr ",
+      "version or use `method = \"residual\"`.",
+      call. = FALSE
+    )
+  }
+
   list(
     model = fit$config$model %||% fit$summary$Model[1] %||% "RSM",
     method = fit$config$method %||% fit$summary$Method[1] %||% "JML",
     step_facet = fit$config$step_facet %||% NULL,
+    slope_facet = fit$config$slope_facet %||% NULL,
+    rating_min = rating_min,
+    rating_max = rating_max,
     weight = fit$config$weight_col %||% NULL,
+    keep_original = isTRUE(replay$keep_original %||% fit$config$keep_original),
+    missing_codes = replay$missing_codes %||% NULL,
     noncenter_facet = fit$config$noncenter_facet %||% "Person",
     dummy_facets = fit$config$dummy_facets %||% NULL,
     positive_facets = fit$config$positive_facets %||% NULL,
-    quad_points = as.integer(control$quad_points %||% 15L),
-    maxit = max(25L, min(as.integer(control$maxit %||% 50L), 100L)),
-    reltol = as.numeric(control$reltol %||% 1e-6)
+    min_obs_per_element = as.numeric(replay$min_obs_per_element %||% 30),
+    min_obs_per_category = as.numeric(replay$min_obs_per_category %||% 10),
+    quad_points = as.integer(replay$quad_points %||% control$quad_points %||% 31L),
+    maxit = as.integer(replay$maxit %||% control$maxit %||% 400L),
+    reltol = as.numeric(replay$reltol %||% control$reltol %||% 1e-9),
+    optimizer = as.character(
+      replay$optimizer %||% control$optimizer_requested %||% "auto"
+    )[1],
+    mml_engine = as.character(
+      replay$mml_engine %||% control$mml_engine_requested %||% "direct"
+    )[1],
+    identity_contract = "baseline_response_and_estimation_controls_v1"
   )
 }
 
@@ -437,6 +516,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' covariance. Refit statistics therefore remain screening evidence and set
 #' `FormalInferenceEligible`, `SupportsFormalInference`,
 #' `PrimaryReportingEligible`, and `ETS_Eligible` to `FALSE`.
+#' The subgroup fits replay the baseline response family, resolved score range,
+#' step/slope facets, weighting, optimizer, MML engine, and numerical controls;
+#' the non-target anchors are the intentional linking change. Refit analysis
+#' fails closed when the baseline uses an active latent-regression population
+#' model, facet interactions, or group-anchor constraints, because those
+#' structures do not yet have a complete subgroup-replay and linking contract.
 #'
 #' When `facet` refers to an item-like facet (for example `Criterion`), this
 #' recovers the familiar DIF case. When `facet` refers to raters or
@@ -455,9 +540,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' In most first-pass DFF screening, start with `method = "residual"`. It is
 #' faster, reuses the fitted model, and is less fragile in smaller subsets.
 #' Use `method = "refit"` when you specifically want group-specific parameter
-#' estimates and can tolerate extra computation.  Both methods should yield
-#' similar conclusions when sample sizes are adequate (\eqn{N \ge 100} per
-#' group is a useful guideline for stable differential-functioning detection).
+#' estimates and can tolerate extra computation. Agreement between methods is
+#' not guaranteed by a universal per-group sample-size threshold: stability and
+#' detection depend jointly on effect size, category support, response-pattern
+#' overlap, linking strength, slope heterogeneity, and estimator behavior.
+#' `min_obs` is only a cell-computability/sparsity guard; it is not evidence of
+#' power, parameter stability, or sample-size adequacy.
 #'
 #' @section Interpreting output:
 #' - `$dif_table`: one row per facet-level x group-pair with contrast,
@@ -1117,18 +1205,28 @@ analyze_dif <- function(...) {
       person = person_col,
       facets = facet_names,
       score = score_col,
+      rating_min = refit_controls$rating_min,
+      rating_max = refit_controls$rating_max,
       weight = refit_controls$weight,
+      keep_original = refit_controls$keep_original,
+      missing_codes = refit_controls$missing_codes,
       method = refit_controls$method,
       model = refit_controls$model,
       step_facet = refit_controls$step_facet,
+      slope_facet = refit_controls$slope_facet,
       anchors = if (nrow(linking_setup$anchor_tbl) > 0) linking_setup$anchor_tbl else NULL,
       noncenter_facet = refit_controls$noncenter_facet,
       dummy_facets = refit_controls$dummy_facets,
       positive_facets = refit_controls$positive_facets,
       anchor_policy = "silent",
+      min_common_anchors = linking_setup$min_common_anchors,
+      min_obs_per_element = refit_controls$min_obs_per_element,
+      min_obs_per_category = refit_controls$min_obs_per_category,
       quad_points = refit_controls$quad_points,
       maxit = refit_controls$maxit,
-      reltol = refit_controls$reltol
+      reltol = refit_controls$reltol,
+      optimizer = refit_controls$optimizer,
+      mml_engine = refit_controls$mml_engine
     )
     # Capture the anchor-review issue messages emitted while refitting
     # the subgroup so a silent anchor_policy no longer hides
@@ -1367,6 +1465,12 @@ analyze_dif <- function(...) {
                   focal = focal, group_levels = group_levels,
                   linking_facets = linking_setup$linking_facets,
                   linking_threshold = linking_setup$min_common_anchors,
+                  refit_identity_contract = refit_controls$identity_contract,
+                  refit_rating_range = c(refit_controls$rating_min,
+                                         refit_controls$rating_max),
+                  refit_slope_facet = refit_controls$slope_facet,
+                  refit_optimizer = refit_controls$optimizer,
+                  refit_mml_engine = refit_controls$mml_engine,
                   functioning_label = functioning_label)
   )
   class(out) <- c("mfrm_dff", "mfrm_dif", class(out))

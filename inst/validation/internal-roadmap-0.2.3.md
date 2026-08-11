@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-05.
+Status: repository-only maintainer plan, refined 2026-08-11.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -62,6 +62,2071 @@ in 0.2.3, make that contract reusable through typed calibration and step
 anchors in 0.2.4, and only then add explicit multi-scale parameter indexing in
 0.2.5. Existing fitted-object EAP/posterior scoring in 0.2.2 is not the same as
 loading a versioned frozen calibration for operational scoring of new data.
+
+### Generalized-MFRM model-family dependency lock
+
+`generalized-mfrm-model-ladder-0.2.3.md` is the controlling technical
+refinement for GPCM model identity. It classifies the implemented likelihood
+as an aligned single-owner relative-slope GPCM: exactly one facet owns both
+the slope and step blocks, `slope_facet == step_facet`, and the latent trait is
+unidimensional. Draft.63 adopts separate criterion-owned and rater-owned
+evidence strata plus the machine-readable
+`gpcm-model-identity-contract-0.2.3.csv`. The existing pooled
+`NUM-GPCM-BOUND` label is retained only for historical calibration traceability
+and cannot promote either substantive owner interpretation.
+
+Every future GPCM evidence identity must carry at least `SlopeOwner`,
+`StepOwner`, `SlopeComposition`, and `LatentDimensionCount`, in addition to the
+estimator, latent-scale, category-map, constraint, and topology identities
+already required by the release gate. This distinction applies to simulation,
+recovery, DFF/DRF, fit, external comparison, cache/replay, and public support
+rows. A rater-indexed slope is model-conditional discrimination until
+role-specific recovery and attribution evidence earns any stronger
+`consistency` interpretation.
+
+The dependency order after the current aligned route is: decouple one slope
+owner from one step owner; then define multiplicative criterion/task-by-rater
+slope blocks and their factor-separation constraints; then consider a native
+multidimensional generalized model. Rater-by-criterion severity interactions,
+centrality/extremity response-style models, hierarchical latent-rating models,
+and repeated-rating local-dependence models are alternative branches, not
+automatic steps in that nesting sequence. They may supply generator-only
+diagnostic challenges in 0.2.3 without becoming native fit methods.
+
+Draft.63 changes evidence identity, not the likelihood. Existing criterion-
+owned stress and attribution runners remain calibration inputs, but they do
+not satisfy the rater-owned gate. The next execution slice must stamp the four
+model-family identity fields, ability-scale contract, and actual runtime
+content identity into every GPCM manifest/result before owner-specific pilot
+evidence is regenerated. Confirmation remains unauthorized.
+
+Draft.64 adds the owner-specific execution slice in
+`gpcm-owner-specific-pilot-0.2.3.R`. Its smoke manifest crosses both owners,
+JML/MML, and core/weak/negative support designs while hashing the loaded
+runtime, runner, identity contract, manifest, and retained data. The guarded
+unit execution proves dispatch and fail-closed support behavior only; it does
+not close owner-specific recovery, coverage, precision, runtime, fit, DFF, or
+external gates. The larger pilot expands 24 owner/estimator/design cells to
+five disjoint seeds each (120 run rows) and remains authorization-guarded and
+unrun, so confirmation remains unauthorized.
+
+Draft.65 freezes the pre-pilot execution structure in
+`gpcm-owner-specific-execution-contract-0.2.3.md`. One full-manifest execution
+identity now covers runtime, runner, both contracts, optimizer ceiling, and
+quadrature. The primary pilot freezes the package-default `maxit = 400` and
+q=31 Gaussian--Hermite basis; q=5 remains smoke-only, and a later higher-node
+MML sensitivity lane must receive a separate identity rather than being
+pooled into primary recovery. Deterministic modulo shards alter workload
+placement only. Atomic one-row checkpoints permit strict interruption/resume and reject orphan,
+identity-mismatched, or altered payloads. Bernoulli summaries retain every
+planned row in the denominator and report MCSE plus 95% Wilson intervals;
+numeric recovery reports finite and missing/ineligible counts, failures,
+evidence-ready counts, and finite-value MCSE. A hashed completion marker can
+exist only after all declared checkpoints validate. These are execution-
+integrity controls, not recovery evidence. At Draft.65 freeze the live pilot
+was unrun and confirmation remained unauthorized.
+
+Draft.66 records the first completed owner-specific pilot and its corrective
+rerun in `gpcm-owner-specific-pilot-record-0.2.3.md`. Draft.65 exposed that
+the intended observed 1/3/4 internal-zero challenge was being fitted after
+automatic recoding to 1/2/3. Draft.66 fixes `keep_original = TRUE`, changes
+the execution identity, and completes all 120 rows/checkpoints. All 20
+internal-zero rows now fail closed before optimization; the other 100 rows
+match Draft.65 on every non-identity result field. Overall, 88 fits return,
+32 failures remain in denominators, and identity violation, inference-ready,
+and false-ready counts are zero. Weak-bridge JML recovery is the dominant
+signal, but five-replicate Wilson intervals and MCSE are too wide for a
+threshold. Next come unexpected-JML failure attribution, paired common-data
+owner/estimator contrasts, separately identified MML node sensitivity,
+replication expansion, and recovery/coverage beyond optimizer slopes. No
+gate, numeric rule, owner-consistency claim, or confirmation state is
+promoted.
+
+Draft.67 closes the two-row JML artifact-loss mechanism without treating it as
+a recovery or boundary proof. The fixed common-data optimizer panel and exact
+trace are recorded in
+`gpcm-owner-jml-optimizer-attribution-record-0.2.3.md`. Both unexpected
+Draft.66 failures involved a non-representable log-slope proposal, but their
+substantive paths differed: rater-owned workload imbalance was an early BFGS
+line-search accident, while criterion-owned weak bridge remained an extreme
+slope/boundary path under both BFGS and L-BFGS-B. This rejects a wholesale
+optimizer switch. The narrower implementation makes the parameter cache
+transactional and rejects only the typed non-representable slope proposal
+during direct-optimizer line search. In the full 40-row BFGS recheck, all fits
+return, exactly two rows record a rejection, the other 38 objectives reproduce
+within `4.55e-12`, and the weak-bridge case remains convergence-failed and
+inference-ineligible. The next active order is therefore joint weak-link
+geometry, separately identified MML node sensitivity, paired owner/estimator
+attribution, expanded recovery/coverage replication, and only then numeric
+freeze. Artifact retention is improved; no gate is promoted.
+
+Draft.68 completes the separately identified MML integration lane under
+`gpcm-mml-integration-sensitivity-contract-0.2.3.md`; exact execution and
+results are in `gpcm-mml-integration-sensitivity-record-0.2.3.md`. Forty exact
+owner-pilot datasets are each fitted at q=31/61/91 and evaluated on one common
+q=91 grid. All 120 fits return, but seven code-zero fits remain gradient review
+and none becomes inference-ready. q=31 common-grid regret reaches 0.5443,
+while q=61 regret is at most 0.001471. q=31-to-q=91 changes reach 0.0914 for
+identified log slopes, 0.6011 for steps, 0.0745 EAP RMSE, and 0.0591
+posterior-SD RMSE. Thus q=31 remains only a comparison starting grid; small
+structural-objective regret cannot stand in for Person-estimand stability.
+Zero-common-Person MML remains population-assumption-linked and blocked. The
+next integration step is direct q61-to-q91 parameter comparison with
+prospectively proposed tolerances inside expanded replication, not a default-q
+change. Marginal-MML slope geometry and paired owner/estimator attribution
+remain ahead of any freeze.
+
+Draft.69 implements the first estimator-specific marginal-MML slope-boundary
+instrument under `gpcm-mml-slope-boundary-contract-0.2.3.md`. For the declared
+finite quadrature rule it expresses each Person-pattern derivative as a
+posterior-node-weighted conditional derivative, checks utility maximum/minimum
+compatibility at every node, enumerates all ordered constant sum-zero
+two-level rays, and reconstructs each compatible boundary likelihood
+independently. A constructed sparse control is certified and follows the
+direct likelihood-path oracle; ordinary data, row permutation, reconstruction,
+and execution-limit controls also pass. This closes the absence of MML
+boundary instrumentation, not marginal identification: the certificate is
+only sufficient for a fixed-node/fixed-additive path, has no readiness effect,
+and neither positive nor negative results make finite optimizer slopes primary.
+
+Draft.70 completes the first retrospective cross-q application under
+`gpcm-mml-boundary-grid-calibration-contract-0.2.3.md`; exact execution and
+results are in `gpcm-mml-boundary-grid-calibration-record-0.2.3.md`. All 40
+Draft.68 datasets and 120 q arms complete. Every arm is
+`none_certified_fixed_quadrature_marginal`, with exact boundary-likelihood
+reconstruction and identical state, certified direction set, and target status
+across q=31/61/91 for every dataset. Draft.68 own-grid and common-q91
+likelihoods reproduce with maximum difference zero. Direct q61-to-q91 maxima
+are 0.001471 common-grid regret, 0.00619 log slope, 0.0132 facet, 0.0553 step,
+0.00552 EAP RMSE, and 0.00790 posterior-SD RMSE. These values sharpen the
+prospective design but do not freeze tolerances: the datasets were already
+inspected, five replicates do not characterize tails, q91 is not a proven
+continuous-integral limit, and the zero positive count gives no positive-path
+detection estimate.
+
+The next active order is therefore: (1) prospectively freeze positive,
+near-boundary, negative, and sufficient-test-silent challenge strata across
+q=31/61/91; (2) run untouched owner/design seeds under a separately declared
+q61-to-q91 candidate rule, retaining failures in every denominator; (3)
+calibrate a separately versioned readiness-propagation rule only after positive
+and negative classification behavior is known; and then (4) begin paired
+JML/MML recovery and coverage. Fit and DFF operating characteristics remain
+separate from integration and boundary geometry.
+
+Draft.71 executes the first item under
+`gpcm-mml-boundary-challenge-contract-0.2.3.md`; the failed frozen expectations
+and exact identities are retained in
+`gpcm-mml-boundary-challenge-record-0.2.3.md`. All 30 deterministic fits and
+likelihood reconstructions complete, and all 12 mixed-negative or positive-
+weight-discordant expectations pass. However, criterion/rater forward,
+reverse, and zero-weight positive expectations fail in all 18 dense-grid arms:
+every q=31/61/91 result is none-certified. The q=5 reference remains positive
+only for that exact coarse objective. Gaussian--Hermite extrema expand from
+about +/-2.86 at q=5 to +/-9.89, +/-14.50, and +/-18.02, so finite additive
+coordinates no longer keep each observed response at the required utility
+extremum on every node. The all-node sufficient condition is therefore not a
+viable bridge to continuous-normal or readiness claims.
+
+This concern reorders the active sequence. Readiness propagation and
+stochastic classification calibration are paused. The next core slice must
+derive a broader Person-marginal half-line condition that permits adverse
+conditional outer nodes to lose posterior mass, proves its limit and derivative
+behavior over the complete ray rather than a selected t grid, and keeps finite
+q, continuous-normal, and moving-additive theorems separate. A new
+q=5/31/61/91 deterministic challenge must pass before untouched-seed owner
+classification work resumes. Direct q61-to-q91 recovery calibration may
+continue as a separate numerical lane, but it cannot substitute for the
+boundary proof. Fit/DFF operating characteristics remain downstream and
+separate.
+
+Draft.72 begins that corrective slice under
+`gpcm-mml-person-marginal-path-contract-0.2.3.md`; selected verification is in
+`gpcm-mml-person-marginal-path-prototype-record-0.2.3.md`. The analytic oracle
+reconstructs the exact finite-q objective, first derivative, curvature,
+surviving-node boundary likelihood, and leading tail coefficient. On the
+Draft.71 q=31 positive control, 36 Person-node derivative cells are adverse at
+each selected t while all 12 posterior-weighted Person derivatives and the
+total derivative are positive. Analytic first derivatives and curvature match
+their stable central checks to approximately `3e-12` and `2e-15`; generalized
+boundary improvement and the tail coefficient are both approximately
+`9.0542e-9`. At q=61/91, 58/61 and 81/91 positive-compatible nodes per Person
+survive, making explicit how adverse outer nodes lose limiting mass.
+
+This is mechanism/formula progress, not the missing proof. All selected points
+could be positive while an unobserved interval is negative, ordinary doubles
+do not provide outward error bounds, and the leading tail term lacks a
+certified remainder. `HalfLineCertified`, `TailCertified`, and readiness remain
+false. The active mathematical order is now: outward-rounded value/derivative
+bounds; deterministic compact-interval subdivision with typed exhaustion; a
+tail remainder joined to that interval; genuine sign-changing and near-zero-A
+counterexamples; then the full owner/q/polytomous challenge. Only after those
+pass may stochastic classification or readiness propagation resume.
+
+Draft.73 advances a separate JML-estimator maturity lane under
+`jml-extreme-profile-limit-contract-0.2.3.md`. The existing typed Person audit
+correctly reports independently free all-minimum/all-maximum Persons at signed
+infinity, but the structural coordinates and stored objective still come from
+a finite joint optimizer trace. The repository-only prototype now removes
+exactly those Person likelihood contributions, reoptimizes the remaining JML
+coordinates, and reconstructs the original likelihood along signed finite
+ability caps. Selected RSM, PCM, and aligned-owner GPCM controls approach the
+reduced supremum monotonically and end within `5.92e-12`; anchored Persons are
+not removed and constraint-coupled extremes fail closed. Raw and profile-limit
+values remain distinct, and the result explicitly denies a finite original-
+JML maximum and any finite-item bias-correction interpretation.
+
+This establishes an extended-boundary computation identity, not estimator
+maturity. Next, the raw finite trace and profile-limit structural result must
+enter a prespecified recovery grid with extreme proportion, Person exposure,
+weights, missingness, topology, rater workload, category support, interactions,
+and owner-specific GPCM strata. That grid must remain factorially separate
+from external extreme-score adjustment and finite-item-bias correction. Only
+after recovery, supported uncertainty, failure accounting, and candidate-
+linked runtime evidence may a production/public decision be considered.
+
+Draft.74 executes the first paired slice under
+`jml-extreme-profile-recovery-contract-0.2.3.md`. Ninety RSM, PCM, and aligned
+Criterion-owned GPCM datasets cross low/high Person exposure, forced extreme
+fractions 0/0.10/0.25, and five fixed seeds. All 90 raw fits return, all
+forced Persons have the correct signed unbounded type, 68 finite-cap profile
+paths verify, 22 no-free-extreme cases use the declared no-op, and every one
+of 2,700 structural recovery rows pairs. No extreme fit is falsely marked
+inference-ready. The GPCM path extends to cap 64 because its limiting rate
+depends on the smallest fitted positive slope; the maximum terminal gap is
+`1.94e-11`.
+
+The maximum aligned raw/profile structural change is only `5.94e-6`, and the
+two recovery RMSE summaries agree at displayed precision. This is informative
+without being reassuring in the wrong way: the profile operation resolves
+non-attainment, but it does not remove the remaining JML incidental-parameter
+bias. Person recovery is excluded and profile SE/coverage remain unavailable.
+Five replicates, complete crossing, one GPCM owner, and no weights,
+missingness, weak links, workload imbalance, interactions, anchors, or
+external modes preclude a numeric rule or estimator choice. The next active
+JML order is expanded replication and adversity, then a separately identified
+FACETS/TAM/immer extreme-adjustment and bias-correction grid, supported
+uncertainty, and only afterward a production decision. Confirmation remains
+unauthorized.
+
+Draft.75 starts that external-convention grid with a source-audited identity
+and normalization smoke, not with a package ranking. Installed TAM 4.3-25 and
+immer 1.5-13 help and loaded function bodies are bound to exact hashes and
+mode arguments. A common expanded cumulative-difficulty surface avoids direct
+comparison of opposite-sign/corner-constrained basis coefficients. The four
+paired RSM/PCM microdatasets retain all 36 planned method rows and 864
+successful structural coordinates; four TAM `adj = 0` modes with forced
+extremes fail and remain ineligible. On no-extreme data, location-aligned
+mfrmr/TAM raw differences are at most `3.88e-6` and TAM/immer raw differences
+at most `1.25e-5`. With forced extremes, TAM `adj = .3` and immer
+`jml, eps = .3` differ by at most `8.06e-8`; all classical postscale identities
+reproduce to `8.88e-16`.
+
+The more important result is semantic. immer `jml` is original unadjusted JML
+only when no Person is extreme; `eps_adj` changes both Person and item
+sufficient statistics; and `jml_bc` combines its extreme handling with an
+`(Ibar - 1) / Ibar` postscale. TAM separates `adj` from a later
+`(I - 1) / I` postscale. They coincide on the complete nine-pseudoitem smoke
+but can diverge under missing or unequal exposure. Therefore Draft.75 selects
+no correction and freezes no tolerance. Draft.76 supersedes the narrow
+60-dataset proposal with the factor-structured program below. GPCM remains
+outside this specific overlap because immer's design-matrix PCM JML is not
+mfrmr's aligned single-owner slope GPCM. Confirmation remains unauthorized.
+
+Draft.76 makes sample and design adversity first-class identities. The
+22-dataset feasibility smoke crosses RSM/PCM with Persons, realized responses
+per Person, Rater and Criterion counts, 3--6 categories, assignment density,
+workload imbalance, forced and natural endpoint rates, Gaussian-copula local
+dependence, guarded Rater anchors, MCAR, observed-Rater MAR, score-MNAR, and a
+combined-adversity cell. Observations per Person are treated as a derived
+quantity because they are algebraically determined by assigned Raters,
+Criteria, and observed fraction. A full Cartesian product is rejected in favor
+of factor blocks and targeted interactions.
+
+All 22 datasets generate. Two anchor rows retain their truth anchor tables but
+stop before fitting because a common mfrmr/TAM/immer anchor basis is not yet
+proved. The two one-Rater-per-Person low-information rows correctly fail the
+structural-rank screen: no common Persons link Raters. The other 18 datasets
+retain all 162 method rows. Eleven contain observed extreme Persons, producing
+22 retained TAM `adj = 0` failures and reducing original-raw eligibility for
+mfrmr raw and immer `jml` to 7/18 even though their numerical fits return.
+
+Sparse assignment exposes the anticipated correction divergence directly:
+TAM uses `31/32`, based on 32 potential pseudoitems, while immer uses `7/8`,
+based on eight observed responses per Person. Across fitted cells, their
+factors range `0.9375--0.97917` and `0.84027--0.95833`. Their returned marginal
+basis SE vectors also remain unchanged after classical point-estimate
+postscaling. Common-surface coverage is therefore unavailable pending a proved
+native-basis truth mapping or a prespecified refit/bootstrap covariance.
+
+The 3,050 metric rows keep bias, RMSE, Spearman rank, pairwise order,
+truth-SD/RMSE recovery separation, returned fit, finite surface, numerical
+convergence, and estimand eligibility separate. Recovery separation is not
+reported Rasch/FACETS separation. Common-surface coverage and definition-
+matched reported facet separation have zero eligible rows. Local-dependence
+and MNAR results are misspecification robustness only.
+
+The next guarded manifest is 29 profiles x two models x five replicates = 290
+datasets. Five replicates can expose feasibility and gross interactions but
+cannot estimate coverage or rare failures. The order after that pilot is:
+common anchor mapping; covariance/coverage identity; reported-separation
+definition; stronger external convergence extraction; then high-replication
+calibration with prespecified Monte Carlo precision and untouched confirmation
+seeds. No correction or sample-size recommendation is authorized.
+
+Draft.77 executes that guarded pilot and adds the missing execution-integrity
+layer. Dataset-level checkpoints bind the manifest row, generator/fitter/metric
+bodies, loaded mfrmr/TAM/immer function identities, R/platform/RNG contract,
+and payload hash. Publication is same-directory temporary-write, verification,
+and rename; unexpected or stale files fail closed. A completion marker binds
+all 290 checkpoint file hashes and the deterministic aggregate. An independent
+resume reconstructed all 290 cells without refitting and matched result hash
+`bd506dfdad21d1bafa3ee45409e64a77d8d63e5b75483a35db304644a224ab53`
+and marker hash
+`9bf8b8db3ce45ccd416d0fe12d5906bd33c104d5aa00db8925edfd410faa999c`.
+
+The manifest accounts for 230 fitted datasets and 2,070 mode rows, 40 expected
+structural-rank failures, and 20 anchor guards. The structural failures are not
+incidental: `EXPOSURE_LOW`, `RATERS_LOW`, `DENSITY_LOW`, and the combined
+low-information profile all assign only one Rater per Person and contain no
+common-Person Rater links. They cannot supply a low-information recovery
+estimate. The next design replaces those cells with prespecified connected
+bridge fractions and separates total Raters, assignment degree, density, and
+realized exposure more carefully. Apparent high-density benefits remain
+aliased with having only two Raters and are not promoted.
+
+Of the 230 fitted datasets, 126 contain observed extreme Persons. Original-raw
+eligibility is therefore 104/230 for mfrmr raw and immer `jml`; TAM raw returns
+on 103/230, including one separate no-extreme failure. mfrmr raw returns on all
+230 while its extended profile returns on 228. TAM adjusted and combined modes
+return on all 230 but meet the iteration-before-ceiling proxy on 192; TAM
+raw/classical meet it on 84. All three immer modes meet that proxy on 230.
+Return, numerical convergence, extreme-boundary identity, and evidence
+eligibility remain distinct denominators.
+
+The five-replicate traces show the expected finite-item contraction direction
+without selecting a correction. On common original-raw-eligible rows, TAM and
+immer classical corrections reduce cumulative-surface RMSE in 95.1% and 94.2%
+of cells; their correction factors range `0.875--0.96875` and
+`0.75--0.9375`. Those corrected points are not original-JML maximizers, and the
+unchanged returned marginal SE vectors cannot provide corrected-estimand
+coverage.
+
+Method-specific reference ratios identify priorities, not thresholds. Median
+cumulative-surface RMSE ratios are about `2.43` for 30% score-MNAR, `2.01` for
+sparse-load-MAR, `1.71` for local dependence 0.50, `1.48` for 48 Persons, and
+`0.53` for 480 Persons. The fixed-exposure Person comparison does not establish
+that incidental-parameter bias vanishes. Rank recovery and location RMSE can
+move differently, and truth-SD/RMSE recovery separation remains distinct from
+reported Rasch/FACETS separation.
+
+Draft.78 completes the first connected low-exposure/low-density redesign. Its
+18 profiles x RSM/PCM deterministic smoke has 30 connected datasets retaining
+270 method rows and six disconnected negative controls stopping before
+optimization. The runner makes bridge-Person count, Person degree, density,
+workload imbalance, Rater-graph components, shared-Person edge weights, and
+weighted algebraic connectivity explicit before and after response-level
+missingness.
+
+Six bridges leave the planned eight-Rater chain in two components; 12 bridges
+connect it. The 12-bridge designs have identical cross-Rater algebraic
+connectivity with 60, 120, or 480 total Persons, showing that additional
+single-Rater Persons do not increase linking information. This is not a
+12-bridge recommendation: the positive construction still has minimum edge
+weight one and remains weakly linked. Fixed-degree and fixed-density Rater
+sequences are retained as different conditional contrasts because density,
+degree, and Rater count cannot be three orthogonal effects.
+
+Natural extreme Persons occur in 20/30 connected datasets. Original-raw
+eligibility is 10/30 for mfrmr raw and immer `jml`; TAM raw/classical return on
+9/30. Most TAM adjusted/combined fits reach the 500-iteration smoke ceiling,
+so their return state and iteration-before-ceiling proxy remain separate.
+Common coverage and reported facet separation still have zero eligible rows.
+
+Draft.79 completes the matched path, cycle, distributed, and hub structural
+smoke at 8, 12, and 24 bridge Persons. It adds articulation-Rater, cut-edge,
+single-link-Person failure, removal robustness, cycle rank, and edge-weight
+diagnostics. Thirty connected RSM/PCM datasets retain 270 method rows; six
+observed-disconnected controls stop before optimization. The first run is
+intentionally interrupted after one atomic checkpoint, resumes the other 35,
+and a second process reconstructs all 36 with the same aggregate and marker
+hashes.
+
+At 12 bridges, hub algebraic connectivity exceeds cycle and path, yet the hub
+has one articulation Rater and seven cut edges. One targeted link loss
+disconnects path and hub; cycle survives as a vulnerable path and distributed
+survives with two articulation Raters and two cut edges. Spending 24 bridges
+inside only four Raters leaves the global design in five components. No bridge
+count or one scalar network diagnostic can therefore become the release rule.
+
+The smoke also rejects immediate execution of its declared five-replicate
+performance manifest. Every connected dataset contains a natural extreme
+Person, so original-raw eligibility is 0/30 for mfrmr raw and immer `jml`, and
+TAM raw/classical return on 0/30. Only 10/30 TAM adjusted/combined fits stop
+before the 800-iteration ceiling. Running more identical cells would not close
+raw estimand or convergence identity.
+
+The next ordered slice is therefore: split operational sparse-topology/extreme
+and raw-JML-eligible high-information designs without conditioning away
+extremes; extract or calibrate stronger engine-specific convergence evidence;
+then refreeze matched-topology replication and Monte Carlo precision. Common
+anchor basis, native transformed covariance or frozen refit/bootstrap
+uncertainty, and definition-matched reported separation remain before high-
+replication confirmation. GPCM transfer remains later and partitions
+Criterion-owned and Rater-owned model identities. Draft.79 changes no public
+default, bridge cutoff, topology preference, sample-size recommendation,
+correction, threshold, or readiness state.
+
+### Draft.80 typed G-theory and D-study reconstruction contract
+
+Draft.80 adds `gtheory-reconstruction-roadmap-0.2.3.md` as a separate
+observed-score measurement-design track. It does not reinterpret an MFRM fit as
+a joint GT-IRT model and does not broaden the 0.2.3 public G/D-study claim.
+The existing `mfrm_generalizability()` remains a univariate main-effects
+`lme4` fit with collapsed interaction/residual variance, and
+`mfrm_d_study()` remains a sensitivity projection of that exact surface.
+
+The source audit establishes both opportunity and caution. Archived `gtheory`
+0.1.2 accepted arbitrary `lmer` formulas and included univariate, stratum-based
+multivariate, and weighted composite routes, but CRAN removed it in March 2025
+and its documented unbalanced summary uses median main-facet counts. Current
+`gtheoryr` 0.1.0 covers only simple persons-by-items crossed and items-within-
+person designs. Current `csemGT` 1.0.0 adds a narrow persons-by-items
+conditional-SEM/D-study reference, while GeneralizIT 0.1.2 supplies a separate
+Python/Henderson-method univariate overlap candidate. Local `lme4` 2.0.6 and
+`glmmTMB` 1.1.14 supply modern fitting,
+covariance, diagnostic, and bootstrap primitives, but do not supply the
+G-theory D-study meaning of an arbitrary formula.
+
+Draft.80 therefore requires a formula plus a typed design/effect map. The map
+identifies the object, random and fixed facets, nesting graph, profile strata,
+component members, universe/error role, exact `ScaleBy` facets or allocation
+operator, observed replication, and estimability state. A parsed `A:B` term
+cannot by itself decide whether `B` is nested in `A`, whether the component is
+relative or absolute error, or which future facet counts divide it. Any
+unresolved role stops before a coefficient.
+
+For a balanced fully crossed `p x r x i` design, the algebra oracle separately
+scales `p:r / n_r`, `p:i / n_i`, and `p:r:i,e / (n_r n_i)` for relative error,
+then adds `r / n_r`, `i / n_i`, and `r:i / (n_r n_i)` for absolute error. The
+highest interaction and residual are not reported separately without within-
+cell replication. Nested, partially crossed, sparse, and unequal-allocation
+designs require a nesting graph plus component-specific incidence/rank and
+allocation audits; observed median counts cannot silently define a D-study.
+
+Balanced ANOVA/MoM, `lme4` REML/ML, and `glmmTMB` REML/ML remain different
+estimators. Raw negative MoM components remain visible. The likelihood
+backends constrain variances nonnegative, so a zero/boundary/singular estimate
+is retained as such and is never described as a raw negative component or a
+successful repair. `lme4` singularity/`rePCA` and `glmmTMB` Hessian,
+convergence, correlation, and optimizer-sensitivity states remain backend-
+specific.
+
+Uncertainty uses full-refit parametric bootstrap as the proposed primary route:
+each replicate refits the canonical G-study, repeats identification, and
+recomputes every D-study scenario. Marginal variance-component interval
+endpoints are not plugged into a nonlinear coefficient as the default.
+Failed, boundary, and ineligible bootstrap replicates remain in the ledger.
+
+Multivariate work follows the univariate algebra. Each effect has a stratum
+covariance matrix; composite `E rho^2` and `Phi` use `w' Sigma w`. Off-diagonal
+D-study scaling requires explicit common, partially shared, or independent
+facet allocation across strata. Counts alone and `sqrt(n_a n_b)` do not define
+that covariance. Raw symmetry, PSD, rank, and stratum-order checks precede any
+scalar composite, and a PSD repair is separately labelled rather than silently
+substituted.
+
+The ordered implementation sequence is Draft.81 parser/algebra oracle;
+Draft.82 balanced univariate MoM/lme4; Draft.83 nesting, partial crossing,
+imbalance, and missingness; Draft.84 checkpointed uncertainty; Draft.85
+multivariate covariance prototype and exact lme4/glmmTMB overlap; and Draft.86
+external/reproducible-reporting gate. Version placement is 0.2.3 contract and
+prototypes, possible 0.2.4 univariate candidate, 0.2.5 multivariate prototype
+aligned with explicit scale/stratum identity, and 0.3.0 schema stabilization.
+
+Draft.80 freezes no backend preference, supported arbitrary-formula grammar,
+CI method, coefficient threshold, optimal D-study design, sample-size rule,
+multivariate claim, public default, checklist promotion, candidate, or
+confirmation state.
+
+### Draft.81 typed parser and balanced algebra prototype
+
+Draft.81 executes the first narrow slice of the Draft.80 plan through
+`gtheory-design-algebra-contract-0.2.3.md`,
+`gtheory-design-algebra-prototype-0.2.3.R`, and its result record. It adds no
+export and performs no fit. The parser accepts an intercept-only fixed part and
+random intercepts, normalizes term/member order against one declared object
+and its facets, retains original `/` nesting edges separately from
+`reformulas` expansion, and builds stable component, universe-role, `ScaleBy`,
+replication, nesting, and estimability fields plus SHA-256 identities.
+
+The coefficient-positive subset is complete crossing with one or two random
+facets, all lower-order components, one collapsed highest-order/residual
+component, explicit residual scaling by all random facets, and positive integer
+balanced planned counts. The frozen p x i oracle returns relative error `.2`,
+absolute error `.25`, `G=5/6`, and `Phi=4/5`. The p x r x i oracle returns
+relative error `.30`, absolute error `13/30`, `G=10/13`, and `Phi=30/43` from
+separately recorded divisors and contributions. Eight dedicated tests with 46
+expectations pass.
+
+Draft.81 does not hide estimator boundaries. Negative raw inputs remain in the
+component and contribution tables with `AlgebraReady=FALSE`; no truncation is
+performed. Positive fixtures may be algebra-ready, but all rows remain
+`DecisionReady=FALSE` because no component estimation or uncertainty exists.
+Missing residual semantics, incomplete decompositions, unsupported
+nesting operators, component-name mismatches, and the unreplicated highest-
+order interaction/residual alias all fail before coefficient output. Parsing a
+nested formula is not evidence that conditional counts or allocation operators
+exist.
+
+This moves only `gtheory_typed_design_algebra` from `not_run` to `review` as a
+roadmap guard. It is not `ok`. Draft.82 now supplies the balanced ANOVA/MoM,
+matched `lme4` extraction, raw-negative/boundary distinction, and declared
+collapsed-residual reduction described next; nested, partially crossed,
+unbalanced, missing, interval, multivariate, and broader public compatibility
+gates remain open.
+
+### Draft.82 balanced ANOVA/MoM and lme4 estimator prototype
+
+Draft.82 adds `gtheory-balanced-estimation-contract-0.2.3.md`,
+`gtheory-balanced-estimation-prototype-0.2.3.R`, and its execution record. It
+keeps the Draft.81 one-/two-random-facet, complete-crossed, one-observation-per-
+cell boundary and adds no package export or dependency.
+
+The raw estimator reconstructs every marginal interaction effect, verifies
+orthogonal sum-of-squares closure, and inverts the balanced expected-mean-
+square system from the highest-order residual downward. It retains mean
+squares, degrees of freedom, EMS coefficients, subtracted higher-order
+contributions, raw components, and negative/zero/interior states. The p x i
+fixture recovers `p=1`, `i=.2`, `p:i,e=.8`; the p x r x i fixture recovers
+`p=1`, `r=.12`, `i=.18`, `p:r=.24`, `p:i=.30`, `r:i=.08`, and
+`p:r:i,e=.48`. Its SS/MS tables independently match saturated base-R `lm`
+ANOVA output.
+
+Matched local lme4 2.0.6 REML fits agree with those interior vectors within
+`1.2e-5`. ML remains separately labelled and differs from REML on the same
+data. In the negative control, raw Item MoM is `-.04444444`, while REML returns
+approximately zero under the nonnegative variance parameterization and is
+singular. The former is not a likelihood maximum; the latter is a constrained
+REML boundary point, not a corrected raw MoM estimate or an unconstrained
+maximum.
+
+The explicit `main_effects_collapsed_residual_v1` route reproduces the four
+variance components returned by current `mfrm_generalizability()` to its
+documented six decimal places. It remains governed by the current residual-
+scaling sensitivity contract and is rejected by the typed interaction-specific
+D-study dispatcher.
+
+Seven dedicated tests and 71 expectations pass. Algebra-ready results remain
+`InferenceReady=FALSE` and `DecisionReady=FALSE`; no interval, bias/RMSE,
+coverage, estimator preference, sample-size rule, external equivalence, or
+public design family is claimed. `gtheory_univariate_crossed_nested` and
+`gtheory_current_surface_compatibility` move only to roadmap `review`, not
+`ok`. Draft.83 must add nesting, partial crossing, imbalance, missingness,
+allocation, and component-specific rank/replication evidence.
+
+### Draft.83a observed-design incidence and rank audit
+
+Draft.83a adds `gtheory-design-incidence-contract-0.2.3.md`,
+`gtheory-design-incidence-audit-0.2.3.R`, and its execution record as a
+repository-only pre-fit gate. It accepts a Draft.81 typed specification even
+when later D-study scaling remains unsupported, because its purpose is to
+audit the observed incidence structure before a backend is allowed to make a
+stronger claim.
+
+The audit hashes canonical input, retained rows, and omission patterns without
+using raw row numbers. It treats complete, MCAR, covariate-MAR, MNAR-
+sensitivity, and unknown missingness as declared provenance rather than a
+tested causal mechanism. Nested child labels receive ancestry-qualified
+identities, so repeated labels across Sites cannot create false graph links.
+Global and pairwise components, incidence density, degree/load imbalance,
+full-cell coverage/replication, conditional child counts, and model-term
+fixed-effect-equivalent rank increments remain separate outputs.
+
+Seven tests and 69 expectations pass across complete p x r x i,
+sparse-connected p x i, disconnected islands, nested Site/Rater, fully
+replicated saturated p x i, missing-row/replay, nonnumeric-score, and rank-
+capacity controls. The nested `Site` fixed-equivalent column is explicitly
+labelled as absorbed by the `Site:Rater` hierarchy; it is not misreported as
+proof that the random Site variance is unidentified. Conversely, full
+fixed-equivalent rank is not proof of covariance-parameter identifiability.
+
+`IncidenceScreenPassed` is therefore only a structural screen.
+`EstimationEligibility` remains `not_adjudicated_draft83a`, and
+`CoefficientEligible` and `DecisionReady` are always false. The
+`gtheory_univariate_crossed_nested` checklist row remains `review`, not `ok`.
+Draft.83b now supplies the planned allocation algebra described next;
+Draft.83c1 now supplies the covariance/information and lme4 audit;
+Draft.83c2 now supplies matched glmmTMB diagnostics; Draft.83d1 freezes the
+recovery registry and denominators; Draft.83d2a now supplies deterministic
+generation; Draft.83d2b0 now supplies scalable structural pre-fit
+adjudication; Draft.83d2b1 now supplies atomic execution with a retained weak-
+information concern; and later Draft.83d2 slices must calibrate that gate
+before smoke recovery and zero-false-ready evidence.
+
+### Draft.83b component-specific allocation operator
+
+Draft.83b adds `gtheory-allocation-operator-contract-0.2.3.md`,
+`gtheory-allocation-operator-prototype-0.2.3.R`, and its execution record. The
+repository-only operator takes an explicit planned Scenario x prospective-
+object Unit x random-facet support with positive weights summing to one. It
+never derives a future plan from observed medians or normalizes weights
+silently.
+
+For component `C`, full-cell weights are marginalized to its typed `ScaleBy`
+condition identities and transformed by `lambda_uC = sum_g a_uCg^2`.
+Uniform crossed weights reduce exactly to `1/n_r`, `1/n_i`, and
+`1/(n_r n_i)`. Nested Site/Rater support uses conditional child identities,
+giving `1/2` for Site and `1/6` for Site:Rater in the frozen two-by-three
+fixture without using the 12-cell Cartesian overcount as a denominator.
+
+Unequal units keep separate component concentrations, effective counts, G, and
+Phi. A scenario scalar is available only for identical full supports and
+weights. Cross-unit `sum_g a_uCg a_vCg` records shared-condition covariance;
+object-containing components retain a zero cross-object covariance multiplier.
+Equal unit coefficients under disjoint Item support deliberately remain
+scenario-ineligible.
+
+Seven tests and 71 expectations pass across exact p x i / p x r x i Draft.81
+reduction, nested conditional levels, unequal units, shared/disjoint support,
+raw negatives, replay, and malformed/operator-capacity failures. Component
+application remains `EstimationReady=FALSE`, `InferenceReady=FALSE`, and
+`DecisionReady=FALSE`. The crossed/nested checklist row remains `review`.
+
+Draft.83c1 supplies the lme4 half of that binding, described next. Draft.83c2
+now adds the separately identified matched-glmmTMB route; Draft.83d1 freezes
+the registry/denominator identity; Draft.83d2a supplies deterministic
+generator identity; Draft.83d2b0 supplies scalable structural pre-fit identity;
+Draft.83d2b1 executes atomic fits but fails its near-boundary false-ready gate;
+and subsequent Draft.83d2 slices must calibrate weak information before fitted
+components can enter a recovery pilot.
+
+### Draft.83c1 covariance-design, expected-information, and lme4 audit
+
+Draft.83c1 adds `gtheory-covariance-information-contract-0.2.3.md`,
+`gtheory-covariance-information-audit-0.2.3.R`, and its execution record. For
+each typed variance component it builds `K_c=Z_c Z_c'` on the exact Draft.83a
+retained rows and audits the rank and right null space of the stacked
+`vech(K_c)` covariance design. It then evaluates ML and REML expected
+information separately at an explicit named variance point; REML uses the
+intercept-residualizing `P` operator rather than assuming its rank matches ML.
+
+The frozen saturated p x i negative control identifies the exact
+Person:Item/Residual alias. A distinct one-Item control is structurally full
+rank and ML-informative but loses the Item direction under REML. Sparse
+connected and disconnected designs can both retain full covariance/information
+rank, so Draft.83a connectivity remains an independent necessary gate. Nested
+Site/Rater components use ancestry-qualified identities.
+
+The lme4 route stores semantic `VarCorr()` identities, backend/version and
+ML/REML identity, optimizer code, messages, gradient/Hessian availability,
+`isSingular()`, fitted boundary states, default-control identity, backend
+function hashes, and linked covariance/information hashes. A balanced interior
+fixture passes the narrow point-estimation gate; a
+finite optimizer-code-zero boundary fit remains `boundary_nonregular`. Eight
+tests and 103 expectations pass.
+
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+Dense covariance matrices are capacity-guarded and remain a prototype
+implementation. Draft.83c2 now supplies the matched backend comparison
+described next. Draft.83d1 now supplies the pre-simulation registry described
+after it; Draft.83d2a supplies its deterministic generation layer; and
+Draft.83d2b0 supplies its exact scalable structural pre-fit layer. The
+Draft.83d2b1 atomic execution layer is complete but retains a near-boundary
+false-ready concern. Weak-information calibration, sampling recovery, and the
+zero-false-ready gate therefore remain open.
+
+### Draft.83c2 matched glmmTMB/lme4 point-estimation parity
+
+Draft.83c2 adds `gtheory-glmmtmb-parity-contract-0.2.3.md`,
+`gtheory-glmmtmb-parity-prototype-0.2.3.R`, and its execution record. The
+glmmTMB route is restricted to the exact Draft.83c1 Gaussian identity-link,
+intercept-only, independent scalar random-intercept, homogeneous-dispersion,
+no-zero-inflation, retained-row, and ML/REML overlap. It records glmmTMB/TMB
+versions, actual default controls and function hashes, semantic `VarCorr`
+components, optimizer code/message/objective, gradient, `pdHess`, boundary
+tolerance, and the common covariance/information identities.
+
+Interior p x i ML/REML, p x r x i ML/REML, and nested Site/Rater fixtures match
+components, intercept, and full Gaussian logLik under explicit smoke
+tolerances. Backend grouping order such as Rater:Site maps back to typed
+Site:Rater. The negative-component control is more informative: glmmTMB has
+optimizer code zero and `pdHess=TRUE`, but Item is below the declared boundary
+tolerance and its Person/Residual estimates and REML logLik materially differ
+from lme4. Both fits remain nonregular and matched parity is false.
+
+Eight tests and 93 expectations pass. These are deterministic point-estimation
+overlap checks, not equivalence margins or estimator-selection evidence.
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+Draft.83d1 now freezes how recovery and exact false-ready rates must be
+evaluated without pooling away backend-specific failures.
+
+### Draft.83d1 G-theory ADEMP registry and denominator contract
+
+Draft.83d1 adds `gtheory-ademp-registry-contract-0.2.3.md`,
+`gtheory-ademp-registry-prototype-0.2.3.R`, and its record. It registers 24
+covering scenarios across Person count, within-Person observations, raters,
+criteria, score categories, assignment sparsity/topology, workload imbalance,
+endpoint concentration, local dependence, anchor rate, missingness, and
+variance regularity. Twenty metrics form 480 explicit scenario-metric routes,
+and the executable one-replicate smoke manifest contains 89 paired fit units.
+
+The registry does not assume one truth across incompatible stress families.
+Continuous independent Gaussian cells retain generating component truth;
+bounded ordinal cells target a complete finite-potential observed-score
+projection; local-dependence cells report independence-reference deviation;
+boundary/identification controls emphasize false readiness; and nonzero anchor
+rates remain blocked because the current Gaussian random-intercept G-study has
+no anchoring operation. Missingness mechanisms remain declared sensitivity
+strata rather than empirically verified causal labels.
+
+Person rank recovery, facet-level rank/RMSE, and a G-theory effect-recovery
+ratio are kept separate. The last is explicitly not Rasch/FACETS separation.
+Component, G, and Phi coverage remain unavailable until Draft.84 supplies a
+validated interval. A backend standard error cannot fill that missing gate.
+
+Result stages are monotone from planned through generated, pre-fit eligible,
+fit attempted/returned, optimizer converged, finite components, and point-gate
+passed. Fit-return and convergence rates use attempted fits; gate and false-
+ready rates use planned units; bias/RMSE additionally require declared truth
+and an available value; and every absent row remains unrecorded rather than a
+typed failure. A four-row audit fixture proves false readiness and incomplete
+accounting remain visible.
+
+Nine tests and 77 expectations pass. `SimulationExecuted`,
+`RecoveryEvidenceReady`, `InferenceReady`, `CoefficientEligible`, and
+`DecisionReady` remain false. Smoke replication one is a schema check only;
+pilot/confirmation counts and precision criteria are not frozen. Draft.83d2a
+implements the hashed generator, assignment/omission mechanisms, and
+projection truth described next; Draft.83d2b0 then supplies structural pre-fit
+adjudication. Draft.83d2b1 then executes method adapters and atomic attempt
+rows, retaining a failed near-boundary false-ready result; later Draft.83d2 work
+must calibrate weak information before effect extraction and recovery.
+
+### Draft.83d2a deterministic G-theory ADEMP generation layer
+
+Draft.83d2a adds `gtheory-ademp-generator-contract-0.2.3.md`,
+`gtheory-ademp-generator-prototype-0.2.3.R`, and its record. The exact
+Draft.83d1 registry now replays to 22 generated scenario identities and two
+typed anchor blocks. Each generated identity binds separate complete-
+potential, assigned, and post-missingness tables; nominal and, where
+registered, complete finite-table observed-score projection truth; generated
+level effects; realized assignment/missingness/score audits; eleven function
+hashes; and one generator hash.
+
+The assignment layer realizes every registered density and observation count
+per Person, while connected-cycle sparsity and moderate/high hub workload
+remain separate. Bounded 3/5/7-category cells retain endpoint rates
+0.50/0.25/0 and target finite observed-score projection rather than latent
+Gaussian variance. Exact 20% MCAR, observed-load MAR, score-MNAR, and unknown
+omissions remain separate mechanisms. Residual AR(1) cells reproduce the
+registered 0.25/0.50 perturbations; exact-zero and near-zero Rater variances
+retain distinct generated effects.
+
+The currently auditable nested cell is deliberately restricted to Person,
+Site, Site:Rater, Criterion, and residual components. Interaction-rich nested
+models remain pending because the present fixed-effect-equivalent rank screen
+does not establish their covariance identification. The simplified nested
+cell passes incidence audit, while disconnected Person/Rater islands and an
+unreplicated saturated highest-order component fail as designed.
+
+Ten tests and 185 expectations pass. The aggregate generator-smoke hash is
+`1ed0856cc91ceb36115806dcf0f135ef7491d9e1ef53106276c0fd81584e0844`.
+Only `GenerationEvidenceReady` becomes true for executable rows;
+`EstimationReady`, `InferenceReady`, `CoefficientEligible`, and
+`DecisionReady` remain false. Draft.83d2b0, described next, attaches the
+structural pre-fit audit to all 89 manifest units. Draft.83d2b1 must then
+record one atomic backend result or typed failure for every unit. That execution
+is now complete with the concern recorded below; later Draft.83d2 slices must
+calibrate weak information before extracting centered effects and demonstrating
+zero false readiness. Replication-count calibration and Draft.84 intervals
+remain later gates.
+
+### Draft.83d2b0 scalable G-theory ADEMP pre-fit layer
+
+Draft.83d2b0 adds `gtheory-ademp-prefit-contract-0.2.3.md`,
+`gtheory-ademp-prefit-prototype-0.2.3.R`, and its record. It binds every
+Draft.83d2a analysis table to the Draft.83a observed-design audit, an exact
+scalable covariance-component rank audit, and every corresponding Draft.83d1
+manifest unit.
+
+This slice corrects an important category distinction. Fixed-effect-equivalent
+rank remains useful for saturated mean-design diagnostics, but it is not the
+rank of the variance-component covariance design. For the registered
+independent scalar random-intercept family, each covariance derivative is an
+equality indicator. Exact supported equality signatures therefore preserve
+the full covariance-design rank and null space without materializing
+`vech(K_c)`. The 19,200-row N=300 cell is audited at rank 7/7; the dense seven-
+component representation would require 1,290,307,200 design cells.
+
+Nineteen scenarios and 77 fit units are structurally eligible with likelihood
+information still pending. Three scenarios and 12 units are blocked:
+`GT-SPARSE-CYCLE-LOW` and `GT-NEG-DISCONNECTED` confound `Person:Rater` with
+Residual, while `GT-NEG-ALIASED` confounds the unreplicated
+`Person:Rater:Criterion` component with Residual. Missing declared levels
+restrict level-recovery metrics, and unknown missingness remains a sensitivity
+label; neither is silently converted into a causal or full-metric claim.
+
+Eight tests and 71 expectations pass. All manifest rows retain
+`FitAttemptAuthorized=FALSE`, `AtomicResultRecorded=FALSE`,
+`RecoveryEvidenceReady=FALSE`, `InferenceReady=FALSE`,
+`CoefficientEligible=FALSE`, and `DecisionReady=FALSE`. Draft.83d2b1, recorded
+next, freezes method-specific adapters and likelihood-information/regularity
+rules and records an atomic success or typed failure for each of the 89 planned
+units. Pre-fit-blocked units do not call a backend. This scalable proof does
+not extend to random slopes, structured residuals, multivariate covariance, or
+latent GPCM/GT-IRT likelihoods.
+
+### Draft.83d2b1 atomic point-fit execution and retained concern
+
+Draft.83d2b1 adds `gtheory-ademp-fit-contract-0.2.3.md`,
+`gtheory-ademp-fit-prototype-0.2.3.R`, and its record. All 89 manifest units
+now receive one atomic success or typed failure. The 12 Draft.83d2b0 blocks
+never call a backend; all 77 eligible balanced-MoM/lme4/glmmTMB attempts
+return. Fifty-seven point gates pass and 32 failures are typed as pre-fit,
+regularity, or local-curvature failures. The execution hash reproduces in two
+fresh R processes and exact accounting passes.
+
+This slice separates backend-local curvature from full expected information.
+lme4 uses its profiled `theta` Hessian, glmmTMB uses the inverse of its fixed-
+parameter covariance, and MoM records nonlikelihood equation completion. None
+is relabelled as the complete Draft.83c1 expected-information matrix. Negative
+raw MoM components also remain raw rather than being clipped.
+
+The negative-control gate does not pass. Exact-zero, disconnected, and aliased
+controls yield zero passed point gates, but all four near-zero variance routes
+pass: their fitted Rater variances are about 0.0039--0.0052 although the
+nominal generator variance is `1e-10`. Optimizer completion, finite components,
+an absolute `1e-8` boundary tolerance, and positive local curvature therefore
+do not constitute an adequate weak-information screen. The runner retains
+`ZeroFalseReadyPassed=FALSE` and all recovery/inference/readiness flags false.
+
+The next Draft.83d2 slice must pre-register an observable weak-information
+calibration before effect extraction. It must include zero, near-zero, small-
+positive, and ordinary-positive controls and vary component level count,
+observations per level, sparse topology, and workload imbalance. A truth-aware
+gate or post hoc increase of the boundary tolerance is prohibited. Only after
+false-positive/false-negative behavior is calibrated may centered-effect and
+G/Phi recovery enter a feasibility pilot.
+
+### Draft.83d2b2a weak-information diagnostic covering smoke
+
+Draft.83d2b2a adds
+`gtheory-weak-information-calibration-contract-0.2.3.md`,
+`gtheory-weak-information-calibration-prototype-0.2.3.R`, and its record. The
+registry crosses five information/design strata with exact-zero, numerical-
+near-zero, two small-positive, moderate-positive, and ordinary-positive Rater
+variance regions, then evaluates lme4 and glmmTMB under ML and REML. All 120
+one-replicate units are attempted, returned, restored to canonical manifest
+order, and atomically accounted.
+
+The covering result rejects the previous whole-model point gate as a target-
+component resolution rule. It passes 82/120 units, including 27/40 registered
+zero or near-zero negative controls. It also blocks 3/12 deliberately narrow
+positive controls, all in the high-information variance-0.04 cell. The latter
+failure can be caused by another component's boundary or whole-model curvature,
+which is precisely why target weakness and nuisance fit failure must not be
+collapsed into one bit.
+
+Ten application-time observables are implemented without reading generating
+truth: component estimate/fractions, level and exposure descriptors, boundary
+and curvature state, and matched backend and ML/REML contrasts. A reduced-
+component likelihood comparison is registered but not implemented because its
+boundary null requires a separate calibration contract; full-refit component
+intervals remain Draft.84 work. `ThresholdFrozen`,
+`CalibrationEvidenceReady`, `ConfirmationAuthorized`,
+`RecoveryEvidenceReady`, `InferenceReady`, `CoefficientEligible`, and
+`DecisionReady` remain false.
+
+Draft.83d2b2b is therefore a replicated feasibility pilot rather than a
+threshold application. It must freeze replication counts and Monte Carlo
+precision, preserve paired seeds, compare a small prespecified rule set by
+design stratum, and define an indeterminate region and failure behavior before
+untouched confirmation seeds exist. It may not derive a universal minimum
+number of Raters or observations per Rater from this one-replicate smoke.
+
+### Draft.83d2b2b0 replicated pilot plan and authorization firewall
+
+Draft.83d2b2b0 adds `gtheory-weak-information-pilot-contract-0.2.3.md`,
+`gtheory-weak-information-pilot-prototype-0.2.3.R`, and its record. The
+independent Monte Carlo unit is one scenario-by-replicate dataset. lme4 and
+glmmTMB ML/REML routes share it and are paired observations, not four
+independent replications.
+
+Four nonoverlapping replicate bands are frozen. Schema uses IDs 2--3 over
+three baseline controls (24 fits); feasibility uses 101--125 over all 30 cells
+(3,000 fits); calibration uses 201--300 (12,000 fits); and confirmation uses
+501--700 (24,000 fits). Worst-case cell-by-method Bernoulli MCSE is 0.10 for
+feasibility, 0.05 for calibration, and about 0.035 for confirmation. Primary
+error rates remain scenario- and method-specific; pooling topology, level
+count, exposure, or method to manufacture precision is prohibited.
+
+The 24-fit schema execution passes atomic accounting and returns all fits. It
+is already viewed and therefore cannot enter pilot denominators. Feasibility
+is authorized but unrun. Calibration and confirmation manifests are auditable
+metadata, while their execution fails closed. Confirmation remains sealed
+until a selected rule, both cutpoints, the indeterminate zone, failure
+behavior, backend scope, and source hashes are frozen.
+
+Four candidate architectures use target fraction, target-to-residual ratio,
+backend-specific relative uncertainty, or same-backend full-versus-reduced
+likelihood drop. lme4 profiled relative-SD curvature and glmmTMB joint log-SD
+covariance retain distinct labels; neither becomes a generic component SE.
+The likelihood drop receives no ordinary chi-square p-value under the boundary
+null. `ThresholdFrozen`, `CalibrationEvidenceReady`,
+`ConfirmationAuthorized`, `ConfirmationViewed`, `RecoveryEvidenceReady`,
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+
+The subsequent source audit supersedes that feasibility authorization before
+any seed in 101--125 is generated. The historical b2b0 identities remain an
+immutable planning record, but their execution permission is no longer the
+active contract.
+
+### Draft.83d2b2b1a source-audited boundary diagnostic refits
+
+Draft.83d2b2b1a adds
+`gtheory-weak-information-inference-audit-0.2.3.md`,
+`gtheory-weak-information-diagnostic-refit-prototype-0.2.3.R`, and its
+record. Self and Liang's boundary asymptotics, Crainiceanu and Ruppert's exact
+one-component LMM result, Greven et al.'s finite-sample extensions, and current
+lme4/glmmTMB/RLRsim contracts are mapped to the registered six-random-
+component model.
+
+The audit withdraws `target_relative_se_profiled` and both candidate rule
+families that require it. lme4 supplies a profiled relative-SD coordinate;
+when its profiled criterion Hessian is finite positive definite, the validation
+runner records the local scale `sqrt(2 * diag(H^-1))`. glmmTMB supplies a joint
+log-SD coordinate and covariance, whose doubled local scale is only a first-
+order relative-variance diagnostic. These coordinates are neither common
+component standard errors nor valid boundary Wald tests.
+
+The already viewed schema is refitted as 24 full/reduced pairs, or 48 backend
+fits. All pairs return with identical retained-row counts and one likelihood-
+df difference. Raw ML LRT and REML RLRT differences are available for all 24;
+four glmmTMB values between approximately -3.6e-7 and -5.7e-7 remain untruncated
+inside a -1e-6 numerical tolerance. Twenty backend-coordinate local diagnostics
+are available. Four lme4 target-boundary fits have no profiled Hessian and
+remain explicitly unavailable. No chi-square law, universal mixture law,
+p-value, interval, or resolved state is assigned.
+
+The exact-zero schema rows can have positive target estimates and nonzero
+likelihood drops, while positive-reference rows can reach a target boundary.
+This is schema evidence that point positivity, zero-null separation, local
+coordinate computability, positive-component recovery, and D-study stability
+are distinct. It is not an operating-characteristic estimate.
+
+The next slice must register a custom parametric bootstrap under the fitted
+reduced model on the exact observed incidence pattern. Its unit, bootstrap
+draw count, Monte Carlo uncertainty, optimizer/failure denominator, nuisance-
+boundary handling, and ML/REML/backend scope must be frozen before a small
+viewed bootstrap schema is run. Only a later replacement identity may
+reauthorize the 25-replicate feasibility phase. `FeasibilityEvidenceReady`,
+`CalibrationEvidenceReady`, `ThresholdFrozen`, `ConfirmationAuthorized`,
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+
+### Draft.83d2b2b1b exact-design bootstrap mechanics
+
+Draft.83d2b2b1b adds
+`gtheory-weak-information-bootstrap-contract-0.2.3.md`,
+`gtheory-weak-information-bootstrap-prototype-0.2.3.R`, and its record. It
+separates the 3,000-row resolution-score feasibility computation, fitted-null
+bootstrap mechanics, and independent outer calibration of test operating
+characteristics. Only the middle layer is executed.
+
+For the three already viewed baseline controls at outer replicate 2, all four
+lme4/glmmTMB ML/REML routes fit observed full/reduced models. Each reduced fit
+generates `B=3` backend-native unconditional responses while preserving exact
+rows, order, factor levels, incidence, missingness, fixed-effect design, and
+non-target random terms. The 12 observed plus 36 bootstrap pairs require 96
+backend fits. All pairs return; 36/36 design checks and distinct generated-
+data identities pass; 16 small negative raw likelihood differences remain
+untruncated; and no difference is below the frozen -1e-6 tolerance.
+
+Every planned bootstrap draw remains in the denominator. If `E` available
+draws exceed the observed raw statistic and `F` draws fail, the recorded
+computational bounds are `(1+E)/(B+1)` and `(1+E+F)/(B+1)`. A point value is
+formed only when `F=0`. Simulation/identity and refit failures remain distinct,
+and a response hash survives a later refit failure. The schema has no failures,
+but eight of 36 bootstrap pairs have at least one non-target component at the
+1e-8 boundary tolerance.
+
+This is a plain plug-in parametric bootstrap, not a finite-sample exact test
+and not the separately published shrinked parametric-bootstrap procedure for
+nuisance boundary components. Its `B=3` grid width is 0.25. The 12 values
+cannot estimate size, power, a production `B`, a threshold, or backend
+superiority. A naive 30-cell x 25-outer-replicate x four-method plan with
+`B=199` would require 1,200,000 fits and is not authorized.
+
+The next slice must freeze the replacement no-inner-bootstrap 3,000-row
+resolution-feasibility manifest, measure route/boundary runtimes, and design a
+tractable outer operating-characteristic study with an explicit nuisance-
+boundary method choice. `ResolutionFeasibilityAuthorized`,
+`BootstrapOperatingCharacteristicsReady`, `FeasibilityEvidenceReady`,
+`CalibrationEvidenceReady`, `ThresholdFrozen`, `ConfirmationAuthorized`,
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+
+### Draft.83d2b2b1c replacement feasibility and runtime authorization
+
+Draft.83d2b2b1c adds
+`gtheory-weak-information-feasibility-contract-0.2.3.md`,
+`gtheory-weak-information-feasibility-prototype-0.2.3.R`, and its record. It
+rebinds the never-generated replicate-101--125 band to a new 3,000-row,
+750-independent-dataset, 6,000-full/reduced-fit manifest. Manifest construction
+does not call the generator, pre-fit layer, or a backend. Each generated
+dataset will be shared by exactly four method routes, and every scenario x
+method cell retains 25 independent replicates.
+
+Runtime is measured on all 30 already viewed replicate-1 design x variance
+cells and four methods. All 120 full/reduced pairs return, but only 111 common
+feasibility scores are available. Six rows have a raw likelihood difference
+below -1e-6; four rows fail optimizer/likelihood availability; one row belongs
+to both groups. Eighteen available small negative values remain untruncated,
+22 target-boundary rows and eight nuisance-boundary rows remain explicit. All
+eight nuisance boundaries occur in the one viewed few-level design, which is
+not a claim that other designs are free of that risk.
+
+The timing-excluded execution and authorization hashes reproduce. Two serial
+central projections are approximately 32.6--33.0 minutes; x4 sensitivity is
+about 2.2 hours. Timing varies across runs and is excluded from scientific
+identity, estimator comparison, and performance guarantees. The full/reduced
+method pair is the atomic checkpoint unit; a dataset is complete only after
+four method rows; stale or partial identity mismatches are recomputed or
+rejected.
+
+All eight narrow authorization gates pass. The separate authorization record
+sets `ResolutionFeasibilityAuthorized=TRUE` for the exact frozen manifest.
+The contract and runtime objects cannot self-authorize and retain that flag as
+false. The coming run may report only scenario x method score availability,
+raw distributions, optimizer/boundary/material-negative frequencies, and
+exact failure accounting. It cannot select a threshold, run an inner
+bootstrap, stop early, calibrate size/power, or support a D-study decision.
+`FeasibilityEvidenceReady`, `BootstrapOperatingCharacteristicsReady`,
+`CalibrationEvidenceReady`, `ThresholdFrozen`, `ConfirmationAuthorized`,
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+
+### Draft.83d2b2b1d atomic feasibility execution
+
+Draft.83d2b2b1d adds
+`gtheory-weak-information-feasibility-runner-contract-0.2.3.md`,
+`gtheory-weak-information-feasibility-runner-0.2.3.R`, its execution record,
+and an explicit full validation tier. Each full/reduced method pair is written
+atomically, and a dataset marker is valid only after the four expected route
+hashes validate. Timing, execution order, filesystem location, and checkpoint
+reuse are excluded from the scientific identity.
+
+All 3,000 pairs and 750 datasets are present. All pairs return, but common
+scores are available for 2,804 rows. Seventy-nine rows fail the registered
+optimizer/likelihood-identity condition, 126 have a finite raw likelihood
+difference below -1e-6, and nine belong to both groups. Seven further raw
+differences are non-finite and already in the failure set; they are not signed
+material-negative values. The 759 available small negative values remain
+untruncated. A full resume performs zero route computations,
+reuses all 3,000 checkpoints, and reproduces execution hash
+`04ec60ab6d4351c0d8c6416543fa8ac46e15585bbe85680f829b341beb34a22b`.
+
+The descriptive result is heterogeneous. High-information availability is
+457/600 because 101 routes have materially negative likelihood differences.
+The few-level design has 283/600 nuisance-boundary routes and Spearman
+ordering of only about 0.14--0.26, despite 576/600 common-score availability.
+At generating Rater variance 0.0025, 228/500 routes reach the target boundary,
+compared with 202/500 at exact zero. Boundary attainment is therefore not a
+monotone component-resolution rule.
+
+`FeasibilityEvidenceReady=TRUE` records complete descriptive accounting only.
+Before untouched calibration replicates 201--300 can be generated, a new
+contract must freeze (a) a numerical-likelihood sensitivity for the already
+viewed high-information routes and (b) separate plain versus prespecified
+nuisance-boundary bootstrap operating-characteristic lanes. Scenario x method
+availability, size, power, Monte Carlo uncertainty, positive-component
+bias/RMSE/coverage, and D-study stability cannot be pooled. Threshold,
+calibration, confirmation, inference, coefficient, and decision readiness
+remain false.
+
+### Draft.83d2b2b1e numerical-likelihood sensitivity
+
+Draft.83d2b2b1e adds a source-grounded optimizer sensitivity contract, atomic
+runner, execution record, and explicit 18,000-fit test tier. The 3,000 viewed
+feasibility routes are each re-fitted under default, strict same-algorithm, and
+different-algorithm profiles for 9,000 full/reduced pairs. All route and
+dataset identities validate, and a full resume reuses every checkpoint and
+reproduces execution hash
+`37be0b4dbac852454ced612b5f84706678f688f3f3ea7209793111ab6a706d94`.
+
+The same-algorithm strict profiles reproduce all full and reduced objectives
+exactly. lme4 bobyqa returns 1,500/1,500 available comparisons, removes all 34
+finite default-lme4 material-negative differences, and attains the highest
+recorded full and reduced objective in 1,495 routes. glmmTMB BFGS is not a
+parallel remedy: only 1,169/1,500 differences are finite, 401 are materially
+negative, and 331 are non-finite. Across backends, 433 route signs are
+optimizer-sensitive, 334 are incomplete, and 30 remain material-negative
+under every profile. The separately maximized envelope remains below -1e-6
+on 69 routes.
+
+All 2,993 finite default differences exactly replay b1d. Seven old and new
+default values are both non-finite, but the frozen rule defined replay only as
+a finite absolute difference no greater than 1e-10. The rule is not relaxed
+after viewing. `DefaultReplayPassed=FALSE` and
+`NumericalSensitivityEvidenceReady=FALSE`; all calibration, bootstrap-
+operating-characteristic, threshold, confirmation, inference, coefficient,
+and decision flags remain false. A successor must prospectively type same-
+non-finite replay and add a backend-specific glmmTMB stabilization lane before
+replicates 201--300 can be generated.
+
+### Draft.83d2b2b1f typed numerical replay
+
+Draft.83d2b2b1f prospectively defines five mutually exclusive replay states
+and applies them only to the immutable b1d and b1e atomic ledgers. It performs
+no generation, fitting, optimization, bootstrap, calibration, or D-study.
+All 2,993 finite default values match within 1e-10. The other seven values are
+`NA_real_` in both ledgers and agree on pair return, likelihood availability,
+within-tolerance flag, and comparison state. There are zero finite,
+non-finite-state, or finite/non-finite mismatches, and no non-finite row is
+promoted to an available comparison.
+
+`TypedReplayAdjudicationReady=TRUE` closes only the missing b1e state
+definition under a new identity. The immutable b1e
+`DefaultReplayPassed=FALSE`, `NumericalStabilizationReady=FALSE`, and
+`NumericalSensitivityEvidenceReady=FALSE` remain controlling. The next
+prospective glmmTMB stabilization lane must separately bind named start
+parameter blocks, cold and current-optimum restarts, scaled/unscaled gradient
+diagnostics, Hessian diagnostics, and alternative algorithms, with all failed
+rows retained. It may not select a start rule, optimizer, or objective-spread
+threshold from the viewed successful subset.
+
+### Draft.83d2b2b1g glmmTMB stabilization design
+
+Draft.83d2b2b1g converts the preceding requirement into a prospective,
+machine-validated design without authorizing a fit. The 1,500 viewed b1e
+glmmTMB routes expand to six profiles: cold nlminb and BFGS roots, a
+same-algorithm restart from each root, and a cross-algorithm warm start from
+each root. This symmetric DAG has 9,000 full/reduced pairs, 18,000 planned
+fits, 3,000 cold-root pairs, 6,000 dependent pairs, and no missing parents or
+duplicate route identities.
+
+Warm starts bind all ten public glmmTMB parameter blocks in canonical order,
+including zero-length blocks and conditional random-effect modes. They may
+move only from parent full to child full or parent reduced to child reduced on
+the same route. Parent failure produces a typed dependent failure and cannot
+fall back to a cold fit. Each returned fit must retain optimizer identity,
+outer and sdreport gradients, `pdHess`, inverse-covariance diagnostics, and a
+frozen Richardson gradient-Jacobian eigenspectrum. `diagnose()` is
+supplementary and cannot define eligibility.
+
+Five tests and 73 expectations establish the DAG, start signature, manifest,
+and fail-closed upstream identities. `ManifestReady=TRUE`, but
+`StabilizationRunnerImplemented=FALSE`,
+`StabilizationExecutionAuthorized=FALSE`,
+`NumericalStabilizationReady=FALSE`, and
+`NumericalSensitivityEvidenceReady=FALSE`. The next slice must implement
+atomic checkpoints, parent-start equality, derivative hashes, interruption/
+resume, and a small viewed-data covering smoke before a separate execution
+authorization is considered.
+
+### Draft.83d2b2b1g1 stabilization runner and covering smoke
+
+Draft.83d2b2b1g1 implements one six-profile base route as the atomic unit and
+authorizes only replicate 101, all five designs, exact-zero/reference-positive
+variance, and ML/REML. The resulting 10 datasets, 20 base routes, 120 pairs,
+and 240 planned fits are selected without reading a numerical result. All 20
+route checkpoints and ten dataset markers validate; a second execution reuses
+all 20 checkpoints and reproduces every atomic row and scientific hash.
+
+The complete state partition is 84 diagnostic-complete, 21 finite material-
+negative, 11 non-finite objective/likelihood, two parent-unavailable, one full
+failure, and one reduced failure. All returned snapshots have exact fixed-
+coordinate equality, and all returned dependent fits have matching parent
+final/child input hashes. The four failure rows originate in two BFGS fits
+whose backend returns but whose immediate `last.par.best` fixed coordinates
+are not bitwise equal to `fit$fit$par`; their dependent consequences remain in
+the denominator.
+
+A viewed diagnostic measures one mismatch at about 2.80e-10 and finds no
+change after objective re-evaluation. This value cannot become a post hoc
+tolerance. The mathematically cleaner successor is a prospective operation
+that hashes the original joint state, deterministically replaces its fixed
+coordinates with the reported top-level vector, and separately records the
+pre-alignment discrepancy. It requires negative controls and a new identity.
+
+`SmokeRunnerMechanicsReady=TRUE`, but `FullExecutionAuthorized=FALSE`,
+`NumericalStabilizationReady=FALSE`, and
+`NumericalSensitivityEvidenceReady=FALSE`. The smoke cannot choose an
+optimizer/start rule or authorize calibration, inference, or D-study output.
+
+### Draft.83d2b2b1g2 deterministic alignment replay
+
+Draft.83d2b2b1g2 replaces no optimizer and adopts no observed tolerance. For
+every returned fit it hashes the immediate raw joint state, deterministically
+sets only `aligned_joint[lfixed()] <- fit$fit$par`, requires bitwise equality,
+and passes the aligned joint state explicitly to `parList`. Random-mode
+coordinates are unchanged. The rule is applied uniformly even where the raw
+fixed coordinates already agree.
+
+The exact b1g1 120-row denominator is re-executed under a new contract and
+checkpoint root. All 240 fits return, all align exactly, all 80 dependent
+transfers verify, and a no-fit resume reuses all 20 base routes. Four pair
+returns are recovered and none is lost. Across the 117 common full and 119
+common reduced returns, top-level parameter hashes, objectives, and log
+likelihoods have zero mismatch. The one typed likelihood-drop difference is
+the recovered finite value from the formerly unavailable reduced snapshot.
+
+This closes only start-state transport. Fourteen non-finite
+objective/likelihood states, 21 finite material-negative drops, maximum outer
+gradients near 0.028/0.017, and negative Richardson relative eigenvalues
+remain. Therefore `AlignmentMechanicsReady=TRUE`, but
+`FullExecutionAuthorized=FALSE`, `NumericalStabilizationReady=FALSE`, and all
+calibration, inference, coefficient, and D-study gates remain false. The next
+slice must prospectively adjudicate likelihood, gradient, and curvature
+evidence before it can reconsider the full 18,000-fit run.
+
+### Draft.83d2b2b1g3 no-refit numerical adjudication
+
+Draft.83d2b2b1g3 replaces the precedence-based smoke label with parallel
+numerical axes without changing or refitting a model. The installed
+`logLik.glmmTMB` implementation is part of identity: it returns the negative
+raw objective only for `pdHess=TRUE`, and otherwise returns `NA`. Therefore all
+120 finite raw full/reduced objectives coexist with only 106 pairwise reported
+likelihood differences; the other 14 are exactly curvature-masked, not
+unexplained nonfinite objectives.
+
+Optimizer termination is also independent: 119 pairs have two code-zero fits,
+while one full fit has code 1 beneath the earlier nonfinite primary state.
+Sdreport and Richardson PD signs agree for all fits, giving 106 both-PD, seven
+full-only, five reduced-only, and two neither-PD pairs. Both gradient surfaces
+are available throughout, but their hashes disagree for one full and one
+reduced fit at the same two b1g2 raw/aligned state discrepancies. Raw unscaled
+gradient magnitudes cannot define stationarity.
+
+The objective-based finite trace partition is 75 positive, 22 small negative,
+and 23 material negative. Independently taking the best observed full and
+reduced objective across the frozen six profiles yields 12 positive and eight
+small-negative route envelopes and no material-negative envelope. This is
+best-observed search evidence, not an attained global maximum, optimizer
+selection, or LRT. The exact-zero reduced variance lies in the closure rather
+than at a finite full log-SD coordinate.
+
+`AdjudicationSchemaReady=TRUE` and
+`ObjectiveLikelihoodSeparationReady=TRUE`, but
+`StationarityCriterionReady=FALSE`,
+`NumericalEligibilitySufficientRuleFrozen=FALSE`, and
+`FullExecutionAuthorized=FALSE`. The next prospective slice must retain raw
+gradient vectors plus parameter/objective scales and define scale-aware
+stationarity summaries before fitting. It must not derive a cutoff from the
+observed 0.028/0.017 maxima.
+
+### Draft.83d2b2b1g4 scale-aware stationarity instrumentation
+
+Draft.83d2b2b1g4 executes that prospectively frozen measurement layer on the
+unchanged 120-pair denominator. Each of 240 returned fits retains a hashed
+sidecar containing the named top-level parameter vector, raw TMB outer
+gradient, sdreport fixed gradient, raw and symmetric Richardson matrices,
+eigenvalues, and all derived vectors. Existing b1g2 parameter hashes,
+objectives, reported likelihoods, and raw nested drops have zero mismatches;
+the repeated outer-gradient and Richardson hashes also agree for every fit.
+All 20 base routes resume without fitting and reproduce execution
+`a825ab427da7e4a8160e428a7a6b00038f364b1c15049df6d5e4bf03bbbbbade`.
+
+The new schema deliberately separates coordinate meanings. Raw and
+objective/parameter-relative gradients are available for all 240 fits.
+Richardson eigenvalues are positive for 224 fits, but Cholesky factors are
+numerically available for 221, so spectral positivity cannot stand in for
+factorability. lme4-compatible `solve(chol(H), g)` and Newton-whitened
+`solve(t(chol(H)), g)` vectors are both available for those 221 but are not the
+same statistic. A direct relative Newton step is available for only 218 fits.
+The two b1g3 outer/sdreport hash disagreements are now quantified as maximum
+absolute differences about `2.16e-7` and `2.09e-8` rather than classified by a
+tolerance.
+
+Across 40 route/model strata, the profile with the smallest raw gradient
+matches the best observed objective only 18 times; corresponding counts are
+18 for the objective-relative metric, 26 for the lme4-compatible metric, 29
+for Newton decrement, and 27 for the relative Newton step. This is evidence
+against selecting an optimizer by one gradient summary, not evidence for a
+preferred alternative.
+
+`ScaleAwareMeasurementSchemaReady=TRUE` and raw derivative retention is
+ready, but `StationarityCriterionReady=FALSE`,
+`NumericalEligibilitySufficientRuleFrozen=FALSE`, and
+`FullExecutionAuthorized=FALSE`. The next slice must specify a calibration
+design with independent high-accuracy reference states and both false-ready
+and false-unready targets. It must prespecify handling for non-PD,
+Cholesky-unavailable, boundary, and direct-step-unavailable fits and may not
+tune a cutoff from these 240 viewed fits.
+
+### Draft.83d2b2b1g5 independent stationarity-calibration design
+
+Draft.83d2b2b1g5 completes that design prerequisite without generating a
+reserved dataset. It separates finite first-order stationarity, second-order
+curvature/factorability, profiled log-SD boundary limits, and statistical
+target-component resolution. Simulation generating truth labels only the last
+of these; it cannot certify numerical stationarity.
+
+The eight-stage high-accuracy reference architecture retains objective,
+automatic and Richardson derivatives, deterministic multistart solver
+envelopes, damped-Newton polishing, Hessian inertia, and nuisance-reoptimized
+boundary profiles. Disagreement is `reference_unresolved`, not a majority-vote
+success. Analytic affine fixtures verify congruence preservation of Hessian
+inertia and invariance of Newton decrement while exposing coordinate
+dependence of raw, objective-relative, lme4-compatible, and relative-step
+summaries.
+
+The sealed workload has 3,000 independent datasets, 12,000 paired-method base
+units, 144,000 prospective candidate fits, and 24,000 reference problems.
+`DesignSchemaReady`, `CandidateArchitectureFrozen`,
+`ReferenceArchitectureFrozen`, and `CoordinateAuditReady` are true.
+`ReferenceToleranceFrozen`, `StationarityCriterionReady`, numerical
+calibration execution, full execution, bootstrap, inference, and D-study
+readiness remain false at this design stage. Draft.83d2b2b1g6 is the ordered
+analytic and nonreserved reference gate before replicate 201 may be generated.
+
+### Draft.83d2b2b1g6 high-accuracy reference calibration
+
+Draft.83d2b2b1g6 completes that narrow reference gate without opening any
+reserved seed. The first diagnostic replay exposed why a single
+`epsilon^(2/3)` derivative tolerance is insufficient for a composed Laplace
+objective near 2,200: ordinary Richardson differencing amplified objective-
+scale cancellation and disagreed with AD by `1.9e-6` to `1.17e-5`. Those
+viewed discrepancies were not adopted as a cutoff.
+
+The corrected contract chooses a central-difference interval without
+consulting AD. It scans `epsilon^(1/3) * 2^(-4:8)`, minimizes adjacent-step
+instability, retains a componentwise roundoff/truncation resolution envelope,
+and requires the AD difference to fall within that independently constructed
+envelope. TMB's `last.par.best` random-effect start is reset to one hashed
+anchor before every evaluation, so call order cannot change the audited
+surface. An adversarial analytic gradient error changes only the comparison
+result, not the selected step or finite-difference table.
+
+All six analytic fixtures recover their intended numerical states. On
+nonreserved baseline-complete replicates 901--902, all four full/reduced
+glmmTMB REML objectives resolve as finite local minima and pass nlminb/BFGS/
+Nelder--Mead objective consensus, adaptive derivative agreement, Hessian
+symmetry, positive-definite curvature, and content-addressed sidecar checks.
+Both full-model profiles support a finite interior; all twelve fixed-log-SD
+points pass free-coordinate curvature and Newton-decrement checks after
+nuisance polishing.
+
+Contract `60e04706736c0e7273dfa321d0d41a3a9ed4bb8362a0b7d428f8507653ecce9a`,
+manifest `87b42667d3dbeb2ecd045b23b32cf23a5f9919b0d26ac75c5771baf691770d3a`,
+and execution `28f155c91065cb56ebe695234eab7867392e25fe413ab362717e760f5e775e72`
+reproduce. `NonreservedReplayReady=TRUE` and the narrow
+`ReferenceToleranceFrozen=TRUE`; `StationarityThresholdFrozen`,
+`StationarityCriterionReady`, reserved calibration, full stabilization,
+bootstrap operating characteristics, inference, coefficients, and D-study
+decisions remain false or unauthorized. Draft.83d2b2b1g7 next audits whether
+the prerequisites for an authorization identity actually exist.
+
+### Draft.83d2b2b1g7 stationarity-calibration preauthorization audit
+
+Draft.83d2b2b1g7 completes a fail-closed audit without opening any reserved
+seed. The b1g5 historical manifest assigned six profiles to all four method
+lanes. The operative registries contain six glmmTMB profiles and three lme4
+profiles, so the prospective candidate-fit upper bound is 108,000 rather than
+144,000. The 3,000 datasets, 12,000 dataset-method units, and 24,000 reference
+problems are unchanged. b1g5 remains immutable; future execution must bind the
+new corrected manifest.
+
+The audit freezes profile aggregation within one dataset-method-model-role
+ledger as minimum returned finite objective plus fixed exact-tie priority.
+Neither a stationarity metric nor generating truth may select a profile. It
+also freezes a typed boundary/first-order/curvature state algebra: only a
+stationary-zone score with factorable positive-definite curvature is
+numerically eligible; spectral positivity without factorability and near-
+singular curvature are indeterminate.
+
+Contract `b293987e768ec0e998d3224a6df0689f0ab8b6f2268704ef422e333865d82765`
+and corrected manifest
+`7cce9d42faccfbbdf928c9ec4978fef25c50aa562750141fbab45a53b75885f8`
+reproduce. Five focused tests and 71 expectations pass. The b1g6 receipt
+covers only glmmTMB REML: glmmTMB ML has no nonreserved replay, and lme4
+ML/REML lack likelihood-faithful high-accuracy reference mechanics. The
+production boundary probe, acceptance policy, and exact-resume runner are
+also absent. `PreauthorizationAuditReady=TRUE` therefore coexists with
+`CalibrationAuthorizationReady=FALSE`, `CalibrationExecutionAuthorized=FALSE`,
+and every downstream inferential/decision flag false. The next gate is
+nonreserved method-coverage work, not replicate 201; b1g8 completes the
+glmmTMB ML half of that remaining work.
+
+### Draft.83d2b2b1g8 glmmTMB ML reference coverage
+
+Draft.83d2b2b1g8 leaves the b1g6 REML identity unchanged and binds a distinct
+glmmTMB ML surface through `MethodId="glmmTMB_ml"`, `Likelihood="ML"`, and
+`REML=FALSE` at contract, manifest, row, and sidecar levels. The same
+nonreserved generator hashes for replicates 901--902 are used, but all four
+polished objectives differ from REML by more than `1e-3`; the likelihood mode
+is therefore not a cosmetic label. Absolute ML and REML objectives are not
+used to choose an estimator.
+
+All four full/reduced ML objectives resolve as finite local minima and pass
+three-algorithm consensus, AD-independent adaptive differences, Hessian
+symmetry, and positive curvature. Both six-point full-model profiles support
+finite interiors and all twelve nuisance fits pass stationarity. A second
+complete execution reproduces atomic rows, sidecar hashes, and execution hash
+exactly.
+
+Contract `1216ae3591fc026a61b4fb6581ebe79e33d34e4e2b6bf04a969a4c93c3e06689`,
+manifest `2974db4aefd07636d286b8227edb6dd50b481764e9dd7060296bd379a2688434`,
+and execution `46ea4be751a3c54904bac28da31f15e5e05f347b9e8f10a1194887f55557807d`
+reproduce. Six focused tests and 64 expectations pass. glmmTMB ML and REML
+reference mechanics are now ready, but lme4 ML/REML remain unimplemented.
+`ReferenceMethodCoverageComplete`, calibration authorization, production
+stationarity, confirmation, inference, coefficients, and D-study decisions
+remain false. The ordered next gate is likelihood-faithful lme4 reference
+construction and nonreserved validation; b1g9 below completes only its
+objective-identity prerequisite.
+
+### Draft.83d2b2b1g9 lme4 objective-reference preflight
+
+Draft.83d2b2b1g9 completes the algebraic prerequisite to that lme4 work
+without reading nonreserved or reserved responses. For zero-offset, unweighted
+independent random intercepts it constructs an independent dense Gaussian
+oracle in lme4's relative-SD theta coordinates. The oracle profiles fixed
+effects and residual scale, evaluates both the ML deviance and REML criterion, and supplies
+closed-form gradients. Both objectives agree with
+`lmer(..., devFunOnly=TRUE)` at about `1e-12`; analytic and Richardson
+gradients agree within `5e-9`; selected fitted criteria agree with independent
+objectives and `-2*logLik`; and exact-zero full-to-reduced identities hold in
+both modes.
+
+The installed lme4 2.0.6 implementation is part of the contract identity.
+`devfun2()` source forces `refitML()` and fails its own local basedev/optimum
+reproduction control. `deviance.merMod(..., REML=TRUE)` routes to an ML
+criterion and differs from `REMLcrit()`. Both routes are source-hash-bound
+negative controls, not eligible accessors. Audit
+`83faaaf570bd814c000924aa21396ade00958fb8134cec553a0eaa985382ca67` and
+contract `20d6fb656ac2f2996e5881a07729a3e4fb2f417859f90efde7ee72784ba62092`
+reproduce in seven tests with 67 expectations.
+
+`Lme4ObjectivePreflightReady=TRUE` does not advance the two-of-four method
+coverage count. The likelihood-preserving box solver, nuisance-reoptimized
+boundary profile, nonreserved lme4 ML/REML replay, acceptance policy,
+production runner, calibration, confirmation, inference, and D-study
+decisions remain false or unauthorized.
+
+### Draft.83d2b2b1g10 lme4 ML/REML reference coverage
+
+Draft.83d2b2b1g10 completes the two remaining nonreserved reference lanes.
+The reference variable remains nonnegative relative-SD theta; ML and REML
+retain distinct closures and accessors. Nine main fits per objective combine
+three deterministic starts with `nlminb`, `L-BFGS-B`, and `bobyqa`.
+
+The initial fail-closed replay exposed insufficient derivative and profile
+resolution. No viewed discrepancy became a cutoff. Instead, the b1g9 dense
+algebra was reconstructed with sparse Cholesky solves at n=1600, giving an
+independent analytic objective and gradient. Analytic-gradient Newton polish
+then reduced final maximum gradients below `8.1e-11`, so the final contract
+requires raw KKT rather than relying only on the separately retained Newton-
+decrement state.
+
+All eight full/reduced objectives pass consensus, sparse-oracle objective and
+gradient agreement, adaptive differences, raw KKT, Newton decrement, positive
+free curvature, and sidecar integrity. All four seven-point theta profiles
+pass nuisance gates, rise monotonically toward zero, and match separately
+optimized reduced objectives within `2.3e-11`. Contract
+`419fbf43fd1b86ab494aa96224916c0bfa9c1e1ef2668f8877d9d39659bcc7e0`,
+manifest `f26d4a2fe5670d9b9395f97669f0ef368f9c5067580394ff5b20acccf5e8580b`,
+and execution `b84c1d53f8653bb5329a0a165e2249b36e5d12e10c26099ab15cbdfac4281e8a`
+reproduce exactly in nine tests with 137 expectations.
+
+`ReferenceMethodCoverageComplete=TRUE` now means exactly four of four
+prespecified backend-likelihood lanes. It does not rank estimators or authorize
+calibration. The acceptance/indeterminate policy, production boundary probe,
+exact-resume runner, reserved calibration, confirmation, inference, and
+D-study decisions remain false or unauthorized.
+
+### Draft.83d2b2b1g11 truth-blind acceptance-policy freeze
+
+The 24-candidate primary grid crosses three eligible score families with the
+eight previously registered zones. The policy binds all four nonreserved
+reference receipts, preserves scenario x method x model-role rate denominators,
+and distinguishes safety false ready, false boundary handoff, false unready,
+missed boundary, indeterminate, not-evaluable, and reference-unresolved states.
+One-sided 95% Clopper--Pearson upper bounds remain nonzero after zero observed
+events: 0.029513 for 0/100, with 59 zero-event trials required before the upper
+bound is no greater than 0.05. These are calibration comparison scores, not
+unqualified post-selection confidence intervals.
+
+Any observed safety false ready or false boundary handoff rejects a candidate.
+All 20 method x model-role x reference-class combinations must be observed and
+correctly classified at least once, preventing an always-indeterminate rule
+from winning. If no candidate passes, the immutable result is a negative
+calibration with no threshold. Policy `7962e47df285812d8c785f206d51925b44a13d02037b7b40a619cb80ce833a62`,
+audit `cfdaa73ddc0beb6cc6ca3fbdc2cd7c73bd899bf9e6bebaab675ccc7bd88b16f7`,
+and contract `1dcc877da78d3975271b33629b3d67bd9f0f48d675fb1ed62e5704baa46b8b1a`
+reproduce in nine focused tests with 102 expectations.
+
+`AcceptancePolicyFrozen=TRUE` and `MonteCarloDecisionPolicyFrozen=TRUE` do not
+freeze a cutpoint. Production boundary-probe, runner, calibration,
+stationarity-criterion, confirmation, inference, and D-study readiness remain
+false or unauthorized. The ordered next gate is a coordinate-correct
+production boundary probe, followed by the exact-resume runner.
+
+### Draft.83d2b2b1g12 coordinate-correct production boundary probe
+
+The application probe now retains the actual backend coordinates. lme4's
+relative-SD theta has the finite lower endpoint zero, whereas glmmTMB's log-SD
+has no finite zero-variance coordinate. Every registered target value
+reoptimizes all nuisance coordinates, and the two paths receive a common
+boundary meaning only when the terminal full-model objective matches the
+separately fitted reduced model.
+
+Monotone material improvement yields `boundary_limit_supported`; monotone
+material worsening yields `finite_interior_supported`. Flat, nonmonotone, or
+endpoint-mismatched finite paths remain `boundary_probe_inconclusive`, and a
+failed nuisance path remains `not_evaluable`. A small first derivative is not
+sufficient. The primary warm-started L-BFGS-B nuisance fit permits one frozen
+same-point `nlminb` fallback after a finite unsuccessful return, retaining the
+solver identity and code.
+
+Seven analytic controls plus lme4/glmmTMB x ML/REML full/reduced fixtures pass
+in eight tests with 120 expectations. Policy
+`fb7f938a0e1e5b7be598a180f7d5c06eb3176ebea7f1bfc269491befa865cb6c`,
+audit `272e5ee2c274c8972ecde6feb039db02e9beb937d4db910555812c35af627eab`,
+and contract `53a36d72388eb8b4e096ef817aaf94959aa1b3fd3257190cf5c0a8164383d9da`
+reproduce. `ProductionBoundaryProbeReady=TRUE` is narrow; runner,
+calibration, stationarity criterion, confirmation, inference, and D-study
+readiness remain false or unauthorized. The ordered next gate is the exact-
+resume atomic runner.
+
+### Draft.83d2b2b1g13 exact-resume stationarity runner
+
+The runner fixes one dataset x method as the atomic checkpoint. Each unit
+contains all backend optimizer profiles for both model roles, two high-
+accuracy reference problems, and 48 truth-blind candidate decisions. The
+three ledgers remain independently counted and hashed: the sealed workload is
+3,000 dataset markers, 12,000 atomic units, 108,000 candidate-fit rows,
+576,000 decision rows, and 24,000 reference rows. Evaluator exceptions and
+malformed output expand to complete typed failure denominators.
+
+Checkpoint identity binds contract, run manifest, atomic unit, complete
+ledgers, and content hashes. Timing and reuse metadata are excluded from the
+scientific identity. A dataset marker requires four valid method checkpoint
+hashes. On nonreserved mechanics replicates 901--902, cold, three-unit-
+interrupted/resumed, and complete-reuse executions share exact execution hash
+`4cdbb0ed2ba69588f81e3fcbd3df634b92a4b7e1929bac387cd6a8562a18100f`;
+corrupting one checkpoint causes exactly one recomputation and recovers that
+same hash. Nine tests with 129 expectations pass.
+
+`RunnerImplementationReady=TRUE` is limited to accounting and resume
+mechanics. `ProductionEvaluatorAdaptersFrozen=FALSE`,
+`ReservedRunManifestFrozen=FALSE`, calibration authorization/execution,
+stationarity criterion, confirmation, inference, and D-study readiness remain
+false. The next gate must freeze the four production evaluator adapters and a
+runtime-, shard-, output-, and function-identified reserved manifest through a
+response-free preflight. It must not open 201--300. Only an independently
+audited later authorization artifact may reconsider replicate 201.
+
+### Draft.83d2b2b1g14 production-adapter and reserved-manifest preflight
+
+The four real lme4/glmmTMB x ML/REML candidate and high-accuracy-reference
+adapters now bind the deterministic generator, structural pre-fit audit,
+objective-only profile selection, scale-aware diagnostics, coordinate-specific
+production boundary probe, and separately frozen reference mechanics. Their
+two top-level and 15 dependency hashes are joined to the installed R/package
+runtime identity.
+
+One nonreserved replicate-902 dataset completes all four atomic units with 36
+candidate-fit, 192 candidate-decision, and eight reference rows. Thirty-five
+fits return; the glmmTMB ML full BFGS-from-BFGS restart remains a typed
+`start_snapshot` failure in the denominator. All references resolve, candidate
+and reference generator hashes agree, truth and metrics do not select a
+profile, and complete reuse reproduces execution
+`b9ad747a62b1e14cf1da1e0e4cee8a0a341db969596df3e2de87b25ba908caae`.
+
+The reserved manifest fixes shards `R0201`--`R0300`, one full replicate per
+shard. Each has 120 atomic units, 1,080 candidate fits, 5,760 decisions, and
+240 references, reproducing the exact sealed total. It binds output root,
+runtime, adapters, dependencies, and every assignment, but remains
+`ExecutionAuthorized=FALSE`.
+
+`ProductionAdapterPreflightReady=TRUE` means only executable identity and
+nonreserved schema readiness. Calibration authorization/execution/data/results,
+stationarity threshold/criterion, confirmation, inference, coefficient,
+decision, and D-study readiness remain false. The ordered next gate is a
+separate response-free one-way authorization audit with destination permission,
+capacity, same-filesystem, early-stopping, and confirmation-isolation checks.
+It must not open replicate 201 while being constructed.
+
+### Draft.83d2b2b1g15 response-free one-way authorization preflight
+
+The exact b1g14 workload is now represented by 100 separately hashed
+prospective manifests, `R0201`--`R0300`. Each non-executable shard contains
+one replicate over 30 scenarios and four methods: 120 atomic units, 1,080
+candidate fits, 5,760 decisions, and 240 references. Their exact union
+reconstructs 3,000 datasets, 12,000 units, 108,000 fits, 576,000 decisions,
+and 24,000 references without generating any response.
+
+The real output parent passes target-absence and an actual RDS write,
+same-directory checked rename, identical readback, cleanup, and `df -Pk`
+capacity probe. A frozen nonreserved four-lane measurement is extrapolated
+under a 32x disk safety multiplier plus 32 GiB residual and a 4x runtime
+planning multiplier. The resulting admission bounds are 47,775,834,368
+available bytes, 296.823333 serial hours, and 2.968233 hours per shard, with
+`MaxConcurrentShards=1` and no early stopping. These are conservative planning
+bounds, not performance or statistical claims, and must be rechecked at
+activation.
+
+`AuthorizationReadinessAuditReady=TRUE` and
+`AuthorizationActivationEligible=TRUE` mean only that a later activation
+review has a complete response-free input. They deliberately coexist with
+`ExecutionAuthorizationRecordIssued=FALSE`,
+`CalibrationAuthorizationReady=FALSE`, and
+`CalibrationExecutionAuthorized=FALSE`. No calibration or confirmation
+response is generated or inspected, and no threshold, inference, coefficient,
+decision, or D-study result advances. The ordered next gate is a separately
+reviewed immutable activation artifact and authorized single-shard runner. It
+must repeat runtime, target, filesystem, and capacity checks and bind only the
+exact prospective manifest before replicate 201 can be reconsidered.
+
+### Draft.83d2b2b1g15a Monte Carlo value and precision audit
+
+The apparent 108,000-fit / 576,000-decision scale is now separated from its
+scientific denominator. Only 3,000 scenario-by-replicate datasets are
+independent, and the primary scenario x method x model-role cell has at most
+100 planned trials. Four methods are paired on each dataset; roles, optimizer
+profiles, candidate decisions, and references are repeated computations.
+
+With a complete resolved denominator, 0/100 has a one-sided 95% exact upper
+bound of 0.029513, and a true 3% safety-event rate appears at least once with
+probability 0.952447. At rates 0.05/0.95 the MCSE is 0.021794 and at 0.80 it is
+0.040000. Reference-unresolved rows reduce the denominator, so these remain
+planning values; actual cellwise MCSE and bounds must be recomputed after a
+complete run.
+
+The 30-by-100 design is retained for numerical candidate selection, safety-
+error rejection, and a valid negative calibration. It is not general
+validation. For comparison, Bernoulli MCSE at most 0.01 requires 475 trials at
+probability 0.05/0.95 and 1,600 at probability 0.80; continuous bias, RMSE,
+rank, separation, and D-study measures need their own pilot variances and
+precision targets. `NumericalCalibrationDesignPurposeJustified=TRUE` therefore
+coexists with `CalibrationPrecisionEvidenceReady=FALSE` and false broad-
+performance flags.
+
+This audit changes neither b1g15 activation eligibility nor authorization.
+Draft.83d2b2b1g16, below, subsequently applies stronger reproducibility and
+single-writer requirements before any activation artifact can be considered.
+
+### Draft.83d2b2b1g16 pre-activation hardening audit
+
+The response-free double-check stops before large calibration. The registered
+phase-specific ledger contains 9,756 datasets and 9,756 unique seeds: six
+schema-smoke, 750 feasibility, 3,000 calibration, and 6,000 confirmation rows.
+Calibration and confirmation seed sets are disjoint.
+
+Seed uniqueness is necessary but not sufficient. On nonreserved replicate
+901, the current `set.seed(seed)` generator yields different score and
+generator hashes under ambient `Mersenne-Twister` and `Wichmann-Hill` states.
+It neither supplies uniform/normal/sample kinds explicitly nor records them in
+generator identity. The b1g14 runtime hash also omits RNG, matrix-product,
+BLAS/LAPACK, locale/timezone, glmmTMB parallel, and thread-environment state.
+
+Four gates pass: seed accounting, shard partition, complete denominators, and
+confirmation isolation. Eight gates block: RNG self-containment, extended
+runtime binding, explicit serial threads, vanilla child-process isolation,
+reserved-only runner, exclusive writer lock, atomic activation/resume root,
+and per-shard filesystem/capacity recheck. The narrower b1g15 readiness result
+remains historical evidence, but its activation-eligibility conclusion is
+superseded. `LargeSimulationMayStart=FALSE`; no authorization record is issued
+and replicate 201 remains unopened.
+
+The ordered repair is to fix and identify RNG generation, re-freeze all
+affected downstream nonreserved artifacts, then implement and negatively test
+the isolated locked shard runner. Only a later separately reviewed artifact
+may reconsider authorization, with no outcome-dependent early stopping and no
+confirmation access.
+
+### Draft.83d2b2b1g17 RNG-hardened generator replay
+
+The first b1g16 repair is complete without rewriting historical evidence. The
+b1g2a generator remains unchanged, while a separately versioned wrapper fixes
+uniform, normal, and sample RNG kinds to
+`Mersenne-Twister/Inversion/Rejection`, records them together with the complete
+historical parent identity, and restores the caller's RNG kind and
+`.Random.seed` on success and error.
+
+All 30 registered scenarios at nonreserved replicate 901 were generated under
+both Mersenne-Twister and Wichmann-Hill caller configurations. Hardened
+generator hashes, historical parent hashes, and analysis-data hashes agree for
+every scenario, with no caller-state restoration failure. A no-pre-existing-
+seed path also restores seed absence. Requests for calibration 201--300 or
+confirmation 501--700 fail before generation.
+
+Five component gates pass: explicit RNG, complete cross-ambient replay,
+caller-state restoration, dual historical/hardened identity, and reserved-band
+exclusion. `RNG-ADAPTER-01` remains blocked because the real candidate and
+reference adapters still call and hash the historical generator. Therefore
+`HardenedGeneratorReady=TRUE` and `RNG01ProspectivelyResolved=TRUE` coexist
+with `AuthorizationRNG01Closed=FALSE`, `LargeSimulationMayStart=FALSE`, and
+`Replicate201MayBeOpened=FALSE`.
+
+The next ordered slice must rebuild the nonreserved production adapter,
+reference, manifest, checkpoint, and preflight identities against the hardened
+generator. Old hashes must not be edited in place. Only after exact nonreserved
+dry-run and resume/tamper parity may the authorization-level RNG gate close;
+runtime, thread, process, lock, root, and per-shard capacity work remains
+independent and subsequent.
+
+### Draft.83d2b2b1g18 hardened production-adapter rebase
+
+The nonreserved adapter connection is now complete under a new descendant
+identity. Historical b1g14 preparation and evaluators remain unchanged. New
+preparation calls the b1g17 generator, checks exact historical analysis-data
+reduction, recomputes the structural pre-fit identity, and rejects calibration
+and confirmation replicates before generation.
+
+Historical and hardened paths independently execute replicate 902 through
+glmmTMB/lme4 x ML/REML. After excluding generator/pre-fit identity columns and
+reference sidecar hashes that must change, all 36 candidate rows, all 192
+candidate decisions, and all eight reference state/failure rows agree exactly.
+Both retain 35 returned fits, one typed glmmTMB ML `start_snapshot` failure, and
+zero unresolved references. Candidate and reference calls independently agree
+on hardened generator and pre-fit hashes. A second hardened execution reuses
+all four checkpoints and reproduces its execution hash.
+
+This yields `NonreservedAdapterRebaseReady=TRUE` and
+`RNGAdapterComponentProspectivelyResolved=TRUE`. It does not create a reserved
+entry point or rebuild the 100-shard prospective manifest. Therefore
+`ReservedAdapterEntryPointReady=FALSE`, `AuthorizationRNG01Closed=FALSE`,
+`LargeSimulationMayStart=FALSE`, and replicate 201 remains sealed.
+
+### Draft.83d2b2b1g19 hardened reserved-lineage rebase
+
+The response-free reserved lineage now reduces exactly to the b1g14 workload:
+3,000 datasets, 12,000 atomic units, 108,000 candidate fits, 576,000 decisions,
+24,000 references, and 100 one-replicate shards. Dataset/unit IDs, assignment,
+and all denominators agree. The historical unit identity did not bind adapter
+or generator contracts, so b1g19 retains it only as paired provenance and
+rehashes every unit against the b1g17/b1g18 lineage. All 12,000 unit and all 100
+shard identities change; no historical scientific hash appears in the active
+registry.
+
+All 100 prospective shard manifests validate independently and remain inert:
+response generation, fitting, output creation, execution, early stopping, and
+confirmation use are false. Replicate 501 is rejected, and the b1g19 output
+root remains absent. Thus `ReservedManifestRebaseReady=TRUE` does not imply an
+executable entry point: `ReservedAdapterEntryPointReady=FALSE`,
+`RuntimeContractExtensionReady=FALSE`, `AuthorizedSingleShardRunnerReady=FALSE`,
+`AuthorizationRNG01Closed=FALSE`, and replicate 201 remains sealed.
+
+The immediately following b1g20 slice consolidates the shared runtime,
+process, lock, root, and capacity mechanics. The scientific runner and its
+separate authorization decision remain later work.
+
+### Draft.83d2b2b1g20 reusable authorization kernel
+
+The shared runtime/process/lock/root/capacity work is now consolidated into one
+response-free kernel rather than split across further narrow evidence layers.
+An isolated `Rscript --vanilla` child reproduces an extended runtime identity
+with explicit RNG, C locale, UTC timezone, suppressed startup files, serial
+glmmTMB control, and five numerical-library thread variables fixed to one.
+Atomic lock contention, initial activation versus exact resume, unmarked-root
+rejection, fresh write/rename/readback, and conservative capacity checks pass
+without creating the reserved target.
+
+Nine gates now pass: RNG, lineage, runtime, thread, process, lock, root,
+capacity, and confirmation isolation. Only `RUNNER-01` and
+`AUTH-RECORD-01` remain. Thus `AuthorizationKernelReady=TRUE` is a reusable
+infrastructure result, while `AuthorizationRNG01Closed=FALSE`,
+`LargeSimulationMayStart=FALSE`, and replicate 201 remains sealed.
+
+No additional preauthorization abstraction layer should be introduced unless
+the actual runner reveals a genuinely new failure mode. The next implementation
+priority is one reserved-only runner reduced first against nonreserved data,
+then a separate immutable authorization decision. After numerical-rule
+calibration, priority returns to G-study/D-study recovery and full-refit
+uncertainty rather than further execution-framework elaboration.
+
+### Draft.83d2b2b1g21 guarded single-shard runner reduction
+
+The actual hardened scientific path is now joined to the b1g20 execution
+boundary. In a disposable nonreserved replicate-902 root, one isolated
+`Rscript --vanilla` child evaluates all four glmmTMB/lme4 x ML/REML units under
+an exclusive lock and a manifest/runtime activation marker. The content-
+addressed job capsule binds target, lock owner, activation, contract, and
+manifest identities before the child independently rereads the markers.
+
+The first run retains all 36 fit rows, 192 candidate decisions, eight
+references, 35 returned fits, and one typed failure. These rows reduce
+semantically to the direct b1g18 hardened execution. A second child observes
+an exact resume, computes zero units, reuses four checkpoints, and reproduces
+execution/checkpoint/marker hashes. Job, worker, contract, manifest, and result
+mutations fail closed. This establishes `GuardedSingleShardRunnerReady=TRUE`
+and closes `RUNNER-01`.
+
+This remains non-authorization evidence. The guard rejects reserved 201--300
+unless a separate immutable authorization record exists, rejects confirmation
+501--700 before generation, supplies no issuance function, and leaves the
+reserved root absent. `ReservedAdapterEntryPointReady`,
+`AuthorizedSingleShardRunnerReady`, `AuthorizationRNG01Closed`,
+`LargeSimulationMayStart`, and `Replicate201MayBeOpened` remain false. The only
+remaining activation blocker is `AUTH-RECORD-01`.
+
+The next step is one explicit go/no-go authorization decision, not another
+infrastructure layer and not a large simulation. If issued, it must bind one
+exact b1g19 shard and a fresh b1g20 site receipt; that shard must be reviewed
+before continuation. After stationarity calibration, priority returns to
+G-study/D-study recovery and full-refit uncertainty, then nested/crossed and
+multivariate claims.
+
+### Draft.83d2b2b1g22 execution-authorization decision
+
+The explicit go/no-go audit refuses authorization. The b1g21 reduction remains
+valid, but exact-source inspection shows that its preparation entry point
+stops on reserved replicates and the inherited b1g13 execution loop is
+nonreserved-only. Consequently a record that merely named the b1g21 source
+would not create an executable, record-bound reserved path.
+
+Five gates pass: exact R0201 lineage and denominators, isolated runtime,
+nonreserved scientific reduction, exact runner-source audit, and confirmation
+exclusion. Three gates block: `RESERVED-ENTRY-01`, `ACTIVE-MANIFEST-01`, and
+`SITE-RECEIPT-01`. The frozen decision is `no_go_refused_not_issued`.
+Authorization, replicate 201, calibration, inference, and large simulation all
+remain false; no response, fit, or reserved root was created.
+
+This refines the coarse b1g21 `AUTH-RECORD-01` label into concrete
+prerequisites. The next task is bounded implementation, not more policy:
+provide a record-bound reserved-only entry point and exact R0201 active-
+manifest conversion, reduce its evaluator/checkpoint semantics against
+nonreserved evidence, and keep the path inert until a separate record and a
+fresh site receipt are issued. If those checks later pass, exactly one shard
+may be considered; its complete denominators must be reviewed before any
+continuation.
+
+### Draft.83d2b2b1g23 record-bound reserved entry implementation
+
+The missing reserved-capable mechanics now exist without opening R0201.
+Exact-source audit identified three independent nonreserved admissions: the
+b1g17 generator, b1g18 preparation adapter, and b1g13 checkpoint runner. b1g23
+removes exactly one expected admission expression from each parent abstract
+syntax tree, source-hashes the parent and reused core, and binds the unchanged
+scientific bodies to one record/manifest/capability admission.
+
+An ephemeral capability can be created only from a hash-valid b1g23 contract,
+active manifest, and mode-specific record. Preparation and generation
+revalidate it. A future reserved generation receives a new identity binding
+the issued record and active manifest while retaining the complete b1g17
+parent identity. The R0201 conversion preserves all 120 prospective atomic
+identities as provenance, recomputes active identities, and retains exact
+30/120/1,080/5,760/240 denominators.
+
+The executable evidence remains nonreserved replicate 902. Its 36 fits, 192
+decisions, and eight references exactly equal b1g21, including 35 returned
+fits and one typed failure; exact resume computes zero and reuses four units.
+Four focused tests with 75 assertions pass.
+
+This closes only the implementation portions of `RESERVED-ENTRY-01` and
+`ACTIVE-MANIFEST-01`. No production issuance function or record exists, no
+active R0201 manifest is constructed, and the reserved root/lock remain
+absent. `FreshSiteReceiptBound`, `AuthorizationRecordIssued`,
+`Replicate201MayBeOpened`, and `LargeSimulationMayStart` remain false. The
+next bounded step is a fresh runtime/site six-gate issuance decision that may
+authorize at most R0201; complete single-shard review must precede expansion.
+
+### Draft.83d2b2b1g24 fresh-site one-shard issuance
+
+The separate production issuer now exists as a response-free boundary. It
+binds the exact b1g23 entry contract and R0201 prospective manifest to newly
+collected b1g20 isolated-runtime and site receipts. Six rows are recomputed:
+entry implementation, active-manifest conversion, isolated runtime, target-
+specific site readiness, exact one-shard scope, and confirmation isolation.
+The gate registry and nested receipt objects enter the decision and record
+identity; stored pass flags alone cannot authorize execution.
+
+GO and NO-GO have deliberately different roles. A failed site gate creates a
+hash-valid, auditable `no_go_record_must_not_be_issued` preflight, but the
+record issuer rejects it. The observed six-gate GO creates one production
+record for R0201 and an unexecuted active manifest with exact
+30/120/1,080/5,760/240 denominators. The parent b1g23 production validator
+independently revalidates the record, so b1g24 cannot self-authorize around the
+record-bound entry contract.
+
+Fifty-one focused assertions cover both decisions, portable identities,
+active unit identity rebinding, absent response/pre-fit/checkpoint state, and
+decision/record/manifest/audit mutation. No reserved root or lock is created.
+The result changes `Replicate201MayBeOpened` only for an exact fresh issuance
+instance; it does not mean that replicate 201 has run. `LargeSimulationMayStart`
+remains false.
+
+The next priority is one persistent R0201 execution through the existing
+record-bound isolated runner, followed by mandatory inspection of all
+1,080 candidate fits, 5,760 decisions, 240 references, typed failures,
+numerical diagnostics, time/storage, and exact-resume state. That review—not
+elapsed time alone—determines whether the numerical-rule calibration can
+continue. R0202, the remaining 99 shards, Draft.84 uncertainty, and Draft.85
+multivariate estimation remain downstream and receive no authorization from
+b1g24.
+
+### 2026-08-11 portfolio-purpose checkpoint
+
+The higher-level portfolio audit in
+`portfolio-purpose-and-conquest-audit-0.2.3.md` supersedes R0201 as the next
+priority without invalidating the b1g24 issuance result. The GO/NO-GO sequence
+closed real RNG, runtime-identity, reserved-entry, locking, root-lifecycle,
+resume, and complete-denominator defects. It is now terminal infrastructure:
+no further authorization layer is planned, and technical issuability does not
+establish scientific necessity.
+
+R0201 remains unexecuted until the claim-disposition profile identifies one
+retained 0.2.3 decision that the numerical-rule calibration can change, why a
+deterministic reduction or external microcase cannot answer it, and what
+precision and sequential escalation rule apply. Absent that dependency, the
+30-by-100 calibration is deferred. Its nominal n=100 per primary cell is not
+reused for bias, RMSE, rank recovery, facet-effect recovery, coverage, D-study
+stability, or multivariate claims.
+
+Immediate priority returns to the release spine and matched external evidence.
+Wave C starts with an additive Person/Rater/Criterion RSM/PCM complete-crossing
+microcase, explicit native-export precision, and native A-matrix adjudication;
+only then may a connected sparse/unequal-workload case be considered.
+Candidate-bound binary/polytomous replication remains later than this schema
+gate. ConQuest `scoresfree` GPCM coordinates require an exact probability-level
+mapping before any bounded-GPCM comparison. Display rounding, shared output
+labels, or unmatched estimator modes cannot create an agreement claim.
+
+The first corrective artifact is now complete in
+`claim-disposition-profile-0.2.3.csv` and its companion record. It maps all 106
+checklist items in exact order to 53 `release_spine`, 32
+`claim_conditional`, and 21 `deferred` rows. Every conditional row has an
+explicit fail-closed fallback, and mixed checklist rows apply to the spine only
+for their retained supported-core scope. The profile changes no evidence
+status and creates no new gate.
+
+That deterministic follow-up is now complete in
+`conditional-fallback-coverage-audit-0.2.3.md`. All nine fallback classes have
+a fail-closed public decision route. The audit corrected the JML fallback
+vocabulary, added machine-readable residual-PCA non-promotion fields to
+result/summary/plot surfaces, and propagated exact GPCM slope/step owner plus
+the non-consistency interpretation through fit summaries and central GPCM
+boundary tables. It ran no simulation or external engine and promotes no
+conditional claim. The next task is to work the 53-row spine by dependency
+and decision value, beginning with deterministic shared contracts and exact
+external-core microcases.
+
+`release-spine-priority-queue-0.2.3.md` now assigns all 53 spine rows exactly
+once to five dependency waves: 23 deterministic contract/scope rows, six
+numerical/model-identity rows, seven external-core rows, nine retained-core
+recovery/sparse rows, and eight candidate/release rows. The first bounded
+closure is complete: row 22 `readiness_contract_schema` is `ok` under contract
+v3 after the 36-row dependency-free validator, conservative legacy-TRUE and
+legacy-FALSE mapping, a rejected blocked-to-ready mutation, and the
+public/private vocabulary boundary all passed. Row 23 runtime propagation
+remains `review`; schema closure cannot be borrowed by fit/report/export
+surfaces or by unfinished statistical states.
+
+The first bounded row-23 slice is now stable and documented in
+`readiness-propagation-stable-slice-audit-0.2.3.md`. For native retained-core
+RSM/PCM fits, one v3 fit record reaches summary, convergence review,
+`mfrm_results`, manifest, export, and replay provenance. Manifest and replay
+objects carry exact fit/component/parameter tables; replay recomputes the new
+fit's readiness and warns on disagreement rather than copying source status.
+Optimizer-code convergence is no longer stored under the manifest's
+`Converged` label as inference readiness. Deterministic JML/MML PCM positive
+and iteration-limit paths and legacy-unknown adapters pass. Row 23 is still
+`review`: parameter/step/interaction coverage depends on open WP1--WP3 states,
+and lower-priority saved/export adapters plus exact-candidate binding remain
+open. A real fit serialized by the frozen 0.2.2 tarball now maps to
+`legacy_unknown/FALSE`; a current-development fresh-session replay recomputes
+a separate `ready/TRUE` decision and emits the required mismatch warning. The
+central results/report/checklist/APA routes retain exact
+fit/component/parameter records; an adversarial APA test also prevents a
+diagnostic precision flag from upgrading a blocked fit. This retained-core
+slice has reached its deliberate stopping boundary. No simulation or external
+engine was used, and lower-value adapter polishing is deferred behind shared
+mathematical release-spine contracts.
+
+### 2026-08-11 additive ConQuest Wave C checkpoint
+
+The additive external microcase has now been reduced before native execution
+from an over-wide 3-Rater/4-Criterion draft to a 96-Person, 2-Rater,
+2-Criterion, four-category complete crossing. A balanced two-level regression
+covariate retains the population slope while exact design reuse reduces the
+strict MML all-pattern audit from about 1.61 billion prospective
+pattern/design evaluations to 512. The independent free dimensions are 7 for
+RSM and 9 for Criterion-step PCM. This is a methodological correction, not a
+sample-size preference.
+
+The source-bound q31/q61 RSM/PCM preflight is complete. All four fits converge;
+an independently implemented probability/Gauss-Hermite marginal-likelihood
+oracle agrees within `1.14e-13`; and the all-pattern local ranks are 7/9 with
+nullity zero and no tolerance sensitivity. q31/q61 deviance differences of
+about `2.3e-12`--`2.5e-12` are observations only because no acceptance
+threshold was set prospectively. `InferenceReady = FALSE` remains visible:
+the current policy treats the completed all-pattern information calculation as
+a local diagnostic rather than structural-identification proof.
+
+The preliminary native-runtime NO-GO was then corrected. Restricted Codex
+launches crashed in registry/settings XML persistence, but the user showed the
+same executable running in Terminal. An unsandboxed `quit;` control printed
+version 5.47.5 and `End of Program`, and the SHA-matched executable completed
+all four sealed arms. The old ACER support draft is therefore withdrawn; the
+crash evidence describes sandbox compatibility, not general ConQuest
+availability.
+
+RSM q31/q61 completed 96 iterations and PCM q31/q61 completed 95. All native
+A matrices exactly match the independent 7/9-dimensional sum-zero bases. For
+each model, q31/q61 final coordinates are identical at the CSV digits.
+Native-minus-mfrmr displayed coordinate differences are at most `2.74e-6`,
+but no CSV rounding rule or acceptance threshold is established. The native
+history column named `LogLikelihood` contains positive deviance and is handled
+explicitly. The comparison also caught and repaired a reference-export defect
+that had written PCM step estimates as missing; the validator now requires
+every reference estimate to be finite.
+
+Wave C has therefore moved from a false runtime block to
+`four_arm_native_outputs_ready_tolerance_and_candidate_missing`. It is still
+not a scientific-equivalence or release result.
+
+The subsequent five-layer adjudication deliberately did not turn the opened
+maximum difference into a self-passing `EXT-CQ-TOL`. Calibration may inform a
+prospective rule for a disjoint candidate, but cannot pass itself under a
+newly chosen threshold. Representation, optimizer termination,
+integration stability, scientific acceptance, and exact candidate binding now
+have separate machine-readable rows. The ConQuest IC normalizer's former
+`export_tolerance` is an internal handoff-consistency threshold, now named
+`handoff_tolerance`; CSV resolution and cross-engine tolerance remain unknown.
+The decision is `hold_no_post_hoc_tolerance_freeze`. The broad external claim
+is retained as a future gate, but the present claim is descriptive only. An
+independently adjudicated pre-confirmation `EXT-CQ-TOL` and
+`IC-INTEGRATION-TOL` record
+must precede candidate binding and the fresh four-arm rerun. Sparse extension
+and large simulation remain unauthorized.
+
+The first independent deterministic task during that pause is complete. Row
+71 `estimator_vocabulary` now closes structurally: `MML` and `JML` remain the
+canonical estimator labels, `JMLE` remains an input alias, and legacy `JMLE`
+fields are normalized at summary, console, manifest, and replay boundaries.
+The focused runtime and public-documentation tests pass. This is a public-
+contract repair only; it does not imply equal MML/JML maturity or substitute
+for any external comparison.
+
+### Future Draft.85a0 multivariate supplied-matrix algebra preflight
+
+The multivariate mathematical layer has been implemented early as a
+repository-only supplied-matrix preflight without changing the ordered
+estimation gates. `gtheory-multivariate-algebra-contract-0.2.3.md`, its R
+prototype, and record represent each semantic component by a stratum
+covariance matrix `Gamma_c`, a prospective allocation Gram operator
+`Lambda_c`, and the contribution `Gamma_c o Lambda_c`.
+
+Universe-score, relative-error, and absolute-error covariance matrices are
+formed before a composite quadratic form. Explicit condition weights produce
+common, partial, or zero cross-stratum overlap; counts and
+`1/sqrt(n_a n_b)` cannot substitute for that operator. The two-stratum oracle
+gives G/Phi 0.6719368/0.6204380, 0.6967213/0.6488550, and
+0.7234043/0.6800000 under common, one-of-two shared, and independent Rater
+samples. Exact one-stratum reduction and a three-stratum order fixture also
+pass.
+
+Nine tests and 66 expectations reject indefinite, asymmetric, reordered, or
+mis-scaled matrices and invalid weights while retaining raw PSD/rank state.
+`AlgebraReady=TRUE` refers only to supplied matrices. No covariance estimator,
+long-form Stratum incidence audit, joint interval, PSD repair, backend
+selection, public object, or support claim exists. `EstimationReady`,
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+
+This preflight does not replace the remaining Draft.83d2 or Draft.84 gates.
+Future Draft.85b must
+bind a typed Stratum design to estimated component covariance matrices, and
+Draft.85c must establish sparse/unequal/missing two-/three-stratum recovery,
+PSD/rank recovery, shared-facet operator recovery, and full-refit uncertainty.
 
 ### Release horizon
 
@@ -2129,6 +4194,20 @@ reductions held. These are fixed-fixture pilot and structural-regression
 results only. `NUM-SCORE-TOL`, an expanded near-boundary grid,
 independent-engine replication, and confirmation remain unresolved.
 
+The bounded non-unit GPCM follow-up removes the special-case-only ambiguity in
+that pilot. On the same fixed q=31 direct-MML fixture, an independently
+expanded positive-slope map, GPCM softmax kernel, Person-wise marginal
+objective, and numeric free-coordinate score agree with the package at the
+retained solution, the earlier high-dispersion point, and forward/reverse
+finite stress points spanning slopes `exp(-3)`--`exp(3)`. At the calibrated
+`1e-5` central-difference step, the largest whole-vector and slope-block
+differences were `5.95e-7` and `1.25e-8`; probabilities, objective, and slope
+transforms agreed exactly at recorded precision. The 47 focused expectations
+include fail-closed mutations. This is review evidence only: it partly shares
+additive/step/population expansion, freezes no general `NUM-SCORE-TOL`, and
+does not replace owner-specific, five-category, sparse-topology, confirmation,
+or external-overlap evidence.
+
 Draft.13 adds the first repository-only G1 common-vector engine-path pilot.
 Four fixed binary/RSM/PCM runs compare direct, hybrid, and converged-EM plus
 common-direct-polish solutions; raw EM is retained as a diagnostic path, and
@@ -2192,6 +4271,110 @@ must not be advertised as implemented.
   projected-gradient rule applies to it.
 - [ ] Expand the score pilot by model/parameter class and near-boundary slope
   regime, then freeze absolute/scaled `NUM-SCORE-TOL` before confirmation.
+- [x] Add a general non-unit GPCM oracle that independently reconstructs the
+  positive-slope transform, response kernel, Person-wise marginal objective,
+  and numeric free-coordinate score at retained, high-dispersion, and finite
+  forward/reverse stress points. Keep this calibration-only and leave rows
+  5--6 in review.
+- [x] Prespecify the remaining criterion-owner/rater-owner, five-category,
+  sparse/workload-imbalanced, weak-link, and category-imbalance cells plus
+  parameter-class-specific absolute/scaled score, Jacobian, and margin rules.
+  The resulting no-execution contract has eight cells, 128 mandatory
+  scenario/point/class strata, and 63 fail-closed expectations.
+- [x] Implement an exact identity-bound runner and execute the frozen eight-
+  cell v2 calibration once. Retain its `rejected` result: all 128 evidence rows
+  were complete, while 33/672 coordinate rows and three Jacobian point rows
+  failed the conjunctive scale rule.
+- [x] Attribute the failed strata without changing v2. A fine objective-step
+  ladder demonstrated the extreme-slope locality/cancellation tradeoff, while
+  an independently reconstructed Person-posterior sufficient-statistic score
+  passed all 48 attribution strata with maximum difference `1.05e-9`.
+- [x] Specify v3 before opening new evidence: use independent analytic-score
+  agreement everywhere, finite differences with one combined absolute-plus-
+  relative allowance only inside the prespecified log-slope envelope
+  `[-3, 3]`, and an explicit non-promoting boundary/readiness handoff outside
+  it. Retrospective calibration is not confirmation; preserve the eventual
+  frozen rule unchanged for disjoint exact-candidate confirmation.
+- [x] Implement one identity-bound bounded v3 replay of the same deterministic
+  eight cells. The artifact-reuse audit found that the v2 bundle preserves all
+  128 structural/finite-difference strata, but independent analytic evidence
+  covers only 48/128 strata and the 32 Jacobian summaries lack the entrywise
+  scales needed for exact combined ratios. Record all denominators and
+  entrywise comparisons; do not reverse-engineer a pass from separate maxima,
+  call the replay confirmation, or use it to prove a boundary.
+- [x] Reject the first nominal v3 pass after repeatability failed, replace
+  random approximate-tie `max.col()` stabilization with deterministic first-
+  maximum selection across likelihood/prediction paths, retain owned cache-key
+  snapshots, and rebuild v2 attribution and v3 under the corrected payload.
+  Corrected v2 retains the 33-coordinate/three-Jacobian rejection; corrected
+  v3 completes 128 strata and 384 entrywise Jacobian rows and passes its
+  bounded retrospective rule while every fit remains inference-unready.
+- [x] Review and freeze the corrected v3 calibration rule and exact source
+  identity before opening disjoint exact-candidate confirmation. Freeze review
+  found that the first corrected identity omitted the numerical coordinate/
+  Jacobian helper; source-bound v2, attribution, and v3 artifacts now name it,
+  reproduce the same numerical tables, and pass a nine-source/full-denominator
+  seal. This freezes only the bounded rule for confirmation and does not claim
+  a boundary, finite extreme-slope maximum, or general score tolerance.
+- [x] Specify and seal disjoint exact-candidate confirmation fixtures and
+  fixture hashes without changing the frozen v3 rule. Three deterministic
+  noncalibration structures crossed with both slope owners fix six scenarios,
+  96 evidence strata, 560 coordinates, 24 points, and 376 Jacobian rows. No fit
+  or confirmation result was opened.
+- [x] Implement a record-consuming, dry-run-by-default confirmation runner and
+  a separate fresh-process/output-absence execution authorization contract.
+  Exact design/source/payload/freeze/manifest hashes, class-specific and
+  Jacobian-specific denominators, stale-record rejection, and occupied-target
+  negative tests pass. The actual default decision remains
+  `no_go_not_issued`; no confirmation result was opened.
+- [x] In one fresh process, recompute preflight, issue one exact target-bound
+  authorization record, and consume it once without result-dependent retry or
+  setting change. Retain the complete `rejected` result: every numerical
+  component passed, but a constructed six-level boundary was represented as
+  `3.0000000000000009` and failed the frozen raw inclusive classifier.
+- [x] Specify v4 without execution: derive a representation-aware inclusive-
+  boundary rule from binary64 input/summation/comparison error bounds, preserve
+  zero allowance for retained extremes, leave all four numerical comparison
+  rules unchanged, and require the exact consumed authorization row in the
+  result bundle. Opened v3 fixtures are calibration-only.
+- [x] Apply the prespecified v4 classifier retrospectively to the opened v3
+  bundle without fitting. Exactly one intended boundary changes region and all
+  retained extremes remain unchanged. Record the honest incomplete result:
+  the reclassified point lacks a saved finite difference and the old bundle
+  lacks its consumed authorization row, so v4 is not freeze-ready.
+- [x] Seal one new calibration-only deterministic boundary fixture without
+  fitting. Fix one Criterion-owned six-level forward-boundary scenario with
+  4 evidence rows, 24 coordinates, 1 point, and 30 Jacobian rows; permanently
+  mark it ineligible for later v4 confirmation.
+- [x] Implement its dry-run runner and separate target-bound authorization
+  without fitting. Bind exact source/payload/design/rule/manifest identities,
+  same-process issuance, authorization-source and row hashes, exact absent
+  target, and the 4/24/1/30 denominator; require the consumed row to be embedded.
+- [x] In one fresh process, issue and immediately consume the exact target-bound
+  row without retry. Independently validate the saved 4/24/1/30 result,
+  issued/consumed hashes, source chain, target resolution, aggregation, and
+  non-promotion boundary. All numerical rules pass; the fit remains `review`.
+- [x] Conduct a no-execution v4 freeze review over the full rule,
+  retrospective, completion, authorization, and validator lineage. Record the
+  repository-relative/non-absolute target form explicitly and freeze only the
+  bounded calibration rule and interpretation.
+- [x] Seal a new structurally disjoint v4 confirmation family without fitting.
+  Reuse no v3/completion identities or response constructions; fix six
+  Criterion/Rater-owned scenarios and 96/888/24/688 denominators across sparse,
+  balanced, and workload-imbalanced 5/6/7-category designs.
+- [x] Implement the v4 confirmation dry-run runner, separate same-process
+  authorization, and prospectively sealed independent validator. The absent
+  absolute-target, issued/consumed-row, source/manifest, fixed 96/888/24/688
+  denominator, incomplete-result, and mutation guards passed 74 no-fit
+  expectations before execution.
+- [x] Consume the v4 confirmation authorization exactly once without retry.
+  All frozen score and Jacobian comparisons passed, but two Criterion-owned
+  fits reached the iteration limit and were `blocked`. The runner omitted fit
+  readiness from its final aggregation and reported a false-positive candidate
+  pass; the sealed validator also exposed a separate names-attribute defect.
+  The immutable no-fit retrospective audit therefore records
+  `rejected_runner_false_positive_and_blocked_fits`. No retry, rule adjustment,
+  general tolerance, boundary, inference, or 0.2.3 promotion is authorized.
 - [x] Add and run the draft.13 fixed-fixture pilot that compares direct,
   hybrid, and converged-EM-plus-common-direct-polish routes at the same
   retained parameter vectors, objective, quadrature, coordinate order, and
@@ -2203,12 +4386,18 @@ must not be advertised as implemented.
 - [ ] Expand the engine-path pilot by fixture, parameter class, and platform,
   then freeze absolute/scaled `NUM-OBJECTIVE-TOL` and
   `NUM-PARAMETER-TOL` before confirmation.
-- [ ] Preserve the 0.2.2 `maxit` contract: use a prespecified ceiling sequence,
-  never select a preferred result by rerunning until a desired answer appears,
-  and keep iteration-limited fits review-only.
+- [x] Implement the deterministic 0.2.3 `maxit` stable slice: use a
+  prespecified ceiling sequence, never select a preferred later result, keep
+  iteration-limited fits review-only, and validate release-evidence attempts
+  against an invariant specification hash and first-eligible-run rule. Row 8
+  remains `review` until exact-candidate confirmation applies the same contract.
 - [x] Add exact reduction checks: two-category polytomous cases reduce to the
   intended binary model, RSM/PCM unit-slope cases agree, and bounded-GPCM
   score-side transformations use the same retained fit.
+- [x] Close release-spine row 9 structurally after extending those reductions
+  to a separately implemented category-kernel/person-marginal oracle, explicit
+  free/expanded step and slope identities, and fail-closed numeric mutation
+  tests. This does not close the broader score-tolerance rows 5--6.
 - [ ] Keep JML regression and FACETS-overlap checks distinct from the MML
   recovery gate; no JML-versus-MML equality criterion is permitted.
 
@@ -2800,17 +4989,23 @@ These are separate research programs, not promises attached to 0.2.x or 0.3.0.
 
 - restricted multidimensional `RSM`/`PCM`, followed only later by any
   multidimensional GPCM route;
+- decoupled single-family GPCM in which `slope_facet` and `step_facet` can
+  differ, followed only after its reduction and identification gates by a
+  multiplicative criterion/task-by-rater slope model;
 - unrestricted unidimensional GPCM with general slope design, covariance, and
-  downstream-helper closure;
+  downstream-helper closure, including explicit cell-slope negative guards;
 - freely estimated latent population variance and configurable-prior EAP
   sensitivity after their identification and recovery contracts are defined;
 - moderation-specific DFF/DIF methods with calibrated null/non-null behavior,
   rather than extending the current direct screening labels by name alone;
+- rater-by-criterion severity interactions and response-style
+  centrality/extremity models, kept distinct from discrimination slopes;
 - posterior-predictive diagnostics and optional Bayesian/heavy backends;
-- profile or multivariate G-theory with covariance-based composite
-  reliability;
+- typed profile or multivariate observed-score G-theory under the ordered
+  Draft.80 design/covariance gates, with joint GT-IRT/GPCM remaining separate;
 - alternative polytomous, rater-process, mixture, unfolding, and general
-  design-matrix families; and
+  design-matrix families, including hierarchical-rater and repeated-rating
+  local-dependence models; and
 - larger-scale performance work after the statistical and reporting contracts
   are fixed.
 
@@ -2840,7 +5035,8 @@ authorized only when:
 The following remain outside committed release scope until a separate proposal
 defines estimands, identification, reduction cases, computational cost, and
 evidence gates: unrestricted GPCM; native multidimensional MFRM and subscores;
-Bayesian/MCMC backends; posterior-predictive checks; multivariate G-theory;
+Bayesian/MCMC backends; posterior-predictive checks; joint GT-IRT/GPCM and
+multivariate G-theory outside the typed observed-score Draft.80 subset;
 mixture, unfolding, and rater-process families; automatic DIF/DFF decision
 rules; and distributed/high-performance engines. An experimental branch or a
 callable internal helper does not remove an item from the icebox.

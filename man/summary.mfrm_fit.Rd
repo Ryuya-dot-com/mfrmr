@@ -75,8 +75,8 @@ when a population model uses model-matrix coding
 (Wright-map-style mean/SD comparison)
 \item \code{step_overview}: threshold/step diagnostics by PCM/GPCM \code{StepFacet}
 ladder, or for the common RSM ladder
-\item \code{slope_overview}: parameter-readiness and explicitly labelled
-optimizer-trace summary for \code{GPCM} discriminations
+\item \code{slope_overview}: parameter-readiness and explicitly labelled optimizer-
+trace summary for \code{GPCM} discriminations
 \item \code{interaction_overview}: model-estimated facet-interaction summary
 when the fit was specified with \code{facet_interactions}
 \item \code{settings_overview}: estimation-settings overview that pins the
@@ -95,6 +95,10 @@ reporting sections (data description, diagnostics, category
 checks, draft reporting)
 \item \code{person_high} / \code{person_low}: highest and lowest person measures
 \item \code{facet_extremes}: extreme facet-level estimates
+\item \code{facet_support_boundaries}: observed boundary-constant non-person facet
+levels, kept distinct from parameter-level recession conclusions
+\item \code{facet_recession_review}: certified JML additive facet recession
+directions, including review scope and completeness
 \item \code{caveats}: structured warning/review rows for score-support and
 latent-regression population-model issues
 \item \code{notes}: short interpretation notes
@@ -141,8 +145,8 @@ not enter the common MML ranking panel. \code{ICSelectable} additionally
 distinguishes raw screening/review criteria at q<31 from criteria that
 may enter automatic same-grid comparison at q>=31; close decisions still
 require a denser common-grid sensitivity check.
-\item \code{readiness}: the stored fit-readiness result followed by Numerical,
-Data, Design, Stability, Diagnostics, and Reporting workflow states.
+\item \code{readiness}: the stored fit-readiness result followed by Numerical, Data,
+Design, Stability, Diagnostics, and Reporting workflow states.
 \code{InferenceReady} is a conservative compatibility scalar and is \code{TRUE}
 only when the stored \code{FitReadiness} is \code{ready}; numerical convergence
 cannot override input, estimability, category, or boundary review.
@@ -168,6 +172,12 @@ population-design check row.
 \item \code{reporting_map}: where to get companion outputs for manuscript reporting.
 \item \code{person_high} / \code{person_low} (opt-in for printing) and \code{facet_extremes}:
 extreme estimates for focused review.
+\item \code{facet_support_boundaries}: observed non-person facet levels whose retained
+responses are constant at the minimum or maximum score. This is a data-
+support warning, not by itself a proof that a parameter MLE is infinite.
+\item \code{facet_recession_review}: non-person facet directions certified as
+unbounded in an evaluated JML additive recession subspace. Joint rows are
+relative directions under the fitted identification constraints.
 }
 }
 

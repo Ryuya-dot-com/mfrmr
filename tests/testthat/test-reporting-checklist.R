@@ -18,8 +18,12 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   ))
 
   chk <- reporting_checklist(fit, diagnostics = diag, bias_results = list(rater_criterion = bias))
+  readiness_record <- mfrmr:::mfrmr_get_readiness_record(fit)
 
   expect_s3_class(chk, "mfrm_reporting_checklist")
+  expect_equal(chk$fit_readiness, readiness_record$fit)
+  expect_equal(chk$fit_readiness_components, readiness_record$components)
+  expect_equal(chk$fit_readiness_parameters, readiness_record$parameters)
   expect_true(is.data.frame(chk$checklist))
   expect_true(is.data.frame(chk$summary))
   expect_true(is.data.frame(chk$section_summary))
@@ -102,6 +106,9 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_true(all(c("DraftReady", "ReadyForAPA", "NeedsDraftWork", "NeedsAction") %in% names(chk$summary)))
 
   s_chk <- summary(chk)
+  expect_equal(s_chk$fit_readiness, readiness_record$fit)
+  expect_equal(s_chk$fit_readiness_components, readiness_record$components)
+  expect_equal(s_chk$fit_readiness_parameters, readiness_record$parameters)
   expect_s3_class(s_chk, "summary.mfrm_reporting_checklist")
   expect_true(is.data.frame(s_chk$overview))
   expect_true(is.data.frame(s_chk$section_summary))

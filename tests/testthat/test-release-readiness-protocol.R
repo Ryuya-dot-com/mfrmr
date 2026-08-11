@@ -75,6 +75,246 @@ test_that("internal draft.62 roadmap and GPCM work remain explicit and private",
     pkg_root, "inst", "validation",
     "tam-immer-estimator-stress-plan-0.2.3.md"
   )
+  factor_checkpoint_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-factor-checkpoint-contract-0.2.3.md"
+  )
+  factor_pilot_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-factor-pilot-record-0.2.3.md"
+  )
+  connected_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-connected-design-contract-0.2.3.md"
+  )
+  connected_runner_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-connected-design-0.2.3.R"
+  )
+  connected_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-connected-design-record-0.2.3.md"
+  )
+  topology_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-topology-calibration-contract-0.2.3.md"
+  )
+  topology_runner_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-topology-calibration-0.2.3.R"
+  )
+  topology_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "tam-immer-jml-topology-calibration-record-0.2.3.md"
+  )
+  gtheory_roadmap_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-reconstruction-roadmap-0.2.3.md"
+  )
+  gtheory_algebra_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-design-algebra-contract-0.2.3.md"
+  )
+  gtheory_algebra_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-design-algebra-prototype-0.2.3.R"
+  )
+  gtheory_algebra_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-design-algebra-record-0.2.3.md"
+  )
+  gtheory_estimation_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-balanced-estimation-contract-0.2.3.md"
+  )
+  gtheory_estimation_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-balanced-estimation-prototype-0.2.3.R"
+  )
+  gtheory_estimation_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-balanced-estimation-record-0.2.3.md"
+  )
+  gtheory_incidence_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-design-incidence-contract-0.2.3.md"
+  )
+  gtheory_incidence_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-design-incidence-audit-0.2.3.R"
+  )
+  gtheory_incidence_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-design-incidence-record-0.2.3.md"
+  )
+  gtheory_allocation_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-allocation-operator-contract-0.2.3.md"
+  )
+  gtheory_allocation_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-allocation-operator-prototype-0.2.3.R"
+  )
+  gtheory_allocation_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-allocation-operator-record-0.2.3.md"
+  )
+  gtheory_covariance_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-covariance-information-contract-0.2.3.md"
+  )
+  gtheory_covariance_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-covariance-information-audit-0.2.3.R"
+  )
+  gtheory_covariance_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-covariance-information-record-0.2.3.md"
+  )
+  gtheory_parity_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-glmmtmb-parity-contract-0.2.3.md"
+  )
+  gtheory_parity_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-glmmtmb-parity-prototype-0.2.3.R"
+  )
+  gtheory_parity_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-glmmtmb-parity-record-0.2.3.md"
+  )
+  gtheory_ademp_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-registry-contract-0.2.3.md"
+  )
+  gtheory_ademp_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-registry-prototype-0.2.3.R"
+  )
+  gtheory_ademp_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-registry-record-0.2.3.md"
+  )
+  gtheory_generator_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-generator-contract-0.2.3.md"
+  )
+  gtheory_generator_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-generator-prototype-0.2.3.R"
+  )
+  gtheory_generator_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-generator-record-0.2.3.md"
+  )
+  gtheory_prefit_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-prefit-contract-0.2.3.md"
+  )
+  gtheory_prefit_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-prefit-prototype-0.2.3.R"
+  )
+  gtheory_prefit_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-prefit-record-0.2.3.md"
+  )
+  gtheory_fit_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-fit-contract-0.2.3.md"
+  )
+  gtheory_fit_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-fit-prototype-0.2.3.R"
+  )
+  gtheory_fit_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-ademp-fit-record-0.2.3.md"
+  )
+  gtheory_weak_information_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-calibration-contract-0.2.3.md"
+  )
+  gtheory_weak_information_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-calibration-prototype-0.2.3.R"
+  )
+  gtheory_weak_information_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-calibration-record-0.2.3.md"
+  )
+  gtheory_weak_information_pilot_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-pilot-contract-0.2.3.md"
+  )
+  gtheory_weak_information_pilot_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-pilot-prototype-0.2.3.R"
+  )
+  gtheory_weak_information_pilot_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-pilot-record-0.2.3.md"
+  )
+  gtheory_weak_information_inference_audit_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-inference-audit-0.2.3.md"
+  )
+  gtheory_weak_information_diagnostic_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-diagnostic-refit-prototype-0.2.3.R"
+  )
+  gtheory_weak_information_diagnostic_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-diagnostic-refit-record-0.2.3.md"
+  )
+  gtheory_weak_information_bootstrap_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-bootstrap-contract-0.2.3.md"
+  )
+  gtheory_weak_information_bootstrap_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-bootstrap-prototype-0.2.3.R"
+  )
+  gtheory_weak_information_bootstrap_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-bootstrap-record-0.2.3.md"
+  )
+  gtheory_weak_information_feasibility_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-feasibility-contract-0.2.3.md"
+  )
+  gtheory_weak_information_feasibility_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-feasibility-prototype-0.2.3.R"
+  )
+  gtheory_weak_information_feasibility_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-feasibility-record-0.2.3.md"
+  )
+  gtheory_weak_information_feasibility_runner_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-feasibility-runner-contract-0.2.3.md"
+  )
+  gtheory_weak_information_feasibility_runner_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-feasibility-runner-0.2.3.R"
+  )
+  gtheory_weak_information_feasibility_execution_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-weak-information-feasibility-execution-record-0.2.3.md"
+  )
+  gtheory_multivariate_contract_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-multivariate-algebra-contract-0.2.3.md"
+  )
+  gtheory_multivariate_prototype_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-multivariate-algebra-prototype-0.2.3.R"
+  )
+  gtheory_multivariate_record_path <- file.path(
+    pkg_root, "inst", "validation",
+    "gtheory-multivariate-algebra-record-0.2.3.md"
+  )
   contract_path <- file.path(
     pkg_root, "inst", "validation", "readiness-contract-0.2.3.md"
   )
@@ -128,6 +368,49 @@ test_that("internal draft.62 roadmap and GPCM work remain explicit and private",
   )
   skip_if_not(all(file.exists(c(
     internal_path, gate_path, checklist_path, estimator_plan_path,
+    factor_checkpoint_contract_path, factor_pilot_record_path,
+    connected_contract_path, connected_runner_path, connected_record_path,
+    topology_contract_path, topology_runner_path, topology_record_path,
+    gtheory_roadmap_path, gtheory_algebra_contract_path,
+    gtheory_algebra_prototype_path, gtheory_algebra_record_path,
+    gtheory_estimation_contract_path, gtheory_estimation_prototype_path,
+    gtheory_estimation_record_path,
+    gtheory_incidence_contract_path, gtheory_incidence_prototype_path,
+    gtheory_incidence_record_path,
+    gtheory_allocation_contract_path, gtheory_allocation_prototype_path,
+    gtheory_allocation_record_path,
+    gtheory_covariance_contract_path, gtheory_covariance_prototype_path,
+    gtheory_covariance_record_path,
+    gtheory_parity_contract_path, gtheory_parity_prototype_path,
+    gtheory_parity_record_path,
+    gtheory_ademp_contract_path, gtheory_ademp_prototype_path,
+    gtheory_ademp_record_path,
+    gtheory_generator_contract_path, gtheory_generator_prototype_path,
+    gtheory_generator_record_path,
+    gtheory_prefit_contract_path, gtheory_prefit_prototype_path,
+    gtheory_prefit_record_path,
+    gtheory_fit_contract_path, gtheory_fit_prototype_path,
+    gtheory_fit_record_path,
+    gtheory_weak_information_contract_path,
+    gtheory_weak_information_prototype_path,
+    gtheory_weak_information_record_path,
+    gtheory_weak_information_pilot_contract_path,
+    gtheory_weak_information_pilot_prototype_path,
+    gtheory_weak_information_pilot_record_path,
+    gtheory_weak_information_inference_audit_path,
+    gtheory_weak_information_diagnostic_prototype_path,
+    gtheory_weak_information_diagnostic_record_path,
+    gtheory_weak_information_bootstrap_contract_path,
+    gtheory_weak_information_bootstrap_prototype_path,
+    gtheory_weak_information_bootstrap_record_path,
+    gtheory_weak_information_feasibility_contract_path,
+    gtheory_weak_information_feasibility_prototype_path,
+    gtheory_weak_information_feasibility_record_path,
+    gtheory_weak_information_feasibility_runner_contract_path,
+    gtheory_weak_information_feasibility_runner_path,
+    gtheory_weak_information_feasibility_execution_record_path,
+    gtheory_multivariate_contract_path, gtheory_multivariate_prototype_path,
+    gtheory_multivariate_record_path,
     contract_path, fixture_path, gpcm_smoke_record_path,
     attribution_smoke_record_path, attribution_replicated_record_path,
     checkpoint_record_path, metamorphic_record_path, roadmap_record_path,
@@ -191,6 +474,189 @@ test_that("internal draft.62 roadmap and GPCM work remain explicit and private",
     readLines(jml_prescreen_record_path, warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
+  gtheory_roadmap <- paste(
+    readLines(gtheory_roadmap_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  gtheory_algebra_contract <- paste(
+    readLines(gtheory_algebra_contract_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  gtheory_algebra_record <- paste(
+    readLines(gtheory_algebra_record_path, warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  gtheory_estimation_contract <- paste(
+    readLines(
+      gtheory_estimation_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_estimation_record <- paste(
+    readLines(
+      gtheory_estimation_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_incidence_contract <- paste(
+    readLines(
+      gtheory_incidence_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_incidence_record <- paste(
+    readLines(
+      gtheory_incidence_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_allocation_contract <- paste(
+    readLines(
+      gtheory_allocation_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_allocation_record <- paste(
+    readLines(
+      gtheory_allocation_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_covariance_contract <- paste(
+    readLines(
+      gtheory_covariance_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_covariance_record <- paste(
+    readLines(
+      gtheory_covariance_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_parity_contract <- paste(
+    readLines(
+      gtheory_parity_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_parity_record <- paste(
+    readLines(
+      gtheory_parity_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_ademp_contract <- paste(
+    readLines(
+      gtheory_ademp_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_ademp_record <- paste(
+    readLines(
+      gtheory_ademp_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_generator_contract <- paste(
+    readLines(
+      gtheory_generator_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_generator_record <- paste(
+    readLines(
+      gtheory_generator_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_prefit_contract <- paste(
+    readLines(
+      gtheory_prefit_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_prefit_record <- paste(
+    readLines(
+      gtheory_prefit_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_fit_contract <- paste(
+    readLines(
+      gtheory_fit_contract_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_fit_record <- paste(
+    readLines(
+      gtheory_fit_record_path, warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_contract <- paste(
+    readLines(
+      gtheory_weak_information_contract_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_record <- paste(
+    readLines(
+      gtheory_weak_information_record_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_pilot_contract <- paste(
+    readLines(
+      gtheory_weak_information_pilot_contract_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_pilot_record <- paste(
+    readLines(
+      gtheory_weak_information_pilot_record_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_inference_audit <- paste(
+    readLines(
+      gtheory_weak_information_inference_audit_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_diagnostic_record <- paste(
+    readLines(
+      gtheory_weak_information_diagnostic_record_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_weak_information_feasibility_execution_record <- paste(
+    readLines(
+      gtheory_weak_information_feasibility_execution_record_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_multivariate_contract <- paste(
+    readLines(
+      gtheory_multivariate_contract_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
+  gtheory_multivariate_record <- paste(
+    readLines(
+      gtheory_multivariate_record_path,
+      warn = FALSE, encoding = "UTF-8"
+    ),
+    collapse = "\n"
+  )
 
   expect_match(internal, "WP0-READINESS-CONTRACT", fixed = TRUE)
   expect_match(internal, "WP7-REPILOT-AND-FREEZE", fixed = TRUE)
@@ -241,7 +707,380 @@ test_that("internal draft.62 roadmap and GPCM work remain explicit and private",
   expect_match(internal, "partitioned\\s+exhaustively")
   expect_match(internal, "Estimator ecosystem and maturity boundary", fixed = TRUE)
   expect_match(internal, "method = \"HRM\"", fixed = TRUE)
-  expect_match(gate, "Specification ID | `0.2.3-draft.62`", fixed = TRUE)
+  expect_match(
+    gate, "Specification ID | `0.2.3-draft.83d2b2b1g24`", fixed = TRUE
+  )
+  expect_match(internal, "Draft.73 advances a separate JML-estimator maturity lane",
+               fixed = TRUE)
+  expect_match(internal, "Draft.74 executes the first paired slice",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.75 starts that external-convention grid",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.76 makes sample and design adversity first-class identities",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.77 executes that guarded pilot",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.78 completes the first connected low-exposure",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.79 completes the matched path, cycle, distributed",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.80 typed G-theory and D-study reconstruction contract",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.81 typed parser and balanced algebra prototype",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.82 balanced ANOVA/MoM and lme4 estimator prototype",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83a observed-design incidence and rank audit",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83b component-specific allocation operator",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83c1 covariance-design, expected-information, and lme4 audit",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83c2 matched glmmTMB/lme4 point-estimation parity",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d1 G-theory ADEMP registry and denominator contract",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2a deterministic G-theory ADEMP generation layer",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b0 scalable G-theory ADEMP pre-fit layer",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b1 atomic point-fit execution and retained concern",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b2a weak-information diagnostic covering smoke",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b2b0 replicated pilot plan and authorization firewall",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b2b1a source-audited boundary diagnostic refits",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b2b1b exact-design bootstrap mechanics",
+               fixed = TRUE)
+  expect_match(internal,
+               "Draft.83d2b2b1c replacement feasibility and runtime authorization",
+               fixed = TRUE)
+  expect_match(gtheory_roadmap,
+               "An arbitrary mixed-model formula is necessary but not sufficient",
+               fixed = TRUE)
+  expect_match(gtheory_roadmap, "allocation_operator", fixed = TRUE)
+  expect_match(gtheory_roadmap, "full-refit parametric bootstrap", fixed = TRUE)
+  expect_match(gtheory_roadmap, "w' Sigma_p w", fixed = TRUE)
+  expect_match(gtheory_algebra_contract,
+               "positive integer `n_<Facet>` columns", fixed = TRUE)
+  expect_match(gtheory_algebra_contract,
+               "raw_negative_component", fixed = TRUE)
+  expect_match(gtheory_algebra_record,
+               "eight tests and 46 expectations passed", fixed = TRUE)
+  expect_match(gtheory_algebra_record,
+               "G=10/13", fixed = TRUE)
+  expect_match(gtheory_estimation_contract,
+               "orthogonal_expected_mean_square_inversion", fixed = TRUE)
+  expect_match(gtheory_estimation_record,
+               "seven tests and 71 expectations passed", fixed = TRUE)
+  expect_match(gtheory_estimation_record,
+               "constrained_zero_boundary", fixed = TRUE)
+  expect_match(gtheory_incidence_contract,
+               "Connectivity is necessary but not sufficient", fixed = TRUE)
+  expect_match(gtheory_incidence_record,
+               "seven tests and 69 expectations passed", fixed = TRUE)
+  expect_match(gtheory_incidence_record,
+               "not_adjudicated_draft83a", fixed = TRUE)
+  expect_match(gtheory_allocation_contract,
+               "lambda_uC = sum_g a_uCg^2", fixed = TRUE)
+  expect_match(gtheory_allocation_record,
+               "seven tests and 71 expectations passed", fixed = TRUE)
+  expect_match(gtheory_allocation_record,
+               "heterogeneous_unit_specific_only", fixed = TRUE)
+  expect_match(gtheory_covariance_contract,
+               "point_estimation_gate_passed", fixed = TRUE)
+  expect_match(gtheory_covariance_record,
+               "eight focused tests and 103 expectations pass", fixed = TRUE)
+  expect_match(gtheory_covariance_record,
+               "boundary_nonregular", fixed = TRUE)
+  expect_match(gtheory_parity_contract,
+               "MatchedOverlapPassed", fixed = TRUE)
+  expect_match(gtheory_parity_record,
+               "eight focused tests and 93 expectations pass", fixed = TRUE)
+  expect_match(gtheory_parity_record,
+               "pdHess=TRUE", fixed = TRUE)
+  expect_match(gtheory_ademp_contract,
+               "blocked_anchor_not_gstudy_operation", fixed = TRUE)
+  expect_match(gtheory_ademp_contract,
+               "no_interval_until_draft84", fixed = TRUE)
+  expect_match(gtheory_ademp_record,
+               "Nine focused tests and 77 expectations pass", fixed = TRUE)
+  expect_match(gtheory_generator_contract,
+               "FullPotentialData", fixed = TRUE)
+  expect_match(gtheory_generator_contract,
+               "Draft.83d2b", fixed = TRUE)
+  expect_match(gtheory_generator_record,
+               "Ten focused tests and 185 expectations pass", fixed = TRUE)
+  expect_match(gtheory_generator_record,
+               "GenerationEvidenceReady", fixed = TRUE)
+  expect_match(gtheory_prefit_contract,
+               "exact scalable covariance-component rank audit", fixed = TRUE)
+  expect_match(gtheory_prefit_contract,
+               "FitAttemptAuthorized = FALSE", fixed = TRUE)
+  expect_match(gtheory_prefit_record,
+               "Eight focused tests and 71 expectations pass", fixed = TRUE)
+  expect_match(gtheory_prefit_record,
+               "022ae8b01eb9febc3b1648bd232066fd11a56609e483e9e8b64d4a526ff94986",
+               fixed = TRUE)
+  expect_match(gtheory_fit_contract,
+               "zero false-ready gate | **failed**", fixed = TRUE)
+  expect_match(gtheory_fit_contract,
+               "backend-local regularity diagnostics", fixed = TRUE)
+  expect_match(gtheory_fit_record,
+               "atomic accounting passed; near-boundary zero-false-ready gate failed",
+               fixed = TRUE)
+  expect_match(gtheory_fit_record,
+               "1b0fa928f1aba1a9ac09bc3ec1c790f7fb94911a92cc6ea13ee7ad92d4884d49",
+               fixed = TRUE)
+  expect_match(gtheory_weak_information_contract,
+               "27 false-ready results", fixed = TRUE)
+  expect_match(gtheory_weak_information_contract,
+               "ThresholdFrozen", fixed = TRUE)
+  expect_match(gtheory_weak_information_record,
+               "27/40 false-ready", fixed = TRUE)
+  expect_match(gtheory_weak_information_record,
+               "71978d3ea5bd747ae53526f8bbfe3bfde5a086e0267f6e9530b088cfb4f9f336",
+               fixed = TRUE)
+  expect_match(gtheory_weak_information_pilot_contract,
+               "ScenarioId x Replicate", fixed = TRUE)
+  expect_match(gtheory_weak_information_pilot_contract,
+               "Confirmation remains unavailable", fixed = TRUE)
+  expect_match(gtheory_weak_information_pilot_record,
+               "3,000\\s+atomic rows")
+  expect_match(gtheory_weak_information_pilot_record,
+               "463a188717f389858635c5447d2c750b32920b5d370d3fbb39cbada43ed9780c",
+               fixed = TRUE)
+  expect_match(gtheory_weak_information_inference_audit,
+               "must not share a numerical threshold", fixed = TRUE)
+  expect_match(gtheory_weak_information_inference_audit,
+               "custom parametric\nbootstrap under the fitted reduced model")
+  expect_match(gtheory_weak_information_diagnostic_record,
+               "aac91ac4bddffb14186ecb9e042d40744b42c2fd257a1b85a83037f3aab909bd",
+               fixed = TRUE)
+  expect_match(gtheory_weak_information_diagnostic_record,
+               "c39180ec3618957b261ff84313f5f770be7e5ecdfbfa383a996160d822f5db2d",
+               fixed = TRUE)
+  expect_match(gtheory_weak_information_feasibility_execution_record,
+               "common-score-available rows | 2,804 / 3,000", fixed = TRUE)
+  expect_match(gtheory_weak_information_feasibility_execution_record,
+               "FeasibilityEvidenceReady = TRUE", fixed = TRUE)
+  expect_match(gtheory_multivariate_contract,
+               "Gamma_c o Lambda_c", fixed = TRUE)
+  expect_match(gtheory_multivariate_contract,
+               "it is not `1/sqrt(2*3)`", fixed = TRUE)
+  expect_match(gtheory_multivariate_record,
+               "Nine focused tests and 66 expectations pass", fixed = TRUE)
+  expect_match(estimator_plan, "tam-immer-jml-mode-comparison-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-factor-stress-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-factor-checkpoint-contract-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-factor-pilot-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-connected-design-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-connected-design-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-topology-calibration-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "tam-immer-jml-topology-calibration-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d1-mv1", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2a", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b0", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b1", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2a", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b0", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1a", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1b", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1c", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1d", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1e", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1f", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g1", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g2", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g3", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g4", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g5", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g8", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g9", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g10", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g11", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g12", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g13", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g14", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g15", fixed = TRUE)
+  expect_match(gate, "0.2.3-draft.83d2b2b1g15a", fixed = TRUE)
+  expect_match(
+    gate,
+    "gtheory-weak-information-monte-carlo-value-audit-0.2.3.R",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-monte-carlo-value-audit-contract-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-monte-carlo-value-audit-record-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-one-way-authorization-preflight-0.2.3.R",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-one-way-authorization-preflight-contract-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-one-way-authorization-preflight-record-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-production-adapter-preflight-0.2.3.R",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-production-adapter-preflight-contract-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-production-adapter-preflight-record-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-production-boundary-probe-0.2.3.R",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-production-boundary-probe-contract-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(
+    gate,
+    "gtheory-weak-information-production-boundary-probe-record-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(gate, "gtheory-reconstruction-roadmap-0.2.3.md", fixed = TRUE)
+  expect_match(gate, "gtheory-design-algebra-prototype-0.2.3.R", fixed = TRUE)
+  expect_match(gate, "gtheory-design-algebra-record-0.2.3.md", fixed = TRUE)
+  expect_match(gate, "gtheory-balanced-estimation-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-balanced-estimation-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-design-incidence-audit-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-design-incidence-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-allocation-operator-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-allocation-operator-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-covariance-information-audit-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-covariance-information-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-glmmtmb-parity-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-glmmtmb-parity-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-registry-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-registry-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-generator-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-generator-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-prefit-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-prefit-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-fit-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-ademp-fit-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-calibration-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-calibration-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-pilot-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-diagnostic-refit-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-diagnostic-refit-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-bootstrap-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-bootstrap-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-feasibility-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-feasibility-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate,
+               "gtheory-weak-information-feasibility-runner-0.2.3.R",
+               fixed = TRUE)
+  expect_match(
+    gate,
+    "gtheory-weak-information-feasibility-execution-record-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_match(gate,
+               "gtheory-weak-information-pilot-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-multivariate-algebra-prototype-0.2.3.R",
+               fixed = TRUE)
+  expect_match(gate, "gtheory-multivariate-algebra-record-0.2.3.md",
+               fixed = TRUE)
+  expect_match(gate, "INT-JML-EXT-PROFILE", fixed = TRUE)
+  expect_match(gate, "FiniteOriginalJMLMaximum = FALSE", fixed = TRUE)
+  expect_match(internal, "jml-extreme-profile-recovery-contract-0.2.3.md",
+               fixed = TRUE)
+  expect_match(internal, "Person recovery is excluded", fixed = TRUE)
   expect_match(internal, "Draft.40 adds the first bounded joint nonlinear GPCM path family", fixed = TRUE)
   expect_match(internal, "Draft.41 makes the prespecified GPCM stress envelope executable", fixed = TRUE)
   expect_match(internal, "Draft.42 adds the isolated-attribution layer", fixed = TRUE)
@@ -270,6 +1109,28 @@ test_that("internal draft.62 roadmap and GPCM work remain explicit and private",
                fixed = TRUE)
   expect_match(internal,
                "Draft.62 implements the selected bounded single-ten-second policy",
+               fixed = TRUE)
+  expect_match(internal, "Draft.63 adopts separate criterion-owned",
+               fixed = TRUE)
+  expect_match(internal, "Draft.64 adds the owner-specific execution slice",
+               fixed = TRUE)
+  expect_match(internal, "Draft.65 freezes the pre-pilot execution structure",
+               fixed = TRUE)
+  expect_match(internal, "Draft.66 records the first completed owner-specific pilot",
+               fixed = TRUE)
+  expect_match(internal, "Draft.67 closes the two-row JML artifact-loss mechanism",
+               fixed = TRUE)
+  expect_match(internal, "Draft.68 completes the separately identified MML integration lane",
+               fixed = TRUE)
+  expect_match(internal, "Draft.69 implements the first estimator-specific marginal-MML slope-boundary",
+               fixed = TRUE)
+  expect_match(internal, "Draft.70 completes the first retrospective cross-q application",
+               fixed = TRUE)
+  expect_match(internal, "Draft.71 executes the first item under",
+               fixed = TRUE)
+  expect_match(internal, "Draft.72 begins that corrective slice under",
+               fixed = TRUE)
+  expect_match(gate, "aligned single-owner relative-slope GPCM",
                fixed = TRUE)
   expect_match(internal, "`release_spine`", fixed = TRUE)
   expect_match(internal, "in_progress_core_slice_unblocked", fixed = TRUE)
@@ -460,7 +1321,12 @@ test_that("internal draft.62 roadmap and GPCM work remain explicit and private",
     "tam_immer_jml_overlap",
     "conditional_estimator_overlap",
     "hrm_local_dependence_boundary",
-    "ecosystem_positioning_claims"
+    "ecosystem_positioning_claims",
+    "gtheory_typed_design_algebra",
+    "gtheory_univariate_crossed_nested",
+    "gtheory_interval_propagation",
+    "gtheory_multivariate_covariance",
+    "gtheory_current_surface_compatibility"
   ) %in% checklist$Item))
   expect_identical(anyDuplicated(paste(checklist$Gate, checklist$Item)), 0L)
 })

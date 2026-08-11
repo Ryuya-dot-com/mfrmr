@@ -65,7 +65,9 @@ loglik_pcm <- function(eta, score_k, step_cum_mat, criterion_idx, weight = NULL,
     nr <- length(rows)
     eta_mat <- outer(eta_c, 0:(k_cat - 1))
     log_num <- eta_mat - matrix(step_cum, nrow = nr, ncol = k_cat, byrow = TRUE)
-    row_max <- log_num[cbind(seq_len(nr), max.col(log_num))]
+    row_max <- log_num[cbind(
+      seq_len(nr), max.col(log_num, ties.method = "first")
+    )]
     log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
     log_num_obs <- log_num[cbind(seq_len(nr), score_k[rows] + 1)]
     diff <- log_num_obs - log_denom

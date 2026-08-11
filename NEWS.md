@@ -4,6 +4,897 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Completed the sealed four-arm ConQuest 5.47.5 additive RSM/PCM q31/q61
+  calibration outside the filesystem sandbox. Exact native A-matrix checks
+  establish the 7/9-dimensional sum-zero bases, and q31/q61 final coordinates
+  agree at retained CSV digits. The review corrected implicit-facet command
+  grammar, native GIN ordering, and a validation exporter that had omitted PCM
+  step estimates. Raw CSV rounding, a prespecified tolerance, and candidate
+  identity remain unresolved, so no scientific-equivalence claim is made.
+
+* Adjudicated the opened ConQuest calibration without selecting a self-passing
+  tolerance. Representation, optimizer termination, integration stability,
+  scientific acceptance, and candidate binding are now separate gates. The
+  internal history/export check is named `handoff_tolerance`; its old
+  `export_tolerance` name is a deprecated alias and is explicitly neither CSV
+  resolution nor `EXT-CQ-TOL`. The broad external claim remains in the future
+  portfolio. Calibration may inform a prospective error budget for a disjoint
+  candidate, but cannot pass itself under a newly chosen rule; the current
+  result stays descriptive and no candidate,
+  sparse extension, or large simulation is authorized.
+
+* Kept `MML` and `JML` as the two canonical estimator labels while retaining
+  `JMLE` only as a backward-compatible input alias. Legacy objects that still
+  contain `JMLE` in retained method fields now emit `JML` consistently from
+  summary, print, manifest, and replay surfaces; no likelihood or estimate is
+  changed.
+
+* Froze the bounded GPCM score-rule v3 calibration for a future disjoint
+  confirmation, without freezing a general score tolerance. Freeze review
+  found that the first corrected replay identity omitted the numerical helper
+  supplying coordinate and Jacobian calculations. Source-bound v2,
+  attribution, and v3 reruns now include that helper hash, reproduce the same
+  numerical tables and decisions, and pass a no-fit seal over nine validation
+  sources, the complete package payload, three artifacts, and all evidence
+  denominators. Confirmation execution, boundary claims, and inference
+  promotion remain unauthorized.
+
+* Sealed a no-fit disjoint GPCM score-confirmation design without opening any
+  result. Three deterministic structures spanning four to six categories,
+  complete, cyclic-sparse, and workload-imbalanced assignments are crossed
+  with Criterion- and Rater-owned slopes. Their fixture hashes and complete
+  six-scenario/96-evidence/560-coordinate/24-point/376-Jacobian denominators
+  are fixed. Execution remains NO-GO pending a record-consuming runner and a
+  separate fresh-process/output-absence authorization contract.
+
+* Added the corresponding dry-run-by-default confirmation runner and separate
+  eleven-gate authorization decision. Exact source/payload/freeze/design/
+  manifest identities, class-specific coordinate counts, point-specific
+  Jacobian counts, stale records, missing authorization, and occupied targets
+  are checked fail-closed. Synthetic issuance is tested without fitting; the
+  actual default remains `no_go_not_issued` and no confirmation result exists.
+
+* Consumed the sealed GPCM score v3 confirmation exactly once and retained its
+  complete negative result. All score/oracle/finite-difference-applicable and
+  Jacobian components passed, but a constructed six-level boundary value was
+  represented as `3.0000000000000009` and failed the frozen raw `<= 3`
+  classifier. No retry or tolerance adjustment was made. The saved artifact
+  also omitted the consumed in-memory authorization row, so it could not have
+  supported acceptance even if numerically positive. V4 must be specified
+  prospectively with error-analysis-based boundary handling and embedded
+  authorization provenance; no large simulation is authorized.
+
+* Specified a no-execution v4 score contract without relaxing the four v3
+  numerical comparison rules. Contract-constructed inclusive-boundary points
+  receive a binary64 forward-error bound derived from input rounding,
+  `gamma_n` summation error, and comparison error; retained solutions receive
+  zero allowance. Future saved results must embed the exact consumed
+  authorization row. Opened v3 fixtures are calibration-only, and v4 review,
+  freeze, and new disjoint confirmation remain pending.
+
+* Applied v4 retrospectively without fitting to the immutable rejected v3
+  bundle. Exactly one intended six-level boundary changed to the finite region,
+  while every retained extreme was unchanged. The result remains incomplete:
+  v3 saved no finite difference for that formerly extreme point and omitted the
+  consumed authorization row. V4 is not frozen. A new sealed calibration-only
+  boundary fixture must fill the gap; refitting v3 cells and large simulation
+  remain prohibited.
+
+* Sealed a no-fit calibration-only boundary-completion fixture for v4. One
+  Criterion-owned six-level scenario fixes four evidence rows, 24 coordinates,
+  one point, and 30 Jacobian rows with complete owner-category support. It is
+  permanently ineligible for confirmation.
+
+* Added its dry-run runner and separate target-bound authorization boundary
+  without fitting. Exact source, payload, design, rule, manifest, denominator,
+  same-process, output-path, authorization-source, issued-row, consumed-row,
+  and target-absence checks fail closed. The runner must embed the exact
+  consumed authorization row and calculate the one missing five-point finite
+  difference. Forty-four no-fit expectations pass. Before execution, the
+  default remained `no_go_not_issued` and the single allowed action was a
+  fresh-process issue-and-consume operation.
+
+* Consumed that authorization once without retry and independently validated
+  the saved calibration-only result. All 4/24/1/30 rows and all analytic-score,
+  five-point finite-difference, log-Jacobian, and slope-Jacobian rules pass;
+  their maximum combined ratios are 5.05e-05, 6.33e-04, 0.203, and 0.282.
+  Issued- and consumed-row hashes reproduce, while the repository-relative
+  target is explicitly recorded as not absolute and resolves to the hashed
+  artifact. The fit remains `review`; v4 is freeze-review-ready but not frozen,
+  and general tolerance, confirmation, inference, and release promotion remain
+  unauthorized.
+
+* Froze the bounded v4 score rule and calibration interpretation with a no-fit
+  six-source/two-artifact seal. The seal preserves the unchanged four numerical
+  rules, constructed-only binary64 allowance, zero retained-solution allowance,
+  unique retrospective reclassification, completion evidence, authorization
+  hashes, repository-relative target disclosure, and review-only fit boundary.
+  A new disjoint confirmation design may now be specified, but execution,
+  general tolerance, boundary, inference, and release promotion remain false.
+
+* Sealed a no-fit structurally disjoint v4 confirmation design. Three new
+  deterministic sparse/imbalanced structures, 5/6/7 categories, and both slope
+  owners create six scenarios with fixed 96/888/24/688 denominators. Prior
+  Person, Rater, Criterion, and fixture-hash overlaps are zero. Future execution
+  must record an absolute target.
+
+* Added the v4 confirmation dry-run runner and separate same-process
+  authorization contract without fitting. They bind the exact runner identity,
+  six-scenario manifest, package payload, design/freeze/rule chain, fixture
+  hashes, and 96/888/24/688 denominators. Relative or occupied targets,
+  missing/stale/tampered authorization, and incomplete evidence fail closed.
+  A runner-independent validator was sealed before execution and its hash is
+  an authorization gate. Seventy-four no-fit expectations pass; the default
+  remains `no_go_not_issued`, and no confirmation result has been opened.
+
+* Consumed the v4 confirmation exactly once and retained its negative result.
+  The complete 96/888/24/688 denominator and every frozen score/Jacobian ratio
+  pass, but two Criterion-owned fits reached the iteration limit and are
+  `blocked`. The runner omitted fit readiness from its final aggregation and
+  reported a false-positive candidate pass. The prospectively sealed validator
+  also has a names-attribute false negative; an immutable no-fit retrospective
+  audit distinguishes that defect from the independently failed fit gate and
+  records `ConfirmationAccepted = FALSE`. No retry, rule adjustment, general
+  tolerance, boundary, inference, or promotion is authorized.
+
+* Fit summaries now keep observed boundary-constant facet support separate
+  from certified JML additive facet recession directions. Diagnostic objects
+  also retain the source fit readiness record, so a blocked or review-only fit
+  cannot appear inference-ready merely because diagnostic calculations return.
+
+* Closed a deterministic retained-core slice of readiness propagation without
+  closing the full release gate. Manifests and replay objects now preserve the
+  exact fit/component/parameter readiness provenance; exported bundles write
+  those records as CSV files. Replay scripts recompute readiness after fitting
+  and warn on source/replay disagreement instead of copying source status.
+  Manifest `Converged` now means optimizer-code convergence, while
+  `InferenceReady` remains the stricter v3 contract decision. RSM/PCM JML/MML,
+  iteration-limit, and legacy-unknown checks pass. A real PCM/JML fit generated
+  from the frozen CRAN 0.2.2 tarball remains `legacy_unknown` under 0.2.3, and
+  a fresh-session development replay obtains a separate new v3 decision while
+  warning on source/replay mismatch. Broader parameter/interaction coverage,
+  lower-priority adapters, and candidate-bound replay remain open.
+
+* Closed the structural exact-model-reduction gate for the binary RSM/PCM and
+  unit-slope GPCM/PCM special cases. The fixed audit now checks observed log
+  probabilities, full category probabilities, marginal objectives, common
+  scores, and free/expanded transformations against both model routes and a
+  separately implemented likelihood/marginalization oracle; broader numerical
+  stationarity tolerances and candidate confirmation remain open.
+
+* Added an internal `maxit` attempt-registry validator. It rejects
+  skipped or unregistered ceilings, specification changes, iteration-limited
+  or review-only selections, multiple selections, and choosing a later ready
+  run when an earlier run was already eligible. Individual fits continue to
+  fail closed through v3 readiness; the release row remains under review until
+  the same rule is applied to the exact candidate.
+
+* Completed the deterministic 0.2.3 conditional-fallback coverage audit.
+  Fit-specific GPCM boundary tables and fit summaries now expose exact
+  slope/step ownership and explicitly distinguish model-conditional
+  discrimination from rater consistency. Residual-PCA result, summary, and
+  plot payloads now carry machine-readable exploratory, non-primary, and
+  no-automatic-dimensionality-decision fields. The JML fallback description
+  now accurately retains explicitly exploratory observation-table SEs while
+  continuing to prohibit profile-likelihood, finite-item-correction, or
+  corrected-JML claims. No conditional claim was promoted and no simulation
+  or external engine was run.
+
+* Completed the response-free Draft.83d2b2b1g24 fresh-site issuance boundary.
+  Six recomputed gates now bind the exact b1g23 entry contract and R0201
+  prospective manifest to fresh isolated-runtime/site receipts, one-shard
+  scope, complete denominators, no early stopping, and confirmation isolation.
+  One observed GO produces a hash-valid production record and unexecuted
+  active R0201 manifest; a forced occupied-target condition produces a
+  separately hash-valid NO-GO from which issuance is refused. Fifty-one
+  assertions pass. No response, fit, checkpoint, reserved root, or lock was
+  created. Exactly R0201 may be opened by a fresh record-consuming runner, but
+  `LargeSimulationMayStart=FALSE` and no later shard is authorized.
+
+* Implemented the response-free Draft.83d2b2b1g23 record-bound reserved entry
+  point and exact R0201 active-manifest conversion. Exact AST/source audits
+  retain the b1g17 generator, b1g18 preparation, and b1g13 complete-checkpoint
+  bodies while replacing their three nonreserved admission guards with one
+  issued-record/manifest/capability boundary. A four-unit replicate-902
+  reduction exactly matches b1g21 over 36 fits, 192 decisions, and eight
+  references, then reuses all checkpoints. Four tests with 75 assertions pass.
+  No production issuer exists, R0201 remains prospective, no reserved root was
+  created, and fresh site receipt plus separate six-gate issuance still block
+  replicate 201 and large simulation.
+
+* Completed the response-free Draft.83d2b2b1g22 execution-authorization
+  decision. The exact b1g21 source closes a nonreserved scientific reduction,
+  but its preparation guard rejects reserved replicates and the inherited
+  b1g13 loop is explicitly nonreserved-only. Five decision gates pass and
+  `RESERVED-ENTRY-01`, `ACTIVE-MANIFEST-01`, and `SITE-RECEIPT-01` block.
+  The honest result is `no_go_refused_not_issued`: no authorization record,
+  response, fit, or reserved root was created, large simulation remains
+  prohibited, and replicate 201 stays sealed. The next bounded task is a
+  response-free record-bound reserved entry point and exact one-shard active
+  manifest, not simulation expansion.
+
+* Completed the Draft.83d2b2b1g21 guarded single-shard runner reduction.
+  The real b1g18 glmmTMB/lme4 x ML/REML evaluator path now runs in the b1g20
+  isolated vanilla child under an exclusive lock and typed activation root.
+  Replicate 902 reproduces all 36 candidate fits, 192 decisions, eight
+  references, 35 returned fits, and one retained typed failure; a second child
+  reuses all four checkpoints and reproduces the scientific execution hash.
+  Reserved 201 and confirmation 501 fail before generation, so `RUNNER-01`
+  closes but `AUTH-RECORD-01` remains: no reserved response is authorized,
+  large simulation remains prohibited, and replicate 201 stays sealed.
+
+* Consolidated the remaining shared preactivation infrastructure into the
+  Draft.83d2b2b1g20 response-free authorization kernel. An isolated
+  `Rscript --vanilla` child now binds RNG, locale/timezone, startup, BLAS/LAPACK,
+  package, glmmTMB, and serial thread state. Atomic exclusive-lock,
+  initial/resume marker, unmarked-root rejection, fresh filesystem, and
+  capacity mechanics pass without creating the reserved root. Nine common
+  gates pass; only the real reserved runner and a separate immutable
+  authorization record remain. No further infrastructure-only layer is
+  planned, and large simulation remains prohibited.
+
+* Completed the Draft.83d2b2b1g19 response-free hardened reserved-lineage
+  rebase. The exact b1g14 workload and 100-shard partition are preserved, but
+  all 12,000 atomic-unit and all 100 shard hashes are rederived against the
+  b1g17 generator and b1g18 adapters; historical hashes remain provenance-only
+  and have empty intersection with the active registry. All prospective shard
+  manifests remain non-executable, confirmation replicates are excluded, and
+  no output root or response was created. The reserved adapter entry point,
+  extended runtime, and locked runner are still absent, so
+  `AuthorizationRNG01Closed=FALSE`, large simulation remains prohibited, and
+  replicate 201 remains sealed.
+
+* Completed the Draft.83d2b2b1g18 nonreserved hardened production-adapter
+  rebase without altering historical b1g14 evidence. The old and hardened
+  paths execute the same replicate-902 dataset through glmmTMB/lme4 x ML/REML.
+  All 36 candidate rows, 192 decisions, eight reference states, 35 returned
+  fits, and the one retained `start_snapshot` failure have exact semantic
+  parity after excluding identity fields that must change. Hardened candidate
+  and reference paths independently agree on generator and pre-fit identity;
+  all four checkpoints reuse exactly. The prospective reserved manifest is
+  still deferred, so `AuthorizationRNG01Closed=FALSE`, large simulation is
+  prohibited, and replicate 201 remains sealed.
+
+* Completed the Draft.83d2b2b1g17 nonreserved RNG-hardened generator replay.
+  The historical b1g2a generator remains untouched; a separately versioned
+  wrapper explicitly fixes and records uniform, normal, and sample RNG kinds,
+  preserves the historical parent identity, and restores caller RNG state.
+  All 30 scenarios at replicate 901 reproduce identical hardened generator,
+  parent, and analysis-data hashes under Mersenne-Twister and Wichmann-Hill
+  caller states. Reserved replicates are rejected. This closes only the
+  prospective generator component: current production adapters still bind the
+  old identity, so `AuthorizationRNG01Closed=FALSE`,
+  `LargeSimulationMayStart=FALSE`, and replicate 201 remains sealed.
+
+* Completed the Draft.83d2b2b1g16 response-free pre-activation hardening
+  audit and stopped before large calibration. The actual 9,756 phase-specific
+  scenario-replicate seed rows are collision-free, but a nonreserved same-seed
+  negative control proves that the current generator depends on ambient
+  `RNGkind()`. The upstream runtime identity also omits RNG, BLAS/LAPACK,
+  locale/timezone, glmmTMB parallel state, and numerical-library thread state;
+  no isolated vanilla process, authorized reserved runner, exclusive writer
+  lock, activation marker, typed resume-root lifecycle, or per-shard capacity
+  recheck exists. Eight required gates therefore block activation.
+  `LargeSimulationMayStart=FALSE`, replicate 201 remains sealed, and the next
+  work is deterministic/runtime/runner hardening followed by downstream
+  nonreserved re-freezing—not simulation.
+
+* Completed the Draft.83d2b2b1g15a response-free Monte Carlo value audit.
+  The apparently large calibration consists of 3,000 independent datasets,
+  not 108,000 independent candidate fits or 576,000 independent decisions;
+  the primary planned denominator is only 100 per scenario x method x model-
+  role cell. Under a complete resolved denominator, 0/100 has a one-sided 95%
+  upper bound of 0.029513 and a true 3% safety-event rate is observed at least
+  once with probability 0.952447. This justifies the design for numerical-rule
+  calibration only. Broad bias/RMSE/coverage, D-study operating characteristics,
+  achieved precision, universal sample-size, authorization, and inference
+  claims remain false or unavailable.
+
+* Completed the Draft.83d2b2b1g15 response-free one-way authorization
+  preflight without issuing an execution authorization or opening calibration
+  replicate 201. One hundred non-executable prospective shard manifests
+  exactly partition 3,000 datasets, 12,000 atomic units, 108,000 candidate
+  fits, 576,000 decisions, and 24,000 references. An actual write,
+  same-directory checked rename, readback, cleanup, target-absence, and
+  site-capacity probe passes in the frozen output parent. Conservative 32x
+  storage plus 32-GiB residual and 4x serial-time planning passes with one
+  concurrent shard. Authorization readiness is true, while authorization
+  record issuance, calibration execution/data/results, threshold selection,
+  confirmation, inference, and D-study decisions remain false or unauthorized.
+
+* Completed the Draft.83d2b2b1g14 response-free production-adapter and
+  reserved-manifest preflight. Real lme4/glmmTMB x ML/REML candidate and
+  high-accuracy-reference adapters share generator and pre-fit identities,
+  preserve objective-only profile selection, and complete a four-unit
+  nonreserved dry-run with all 36 fits, 192 decisions, and eight references
+  retained; one typed `start_snapshot` failure remains in the denominator.
+  The runtime- and dependency-identified reserved manifest fixes 100 shards
+  and the exact 3,000-dataset workload but remains non-executable. Calibration
+  authorization, replicate 201, threshold selection, confirmation, inference,
+  and D-study decisions remain false or unauthorized.
+
+* Completed the Draft.83d2b2b1g13 exact-resume stationarity-runner mechanics
+  without opening calibration replicate 201. Content-addressed atomic
+  dataset-method checkpoints retain all optimizer fits, all 24 candidate
+  decisions per model role, both high-accuracy references, and every failed
+  row. Interrupted, cold, and complete-reuse fixture runs have the same
+  scientific execution hash, while partial runs are explicitly non-evidence.
+  Production evaluator adapters, the reserved run manifest, calibration,
+  threshold selection, confirmation, inference, and D-study decisions remain
+  false or unauthorized.
+
+* Completed the Draft.83d2b2b1g12 coordinate-correct production boundary
+  probe without opening calibration replicate 201. lme4 finite theta zero and
+  glmmTMB log-SD boundary limits retain separate paths and acquire a common
+  interpretation only after a nuisance-reoptimized profile matches the
+  separately fitted reduced objective. Flat, nonmonotone, mismatched, and
+  failed profiles remain inconclusive or non-evaluable; first-order zero is
+  never sufficient. Analytic controls and lme4/glmmTMB x ML/REML fixtures pass.
+  The exact-resume runner, calibration, threshold selection, confirmation,
+  inference, and D-study decisions remain false or unauthorized.
+
+* Added an internal non-unit GPCM score oracle that independently
+  reconstructs the positive-slope transformation, GPCM response kernel,
+  Person-wise fixed-quadrature marginal objective, and numeric free-coordinate
+  score. Four retained/high-dispersion/finite-stress points and 47 fail-closed
+  expectations pass, including slopes about 0.05--20.1. This is calibration
+  evidence only: the general score tolerance, owner/category/topology grid,
+  confirmation, boundary, selection, and public-capability decisions remain
+  open or unauthorized.
+
+* Froze a no-execution bounded follow-up design for that oracle. Eight
+  five-category cells cross Criterion/Rater slope-step ownership with core,
+  one-Person weak bridge, workload imbalance, and category imbalance using
+  paired deterministic 40-Person/four-Rater/four-Criterion fixtures. Four
+  parameter points and four coordinate classes create 128 mandatory evidence
+  strata under a five-point derivative ladder, hard absolute/scaled guards,
+  an adaptive numerical-error allowance, and slope-Jacobian caps. Sixty-three
+  focused expectations pass. Calibration execution, final `NUM-SCORE-TOL`,
+  confirmation, and release promotion remain unauthorized or unresolved.
+
+* Executed that bounded design once and retained its negative result. All 128
+  evidence strata and 32 structural-oracle point checks were complete, but
+  extreme retained slopes around 2.5e5--3.3e6 caused objective finite
+  differences to lose local resolution, and the conjunctive absolute/scaled
+  rule rejected 33/672 coordinates plus three Jacobian point rows. A separate
+  48-stratum Person-posterior sufficient-statistic score reconstruction agreed
+  with the package to at most 1.05e-9 while leaving the v2 calibration
+  `rejected`. The next rule must separate finite-slope stationarity from
+  non-promoting extreme-slope boundary handoff; no general tolerance,
+  confirmation, readiness, or release claim is promoted.
+
+* Added a no-execution GPCM score-rule v3 contract before retrospective
+  re-adjudication. It fixes `max(abs(z)) <= 3` as the inclusive finite-slope
+  validation envelope, requires independent analytic-score and transformation
+  agreement everywhere, uses one combined absolute-plus-relative/numerical-
+  error finite-difference allowance only inside that envelope, and sends
+  outside points to a non-promoting review handoff. Forty-three focused
+  expectations pass. V2 remains rejected; no boundary is proved, and no
+  general `NUM-SCORE-TOL` or confirmation is frozen.
+
+* Audited whether the immutable v2 artifacts alone can support exact v3
+  adjudication. All 128 structural/finite-difference strata are retained, but
+  independent analytic scores cover only 48/128 strata and the 32 Jacobian
+  point checks retain separate maxima rather than entrywise combined-rule
+  ratios. Aggregation was not reverse-engineered into acceptance evidence;
+  one identity-bound replay of the same eight deterministic cells was used
+  instead, as calibration rather than a recovery simulation or confirmation.
+
+* Fixed a GPCM reproducibility defect found by that replay before accepting
+  its first nominal pass. Log-sum-exp stabilization used `max.col()` with R's
+  random approximate-tie default, so identical weak-bridge fits could change
+  optimizer path and retained vector. All likelihood and prediction routes
+  now use deterministic first-maximum ties, and optimizer cache keys retain
+  owned parameter snapshots. Repeated weak-cell fits are RNG-neutral and
+  bitwise numerically identical. The pre-fix replay is explicitly invalidated.
+  Under the corrected payload, unchanged v2 again rejected the same 33/672
+  coordinates and three/32 Jacobian points. The corrected v3 replay completed
+  128 evidence strata and 384 entrywise Jacobian rows and passed all v3
+  components, with maximum combined ratios 0.172, 0.00175, 0.172, and 0.268
+  for analytic score, finite difference, log Jacobian, and slope Jacobian.
+  Three retained points remain non-promoting extreme-slope handoffs; every fit
+  remains review-only and inference-unready. General tolerance, boundary,
+  confirmation, and release claims remain open.
+
+* Froze the Draft.83d2b2b1g11 truth-blind numerical-stationarity acceptance
+  policy without opening calibration replicate 201. The policy binds all four
+  nonreserved reference receipts, crosses three primary score families with
+  eight prespecified indeterminate zones, retains scenario x method x model-
+  role denominators, and separates false ready, false boundary handoff, false
+  unready, missed boundary, abstention, non-evaluation, and unresolved
+  reference states. Zero observed safety errors remain subject to one-sided
+  exact-binomial upper bounds and no post-selection coverage claim. The
+  production boundary probe, exact-resume runner, threshold selection,
+  calibration, confirmation, inference, and D-study decisions remain false or
+  unauthorized.
+
+* Completed the Draft.83d2b2b1g10 nonreserved lme4 ML/REML high-accuracy
+  reference replay. A three-algorithm box-constrained ladder, independent
+  sparse Gaussian objective/gradient oracle, analytic-gradient Newton polish,
+  raw KKT, free-curvature, and seven-point nuisance-reoptimized theta profiles
+  pass for all eight objectives on replicates 901--902; a complete repeat is
+  exact. The four prespecified lme4/glmmTMB x ML/REML reference lanes are now
+  complete, but acceptance/indeterminate policy, production boundary probe,
+  exact-resume calibration runner, reserved calibration, inference, and
+  D-study decisions remain unauthorized.
+
+* Completed the Draft.83d2b2b1g9 lme4 objective-reference preflight without
+  opening any nonreserved or reserved response. An independently coded dense
+  Gaussian oracle reproduces lme4's theta-only profiled ML deviance and REML
+  criterion, their analytic gradients, fit accessors, and exact-zero full-to-
+  reduced identity. Source-hashed negative controls exclude `devfun2()` and
+  `deviance(..., REML=TRUE)` from REML reference work in installed lme4 2.0.6.
+  This freezes objective identity only: the lme4 box solver, boundary profile,
+  nonreserved replay, complete method coverage, calibration, inference, and
+  D-study decisions remain unauthorized.
+
+* Completed the Draft.83d2b2b1g8 nonreserved glmmTMB ML high-accuracy
+  reference replay. The b1g6 mechanics are reused by exact function hash on a
+  separately identified `REML=FALSE` objective. All four full/reduced ML
+  objectives from replicates 901--902 pass solver consensus, AD-independent
+  derivative, positive-curvature, six-point nuisance-stationary boundary-
+  profile, and sidecar-integrity gates; a complete second replay reproduces
+  every row and hash. glmmTMB ML and REML reference mechanics are now ready,
+  but lme4 ML/REML, production stationarity, reserved calibration,
+  confirmation, inference, and D-study decisions remain unauthorized.
+
+* Completed the Draft.83d2b2b1g7 fail-closed stationarity-calibration
+  preauthorization audit without opening reserved data. The audit corrects
+  the prospective b1g5 candidate-fit upper bound from 144,000 to 108,000 by
+  retaining six glmmTMB profiles but only three lme4 profiles, while keeping
+  3,000 datasets and 24,000 high-accuracy reference problems unchanged. It
+  freezes truth-blind candidate-state precedence and per-role minimum-finite-
+  objective profile aggregation. Only glmmTMB REML has passed the nonreserved
+  reference replay, so method coverage, the acceptance policy, the runner,
+  reserved calibration 201--300, inference, and D-study decisions remain
+  unauthorized.
+
+* Completed the Draft.83d2b2b1g6 high-accuracy stationarity-reference gate on
+  analytic objectives and nonreserved replicates 901--902. The derivative
+  audit now selects a central-difference interval from adjacent-step stability
+  without consulting the AD gradient, retains a componentwise numerical-
+  resolution envelope, and resets TMB random-effect starts before every
+  evaluation. Six analytic states and all four full/reduced glmmTMB REML
+  objectives pass solver consensus, derivative, curvature, nuisance-
+  stationary boundary-profile, and sidecar checks. This freezes only the
+  reference mechanics; no production stationarity rule, reserved calibration,
+  full stabilization, bootstrap, inference, or D-study decision is authorized.
+
+* Added the sealed Draft.83d2b2b1g5 stationarity-calibration design. Numerical
+  finite stationarity, curvature/factorability, log-SD boundary limits, and
+  statistical variance-component resolution now have noninterchangeable state
+  spaces and ordered gates. Analytic affine fixtures confirm Hessian-inertia
+  and Newton-decrement invariance while retaining raw, lme4-compatible, and
+  Newton-step coordinate dependence. The existing calibration reservation
+  remains sealed; its original workload identity contains 3,000 independent
+  datasets, 144,000 candidate fits, and 24,000 high-accuracy reference
+  problems. The later b1g7 backend-specific audit corrects the prospective
+  candidate-fit upper bound to 108,000 without rewriting that identity. No
+  reference tolerance, stationarity rule, optimizer, calibration execution,
+  bootstrap, inference, or D-study decision is authorized.
+
+* Added prospective scale-aware stationarity instrumentation for the exact
+  120-pair glmmTMB alignment smoke. All 240 fits retain content-addressed raw
+  parameter, outer-gradient, `sdreport`-gradient, Richardson-Jacobian, and
+  derived-vector sidecars; b1g2 parameters, objectives, likelihoods, and
+  nested drops reproduce without mismatch, and no-fit resume reproduces the
+  scientific hash. Spectral Hessian positivity is observed in 224 fits, but
+  numerical Cholesky factors are available in only 221, so those states are
+  now explicit rather than collapsed. Raw, objective/parameter-relative,
+  lme4-compatible, Newton-decrement, and relative-Newton-step summaries stay
+  distinct. Cross-profile metric minima disagree with the best observed
+  objective often enough to prohibit optimizer selection. No observed value
+  defines a stationarity cutoff; full execution, calibration, inference, and
+  D-study decisions remain unauthorized.
+
+* Added a no-refit, multi-axis numerical adjudicator for the exact glmmTMB
+  alignment smoke. All 120 pairs have finite raw objectives, while 14
+  pairwise reported likelihoods are unavailable solely because the installed
+  glmmTMB method masks `logLik()` when `pdHess` is false. The new ledger keeps
+  optimizer termination, objective finiteness, reported likelihood, two
+  gradient surfaces, sdreport/Richardson curvature, and nested trace ordering
+  independent. It also records six-profile best-observed envelopes without
+  claiming global maxima. One nonzero optimizer code and two gradient-surface
+  mismatches are no longer hidden by primary-state precedence. No
+  stationarity threshold, optimizer, full execution, inference, or D-study
+  rule is selected.
+
+* Added a prospective, tolerance-free correction for glmmTMB start-state
+  transport and replayed the same 120-pair stabilization smoke under a new
+  identity. Every returned fit now replaces only the fixed positions of the
+  immediate joint state with `fit$fit$par` before `parList`; raw and aligned
+  states are separately hashed. All 240 fits return and align exactly, all 80
+  dependent transfers verify, all checkpoints resume without fitting, and the
+  four b1g1 fit/dependency rows are recovered without losses. Common returned
+  objectives, likelihoods, and top-level parameter hashes are unchanged. The
+  result still contains 14 non-finite and 21 finite material-negative rows,
+  so full execution, numerical stabilization, calibration, thresholds,
+  inference, and D-study decisions remain false.
+
+* Implemented and executed a guarded glmmTMB stabilization covering smoke on
+  10 viewed datasets: 20 atomic base routes, 120 profile pairs, and up to 240
+  backend fits. All checkpoints and dataset markers validate; a no-fit resume
+  reuses all 20 base routes and reproduces the execution hash. Of 120 rows, 84
+  are diagnostic-complete, 21 retain finite material-negative differences, 11
+  have non-finite objective/likelihood state, and four retain typed fit or
+  parent failures. Two BFGS fits expose non-bitwise equality between
+  `last.par.best` fixed coordinates and `fit$fit$par`; this blocks the strict
+  start snapshot and therefore the full 18,000-fit authorization. Runner
+  mechanics are ready, but numerical stabilization, calibration, thresholds,
+  inference, and D-study decisions remain false.
+
+* Froze the next internal glmmTMB stabilization design without
+  authorizing its fits. The exact b1e/b1f ledgers yield 1,500 viewed base
+  routes and a symmetric six-profile DAG: cold nlminb/BFGS, same-algorithm
+  restart, and cross-algorithm warm start. Its 9,000-pair/18,000-fit manifest
+  retains all ten named start blocks, an immediate `last.par.best` snapshot,
+  exact parent lineage, outer and sdreport
+  gradients, Richardson Hessian diagnostics, and typed parent failures. Five
+  tests and 73 expectations pass. `ManifestReady` is true, while runner,
+  execution, numerical stabilization, calibration, thresholds, inference,
+  and D-study decisions remain false or unauthorized.
+
+* Completed a typed, no-refit adjudication of the frozen G-theory b1d/b1e
+  ledgers. All 2,993 finite default replays match within 1e-10; the remaining
+  seven are `NA_real_` on both sides with identical likelihood-unavailable
+  diagnostic states. Thus `TypedReplayAdjudicationReady` is true under the new
+  b1f contract, while the immutable b1e finite-only `DefaultReplayPassed` and
+  `NumericalSensitivityEvidenceReady` remain false. No missing value is
+  treated as a zero difference or promoted to likelihood availability. The
+  next gate must prospectively bind glmmTMB start blocks, cold/current-optimum
+  restarts, gradients, Hessians, and alternative algorithms before calibration
+  data are generated.
+
+* Executed a frozen internal numerical-likelihood sensitivity on the
+  already viewed G-theory feasibility data: three profiles per original route
+  produce 9,000 full/reduced pairs and 18,000 fits with exact checkpoint
+  resume. Tightening the same algorithms changes no objective. lme4 bobyqa
+  removes all 34 finite default-lme4 material-negative differences, whereas
+  glmmTMB BFGS yields 331 non-finite and 401 material-negative differences.
+  Seven default replays are non-finite in both the old and new ledgers, but the
+  frozen finite-absolute-difference replay rule did not define that state, so
+  `NumericalSensitivityEvidenceReady` remains false. This audit also corrects
+  the legacy feasibility count from 133 false tolerance flags to 126 finite
+  material-negative plus seven non-finite rows. Calibration, thresholds,
+  inference, and D-study decisions remain unauthorized.
+
+* Executed the frozen internal G-theory weak-information feasibility
+  band: 3,000 full/reduced method pairs over 750 untouched replicate-101--125
+  datasets now have atomic route checkpoints and dataset markers. All pairs
+  return, but only 2,804 common scores are available; 79 optimizer/likelihood-
+  identity failures and 126 finite materially negative likelihood differences
+  overlap in nine rows, while seven non-finite differences belong to the
+  failure set. High-information availability is only 76.2%, while the
+  few-level design has weak score ordering and 283/600 nuisance-boundary rows.
+  A no-refit resume reuses all 3,000 checkpoints and reproduces the scientific
+  hash. Descriptive feasibility accounting is ready, but no threshold,
+  operating-characteristic calibration, inference, or D-study decision is.
+
+* Froze a replacement 3,000-row G-theory weak-information resolution-
+  feasibility manifest without generating any reserved replicate-101--125
+  data. A 240-fit runtime schema over all already viewed design x variance x
+  method cells returns all 120 full/reduced pairs, but only 111 common scores
+  are available: six materially negative nested likelihood differences and
+  four optimizer/likelihood failures overlap in one row, leaving nine explicit
+  unavailable routes. Timing-excluded execution and authorization hashes
+  reproduce. Local serial projection is about 33 minutes centrally and 2.2
+  hours at x4 sensitivity, but is planning telemetry only. Exact checkpoint
+  accounting now authorizes the descriptive 6,000-fit run; thresholds, inner
+  bootstrap, calibration, inference, and D-study decisions remain blocked.
+
+* Implemented the internal exact-observed-design parametric-bootstrap
+  mechanics schema for the G-theory weak-information lane. Three already
+  viewed baseline controls x four lme4/glmmTMB ML/REML routes x `B=3` produce
+  12 observed and 36 bootstrap pairs, or 96 full/reduced fits. All pairs
+  return, all generated responses retain exact design identity and distinct
+  hashes, 16 small negative likelihood differences remain untruncated, and
+  eight bootstrap pairs expose a non-target nuisance boundary. Failure-aware
+  plus-one bounds retain every planned draw, but the 0.25 Monte Carlo grid is
+  mechanics-only. No finite-sample exactness, size, power, threshold,
+  production `B`, inference, coefficient, or D-study decision claim is added.
+
+* Added a source-audited G-theory weak-information inference contract and
+  full/reduced diagnostic schema. The contract withdraws the former common
+  `target_relative_se_profiled` candidate because lme4's profiled relative-SD
+  and glmmTMB's joint log-SD local scales are not commensurate component
+  standard errors. All 24 viewed-schema pairs return and supply raw ML/REML
+  likelihood differences; four tiny negative glmmTMB differences are retained
+  as numerical results, 20/24 backend-local quadratic diagnostics are
+  available, and no p-value or interval is produced. The previously authorized
+  3,000-fit feasibility manifest is superseded before any of its seeds are
+  generated. A new feasibility identity now requires a custom exact-design
+  reduced-model bootstrap contract plus separate positive-control recovery and
+  D-study stability checks; inference and confirmation remain blocked.
+
+* Froze the internal replicated G-theory weak-information pilot architecture.
+  The independent unit is now one scenario-by-replicate dataset with four
+  paired likelihood routes. Separate schema, feasibility, calibration, and
+  sealed confirmation seed bands contain 24, 3,000, 12,000, and 24,000 fits,
+  with worst-case cell-by-method Bernoulli MCSE targets of 0.354, 0.10, 0.05,
+  and 0.035. A 24-fit schema run passes atomic accounting, but contributes no
+  pilot evidence. Four-state resolved/indeterminate/not-resolved/not-evaluable
+  accounting and four candidate rule architectures are registered without a
+  selected threshold. Calibration and confirmation execution remain blocked.
+
+* Added a 120-unit internal G-theory weak-information diagnostic smoke across
+  five design/information strata, six Rater-variance regions, and lme4/glmmTMB
+  ML/REML. All fits return and atomic accounting passes, but the existing
+  whole-model point gate produces 27 false-ready results among 40 zero or
+  near-zero target-component routes and three false blocks among 12 narrowly
+  registered positive controls. This is evidence that the point gate is not a
+  calibrated component-resolution rule. No threshold, sample-size rule,
+  recovery, interval, coefficient, estimator preference, or public support
+  claim is added; a replicated pilot with frozen Monte Carlo precision remains
+  prerequisite.
+
+* Executed all 89 units of the internal G-theory ADEMP point-fit smoke through
+  atomic balanced-MoM, lme4 ML/REML, and glmmTMB ML/REML adapters. Twelve
+  structurally blocked units never call a backend; all 77 eligible attempts
+  return, and every unit is recorded as one success or typed failure. The
+  near-zero variance negative control nevertheless passes all four likelihood
+  routes, so the zero-false-ready gate fails and recovery promotion remains
+  blocked pending a pre-registered observable weak-information calibration.
+  No recovery, interval, coefficient, estimator preference, or public support
+  claim is added.
+
+* Implemented an exact scalable pre-fit layer for the internal G-theory ADEMP
+  smoke. Equality-signature compression now distinguishes covariance-component
+  rank from fixed-effect-equivalent rank without materializing dense
+  covariance derivatives. Nineteen scenarios and 77 fit units are structurally
+  eligible; three scenarios and 12 units are blocked before fitting by
+  disconnected or aliased designs. This authorizes no fit, reports no recovery,
+  and adds no interval, coefficient, public engine, or checklist claim.
+
+* Implemented the deterministic generation half of the internal G-theory
+  ADEMP smoke. Twenty-two executable registry scenarios now produce separately
+  hashed complete-potential, assigned, and post-missingness tables; two anchor
+  scenarios remain typed semantic blocks. Exact assignment density and
+  observations per Person, workload imbalance, bounded-score projection
+  truth, MCAR/MAR/MNAR/unknown omissions, residual local dependence, zero and
+  near-zero boundaries, and disconnected/aliased controls replay under one
+  generator identity. This fits no model, reports no recovery, freezes no
+  replication count, and adds no estimator, interval, coefficient, public
+  engine, or checklist claim.
+
+* Implemented an internal supplied-matrix multivariate G-theory algebra
+  preflight for the future Draft.85 route. Component covariance matrices are
+  combined with explicit cross-stratum allocation Gram operators, preserving
+  common, partially shared, and independent facet sampling before weighted
+  composite G/Phi is formed. Exact one-stratum reduction, two-/three-stratum
+  order, PSD/rank state, component contributions, and invalid-matrix/weight
+  controls are retained. This estimates no covariance, changes no public API,
+  and adds no multivariate inference or support claim.
+
+* Implemented an internal pre-simulation G-theory ADEMP registry and exact-
+  denominator contract. Twenty-four covering scenarios now separate Gaussian
+  component recovery, missingness sensitivity, bounded observed-score
+  projection, local-dependence reference deviation, boundary and
+  identification controls, and anchor-rate nonapplicability. Bias/RMSE,
+  prediction/rank recovery, interval coverage, coefficient recovery,
+  convergence, false-ready rate, and failed-cell accounting have distinct
+  eligibility and denominators. This runs no simulation, freezes no pilot or
+  confirmation size, and adds no recovery, interval, estimator, coefficient,
+  public-engine, or checklist claim.
+
+* Implemented an internal matched Gaussian glmmTMB/lme4 G-theory point-
+  estimation comparison. Exact retained-row, formula, family, dispersion,
+  covariance, and ML/REML identities are required before component, intercept,
+  or full-log-likelihood differences are evaluated. Interior crossed and
+  nested fixtures agree under recorded smoke tolerances; a boundary fixture
+  with positive-definite glmmTMB Hessian remains nonregular and materially
+  disagrees with lme4. No backend preference, recovery claim, public engine,
+  interval, coefficient eligibility, or checklist promotion is added.
+
+* Implemented an internal G-theory covariance-design and expected-information
+  audit. Component-specific covariance derivatives expose exact variance-
+  component aliases; ML and REML information ranks are evaluated separately;
+  and `lme4` point fits are bound to the exact retained rows with optimizer,
+  singularity, and boundary states kept distinct. A finite optimizer-code-zero
+  boundary fit remains nonregular. This adds no public nested/unbalanced
+  engine, coefficient eligibility, interval, estimator preference, or
+  checklist promotion.
+
+* Implemented an internal component-specific G-theory allocation operator.
+  Planned weights transform each typed variance component through the squared
+  marginal-weight concentration for its own `ScaleBy` identities. Uniform
+  crossed allocations reduce exactly to the earlier balanced divisors;
+  ancestry-qualified nested allocations, unequal unit-specific coefficients,
+  and shared/disjoint cross-unit condition overlap remain distinct. Weights are
+  never normalized silently, heterogeneous unit coefficients are not averaged,
+  and equal effective counts with disjoint support cannot form a scenario
+  scalar. This fits no model and adds no public nested/unbalanced engine,
+  estimation, interval, allocation default, or checklist promotion.
+
+* Implemented an internal pre-fit G-theory observed-design incidence audit.
+  It canonicalizes retained and omitted rows, uses conditional identities for
+  nested child levels, records global and pairwise connectivity, workload,
+  full-cell replication, and component-specific fixed-effect-equivalent rank
+  increments, and fails visibly for disconnected islands, metadata conflicts,
+  missingness conflicts, and rank-capacity limits. Connectivity and fixed-
+  equivalent rank are not treated as variance-component identifiability;
+  estimation eligibility remains unadjudicated and all coefficient and
+  decision-ready states remain false. No exported engine, nested/unbalanced
+  support claim, allocation rule, missingness assumption, or checklist pass is
+  added.
+
+* Implemented an internal balanced univariate G-study estimator prototype on
+  the typed design map. Orthogonal ANOVA/MoM inversion reproduces frozen p x i
+  and p x r x i components and retains raw negative estimates; matched `lme4`
+  REML agrees on interior fixtures, while ML remains separately identified and
+  a negative-MoM control reaches a constrained zero/singular REML boundary.
+  The legacy main-effects/collapsed-residual identity reproduces the current
+  public helper but cannot enter the interaction-specific algebra. All
+  inference and decision-ready states remain false. No exported estimator,
+  formula family, interval, preference, sample-size rule, or release claim is
+  added.
+
+* Implemented an internal typed G-theory design parser and balanced
+  D-study algebra oracle. It canonicalizes random-intercept formula terms into
+  explicit object/facet roles and component-specific divisors, reproduces hand-
+  calculated persons-by-items and persons-by-raters-by-items coefficients, and
+  stops before coefficient output for unresolved residual meaning, nesting
+  without conditional scaling, and highest-order interaction/residual aliasing.
+  Raw negative components remain visible and non-ready. This performs no fit,
+  changes no exported API, and adds no crossed, nested, multivariate, interval,
+  estimator, cutoff, optimum-design, or release claim.
+
+* Added an internal typed G-theory and D-study reconstruction roadmap. It
+  preserves the current univariate main-effects/collapsed-residual helpers as a
+  caveated baseline while specifying a future formula-plus-design/effect-map
+  contract for crossed, nested, partially crossed, unbalanced, and missing
+  designs. Component-specific D-study scaling, visible likelihood boundaries
+  and raw ANOVA/MoM negatives, full-refit bootstrap uncertainty, and
+  multivariate covariance/PSD/shared-facet rules are staged separately. No
+  backend dependency, arbitrary-formula support, multivariate claim, interval
+  method, coefficient cutoff, optimal design, default, or release state is
+  added.
+
+* Completed an internal checkpointed 36-dataset matched-topology JML smoke.
+  Path, cycle, distributed, and hub assignments hold bridge-Person count,
+  degree, and density fixed while recording articulation Raters, cut edges,
+  one-link-Person failure, cycles, edge weights, and algebraic connectivity.
+  Six planned observed-disconnected controls stop before optimization; all 30
+  connected RSM/PCM cells retain their method rows. A second process resumes
+  all checkpoints and reproduces the aggregate and completion marker exactly.
+  The smoke also blocks the unchanged performance pilot: every connected cell
+  contains a natural extreme Person and most TAM adjusted fits reach the smoke
+  iteration ceiling. Sparse operational, raw-eligible high-information, and
+  stronger convergence lanes must be separated before replication. No graph
+  cutoff, topology preference, correction, sample-size rule, method ranking,
+  threshold, default, or release state is selected.
+
+* Completed an internal 36-dataset connected-assignment TAM/immer/mfrmr JML
+  structural smoke. Six no-link negative controls fail before optimization and
+  30 connected RSM/PCM cells retain all 270 planned method rows. Assigned and
+  post-missingness Rater graphs now record bridge counts, degree, density,
+  workload imbalance, components, shared-Person edge weights, and weighted
+  algebraic connectivity. The result shows that bridge rate and total Persons
+  alone do not determine linking information, and that fixed-degree and fixed-
+  density Rater comparisons are different conditional contrasts. It freezes
+  no bridge cutoff, sample-size rule, correction, method ranking, threshold,
+  default, or release state.
+
+* Completed the internal 290-dataset TAM/immer/mfrmr factor pilot with atomic
+  dataset checkpoints and an independently replayed completion marker. The
+  five-replicate result retains 230 fitted RSM/PCM cells, 40 expected
+  one-Rater-per-Person structural failures, 20 common-anchor-basis guards,
+  2,070 mode rows, and 39,406 metric rows. It exposes connected-design and
+  factor-alias revisions, confirms that sparse/missing exposure separates the
+  TAM and immer classical corrections, and keeps fit return, convergence,
+  extreme-boundary eligibility, recovery, rank, and separation denominators
+  distinct. Results remain calibration-only: common-surface coverage and
+  reported facet separation are unavailable, and no correction, sample-size
+  rule, threshold, default, or release state is selected.
+
+* Added an internal factor-structured TAM/immer/mfrmr JML feasibility smoke.
+  Twenty-two RSM/PCM datasets exercise Persons, realized exposure, Raters,
+  Criteria, category count, sparse assignment, workload imbalance, endpoint
+  responses and extreme Persons, local dependence, anchors, and none/MCAR/
+  Rater-MAR/score-MNAR missingness. Expected anchor-basis and structural-rank
+  guards remain failures by design. Bias, RMSE, rank recovery, recovery
+  separation, fit return, finite output, convergence, and evidence eligibility
+  are recorded separately; common-surface coverage and reported facet
+  separation are withheld. The later checkpointed 290-dataset pilot likewise
+  selects no correction, sample-size rule, tolerance, default, or release
+  state.
+
+* Added an internal source-audited TAM/immer/mfrmr JML normalization smoke for
+  matched RSM/PCM cumulative-difficulty surfaces. The validation runner records
+  exact loaded-function hashes and keeps TAM raw, adjusted, classically
+  postscaled, and combined modes separate from immer `jml`, `eps_adj`, and
+  `jml_bc`. The microcases verify the shared response kernel while showing that
+  identically named JML modes do not share one extreme-score or finite-item
+  correction. Results are calibration-only: they select no estimator,
+  correction, release tolerance, default, or readiness state.
+
+* Completed an internal paired calibration of raw finite JML traces and the
+  extended extreme-Person profile limit. Ninety RSM, PCM, and aligned
+  Criterion-owned GPCM datasets crossed low/high exposure and three forced
+  extreme fractions. All fits, signed boundary classifications, profile paths,
+  and structural pairings completed without a false-ready result. Person
+  recovery and profile uncertainty were deliberately excluded. The paired
+  structural estimates were nearly unchanged, which reinforces that the
+  profile operation resolves likelihood non-attainment but is not a
+  finite-item bias correction, estimator selection, or readiness promotion.
+
+* Added an internal JML extreme-Person profile-limit prototype. For
+  independently free all-minimum/all-maximum Persons it reoptimizes the exact
+  reduced supremum objective and separately reconstructs finite original-JML
+  cap paths. Selected RSM, PCM, and aligned-owner GPCM controls reach the
+  profile limit while anchored extremes remain fixed and constraint-coupled
+  extremes fail closed. Raw fits are not overwritten: the result explicitly
+  is not a finite maximum of the original full-vector JML likelihood, a
+  finite-item bias correction, a public estimator, or a readiness promotion.
+
+* Added fixed-quadrature marginal-MML GPCM slope-boundary instrumentation.
+  The audit derives nodewise sufficient conditions for a nondecreasing
+  sum-zero log-slope ray, enumerates every ordered two-level direction, and
+  independently reconstructs its Person-pattern marginal boundary
+  likelihood. It is estimator-specific and does not reuse the conditional
+  JML audit. The result is explicitly not a continuous-integral or
+  joint-coordinate proof and has no readiness effect: finite MML optimizer
+  slopes remain numerical traces until independent calibration and a separate
+  propagation contract are complete.
+
+* Completed an internal retrospective q-grid calibration for that MML
+  slope-path instrument. Forty exact owner-pilot datasets were rerun at
+  q=31/61/91: all 120 fits reproduced the earlier likelihoods exactly, and the
+  none-certified state was stable across grids for every dataset. Direct
+  q61-to-q91 changes were retained separately for slopes, facets, steps,
+  Person EAPs, and posterior SDs. Because the datasets were already inspected
+  and contained no positive certified case, the result changes no quadrature
+  default, tolerance, readiness state, or release gate; prospective positive
+  controls and untouched owner data remain required.
+
+* Added the corresponding deterministic positive/negative challenge and
+  retained its concern result. Mixed-negative and positive-weight-discordant
+  expectations behaved as declared, but the known five-node positive
+  construction did not remain certified at 31, 61, or 91 quadrature points
+  for either slope owner. The extreme Gaussian--Hermite nodes move outward as
+  the grid is densified, making the current individual-response all-node
+  sufficient condition too restrictive for those positive controls. MML
+  slope readiness therefore remains blocked pending broader Person-marginal
+  path mathematics; no default or inferential surface is promoted.
+
+* Added an internal analytic prototype for that broader Person-marginal
+  path. It reconstructs the finite-quadrature likelihood, first derivative,
+  curvature, surviving-node boundary, and leading tail coefficient. Selected
+  controls show how adverse conditional nodes can lose posterior mass while
+  the Person marginal continues upward. The prototype does not certify the
+  complete half-line and cannot affect fitted objects: outward numerical
+  bounds, a compact-interval proof, and a rigorous tail remainder remain
+  required.
+
+* Hardened direct GPCM optimization against non-representable slope proposals.
+  Parameter-cache updates are now transactional, and only the typed
+  floating-point slope-boundary condition is converted to a finite dominating
+  line-search objective; unrelated failures and invalid retained parameter
+  vectors still fail hard. The fitted optimization cache records the rejected
+  proposal count. A fixed 40-dataset owner-pilot recheck retained both formerly
+  lost JML fits while leaving the criterion weak-bridge path convergence-failed
+  and inference-ineligible, so the numerical repair does not conceal the
+  substantive boundary warning.
+
+* Added an identity-stamped internal GPCM MML integration-sensitivity
+  lane. It fits exact owner-pilot datasets at q=31/61/91, reevaluates all
+  candidates on a common q=91 grid, and separates structural-parameter,
+  Person-EAP, posterior-SD, optimizer, and evidence-readiness sensitivity.
+  The calibration run keeps q=31 as a comparison starting grid rather than an
+  integration-sufficiency claim; no package default or release threshold is
+  changed.
+
+* Hardened differential-facet-functioning subgroup refits so they replay the
+  baseline response family, resolved rating range, step/slope facets, weighting,
+  optimizer, MML engine, and numerical controls instead of silently redefining
+  the subgroup model or capping its iteration budget. Refit screening now fails
+  closed for active latent regression, facet interactions, and group-anchor
+  constraints until complete subgroup linking contracts exist. Documentation
+  now treats `min_obs` as a computability guard rather than a universal
+  sample-size rule. The bounded-GPCM contract also states explicitly that
+  default fixed-standard-normal MML plus geometric-mean-one slopes estimates
+  relative discrimination contrasts, not the full conventional GPCM common-
+  slope scale.
+
 * Sanitized the workflow vignette's export preview to display path basenames.
   The rendered public artifact no longer embeds a build machine's temporary
   directory, while the live return object still retains usable local paths.
@@ -35,7 +926,9 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   competitive path is retained as a candidate rather than promoted to a global
   unbounded estimate; a negative result remains limited to that path family.
   Neither result is treated as proof of a finite joint GPCM maximum, and the
-  conditional JML evidence is not reused for MML. Approximate covariance calculations remain
+  conditional JML evidence is not reused for MML. MML now has a separate
+  fixed-quadrature sufficient-path instrument, but its results remain
+  non-propagating and cannot establish finite slopes. Approximate covariance calculations remain
   available in `Optimizer*SE` / `Optimizer*CI` fields, while ordinary slope
   uncertainty is withheld until estimator-specific readiness is established.
   `summary()` separates primary slope summaries from finite optimizer traces,

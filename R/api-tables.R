@@ -5884,6 +5884,10 @@ infer_facet_names <- function(diagnostics) {
 #' - `warnings`: named list of non-fatal PCA warnings captured from the
 #'   underlying PCA engine. These indicate exploratory boundary conditions,
 #'   not confirmatory evidence.
+#' - `InferenceTier`, `SupportsFormalInference`,
+#'   `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
+#'   machine-readable guards that keep this route exploratory and prohibit an
+#'   automatic dimensionality or subscore decision.
 #'
 #' @seealso [diagnose_mfrm()], [plot_residual_pca()], [mfrmr_visual_diagnostics]
 #' @examples
@@ -6075,7 +6079,12 @@ analyze_residual_pca <- function(diagnostics,
     },
     parallel_status = build_residual_parallel_status(out_overall, out_by_facet),
     errors = pca_errors,
-    warnings = pca_warnings
+    warnings = pca_warnings,
+    InferenceTier = "exploratory",
+    SupportsFormalInference = FALSE,
+    PrimaryReportingEligible = FALSE,
+    ReportingUse = "screening_only",
+    DecisionUse = "no_automatic_dimensionality_decision"
   )
   as_mfrm_bundle(out, "mfrm_residual_pca")
 }
@@ -6180,6 +6189,9 @@ extract_loading_table <- function(pca_bundle, component = 1L, top_n = 20L) {
 #' - `facet`: facet name (or `NULL`)
 #' - `title`: plot title text
 #' - `data`: underlying table used for plotting
+#' - `InferenceTier`, `SupportsFormalInference`,
+#'   `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
+#'   machine-readable exploratory-screening guards
 #'
 #' @seealso [analyze_residual_pca()], [diagnose_mfrm()]
 #' @examples
@@ -6323,6 +6335,11 @@ plot_residual_pca <- function(x,
                                                 c("dashed", "dotted", "dotted", "dotted"),
                                                 rep("reference", length(rasch_refs))),
           data = tbl,
+          InferenceTier = "exploratory",
+          SupportsFormalInference = FALSE,
+          PrimaryReportingEligible = FALSE,
+          ReportingUse = "screening_only",
+          DecisionUse = "no_automatic_dimensionality_decision",
           preset = style$name
         )
       )
@@ -6362,6 +6379,11 @@ plot_residual_pca <- function(x,
           ),
           reference_lines = new_reference_lines("h", 0, "Permutation cutoff", "dashed", "reference"),
           data = tbl,
+          InferenceTier = "exploratory",
+          SupportsFormalInference = FALSE,
+          PrimaryReportingEligible = FALSE,
+          ReportingUse = "screening_only",
+          DecisionUse = "no_automatic_dimensionality_decision",
           preset = style$name
         )
       )
@@ -6403,6 +6425,11 @@ plot_residual_pca <- function(x,
                                               c("dashed", "dotted", "dotted", "dotted"),
                                               rep("reference", length(rasch_refs))),
         data = tbl,
+        InferenceTier = "exploratory",
+        SupportsFormalInference = FALSE,
+        PrimaryReportingEligible = FALSE,
+        ReportingUse = "screening_only",
+        DecisionUse = "no_automatic_dimensionality_decision",
         preset = style$name
       )
     )
@@ -6453,6 +6480,11 @@ plot_residual_pca <- function(x,
       reference_lines = new_reference_lines("v", 0, "Zero-loading reference", "dashed", "reference"),
       component = as.integer(component),
       data = load_tbl,
+      InferenceTier = "exploratory",
+      SupportsFormalInference = FALSE,
+      PrimaryReportingEligible = FALSE,
+      ReportingUse = "screening_only",
+      DecisionUse = "no_automatic_dimensionality_decision",
       preset = style$name
     )
   )

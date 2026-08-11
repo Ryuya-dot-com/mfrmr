@@ -1396,6 +1396,10 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   prep <- res$prep
   config <- res$config
   model <- toupper(as.character(config$model %||% "RSM"))
+  fit_readiness_record <- mfrmr_get_readiness_record(res)
+  fit_inference_ready <- isTRUE(
+    fit_readiness_record$fit$InferenceReady[1]
+  )
 
   n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
   n_person <- if (!is.null(summary)) to_float(summary$Persons) else nrow(res$facets$person)
@@ -1430,7 +1434,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     precision_tier <- if (identical(config$method, "MML")) "hybrid" else "exploratory"
   }
   supports_formal_inference <- nrow(precision_profile) > 0 &&
-    isTRUE(precision_profile$SupportsFormalInference[1])
+    isTRUE(precision_profile$SupportsFormalInference[1]) &&
+    fit_inference_ready
   precision_label <- if (supports_formal_inference) {
     "model-based"
   } else if (identical(precision_tier, "hybrid")) {
@@ -2011,6 +2016,20 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
 
   contract <- list(
+    readiness = list(
+      fit = as.data.frame(
+        fit_readiness_record$fit, stringsAsFactors = FALSE
+      ),
+      components = as.data.frame(
+        fit_readiness_record$components %||% data.frame(),
+        stringsAsFactors = FALSE
+      ),
+      parameters = as.data.frame(
+        fit_readiness_record$parameters %||%
+          mfrmr_readiness_empty_parameter_table(),
+        stringsAsFactors = FALSE
+      )
+    ),
     metadata = list(
       model = model,
       method = method,

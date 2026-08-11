@@ -310,6 +310,11 @@ gpcm_capability_boundary_table <- function(fit = NULL,
     Status = character(0),
     Boundary = character(0),
     RecommendedRoute = character(0),
+    SlopeOwner = character(0),
+    StepOwner = character(0),
+    PrimarySlopeStatus = character(0),
+    SlopeUncertaintyStatus = character(0),
+    OwnerInterpretation = character(0),
     stringsAsFactors = FALSE
   )
   if (!inherits(fit, "mfrm_fit")) return(empty)
@@ -327,6 +332,45 @@ gpcm_capability_boundary_table <- function(fit = NULL,
     "Area", "Status", "Boundary", "RecommendedRoute"
   ), drop = FALSE]
   out <- out[match(areas[areas %in% out$Area], out$Area), , drop = FALSE]
+
+  slope_tbl <- as.data.frame(fit$slopes %||% data.frame(),
+                             stringsAsFactors = FALSE)
+  slope_status <- if (nrow(slope_tbl) > 0L &&
+                      "ParameterStatus" %in% names(slope_tbl)) {
+    as.character(slope_tbl$ParameterStatus)
+  } else {
+    character(0)
+  }
+  slope_status <- slope_status[!is.na(slope_status) & nzchar(slope_status)]
+  primary_status <- if (length(slope_status) == 0L) {
+    "legacy_or_unresolved_review_required"
+  } else if (all(slope_status == "fixed")) {
+    "fixed_unit_slope_primary"
+  } else if (any(slope_status %in%
+                 c("unbounded_low", "unbounded_high", "unbounded_both"))) {
+    "typed_extended_boundary_primary_only"
+  } else {
+    "primary_slope_suppressed_optimizer_trace_only"
+  }
+
+  uncertainty_status <- if (length(slope_status) == 0L) {
+    "legacy_or_unresolved_review_required"
+  } else if (all(slope_status == "fixed")) {
+    "not_applicable_fixed_unit_slope"
+  } else if ("SEEligible" %in% names(slope_tbl) &&
+             all(!is.na(slope_tbl$SEEligible)) &&
+             all(as.logical(slope_tbl$SEEligible))) {
+    "eligible_per_parameter_readiness"
+  } else {
+    "not_eligible_per_parameter_readiness"
+  }
+
+  out$SlopeOwner <- as.character(fit$config$slope_facet %||% NA_character_)
+  out$StepOwner <- as.character(fit$config$step_facet %||% NA_character_)
+  out$PrimarySlopeStatus <- primary_status
+  out$SlopeUncertaintyStatus <- uncertainty_status
+  out$OwnerInterpretation <-
+    "model_conditional_discrimination_not_rater_consistency"
   rownames(out) <- NULL
   out
 }
@@ -593,6 +637,26 @@ expand_gpcm_log_slopes <- function(free,
   list(
     log_slopes = log_slopes,
     slopes = exp(log_slopes)
+  )
+}
+
+new_gpcm_slope_numeric_boundary_error <- function(log_slopes) {
+  log_slopes <- as.numeric(log_slopes %||% numeric(0))
+  structure(
+    list(
+      message = paste(
+        "Expanded GPCM slopes must be finite and strictly positive after",
+        "log-scale identification."
+      ),
+      call = NULL,
+      expanded_log_slopes = log_slopes,
+      expanded_slopes = suppressWarnings(exp(log_slopes))
+    ),
+    class = c(
+      "mfrmr_gpcm_slope_numeric_boundary_error",
+      "error",
+      "condition"
+    )
   )
 }
 
@@ -1211,8 +1275,7 @@ expand_params <- function(par, sizes, config) {
     log_slopes <- gpcm_expanded$log_slopes
     slopes <- gpcm_expanded$slopes
     if (!all(is.finite(slopes)) || any(slopes <= 0)) {
-      stop("Expanded GPCM slopes must be finite and strictly positive after log-scale identification.",
-           call. = FALSE)
+      stop(new_gpcm_slope_numeric_boundary_error(log_slopes))
     }
   }
   population <- NULL
@@ -1361,7 +1424,9 @@ mfrm_mml_logprob_bundle_r <- function(idx,
       eta_q <- base_eta + person_nodes[person_int, q]
       eta_mat <- outer(eta_q, 0:(k_cat - 1))
       log_num <- eta_mat - step_cum_row
-      row_max <- log_num[cbind(seq_len(n), max.col(log_num))]
+      row_max <- log_num[cbind(
+        seq_len(n), max.col(log_num, ties.method = "first")
+      )]
       log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
       lp <- log_num[obs_idx] - log_denom
       if (!is.null(idx$weight)) lp <- lp * idx$weight
@@ -1384,7 +1449,9 @@ mfrm_mml_logprob_bundle_r <- function(idx,
       eta_q <- base_eta + person_nodes[person_int, q]
       linear_part <- outer(eta_q, k_vals) - step_cum_obs
       log_num <- linear_part * slope_obs
-      row_max <- log_num[cbind(seq_len(n), max.col(log_num))]
+      row_max <- log_num[cbind(
+        seq_len(n), max.col(log_num, ties.method = "first")
+      )]
       log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
       lp <- log_num[obs_idx] - log_denom
       if (!is.null(idx$weight)) lp <- lp * idx$weight
@@ -1406,7 +1473,9 @@ mfrm_mml_logprob_bundle_r <- function(idx,
     for (q in seq_len(n_nodes)) {
       eta_q <- base_eta + person_nodes[person_int, q]
       log_num <- outer(eta_q, k_vals) - step_cum_obs
-      row_max <- log_num[cbind(seq_len(n), max.col(log_num))]
+      row_max <- log_num[cbind(
+        seq_len(n), max.col(log_num, ties.method = "first")
+      )]
       log_denom <- row_max + log(rowSums(exp(log_num - row_max)))
       lp <- log_num[obs_idx] - log_denom
       if (!is.null(idx$weight)) lp <- lp * idx$weight
@@ -2594,19 +2663,31 @@ make_param_cache <- function(sizes, config, idx, is_mml = FALSE) {
   list(
     ensure = function(par) {
       if (identical(par, cached_par)) return(invisible(NULL))
-      cached_par <<- par
-      cached_params <<- expand_params(par, sizes, config)
+      # Build the candidate state transactionally. In particular, a GPCM
+      # trial step can leave the floating-point range on the log-slope scale.
+      # A failed candidate must not poison the cache by retaining its `par`
+      # alongside parameters from the preceding valid evaluation.
+      next_params <- expand_params(par, sizes, config)
+      next_eta <- NULL
+      next_base_eta <- NULL
       if (is_mml) {
-        cached_base_eta <<- compute_base_eta(idx, cached_params, config)
+        next_base_eta <- compute_base_eta(idx, next_params, config)
       } else {
-        cached_eta <<- compute_eta(idx, cached_params, config)
+        next_eta <- compute_eta(idx, next_params, config)
       }
-      if (config$model == "RSM") {
-        cached_step_cum <<- c(0, cumsum(cached_params$steps))
+      next_step_cum <- if (config$model == "RSM") {
+        c(0, cumsum(next_params$steps))
       } else {
-        cached_step_cum <<- t(apply(cached_params$steps_mat, 1,
-                                    function(x) c(0, cumsum(x))))
+        t(apply(next_params$steps_mat, 1, function(x) c(0, cumsum(x))))
       }
+      # Keep an owned snapshot. optim() may reuse and mutate its parameter
+      # buffer between callbacks; retaining that buffer by reference can make
+      # an equality cache mistake a new point for the preceding point.
+      cached_par <<- par + 0
+      cached_params <<- next_params
+      cached_eta <<- next_eta
+      cached_base_eta <<- next_base_eta
+      cached_step_cum <<- next_step_cum
       invisible(NULL)
     },
     params = function() cached_params,
@@ -4088,7 +4169,16 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   phase_finish("joint_recession_audit", phase_started, "joint additive recession directions")
 
   phase_started <- phase_clock()
-  boundary_audit$gpcm_slope_boundary <-
+  boundary_audit$gpcm_slope_boundary <- if (identical(method, "MML")) {
+    audit_mfrm_mml_gpcm_slope_boundary(
+      prep = prep,
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      par = opt$par,
+      quad_points = quad_points
+    )
+  } else {
     audit_mfrm_jml_gpcm_slope_boundary(
       prep = prep,
       idx = idx,
@@ -4096,7 +4186,15 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       sizes = sizes,
       par = opt$par
     )
-  phase_finish("gpcm_slope_boundary_audit", phase_started, "GPCM slope-only boundary directions")
+  }
+  phase_finish(
+    "gpcm_slope_boundary_audit", phase_started,
+    if (identical(method, "MML")) {
+      "fixed-quadrature marginal GPCM slope-only boundary directions"
+    } else {
+      "conditional JML GPCM slope-only boundary directions"
+    }
+  )
 
   phase_started <- phase_clock()
   boundary_audit$gpcm_joint_boundary <-
@@ -9816,6 +9914,7 @@ mfrm_diagnostics <- function(res,
     ZSTDTransform = fit_zstd_transform_label(whexact),
     FacetsZSTDCap = if (identical(fit_df_method, "engine")) NA_real_ else 9
   )
+  fit_readiness_record <- mfrmr_get_readiness_record(res)
 
   list(
     obs = obs_df,
@@ -9823,6 +9922,19 @@ mfrm_diagnostics <- function(res,
     diagnostic_mode = diagnostic_mode,
     diagnostic_basis = diagnostic_basis_tbl,
     fit_standardization = fit_standardization,
+    fit_readiness = as.data.frame(
+      fit_readiness_record$fit %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      fit_readiness_record$components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      fit_readiness_record$parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     overall_fit = overall_fit,
     measures = measures,
     fit = fit_tbl,

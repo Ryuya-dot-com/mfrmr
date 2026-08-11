@@ -89,6 +89,12 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_true(is.data.frame(fit$slopes))
   expect_true("slope_overview" %in% names(s))
   expect_true(is.data.frame(s$slope_overview))
+  expect_identical(s$slope_overview$SlopeOwner[1], "Criterion")
+  expect_identical(s$slope_overview$StepOwner[1], "Criterion")
+  expect_identical(
+    s$slope_overview$OwnerInterpretation[1],
+    "model_conditional_discrimination_not_rater_consistency"
+  )
   expect_identical(s$slope_overview$ValueBasis[1], "optimizer_trace")
   expect_identical(s$slope_overview$ParameterStatus[1], "not_evaluated")
   expect_false(isTRUE(s$slope_overview$PrimaryReady[1]))
@@ -100,6 +106,20 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_identical(s$slope_overview$ComparisonEligible[1], 0L)
   dx <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "overall")
   pca <- analyze_residual_pca(dx, mode = "overall")
+  expect_identical(pca$InferenceTier, "exploratory")
+  expect_false(pca$SupportsFormalInference)
+  expect_false(pca$PrimaryReportingEligible)
+  expect_identical(pca$ReportingUse, "screening_only")
+  expect_identical(
+    pca$DecisionUse,
+    "no_automatic_dimensionality_decision"
+  )
+  pca_plot <- plot_residual_pca(pca, draw = FALSE)
+  expect_false(pca_plot$data$PrimaryReportingEligible)
+  expect_identical(
+    pca_plot$data$DecisionUse,
+    "no_automatic_dimensionality_decision"
+  )
   unexp <- unexpected_response_table(fit, diagnostics = dx, top_n = 10)
   disp <- displacement_table(fit, diagnostics = dx, top_n = 10)
   meas <- measurable_summary_table(fit, diagnostics = dx)

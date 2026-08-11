@@ -981,6 +981,12 @@ test_that("bias reports flag mixed-sign orientation when facets mix score direct
 
 test_that("build_apa_outputs produces structured APA text", {
   apa <- build_apa_outputs(.fit, diagnostics = .diag)
+  readiness_record <- mfrmr:::mfrmr_get_readiness_record(.fit)
+  expect_equal(apa$fit_readiness, readiness_record$fit)
+  expect_equal(apa$fit_readiness_components, readiness_record$components)
+  expect_equal(apa$fit_readiness_parameters, readiness_record$parameters)
+  expect_equal(apa$contract$readiness$fit, readiness_record$fit)
+  expect_equal(summary(apa)$fit_readiness, readiness_record$fit)
   expect_s3_class(apa, "mfrm_apa_outputs")
   expect_true("report_text" %in% names(apa))
   expect_true("section_map" %in% names(apa))
@@ -992,6 +998,36 @@ test_that("build_apa_outputs produces structured APA text", {
   expect_true(any(grepl("contract completeness", s$notes, fixed = TRUE)))
   out <- capture.output(print(s))
   expect_true(length(out) > 0)
+})
+
+test_that("APA precision cannot override blocked fit readiness", {
+  data <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(
+    data,
+    "Person",
+    c("Rater", "Criterion"),
+    "Score",
+    method = "MML",
+    model = "PCM",
+    step_facet = "Criterion",
+    quad_points = 7,
+    maxit = 1,
+    reltol = 1e-12
+  ))
+  diagnostics <- suppressWarnings(diagnose_mfrm(
+    fit, residual_pca = "none"
+  ))
+  diagnostics$precision_profile$SupportsFormalInference <- TRUE
+  apa <- build_apa_outputs(fit, diagnostics = diagnostics)
+
+  expect_identical(apa$fit_readiness$FitReadiness[[1]], "blocked")
+  expect_false(apa$fit_readiness$InferenceReady[[1]])
+  expect_false(apa$contract$precision$supports_formal_inference)
+  expect_match(
+    apa$fit_readiness$ReasonCodes[[1]],
+    "iteration_limit",
+    fixed = TRUE
+  )
 })
 
 test_that("build_apa_outputs with bias produces extended text", {

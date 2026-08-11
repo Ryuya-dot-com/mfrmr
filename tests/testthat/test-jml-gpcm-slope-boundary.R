@@ -313,7 +313,7 @@ test_that("GPCM slope parameter contract represents two-sided boundaries", {
   expect_identical(c1$ReasonCodes, "jml_gpcm_slope_boundary_both")
 })
 
-test_that("MML GPCM is not relabelled by the conditional JML slope audit", {
+test_that("MML GPCM remains review-only after marginal path instrumentation", {
   data <- load_mfrmr_data("example_core")
   fit <- suppressMessages(suppressWarnings(fit_mfrm(
     data,
@@ -328,6 +328,11 @@ test_that("MML GPCM is not relabelled by the conditional JML slope audit", {
     maxit = 25
   )))
 
+  audit <- fit$config$boundary_audit$gpcm_slope_boundary
+  expect_identical(audit$method, "MML")
+  expect_true(audit$fixed_quadrature_certificate)
+  expect_false(audit$continuous_integral_certificate)
+  expect_identical(audit$readiness_effect, "none_instrumentation_only")
   expect_true(all(fit$slopes$ParameterStatus == "not_evaluated"))
   expect_true(all(is.na(fit$slopes$PrimaryEstimate)))
   expect_true(all(is.finite(fit$slopes$OptimizerEstimate)))

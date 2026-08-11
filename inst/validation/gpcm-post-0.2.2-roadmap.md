@@ -1,6 +1,7 @@
 # Bounded-GPCM technical evidence supplement after 0.2.2
 
-Status: subordinate validation supplement, reviewed 2026-07-26.
+Status: subordinate validation supplement, reviewed 2026-07-26; model-family
+refinement added 2026-08-08.
 
 The repository-root `ROADMAP.md` controls release sequencing. This file only
 records technical exit criteria for bounded-GPCM capability rows that remain
@@ -12,6 +13,21 @@ The current executable contract is `gpcm_capability_matrix()` together with
 step facet and the documented `slope_facet == step_facet` structure. Direct
 recovery evidence is not design operating-characteristic evidence, and
 diagnostic screens are not standalone fairness or validity decisions.
+
+The model-family interpretation and dependency order are refined in
+`generalized-mfrm-model-ladder-0.2.3.md`. Under that vocabulary, the current
+route is an **aligned single-owner relative-slope GPCM**. Criterion-owned and
+rater-owned calls share a response kernel but do not share a substantive
+estimand or an empirical evidence claim. Before the 0.2.3 gate can promote a
+role-specific claim, its evidence must record `SlopeOwner`, `StepOwner`,
+`SlopeComposition`, and `LatentDimensionCount`; pooled bounded-GPCM evidence
+cannot promote both owner roles.
+
+In particular, a rater-owned slope may be described as rater-indexed
+conditional discrimination only within the fitted model. Calling it rater
+consistency, reliability, competence, or absence of random error requires
+separate recovery and attribution evidence against category-use, targeting,
+interaction, multidimensional, and local-dependence alternatives.
 
 ## Complete package-native GPCM exit criteria
 
@@ -121,6 +137,14 @@ require null and non-null fixtures, severity and range-restriction effects,
 group imbalance, sparse links, and matched external checks. A screen-positive
 row is not by itself a fairness, invariance, or bias conclusion.
 
+For 0.2.3, subgroup refits replay the baseline response family, resolved rating
+range, step/slope facets, weighting, optimizer, MML engine, and numerical
+controls; the non-target anchors are the intentional linking change. Active
+latent regression, facet interactions, and group-anchor constraints fail closed
+until their subgroup linking contracts are implemented. `min_obs` remains a
+cell-computability guard, not a universal sample-size or power rule. This
+model-identity guard does not promote the refit contrast beyond screening.
+
 `build_linking_review()` is an exploratory index over direct anchor, drift, or
 chain evidence. Stronger operational wording requires a fixed calibration
 identity contract and examples separating sparse-link design problems from
@@ -134,6 +158,14 @@ calibration follows in 0.2.4, and multiple observed scales follow in 0.2.5.
 Unrestricted GPCM, multidimensional traits, posterior-predictive computation,
 and heavy backends remain 0.3-or-later research programs unless the root
 roadmap is explicitly revised.
+
+Within 0.2.3, the next gate-specification revision should either split the
+current bounded-GPCM evidence into criterion-aligned and rater-aligned strata
+or keep the untested owner role explicitly caveated/unsupported. Decoupled
+slope and step owners, multiplicative criterion-by-rater slopes, rater-by-
+criterion severity interactions, centrality/extremity response-style models,
+and local-dependence rater models remain separate later-family or alternative-
+model proposals; none is implied by completing the aligned route.
 
 When a capability changes, update the implementation, capability registry,
 runtime guard coverage, help, tests, release evidence, and this supplement in

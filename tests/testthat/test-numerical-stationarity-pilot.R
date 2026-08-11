@@ -353,6 +353,43 @@ test_that("the five-run pilot records review evidence and fails closed", {
     max(pilot$reduction_results$CommonScoreMaxAbsDifference),
     1e-10
   )
+  expect_lte(
+    max(pilot$reduction_results$IndependentLogProbabilityMaxAbsDifference),
+    1e-12
+  )
+  expect_lte(
+    max(pilot$reduction_results$IndependentProbabilityMaxAbsDifference),
+    1e-12
+  )
+  expect_lte(
+    max(pilot$reduction_results$IndependentObjectiveAbsDifference),
+    1e-10
+  )
+  expect_lte(
+    max(pilot$reduction_results$IndependentCommonScoreMaxAbsDifference),
+    1e-6
+  )
+  expect_true(all(
+    pilot$reduction_results$TransformReductionObserved
+  ))
+  expect_lte(
+    max(pilot$reduction_results$CommonFreeCoordinateMaxAbsDifference),
+    1e-12
+  )
+  expect_lte(
+    max(pilot$reduction_results$ExpandedStepMaxAbsDifference),
+    1e-12
+  )
+  gpcm_reduction <- pilot$reduction_results[
+    pilot$reduction_results$ReductionId == "unit_slope_gpcm_equals_pcm",
+    ,
+    drop = FALSE
+  ]
+  expect_lte(gpcm_reduction$ExpandedLogSlopeMaxAbsDifference, 1e-12)
+  expect_lte(
+    gpcm_reduction$ExpandedSlopeMaxAbsDifferenceFromOne,
+    1e-12
+  )
   expect_true(pilot$summary$FixedFixturesComplete)
   expect_true(pilot$summary$AllScoreReferencesComplete)
   expect_true(pilot$summary$GpcmTransformationJacobianComplete)
@@ -394,6 +431,28 @@ test_that("the five-run pilot records review evidence and fails closed", {
     pilot$fixture_manifest
   )
   expect_false(reduction_fail_closed$ExactReductionsObserved)
+
+  mutated_oracle <- pilot$reduction_results
+  mutated_oracle$IndependentObjectiveAbsDifference[1] <- 1
+  oracle_fail_closed <- env$mfrmr_num_global_summary(
+    pilot$score_summary,
+    pilot$gpcm_jacobian$summary,
+    mutated_oracle,
+    pilot$fixture_manifest
+  )
+  expect_false(oracle_fail_closed$ExactReductionsObserved)
+
+  mutated_transform <- pilot$reduction_results
+  mutated_transform$ExpandedSlopeMaxAbsDifferenceFromOne[
+    mutated_transform$ReductionId == "unit_slope_gpcm_equals_pcm"
+  ] <- 0.1
+  transform_fail_closed <- env$mfrmr_num_global_summary(
+    pilot$score_summary,
+    pilot$gpcm_jacobian$summary,
+    mutated_transform,
+    pilot$fixture_manifest
+  )
+  expect_false(transform_fail_closed$ExactReductionsObserved)
 
   invalid_fixture <- pilot$fixture_manifest
   invalid_fixture$SHA256[1] <- "not-a-sha256"

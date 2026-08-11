@@ -55,6 +55,9 @@
 #'   `DraftReady = TRUE` means the item can be drafted into a report with the
 #'   package's documented caveats. `ReadyForAPA` is a backward-compatible alias
 #'   of the same flag; neither field certifies formal inferential adequacy.
+#' - `fit_readiness`, `fit_readiness_components`, and
+#'   `fit_readiness_parameters`: exact source-fit v3 readiness provenance;
+#'   these fields are not re-derived from checklist completeness.
 #' - `section_summary`: available items by section.
 #' - The Global Fit section includes a "Fit/separation reporting boundary"
 #'   row that points to [precision_review_report()], [fit_measures_table()],
@@ -171,6 +174,7 @@ reporting_checklist <- function(fit,
   n_bias_errors <- if (is.data.frame(bias_error_tbl)) nrow(bias_error_tbl) else 0L
 
   convergence <- mfrm_convergence_state(fit)
+  fit_readiness_record <- mfrmr_get_readiness_record(fit)
   converged <- convergence$inference_ready
   summary_msg <- if (is.data.frame(fit$summary) && "Message" %in% names(fit$summary)) {
     as.character(fit$summary$Message[1] %||% "")
@@ -1057,6 +1061,18 @@ reporting_checklist <- function(fit,
 
   out <- list(
     checklist = checklist,
+    fit_readiness = as.data.frame(
+      fit_readiness_record$fit, stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      fit_readiness_record$components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      fit_readiness_record$parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     section_summary = as.data.frame(section_summary, stringsAsFactors = FALSE),
     software_scope = external_software_scope_table(fit),
@@ -1332,6 +1348,18 @@ summary.mfrm_reporting_checklist <- function(object, top_n = 10, ...) {
 
   out <- list(
     overview = overview,
+    fit_readiness = as.data.frame(
+      object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      object$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      object$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     section_summary = section_summary,
     software_scope = software_scope,
     facets_positioning = facets_positioning,

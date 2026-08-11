@@ -43,6 +43,16 @@ If equal contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
 
+The word *bounded* also marks an identification restriction. With default
+unconditional MML, ability is integrated on a fixed standard-normal reference
+scale, while the level-specific log slopes are additionally constrained to sum
+to zero (geometric mean 1). Thus the fitted slopes are relative
+discriminations with \(G-1\) free contrasts. A conventional fixed-ability-scale
+GPCM in which every slope could share an estimated value other than 1 is not
+contained in this branch. Under JML or active latent-regression MML, the same
+geometric-mean constraint also participates in resolving the ability/slope
+scale.
+
 ## Report wording templates
 
 Use wording that matches the model actually fitted:
@@ -106,7 +116,27 @@ family is recorded as a candidate, but `ParameterStatus` remains
 path result does not determine the global maximum of the non-concave GPCM
 likelihood. Failure to find such a path is equally limited to that family.
 Under MML, Persons are integrated out, so neither conditional JML result is
-reused as marginal-likelihood evidence.
+reused as marginal-likelihood evidence. The MML branch instead records a
+separate sufficient-path check for the declared finite quadrature objective:
+positive-loading responses must maximize unscaled utility at every node and
+negative-loading responses must minimize it. Compatible paths receive an
+independently reconstructed Person-pattern boundary likelihood. This is not a
+continuous-integral or joint-coordinate proof and has no readiness effect;
+both certified and none-certified outcomes leave free MML slopes
+`not_evaluated`. A retrospective 40-dataset owner panel returned the same
+none-certified state at 31, 61, and 91 quadrature points for every dataset and
+reproduced its earlier likelihoods exactly. Because the panel contained no
+positive certified case and had already been inspected, it does not establish
+positive-path sensitivity, a finite maximum, a quadrature tolerance, or a
+default. In a separately predeclared deterministic challenge, the known
+five-node positive construction was no longer certified at 31, 61, or 91
+points for either slope owner. As the quadrature grid grows, its extreme nodes
+move outward and the individual-response all-node condition becomes too
+restrictive for those controls. MML slope readiness remains blocked pending a
+broader Person-marginal path condition. An internal analytic prototype
+reconstructs the wider path's value, derivatives, surviving-node boundary, and
+leading tail term, but it does not prove the complete half-line and cannot
+change a fitted object's status.
 
 The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
 local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for

@@ -239,7 +239,7 @@ A missing boundary remains review evidence for the separate element-
 boundary contract. If unused intermediate categories should remain in the
 original scale, set \code{keep_original = TRUE}; a retained zero-count internal
 category in a polytomous fitted ladder creates an unsupported adjacent-
-step contrast, and \code{fit_mfrm()} returns a structured pre-optimization error.
+step contrast, and \code{\link[=fit_mfrm]{fit_mfrm()}} returns a structured pre-optimization error.
 \item \code{summary(describe_mfrm_data(...))} reports retained zero-count categories
 in \code{Notes}, printed \code{Caveats}, and \verb{$caveats}; \code{summary(fit)} carries full
 structured rows into printed \code{Caveats} and \verb{$caveats}, with \verb{Key warnings}
@@ -376,6 +376,13 @@ The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes on the log scale with geometric mean 1. This makes bounded
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
+Under default unconditional MML, the ability distribution is already fixed to
+a standard-normal reference scale. Geometric-mean-one is consequently an
+additional relative-discrimination restriction with \eqn{G - 1} free slope
+contrasts; the conventional fixed-ability-scale GPCM case in which all slopes
+may share an estimated value other than 1 is outside this bounded branch.
+Under JML or active latent-regression MML, the same constraint also helps
+resolve the ability/slope scale.
 
 \strong{Ordered-response scope}
 
