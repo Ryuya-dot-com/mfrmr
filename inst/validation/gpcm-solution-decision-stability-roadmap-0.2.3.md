@@ -143,6 +143,17 @@ states. Therefore zero candidates are stability eligible; this is evidence to
 profile variance and integration, not permission to select the lowest observed
 candidate.
 
+The next P1a record,
+`gpcm-population-variance-profile-p1a-record-0.2.3.md`, fixes q=31 and
+reoptimizes the 23 nuisance coordinates at ten log-variance values from both
+P0b basins. All four reflected scenarios attain their diagnostic finite-grid
+minimum at the low-variance anchor, and that minimum passes the existing
+nuisance-stationarity rule. The high-variance tails do not. Across the full
+curves, exact and near high/low reflections retain objective discrepancies,
+so the result is a qualified local basin rather than a global, boundary, or
+reflection-invariant profile. The broad two-basin q cross is therefore not
+authorized.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -244,10 +255,12 @@ not retrospective widening of the tolerance.
    separate fixed-facet boundary lane.
 2. **P1 -- boundary and integration adjudication.** Complete the retained JML
    joint additive/log-slope scope, add the separate MML fixed-facet/slope and
-   variance-profile scopes, and first cross the default and `variance_low`
-   basins with q=31/61/91 plus one common dense reevaluation grid. Do not freeze
-   q or a local-solution tolerance from the historical five-replicate panel,
-   and do not call finite-grid agreement a continuous-integral certificate.
+   variance-profile scopes. P1a now admits the low-variance basin to a bounded
+   q=31/61/91 refit and common-dense-grid audit; retain the default/high basin
+   only as a diagnostic start unless its nuisance stationarity is repaired.
+   Do not freeze q or a local-solution tolerance from the historical
+   five-replicate panel, and do not call finite-grid agreement a continuous-
+   integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

@@ -3944,13 +3944,33 @@ The default source EAPs are finite but accompany enormous variances and
 `P0StabilityEligible = FALSE`; neither the diagnostic lowest-objective label
 nor the derivative-step calibration authorizes selection.
 
-The immediate P1 slice is now narrower than the earlier generic start-by-q
-cross: profile `log_sigma2` in both directions, then cross only the default and
-`variance_low` basins over q=31/61/91 with one common dense-grid reevaluation.
-Keep population variance, slope-only movement, and joint movement as separate
-states, and materialize candidate EAP/posterior-SD consequences only after
-those source-fit gates. Isolated Rater endpoints and constant-response controls
-remain a different fixed-facet lane. No large simulation is admissible here.
+That observation narrowed P1 relative to the earlier generic start-by-q cross:
+profile `log_sigma2` in both directions first and make any q=31/61/91 cross
+conditional on profile quality. Population variance, slope-only movement, and
+joint movement remain separate states, and candidate EAP/posterior-SD
+consequences follow only after those source-fit gates. Isolated Rater endpoints
+and constant-response controls remain a different fixed-facet lane. No large
+simulation is admissible here.
+
+P1a is now complete in
+`gpcm-population-variance-profile-p1a-0.2.3.R` and its execution record. At
+each of ten q=31 log-variance values it fixes that one coordinate and
+independently reoptimizes the other 23 from the default and `variance_low`
+P0b anchors, including the package's objective-nondegrading gradient-polish
+policy. All 80 vectors returned. The four diagnostic minima occur at the
+low-variance anchors (`sigma2` about 0.025--0.030), are interior to the finite
+grid, and pass the existing nuisance rule. None of the four high-variance tail
+envelope rows passes nuisance stationarity. Exact and near reflected curves
+also retain maximum objective discrepancies of about 0.00065 and 0.0128,
+respectively; no retrospective tolerance is set.
+
+This is a conditional GO only for a low-basin q=31/61/91 calibration. The
+default/high basin remains a diagnostic start and cannot enter an equivalence
+or solution-selection denominator unless stationarity is repaired. Common
+dense-grid reevaluation must remain separate from a continuous-integral
+certificate. P2 uncertainty and P3 downstream metrics remain blocked, and the
+complete 80-row polished path is opt-in so ordinary regression testing does
+not turn this bounded gate into a persistent runtime burden.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

@@ -4,6 +4,18 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a bounded q=31 GPCM population-variance nuisance-profile P1a audit.
+  At ten fixed `log_sigma2` values, all other free coordinates are reoptimized
+  independently from the default and low-variance P0b basins using the same
+  gradient-polish policy as the package optimizer. All four reflected endpoint
+  cases have a locally stationary finite-grid minimum at the low-variance
+  anchor, but the high-variance tails fail nuisance stationarity and the wider
+  high/low curves are not numerically reflection-invariant. The result narrows
+  the next q=31/61/91 audit to a qualified low-variance candidate while keeping
+  the default basin diagnostic-only. It selects no package solution and
+  promotes no boundary, integration, uncertainty, DFF/fit/rank, simulation, or
+  capability claim.
+
 * Added a deterministic GPCM endpoint solution-stability P0b instrument and
   execution record. Reflected all-5/all-1 and 19/20 near-endpoint Person cases
   retain all five categories and replay the seven fixed P0 starts. Finite MML

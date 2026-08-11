@@ -104,6 +104,13 @@ identify whether the opt-in layer ran and retain its test log.
   start-sensitive population scale, keeps every candidate review-only, and
   narrows the next work to variance-profile and start-by-q adjudication rather
   than a broad simulation.
+- `gpcm-population-variance-profile-p1a-0.2.3.R` and
+  `gpcm-population-variance-profile-p1a-record-0.2.3.md`: q=31 finite-grid
+  local nuisance profiles from the P0b default and low-variance basins. The
+  low-variance anchor is a qualified local minimum in all four reflected
+  endpoint cases, whereas the high-variance tails remain nonstationary. The
+  diagnostic envelope is not promoted to a global profile or boundary result;
+  its complete 80-row execution is opt-in rather than part of ordinary tests.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

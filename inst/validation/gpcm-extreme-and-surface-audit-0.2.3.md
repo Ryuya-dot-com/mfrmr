@@ -177,6 +177,15 @@ fit is not evidence of a stable finite population solution. The record is
 `gpcm-endpoint-solution-stability-p0b-record-0.2.3.md`; it authorizes neither a
 candidate replacement nor a large simulation.
 
+The subsequent q=31 P1a nuisance-profile calibration reoptimizes the other 23
+free coordinates at ten fixed log-variance values from both P0b basins. Its
+diagnostic finite-grid minimum is the low-variance anchor in all four cases and
+passes the existing nuisance-stationarity rule there. The high-variance tails
+do not pass that rule, and the wider reflected curves retain numerical
+high/low discrepancies. This supports carrying only the low-variance basin
+forward as a qualified local candidate; it does not establish a global
+profile, a variance-boundary limit, or solution selection.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
@@ -194,9 +203,11 @@ candidate replacement nor a large simulation.
 3. **Close estimator-specific gaps.** Keep raw finite JML traces, JML
    extended-profile limits, named adjusted/bias-reduced estimates, and MML EAPs
    in separate fields and comparison strata. Develop a marginal-likelihood
-   boundary audit for fixed facets rather than reusing the JML cone. Extend the
-   joint GPCM audit to the retained additive/log-slope parameterization before
-   promoting slope uncertainty.
+   boundary audit for fixed facets rather than reusing the JML cone. Retain the
+   P1a low-variance MML basin as a local q-sensitivity candidate and the
+   nonstationary default/high basin as diagnostic-only. Extend the joint GPCM
+   audit to the retained additive/log-slope parameterization before promoting
+   slope uncertainty.
 4. **Gate fit and DFF by estimand.** Fit indices and DFF may execute for
    diagnosis, but they cannot override a review-only source fit. Endpoint-
    affected rows need an explicit eligibility reason; location-like DFF,

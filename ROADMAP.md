@@ -565,6 +565,16 @@ promoted. The next narrow gate is a population-variance profile and a
 default-versus-low-variance q=31/61/91 comparison on a common dense evaluation
 grid; Rater endpoints remain separate fixed-facet boundary work.
 
+The q=31 P1a nuisance-profile calibration has now completed that first
+population-variance slice. Reoptimizing all other free coordinates at ten
+fixed log-variance values confirms a locally stationary low-variance
+finite-grid minimum in each reflected endpoint case. It does not confirm the
+default high-variance plateau: those tail points remain nonstationary, and the
+wider reflected curves retain numerical path differences. Consequently the
+next q=31/61/91 audit is limited to the qualified low-variance local candidate,
+with the default basin retained only diagnostically. This is not a selected
+package solution, a global profile, or a continuous-integration result.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
