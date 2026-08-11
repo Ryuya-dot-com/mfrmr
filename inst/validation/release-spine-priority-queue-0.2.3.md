@@ -296,14 +296,18 @@ case assets, real local paths, or escaping symlinks. This does not inspect
 ignored result directories or establish numerical comparability.
 
 Row 64 now has a deterministic row-level contract in
-`external-comparison-eligibility-contract-record-0.2.3.md`. Twenty fixtures
-separate eligible, rejected, missing, failed, and unexpected rows across all
-four programs and prove that finite rejected values cannot enter exact
-metric/parameter/method strata. Its evidence status is `review`, not `ok`:
-actual ConQuest, TAM, immer, and FACETS normalizers have not yet populated the
-contract. The current environment can exercise ConQuest and the installed R
-comparators but cannot execute FACETS. Local Wave C work therefore starts with
-the ConQuest binding. Row 59 remains `review` and must be completed once in a
+`external-comparison-eligibility-contract-record-0.2.3.md`. Twenty-five
+fixtures separate eligible, rejected, missing, failed, and unexpected rows
+across ConQuest, FACETS, TAM, immer, and sirt and prove that finite rejected
+values cannot enter exact metric/parameter/method strata. Penalty mode, finite
+parameter boxes, and retained source precision are independent admission axes;
+the free-slope sirt fixture therefore fails exact admission under its documented
+finite slope box while an equal-discrimination PCM fixture remains structurally
+admissible. Its evidence status is `review`, not `ok`: actual program
+normalizers have not yet populated the contract. The current environment can
+exercise ConQuest and the installed R comparators but cannot execute FACETS.
+Local Wave C work therefore starts with the ConQuest binding. Row 59 remains
+`review` and must be completed once in a
 licensed external environment with executable, parser, generator, locale,
 command/control/input/output, run-date, and candidate identities in one
 portable bundle. Historical 4.5.0 output and synthetic placeholders cannot

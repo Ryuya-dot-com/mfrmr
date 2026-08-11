@@ -7,13 +7,15 @@ mfrmr_ecec_required_columns <- function() {
     "ExpectedFamily", "ObservedFamily",
     "ExpectedEstimator", "ObservedEstimator",
     "ExpectedCorrectionMode", "ObservedCorrectionMode",
+    "ExpectedPenaltyMode", "ObservedPenaltyMode",
+    "ExpectedFiniteParameterBox", "ObservedFiniteParameterBox",
     "Metric", "ParameterClass", "ExpectedRow", "ObservedRow",
     "FitSucceeded", "MetricValue",
     "ObservationsStatus", "WeightsStatus", "ActiveFacetsStatus",
     "SignOrientationStatus", "CategoryMapStatus", "StepDimensionStatus",
     "AnchorsStatus", "ConstraintsStatus", "CoordinatesStatus",
     "IdentificationStatus", "ConditioningStatus",
-    "BoundaryConventionStatus"
+    "BoundaryConventionStatus", "SourcePrecisionStatus"
   )
 }
 
@@ -30,14 +32,16 @@ mfrmr_ecec_status_columns <- function() {
     CoordinatesStatus = "coordinates",
     IdentificationStatus = "identification",
     ConditioningStatus = "conditioning",
-    BoundaryConventionStatus = "boundary_convention"
+    BoundaryConventionStatus = "boundary_convention",
+    SourcePrecisionStatus = "source_precision"
   )
 }
 
 mfrmr_ecec_stratum_columns <- function() {
   c(
     "ScenarioId", "Program", "ExpectedFamily", "ExpectedEstimator",
-    "ExpectedCorrectionMode", "Metric", "ParameterClass"
+    "ExpectedCorrectionMode", "ExpectedPenaltyMode",
+    "ExpectedFiniteParameterBox", "Metric", "ParameterClass"
   )
 }
 
@@ -61,7 +65,8 @@ mfrmr_ecec_assert_input <- function(rows) {
 
   text_columns <- c(
     "ComparisonRowId", "ScenarioId", "Program", "ExpectedFamily",
-    "ExpectedEstimator", "ExpectedCorrectionMode", "Metric",
+    "ExpectedEstimator", "ExpectedCorrectionMode", "ExpectedPenaltyMode",
+    "ExpectedFiniteParameterBox", "Metric",
     "ParameterClass"
   )
   for (column in text_columns) {
@@ -76,7 +81,7 @@ mfrmr_ecec_assert_input <- function(rows) {
   if (any(grepl("\037", unlist(rows[required]), fixed = TRUE))) {
     stop("comparison fields contain the reserved unit separator", call. = FALSE)
   }
-  allowed_programs <- c("ConQuest", "FACETS", "TAM", "immer")
+  allowed_programs <- c("ConQuest", "FACETS", "TAM", "immer", "sirt")
   programs <- mfrmr_ecec_character(rows$Program)
   if (any(!programs %in% allowed_programs)) {
     stop("Program contains an unsupported external engine", call. = FALSE)
@@ -96,7 +101,8 @@ mfrmr_ecec_assert_input <- function(rows) {
     stop("an unobserved row cannot have FitSucceeded = TRUE", call. = FALSE)
   }
   observed_identity <- c(
-    "ObservedFamily", "ObservedEstimator", "ObservedCorrectionMode"
+    "ObservedFamily", "ObservedEstimator", "ObservedCorrectionMode",
+    "ObservedPenaltyMode", "ObservedFiniteParameterBox"
   )
   for (column in observed_identity) {
     value <- mfrmr_ecec_character(rows[[column]])
@@ -128,7 +134,11 @@ mfrmr_ecec_reason_codes <- function(row) {
   identity_fields <- list(
     family = c("ExpectedFamily", "ObservedFamily"),
     estimator = c("ExpectedEstimator", "ObservedEstimator"),
-    correction_mode = c("ExpectedCorrectionMode", "ObservedCorrectionMode")
+    correction_mode = c("ExpectedCorrectionMode", "ObservedCorrectionMode"),
+    penalty_mode = c("ExpectedPenaltyMode", "ObservedPenaltyMode"),
+    finite_parameter_box = c(
+      "ExpectedFiniteParameterBox", "ObservedFiniteParameterBox"
+    )
   )
   for (label in names(identity_fields)) {
     fields <- identity_fields[[label]]

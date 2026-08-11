@@ -145,7 +145,11 @@ Priorities are:
   sirt places the product of item and rater slopes on the trait term and keeps
   rater severity as a separate location term, whereas mfrmr assigns one slope
   owner to the complete adjacent-category predictor. It will therefore remain
-  sensitivity evidence unless an exact submodel map is established;
+  sensitivity evidence unless an exact submodel map is established. The
+  installed sirt 4.2-133 help also documents finite default slope bounds of
+  `0.05--10`; item-only free-slope results therefore fail the exact mfrmr
+  parameter-space contract unless that difference is explicitly resolved.
+  Equal-discrimination reductions remain the cleaner first lane;
 - conditional-likelihood results from immer as separate Rasch-family reference
   evidence where their estimands match, without treating CML or CCML as current
   mfrmr fitting methods;

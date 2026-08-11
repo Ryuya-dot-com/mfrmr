@@ -53,13 +53,15 @@ test_that("every required comparison axis has a deterministic rejection", {
   required_reasons <- c(
     "unexpected_row_not_in_registry", "missing_expected_row",
     "external_fit_failed", "family_mismatch", "estimator_mismatch",
-    "correction_mode_mismatch", "observations_mismatch",
+    "correction_mode_mismatch", "penalty_mode_mismatch",
+    "finite_parameter_box_mismatch", "observations_mismatch",
     "weights_mismatch", "active_facets_mismatch",
     "sign_orientation_mismatch", "category_map_mismatch",
     "step_dimension_mismatch", "anchors_mismatch",
     "constraints_mismatch", "coordinates_mismatch",
     "identification_unknown", "conditioning_mismatch",
-    "boundary_convention_mismatch", "metric_value_missing_or_nonfinite"
+    "boundary_convention_mismatch", "source_precision_mismatch",
+    "metric_value_missing_or_nonfinite"
   )
 
   expect_setequal(unique(result$Reasons$ReasonCode), required_reasons)
@@ -105,9 +107,9 @@ test_that("denominators expose every disposition and exclude finite rejects", {
     , drop = FALSE
   ]
   expect_equal(nrow(facets), 1L)
-  expect_identical(facets$ExpectedRows, 11L)
+  expect_identical(facets$ExpectedRows, 13L)
   expect_identical(facets$EligibleRows, 1L)
-  expect_identical(facets$RejectedRows, 10L)
+  expect_identical(facets$RejectedRows, 12L)
   expect_identical(facets$IncludedRows, 1L)
   expect_equal(facets$AggregateValue, 0.05, tolerance = 0)
 })
@@ -128,12 +130,25 @@ test_that("eligibility is row-order invariant and strata are never pooled", {
   stratum_key <- do.call(paste, c(
     forward$Denominators[c(
       "ScenarioId", "Program", "ExpectedFamily", "ExpectedEstimator",
-      "ExpectedCorrectionMode", "Metric", "ParameterClass"
+      "ExpectedCorrectionMode", "ExpectedPenaltyMode",
+      "ExpectedFiniteParameterBox", "Metric", "ParameterClass"
     )], sep = "|"
   ))
   expect_false(anyDuplicated(stratum_key) > 0L)
   expect_setequal(unique(forward$Denominators$Program),
-                  c("ConQuest", "FACETS", "TAM", "immer"))
+                  c("ConQuest", "FACETS", "TAM", "immer", "sirt"))
+
+  sirt_rows <- forward$Rows[forward$Rows$Program == "sirt", , drop = FALSE]
+  expect_identical(
+    sirt_rows$Disposition[match("SIRT-PCM-OK", sirt_rows$ComparisonRowId)],
+    "eligible"
+  )
+  expect_identical(
+    sirt_rows$ReasonCodes[
+      match("SIRT-GPCM-BOX", sirt_rows$ComparisonRowId)
+    ],
+    "finite_parameter_box_mismatch"
+  )
 })
 
 test_that("malformed registries fail closed", {
@@ -163,6 +178,19 @@ test_that("malformed registries fail closed", {
   expect_error(
     contract$env$mfrmr_external_comparison_eligibility(bad_program),
     "unsupported external engine"
+  )
+  blank_penalty <- fixtures
+  first_observed <- which(blank_penalty$ObservedRow)[1L]
+  blank_penalty$ObservedPenaltyMode[first_observed] <- ""
+  expect_error(
+    contract$env$mfrmr_external_comparison_eligibility(blank_penalty),
+    "ObservedPenaltyMode must be non-empty"
+  )
+  blank_box <- fixtures
+  blank_box$ExpectedFiniteParameterBox[1L] <- ""
+  expect_error(
+    contract$env$mfrmr_external_comparison_eligibility(blank_box),
+    "ExpectedFiniteParameterBox must be non-empty"
   )
 })
 

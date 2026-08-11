@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Extended the repository-only external-comparison admission contract so
+  statistical penalties, finite parameter boxes, and source numerical
+  precision cannot be hidden inside a generic estimator or correction label.
+  Added sirt as a source/version-bound comparator: equal-discrimination PCM is
+  structurally admissible, while the default free-slope route is rejected as
+  an exact mfrmr match because `rm.facets()` documents finite `0.05--10` slope
+  bounds. TAM and immer adjustment/bias-correction modes remain separate
+  strata. This changes comparison governance only and runs no external fit.
+
 * Clarified the GPCM estimator-family contract. "Bounded GPCM" now explicitly
   means bounded public model/workflow scope, not finite parameter boxes. New
   fits record whether the route is unpenalized identified JML or MML, that no
@@ -47,13 +56,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   deferred review only; no tolerance, candidate, many-facet equivalence, or
   release claim is promoted.
 
-* Added a deterministic metric-specific eligibility contract for external
-  comparisons. Exact program/family/estimator/correction and data, facet,
-  category, anchor, coordinate, identification, conditioning, and boundary
-  identities are checked per metric and parameter stratum; rejected, missing,
-  failed, and unexpected rows cannot enter aggregates. This moves the
-  structural checklist slice to review only: real ConQuest, FACETS, TAM, and
-  immer normalizers are not yet bound and no equivalence claim is promoted.
+* Added the initial deterministic metric-specific eligibility contract for
+  external comparisons. Exact program/family/estimator/correction and data,
+  facet, category, anchor, coordinate, identification, conditioning, and
+  boundary identities are checked per metric and parameter stratum; rejected,
+  missing, failed, and unexpected rows cannot enter aggregates. The current
+  contract additionally separates penalty, finite-box, and source-precision
+  identities and covers ConQuest, FACETS, TAM, immer, and sirt. This moves the
+  structural checklist slice to review only: real program normalizers are not
+  yet bound and no equivalence claim is promoted.
 
 * Routed the next external-normalizer work through ConQuest rather than
   FACETS because no licensed FACETS executable is available in the current

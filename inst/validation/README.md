@@ -977,13 +977,15 @@ identify whether the opt-in layer ran and retain its test log.
   0.2.3--0.2.5 correction architecture. It is not confirmation evidence.
 - `external-comparison-eligibility-contract-0.2.3.R`: repository-only
   row-level admission contract for external metrics. It verifies exact
-  family/estimator/correction and data/facet/category/anchor/coordinate/
-  identification/boundary identities, then separates eligible, rejected,
-  missing, failed, and unexpected rows before aggregation.
+  family/estimator/correction/penalty/finite-box and
+  data/facet/category/anchor/coordinate/identification/boundary/source-
+  precision identities, then separates eligible, rejected, missing, failed,
+  and unexpected rows before aggregation.
 - `external-comparison-eligibility-contract-record-0.2.3.md`: hash-bound
-  structural-review record for 20 accepted and rejected fixtures across
-  ConQuest, FACETS, TAM, and immer. Passing fixtures do not close checklist
-  row 64; actual normalizer bindings and the WP7 pilot remain outstanding.
+  structural-review record for 25 disposition fixtures across
+  ConQuest, FACETS, TAM, immer, and sirt. Passing fixtures do not close
+  checklist row 64; actual normalizer bindings and the WP7 pilot remain
+  outstanding.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status
