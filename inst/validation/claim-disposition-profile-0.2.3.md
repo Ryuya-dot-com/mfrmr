@@ -19,6 +19,14 @@ semantic identifier. A checklist addition, deletion, reorder, or item rename
 requires a deliberate profile revision; it must not inherit a disposition by
 position.
 
+`mfrmr_release_readiness_review()` now verifies both recorded SHA-256 values,
+the exact row/order/item mapping, the 53/32/21 class counts, class-specific
+scope contracts, the nine conditional fallback codes, and allowed evidence
+states. It derives the current scope decision from the checklist rather than
+trusting the prose counts below. Profile integrity is a release-review gate;
+the number of open spine rows is a current portfolio decision, not evidence
+that the integrity audit itself failed.
+
 ## Disposition result
 
 | Portfolio class | Rows | Effect when incomplete |

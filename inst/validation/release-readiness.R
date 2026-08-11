@@ -154,6 +154,14 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
       target_version = target_version,
       ext = ".csv"
     ),
+    claim_disposition_profile = file.path(
+      validation_dir,
+      paste0("claim-disposition-profile-", target_version, ".csv")
+    ),
+    claim_disposition_record = file.path(
+      validation_dir,
+      paste0("claim-disposition-profile-", target_version, ".md")
+    ),
     gate_specification = file.path(
       validation_dir,
       paste0("release-gate-spec-", target_version, ".md")
@@ -332,6 +340,265 @@ mfrmr_release_readiness_file_sha256 <- function(path) {
   tryCatch(
     tolower(digest::digest(file = path, algo = "sha256")),
     error = function(...) NA_character_
+  )
+}
+
+mfrmr_release_readiness_recorded_artifact_sha256 <- function(path,
+                                                              artifact) {
+  lines <- mfrmr_release_readiness_read_lines(path)
+  hit <- lines[grepl(paste0("`", artifact, "`"), lines, fixed = TRUE)]
+  if (length(hit) != 1L) {
+    return(NA_character_)
+  }
+  fields <- trimws(strsplit(hit, "|", fixed = TRUE)[[1]])
+  if (length(fields) < 3L) {
+    return(NA_character_)
+  }
+  value <- tolower(gsub("`", "", fields[3L], fixed = TRUE))
+  if (!grepl("^[0-9a-f]{64}$", value)) NA_character_ else value
+}
+
+mfrmr_release_readiness_claim_disposition_contract <- function(checklist,
+                                                                profile) {
+  checklist_columns <- c("Item", "EvidenceStatus")
+  profile_columns <- c(
+    "ChecklistRow", "Item", "PortfolioClass", "ClaimGroup",
+    "UnmetAction", "FallbackCode", "Horizon", "Applicability"
+  )
+  checklist_schema_ok <- all(checklist_columns %in% names(checklist))
+  profile_schema_ok <- all(profile_columns %in% names(profile))
+  schema_ok <- checklist_schema_ok && profile_schema_ok
+
+  default <- data.frame(
+    ProfileContractOK = FALSE,
+    ChecklistSchemaOK = checklist_schema_ok,
+    ProfileSchemaOK = profile_schema_ok,
+    RowMappingOK = FALSE,
+    ItemIdentityOK = FALSE,
+    ClassCountsOK = FALSE,
+    ClassContractsOK = FALSE,
+    ConditionalFallbackSetOK = FALSE,
+    EvidenceStatusValuesOK = FALSE,
+    ChecklistRows = nrow(checklist),
+    ProfileRows = nrow(profile),
+    ReleaseSpineRows = NA_integer_,
+    ReleaseSpineClosedRows = NA_integer_,
+    ReleaseSpineOpenRows = NA_integer_,
+    ReleaseSpineConcernRows = NA_integer_,
+    ConditionalRows = NA_integer_,
+    ConditionalClosedRows = NA_integer_,
+    ConditionalFallbackRows = NA_integer_,
+    DeferredRows = NA_integer_,
+    DeferredConcernRows = NA_integer_,
+    ReleaseScopeDecision = "invalid_profile_no_decision",
+    Detail = if (schema_ok) "claim-disposition contract not evaluated" else
+      "claim-disposition or checklist schema is incomplete",
+    stringsAsFactors = FALSE
+  )
+  if (!schema_ok) {
+    return(default)
+  }
+
+  row_mapping_ok <- nrow(checklist) == nrow(profile) &&
+    identical(as.integer(profile$ChecklistRow), seq_len(nrow(checklist)))
+  item_identity_ok <- row_mapping_ok &&
+    identical(as.character(profile$Item), as.character(checklist$Item)) &&
+    anyDuplicated(profile$Item) == 0L &&
+    anyDuplicated(checklist$Item) == 0L &&
+    all(nzchar(as.character(profile$Item)))
+
+  expected_class_counts <- c(
+    release_spine = 53L, claim_conditional = 32L, deferred = 21L
+  )
+  observed_class_counts <- table(factor(
+    profile$PortfolioClass,
+    levels = names(expected_class_counts)
+  ))
+  class_values_ok <- all(
+    profile$PortfolioClass %in% names(expected_class_counts)
+  )
+  class_counts_ok <- class_values_ok && identical(
+    as.integer(observed_class_counts), unname(expected_class_counts)
+  )
+
+  spine <- profile$PortfolioClass == "release_spine"
+  conditional <- profile$PortfolioClass == "claim_conditional"
+  deferred <- profile$PortfolioClass == "deferred"
+  class_contracts_ok <-
+    all(profile$UnmetAction[spine] == "release_no_go") &&
+    all(profile$FallbackCode[spine] == "none_release_blocked") &&
+    all(profile$Horizon[spine] == "0.2.3") &&
+    all(profile$Applicability[spine] == "retained_supported_core_only") &&
+    all(profile$UnmetAction[conditional] == "claim_no_go_use_fallback") &&
+    all(profile$Horizon[conditional] == "0.2.3") &&
+    all(profile$Applicability[conditional] == "named_claim_only") &&
+    all(profile$UnmetAction[deferred] == "no_0_2_3_release_effect") &&
+    all(profile$Horizon[deferred] == "later") &&
+    all(profile$Applicability[deferred] ==
+          "excluded_from_0_2_3_release_scope")
+
+  expected_fallback_counts <- c(
+    retain_jml_point_estimates_and_exploratory_observation_table_se_no_ordinary_uncertainty_adjustment_or_correction = 1L,
+    suppress_gpcm_primary_slope_and_ordinary_uncertainty = 12L,
+    disable_automatic_ic_ranking_retain_raw_components = 2L,
+    retain_unidimensional_scope_no_dimension_selection_or_subscores = 10L,
+    retain_diagnostic_as_exploratory_no_inferential_decision = 2L,
+    exclude_secondary_external_numeric_aggregation = 2L,
+    disable_rater_owned_gpcm_primary_route = 1L,
+    retain_gpcm_fit_as_exploratory_no_decision = 1L,
+    disable_gpcm_dff_inferential_promotion = 1L
+  )
+  observed_fallback_counts <- table(profile$FallbackCode[conditional])
+  conditional_fallback_set_ok <-
+    setequal(names(observed_fallback_counts), names(expected_fallback_counts)) &&
+    identical(
+      as.integer(observed_fallback_counts[names(expected_fallback_counts)]),
+      unname(expected_fallback_counts)
+    )
+
+  evidence_status <- as.character(checklist$EvidenceStatus)
+  evidence_status_values_ok <- all(
+    evidence_status %in% c("not_run", "review", "ok", "concern")
+  )
+  contract_ok <- row_mapping_ok && item_identity_ok && class_counts_ok &&
+    class_contracts_ok && conditional_fallback_set_ok &&
+    evidence_status_values_ok
+
+  spine_closed <- sum(spine & evidence_status == "ok")
+  spine_open <- sum(spine & evidence_status != "ok")
+  spine_concern <- sum(spine & evidence_status == "concern")
+  conditional_closed <- sum(conditional & evidence_status == "ok")
+  conditional_fallback <- sum(conditional & evidence_status != "ok")
+  deferred_concern <- sum(deferred & evidence_status == "concern")
+  release_scope_decision <- if (!contract_ok) {
+    "invalid_profile_no_decision"
+  } else if (spine_open > 0L) {
+    paste0("release_no_go_", spine_open, "_spine_rows_open")
+  } else {
+    "release_spine_rows_complete_other_release_gates_still_apply"
+  }
+
+  data.frame(
+    ProfileContractOK = contract_ok,
+    ChecklistSchemaOK = checklist_schema_ok,
+    ProfileSchemaOK = profile_schema_ok,
+    RowMappingOK = row_mapping_ok,
+    ItemIdentityOK = item_identity_ok,
+    ClassCountsOK = class_counts_ok,
+    ClassContractsOK = class_contracts_ok,
+    ConditionalFallbackSetOK = conditional_fallback_set_ok,
+    EvidenceStatusValuesOK = evidence_status_values_ok,
+    ChecklistRows = nrow(checklist),
+    ProfileRows = nrow(profile),
+    ReleaseSpineRows = sum(spine),
+    ReleaseSpineClosedRows = spine_closed,
+    ReleaseSpineOpenRows = spine_open,
+    ReleaseSpineConcernRows = spine_concern,
+    ConditionalRows = sum(conditional),
+    ConditionalClosedRows = conditional_closed,
+    ConditionalFallbackRows = conditional_fallback,
+    DeferredRows = sum(deferred),
+    DeferredConcernRows = deferred_concern,
+    ReleaseScopeDecision = release_scope_decision,
+    Detail = paste0(
+      "spine=", spine_closed, " closed/", spine_open, " open; ",
+      "conditional=", conditional_closed, " closed/",
+      conditional_fallback, " fallback; deferred=", sum(deferred),
+      "; deferred_concerns=", deferred_concern
+    ),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_release_readiness_claim_disposition_status <- function(
+    paths,
+    target_version = NULL) {
+  target_version <- target_version %||% paths$target_version
+  if (!mfrmr_release_readiness_contract_applies(target_version)) {
+    return(data.frame(
+      ClaimDispositionStatus = "not_applicable",
+      ProfileIntegrityOK = TRUE,
+      HashBindingOK = NA,
+      ProfileContractOK = NA,
+      ReleaseSpineRows = NA_integer_,
+      ReleaseSpineClosedRows = NA_integer_,
+      ReleaseSpineOpenRows = NA_integer_,
+      ConditionalRows = NA_integer_,
+      ConditionalFallbackRows = NA_integer_,
+      DeferredRows = NA_integer_,
+      DeferredConcernRows = NA_integer_,
+      ReleaseScopeDecision = "not_applicable_before_0.2.3",
+      Detail = "claim-disposition contract applies from 0.2.3",
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  checklist_path <- paths$evidence_checklist %||% ""
+  profile_path <- paths$claim_disposition_profile %||% ""
+  record_path <- paths$claim_disposition_record %||% ""
+  available <- all(file.exists(c(checklist_path, profile_path, record_path)))
+  if (!available) {
+    return(data.frame(
+      ClaimDispositionStatus = "concern",
+      ProfileIntegrityOK = FALSE,
+      HashBindingOK = FALSE,
+      ProfileContractOK = FALSE,
+      ReleaseSpineRows = NA_integer_,
+      ReleaseSpineClosedRows = NA_integer_,
+      ReleaseSpineOpenRows = NA_integer_,
+      ConditionalRows = NA_integer_,
+      ConditionalFallbackRows = NA_integer_,
+      DeferredRows = NA_integer_,
+      DeferredConcernRows = NA_integer_,
+      ReleaseScopeDecision = "invalid_profile_no_decision",
+      Detail = "claim-disposition checklist, profile, or record is missing",
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  checklist <- tryCatch(
+    utils::read.csv(checklist_path, stringsAsFactors = FALSE,
+                    check.names = FALSE),
+    error = function(...) data.frame()
+  )
+  profile <- tryCatch(
+    utils::read.csv(profile_path, stringsAsFactors = FALSE,
+                    check.names = FALSE),
+    error = function(...) data.frame()
+  )
+  contract <- mfrmr_release_readiness_claim_disposition_contract(
+    checklist, profile
+  )
+  recorded_checklist_hash <-
+    mfrmr_release_readiness_recorded_artifact_sha256(
+      record_path, basename(checklist_path)
+    )
+  recorded_profile_hash <-
+    mfrmr_release_readiness_recorded_artifact_sha256(
+      record_path, basename(profile_path)
+    )
+  actual_checklist_hash <- mfrmr_release_readiness_file_sha256(checklist_path)
+  actual_profile_hash <- mfrmr_release_readiness_file_sha256(profile_path)
+  hash_binding_ok <- !anyNA(c(
+    recorded_checklist_hash, recorded_profile_hash,
+    actual_checklist_hash, actual_profile_hash
+  )) && identical(recorded_checklist_hash, actual_checklist_hash) &&
+    identical(recorded_profile_hash, actual_profile_hash)
+  profile_integrity_ok <- isTRUE(contract$ProfileContractOK[1]) &&
+    isTRUE(hash_binding_ok)
+
+  cbind(
+    data.frame(
+      ClaimDispositionStatus = if (profile_integrity_ok) "ok" else "concern",
+      ProfileIntegrityOK = profile_integrity_ok,
+      HashBindingOK = hash_binding_ok,
+      RecordedChecklistSHA256 = recorded_checklist_hash,
+      ActualChecklistSHA256 = actual_checklist_hash,
+      RecordedProfileSHA256 = recorded_profile_hash,
+      ActualProfileSHA256 = actual_profile_hash,
+      stringsAsFactors = FALSE
+    ),
+    contract
   )
 }
 
@@ -2023,6 +2290,7 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
                                                  candidate_identity_status = NULL,
                                                  gate_results_status = NULL,
                                                  public_scope_status = NULL,
+                                                 claim_disposition_status = NULL,
                                                  prose_count_status = NULL,
                                                  example_policy_status = NULL,
                                                  check_timing_scope = c(
@@ -2125,6 +2393,18 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   } else {
     "concern"
   }
+  claim_disposition_gate_status <- if (is.null(claim_disposition_status)) {
+    if (identity_contract_applies) "concern" else "ok"
+  } else if (identical(
+    claim_disposition_status$ClaimDispositionStatus[1],
+    "not_applicable"
+  )) {
+    "ok"
+  } else if (isTRUE(claim_disposition_status$ProfileIntegrityOK[1])) {
+    "ok"
+  } else {
+    "concern"
+  }
   prose_count_gate_status <- if (is.null(prose_count_status)) {
     if (identity_contract_applies) "concern" else "ok"
   } else if (identical(
@@ -2147,7 +2427,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   rows <- data.frame(
     Gate = c(
       "version_contract", "source_truth", "candidate_identity",
-      "gate_results", "public_scope", "evidence_counts", "package_check",
+      "gate_results", "public_scope", "claim_disposition",
+      "evidence_counts", "package_check",
       "check_timing", "example_policy", "release_evidence_freshness",
       "ci_workflow", "terminology", "evidence_artifacts"
     ),
@@ -2157,6 +2438,7 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
       candidate_identity_gate_status,
       gate_results_gate_status,
       public_scope_gate_status,
+      claim_disposition_gate_status,
       prose_count_gate_status,
       package_check_status,
       check_timing_status,
@@ -2231,6 +2513,22 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
           "; future_arguments_absent=",
           public_scope_status$FutureArgumentsAbsent[1],
           "; detail=", public_scope_status$Detail[1]
+        )
+      },
+      if (is.null(claim_disposition_status)) {
+        "claim-disposition profile not checked separately"
+      } else {
+        paste0(
+          "status=", claim_disposition_status$ClaimDispositionStatus[1],
+          "; integrity=", claim_disposition_status$ProfileIntegrityOK[1],
+          "; hash_binding=", claim_disposition_status$HashBindingOK[1],
+          "; spine_closed=",
+          claim_disposition_status$ReleaseSpineClosedRows[1],
+          "; spine_open=", claim_disposition_status$ReleaseSpineOpenRows[1],
+          "; conditional_fallback=",
+          claim_disposition_status$ConditionalFallbackRows[1],
+          "; deferred=", claim_disposition_status$DeferredRows[1],
+          "; decision=", claim_disposition_status$ReleaseScopeDecision[1]
         )
       },
       if (is.null(prose_count_status)) {
@@ -2452,6 +2750,11 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     target_version = target_version
   )
   checklist_status <- mfrmr_release_readiness_checklist_status(paths$evidence_checklist)
+  claim_disposition_status <-
+    mfrmr_release_readiness_claim_disposition_status(
+      paths,
+      target_version = target_version
+    )
   gate_results_status <- mfrmr_release_readiness_gate_results_status(
     paths,
     candidate_identity_status = candidate_identity_status,
@@ -2475,6 +2778,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     candidate_identity_status = candidate_identity_status,
     gate_results_status = gate_results_status,
     public_scope_status = public_scope_status,
+    claim_disposition_status = claim_disposition_status,
     prose_count_status = prose_count_status,
     example_policy_status = example_policy_status,
     check_timing_scope = check_timing_scope
@@ -2496,6 +2800,7 @@ mfrmr_release_readiness_review <- function(pkg_dir = ".",
     candidate_identity_status = candidate_identity_status,
     gate_results_status = gate_results_status,
     public_scope_status = public_scope_status,
+    claim_disposition_status = claim_disposition_status,
     prose_count_status = prose_count_status,
     check_status = check_status,
     freshness_status = freshness_status,
@@ -2525,6 +2830,7 @@ summary.mfrmr_release_readiness_review <- function(object, ...) {
     candidate_identity_status = object$candidate_identity_status,
     gate_results_status = object$gate_results_status,
     public_scope_status = object$public_scope_status,
+    claim_disposition_status = object$claim_disposition_status,
     prose_count_status = object$prose_count_status,
     freshness_status = object$freshness_status,
     ci_workflow_status = object$ci_workflow_status,
@@ -2554,6 +2860,16 @@ print.summary.mfrmr_release_readiness_review <- function(x, ...) {
   if (!is.null(x$gpcm_scope_status)) {
     cat("\nGPCM scope status:\n")
     print(x$gpcm_scope_status, row.names = FALSE)
+  }
+  if (!is.null(x$claim_disposition_status)) {
+    cat("\nClaim-disposition status:\n")
+    fields <- intersect(c(
+      "ClaimDispositionStatus", "ProfileIntegrityOK",
+      "ReleaseSpineClosedRows", "ReleaseSpineOpenRows",
+      "ConditionalFallbackRows", "DeferredRows", "ReleaseScopeDecision"
+    ), names(x$claim_disposition_status))
+    print(x$claim_disposition_status[, fields, drop = FALSE],
+          row.names = FALSE)
   }
   if (isTRUE(x$external_recovery_status$ExternalRecoveryRequested[1])) {
     cat("\nExternal recovery status:\n")

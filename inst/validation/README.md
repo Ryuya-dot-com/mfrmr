@@ -52,6 +52,11 @@ identify whether the opt-in layer ran and retain its test log.
 - `readiness-contract-0.2.3.R`: dependency-free repository validator and
   machine-readable catalog for readiness states, reason codes, condition
   classes, deterministic fit derivation, and legacy mapping.
+- `claim-disposition-profile-0.2.3.csv` and `.md`: the hash-bound single
+  portfolio overlay mapping all checklist items to the mandatory release
+  spine, claim-specific fail-closed fallbacks, or deferred work. The central
+  release-readiness review verifies its integrity and reports the current
+  spine-open decision without treating deferred concerns as release blockers.
 - `readiness-contract-fixtures-0.2.3.csv`: 36 exact positive, negative,
   migration, and FACETS-comparison expectations covering balanced, sparse,
   two-rater, category-support, extreme-score, numerical, and external-result

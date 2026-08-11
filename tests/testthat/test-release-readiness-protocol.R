@@ -2677,7 +2677,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
     "prompt_steps", "gate_summary", "release_decision",
     "version_status", "check_status", "freshness_status", "ci_workflow_status",
     "source_truth_status", "candidate_identity_status", "public_scope_status",
-    "gate_results_status", "prose_count_status",
+    "gate_results_status", "claim_disposition_status", "prose_count_status",
     "terminology_status", "example_policy_status",
     "check_timing_scope",
     "checklist_status", "gpcm_scope_status", "external_recovery_status"
@@ -2714,6 +2714,15 @@ test_that("release-readiness protocol reviews the source tree shape", {
       review$prose_count_status$ProseCountStatus[1],
       "ok"
     )
+    expect_identical(
+      review$claim_disposition_status$ClaimDispositionStatus[1],
+      "ok"
+    )
+    expect_true(review$claim_disposition_status$ProfileIntegrityOK[1])
+    expect_identical(
+      review$claim_disposition_status$ReleaseScopeDecision[1],
+      "release_no_go_50_spine_rows_open"
+    )
   } else {
     expect_identical(
       review$candidate_identity_status$CandidateIdentityStatus[1],
@@ -2731,6 +2740,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
       review$prose_count_status$ProseCountStatus[1],
       "not_applicable"
     )
+    expect_identical(
+      review$claim_disposition_status$ClaimDispositionStatus[1],
+      "not_applicable"
+    )
   }
   expect_equal(review$gpcm_scope_status$GPCMScopeStatus[1], "ok")
   if (file.exists(file.path(pkg_root, ".github", "workflows", "R-CMD-check.yaml"))) {
@@ -2740,6 +2753,12 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_true(isTRUE(review$example_policy_status$ExamplePolicyOK[1]))
   expect_identical(
     review$gate_summary$Status[review$gate_summary$Gate == "example_policy"],
+    "ok"
+  )
+  expect_identical(
+    review$gate_summary$Status[
+      review$gate_summary$Gate == "claim_disposition"
+    ],
     "ok"
   )
   expect_true(isTRUE(review$checklist_status$ChecklistAvailable[1]))

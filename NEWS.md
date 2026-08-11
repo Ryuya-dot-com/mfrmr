@@ -10,6 +10,13 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   layer; `MFRMR_RUN_GTHEORY_SLOW=true` restores the complete isolated runs.
   This changes test scheduling only, not the archived model or evidence.
 
+* Made the existing 106-row claim-disposition profile a machine-checked part
+  of the central release-readiness review. Recorded hashes, item order,
+  53/32/21 class counts, class contracts, and all nine conditional fallbacks
+  now fail closed. The review separately reports current open mandatory rows,
+  active claim fallbacks, and deferred rows; it does not mistake a valid
+  profile for release readiness.
+
 * Completed the sealed four-arm ConQuest 5.47.5 additive RSM/PCM q31/q61
   calibration outside the filesystem sandbox. Exact native A-matrix checks
   establish the 7/9-dimensional sum-zero bases, and q31/q61 final coordinates
