@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a bounded GPCM low-basin quadrature P1b audit. The P1a-qualified local
+  basin is independently refit at q=31, 61, and 91 and every vector is
+  reevaluated at held-out q=121 with analytic and independent numeric scores,
+  labelled coordinates, EAPs, and posterior SDs. All 12 qualified arms pass
+  the existing native numerical rule and agree closely across q, whereas none
+  of the 12 predesignated default/high-variance diagnostic arms passes and
+  several fail dramatically on the common evaluator. This conditionally
+  closes the finite-q local-basin calibration, but it neither certifies the
+  continuous integral nor selects a package solution. Population-boundary,
+  uncertainty, DFF/fit/rank, simulation, and capability gates remain closed.
+
 * Added a bounded q=31 GPCM population-variance nuisance-profile P1a audit.
   At ten fixed `log_sigma2` values, all other free coordinates are reoptimized
   independently from the default and low-variance P0b basins using the same

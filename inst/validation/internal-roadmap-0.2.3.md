@@ -3972,6 +3972,26 @@ certificate. P2 uncertainty and P3 downstream metrics remain blocked, and the
 complete 80-row polished path is opt-in so ordinary regression testing does
 not turn this bounded gate into a persistent runtime burden.
 
+P1b is now complete in
+`gpcm-low-basin-quadrature-p1b-0.2.3.R` and its execution record. It refits the
+four P1a-qualified low-basin candidates independently at q=31, 61, and 91 and
+evaluates every returned vector at held-out q=121. All 12 qualified arms pass
+the existing native numerical rule; across their 12 q pairs the maximum common
+objective difference is about `1.14e-13`, labelled-coordinate differences stay
+below `1e-11`, and the maximum common EAP difference is about `5.42e-12`.
+Exact and near high/low reflection differences are also stable across q, but
+no reflection tolerance is inferred.
+
+The predesignated default/high-variance lane remains diagnostic-only by
+construction. Zero of its 12 arms passes native stationarity, and the held-out
+evaluator exposes objective, score, population-scale, and EAP instability that
+cannot be explained by printed decimal rounding. Accordingly P1b closes only
+the finite-q calibration of one local basin. It does not select a package
+solution or certify the continuous integral. The next efficient slice is the
+population-boundary plus source-solution selection contract, alongside the
+separate fixed-facet Rater endpoint lane; adding more q values, Hessian work,
+downstream DFF/fit/rank work, or broad simulation cannot bypass those gates.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

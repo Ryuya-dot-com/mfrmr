@@ -154,6 +154,18 @@ so the result is a qualified local basin rather than a global, boundary, or
 reflection-invariant profile. The broad two-basin q cross is therefore not
 authorized.
 
+The P1b record,
+`gpcm-low-basin-quadrature-p1b-record-0.2.3.md`, then performs only the
+admissible cross: independent q=31/61/91 refits of the qualified low basin,
+with a predesignated but comparison-ineligible default diagnostic lane and one
+held-out q=121 evaluator. All 12 qualified arms pass the existing native rule;
+their common objectives, labelled coordinates, EAPs, and posterior SDs remain
+closely aligned across q. Zero of 12 default diagnostic arms passes native
+stationarity, and common evaluation exposes severe node/path sensitivity.
+Finite-q stability is therefore conditionally supported for one local basin,
+but no observed difference is converted into a tolerance, no continuous
+integral is certified, and no package solution is selected.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -255,12 +267,13 @@ not retrospective widening of the tolerance.
    separate fixed-facet boundary lane.
 2. **P1 -- boundary and integration adjudication.** Complete the retained JML
    joint additive/log-slope scope, add the separate MML fixed-facet/slope and
-   variance-profile scopes. P1a now admits the low-variance basin to a bounded
-   q=31/61/91 refit and common-dense-grid audit; retain the default/high basin
-   only as a diagnostic start unless its nuisance stationarity is repaired.
-   Do not freeze q or a local-solution tolerance from the historical
-   five-replicate panel, and do not call finite-grid agreement a continuous-
-   integral certificate.
+   variance-profile scopes. P1a admitted the low-variance basin to a bounded
+   q=31/61/91 refit, and P1b now conditionally closes that finite-q calibration
+   under a held-out q=121 evaluator. Retain the default/high basin only as a
+   diagnostic trace unless its stationarity is independently repaired. Next
+   define the population-boundary and source-solution selection contracts;
+   do not add q points by default, freeze an observed local-solution tolerance,
+   or call finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

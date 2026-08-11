@@ -186,6 +186,17 @@ high/low discrepancies. This supports carrying only the low-variance basin
 forward as a qualified local candidate; it does not establish a global
 profile, a variance-boundary limit, or solution selection.
 
+The bounded P1b follow-up independently refits that qualified local candidate
+at q=31, 61, and 91 and reevaluates all vectors at held-out q=121. All 12 low-
+basin arms pass the existing native numerical rule and remain closely aligned
+in common objective, labelled coordinates, Person EAP, and posterior SD. In
+contrast, none of the 12 predesignated default/high-variance diagnostic arms
+passes native stationarity, and several have enormous q=121 objective and
+score discrepancies. This closes only the finite-q calibration of one local
+basin. It neither supplies a continuous-integral certificate nor authorizes
+source-solution replacement; population-boundary and selection contracts
+remain ahead of Hessian, DFF, fit, and ranking work.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
@@ -238,6 +249,7 @@ The companion `gpcm-solution-decision-stability-roadmap-0.2.3.md` defines the
 next cross-cutting gate for Hessian uncertainty, slope/variance boundaries,
 multiple solutions, quadrature, canonical objective/gradient/free-dimension
 agreement, transformed-coordinate differences, and exact DFF/fit/rank/
-readiness decision signatures. Its P0b record now closes the reflected Person
-exact/near instrumentation slice but leaves population boundary and integration
-adjudication open; it does not authorize a large simulation.
+readiness decision signatures. P0b, P1a, and P1b now narrow the reflected
+Person MML result to one finite-q-stable local low-variance candidate while
+leaving the population boundary, source-solution selection, and continuous-
+integration questions open; they do not authorize a large simulation.

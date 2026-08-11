@@ -575,6 +575,20 @@ next q=31/61/91 audit is limited to the qualified low-variance local candidate,
 with the default basin retained only diagnostically. This is not a selected
 package solution, a global profile, or a continuous-integration result.
 
+That bounded q audit is now complete as P1b. Independent q=31/61/91 refits of
+the four qualified low-variance endpoint candidates all pass the existing
+native numerical rule and remain coherent under a held-out q=121 objective,
+score, labelled-coordinate, EAP, and posterior-SD evaluator. The largest
+qualified q-pair common-objective difference is about `1.14e-13`; the largest
+labelled-coordinate difference is below `1e-11`, and the largest common EAP
+difference is about `5.42e-12`. These observed values are not acceptance
+tolerances. None of the 12 predesignated default/high-variance diagnostic arms
+passes native stationarity, and their common-evaluator failures can be
+enormous. P1b therefore redirects the next work from adding more q points to
+population-boundary and source-solution selection contracts. It still does
+not authorize a default replacement, continuous-integration certificate,
+Hessian inference, DFF/fit/rank decisions, or broad simulation.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

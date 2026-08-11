@@ -111,6 +111,15 @@ identify whether the opt-in layer ran and retain its test log.
   endpoint cases, whereas the high-variance tails remain nonstationary. The
   diagnostic envelope is not promoted to a global profile or boundary result;
   its complete 80-row execution is opt-in rather than part of ordinary tests.
+- `gpcm-low-basin-quadrature-p1b-0.2.3.R` and
+  `gpcm-low-basin-quadrature-p1b-record-0.2.3.md`: independent q=31/61/91
+  refits of the P1a-qualified low-variance basin plus a predesignated
+  diagnostic-default lane. Every returned vector is reevaluated on held-out
+  q=121 for objective, analytic/numeric score, labelled coordinates, EAP, and
+  posterior SD. The low lane is coherent across finite q; the nonstationary
+  default lane is excluded before comparison. No tolerance, continuous-
+  integral certificate, solution selection, or downstream inference is
+  promoted, and the 24-arm execution is opt-in.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
