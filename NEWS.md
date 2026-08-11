@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Established the exact narrow overlap between ConQuest 5.47.5
+  `scoresfree` GPCM and mfrmr's bounded item-owned GPCM under active latent
+  regression. A deterministic coordinate/probability contract and one native
+  31-node microcase verify the latent-scale, Tau, item, step, regression, and
+  objective map. Default unconditional MML, standard multifacet
+  generalized-item scores, JML free-score estimation, and multidimensional
+  GPCM remain different or unsupported strata. The external row moves to
+  deferred review only; no tolerance, candidate, many-facet equivalence, or
+  release claim is promoted.
+
 * Added a deterministic metric-specific eligibility contract for external
   comparisons. Exact program/family/estimator/correction and data, facet,
   category, anchor, coordinate, identification, conditioning, and boundary
@@ -18,14 +28,14 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   identity and candidate-linked WP7 execution require a portable bundle from
   a licensed external environment and cannot be closed by mocks.
 
-* Split four repository-only G-theory execution/exact-resume validations from
+* Split four internal G-theory execution/exact-resume validations from
   their fast contract, hash, mutation, and fail-closed checks. Ordinary tests
   retain the structural checks and report explicit skips for the execution
   layer; `MFRMR_RUN_GTHEORY_SLOW=true` restores the complete isolated runs.
   This changes test scheduling only, not the archived model or evidence.
 
 * Made the existing 106-row claim-disposition profile a machine-checked part
-  of the central release-readiness review. Recorded hashes, item order,
+  of the central release review. Recorded hashes, item order,
   53/32/21 class counts, class contracts, and all nine conditional fallbacks
   now fail closed. The review separately reports current open mandatory rows,
   active claim fallbacks, and deferred rows; it does not mistake a valid

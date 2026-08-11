@@ -24,9 +24,9 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 
 | Quantity | Result |
 | --- | ---: |
-| External artifact paths | 93 |
+| External artifact paths | 97 |
 | External software families | 4 |
-| Classified tracked data assets | 33 |
+| Classified tracked data assets | 34 |
 | Unclassified tracked data assets | 0 |
 | Allowed synthetic local-path fixtures | 1 |
 | Prohibited findings | 0 |
@@ -34,7 +34,7 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 | Non-relative tracked paths | 0 |
 
 The four separately retained families are ConQuest, FACETS, TAM, and immer.
-The 33 data assets are explicitly limited to documented synthetic package
+The 34 data assets are explicitly limited to documented synthetic package
 data, synthetic vignette aggregates, schema/contract fixtures, and one
 synthetic compatibility fixture; an unclassified CSV, R data object, or
 serialized table fails closed.
@@ -43,7 +43,7 @@ The one allowed path fixture is the deliberately fictitious negative case in
 and is not evidence or a real local identity.
 
 The canonical path/family/role/file-hash manifest has SHA-256
-`0644ac6e1184186ad6723bb0a856a9f225eed9d0421409211a5768bf6cbbfb31`.
+`d69ac429f0848096f1b32b1ae03d8f736534a3e9a1b1bf8fb912e96987f27490`.
 Paths use bytewise radix order so locale cannot change the identity. The
 manifest is reconstructed in memory so a newly tracked or changed external
 artifact cannot inherit an earlier hash.
@@ -76,7 +76,7 @@ copies a matched value into its result or test output.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `external-repository-boundary-audit-0.2.3.R` | `70b5d3b9fbfa4d685aa51e44ccbb114b26f1dc9d2755aa8f56861435e1836cb1` |
+| `external-repository-boundary-audit-0.2.3.R` | `ca4a9ae6556bc6e1ff7c8d612f65a8f1d329ac2851872aace8381a0ef0cd199e` |
 | `test-external-repository-boundary-audit.R` | `545dfc06e0693e6de9eb3dd90fa6c112e268e45f7d279dec999e8a7ee7bcb6d6` |
 | sanitized portfolio/ConQuest audit | `2fdaa8f70add2f2da5122f2e68f879d27711fab18e1231931249254e7b0b7358` |
 

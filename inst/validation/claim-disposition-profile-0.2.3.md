@@ -10,7 +10,7 @@ execution, candidate freeze, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `0dab2a0530fb725a7e715ca1fc48fedada2fcd88fc9a6e597b6665d9e15d8f55` |
+| `release-evidence-checklist-0.2.3.csv` | `c3b06b9909c2afee0e086aff6760ef4cd1cc079cfd1a89bfe1e6ae640ff74f53` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`

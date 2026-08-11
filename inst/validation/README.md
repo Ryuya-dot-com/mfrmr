@@ -62,6 +62,14 @@ identify whether the opt-in layer ran and retain its test log.
   retains only finding classes and repository-relative paths, recomputes the
   external artifact manifest, and does not inspect or authorize ignored local
   result directories.
+- `conquest-gpcm-overlap-contract-0.2.3.R`, its machine-readable registry,
+  and companion record: exact item-only active-latent-regression map between
+  mfrmr's geometric-mean-one slopes plus estimated residual variance and
+  ConQuest's variance-one `scoresfree` Taux. The record binds one completed
+  native MML microcase and explicitly rejects unconditional common-slope,
+  standard multifacet generalized-item, JML free-score, and multidimensional
+  generalization. It launches no external program and promotes no comparison
+  row.
 - `readiness-contract-fixtures-0.2.3.csv`: 36 exact positive, negative,
   migration, and FACETS-comparison expectations covering balanced, sparse,
   two-rater, category-support, extreme-score, numerical, and external-result

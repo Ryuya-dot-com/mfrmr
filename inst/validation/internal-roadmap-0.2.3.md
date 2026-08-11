@@ -1977,9 +1977,23 @@ Wave C starts with an additive Person/Rater/Criterion RSM/PCM complete-crossing
 microcase, explicit native-export precision, and native A-matrix adjudication;
 only then may a connected sparse/unequal-workload case be considered.
 Candidate-bound binary/polytomous replication remains later than this schema
-gate. ConQuest `scoresfree` GPCM coordinates require an exact probability-level
-mapping before any bounded-GPCM comparison. Display rounding, shared output
-labels, or unmatched estimator modes cannot create an agreement claim.
+gate. The exact probability-level audit in
+`conquest-gpcm-overlap-record-0.2.3.md` now establishes one narrow bounded-
+GPCM common stratum: item-only MML with active latent regression. Under
+`theta = beta_0 + X beta + sigma epsilon`, mfrmr's geometric-mean-one slopes
+map to ConQuest Taux as `Tau_i = sigma a_i`, with the regression, item, and
+step coordinates transformed at the same time. The installed ConQuest 5.47.5
+completed that 31-node microcase and reproduced the transformed structural
+coordinates and deviance descriptively. It remains review-only because the
+mfrmr fit did not pass its terminal-gradient readiness rule, CSV rounding and
+a prospective tolerance are unresolved, and no candidate was bound.
+
+This item-only map does not extend to a standard multifacet `scoresfree` run.
+ConQuest then owns scores by generalized-item facet combinations, whereas the
+current mfrmr kernel gives one selected Criterion or Rater the slope that
+multiplies all active facet terms. ConQuest JML also cannot estimate item
+scores. Display rounding, shared output labels, C-matrix labels, or unmatched
+estimator/owner modes cannot create a many-facet agreement claim.
 
 The first corrective artifact is now complete in
 `claim-disposition-profile-0.2.3.csv` and its companion record. It maps all 106
@@ -3285,6 +3299,14 @@ pooled averages cannot satisfy a blocker.
 
 External roles are fixed as follows:
 
+- ConQuest 5.47.5 `scoresfree` is now the candidate bounded-GPCM MML
+  reference for the exact item-only active-latent-regression stratum. The
+  transform is `z=(theta-beta_0)/sigma`, `beta_CQ=beta/sigma`,
+  `Tau_i,CQ=sigma a_i`, `delta_i,CQ=a_i(delta_i-beta_0)`, and
+  `step_ik,CQ=a_i step_ik`. Default unconditional MML, JML free-score,
+  generalized-item multifacet, and multidimensional rows are different
+  strata and remain rejected or deferred. This narrow kernel/integration
+  reference cannot close Criterion- or Rater-owned MFRM evidence.
 - local FACETS 4.5.0 supplies the RSM/PCM and fixed/equal-discrimination
   many-facet reference plus deliberately different post-fit discrimination,
   bias, interaction, and residual outputs. Table 7 discrimination is never a
@@ -4840,9 +4862,12 @@ model cannot silently create a multidimensional `mfrmr` support claim.
 - [ ] Keep proprietary binaries and identifier-bearing case files outside the
   package while retaining commands, synthetic/public inputs, normalized
   aggregate outputs, hashes, versions, and run dates needed for audit.
-- [ ] Treat bounded-GPCM external rows as extended evidence until a genuinely
-  matched external likelihood and identification contract is documented; they
-  cannot silently expand the mandatory overlap scope.
+- [x] Derive and test the exact ConQuest/mfrmr item-only active-latent-
+  regression GPCM likelihood and coordinate map, then complete one native
+  structural microcase. Keep it as deferred review evidence: no numerical row
+  is eligible until a new candidate, raw-token rule, integration ladder,
+  mfrmr fit readiness, and prospective tolerance are all bound. Reject
+  standard multifacet and JML rows rather than silently expanding the map.
 
 ### FACETS coverage and release tooling
 
