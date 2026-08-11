@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-11.
+Status: repository-only maintainer plan, refined 2026-08-12.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -3915,6 +3915,22 @@ cannot be transported to the current free-population default or used to freeze
 a tolerance. Large simulation remains reserved for coverage and error-rate
 questions that deterministic algebra, boundary paths, and microcases cannot
 answer.
+
+The first P0 instrument and execution record are now complete in
+`gpcm-solution-stability-p0-0.2.3.R` and
+`gpcm-solution-stability-p0-record-0.2.3.md`. The fixed benign
+free-population GPCM-MML microcase registers seven starts before fitting,
+reuses one canonical objective, compares analytic and independent numeric
+scores, reconciles five total-free-dimension counts, and maps every candidate
+to labelled additive, step, slope, and population coordinates. All seven are
+eligible for descriptive comparison under the existing optimizer rule, but
+all seven remain `P0StabilityEligible = FALSE`: no solution tolerance,
+boundary rule, or integration rule is frozen. The compact signature also
+leaves boundary, Hessian, interval, DFF, fit, rank, and separation fields
+explicitly unevaluated. Thus this closes P0 instrumentation for one microcase,
+not P0 evidence scope. The next admissible GPCM slice is the bounded endpoint/
+near-boundary start-by-q cross and separate marginal-MML slope/variance
+profiles; P2--P3 work cannot be used to bypass it.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

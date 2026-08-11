@@ -543,6 +543,16 @@ addition to class-wise transformed-coordinate tolerances. A positive-definite
 local Hessian, code-zero optimizer, close dense-grid objective, or high rank
 correlation cannot substitute for the preceding gates.
 
+Its first repository-only P0 instrumentation slice is now complete for one
+fixed, benign, free-population GPCM-MML microcase. Seven preregistered starts
+are compared through one canonical objective, analytic and independent numeric
+scores, five free-dimension counts, labelled expanded coordinates, and an exact
+fail-closed decision signature. All seven returned near the same numerical
+solution, but no tolerance is frozen and all boundary, Hessian, interval, DFF,
+fit, rank, and separation fields remain explicitly unevaluated. The result is
+therefore a working gate instrument, not a global-maximum or inference-ready
+claim; endpoint/near-boundary and start-by-quadrature adjudication remain next.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

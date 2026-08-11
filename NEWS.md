@@ -4,14 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
-* Added a GPCM solution and decision-stability roadmap. It
-  orders canonical objective/gradient/free-dimension agreement, deterministic
-  multiple starts, common-grid quadrature checks, additive/slope/variance
-  boundary adjudication, Hessian and interval eligibility, transformed-
-  coordinate comparisons, and exact DFF/infit/outfit/rank/readiness decision
-  signatures. Regularized covariance, code-zero convergence, close objectives,
-  and high rank correlations are explicitly insufficient on their own. No
-  tolerance, simulation, formal DFF/fit rule, or capability is promoted.
+* Added a GPCM solution and decision-stability roadmap and its first
+  deterministic P0 validation instrument. Seven fixed GPCM-MML starts are
+  reevaluated through one canonical objective, analytic and independent
+  numeric scores, five free-dimension counts, labelled expanded coordinates,
+  and a fail-closed decision signature. The fixed benign microcase returned
+  near one numerical solution, but boundary, Hessian, interval, DFF, fit,
+  rank, and separation gates remain explicitly unevaluated. Regularized
+  covariance, code-zero
+  convergence, close objectives, and high rank correlations are insufficient
+  on their own; no tolerance, simulation, formal DFF/fit rule, selected
+  solution, or capability is promoted.
 
 * Refined the five-category endpoint-response roadmap. It now
   separates all-5/all-1 Persons from all-5/all-1 Raters, observed support from
