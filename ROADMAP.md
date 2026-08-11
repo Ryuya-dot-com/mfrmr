@@ -524,6 +524,15 @@ diagnostic summaries inherit the source fit's readiness rather than appearing
 to overrule it. Central functions execute and plots remain visibly review-only,
 but this promotes no GPCM capability row: global additive/log-slope boundary,
 covariance/SE/CI, owner-specific evidence, and external overlap remain open.
+The same record now fixes a compact endpoint-response ladder rather than a new
+large simulation: sign-symmetric all-1/all-5 Persons, isolated and joint
+all-1/all-5 Raters, a response-constant non-recession control, anchors,
+near-extreme support, interaction cells, and category/step support. The release
+order is deterministic boundary attribution, public-surface propagation,
+estimator-specific JML/MML/adjustment semantics, and fit/DFF eligibility; only
+then may bounded operating-characteristic simulation or external FACETS work
+begin. An endpoint Rater is a support warning, not by itself proof of an
+infinite facet estimate.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

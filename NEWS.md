@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Refined the repository-only five-category endpoint-response roadmap. It now
+  separates all-5/all-1 Persons from all-5/all-1 Raters, observed support from
+  certified constrained recession, isolated from joint attribution, JML
+  extended boundaries from MML EAPs and adjusted displays, and exact from
+  near-extreme patterns. Deterministic sign, negative, anchor, interaction,
+  category, and public-surface gates precede any bounded simulation or external
+  FACETS work. This planning change promotes no GPCM, fit, DFF, or external
+  capability.
+
 * Bound the retained ConQuest additive RSM/PCM four-arm review to the generic
   external-comparison eligibility ledger. A pre-result registry fixes 36
   coordinate rows; all 36 retained results are observed, successful, and

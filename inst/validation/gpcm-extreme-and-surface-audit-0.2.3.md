@@ -111,3 +111,95 @@ Secondary category/information artifacts compute on review-only fits but do not
 yet all embed the complete readiness record. That adapter propagation remains a
 bounded row-23 follow-up; it does not justify expanding this audit into an
 inventory-wide visualization rewrite or a large simulation.
+
+## Refined five-category endpoint roadmap
+
+The next work must distinguish an observed endpoint pattern from a parameter
+boundary. Throughout this section, "all 5" and "all 1" refer only to retained,
+positive-weight contributing rows after missing-value processing. A 95% endpoint
+rate is near-extreme weak information, not an exact extreme sufficient score.
+
+For the implemented additive orientation, increasing a free Person measure
+raises category probabilities, while increasing a Rater severity lowers them.
+Consequently, a separately free JML Person with all 5 has a `+Inf` primary
+measure and one with all 1 has a `-Inf` primary measure. An all-5 Rater suggests
+the candidate leniency direction `severity -> -Inf`, and an all-1 Rater suggests
+`severity -> +Inf`, but neither conclusion follows from the raw response rate
+alone. Centering, anchors, crossed support, other facet coordinates, steps, and
+interactions can couple or close the direction. A constrained structural or
+joint likelihood-recession certificate is therefore required before a
+non-Person primary value can be called unbounded.
+
+MML has a different contract. An endpoint Person receives a finite
+prior/population-regularized EAP, not a finite ordinary Person MLE. Integration
+over Persons does not automatically regularize a fixed Rater, Criterion, step,
+or interaction coordinate. JML recession certificates cannot be copied to the
+marginal likelihood, and a finite MML optimizer coordinate is not proof of an
+interior marginal maximum. Any finite extreme-score adjustment or finite-item
+bias correction is a third, explicitly named estimator/display stratum; it is
+not the maximizer of the unmodified JML likelihood.
+
+### Deterministic scenario ladder
+
+| ID | Five-category construction | Required conclusion | Current state |
+| --- | --- | --- | --- |
+| `EXT5-P-HI` | One independently free Person receives 5 from every assigned Rater on every Criterion; all other data retain categories 1--5. | JML primary `+Inf`; optimizer iterate trace-only; MML finite EAP with provenance. | Covered in the retained combined challenge. |
+| `EXT5-P-LO` | Sign-reversed all-1 Person with otherwise retained 1--5 support. | JML primary `-Inf`; the same SE/CI/ranking exclusions as the high endpoint; MML finite EAP. | Generic low/high Person contract is tested; a full five-category GPCM surface-parity case remains. |
+| `EXT5-R-HI` | One Rater gives 5 on every retained Person-by-Criterion assignment, first without any extreme Person. | Record the support boundary; report `severity -> -Inf` only when the exact constrained audit certifies it. | The all-5 support and a relative joint direction are covered only in the combined challenge; isolated attribution remains. |
+| `EXT5-R-LO` | Sign-reversed all-1 Rater. | Record the support boundary; report `severity -> +Inf` only when certified. | Structural sign behavior is tested outside the five-category GPCM surface; full parity remains. |
+| `EXT5-PR-JOINT` | Cross the Person and Rater endpoints as high/high, low/low, and high/low on a connected design. | Separate the Person sufficient-score result from any compensating facet direction; do not count one joint geometry as several independent boundary facts. | High/high is covered; attribution contrasts remain. |
+| `EXT5-CONST-NEG` | A response-constant Rater in a design where the constrained cone has no recession direction. | Support warning present, `finite_in_audited_subspace` when the exact audit is complete, and no automatic infinity. | Binary structural negative control exists; five-category GPCM control remains. |
+| `EXT5-ANCHOR` | Repeat the isolated Rater endpoint with that level directly anchored, then with only a linked external anchor. | Directly fixed values stay `fixed`; linked anchors must be evaluated through the exact free-coordinate design and may not inherit the unanchored conclusion. | Additive direct-anchor behavior is tested; full GPCM and linked-anchor parity remain. |
+| `EXT5-NEAR` | Endpoint proportions below 1, prespecified near 0.95, under balanced and unequal Rater workloads. | `weak_information` or finite audited status as appropriate; never an exact-boundary label from a heuristic rate cutoff. | Pending deterministic calibration; not a simulation trigger. |
+| `EXT5-CELL` | Make a Criterion and then one Rater-by-Criterion cell all 5/all 1, with the interaction disabled and enabled in separate models. | Attribute a candidate only to parameters present in the fitted model; use the exact parameter orientation and cone/path certificate. | Pending; interaction results must not be inferred from the additive Rater audit. |
+| `EXT5-STEP` | Remove an internal category globally, within one Criterion, and within one Rater workload in separate cases. | Keep category/step support, Person boundary, and facet recession as distinct diagnoses. | Global and local support infrastructure exists; endpoint integration remains. |
+
+The ladder is deliberately small. Each row is a deterministic algebraic or
+microcase question. It should not be inflated into a factorial recovery study.
+High/low symmetry is required because it detects orientation and recoding
+errors that a one-sided all-5 case cannot detect.
+
+### Ordered work and exit criteria
+
+1. **Close the 0.2.3 deterministic core.** Add the missing five-category
+   `EXT5-P-LO`, isolated `EXT5-R-HI/LO`, joint-attribution, constant-response
+   negative, and anchor controls. Require exact statuses, audit scope,
+   completeness, reason codes, and independent likelihood-path checks; do not
+   accept optimizer convergence as a substitute.
+2. **Propagate one state contract through the public surfaces.** `fit`,
+   `summary`, `print`, `diagnose`, draw-free `plot`, export, report, and replay
+   must agree on the primary estimate, optimizer-trace status, support warning,
+   recession certificate, and readiness provenance. An endpoint Person or
+   certified non-Person boundary must not acquire an ordinary SE/CI, arbitrary
+   finite rank, or ordinary facet-separation contribution downstream.
+3. **Close estimator-specific gaps.** Keep raw finite JML traces, JML
+   extended-profile limits, named adjusted/bias-reduced estimates, and MML EAPs
+   in separate fields and comparison strata. Develop a marginal-likelihood
+   boundary audit for fixed facets rather than reusing the JML cone. Extend the
+   joint GPCM audit to the retained additive/log-slope parameterization before
+   promoting slope uncertainty.
+4. **Gate fit and DFF by estimand.** Fit indices and DFF may execute for
+   diagnosis, but they cannot override a review-only source fit. Endpoint-
+   affected rows need an explicit eligibility reason; location-like DFF,
+   nonuniform slope/step DFF, and interaction DFF stay separate. Facet
+   separation, rank recovery, and coverage are evaluated only on their declared
+   estimable target sets.
+5. **Use external programs only after identity matching.** A later licensed
+   FACETS bundle must compare raw-JML boundary status separately from any
+   adjusted finite display, with exact category map, constraints, anchors,
+   correction mode, convergence rule, and raw printed precision retained.
+   ConQuest/TAM/immer comparisons remain estimator- and model-specific; a
+   finite result from a different integration, adjustment, or penalty contract
+   is not endpoint equivalence evidence.
+6. **Simulate only unresolved operating characteristics.** After steps 1--5,
+   use a bounded prespecified grid only to estimate false-ready/false-boundary
+   rates, bias/RMSE and coverage on estimable targets, finite-target rank
+   recovery, facet separation, and convergence under exposure, sparsity,
+   workload, category support, and missingness. Do not simulate to rediscover
+   the analytic signed-infinity result or merely obtain runtime estimates.
+
+The release-spine decision remains fail-closed until the deterministic core and
+cross-surface propagation pass. Marginal fixed-facet boundary theory, nonuniform
+DFF, and external FACETS numeric overlap may remain explicit conditional or
+deferred claims; they need not expand into blockers for the retained supported
+core if their public fallbacks are enforced.

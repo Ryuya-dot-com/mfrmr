@@ -82,8 +82,12 @@ identify whether the opt-in layer ran and retain its test log.
 - `gpcm-extreme-and-surface-audit-0.2.3.md`: deterministic five-category
   challenge separating JML infinite Person measures, MML prior-regularized
   EAPs, boundary-constant Rater support, certified relative JML facet recession
-  directions, and central summary/diagnostic/plot readiness propagation. It
-  changes no GPCM capability status.
+  directions, and central summary/diagnostic/plot readiness propagation. Its
+  compact endpoint roadmap adds high/low symmetry, isolated versus joint
+  attribution, negative and anchor controls, near-extreme support,
+  interaction/category cases, estimator-specific semantics, and downstream
+  fit/DFF eligibility without authorizing a large simulation. It changes no
+  GPCM capability status.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
