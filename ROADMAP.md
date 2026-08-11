@@ -534,6 +534,15 @@ then may bounded operating-characteristic simulation or external FACETS work
 begin. An endpoint Rater is a support warning, not by itself proof of an
 infinite facet estimate.
 
+The companion solution/decision-stability roadmap adds a second ordering:
+common objective-gradient-free-dimension identity, prespecified multiple-start
+and quadrature candidates, boundary competition, Hessian/interval eligibility,
+and only then DFF, infit/outfit, Person/Rater rank, facet-separation, and final
+readiness invariance. It requires exact categorical decision signatures in
+addition to class-wise transformed-coordinate tolerances. A positive-definite
+local Hessian, code-zero optimizer, close dense-grid objective, or high rank
+correlation cannot substitute for the preceding gates.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

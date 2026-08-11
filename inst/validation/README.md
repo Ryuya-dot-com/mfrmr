@@ -88,6 +88,12 @@ identify whether the opt-in layer ran and retain its test log.
   interaction/category cases, estimator-specific semantics, and downstream
   fit/DFF eligibility without authorizing a large simulation. It changes no
   GPCM capability status.
+- `gpcm-solution-decision-stability-roadmap-0.2.3.md`: cross-cutting roadmap
+  from canonical objective/gradient/free-dimension and multiple-start/
+  quadrature checks through boundary adjudication, Hessian/interval
+  eligibility, coordinate transformation, and exact DFF/fit/rank/readiness
+  decision signatures. It records current implemented versus open layers and
+  authorizes no tolerance, simulation, or capability promotion.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

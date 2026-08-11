@@ -3895,6 +3895,27 @@ exports, replay, serialized legacy-object evidence, and external normalizers
 remain WP4--WP5 work and may not reconstruct or upgrade the stored state
 independently.
 
+##### Cross-gate solution and decision-stability order
+
+`gpcm-solution-decision-stability-roadmap-0.2.3.md` now binds the endpoint,
+numerical, uncertainty, readiness, fit, DFF, and ranking work without adding a
+new checklist row. Its order is mandatory for the retained GPCM work: P0 common
+objective/gradient/free-dimension, deterministic starts, transformed
+coordinates, and decision signatures; P1 boundary and quadrature adjudication;
+P2 typed Hessian/profile/bootstrap/posterior uncertainty and coverage; P3
+fit/DFF/rank/separation operating characteristics; and P4 matched external and
+consequence stability. Later stages cannot repair a failure in an earlier
+stage. In particular, a code-zero optimizer, locally positive Hessian, dense-
+grid objective tie, or high rank correlation cannot promote a dominated,
+boundary, nonidentified, or decision-sensitive result.
+
+The panel is deliberately staged rather than factorial. The historical
+fixed-standard-normal q=31/61/91 calibration remains sensitivity evidence and
+cannot be transported to the current free-population default or used to freeze
+a tolerance. Large simulation remains reserved for coverage and error-rate
+questions that deterministic algebra, boundary paths, and microcases cannot
+answer.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

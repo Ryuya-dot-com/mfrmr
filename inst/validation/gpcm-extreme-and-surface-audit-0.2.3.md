@@ -203,3 +203,10 @@ cross-surface propagation pass. Marginal fixed-facet boundary theory, nonuniform
 DFF, and external FACETS numeric overlap may remain explicit conditional or
 deferred claims; they need not expand into blockers for the retained supported
 core if their public fallbacks are enforced.
+
+The companion `gpcm-solution-decision-stability-roadmap-0.2.3.md` defines the
+next cross-cutting gate for Hessian uncertainty, slope/variance boundaries,
+multiple solutions, quadrature, canonical objective/gradient/free-dimension
+agreement, transformed-coordinate differences, and exact DFF/fit/rank/
+readiness decision signatures. It does not change the endpoint conclusions or
+authorize a large simulation.

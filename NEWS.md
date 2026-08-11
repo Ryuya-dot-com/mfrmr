@@ -4,7 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
-* Refined the repository-only five-category endpoint-response roadmap. It now
+* Added a GPCM solution and decision-stability roadmap. It
+  orders canonical objective/gradient/free-dimension agreement, deterministic
+  multiple starts, common-grid quadrature checks, additive/slope/variance
+  boundary adjudication, Hessian and interval eligibility, transformed-
+  coordinate comparisons, and exact DFF/infit/outfit/rank/readiness decision
+  signatures. Regularized covariance, code-zero convergence, close objectives,
+  and high rank correlations are explicitly insufficient on their own. No
+  tolerance, simulation, formal DFF/fit rule, or capability is promoted.
+
+* Refined the five-category endpoint-response roadmap. It now
   separates all-5/all-1 Persons from all-5/all-1 Raters, observed support from
   certified constrained recession, isolated from joint attribution, JML
   extended boundaries from MML EAPs and adjusted displays, and exact from
@@ -22,7 +31,7 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   Missing, failed, unexpected, duplicate, model-conflicting, and unaudited-
   precision controls fail closed. No tolerance or equivalence is promoted.
 
-* Extended the repository-only external-comparison admission contract so
+* Extended the external-comparison admission contract so
   statistical penalties, finite parameter boxes, and source numerical
   precision cannot be hidden inside a generic estimator or correction label.
   Added sirt as a source/version-bound comparator: equal-discrimination PCM is
