@@ -7,7 +7,7 @@
 
 mfrmr_external_ic_specification <- "0.2.3-draft.8"
 mfrmr_external_ic_contract <- "mfrmr_external_ic_v1"
-mfrmr_conquest_ic_contract <- "mfrmr_conquest_ic_handoff_v1"
+mfrmr_conquest_ic_contract <- "mfrmr_conquest_ic_handoff_v2"
 
 mfrmr_external_ic_or <- function(value, fallback) {
   if (is.null(value) || length(value) == 0L) fallback else value
@@ -437,7 +437,8 @@ mfrmr_external_ic_from_conquest <- function(
       "not_checked", "pass", "review", "fail"
     ),
     candidate_id = NA_character_,
-    export_tolerance = 1e-6) {
+    handoff_tolerance = 1e-6,
+    export_tolerance = NULL) {
   convergence_status <- match.arg(convergence_status)
   integration_stability_status <- match.arg(integration_stability_status)
   engine_version <- mfrmr_external_ic_label(engine_version)
@@ -465,9 +466,22 @@ mfrmr_external_ic_from_conquest <- function(
   quadrature_nodes <- mfrmr_conquest_external_integer(
     quadrature_nodes, "quadrature-node count"
   )
-  export_tolerance <- mfrmr_external_ic_scalar(export_tolerance)
-  if (!is.finite(export_tolerance) || export_tolerance <= 0) {
-    stop("`export_tolerance` must be a positive finite number.",
+  if (!is.null(export_tolerance)) {
+    if (!identical(handoff_tolerance, 1e-6)) {
+      stop(
+        "Supply only `handoff_tolerance`; `export_tolerance` is its deprecated alias.",
+        call. = FALSE
+      )
+    }
+    warning(
+      "`export_tolerance` is deprecated; use `handoff_tolerance`. It is not an export-resolution or cross-engine tolerance.",
+      call. = FALSE
+    )
+    handoff_tolerance <- export_tolerance
+  }
+  handoff_tolerance <- mfrmr_external_ic_scalar(handoff_tolerance)
+  if (!is.finite(handoff_tolerance) || handoff_tolerance <= 0) {
+    stop("`handoff_tolerance` must be a positive finite number.",
          call. = FALSE)
   }
   if (identical(convergence_status, "pass") &&
@@ -624,7 +638,7 @@ mfrmr_external_ic_from_conquest <- function(
     weight <- mfrmr_conquest_external_numeric(
       cases, weight_column, "case-EAP"
     )
-    if (any(abs(weight - 1) > export_tolerance)) {
+    if (any(abs(weight - 1) > handoff_tolerance)) {
       stop(
         "The ConQuest IC adapter currently requires unit case weights.",
         call. = FALSE
@@ -654,7 +668,7 @@ mfrmr_external_ic_from_conquest <- function(
   if (length(history_final_vector) != npar_exports ||
       any(!is.finite(history_final_vector)) ||
       any(abs(history_final_vector - exported_free_vector) >
-          export_tolerance * pmax(1, abs(exported_free_vector)))) {
+          handoff_tolerance * pmax(1, abs(exported_free_vector)))) {
     stop(
       "ConQuest final history vector does not match the regression, covariance, and parameter exports.",
       call. = FALSE
@@ -701,7 +715,11 @@ mfrmr_external_ic_from_conquest <- function(
       "deviance_by_ConQuest_manual_4.9.2; native_5.47.5_CSV_header_",
       objective_native_header
     ),
-    ObjectiveExportResolution = export_tolerance,
+    InternalHandoffTolerance = handoff_tolerance,
+    ObjectiveExportResolution = NA_real_,
+    ObjectiveExportResolutionEstablished = FALSE,
+    ObjectiveExportRoundingRule = "unknown",
+    HandoffToleranceIsCrossEngineTolerance = FALSE,
     HistoryRows = nrow(history),
     FinalRun = run_number[final_index],
     FinalIteration = iteration[final_index],

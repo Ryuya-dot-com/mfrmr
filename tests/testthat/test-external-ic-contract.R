@@ -198,7 +198,37 @@ test_that("the repository ConQuest adapter audits objective, free dimension, and
   expect_true(record$audit$PersonIdsMatched)
   expect_identical(record$audit$ObjectiveNativeHeader, "LogLikelihood")
   expect_match(record$audit$ObjectiveInterpretation, "deviance_by_ConQuest")
+  expect_equal(record$audit$InternalHandoffTolerance, 1e-6)
+  expect_true(is.na(record$audit$ObjectiveExportResolution))
+  expect_false(record$audit$ObjectiveExportResolutionEstablished)
+  expect_identical(record$audit$ObjectiveExportRoundingRule, "unknown")
+  expect_false(record$audit$HandoffToleranceIsCrossEngineTolerance)
   expect_true(all(nzchar(record$audit$ArtifactFingerprints$Digest)))
+
+  legacy_tolerance <- adapter_args
+  legacy_tolerance$export_tolerance <- 1e-7
+  legacy_record <- NULL
+  expect_warning(
+    legacy_record <- do.call(
+      env$mfrmr_external_ic_from_conquest,
+      legacy_tolerance
+    ),
+    "deprecated"
+  )
+  expect_equal(legacy_record$audit$InternalHandoffTolerance, 1e-7)
+  expect_true(is.na(legacy_record$audit$ObjectiveExportResolution))
+
+  conflicting_tolerances <- adapter_args
+  conflicting_tolerances$handoff_tolerance <- 1e-5
+  conflicting_tolerances$export_tolerance <- 1e-7
+  expect_error(
+    do.call(
+      env$mfrmr_external_ic_from_conquest,
+      conflicting_tolerances
+    ),
+    "Supply only `handoff_tolerance`",
+    fixed = TRUE
+  )
 
   unaudited_version <- adapter_args
   unaudited_version$engine_version <- "5.48.0"
