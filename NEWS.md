@@ -4,6 +4,14 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a deterministic metric-specific eligibility contract for external
+  comparisons. Exact program/family/estimator/correction and data, facet,
+  category, anchor, coordinate, identification, conditioning, and boundary
+  identities are checked per metric and parameter stratum; rejected, missing,
+  failed, and unexpected rows cannot enter aggregates. This moves the
+  structural checklist slice to review only: real ConQuest, FACETS, TAM, and
+  immer normalizers are not yet bound and no equivalence claim is promoted.
+
 * Split four repository-only G-theory execution/exact-resume validations from
   their fast contract, hash, mutation, and fail-closed checks. Ordinary tests
   retain the structural checks and report explicit skips for the execution

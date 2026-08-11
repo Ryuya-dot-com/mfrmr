@@ -62,9 +62,10 @@ GPCM umbrella may promote criterion- and rater-owned evidence together.
 
 ## Wave C: external core (7)
 
-1. row 59 `facets_tool_identity`, row 64
-   `metric_specific_comparison_eligibility`, and row 66
-   `external_privacy_and_license_boundary` establish admission.
+1. row 66 `external_privacy_and_license_boundary` is structurally closed;
+   row 64 `metric_specific_comparison_eligibility` has a passing deterministic
+   contract but remains under review pending real normalizer bindings; and row
+   59 `facets_tool_identity` remains unresolved. All three establish admission.
 2. rows 55--57 `conquest_binary_core`, `conquest_rsm_core`, and
    `conquest_pcm_core` then run as independent, candidate-replayable,
    raw-token-preserving microcases.
@@ -288,6 +289,13 @@ structurally closed by
 recomputes hashes for 93 external-related artifacts across ConQuest, FACETS,
 TAM, and immer and found zero proprietary binaries, keys, identifier-bearing
 case assets, real local paths, or escaping symlinks. This does not inspect
-ignored result directories or establish numerical comparability. Rows 64
-`metric_specific_comparison_eligibility` and 59 `facets_tool_identity` remain
-the active Wave C admission dependencies; no external rerun is authorized.
+ignored result directories or establish numerical comparability.
+
+Row 64 now has a deterministic row-level contract in
+`external-comparison-eligibility-contract-record-0.2.3.md`. Twenty fixtures
+separate eligible, rejected, missing, failed, and unexpected rows across all
+four programs and prove that finite rejected values cannot enter exact
+metric/parameter/method strata. Its evidence status is `review`, not `ok`:
+actual FACETS, ConQuest, TAM, and immer normalizers have not yet populated the
+contract. Row 59 `facets_tool_identity` and those adapter bindings remain the
+active Wave C admission dependencies; no external rerun is authorized.

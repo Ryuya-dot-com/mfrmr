@@ -10,7 +10,7 @@ execution, candidate freeze, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `6bcd62e53b39b6c295c366fb4ce3feb1c7af6ad265f8ba38c9457b037d13c9bc` |
+| `release-evidence-checklist-0.2.3.csv` | `15311ebc0aa2f36b650917cc023055e2b17f4a801204f25977f33c1d5b43c57b` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -37,7 +37,7 @@ that the integrity audit itself failed.
 
 The mapping reduces an undifferentiated 106-row programme to a 53-row release
 spine. It does not assert that those 53 rows currently pass. The current
-checklist snapshot contains 26 `not_run`, 23 `review`, and four `ok` spine
+checklist snapshot contains 25 `not_run`, 24 `review`, and four `ok` spine
 rows. The completed rows are the deterministic v3 readiness-contract schema,
 exact-model reductions, estimator-vocabulary contract, and tracked-repository
 external privacy/license boundary; they do not close runtime readiness

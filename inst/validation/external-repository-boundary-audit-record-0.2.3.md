@@ -26,7 +26,7 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 | --- | ---: |
 | External artifact paths | 93 |
 | External software families | 4 |
-| Classified tracked data assets | 32 |
+| Classified tracked data assets | 33 |
 | Unclassified tracked data assets | 0 |
 | Allowed synthetic local-path fixtures | 1 |
 | Prohibited findings | 0 |
@@ -34,7 +34,7 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 | Non-relative tracked paths | 0 |
 
 The four separately retained families are ConQuest, FACETS, TAM, and immer.
-The 32 data assets are explicitly limited to documented synthetic package
+The 33 data assets are explicitly limited to documented synthetic package
 data, synthetic vignette aggregates, schema/contract fixtures, and one
 synthetic compatibility fixture; an unclassified CSV, R data object, or
 serialized table fails closed.
@@ -76,7 +76,7 @@ copies a matched value into its result or test output.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `external-repository-boundary-audit-0.2.3.R` | `9d0ac24849601ed9265d668776f2d9e8dec22aabd30aaa515196271b243beace` |
+| `external-repository-boundary-audit-0.2.3.R` | `70b5d3b9fbfa4d685aa51e44ccbb114b26f1dc9d2755aa8f56861435e1836cb1` |
 | `test-external-repository-boundary-audit.R` | `545dfc06e0693e6de9eb3dd90fa6c112e268e45f7d279dec999e8a7ee7bcb6d6` |
 | sanitized portfolio/ConQuest audit | `2fdaa8f70add2f2da5122f2e68f879d27711fab18e1231931249254e7b0b7358` |
 

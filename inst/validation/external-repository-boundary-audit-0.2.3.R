@@ -88,7 +88,8 @@ mfrmr_erba_data_asset_class <- function(path) {
   }
   if (grepl(
     paste0(
-      "^inst/validation/(claim-disposition-profile|external-ic-fixtures|",
+      "^inst/validation/(claim-disposition-profile|",
+      "external-comparison-eligibility-fixtures|external-ic-fixtures|",
       "gpcm-model-identity-contract|ic-contract-fixtures|",
       "ic-free-dimension-fixtures|readiness-contract-fixtures|",
       "release-evidence-checklist)-[^/]+[.]csv$"
