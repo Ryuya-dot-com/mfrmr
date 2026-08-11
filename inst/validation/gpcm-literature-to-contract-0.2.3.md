@@ -203,6 +203,28 @@ provenance only and is not stability or inferential evidence.
 This closes a documentation/model-replay sub-gate, not the DFF inference,
 operating-characteristic, or external-validation gates.
 
+### Estimator-family audit, 2026-08-11
+
+The supplied JML/PJML memorandum adds a useful distinction but its proposed
+classification of mfrmr as finite-box or bounded JMLE is rejected. Source
+inspection establishes the following contract.
+
+| Route | Statistical objective and person treatment | Extreme/boundary consequence | Relation to mfrmr |
+|---|---|---|---|
+| Muraki (1992) | GPCM with random-person MML estimated by an EM route. | Person coordinates are integrated and then summarized, not fitted as one fixed parameter per Person. | Response-model and MML precedent; not the source for mfrmr JML. |
+| mfrmr GPCM JML | Identified, unpenalized fixed-effects joint log-likelihood; log slopes have a sum-zero identification constraint. No finite lower/upper parameter box is passed to `optim()`. | A certified recession direction produces an extended-real or typed primary boundary result. A finite optimizer iterate is a numerical trace, not an attained finite maximum. | Current implementation. Numerical rejection of non-representable slope proposals is a line-search safeguard, not regularization. |
+| Wijayanto et al. (2021) PJML | GPCM parameters are jointly fitted under an explicitly penalized likelihood. | The penalty can select finite values where ordinary JML has weak or receding directions. | Methodologically relevant alternative; a different objective and therefore not numerical-equivalence evidence for unpenalized JML. |
+| `Rirt::model_gpcm_jmle()` | JML software route with documented finite defaults for ability, slope, location, and category-parameter bounds. | A box endpoint can be a constrained optimum even when the unconstrained likelihood has no finite maximizer. | Concrete box-constrained comparator; not a description of mfrmr. |
+| Hessen (2025) fixed/random-effects distinction | In the fixed-effects formulation, Person and item parameters are fixed and jointly estimated; the random-effects formulation instead marginalizes over a population distribution. | With fixed test length, increasing the number of Persons alone does not generally remove JML item-parameter inconsistency. | Justifies a separate JML operating envelope indexed by information per Person/item, not a correction already implemented in mfrmr. |
+
+Accordingly, `bounded GPCM` is retained only as a public-scope label. It means
+one aligned slope/step owner and a deliberately restricted downstream workflow;
+it does not mean a box-constrained estimator. A future PJML, extreme-score
+adjustment, or finite-box option would require a new estimator-family code,
+objective definition, output basis, and recovery/coverage evidence. Its finite
+point estimates could not be described as maximizers of the present original
+JML likelihood.
+
 ## Literature-to-contract matrix
 
 | Topic | Literature implication | Current 0.2.3 contract | Disposition and gate consequence |
@@ -210,10 +232,10 @@ operating-characteristic, or external-validation gates.
 | GPCM probability kernel | Muraki's category numerator is the exponential of a slope-scaled cumulative adjacent-category expression. | `alpha_g * (k * eta - cumulative_steps_gk)` with positive slopes and stable normalization. | **Mathematical pass.** Retain exact probability, adjacent-odds, and reduction tests as release-spine evidence. |
 | PCM reduction | PCM is the unit-slope special case of GPCM. | All optimizer slopes equal one at the origin; one slope-facet level has no free slope coordinate. | **Pass within the bounded family.** Preserve objective, gradient, probability, and output metamorphic reductions. |
 | GPCM information | Muraki's information is squared discrimination times conditional score variance for logistic `D = 1`. | `score_information = slope^2 * Var(score | eta)`. | **Mathematical pass.** Continue external finite-difference and aggregation checks. |
-| Slope scale | Conventional single-group MML fixes the ability scale and estimates absolute item slopes. Uto and Ueno use a product constraint to separate multiplicative task and rater slope factors. | All methods use `sum(log slopes) = 0`. Default MML also fixes the latent distribution to standard normal. | **Correct but narrower.** Call the default-MML route relative-discrimination bounded GPCM; do not present it as an unrestricted Muraki GPCM. Add an external comparison only after matching this slope constraint. |
+| Slope scale | Conventional single-group MML fixes the ability scale and estimates absolute item slopes. Uto and Ueno use a product constraint to separate multiplicative task and rater slope factors. | All methods use `sum(log slopes) = 0`. Default MML estimates an intercept-only population distribution, so population SD carries the common discrimination scale and `sigma * alpha_g` is the fixed-latent-SD slope. The explicit legacy mode fixes both population SD and slope geometric mean to one. | **Reparameterized conventional degree of freedom by default; legacy route narrower.** External comparison must match the population/slope transformation and cannot compare raw slope labels alone. |
 | Many-facet extension | Generalized rater models may include task discrimination, rater consistency, rater-specific scale use, and local-dependence effects. | One slope facet, required to equal the step facet; all other facets remain additive inside `eta`. | **Supported with caveat.** This is a restricted GPCM-MFRM sensitivity model, not Uto-Ueno GMFRM or an arbitrary virtual-item GPCM. |
-| MML | MML integrates random person ability under an assumed distribution; EM is an algorithm, not the definition of MML. | Standard-normal Gauss-Hermite integration; direct BFGS/L-BFGS-B by default, with EM/hybrid alternatives. | **Framework pass.** Claims must remain conditional on latent-distribution and quadrature sensitivity. Do not describe the default engine as the Bock-Aitkin EM algorithm. |
-| JML | JML avoids a person-distribution assumption but introduces one parameter per person, incidental-parameter bias, and extreme-score/boundary problems. Literature support for free-slope JML in complex rating designs is weak. | Fixed person effects, bounded slopes, explicit readiness and boundary/recession review. | **Experimental/caveated.** JML GPCM cannot be promoted from convergence alone; retain finite/boundary and external-estimand gates. |
+| MML | MML integrates random person ability under an assumed distribution; EM is an algorithm, not the definition of MML. | Estimated-normal Gauss-Hermite integration by default for GPCM; direct BFGS/L-BFGS-B by default, with EM/hybrid alternatives. | **Framework pass.** Claims must remain conditional on latent-distribution and quadrature sensitivity. Do not describe the default engine as the Bock-Aitkin EM algorithm. |
+| JML | JML avoids a person-distribution assumption but introduces one parameter per person, incidental-parameter bias, and extreme-score/boundary problems. PJML and box-constrained JML alter the objective or parameter space and must be named separately. | Fixed person effects, positive log-centered slopes, no statistical penalty or finite parameter box, and explicit readiness and boundary/recession review. | **Experimental/caveated.** JML GPCM cannot be promoted from convergence alone; retain finite/boundary, fixed-information bias, and external-estimand gates. |
 | Bayesian MCMC and variational estimation | Priors can regularize complex rater/slope models; HMC handles high-dimensional models at greater computational cost. Recent variational work improves multidimensional GPCM computation. | No Bayesian GPCM estimator or posterior predictive checks. | **Deferred, not a defect.** Use Bayesian/HMC or external software as a sensitivity lane, not as evidence that the package already supports those estimands. |
 | Fit statistics | Fit is multi-layered. Rasch infit/outfit describe residual behavior, but fixed universal cutoffs are not automatically calibrated for estimated-slope GPCM. Parametric bootstrap can materially change rater-fit decisions. | Slope-aware expected values, residuals, infit/outfit-like summaries, marginal and graphical screens; no GPCM-specific bootstrap calibration or PPC. | **Screening only.** Require null/non-null simulations or bootstrap critical values before operational thresholds. Keep residual, item/facet, marginal, local-dependence, and practical-impact evidence separate. |
 | DFF/DRF | Severity DRF is analogous to uniform DIF; centrality/discrimination DRF is analogous to nonuniform DIF. General fit or infit/outfit does not establish DRF. | The residual method holds the baseline slopes fixed. Subgroup refits re-estimate bounded slopes, but the DFF table contrasts additive facet locations and does not expose or test the subgroup slope difference. | **Location-like screen only.** Current methods can flag conditional subgroup residual/location differences, but do not fit a joint group-by-facet slope/centrality effect. A refit location contrast can also depend on subgroup slope recalibration. Add separate uniform and nonuniform generating conditions before stronger claims. |
@@ -230,10 +252,11 @@ operating-characteristic, or external-validation gates.
    constrained Jacobian, gradient, moment, and information identities are ready
    to serve as fixed structural gates. Numerical readiness still requires the
    high-dispersion and boundary grids already in the 0.2.3 program.
-2. **Split slope claims by estimator.** JML and active latent-regression MML use
-   geometric-mean-one as an identification convention. Default standard-normal
-   MML uses the same transformation as a deliberate relative-slope restriction.
-   External comparisons must reproduce the applicable restriction.
+2. **Split slope claims by estimator.** JML uses geometric-mean-one as a scale
+   identification convention. Default GPCM MML estimates the common scale via
+   population SD while retaining geometric-mean-one relative slopes; only the
+   explicit legacy mode fixes standard-normal population scale as well.
+   External comparisons must reproduce the applicable transformation.
 3. **Prespecify a multidimensional design grid.** Sample size cannot be a single
    `N`. At minimum cross persons, slope-facet levels, category support, exposure
    imbalance, ratings per person, common-person/link topology, slope spread,
@@ -309,6 +332,20 @@ records.
 
 - Muraki, E. (1992). *A generalized partial credit model: Application of an
   EM algorithm*. <https://doi.org/10.1177/014662169201600206>
+- Wijayanto, F., Mul, K., Groot, P., van Engelen, B. G. M., & Heskes, T.
+  (2021). *Semi-automated Rasch analysis using in-plus-out-of-questionnaire log
+  likelihood*.
+  <https://doi.org/10.1111/bmsp.12218>
+- Wijayanto, F., Bucur, I. G., Mul, K., Groot, P., van Engelen, B. G. M., &
+  Heskes, T. (2023). *Semi-automated Rasch analysis with differential item
+  functioning*.
+  <https://doi.org/10.3758/s13428-022-01947-9>
+- Hessen, D. J. (2025). *A convexity-constrained parameterization of the random
+  effects generalized partial credit model*.
+  <https://doi.org/10.1111/bmsp.12365>
+- `Rirt` 0.0.2 reference manual, including `model_gpcm_jmle()` and its
+  documented finite default bounds.
+  <https://stat.ethz.ch/CRAN/web/packages/Rirt/refman/Rirt.html>
 - Wang, W.-C., & Liu, C.-Y. (2007). *Formulation and application of the
   generalized multilevel facets model*.
   <https://doi.org/10.1177/0013164406296974>

@@ -11,6 +11,12 @@ with a documented bounded `GPCM` extension. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
 
+For GPCM, *bounded* means deliberately bounded model and workflow scope; it
+does not mean finite parameter box constraints. The JML route is an
+unpenalized identified joint likelihood. Certified recession or extreme-person
+non-attainment is reported through typed primary results, while a finite
+optimizer iterate remains a numerical trace rather than a finite JML maximum.
+
 The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
 reproducibility, network review, and reporting support. It is not a general
 FACETS replacement: each `fit_mfrm()` call uses one response-model family and
@@ -729,6 +735,10 @@ vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
 
 Free-slope GPCM fits are currently review-only at the parameter boundary gate.
+`summary(fit)$settings_overview`, `print(fit)`, and draw-free fitted-model plots
+state the estimator family, statistical-penalty status, finite-box status, and
+extreme-person policy rather than asking users to infer them from an optimizer
+name. In particular, L-BFGS-B does not imply that mfrmr supplied finite bounds.
 For MML, the default
 `gpcm_mml_identification = "free_population"` estimates an intercept-only
 population distribution and retains the conventional common-discrimination

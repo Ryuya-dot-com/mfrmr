@@ -55,6 +55,16 @@ multidimensional generalized MFRM, or an unrestricted cell-slope model.
 Maintainer evidence keeps those model families and their validation
 dependencies in separate strata.
 
+Here, bounded describes the public model/workflow scope, not finite parameter
+boxes. The current GPCM JML estimator is an unpenalized, identified fixed-
+effects joint likelihood with post-fit recession auditing. Muraki's MML-EM,
+Wijayanto et al.'s penalized JML, and box-constrained JML implementations are
+distinct estimator families and are not numerical-equivalence targets without
+an explicit objective map. In particular, a finite penalized, adjusted, or
+box-constrained estimate is not called the maximizer of mfrmr's original JML
+objective. This separation is now part of fitted-object summary, print, and
+plot metadata.
+
 For GPCM MML, 0.2.3 now estimates an intercept-only population distribution by
 default while retaining geometric-mean-one relative slopes. The population SD
 therefore carries the common discrimination scale; this is a one-to-one

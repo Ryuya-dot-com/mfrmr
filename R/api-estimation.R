@@ -274,6 +274,16 @@
 #' geometric-mean-one constraint is required to resolve the ability/slope
 #' scale because person coordinates are estimated jointly.
 #'
+#' Here and elsewhere in the package, "bounded GPCM" means that the documented
+#' model/workflow scope is deliberately narrow. It does not mean box-constrained
+#' estimation. The JML branch maximizes the identified joint log-likelihood
+#' without a statistical penalty or finite bounds on person, location, step, or
+#' slope coordinates. Numerical line-search rejection of non-representable
+#' slope proposals is not regularization. When a recession direction is
+#' certified, the finite optimizer iterate remains a numerical trace and the
+#' primary result uses the appropriate extended-real or typed boundary status;
+#' it is not relabelled as a finite maximizer of the original JML objective.
+#'
 #' With only two ordered categories (\eqn{K = 1}), the `RSM`/`PCM`
 #' branch reduces to the usual binary Rasch logit for the single category
 #' boundary:
@@ -1306,6 +1316,33 @@ fit_mfrm <- function(data,
     "fixed_to_one_legacy_restriction"
   } else {
     "not_applicable"
+  }
+  fit$config$gpcm_estimator_family <- if (!identical(model, "GPCM")) {
+    "not_applicable"
+  } else if (identical(method_input, "JML")) {
+    "unpenalized_identified_jml"
+  } else {
+    "marginal_maximum_likelihood"
+  }
+  # These fields describe the statistical objective, not numerical line-search
+  # safeguards. The current GPCM routes use neither a regularization penalty
+  # nor finite box constraints on person, location, step, or slope coordinates.
+  fit$config$gpcm_statistical_penalty <- if (identical(model, "GPCM")) {
+    "none"
+  } else {
+    "not_applicable"
+  }
+  fit$config$gpcm_finite_parameter_box <- if (identical(model, "GPCM")) {
+    FALSE
+  } else {
+    NA
+  }
+  fit$config$gpcm_extreme_person_policy <- if (!identical(model, "GPCM")) {
+    "not_applicable"
+  } else if (identical(method_input, "JML")) {
+    "extended_real_primary_when_certified"
+  } else {
+    "posterior_eap_under_population_model"
   }
   fit$config$population_formula <- if (!is.null(fit$population$formula)) {
     paste(deparse(fit$population$formula), collapse = " ")

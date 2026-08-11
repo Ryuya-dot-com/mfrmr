@@ -253,8 +253,10 @@ identify whether the opt-in layer ran and retain its test log.
   claiming the unsampled half-line.
 - `gpcm-literature-to-contract-0.2.3.md`: source-grounded mathematical and
   implementation audit for the current bounded route, including the supplied
-  generalized-MFRM memorandum corrections, estimator-specific slope-scale
-  qualification, DFF/fit/sparse-data implications, and recent literature.
+  generalized-MFRM memorandum corrections, the separation of Muraki MML-EM,
+  unpenalized identified mfrmr JML, Wijayanto penalized JML, and finite-box
+  JML, estimator-specific slope-scale qualification, DFF/fit/sparse-data
+  implications, and recent literature.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,

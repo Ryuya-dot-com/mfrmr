@@ -385,6 +385,11 @@ discrimination degree of freedom is retained. The legacy
 \eqn{\sigma=1} and the slope geometric mean to one and is therefore a
 narrower relative-discrimination model. Under JML, geometric-mean-one is
 required to resolve the scale of jointly estimated person coordinates.
+"Bounded" refers to this deliberately limited model/workflow scope, not to
+finite optimizer box constraints. The GPCM JML objective is unpenalized.
+Certified extreme-person or facet recession is reported through typed
+primary boundary results; a finite optimizer iterate is retained only as a
+numerical trace and is not a finite JML maximum.
 
 \strong{Ordered-response scope}
 

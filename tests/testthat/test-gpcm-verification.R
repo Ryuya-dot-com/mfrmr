@@ -151,6 +151,14 @@ test_that("five-category all-maximum persons and raters retain distinct contract
     step_facet = "Criterion", slope_facet = "Criterion",
     maxit = 80L, reltol = 1e-9
   )))
+  expect_identical(jml$config$gpcm_estimator_family,
+                   "unpenalized_identified_jml")
+  expect_identical(jml$config$gpcm_statistical_penalty, "none")
+  expect_false(jml$config$gpcm_finite_parameter_box)
+  expect_identical(
+    jml$config$gpcm_extreme_person_policy,
+    "extended_real_primary_when_certified"
+  )
   jml_person <- jml$facets$person[jml$facets$person$Person == "P01", , drop = FALSE]
   expect_identical(jml_person$PrimaryEstimate, Inf)
   expect_true(is.finite(jml_person$OptimizerEstimate))
@@ -158,6 +166,15 @@ test_that("five-category all-maximum persons and raters retain distinct contract
   expect_identical(jml_person$ParameterStatus, "unbounded_high")
 
   jml_summary <- summary(jml, include_person = TRUE)
+  expect_identical(
+    jml_summary$settings_overview$GpcmEstimatorFamily[1],
+    "unpenalized_identified_jml"
+  )
+  expect_false(jml_summary$settings_overview$GpcmFiniteParameterBox[1])
+  expect_identical(
+    jml_summary$settings_overview$GpcmExtremePersonPolicy[1],
+    "extended_real_primary_when_certified"
+  )
   expect_identical(jml_summary$facet_support_boundaries$Level, "R1")
   expect_true(jml_summary$facet_support_boundaries$BoundaryConstant)
   rater_recession <- jml_summary$facet_recession_review[
@@ -174,6 +191,22 @@ test_that("five-category all-maximum persons and raters retain distinct contract
   expect_true(any(grepl("Observed boundary-constant facet support", jml_console)))
   expect_true(any(grepl("Certified JML facet recession directions", jml_console)))
   expect_true(any(grepl("numerical traces, not finite JML maxima", jml_console)))
+  expect_true(any(grepl(
+    "GPCM estimator: unpenalized_identified_jml",
+    jml_console,
+    fixed = TRUE
+  )))
+  jml_fit_console <- capture.output(print(jml))
+  expect_true(any(grepl(
+    "Statistical penalty: none | Finite parameter box: no",
+    jml_fit_console,
+    fixed = TRUE
+  )))
+  jml_plot <- suppressWarnings(plot(jml, type = "wright", draw = FALSE))
+  expect_identical(
+    jml_plot$data$scale_contract$GpcmEstimatorFamily[1],
+    "unpenalized_identified_jml"
+  )
 
   mml <- suppressMessages(suppressWarnings(fit_mfrm(
     extreme, "Person", c("Rater", "Criterion"), "Score",

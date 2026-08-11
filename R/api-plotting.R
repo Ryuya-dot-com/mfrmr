@@ -3780,6 +3780,19 @@ print.mfrm_fit <- function(x, ...) {
         scale_contract$SlopeBasis[1],
         population_text
       ))
+      if (identical(as.character(scale_contract$Model[1]), "GPCM")) {
+        finite_box <- if (isTRUE(scale_contract$GpcmFiniteParameterBox[1])) {
+          "yes"
+        } else {
+          "no"
+        }
+        cat(sprintf(
+          "  GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s\n",
+          scale_contract$GpcmEstimatorFamily[1],
+          scale_contract$GpcmStatisticalPenalty[1],
+          finite_box
+        ))
+      }
     }
     ic_lines <- mfrm_ic_console_lines(x$summary, digits = 3L)
     if (length(ic_lines) > 0L) {

@@ -542,6 +542,7 @@ build_mfrm_manifest <- function(fit,
   )
 
   cfg <- fit$config %||% list()
+  scale_contract <- mfrm_fit_scale_contract(fit)
   prep <- fit$prep %||% list()
   est_ctl <- cfg$estimation_control %||% list()
   fit_population <- fit$population %||% list(
@@ -627,6 +628,16 @@ build_mfrm_manifest <- function(fit,
     gpcm_common_discrimination = as.character(
       cfg$gpcm_common_discrimination %||% "not_recorded"
     ),
+    gpcm_estimator_family = as.character(
+      scale_contract$GpcmEstimatorFamily[1]
+    ),
+    gpcm_statistical_penalty = as.character(
+      scale_contract$GpcmStatisticalPenalty[1]
+    ),
+    gpcm_finite_parameter_box = scale_contract$GpcmFiniteParameterBox[1],
+    gpcm_extreme_person_policy = as.character(
+      scale_contract$GpcmExtremePersonPolicy[1]
+    ),
     dummy_facets = paste(as.character(cfg$dummy_facets %||% character(0)), collapse = ", "),
     n_categories = as.character(cfg$n_cat %||% NA_character_),
     population_active = isTRUE(fit_population$active),
@@ -697,6 +708,16 @@ build_mfrm_manifest <- function(fit,
     fit_population_source = as.character(fit_population$source %||% "none"),
     fit_gpcm_mml_identification = as.character(
       cfg$gpcm_mml_identification %||% "not_recorded"
+    ),
+    fit_gpcm_estimator_family = as.character(
+      scale_contract$GpcmEstimatorFamily[1]
+    ),
+    fit_gpcm_statistical_penalty = as.character(
+      scale_contract$GpcmStatisticalPenalty[1]
+    ),
+    fit_gpcm_finite_parameter_box = scale_contract$GpcmFiniteParameterBox[1],
+    fit_gpcm_extreme_person_policy = as.character(
+      scale_contract$GpcmExtremePersonPolicy[1]
     ),
     fit_population_formula = if (!is.null(fit_population$formula)) {
       paste(deparse(fit_population$formula), collapse = " ")

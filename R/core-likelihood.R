@@ -82,7 +82,7 @@ loglik_pcm <- function(eta, score_k, step_cum_mat, criterion_idx, weight = NULL,
 
 # GPCM log-likelihood: same adjacent-category structure as PCM but with a
 # positive discrimination attached to each designated slope-facet level.
-# For the bounded GPCM parameterization:
+# For the identified, scope-bounded GPCM parameterization:
 #   log(P_k / P_{k-1}) = a_c * (eta - tau_{c,k})
 # so category k has kernel exp(a_c * (k * eta - tau_{c,k}^{cum})).
 loglik_gpcm <- function(eta, score_k, step_cum_mat, criterion_idx, slopes,

@@ -53,6 +53,16 @@ test_that("default GPCM MML estimates the common population scale", {
   )
   expect_identical(fit$config$gpcm_mml_identification, "free_population")
   expect_identical(
+    fit$config$gpcm_estimator_family,
+    "marginal_maximum_likelihood"
+  )
+  expect_identical(fit$config$gpcm_statistical_penalty, "none")
+  expect_false(fit$config$gpcm_finite_parameter_box)
+  expect_identical(
+    fit$config$gpcm_extreme_person_policy,
+    "posterior_eap_under_population_model"
+  )
+  expect_identical(
     fit$config$gpcm_common_discrimination,
     "estimated_via_population_sd"
   )
@@ -72,6 +82,19 @@ test_that("default GPCM MML estimates the common population scale", {
     summary_fit$settings_overview$GpcmMmlIdentification[1],
     "free_population"
   )
+  expect_identical(
+    summary_fit$settings_overview$GpcmEstimatorFamily[1],
+    "marginal_maximum_likelihood"
+  )
+  expect_identical(
+    summary_fit$settings_overview$GpcmStatisticalPenalty[1],
+    "none"
+  )
+  expect_false(summary_fit$settings_overview$GpcmFiniteParameterBox[1])
+  expect_identical(
+    summary_fit$settings_overview$GpcmExtremePersonPolicy[1],
+    "posterior_eap_under_population_model"
+  )
   expect_equal(
     summary_fit$slope_overview$FixedLatentSDOptimizerGeometricMean[1],
     population_sd,
@@ -86,6 +109,22 @@ test_that("default GPCM MML estimates the common population scale", {
   expect_true(any(grepl(
     "Discrimination: geometric_mean_one_relative_discrimination",
     fit_console,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "GPCM estimator: marginal_maximum_likelihood",
+    fit_console,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Statistical penalty: none | Finite parameter box: no",
+    fit_console,
+    fixed = TRUE
+  )))
+  summary_console <- capture.output(print(summary_fit))
+  expect_true(any(grepl(
+    "GPCM estimator: marginal_maximum_likelihood",
+    summary_console,
     fixed = TRUE
   )))
   for (plot_type in c("wright", "pathway", "ccc")) {
@@ -104,7 +143,38 @@ test_that("default GPCM MML estimates the common population scale", {
       plot_payload$data$scale_contract$SlopeBasis[1],
       "geometric_mean_one_relative_discrimination"
     )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmEstimatorFamily[1],
+      "marginal_maximum_likelihood"
+    )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmStatisticalPenalty[1],
+      "none"
+    )
+    expect_false(
+      plot_payload$data$scale_contract$GpcmFiniteParameterBox[1]
+    )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmExtremePersonPolicy[1],
+      "posterior_eap_under_population_model"
+    )
   }
+  legacy_fit <- fit
+  legacy_fit$config$gpcm_estimator_family <- NULL
+  legacy_fit$config$gpcm_statistical_penalty <- NULL
+  legacy_fit$config$gpcm_finite_parameter_box <- NULL
+  legacy_fit$config$gpcm_extreme_person_policy <- NULL
+  legacy_contract <- mfrmr:::mfrm_fit_scale_contract(legacy_fit)
+  expect_identical(
+    legacy_contract$GpcmEstimatorFamily[1],
+    "marginal_maximum_likelihood"
+  )
+  expect_identical(legacy_contract$GpcmStatisticalPenalty[1], "none")
+  expect_false(legacy_contract$GpcmFiniteParameterBox[1])
+  expect_identical(
+    legacy_contract$GpcmExtremePersonPolicy[1],
+    "posterior_eap_under_population_model"
+  )
   expect_identical(
     mfrmr:::resolve_dff_refit_controls(fit)$gpcm_mml_identification,
     "free_population"
@@ -125,6 +195,16 @@ test_that("default GPCM MML estimates the common population scale", {
   expect_identical(
     manifest_value("gpcm_mml_identification"),
     "free_population"
+  )
+  expect_identical(
+    manifest_value("gpcm_estimator_family"),
+    "marginal_maximum_likelihood"
+  )
+  expect_identical(manifest_value("gpcm_statistical_penalty"), "none")
+  expect_identical(manifest_value("gpcm_finite_parameter_box"), "FALSE")
+  expect_identical(
+    manifest_value("gpcm_extreme_person_policy"),
+    "posterior_eap_under_population_model"
   )
   expect_identical(
     manifest_value("population_source"),

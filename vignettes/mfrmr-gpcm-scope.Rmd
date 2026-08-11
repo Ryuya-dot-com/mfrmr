@@ -18,13 +18,21 @@ knitr::opts_chunk$set(
 )
 ```
 
-`mfrmr` includes a bounded implementation of the Generalized Partial Credit
-Model (GPCM; Muraki 1992). The bounded estimator is available under the
+`mfrmr` includes a scope-bounded implementation of the Generalized Partial
+Credit Model (GPCM; Muraki 1992). The estimator is available under the
 documented constraints, while several
 downstream reporting helpers remain restricted because score-side semantics
 under free discrimination differ from the Rasch-family case. This vignette
 documents which helpers are available, which are not, and what to use as a
 substitute when a helper is restricted.
+
+In this guide, *bounded* describes the supported model and workflow boundary;
+it does not mean finite lower and upper parameter bounds. The JML route uses an
+unpenalized identified joint likelihood. A non-representable slope proposal can
+be rejected during line search for numerical safety, but that is not a
+statistical penalty. If the likelihood has a certified recession direction,
+the finite optimizer iterate is retained only as a numerical trace and the
+primary result carries an extended-real or typed boundary status.
 
 ## Before fitting: model-choice triage
 
@@ -43,8 +51,9 @@ If equal contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
 
-The word *bounded* also marks an identification restriction. With default
-MML, `gpcm_mml_identification = "free_population"` estimates an intercept-only
+Within that supported scope, an explicit identification contract is still
+required. With default MML,
+`gpcm_mml_identification = "free_population"` estimates an intercept-only
 person distribution \(N(\beta_0,\sigma^2)\), while the level-specific log
 slopes are constrained to sum to zero (geometric mean 1). The fitted slopes are
 therefore relative discriminations with \(G-1\) free contrasts, and
@@ -53,6 +62,25 @@ deviation scale. This retains the conventional common-discrimination degree
 of freedom. The explicit legacy mode
 `gpcm_mml_identification = "fixed_standard_normal"` instead fixes both
 \(\sigma=1\) and the slope geometric mean to one and is a narrower model.
+
+## GPCM is not one estimator
+
+Muraki (1992) supplies the GPCM response model and an MML-EM estimation route;
+it is not a source for the present JML implementation. The present mfrmr JML
+route is an identified fixed-effects, unpenalized joint likelihood with
+post-fit boundary/recession auditing. This differs from penalized JML for GPCM
+(Wijayanto et al. 2021), whose quadratic regularization changes the objective,
+and from software routes that impose finite parameter boxes. A penalized,
+adjusted, or box-constrained point estimate can be a useful comparator, but it
+is not the maximizer of mfrmr's original unpenalized JML objective.
+
+This distinction matters even when all methods return finite numbers. With a
+fixed number of observations per person, jointly estimated person coordinates
+are incidental parameters; structural JML estimates can retain finite-test-
+length bias as the number of persons grows (Hessen 2025). An extreme response
+pattern can additionally make the ordinary finite JML maximum unattained.
+mfrmr therefore keeps recovery/bias evidence, boundary handling, numerical
+convergence, and cross-software agreement as separate gates.
 Under JML, the geometric-mean constraint resolves the scale of the jointly
 estimated person coordinates and slopes.
 
@@ -406,6 +434,18 @@ conditional bias-screening helpers all run under `GPCM` with the caveats listed
 above. `build_apa_outputs(fit_gpcm)` returns a caveated sensitivity-reporting
 object with a `gpcm_boundary`; full FACETS score-side review remains on the
 `RSM` / `PCM` route.
+
+## Estimator references
+
+- Muraki, E. (1992). *A generalized partial credit model: Application of an EM
+  algorithm*. Applied Psychological Measurement, 16, 159--176.
+- Wijayanto, F., Mul, K., Groot, P., van Engelen, B. G. M., & Heskes, T.
+  (2021). *Semi-automated Rasch analysis using in-plus-out-of-questionnaire log
+  likelihood*. British Journal of Mathematical and Statistical Psychology, 74,
+  313--339.
+- Hessen, D. J. (2025). *A convexity-constrained parameterization of the random
+  effects generalized partial credit model*. British Journal of Mathematical
+  and Statistical Psychology, 78, 401--419.
 
 ## Current boundary
 

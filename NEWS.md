@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Clarified the GPCM estimator-family contract. "Bounded GPCM" now explicitly
+  means bounded public model/workflow scope, not finite parameter boxes. New
+  fits record whether the route is unpenalized identified JML or MML, that no
+  statistical penalty or finite box defines the current GPCM estimator, and
+  how extreme Persons are represented. `summary(fit)`, `print(fit)`, and
+  draw-free plot payloads expose the same fields. The documentation now
+  separates Muraki's MML-EM, Wijayanto et al.'s penalized JML, finite-box JML,
+  and mfrmr's post-fit recession audit; numerical overflow safeguards are not
+  described as regularization.
+
 * Unified the basic fitted-object scale contract. `print(fit)` now exposes the
   coordinate and discrimination bases (and population SD when applicable),
   while every draw-free `plot(fit, ...)` payload carries the same structured

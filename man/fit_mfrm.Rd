@@ -429,6 +429,16 @@ branch is a narrower relative-discrimination model. Under JML, the
 geometric-mean-one constraint is required to resolve the ability/slope
 scale because person coordinates are estimated jointly.
 
+Here and elsewhere in the package, "bounded GPCM" means that the documented
+model/workflow scope is deliberately narrow. It does not mean box-constrained
+estimation. The JML branch maximizes the identified joint log-likelihood
+without a statistical penalty or finite bounds on person, location, step, or
+slope coordinates. Numerical line-search rejection of non-representable
+slope proposals is not regularization. When a recession direction is
+certified, the finite optimizer iterate remains a numerical trace and the
+primary result uses the appropriate extended-real or typed boundary status;
+it is not relabelled as a finite maximizer of the original JML objective.
+
 With only two ordered categories (\eqn{K = 1}), the \code{RSM}/\code{PCM}
 branch reduces to the usual binary Rasch logit for the single category
 boundary:

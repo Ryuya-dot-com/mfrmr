@@ -8454,6 +8454,20 @@ mfrm_fit_scale_contract <- function(object) {
   } else {
     "unit_discrimination"
   }
+  estimator_family <- if (!identical(model, "GPCM")) {
+    "not_applicable"
+  } else if (identical(method, "JML")) {
+    "unpenalized_identified_jml"
+  } else {
+    "marginal_maximum_likelihood"
+  }
+  extreme_person_policy <- if (!identical(model, "GPCM")) {
+    "not_applicable"
+  } else if (identical(method, "JML")) {
+    "extended_real_primary_when_certified"
+  } else {
+    "posterior_eap_under_population_model"
+  }
 
   tibble::tibble(
     Model = model,
@@ -8463,6 +8477,21 @@ mfrm_fit_scale_contract <- function(object) {
     SlopeBasis = slope_basis,
     GpcmMmlIdentification = as.character(
       config$gpcm_mml_identification %||% "not_applicable"
+    ),
+    GpcmEstimatorFamily = as.character(
+      config$gpcm_estimator_family %||% estimator_family
+    ),
+    GpcmStatisticalPenalty = as.character(
+      config$gpcm_statistical_penalty %||%
+        if (identical(model, "GPCM")) "none" else "not_applicable"
+    ),
+    GpcmFiniteParameterBox = if (identical(model, "GPCM")) {
+      isTRUE(config$gpcm_finite_parameter_box)
+    } else {
+      NA
+    },
+    GpcmExtremePersonPolicy = as.character(
+      config$gpcm_extreme_person_policy %||% extreme_person_policy
     ),
     FixedLatentSDSlopeField = if (identical(model, "GPCM") &&
                                      identical(method, "MML")) {
@@ -8514,6 +8543,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   step_tbl <- tibble::as_tibble(step_raw)
   slope_tbl <- tibble::as_tibble(slope_raw)
   interaction_tbl <- tibble::as_tibble(interaction_raw)
+  scale_contract <- mfrm_fit_scale_contract(object)
   population_coding <- population_coding_summary_table(population_raw)
   population_coding_variables <- if (nrow(population_coding) > 0L) {
     paste(population_coding$Variable, collapse = ", ")
@@ -8806,6 +8836,14 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     ),
     GpcmCommonDiscrimination = as.character(
       config$gpcm_common_discrimination %||% "not_recorded"
+    ),
+    GpcmEstimatorFamily = as.character(scale_contract$GpcmEstimatorFamily[1]),
+    GpcmStatisticalPenalty = as.character(
+      scale_contract$GpcmStatisticalPenalty[1]
+    ),
+    GpcmFiniteParameterBox = scale_contract$GpcmFiniteParameterBox[1],
+    GpcmExtremePersonPolicy = as.character(
+      scale_contract$GpcmExtremePersonPolicy[1]
     ),
     NoncenterFacet = as.character(config$noncenter_facet %||% "Person"),
     WeightColumn = as.character(config$weight_col %||% NA_character_),
@@ -9900,6 +9938,17 @@ print.summary.mfrm_fit <- function(x, ...) {
           ov$EMRelativeChange %||% NA_real_
         ))
       }
+    }
+    settings <- as.data.frame(x$settings_overview %||% data.frame())
+    if (identical(as.character(ov$Model %||% NA_character_), "GPCM") &&
+        nrow(settings) > 0L && "GpcmEstimatorFamily" %in% names(settings)) {
+      finite_box <- if (isTRUE(settings$GpcmFiniteParameterBox[1])) "yes" else "no"
+      cat(sprintf(
+        "  GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s\n",
+        settings$GpcmEstimatorFamily[1],
+        settings$GpcmStatisticalPenalty[1],
+        finite_box
+      ))
     }
     if (identical(detail, "brief")) {
       ic_lines <- mfrm_ic_console_lines(overview_raw, digits = digits)
