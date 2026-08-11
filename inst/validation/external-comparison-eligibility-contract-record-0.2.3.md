@@ -98,8 +98,11 @@ caller-supplied inclusion-flag replacement, and source binding.
 Row 64 can move to `ok` only after each actual external normalizer constructs
 the expected registry before reading results, populates every identity axis
 from bound input/output metadata, and routes every bias, RMSE, coverage, rank,
-facet-separation, and convergence aggregate through this contract. The first
-adapter binding should be the already bounded FACETS core; ConQuest then adds
-its prospective tolerance boundary, while TAM/immer preserve estimator and
-correction strata. No WP7 new-seed pilot should start before those bindings
-and row 59 FACETS tool identity are independently resolved.
+facet-separation, and convergence aggregate through this contract. Because
+FACETS is unavailable in the current environment, the first actual adapter
+binding is the available ConQuest core; it must retain the unresolved
+prospective tolerance boundary. TAM/immer follow with separate estimator and
+correction strata. FACETS may enter only through a future portable bundle
+created in a licensed environment, and its historical 4.5.0 pilot or an
+unavailable-engine placeholder cannot become eligible. No WP7 FACETS new-seed
+pilot should start before that bundle and row 59 tool identity are resolved.

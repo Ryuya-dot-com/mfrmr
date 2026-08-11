@@ -12,6 +12,12 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   structural checklist slice to review only: real ConQuest, FACETS, TAM, and
   immer normalizers are not yet bound and no equivalence claim is promoted.
 
+* Routed the next external-normalizer work through ConQuest rather than
+  FACETS because no licensed FACETS executable is available in the current
+  environment. FACETS 4.5.0 results remain historical pilot evidence; tool
+  identity and candidate-linked WP7 execution require a portable bundle from
+  a licensed external environment and cannot be closed by mocks.
+
 * Split four repository-only G-theory execution/exact-resume validations from
   their fast contract, hash, mutation, and fail-closed checks. Ordinary tests
   retain the structural checks and report explicit skips for the execution

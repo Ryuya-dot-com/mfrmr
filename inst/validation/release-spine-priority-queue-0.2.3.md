@@ -64,13 +64,17 @@ GPCM umbrella may promote criterion- and rater-owned evidence together.
 
 1. row 66 `external_privacy_and_license_boundary` is structurally closed;
    row 64 `metric_specific_comparison_eligibility` has a passing deterministic
-   contract but remains under review pending real normalizer bindings; and row
-   59 `facets_tool_identity` remains unresolved. All three establish admission.
+   contract but remains under review pending real normalizer bindings. Bind
+   ConQuest first, then TAM/immer where available. Row 59
+   `facets_tool_identity` is an independent external-environment dependency
+   because FACETS is unavailable here; it cannot be closed by a mock.
 2. rows 55--57 `conquest_binary_core`, `conquest_rsm_core`, and
    `conquest_pcm_core` then run as independent, candidate-replayable,
    raw-token-preserving microcases.
 3. row 60 `facets_jml_core_stress` remains method-mode-specific and retains
-   adjustment, extreme-score, and failed-run denominators.
+   adjustment, extreme-score, and failed-run denominators, but its next
+   candidate-linked execution must occur in a licensed FACETS environment
+   through a portable evidence bundle.
 
 External programs are comparators, not a vote. Screen rounding, shared labels,
 or agreement after an undocumented transformation cannot satisfy this wave.
@@ -296,6 +300,11 @@ Row 64 now has a deterministic row-level contract in
 separate eligible, rejected, missing, failed, and unexpected rows across all
 four programs and prove that finite rejected values cannot enter exact
 metric/parameter/method strata. Its evidence status is `review`, not `ok`:
-actual FACETS, ConQuest, TAM, and immer normalizers have not yet populated the
-contract. Row 59 `facets_tool_identity` and those adapter bindings remain the
-active Wave C admission dependencies; no external rerun is authorized.
+actual ConQuest, TAM, immer, and FACETS normalizers have not yet populated the
+contract. The current environment can exercise ConQuest and the installed R
+comparators but cannot execute FACETS. Local Wave C work therefore starts with
+the ConQuest binding. Row 59 remains `review` and must be completed once in a
+licensed external environment with executable, parser, generator, locale,
+command/control/input/output, run-date, and candidate identities in one
+portable bundle. Historical 4.5.0 output and synthetic placeholders cannot
+close it; no FACETS rerun is authorized or possible here.
