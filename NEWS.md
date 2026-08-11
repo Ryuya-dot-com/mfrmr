@@ -4,6 +4,12 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Split four repository-only G-theory execution/exact-resume validations from
+  their fast contract, hash, mutation, and fail-closed checks. Ordinary tests
+  retain the structural checks and report explicit skips for the execution
+  layer; `MFRMR_RUN_GTHEORY_SLOW=true` restores the complete isolated runs.
+  This changes test scheduling only, not the archived model or evidence.
+
 * Completed the sealed four-arm ConQuest 5.47.5 additive RSM/PCM q31/q61
   calibration outside the filesystem sandbox. Exact native A-matrix checks
   establish the 7/9-dimensional sum-zero bases, and q31/q61 final coordinates

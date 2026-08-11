@@ -707,6 +707,12 @@ coverage, D-study stability, and multivariate covariance estimation retain
 their later version-specific precision designs rather than inheriting the
 numerical-rule replication count.
 
+Repository tests follow the same boundary. Contract, schema, hash, mutation,
+and fail-closed checks remain in the ordinary suite. Four isolated fitting and
+exact-resume validations are opt-in with
+`MFRMR_RUN_GTHEORY_SLOW=true`; skipping them in ordinary CI is a scheduling
+decision, not positive evidence or removal of the archived validation.
+
 Passing simulation and software-comparison checks does not establish construct
 validity, fairness, population transportability, or suitability for a
 high-stakes decision. Those require separate domain evidence.

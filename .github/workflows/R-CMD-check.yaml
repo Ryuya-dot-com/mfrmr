@@ -1,7 +1,9 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Runs `R CMD check --as-cran` on every push and pull request. The Linux
-# release job runs the complete regression/vignette suite; the remaining
-# platform jobs run the representative CRAN-time test layer.
+# release job runs the ordinary regression/vignette suite; the remaining
+# platform jobs run the representative CRAN-time test layer. Isolated G-theory
+# execution/resume validation is an explicit slow tier and is not a release
+# check unless MFRMR_RUN_GTHEORY_SLOW is set by a dedicated run.
 on:
   push:
     branches: [main, master, 'dev/**']

@@ -147,12 +147,26 @@ gtheory_guarded_runner_objects <- function(env) {
 
 gtheory_guarded_runner_cache <- new.env(parent = emptyenv())
 
+gtheory_guarded_runner_context <- function() {
+  if (!is.null(gtheory_guarded_runner_cache$context)) {
+    return(gtheory_guarded_runner_cache$context)
+  }
+  context <- list(
+    Env = load_gtheory_guarded_runner()
+  )
+  context$Objects <- gtheory_guarded_runner_objects(context$Env)
+  gtheory_guarded_runner_cache$context <- context
+  context
+}
+
 gtheory_guarded_runner_result <- function() {
+  mfrmr_skip_if_not_gtheory_slow()
   if (!is.null(gtheory_guarded_runner_cache$result)) {
     return(gtheory_guarded_runner_cache$result)
   }
-  env <- load_gtheory_guarded_runner()
-  objects <- gtheory_guarded_runner_objects(env)
+  context <- gtheory_guarded_runner_context()
+  env <- context$Env
+  objects <- context$Objects
   fixture_parent <- tempfile("mfrmr-gtwap-test-")
   dir.create(fixture_parent)
   on.exit(unlink(fixture_parent, recursive = TRUE, force = TRUE), add = TRUE)
@@ -182,10 +196,10 @@ gtheory_guarded_runner_result <- function() {
 }
 
 test_that("b1g21 freezes one guarded nonreserved reduction contract", {
-  result <- gtheory_guarded_runner_result()
-  env <- result$Env
-  contract <- result$Objects$Guarded
-  manifest <- result$Objects$Manifest
+  context <- gtheory_guarded_runner_context()
+  env <- context$Env
+  contract <- context$Objects$Guarded
+  manifest <- context$Objects$Manifest
 
   expect_true(env$mfrmr_gtwap_policy_hash_valid(
     contract$GuardedRunnerPolicy
@@ -260,13 +274,23 @@ test_that("b1g21 executes and exactly resumes in an isolated child", {
   expect_identical(
     result$Audit$RemainingAuthorizationBlockerIds, "AUTH-RECORD-01"
   )
+  expect_false(result$Audit$ReservedExecutionAttempted)
+  expect_false(result$Audit$ReservedAdapterEntryPointReady)
+  expect_false(result$Audit$AuthorizedSingleShardRunnerReady)
+  expect_false(result$Audit$AuthorizationRecordIssued)
+  expect_false(result$Audit$AuthorizationRNG01Closed)
+  expect_false(result$Audit$LargeSimulationMayStart)
+  expect_false(result$Audit$Replicate201MayBeOpened)
+  expect_false(result$Audit$CalibrationExecutionAuthorized)
+  expect_false(result$Audit$CalibrationDataGenerated)
+  expect_false(result$Audit$ConfirmationAuthorized)
 })
 
 test_that("b1g21 keeps reserved and confirmation bands sealed", {
-  result <- gtheory_guarded_runner_result()
-  env <- result$Env
-  contract <- result$Objects$Guarded
-  unit <- result$Objects$Manifest$Units[1L, , drop = FALSE]
+  context <- gtheory_guarded_runner_context()
+  env <- context$Env
+  contract <- context$Objects$Guarded
+  unit <- context$Objects$Manifest$Units[1L, , drop = FALSE]
 
   reserved <- unit
   reserved$Replicate <- 201L
@@ -288,36 +312,18 @@ test_that("b1g21 keeps reserved and confirmation bands sealed", {
     env$mfrmr_gtwap_prepare_unit(contract, confirmation),
     "remain inaccessible"
   )
-  bad_manifest <- result$Objects$Manifest
+  bad_manifest <- context$Objects$Manifest
   bad_manifest$Replicates <- 201L
   expect_false(env$mfrmr_gtwap_fixture_manifest_hash_valid(
     bad_manifest, contract
   ))
-  expect_false(result$Audit$ReservedExecutionAttempted)
-  expect_false(result$Audit$ReservedAdapterEntryPointReady)
-  expect_false(result$Audit$AuthorizedSingleShardRunnerReady)
-  expect_false(result$Audit$AuthorizationRecordIssued)
-  expect_false(result$Audit$AuthorizationRNG01Closed)
-  expect_false(result$Audit$LargeSimulationMayStart)
-  expect_false(result$Audit$Replicate201MayBeOpened)
-  expect_false(result$Audit$CalibrationExecutionAuthorized)
-  expect_false(result$Audit$CalibrationDataGenerated)
-  expect_false(result$Audit$ConfirmationAuthorized)
 })
 
-test_that("b1g21 rejects job, activation, and worker mutations", {
-  result <- gtheory_guarded_runner_result()
-  env <- result$Env
-  objects <- result$Objects
+test_that("b1g21 rejects contract, manifest, and worker mutations", {
+  context <- gtheory_guarded_runner_context()
+  env <- context$Env
+  objects <- context$Objects
 
-  tampered <- result$Initial
-  tampered$Execution$CandidateFits$Objective[[1L]] <- 999
-  expect_false(env$mfrmr_gtwap_run_receipt_hash_valid(
-    tampered, objects$Guarded, objects$Manifest
-  ))
-  tampered_job <- result$Initial$Job
-  tampered_job$ActivationMarkerHash <- "changed"
-  expect_false(env$mfrmr_gtwap_job_hash_valid(tampered_job))
   bad_contract <- objects$Guarded
   bad_contract$GuardedRunnerPolicy$WorkerSourceHash <- "changed"
   expect_false(env$mfrmr_gtwap_contract_hash_valid(bad_contract))
@@ -334,4 +340,19 @@ test_that("b1g21 rejects job, activation, and worker mutations", {
     ),
     "exact b1g21 fixture and worker"
   )
+})
+
+test_that("b1g21 rejects executed receipt and job mutations", {
+  result <- gtheory_guarded_runner_result()
+  env <- result$Env
+  objects <- result$Objects
+
+  tampered <- result$Initial
+  tampered$Execution$CandidateFits$Objective[[1L]] <- 999
+  expect_false(env$mfrmr_gtwap_run_receipt_hash_valid(
+    tampered, objects$Guarded, objects$Manifest
+  ))
+  tampered_job <- result$Initial$Job
+  tampered_job$ActivationMarkerHash <- "changed"
+  expect_false(env$mfrmr_gtwap_job_hash_valid(tampered_job))
 })

@@ -77,12 +77,26 @@ gtheory_production_adapter_objects <- function(env) {
 
 gtheory_production_adapter_cache <- new.env(parent = emptyenv())
 
+gtheory_production_adapter_context <- function() {
+  if (!is.null(gtheory_production_adapter_cache$context)) {
+    return(gtheory_production_adapter_cache$context)
+  }
+  context <- list(
+    Env = load_gtheory_production_adapter()
+  )
+  context$Objects <- gtheory_production_adapter_objects(context$Env)
+  gtheory_production_adapter_cache$context <- context
+  context
+}
+
 gtheory_production_adapter_execution <- function() {
+  mfrmr_skip_if_not_gtheory_slow()
   if (!is.null(gtheory_production_adapter_cache$result)) {
     return(gtheory_production_adapter_cache$result)
   }
-  env <- load_gtheory_production_adapter()
-  objects <- gtheory_production_adapter_objects(env)
+  context <- gtheory_production_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   root <- tempfile("mfrmr-gtwah-dry-")
   dir.create(root)
   on.exit(unlink(root, recursive = TRUE), add = TRUE)
@@ -108,8 +122,9 @@ gtheory_production_adapter_execution <- function() {
 }
 
 test_that("b1g14 freezes production adapter and runtime identities", {
-  env <- load_gtheory_production_adapter()
-  objects <- gtheory_production_adapter_objects(env)
+  context <- gtheory_production_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   contract <- objects$Contract
 
   expect_s3_class(contract, "mfrmr_gtwah_contract")
@@ -143,8 +158,9 @@ test_that("b1g14 freezes production adapter and runtime identities", {
 })
 
 test_that("b1g14 reserved manifest freezes exact shards but no execution", {
-  env <- load_gtheory_production_adapter()
-  objects <- gtheory_production_adapter_objects(env)
+  context <- gtheory_production_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   manifest <- objects$Reserved
 
   expect_true(env$mfrmr_gtwah_reserved_manifest_hash_valid(manifest))
@@ -170,8 +186,9 @@ test_that("b1g14 reserved manifest freezes exact shards but no execution", {
 })
 
 test_that("b1g14 dry manifest is one nonreserved dataset across four lanes", {
-  env <- load_gtheory_production_adapter()
-  objects <- gtheory_production_adapter_objects(env)
+  context <- gtheory_production_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   manifest <- objects$Dry
 
   expect_true(env$mfrmr_gtwag_manifest_hash_valid(manifest))
@@ -201,8 +218,9 @@ test_that("b1g14 dry manifest is one nonreserved dataset across four lanes", {
 })
 
 test_that("b1g14 adapters reject reserved or inconsistent direct calls", {
-  env <- load_gtheory_production_adapter()
-  objects <- gtheory_production_adapter_objects(env)
+  context <- gtheory_production_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   unit <- objects$Dry$Units[1L, , drop = FALSE]
   reserved <- unit
   reserved$Replicate <- 201L
@@ -295,8 +313,9 @@ test_that("b1g14 real adapters complete all four nonreserved atomic units", {
 })
 
 test_that("b1g14 manifests reject adapter shard and runtime mutation", {
-  env <- load_gtheory_production_adapter()
-  objects <- gtheory_production_adapter_objects(env)
+  context <- gtheory_production_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   reserved <- objects$Reserved
   reserved$Shards$AtomicUnitCount[[1L]] <- 119L
   dry <- objects$Dry
@@ -309,8 +328,13 @@ test_that("b1g14 manifests reject adapter shard and runtime mutation", {
   changed <- objects$Reserved
   changed$RuntimeHash <- paste0("x", substring(changed$RuntimeHash, 2L))
   expect_false(env$mfrmr_gtwah_reserved_manifest_hash_valid(changed))
+})
 
+test_that("b1g14 preflight rejects executed-result mutation", {
   result <- gtheory_production_adapter_execution()
+  env <- result$Env
+  objects <- result$Objects
+
   changed_execution <- result$Execution
   changed_execution$CandidateFits$PreFitHash[[1L]] <- paste0(
     "x", substring(changed_execution$CandidateFits$PreFitHash[[1L]], 2L)

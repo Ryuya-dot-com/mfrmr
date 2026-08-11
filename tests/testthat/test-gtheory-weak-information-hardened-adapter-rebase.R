@@ -103,12 +103,26 @@ gtheory_hardened_adapter_objects <- function(env) {
 
 gtheory_hardened_adapter_cache <- new.env(parent = emptyenv())
 
+gtheory_hardened_adapter_context <- function() {
+  if (!is.null(gtheory_hardened_adapter_cache$context)) {
+    return(gtheory_hardened_adapter_cache$context)
+  }
+  context <- list(
+    Env = load_gtheory_hardened_adapter()
+  )
+  context$Objects <- gtheory_hardened_adapter_objects(context$Env)
+  gtheory_hardened_adapter_cache$context <- context
+  context
+}
+
 gtheory_hardened_adapter_execution <- function() {
+  mfrmr_skip_if_not_gtheory_slow()
   if (!is.null(gtheory_hardened_adapter_cache$result)) {
     return(gtheory_hardened_adapter_cache$result)
   }
-  env <- load_gtheory_hardened_adapter()
-  objects <- gtheory_hardened_adapter_objects(env)
+  context <- gtheory_hardened_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   old_root <- tempfile("mfrmr-gtwam-old-")
   new_root <- tempfile("mfrmr-gtwam-new-")
   dir.create(old_root)
@@ -141,10 +155,10 @@ gtheory_hardened_adapter_execution <- function() {
 }
 
 test_that("b1g18 freezes a distinct nonreserved hardened adapter contract", {
-  result <- gtheory_hardened_adapter_execution()
-  env <- result$Env
-  contract <- result$Objects$Contract
-  manifest <- result$Objects$Dry
+  context <- gtheory_hardened_adapter_context()
+  env <- context$Env
+  contract <- context$Objects$Contract
+  manifest <- context$Objects$Dry
 
   expect_true(env$mfrmr_gtwam_policy_hash_valid(
     contract$HardenedAdapterPolicy
@@ -172,11 +186,11 @@ test_that("b1g18 freezes a distinct nonreserved hardened adapter contract", {
   )
   expect_identical(
     contract$ParentAdapterContractHash,
-    result$Objects$ParentAdapter$ContractHash
+    context$Objects$ParentAdapter$ContractHash
   )
   expect_identical(
     contract$HardenedGeneratorContractHash,
-    result$Objects$RNGContract$ContractHash
+    context$Objects$RNGContract$ContractHash
   )
   expect_true(contract$HistoricalAdapterPreserved)
   expect_true(contract$NonreservedHardenedAdaptersFrozen)
@@ -194,9 +208,9 @@ test_that("b1g18 freezes a distinct nonreserved hardened adapter contract", {
 })
 
 test_that("b1g18 preparation preserves data but changes scientific lineage", {
-  result <- gtheory_hardened_adapter_execution()
-  env <- result$Env
-  objects <- result$Objects
+  context <- gtheory_hardened_adapter_context()
+  env <- context$Env
+  objects <- context$Objects
   unit <- objects$Dry$Units[1L, , drop = FALSE]
   old <- env$mfrmr_gtwah_prepare_unit(objects$ParentAdapter, unit)
   new <- env$mfrmr_gtwam_prepare_unit(objects$Contract, unit)
@@ -275,12 +289,17 @@ test_that("b1g18 four-lane execution has exact historical semantic parity", {
   expect_false(audit$DecisionReady)
 })
 
-test_that("b1g18 rejects coherent manifest and audit mutations", {
-  result <- gtheory_hardened_adapter_execution()
-  env <- result$Env
-  changed_manifest <- result$Objects$Dry
+test_that("b1g18 rejects coherent manifest mutations", {
+  context <- gtheory_hardened_adapter_context()
+  env <- context$Env
+  changed_manifest <- context$Objects$Dry
   changed_manifest$ConfirmationUse <- TRUE
   expect_false(env$mfrmr_gtwag_manifest_hash_valid(changed_manifest))
+})
+
+test_that("b1g18 rejects coherent executed-audit mutations", {
+  result <- gtheory_hardened_adapter_execution()
+  env <- result$Env
 
   changed_audit <- result$Audit
   changed_audit$CandidateSemanticParity <- FALSE

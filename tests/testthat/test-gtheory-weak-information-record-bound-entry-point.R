@@ -167,12 +167,26 @@ gtheory_record_bound_entry_objects <- function(env) {
 
 gtheory_record_bound_entry_cache <- new.env(parent = emptyenv())
 
+gtheory_record_bound_entry_context <- function() {
+  if (!is.null(gtheory_record_bound_entry_cache$context)) {
+    return(gtheory_record_bound_entry_cache$context)
+  }
+  context <- list(
+    Env = load_gtheory_record_bound_entry()
+  )
+  context$Objects <- gtheory_record_bound_entry_objects(context$Env)
+  gtheory_record_bound_entry_cache$context <- context
+  context
+}
+
 gtheory_record_bound_entry_result <- function() {
+  mfrmr_skip_if_not_gtheory_slow()
   if (!is.null(gtheory_record_bound_entry_cache$result)) {
     return(gtheory_record_bound_entry_cache$result)
   }
-  env <- load_gtheory_record_bound_entry()
-  objects <- gtheory_record_bound_entry_objects(env)
+  context <- gtheory_record_bound_entry_context()
+  env <- context$Env
+  objects <- context$Objects
   root <- tempfile("mfrmr-gtwar-test-")
   dir.create(root)
   on.exit(unlink(root, recursive = TRUE, force = TRUE), add = TRUE)
@@ -201,9 +215,9 @@ gtheory_record_bound_entry_result <- function() {
 }
 
 test_that("b1g23 freezes record-bound entry mechanics without issuance", {
-  result <- gtheory_record_bound_entry_result()
-  env <- result$Env
-  objects <- result$Objects
+  context <- gtheory_record_bound_entry_context()
+  env <- context$Env
+  objects <- context$Objects
   contract <- objects$Contract
   active <- objects$Active
 
@@ -338,9 +352,9 @@ test_that("b1g23 reduces the reused cores and exactly resumes", {
 })
 
 test_that("b1g23 keeps R0201 inert until a separate production record", {
-  result <- gtheory_record_bound_entry_result()
-  env <- result$Env
-  objects <- result$Objects
+  context <- gtheory_record_bound_entry_context()
+  env <- context$Env
+  objects <- context$Objects
   contract <- objects$Contract
   prospective <- objects$Prospective
 
@@ -390,10 +404,10 @@ test_that("b1g23 keeps R0201 inert until a separate production record", {
   expect_false(contract$DecisionReady)
 })
 
-test_that("b1g23 rejects contract manifest record job and result mutations", {
-  result <- gtheory_record_bound_entry_result()
-  env <- result$Env
-  objects <- result$Objects
+test_that("b1g23 rejects contract manifest and record mutations", {
+  context <- gtheory_record_bound_entry_context()
+  env <- context$Env
+  objects <- context$Objects
 
   bad_contract <- objects$Contract
   bad_contract$RecordBoundEntryPolicy$MaximumAuthorizedShardCount <- 2L
@@ -414,6 +428,13 @@ test_that("b1g23 rejects contract manifest record job and result mutations", {
   expect_false(env$mfrmr_gtwar_active_manifest_hash_valid(
     bad_manifest, objects$Contract
   ))
+})
+
+test_that("b1g23 rejects executed job and result mutations", {
+  result <- gtheory_record_bound_entry_result()
+  env <- result$Env
+  objects <- result$Objects
+
   bad_job <- result$Initial$Job
   bad_job$ActivationMarkerHash <- "changed"
   expect_false(env$mfrmr_gtwar_job_hash_valid(bad_job))

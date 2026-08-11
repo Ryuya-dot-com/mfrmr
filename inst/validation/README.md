@@ -26,6 +26,18 @@ but do not broaden current API scope.
 | Optional stress helper | A script for slower validation runs that should not run during ordinary CRAN checks. |
 | Scope excerpt | A bounded roadmap or capability note used to keep unsupported claims out of public helpers. |
 
+Ordinary repository tests retain the G-theory contract, schema, hash,
+mutation, and fail-closed checks. The isolated fitting and exact-resume layer
+for the guarded shard runner, production adapter, hardened adapter, and
+record-bound entry point is intentionally opt-in:
+
+```sh
+MFRMR_RUN_GTHEORY_SLOW=true Rscript -e 'devtools::test(filter = "gtheory-weak-information-(guarded-shard-runner|hardened-adapter-rebase|production-adapter-preflight|record-bound-entry-point)")'
+```
+
+An ordinary skip is not evidence that this layer passed. Release evidence must
+identify whether the opt-in layer ran and retain its test log.
+
 ## Primary files
 
 - `internal-roadmap-0.2.3.md`: repository-only maintainer roadmap containing
