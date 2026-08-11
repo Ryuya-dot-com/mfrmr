@@ -3928,9 +3928,29 @@ all seven remain `P0StabilityEligible = FALSE`: no solution tolerance,
 boundary rule, or integration rule is frozen. The compact signature also
 leaves boundary, Hessian, interval, DFF, fit, rank, and separation fields
 explicitly unevaluated. Thus this closes P0 instrumentation for one microcase,
-not P0 evidence scope. The next admissible GPCM slice is the bounded endpoint/
-near-boundary start-by-q cross and separate marginal-MML slope/variance
-profiles; P2--P3 work cannot be used to bypass it.
+not P0 evidence scope. At that point the next admissible GPCM slice was the
+bounded endpoint/near-boundary audit and separate marginal-MML slope/variance
+profiles; P2--P3 work could not be used to bypass it.
+
+That bounded Person slice is now complete as P0b in
+`gpcm-endpoint-solution-stability-p0b-0.2.3.R` and its execution record. The
+reflected exact-high, exact-low, 19/20 near-high, and 19/20 near-low fixtures
+retain all five categories and the same seven-start registry. All 28 candidate
+vectors returned, yet each scenario has only one existing-rule pass,
+`variance_low`; it improves the common objective over the default by about
+1.72--4.19 and lies in a qualitatively different population-variance basin.
+The default source EAPs are finite but accompany enormous variances and
+`PopulationConverged = FALSE`. Accordingly all candidates remain
+`P0StabilityEligible = FALSE`; neither the diagnostic lowest-objective label
+nor the derivative-step calibration authorizes selection.
+
+The immediate P1 slice is now narrower than the earlier generic start-by-q
+cross: profile `log_sigma2` in both directions, then cross only the default and
+`variance_low` basins over q=31/61/91 with one common dense-grid reevaluation.
+Keep population variance, slope-only movement, and joint movement as separate
+states, and materialize candidate EAP/posterior-SD consequences only after
+those source-fit gates. Isolated Rater endpoints and constant-response controls
+remain a different fixed-facet lane. No large simulation is admissible here.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

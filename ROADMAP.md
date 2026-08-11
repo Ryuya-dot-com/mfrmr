@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-11.
+Status: public roadmap, updated 2026-08-12.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -551,7 +551,19 @@ fail-closed decision signature. All seven returned near the same numerical
 solution, but no tolerance is frozen and all boundary, Hessian, interval, DFF,
 fit, rank, and separation fields remain explicitly unevaluated. The result is
 therefore a working gate instrument, not a global-maximum or inference-ready
-claim; endpoint/near-boundary and start-by-quadrature adjudication remain next.
+claim; endpoint fixed-facet controls and start-by-quadrature adjudication remain
+next.
+
+A bounded P0b extension now covers reflected all-5/all-1 and 19/20 near-endpoint
+Person patterns. It preserves the intended distinction between exact-response
+provenance and near-endpoint responses, but it also shows why a finite MML EAP
+cannot by itself be called stable: all four default source fits have
+nonconverged population states and very large population variances, while a
+prespecified low-variance start attains a materially lower common objective in
+every case. No candidate is selected and no tolerance or capability is
+promoted. The next narrow gate is a population-variance profile and a
+default-versus-low-variance q=31/61/91 comparison on a common dense evaluation
+grid; Rater endpoints remain separate fixed-facet boundary work.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

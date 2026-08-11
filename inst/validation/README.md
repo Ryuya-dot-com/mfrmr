@@ -94,6 +94,16 @@ identify whether the opt-in layer ran and retain its test log.
   eligibility, coordinate transformation, and exact DFF/fit/rank/readiness
   decision signatures. It records current implemented versus open layers and
   authorizes no tolerance, simulation, or capability promotion.
+- `gpcm-solution-stability-p0-0.2.3.R` and
+  `gpcm-solution-stability-p0-record-0.2.3.md`: seven-start canonical-objective,
+  gradient, free-dimension, semantic-coordinate, and decision-signature
+  instrument plus its benign-microcase record.
+- `gpcm-endpoint-solution-stability-p0b-0.2.3.R` and
+  `gpcm-endpoint-solution-stability-p0b-record-0.2.3.md`: reflected exact and
+  19/20 near Person endpoint extension. It records finite EAP provenance but
+  start-sensitive population scale, keeps every candidate review-only, and
+  narrows the next work to variance-profile and start-by-q adjudication rather
+  than a broad simulation.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

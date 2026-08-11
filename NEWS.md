@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a deterministic GPCM endpoint solution-stability P0b instrument and
+  execution record. Reflected all-5/all-1 and 19/20 near-endpoint Person cases
+  retain all five categories and replay the seven fixed P0 starts. Finite MML
+  EAP provenance is preserved, but every default source fit has a nonconverged,
+  extremely large population variance; in each scenario the prespecified
+  `variance_low` start is the only existing-rule pass and has a materially
+  lower common objective. All candidates remain review-only. No solution,
+  tolerance, continuous-integration result, uncertainty, DFF/fit/rank result,
+  simulation, or capability is promoted.
+
 * Added a GPCM solution and decision-stability roadmap and its first
   deterministic P0 validation instrument. Seven fixed GPCM-MML starts are
   reevaluated through one canonical objective, analytic and independent

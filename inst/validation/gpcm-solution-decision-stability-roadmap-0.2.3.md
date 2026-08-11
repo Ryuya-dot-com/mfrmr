@@ -35,7 +35,7 @@ decision contract for those cases and for ordinary or near-boundary GPCM fits.
 | Slope boundary | Scoped JML log-slope and joint additive/log-slope path instruments with positive and negative controls. | General rate/curved paths, complete primary-value propagation, and separate marginal-MML boundary geometry remain open. |
 | Variance boundary | Positive variance coordinates and transformation Jacobians are recorded. | A finite log-variance, local Hessian, or numerical lower value does not determine whether variance tends to zero; a marginal profile and boundary-aware inference rule remain open. |
 | Quadrature | A paired historical fixed-standard-normal q=31/61/91 GPCM-MML calibration with common q=91 objective reevaluation. | No q tolerance is frozen and the result cannot be transported silently to the current free-population default. Objective proximity did not guarantee step, slope, EAP, posterior-SD, or gradient-state stability. |
-| Multiple solutions | The repository-only P0 microcase now fixes seven GPCM-MML starts, reevaluates every result through one objective plus analytic/independent score, checks five free-dimension counts, and reports free and semantic class-wise differences with an exact fail-closed decision-signature schema. | This is one benign free-population fixture with no frozen tolerance or boundary/q adjudication. A unique selected-cluster rule and endpoint/near-boundary scope are not complete. |
+| Multiple solutions | The P0 microcase fixes seven GPCM-MML starts, one canonical objective plus analytic/independent score, five free-dimension counts, semantic differences, and fail-closed signatures. P0b applies the same registry to reflected exact and 19/20 near Person endpoints. | The benign case is tightly clustered, but every P0b endpoint scenario has only one existing-rule pass (`variance_low`) with a materially lower objective and different population scale than the default. No tolerance, selected cluster, variance-boundary result, or q adjudication is frozen. |
 | DFF | Residual and linked-refit screens, multiplicity adjustment, typed linking/sparsity fields, and explicit formal-inference exclusions. | P-values and labels remain screening-only; joint/replicate covariance, anchor uncertainty, calibrated null/alternative behavior, and consequence classification remain open. |
 | Infit/outfit | Mean-square, ZSTD, engine/FACETS-style transformations, tables, plots, and consistency tests execute. | GPCM false-positive and attribution behavior by estimator, topology, category support, and boundary state is not calibrated; universal cutoffs are not supported. |
 | Ranks/separation | Typed extreme-Person exclusions and exploratory facet separation are available. | Uncertainty-aware Person/Rater ranks, tie handling, q/start stability, and exclusion-safe facet-separation decisions remain open. |
@@ -129,6 +129,19 @@ difference about `1.46e-5`. These are observations, not acceptance cutoffs.
 Boundary, Hessian, interval, DFF, fit, rank, and separation states remain
 explicitly unevaluated, so every candidate remains review-only and no solution
 is selected.
+
+The bounded P0b extension is recorded in
+`gpcm-endpoint-solution-stability-p0b-record-0.2.3.md`. It applies the same
+seven starts to reflected exact-high, exact-low, 19/20 near-high, and 19/20
+near-low Person patterns with five categories retained within every Criterion.
+All 28 optimizations returned finite vectors, but in each scenario only the
+`variance_low` start passed the existing numerical rule. That start improved
+the common objective over the default by about 1.72--4.19 and occupied a
+qualitatively different population-variance basin. The source EAPs remained
+finite but were paired with enormous variances and nonconverged population
+states. Therefore zero candidates are stability eligible; this is evidence to
+profile variance and integration, not permission to select the lowest observed
+candidate.
 
 ## Solution selection and coordinate agreement
 
@@ -225,12 +238,16 @@ not retrospective widening of the tolerance.
    registry, canonical objective plus analytic/independent score reevaluator,
    five-way free-dimension count, transformed class-wise differences, fixed
    seven-start microcase, and compact fail-closed decision signature are now
-   implemented repository-only. Next join this instrument to the endpoint
-   high/low, near-boundary, and negative controls without freezing a tolerance.
+   implemented. Reflected exact and 19/20 near Person endpoints are now joined
+   through P0b without freezing a tolerance. Next retain isolated Rater,
+   constant-response, anchor, and unequal-workload negative controls as a
+   separate fixed-facet boundary lane.
 2. **P1 -- boundary and integration adjudication.** Complete the retained JML
    joint additive/log-slope scope, add the separate MML fixed-facet/slope and
-   variance-profile scopes, and run the bounded start-by-q panel. Do not freeze
-   q or a local-solution tolerance from the historical five-replicate panel.
+   variance-profile scopes, and first cross the default and `variance_low`
+   basins with q=31/61/91 plus one common dense reevaluation grid. Do not freeze
+   q or a local-solution tolerance from the historical five-replicate panel,
+   and do not call finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

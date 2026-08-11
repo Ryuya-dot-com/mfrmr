@@ -1,6 +1,6 @@
 # GPCM extreme-response and central-surface audit for 0.2.3
 
-Status: deterministic development audit, 2026-08-11. This record changes no
+Status: deterministic development audit, refined 2026-08-12. This record changes no
 GPCM capability row and is not exact-candidate or external-validation evidence.
 
 ## Decision being checked
@@ -143,14 +143,14 @@ not the maximizer of the unmodified JML likelihood.
 
 | ID | Five-category construction | Required conclusion | Current state |
 | --- | --- | --- | --- |
-| `EXT5-P-HI` | One independently free Person receives 5 from every assigned Rater on every Criterion; all other data retain categories 1--5. | JML primary `+Inf`; optimizer iterate trace-only; MML finite EAP with provenance. | Covered in the retained combined challenge. |
-| `EXT5-P-LO` | Sign-reversed all-1 Person with otherwise retained 1--5 support. | JML primary `-Inf`; the same SE/CI/ranking exclusions as the high endpoint; MML finite EAP. | Generic low/high Person contract is tested; a full five-category GPCM surface-parity case remains. |
+| `EXT5-P-HI` | One independently free Person receives 5 from every assigned Rater on every Criterion; all other data retain categories 1--5. | JML primary `+Inf`; optimizer iterate trace-only; MML finite EAP with provenance. | JML is covered in the retained combined challenge. The reflected 20-response P0b MML microcase preserves finite-EAP provenance but exposes a materially better low-variance start; it remains review-only. |
+| `EXT5-P-LO` | Sign-reversed all-1 Person with otherwise retained 1--5 support. | JML primary `-Inf`; the same SE/CI/ranking exclusions as the high endpoint; MML finite EAP. | The reflected five-category P0b MML case now covers sign and provenance, but also exposes start-sensitive population scale. Full JML surface/public propagation remains separate. |
 | `EXT5-R-HI` | One Rater gives 5 on every retained Person-by-Criterion assignment, first without any extreme Person. | Record the support boundary; report `severity -> -Inf` only when the exact constrained audit certifies it. | The all-5 support and a relative joint direction are covered only in the combined challenge; isolated attribution remains. |
 | `EXT5-R-LO` | Sign-reversed all-1 Rater. | Record the support boundary; report `severity -> +Inf` only when certified. | Structural sign behavior is tested outside the five-category GPCM surface; full parity remains. |
 | `EXT5-PR-JOINT` | Cross the Person and Rater endpoints as high/high, low/low, and high/low on a connected design. | Separate the Person sufficient-score result from any compensating facet direction; do not count one joint geometry as several independent boundary facts. | High/high is covered; attribution contrasts remain. |
 | `EXT5-CONST-NEG` | A response-constant Rater in a design where the constrained cone has no recession direction. | Support warning present, `finite_in_audited_subspace` when the exact audit is complete, and no automatic infinity. | Binary structural negative control exists; five-category GPCM control remains. |
 | `EXT5-ANCHOR` | Repeat the isolated Rater endpoint with that level directly anchored, then with only a linked external anchor. | Directly fixed values stay `fixed`; linked anchors must be evaluated through the exact free-coordinate design and may not inherit the unanchored conclusion. | Additive direct-anchor behavior is tested; full GPCM and linked-anchor parity remain. |
-| `EXT5-NEAR` | Endpoint proportions below 1, prespecified near 0.95, under balanced and unequal Rater workloads. | `weak_information` or finite audited status as appropriate; never an exact-boundary label from a heuristic rate cutoff. | Pending deterministic calibration; not a simulation trigger. |
+| `EXT5-NEAR` | Endpoint proportions below 1, prespecified near 0.95, under balanced and unequal Rater workloads. | `weak_information` or finite audited status as appropriate; never an exact-boundary label from a heuristic rate cutoff. | Balanced 19/20 high and low Person cases are covered by P0b without an exact-boundary label; both expose start-sensitive population scale. Unequal workload remains pending. |
 | `EXT5-CELL` | Make a Criterion and then one Rater-by-Criterion cell all 5/all 1, with the interaction disabled and enabled in separate models. | Attribute a candidate only to parameters present in the fitted model; use the exact parameter orientation and cone/path certificate. | Pending; interaction results must not be inferred from the additive Rater audit. |
 | `EXT5-STEP` | Remove an internal category globally, within one Criterion, and within one Rater workload in separate cases. | Keep category/step support, Person boundary, and facet recession as distinct diagnoses. | Global and local support infrastructure exists; endpoint integration remains. |
 
@@ -159,11 +159,30 @@ microcase question. It should not be inflated into a factorial recovery study.
 High/low symmetry is required because it detects orientation and recoding
 errors that a one-sided all-5 case cannot detect.
 
+### Endpoint solution-stability P0b result
+
+The fixed P0b extension uses 20 Persons, five Raters, four Criteria, all five
+categories within every Criterion, q=31, and the seven prespecified P0 starts.
+Exact high/low and 19/20 near-high/near-low Person cases are exact score
+reflections. All four source fits report finite posterior EAPs, but all four
+have `PopulationConverged = FALSE`, `InferenceReady = FALSE`, and extremely
+large fitted population variances. In every scenario only the `variance_low`
+start passes the existing optimizer numerical rule and has a lower common
+objective than the default by about 1.72--4.19. None of the 28 candidates is
+P0-stability eligible because the population-boundary, solution-tolerance, and
+continuous-integration rules are not frozen.
+
+Thus the endpoint contract is working as provenance, while the current source
+fit is not evidence of a stable finite population solution. The record is
+`gpcm-endpoint-solution-stability-p0b-record-0.2.3.md`; it authorizes neither a
+candidate replacement nor a large simulation.
+
 ### Ordered work and exit criteria
 
-1. **Close the 0.2.3 deterministic core.** Add the missing five-category
-   `EXT5-P-LO`, isolated `EXT5-R-HI/LO`, joint-attribution, constant-response
-   negative, and anchor controls. Require exact statuses, audit scope,
+1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
+   Person exact/near P0b slice, then add isolated `EXT5-R-HI/LO`,
+   joint-attribution, constant-response negative, anchor, and unequal-workload
+   near controls. Require exact statuses, audit scope,
    completeness, reason codes, and independent likelihood-path checks; do not
    accept optimizer convergence as a substitute.
 2. **Propagate one state contract through the public surfaces.** `fit`,
@@ -208,5 +227,6 @@ The companion `gpcm-solution-decision-stability-roadmap-0.2.3.md` defines the
 next cross-cutting gate for Hessian uncertainty, slope/variance boundaries,
 multiple solutions, quadrature, canonical objective/gradient/free-dimension
 agreement, transformed-coordinate differences, and exact DFF/fit/rank/
-readiness decision signatures. It does not change the endpoint conclusions or
-authorize a large simulation.
+readiness decision signatures. Its P0b record now closes the reflected Person
+exact/near instrumentation slice but leaves population boundary and integration
+adjudication open; it does not authorize a large simulation.
