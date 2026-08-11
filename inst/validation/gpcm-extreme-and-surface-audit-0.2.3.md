@@ -208,6 +208,16 @@ sensitive, so finite objectives cannot be treated as a profiled zero-boundary
 solution. The next deterministic lane must combine zero variance with explicit
 log-slope paths; neither the finite interior nor the zero boundary is selected.
 
+P1d implements that first combined lane along the C4 direction independently
+observed in all four P1c scenarios. It decreases variance at twice the log rate
+at which C4 slope grows and compensates the other slopes symmetrically, so the
+C4 latent-noise scale remains nonzero and q=1 transport is invalid. Finite
+q=61/91/121 objectives agree closely at the same vectors, but stationarity
+degrades sharply: 14/48 points pass overall and zero of 32 points with
+`t >= 4` passes. The worse terminal objectives therefore do not yet certify a
+finite turnback. A coordinate-aware reduced-limit or reparameterized profile
+must precede the separate upper-variance path and source-solution selection.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected

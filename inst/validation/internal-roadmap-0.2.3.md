@@ -4016,6 +4016,37 @@ variance joint path remains separate. Until both and the source-selection rule
 are resolved, the q-stable interior candidate remains local and Hessian,
 DFF/fit/rank, and broad simulation remain inadmissible.
 
+P1d is now complete in
+`gpcm-zero-variance-log-slope-path-p1d-0.2.3.R` and its execution record. The
+observed P1c geometry points to Criterion C4 in every reflected scenario. P1d
+therefore fixes a single explicit compensation ray: `sigma2` falls as
+`exp(-2t)`, C4 slope grows as `exp(t)`, and the other three log slopes fall by
+`t/3`. This preserves sum-zero log slopes and holds C4
+`slope * population SD` constant. The P1c fixed-nuisance dominated-convergence
+argument is not uniform on this sequence, so q=1 transport is prohibited and
+q=121 remains the fitting evaluator.
+
+All 48 two-route finite points return. Same-vector q=61/91/121 objective
+ranges are at most about `1.74e-11`, and an independent directional derivative
+ladder differs from the analytic derivative by at most about `4.93e-6`.
+Nevertheless only 14/48 points pass the existing nuisance-stationarity rule:
+all eight `t = 0` points, six of eight `t = 2` points, and zero of 32 points at
+`t >= 4`. Terminal objectives are 3.52--4.51 larger than their interior
+anchors, but routes differ by as much as about `0.197` and terminal derivative
+signs differ. Every scenario therefore remains
+`bounded_joint_path_inconclusive`; neither recession nor finite turnback is
+certified.
+
+The failure is now localized to nuisance coordinate geometry rather than
+quadrature density. At large `t`, Rater facets contract toward zero while some
+step coordinates and route differences expand. The next efficient gate is to
+derive which step, facet, and population-location combinations must scale to
+keep GPCM category logits finite, then optimize the resulting reduced joint
+limit or a well-scaled finite representation. Raising `maxit`, densifying `t`,
+starting Hessian/DFF/fit/rank work, or launching broad simulation would not
+resolve the identified problem. The upper/joint variance boundary remains a
+separate later gate.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

@@ -128,6 +128,15 @@ identify whether the opt-in layer ran and retain its test log.
   12 finite boundary traces remain nonstationary and comparison-ineligible;
   observed slope dispersion redirects the next gate to a joint zero-variance/
   slope path without freezing a cutoff or selecting a solution.
+- `gpcm-zero-variance-log-slope-path-p1d-0.2.3.R` and
+  `gpcm-zero-variance-log-slope-path-p1d-record-0.2.3.md`: bounded two-route
+  profile of the observed C4 joint lower-boundary ray. The construction keeps
+  C4 `slope * population SD` invariant under sum-zero log-slope identification
+  and therefore forbids transporting the fixed-nuisance q=1 limit. q=61/91/
+  121 evaluations remain coherent, but only 14/48 points pass nuisance
+  stationarity and no `t >= 4` point does. The result is inconclusive and
+  redirects the next gate to a coordinate-aware reduced limit rather than
+  denser paths, a larger iteration ceiling, or solution selection.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

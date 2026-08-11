@@ -177,6 +177,19 @@ boundary objective with the qualified interior and selects no solution. It
 narrows the next boundary work to a prespecified joint zero-variance/log-slope
 path instead of treating population variance as an isolated regular parameter.
 
+The P1d record,
+`gpcm-zero-variance-log-slope-path-p1d-record-0.2.3.md`, now evaluates the
+observed C4 joint ray. Its slope rates sum to zero and C4
+`slope * population SD` remains constant, which makes the path a non-uniform
+limit and explicitly blocks reuse of the fixed-nuisance q=1 identity. Both
+forward and reverse routes return at all six declared path values. Same-vector
+q=61/91/121 objectives are coherent, but only 14/48 points pass nuisance
+stationarity and none with `t >= 4` passes. Higher terminal objectives are
+therefore evidence against simple monotone recession on this ray, not a
+certified finite turnback or a selected interior solution. The next lower-
+boundary work is a coordinate-aware reduced limit or reparameterization, not
+more grid points or a retrospective stationarity tolerance.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -282,11 +295,13 @@ not retrospective widening of the tolerance.
    q=31/61/91 refit, and P1b now conditionally closes that finite-q calibration
    under a held-out q=121 evaluator. P1c closes the fixed-nuisance lower-limit
    identity but finds no stationary zero-boundary nuisance candidate. Retain
-   the default/high basin only as a diagnostic trace; next audit the joint
-   zero-variance/log-slope path, then the separate upper/joint variance path
-   and source-solution selection contract. Do not add q points by default,
-   freeze an observed slope or solution tolerance, or call finite-grid
-   agreement a continuous-integral certificate.
+   the default/high basin only as a diagnostic trace. P1d shows that the first
+   declared C4 joint ray is quadrature-coherent but nuisance-nonstationary
+   beyond `t = 2`; next derive its coordinate-aware reduced limit or a well-
+   scaled finite representation, then address the separate upper/joint
+   variance path and source-solution selection contract. Do not add q or path
+   points by default, freeze an observed slope or solution tolerance, or call
+   finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

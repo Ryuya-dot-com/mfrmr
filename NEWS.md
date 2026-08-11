@@ -4,6 +4,18 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a bounded GPCM joint zero-population-variance/log-slope P1d audit. It
+  preserves geometric-mean-one slopes while holding the observed C4
+  `slope * population SD` term constant, so the fixed-nuisance q=1 limit is
+  explicitly prohibited on this non-uniform sequence. Same-vector q=61/91/121
+  objective ranges stay below about `1.74e-11`, but only 14/48 constrained
+  path fits pass nuisance stationarity and none with `t >= 4` does. Although
+  every terminal objective is worse than the qualified interior anchor, route
+  and derivative behavior remains nonstationary; no recession, turnback, or
+  source solution is certified. The next narrow gate is a coordinate-aware
+  reduced-limit/reparameterization audit, not more path points, a larger
+  iteration ceiling, downstream inference, or broad simulation.
+
 * Added an exact fixed-nuisance GPCM zero-population-variance P1c audit. The
   q=1 node-zero/weight-one likelihood agrees with an independent conditional-
   GPCM oracle to about `1.71e-12` and is exactly invariant to its irrelevant

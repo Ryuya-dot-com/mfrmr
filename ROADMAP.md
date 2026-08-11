@@ -602,6 +602,21 @@ zero-variance/log-slope path, followed separately by the upper/joint variance
 path and a source-solution rule. P2 uncertainty and downstream decisions remain
 blocked.
 
+P1d now evaluates the observed joint lower-boundary geometry without applying
+the P1c q=1 identity outside its assumptions. Along the declared C4 ray,
+`sigma2` decreases as `exp(-2t)`, the C4 slope increases as `exp(t)`, and the
+other three slopes decrease symmetrically while preserving their geometric
+mean. Thus C4 `slope * population SD` stays constant and standardized-normal
+quadrature must remain active. All 48 finite path fits return, and same-vector
+q=61/91/121 objective ranges are at most about `1.74e-11`, but only 14 pass
+nuisance stationarity; none of 32 points with `t >= 4` passes. Terminal
+objectives are higher than their interior anchors, yet route and derivative
+behavior is not stationary enough to certify a finite turnback. The next
+bounded question is a coordinate-aware reduced joint limit or well-scaled
+reparameterization for this ray, before the separate upper/joint variance path
+and source-selection rule. A denser grid, more iterations, Hessian/DFF/fit/rank
+work, or broad simulation cannot bypass that question.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
