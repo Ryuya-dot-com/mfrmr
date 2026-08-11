@@ -2,7 +2,7 @@
 
 Status: evidence review, not release authorization
 
-Review date: 2026-08-07; implementation follow-through: 2026-08-08
+Review date: 2026-08-07; implementation follow-through: 2026-08-11
 
 Scope: the bounded one-slope-facet GPCM route in `mfrmr` 0.2.3
 
@@ -23,14 +23,20 @@ bounded GPCM remains a slope-aware sensitivity route within the wider 0.2.3
 claim portfolio.
 
 The main mathematical qualification concerns scale. With JML, or with MML
-latent regression that estimates a residual ability variance, the
-geometric-mean-one slope constraint identifies a scale indeterminacy. In the
-default MML route, however, the ability distribution is already fixed to the
-standard-normal quadrature basis. The same constraint then makes the fitted
-family one dimension narrower than the conventional GPCM: it estimates only
-relative slope heterogeneity and excludes a common discrimination different
-from one. This is a valid restricted model, but it is a substantive bounded
-contract rather than a constraint required by the default MML likelihood.
+that estimates a residual ability variance, the geometric-mean-one slope
+constraint identifies a scale indeterminacy. The initial 0.2.3 MML route also
+fixed the ability distribution to the standard-normal quadrature basis, which
+made that route one dimension narrower than conventional GPCM. The correction
+completed on 2026-08-11 makes an intercept-only free population distribution
+the default for GPCM MML. Population SD now carries the common discrimination
+scale. The former fixed-standard-normal likelihood remains available only as
+an explicitly named restricted compatibility mode.
+
+The earlier sealed v3/v4 score-calibration artifacts target that restricted
+fixed-standard-normal likelihood and remain immutable. They are not replayed
+under, or cited as full numerical validation of, the new free-population
+default; a current-lineage numerical check must also cover the population
+intercept and log-variance score coordinates.
 
 ## Audit of the supplied generalized-MFRM memorandum
 
@@ -172,8 +178,9 @@ object rebuilt, the tests completed normally.
 The first implementation tranche from this review is complete:
 
 - public fitting, package, and GPCM-scope documentation now distinguishes
-  default-MML relative discrimination from the unrestricted conventional GPCM
-  common-slope scale;
+  geometric-mean-one relative slopes from their fixed-latent-SD values. The
+  corrected GPCM-MML default estimates the common scale through population SD;
+  the earlier fixed-standard-normal likelihood is an explicit legacy mode;
 - DFF subgroup refits now replay the resolved rating range, response family,
   step/slope facets, observation handling, optimizer, MML engine, iteration
   budget, tolerance, and relevant support controls;

@@ -2757,6 +2757,7 @@ test_that("fit-derived GPCM specs generate data and support caveated design fore
     n_criterion = spec$n_criterion,
     raters_per_person = spec$raters_per_person,
     reps = 1,
+    fit_method = "MML",
     maxit = 20,
     sim_spec = spec,
     seed = 720,

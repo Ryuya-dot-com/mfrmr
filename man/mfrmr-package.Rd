@@ -376,13 +376,15 @@ The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes on the log scale with geometric mean 1. This makes bounded
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
-Under default unconditional MML, the ability distribution is already fixed to
-a standard-normal reference scale. Geometric-mean-one is consequently an
-additional relative-discrimination restriction with \eqn{G - 1} free slope
-contrasts; the conventional fixed-ability-scale GPCM case in which all slopes
-may share an estimated value other than 1 is outside this bounded branch.
-Under JML or active latent-regression MML, the same constraint also helps
-resolve the ability/slope scale.
+Under default MML, an intercept-only person distribution
+\eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
+relative discriminations and \eqn{\sigma\alpha_g} are their equivalent
+fixed-latent-standard-deviation values, so the conventional common
+discrimination degree of freedom is retained. The legacy
+\code{gpcm_mml_identification = "fixed_standard_normal"} mode fixes both
+\eqn{\sigma=1} and the slope geometric mean to one and is therefore a
+narrower relative-discrimination model. Under JML, geometric-mean-one is
+required to resolve the scale of jointly estimated person coordinates.
 
 \strong{Ordered-response scope}
 

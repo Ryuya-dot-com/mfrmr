@@ -8251,7 +8251,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `facet_support_boundaries`: observed boundary-constant non-person facet
 #'   levels, kept distinct from parameter-level recession conclusions
 #' - `facet_recession_review`: certified JML additive facet recession
-#'   directions, including audit scope and completeness
+#'   directions, including review scope and completeness
 #' - `caveats`: structured warning/review rows for score-support and
 #'   latent-regression population-model issues
 #' - `notes`: short interpretation notes
@@ -8467,6 +8467,10 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   population_overview <- tibble::tibble(
     PopulationModel = isTRUE(population_raw$active),
     PosteriorBasis = as.character(population_raw$posterior_basis %||% "legacy_mml"),
+    Source = as.character(population_raw$source %||% "none"),
+    IdentificationRole = as.character(
+      population_raw$identification_role %||% "not_applicable"
+    ),
     Formula = if (!is.null(population_raw$formula)) paste(deparse(population_raw$formula), collapse = " ") else NA_character_,
     PersonRows = if (!is.null(population_raw$person_table)) nrow(as.data.frame(population_raw$person_table, stringsAsFactors = FALSE)) else NA_integer_,
     DesignColumns = if (!is.null(population_raw$design_matrix)) ncol(population_raw$design_matrix) else NA_integer_,
@@ -8687,6 +8691,23 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       OptimizerMax = slope_range_value(optimizer_slope, max),
       OptimizerGeometricMean = slope_geometric_mean(optimizer_slope),
       OptimizerPositive = all(is.finite(optimizer_slope) & optimizer_slope > 0),
+      PopulationSD = if ("PopulationSD" %in% names(slope_tbl)) {
+        as.numeric(slope_tbl$PopulationSD[1])
+      } else {
+        NA_real_
+      },
+      FixedLatentSDOptimizerGeometricMean = if (
+        "FixedLatentSDOptimizerEstimate" %in% names(slope_tbl)
+      ) {
+        slope_geometric_mean(slope_tbl$FixedLatentSDOptimizerEstimate)
+      } else {
+        NA_real_
+      },
+      FixedLatentSDBasis = if ("FixedLatentSDBasis" %in% names(slope_tbl)) {
+        as.character(slope_tbl$FixedLatentSDBasis[1])
+      } else {
+        "not_available"
+      },
       SEEligible = if ("SEEligible" %in% names(slope_tbl)) {
         sum(as.logical(slope_tbl$SEEligible), na.rm = TRUE)
       } else {
@@ -8719,6 +8740,12 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     StepFacetSource = as.character(config$step_facet_source %||% "unknown"),
     StepFacetNote = as.character(config$step_facet_note %||% ""),
     SlopeFacet = as.character(config$slope_facet %||% NA_character_),
+    GpcmMmlIdentification = as.character(
+      config$gpcm_mml_identification %||% "not_recorded"
+    ),
+    GpcmCommonDiscrimination = as.character(
+      config$gpcm_common_discrimination %||% "not_recorded"
+    ),
     NoncenterFacet = as.character(config$noncenter_facet %||% "Person"),
     WeightColumn = as.character(config$weight_col %||% NA_character_),
     QuadPoints = as.integer(config$estimation_control$quad_points %||% NA_integer_),

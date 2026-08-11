@@ -112,6 +112,7 @@ test_that("v3 failed replay retains every denominator and rejects", {
 test_that("v3 point audit evaluates finite differences only in finite region", {
   testthat::skip_on_cran()
   testthat::skip_if_not_installed("digest")
+  skip_if_frozen_gpcm_payload_drifted()
   env <- load_gpcm_score_v3_replay_runner()$env
   env$mfrmr_gsv3r_require_sources()
   scenario <- env$mfrmr_gscr_manifest()
@@ -143,6 +144,7 @@ test_that("v3 point audit evaluates finite differences only in finite region", {
 test_that("near-tie GPCM optimization is deterministic and RNG-neutral", {
   testthat::skip_on_cran()
   testthat::skip_if_not_installed("digest")
+  skip_if_frozen_gpcm_payload_drifted()
   env <- load_gpcm_score_v3_replay_runner()$env
   env$mfrmr_gsv3r_require_sources()
   scenario <- env$mfrmr_gscr_manifest()

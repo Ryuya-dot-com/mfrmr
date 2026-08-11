@@ -67,6 +67,22 @@
 #'   requires `slope_facet == step_facet` and uses a
 #'   positive-slope identification convention on the log scale with geometric
 #'   mean discrimination fixed to 1.
+#' @param gpcm_mml_identification Scale-identification convention for
+#'   `model = "GPCM"` with `method = "MML"`. `"free_population"` (the
+#'   default) estimates an intercept-only person distribution
+#'   \eqn{N(\beta_0,\sigma^2)} when `population_formula` is omitted, while
+#'   retaining geometric-mean-one relative slopes. This restores the common
+#'   discrimination degree of freedom used by a conventional fixed-latent-
+#'   variance GPCM; in the documented item-only overlap it is a one-to-one
+#'   reparameterization of ConQuest `scoresfree` GPCM. An explicitly supplied
+#'   `population_formula` is retained under this convention.
+#'   `"fixed_standard_normal"` is the legacy restricted branch: it requires
+#'   `population_formula = NULL`, fixes the person distribution to
+#'   \eqn{N(0,1)}, and also fixes the slope geometric mean to one. The latter
+#'   is then a substantive relative-discrimination restriction rather than an
+#'   identification requirement. This argument does not change JML, whose
+#'   geometric-mean-one slope constraint is required to identify its freely
+#'   estimated person coordinates.
 #' @param facet_interactions Optional confirmatory two-way interaction terms
 #'   between non-person facets, supplied as explicit character terms such as
 #'   `"Rater:Criterion"` or as a list of length-two character vectors. These
@@ -176,7 +192,8 @@
 #' @param shrink_person Logical. When `TRUE` and `facet_shrinkage` is
 #'   active, the same empirical-Bayes shrinkage is applied to
 #'   `fit$facets$person`. Default `FALSE`, since MML already integrates
-#'   over an N(0, 1) prior on theta; the option mainly benefits JML.
+#'   over a normal population distribution for theta; the option mainly
+#'   benefits JML.
 #' @param attach_diagnostics Logical. When `TRUE`, [diagnose_mfrm()] is
 #'   run once after the fit with `residual_pca = "none"`, and the
 #'   per-level `SE`, `Infit`, `Outfit`, `InfitZSTD`, `OutfitZSTD`, and
@@ -246,13 +263,16 @@
 #' The current implementation requires `slope_facet == step_facet` and
 #' identifies slopes by a sum-to-zero constraint on log slopes, so their
 #' geometric mean is 1.
-#' Under the default unconditional MML branch, the quadrature distribution fixes
-#' ability to a standard-normal reference scale. The geometric-mean-one slope
-#' constraint is therefore an additional, intentional relative-discrimination
-#' restriction: only \eqn{G - 1} slope contrasts are free, and a conventional
-#' fixed-ability-scale GPCM with a freely estimated common discrimination is
-#' outside this bounded branch. Under JML or active latent-regression MML, the
-#' same constraint also participates in resolving the ability/slope scale.
+#' Under the default `gpcm_mml_identification = "free_population"` branch,
+#' the population standard deviation carries the common discrimination scale
+#' while the geometric-mean-one slopes describe relative discrimination.
+#' Equivalently, on a standardized latent variable the absolute slopes are
+#' \eqn{\sigma\alpha_g}. Under
+#' `gpcm_mml_identification = "fixed_standard_normal"`, both the population
+#' standard deviation and slope geometric mean are fixed to one; that legacy
+#' branch is a narrower relative-discrimination model. Under JML, the
+#' geometric-mean-one constraint is required to resolve the ability/slope
+#' scale because person coordinates are estimated jointly.
 #'
 #' With only two ordered categories (\eqn{K = 1}), the `RSM`/`PCM`
 #' branch reduces to the usual binary Rasch logit for the single category
@@ -337,9 +357,11 @@
 #'
 #' @section Fixed effects assumption (facets have no prior):
 #' `fit_mfrm()` follows the Linacre (1989) many-facet Rasch specification:
-#' person ability is integrated out under a `N(0, 1)` prior (or under the
-#' `N(X\beta, \sigma^2)` latent-regression population model when
-#' `population_formula` is supplied), but every facet parameter
+#' person ability is integrated out under a `N(0, 1)` distribution (or under
+#' the `N(X\beta, \sigma^2)` population model when `population_formula` is
+#' supplied). Bounded GPCM MML instead activates an intercept-only
+#' `N(\beta_0, \sigma^2)` population model by default so its common
+#' discrimination scale is estimable. Every facet parameter
 #' (`Rater`, `Criterion`, `Task`, ...) is estimated as a fixed effect
 #' identified by a sum-to-zero constraint. There is no hierarchical
 #' prior, no shrinkage, and no variance component for the facets.
@@ -470,8 +492,11 @@
 #'   current `GPCM` scope.
 #'
 #' Latent-regression status:
-#' - `population_formula = NULL` keeps the standard unconditional `MML` / `JML`
-#'   behavior.
+#' - `population_formula = NULL` keeps the standard unconditional behavior for
+#'   RSM/PCM and JML. For bounded GPCM MML, the default
+#'   `gpcm_mml_identification = "free_population"` constructs an intercept-only
+#'   population model internally; use `"fixed_standard_normal"` only to
+#'   reproduce the legacy restricted likelihood.
 #' - Supplying `population_formula` activates latent regression for
 #'   `method = "MML"` only.
 #' - This implementation assumes a one-dimensional conditional-normal population
@@ -793,8 +818,9 @@
 #'   other non-Person parameter classes remain scheduled for later propagation.
 #' - `interactions`: model-estimated facet interaction effects and metadata
 #'   when `facet_interactions` is supplied
-#' - `population`: population-model metadata. Ordinary fits keep an inactive
-#'   record (`active = FALSE`, `posterior_basis = "legacy_mml"`). Active
+#' - `population`: population-model metadata. Ordinary RSM/PCM and JML fits
+#'   keep an inactive record (`active = FALSE`,
+#'   `posterior_basis = "legacy_mml"`). Default bounded-GPCM MML and active
 #'   latent-regression fits store the fitted design matrix, regression
 #'   coefficients, residual variance, omission review, the complete-case
 #'   estimation table (`person_table`), and the observed-person-aligned
@@ -962,7 +988,8 @@ fit_mfrm <- function(data,
                      facet_prior_sd = NULL,
                      shrink_person = FALSE,
                      attach_diagnostics = FALSE,
-                     checkpoint = NULL) {
+                     checkpoint = NULL,
+                     gpcm_mml_identification = c("free_population", "fixed_standard_normal")) {
   # If users opt in to preparation messages, suppress duplicates that would
   # otherwise fire once in review_mfrm_anchors() and again in mfrm_estimate()
   # -> prepare_mfrm_data(). By default, preparation provenance is stored in the
@@ -1051,6 +1078,7 @@ fit_mfrm <- function(data,
   method <- method_input
   optimizer <- normalize_mfrm_optimizer(match.arg(optimizer))
   mml_engine <- tolower(match.arg(mml_engine))
+  gpcm_mml_identification <- match.arg(gpcm_mml_identification)
   interaction_policy <- tolower(match.arg(interaction_policy))
   anchor_policy <- tolower(match.arg(anchor_policy))
   population_policy <- tolower(match.arg(population_policy))
@@ -1067,14 +1095,97 @@ fit_mfrm <- function(data,
     stop("`shrink_person` must be a single logical value.", call. = FALSE)
   }
 
+  gpcm_mml_active <- identical(model, "GPCM") && identical(method_input, "MML")
+  if (gpcm_mml_active &&
+      identical(gpcm_mml_identification, "fixed_standard_normal") &&
+      !is.null(population_formula)) {
+    stop(
+      "`gpcm_mml_identification = \"fixed_standard_normal\"` requires ",
+      "`population_formula = NULL`. Use `\"free_population\"` when estimating ",
+      "a GPCM population model.",
+      call. = FALSE
+    )
+  }
+
+  auto_gpcm_population <- gpcm_mml_active &&
+    identical(gpcm_mml_identification, "free_population") &&
+    is.null(population_formula)
+  effective_population_formula <- population_formula
+  effective_person_data <- person_data
+  effective_person_id <- person_id
+  population_scaffold_data <- data
+  estimation_person_ids <- as.character(data[[person]])
+  if (auto_gpcm_population) {
+    estimation_person_ids <- trimws(estimation_person_ids)
+    default_missing_codes <- isTRUE(missing_codes) ||
+      (is.character(missing_codes) && length(missing_codes) == 1L &&
+       identical(tolower(missing_codes), "default"))
+    if (!is.null(missing_codes) && !isFALSE(missing_codes) &&
+        !default_missing_codes) {
+      estimation_person_ids[
+        estimation_person_ids %in% trimws(as.character(missing_codes))
+      ] <- NA_character_
+    }
+    population_scaffold_data[[person]] <- estimation_person_ids
+    population_scaffold_data <- population_scaffold_data[
+      !is.na(estimation_person_ids), , drop = FALSE
+    ]
+    effective_population_formula <- stats::as.formula("~ 1")
+    effective_person_data <- data.frame(
+      .mfrmr_person_id = unique(estimation_person_ids[!is.na(estimation_person_ids)]),
+      stringsAsFactors = FALSE
+    )
+    names(effective_person_data) <- person
+    effective_person_id <- person
+  }
+
   population <- prepare_mfrm_population_scaffold(
-    data = data,
+    data = population_scaffold_data,
     person = person,
-    population_formula = population_formula,
-    person_data = person_data,
-    person_id = person_id,
+    population_formula = effective_population_formula,
+    person_data = effective_person_data,
+    person_id = effective_person_id,
     population_policy = population_policy
   )
+  population$source <- if (auto_gpcm_population) {
+    "gpcm_mml_default_identification"
+  } else if (isTRUE(population$active)) {
+    "user_supplied"
+  } else {
+    "none"
+  }
+  population$identification_role <- if (gpcm_mml_active &&
+                                         isTRUE(population$active)) {
+    "free_population_scale_with_geometric_mean_one_relative_slopes"
+  } else if (gpcm_mml_active) {
+    "fixed_standard_normal_with_geometric_mean_one_relative_slopes"
+  } else {
+    "not_applicable"
+  }
+  if (auto_gpcm_population) {
+    population$response_rows_retained <- as.integer(nrow(population_scaffold_data))
+    population$response_rows_omitted <- as.integer(
+      nrow(data) - nrow(population_scaffold_data)
+    )
+    population$notes <- unique(c(
+      as.character(population$notes %||% character(0)),
+      paste(
+        "An intercept-only person population model was activated automatically",
+        "to identify bounded GPCM MML without fixing both latent variance and",
+        "the slope geometric mean."
+      ),
+      if (population$response_rows_omitted > 0L) {
+        paste0(
+          population$response_rows_omitted,
+          " response row(s) with missing person IDs were excluded from the ",
+          "automatic population scaffold; ordinary response preparation ",
+          "applies the same exclusion."
+        )
+      } else {
+        character(0)
+      }
+    ))
+  }
   if (isTRUE(population$active)) {
     if (!identical(method_input, "MML")) {
       stop("Latent-regression estimation requires `method = 'MML'`. ",
@@ -1082,6 +1193,16 @@ fit_mfrm <- function(data,
            call. = FALSE)
     }
     if (!identical(as.character(noncenter_facet[1]), "Person")) {
+      if (auto_gpcm_population) {
+        stop(
+          "Default bounded-GPCM MML identification estimates an intercept-only ",
+          "population model and therefore requires `noncenter_facet = \"Person\"`. ",
+          "Use the default centering, or request ",
+          "`gpcm_mml_identification = \"fixed_standard_normal\"` only when ",
+          "the legacy restricted likelihood is intended.",
+          call. = FALSE
+        )
+      }
       stop(
         "Latent-regression identification requires `noncenter_facet = \"Person\"` ",
         "so all non-person facets remain centered and the population-model ",
@@ -1091,8 +1212,9 @@ fit_mfrm <- function(data,
     }
   }
   estimation_data <- data
-  if (isTRUE(population$active) && length(population$included_persons) > 0) {
-    estimation_mask <- as.character(data[[person]]) %in% population$included_persons
+  if (isTRUE(population$active) && !auto_gpcm_population &&
+      length(population$included_persons) > 0) {
+    estimation_mask <- estimation_person_ids %in% population$included_persons
     estimation_data <- data[estimation_mask, , drop = FALSE]
   }
 
@@ -1167,10 +1289,53 @@ fit_mfrm <- function(data,
   fit$config$population_active <- isTRUE(population$active)
   fit$config$posterior_basis <- as.character(fit$population$posterior_basis %||% "legacy_mml")
   fit$config$population_policy <- fit$population$policy %||% NULL
+  fit$config$gpcm_mml_identification_requested <-
+    as.character(gpcm_mml_identification)
+  fit$config$gpcm_mml_identification <- if (gpcm_mml_active) {
+    as.character(gpcm_mml_identification)
+  } else if (identical(model, "GPCM") && identical(method_input, "JML")) {
+    "not_applicable_jml"
+  } else {
+    "not_applicable"
+  }
+  fit$config$gpcm_common_discrimination <- if (
+    gpcm_mml_active && identical(gpcm_mml_identification, "free_population")
+  ) {
+    "estimated_via_population_sd"
+  } else if (gpcm_mml_active) {
+    "fixed_to_one_legacy_restriction"
+  } else {
+    "not_applicable"
+  }
   fit$config$population_formula <- if (!is.null(fit$population$formula)) {
     paste(deparse(fit$population$formula), collapse = " ")
   } else {
     NULL
+  }
+
+  if (identical(model, "GPCM") && identical(method_input, "MML") &&
+      nrow(fit$slopes %||% data.frame()) > 0L) {
+    population_sd <- if (isTRUE(fit$population$active)) {
+      sqrt(as.numeric(fit$population$sigma2 %||% NA_real_)[1])
+    } else {
+      1
+    }
+    optimizer_relative <- as.numeric(
+      fit$slopes$OptimizerEstimate %||% fit$slopes$Estimate
+    )
+    primary_relative <- as.numeric(
+      fit$slopes$PrimaryEstimate %||% rep(NA_real_, nrow(fit$slopes))
+    )
+    fit$slopes$PopulationSD <- rep(population_sd, nrow(fit$slopes))
+    fit$slopes$FixedLatentSDOptimizerEstimate <-
+      population_sd * optimizer_relative
+    fit$slopes$FixedLatentSDPrimaryEstimate <-
+      population_sd * primary_relative
+    fit$slopes$FixedLatentSDBasis <- if (isTRUE(fit$population$active)) {
+      "population_sd_times_relative_slope"
+    } else {
+      "legacy_unit_population_sd_times_relative_slope"
+    }
   }
 
   class(fit) <- c("mfrm_fit", class(fit))
@@ -1212,6 +1377,7 @@ fit_mfrm <- function(data,
     method = as.character(method_input),
     step_facet = if (is.null(step_facet)) NULL else as.character(step_facet),
     slope_facet = if (is.null(slope_facet)) NULL else as.character(slope_facet),
+    gpcm_mml_identification = as.character(gpcm_mml_identification),
     facet_interactions = facet_interactions,
     min_obs_per_interaction = as.numeric(min_obs_per_interaction),
     interaction_policy = as.character(interaction_policy),

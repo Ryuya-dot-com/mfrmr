@@ -920,6 +920,7 @@ summarize_population_model_for_apa <- function(res) {
   active <- isTRUE(population$active)
   empty <- list(
     active = FALSE,
+    identification_only = FALSE,
     formula_label = "",
     coefficient_count = 0L,
     residual_variance = NA_real_,
@@ -935,6 +936,10 @@ summarize_population_model_for_apa <- function(res) {
   if (!active) {
     return(empty)
   }
+  gpcm_identification_only <- identical(
+    as.character(population$source %||% ""),
+    "gpcm_mml_default_identification"
+  )
 
   formula_label <- if (!is.null(population$formula)) {
     paste(deparse(population$formula), collapse = " ")
@@ -983,7 +988,11 @@ summarize_population_model_for_apa <- function(res) {
   }
 
   result_sentence <- paste0(
-    "The latent-regression population model returned ",
+    if (gpcm_identification_only) {
+      "The intercept-only GPCM population-scale model returned "
+    } else {
+      "The latent-regression population model returned "
+    },
     fmt_count(finite_coefficient_count), " finite coefficient(s) out of ",
     fmt_count(coefficient_count),
     if (length(design_columns) > 0L) {
@@ -1003,16 +1012,33 @@ summarize_population_model_for_apa <- function(res) {
     "; omitted persons = ", fmt_count(omitted_persons),
     " and omitted response rows = ", fmt_count(omitted_rows), "."
   )
-  method_sentence <- paste0(
-    "A conditional-normal latent-regression population model was included via ",
-    formula_label,
-    "; coefficients were estimated jointly in the MML model, not as post hoc regression on EAP or MLE person scores."
-  )
-  caution_sentence <- "Latent-regression coefficients should be interpreted as conditional-normal population-model parameters, not as post hoc regression on estimated person scores."
-  conquest_sentence <- "ConQuest overlap is limited to the documented latent-regression MML comparison scope."
+  method_sentence <- if (gpcm_identification_only) {
+    paste0(
+      "An intercept-only conditional-normal population model was activated via ",
+      formula_label,
+      " to estimate the bounded-GPCM MML location and common discrimination scale; it is not a substantive covariate regression."
+    )
+  } else {
+    paste0(
+      "A conditional-normal latent-regression population model was included via ",
+      formula_label,
+      "; coefficients were estimated jointly in the MML model, not as post hoc regression on EAP or MLE person scores."
+    )
+  }
+  caution_sentence <- if (gpcm_identification_only) {
+    "Interpret the population intercept and variance as GPCM identification coordinates; fixed-latent-SD discrimination equals population SD times the relative slope."
+  } else {
+    "Latent-regression coefficients should be interpreted as conditional-normal population-model parameters, not as post hoc regression on estimated person scores."
+  }
+  conquest_sentence <- if (gpcm_identification_only) {
+    "The exact ConQuest scoresfree map is item-only; multifacet equivalence and external acceptance remain unestablished."
+  } else {
+    "ConQuest overlap is limited to the documented latent-regression MML comparison scope."
+  }
 
   list(
     active = TRUE,
+    identification_only = gpcm_identification_only,
     formula_label = formula_label,
     coefficient_count = coefficient_count,
     residual_variance = sigma2,
@@ -1147,8 +1173,12 @@ build_apa_note_map_from_contract <- function(contract) {
   if (isTRUE(availability$has_population_model)) {
     population_summary <- summaries$population_model
     note_map$population_model <- paste0(
-      "Table 5. Latent-regression population model\n",
-      "Note. Coefficients are conditional-normal population-model parameters estimated jointly with the MML model, not post hoc regressions on EAP or MLE person scores. ",
+      if (isTRUE(population_summary$identification_only)) {
+        "Table 5. GPCM population-scale identification model\n"
+      } else {
+        "Table 5. Latent-regression population model\n"
+      },
+      "Note. ", population_summary$caution_sentence, " ",
       "Formula = ", population_summary$formula_label,
       "; residual variance = ",
       if (is.finite(population_summary$residual_variance)) fmt_num(population_summary$residual_variance, 3) else "NA",

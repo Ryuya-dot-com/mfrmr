@@ -267,6 +267,9 @@ reporting_checklist <- function(fit,
   )
   population <- fit$population %||% list()
   population_active <- isTRUE(population$active)
+  population_is_gpcm_identification <- population_active &&
+    identical(as.character(population$source %||% ""),
+              "gpcm_mml_default_identification")
   population_coefficients <- as.numeric(population$coefficients %||% numeric(0))
   population_coefficients_finite <- length(population_coefficients) > 0L &&
     all(is.finite(population_coefficients))
@@ -356,7 +359,11 @@ reporting_checklist <- function(fit,
     population_items <- list(
       add_item(
         "Population Model",
-        "Latent-regression basis",
+        if (population_is_gpcm_identification) {
+          "GPCM population-scale identification basis"
+        } else {
+          "Latent-regression basis"
+        },
         population_active && identical(population_posterior_basis, "population_model"),
         detail = paste0(
           "Formula=", population_formula,
@@ -368,7 +375,11 @@ reporting_checklist <- function(fit,
         severity = "required",
         ready_for_apa = population_active && identical(population_posterior_basis, "population_model"),
         missing_action = "Fit with `method = \"MML\"`, `population_formula`, and one-row-per-person `person_data` before reporting latent regression.",
-        available_action = "Describe the fit as a conditional-normal latent-regression MML model, not as a post hoc regression on EAP/MLE scores."
+        available_action = if (population_is_gpcm_identification) {
+          "Describe the intercept-only population model as the GPCM MML scale-identification basis, not as a substantive covariate regression."
+        } else {
+          "Describe the fit as a conditional-normal latent-regression MML model, not as a post hoc regression on EAP/MLE scores."
+        }
       ),
       add_item(
         "Population Model",
@@ -382,7 +393,11 @@ reporting_checklist <- function(fit,
         severity = "required",
         ready_for_apa = population_coefficients_finite && is.finite(population_sigma2) && population_sigma2 > 0,
         missing_action = "Inspect `summary(fit)$population_coefficients` and `summary(fit)$population_overview` before reporting latent-regression effects.",
-        available_action = "Report coefficients and residual variance as conditional-normal population-model parameters, with scale/coding notes."
+        available_action = if (population_is_gpcm_identification) {
+          "Report the population intercept and variance as GPCM location/scale coordinates; use population SD times relative slope for fixed-latent-SD discrimination comparisons."
+        } else {
+          "Report coefficients and residual variance as conditional-normal population-model parameters, with scale/coding notes."
+        }
       ),
       add_item(
         "Population Model",
@@ -424,11 +439,19 @@ reporting_checklist <- function(fit,
         "Population Model",
         "ConQuest overlap wording",
         TRUE,
-        detail = "Current overlap is narrow RSM/PCM unidimensional conditional-normal latent regression; ConQuest comparison is scoped to the documented external-table workflow.",
+        detail = if (population_is_gpcm_identification) {
+          "An exact probability/coordinate map exists for item-only bounded-GPCM MML and ConQuest scoresfree; multifacet generalized-item equivalence remains unproved and the public external-table bundle does not yet cover GPCM."
+        } else {
+          "Current public external-table overlap is narrow RSM/PCM unidimensional conditional-normal latent regression."
+        },
         source_component = "README latent-regression status + review_conquest_overlap()",
         severity = "recommended",
         ready_for_apa = FALSE,
-        available_action = "Use conservative wording: ConQuest overlap is limited to the documented latent-regression MML comparison scope."
+        available_action = if (population_is_gpcm_identification) {
+          "Use conservative wording: the exact ConQuest GPCM map is item-only and parameterization-level; it is not a many-facet or accepted external-equivalence claim."
+        } else {
+          "Use conservative wording: ConQuest overlap is limited to the documented latent-regression MML comparison scope."
+        }
       )
     )
   }

@@ -117,9 +117,12 @@ covariance. Refit statistics therefore remain screening evidence and set
 The subgroup fits replay the baseline response family, resolved score range,
 step/slope facets, weighting, optimizer, MML engine, and numerical controls;
 the non-target anchors are the intentional linking change. Refit analysis
-fails closed when the baseline uses an active latent-regression population
-model, facet interactions, or group-anchor constraints, because those
-structures do not yet have a complete subgroup-replay and linking contract.
+fails closed when the baseline uses a user-specified active latent-regression
+population model, facet interactions, or group-anchor constraints, because
+those structures do not yet have a complete subgroup-replay and linking
+contract. The automatically generated intercept-only population model used
+for default GPCM-MML scale identification is replayed and is not treated as
+a substantive covariate model.
 
 When \code{facet} refers to an item-like facet (for example \code{Criterion}), this
 recovers the familiar DIF case. When \code{facet} refers to raters or

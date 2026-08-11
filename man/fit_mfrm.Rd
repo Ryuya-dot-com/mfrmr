@@ -43,7 +43,8 @@ fit_mfrm(
   facet_prior_sd = NULL,
   shrink_person = FALSE,
   attach_diagnostics = FALSE,
-  checkpoint = NULL
+  checkpoint = NULL,
+  gpcm_mml_identification = c("free_population", "fixed_standard_normal")
 )
 }
 \arguments{
@@ -253,7 +254,8 @@ prior from domain knowledge or a previous fit.}
 \item{shrink_person}{Logical. When \code{TRUE} and \code{facet_shrinkage} is
 active, the same empirical-Bayes shrinkage is applied to
 \code{fit$facets$person}. Default \code{FALSE}, since MML already integrates
-over an N(0, 1) prior on theta; the option mainly benefits JML.}
+over a normal population distribution for theta; the option mainly
+benefits JML.}
 
 \item{attach_diagnostics}{Logical. When \code{TRUE}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} is
 run once after the fit with \code{residual_pca = "none"}, and the
@@ -279,6 +281,23 @@ resumes from the recorded iteration. Only the EM engine
 \code{mml_engine = "hybrid"}) honours the checkpoint; the direct
 \code{optim()} engine ignores it. Use this to make long MML EM
 fits crash-resilient on shared compute environments.}
+
+\item{gpcm_mml_identification}{Scale-identification convention for
+\code{model = "GPCM"} with \code{method = "MML"}. \code{"free_population"} (the
+default) estimates an intercept-only person distribution
+\eqn{N(\beta_0,\sigma^2)} when \code{population_formula} is omitted, while
+retaining geometric-mean-one relative slopes. This restores the common
+discrimination degree of freedom used by a conventional fixed-latent-
+variance GPCM; in the documented item-only overlap it is a one-to-one
+reparameterization of ConQuest \code{scoresfree} GPCM. An explicitly supplied
+\code{population_formula} is retained under this convention.
+\code{"fixed_standard_normal"} is the legacy restricted branch: it requires
+\code{population_formula = NULL}, fixes the person distribution to
+\eqn{N(0,1)}, and also fixes the slope geometric mean to one. The latter
+is then a substantive relative-discrimination restriction rather than an
+identification requirement. This argument does not change JML, whose
+geometric-mean-one slope constraint is required to identify its freely
+estimated person coordinates.}
 }
 \value{
 An object of class \code{mfrm_fit} (named list) with:
@@ -325,8 +344,9 @@ parameter-level rows. The current parameter slice includes GPCM slopes;
 other non-Person parameter classes remain scheduled for later propagation.
 \item \code{interactions}: model-estimated facet interaction effects and metadata
 when \code{facet_interactions} is supplied
-\item \code{population}: population-model metadata. Ordinary fits keep an inactive
-record (\code{active = FALSE}, \code{posterior_basis = "legacy_mml"}). Active
+\item \code{population}: population-model metadata. Ordinary RSM/PCM and JML fits
+keep an inactive record (\code{active = FALSE},
+\code{posterior_basis = "legacy_mml"}). Default bounded-GPCM MML and active
 latent-regression fits store the fitted design matrix, regression
 coefficients, residual variance, omission review, the complete-case
 estimation table (\code{person_table}), and the observed-person-aligned
@@ -398,13 +418,16 @@ a positive slope for the designated slope-facet level:
 The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes by a sum-to-zero constraint on log slopes, so their
 geometric mean is 1.
-Under the default unconditional MML branch, the quadrature distribution fixes
-ability to a standard-normal reference scale. The geometric-mean-one slope
-constraint is therefore an additional, intentional relative-discrimination
-restriction: only \eqn{G - 1} slope contrasts are free, and a conventional
-fixed-ability-scale GPCM with a freely estimated common discrimination is
-outside this bounded branch. Under JML or active latent-regression MML, the
-same constraint also participates in resolving the ability/slope scale.
+Under the default \code{gpcm_mml_identification = "free_population"} branch,
+the population standard deviation carries the common discrimination scale
+while the geometric-mean-one slopes describe relative discrimination.
+Equivalently, on a standardized latent variable the absolute slopes are
+\eqn{\sigma\alpha_g}. Under
+\code{gpcm_mml_identification = "fixed_standard_normal"}, both the population
+standard deviation and slope geometric mean are fixed to one; that legacy
+branch is a narrower relative-discrimination model. Under JML, the
+geometric-mean-one constraint is required to resolve the ability/slope
+scale because person coordinates are estimated jointly.
 
 With only two ordered categories (\eqn{K = 1}), the \code{RSM}/\code{PCM}
 branch reduces to the usual binary Rasch logit for the single category
@@ -497,9 +520,11 @@ the full \code{rating_min} / \code{rating_max} range.
 \section{Fixed effects assumption (facets have no prior)}{
 
 \code{fit_mfrm()} follows the Linacre (1989) many-facet Rasch specification:
-person ability is integrated out under a \code{N(0, 1)} prior (or under the
-\verb{N(X\\beta, \\sigma^2)} latent-regression population model when
-\code{population_formula} is supplied), but every facet parameter
+person ability is integrated out under a \code{N(0, 1)} distribution (or under
+the \verb{N(X\\beta, \\sigma^2)} population model when \code{population_formula} is
+supplied). Bounded GPCM MML instead activates an intercept-only
+\verb{N(\\beta_0, \\sigma^2)} population model by default so its common
+discrimination scale is estimable. Every facet parameter
 (\code{Rater}, \code{Criterion}, \code{Task}, ...) is estimated as a fixed effect
 identified by a sum-to-zero constraint. There is no hierarchical
 prior, no shrinkage, and no variance component for the facets.
@@ -638,8 +663,11 @@ current \code{GPCM} scope.
 
 Latent-regression status:
 \itemize{
-\item \code{population_formula = NULL} keeps the standard unconditional \code{MML} / \code{JML}
-behavior.
+\item \code{population_formula = NULL} keeps the standard unconditional behavior for
+RSM/PCM and JML. For bounded GPCM MML, the default
+\code{gpcm_mml_identification = "free_population"} constructs an intercept-only
+population model internally; use \code{"fixed_standard_normal"} only to
+reproduce the legacy restricted likelihood.
 \item Supplying \code{population_formula} activates latent regression for
 \code{method = "MML"} only.
 \item This implementation assumes a one-dimensional conditional-normal population

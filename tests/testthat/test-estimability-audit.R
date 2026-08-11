@@ -334,23 +334,23 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     "evaluated_diagnostic_only"
   )
   expect_identical(
-    audit$nonlinear_transformation$block_summary$Block,
-    "log_slopes"
+    sort(audit$nonlinear_transformation$block_summary$Block),
+    c("log_sigma2", "log_slopes")
   )
   expect_true(
-    audit$nonlinear_transformation$block_summary$LogFullColumnRank
+    all(audit$nonlinear_transformation$block_summary$LogFullColumnRank)
   )
   expect_true(
-    audit$nonlinear_transformation$block_summary$NaturalFullColumnRank
+    all(audit$nonlinear_transformation$block_summary$NaturalFullColumnRank)
   )
   expect_lt(
-    audit$nonlinear_transformation$block_summary$
-      MaxAbsLogJacobianDifference,
+    max(audit$nonlinear_transformation$block_summary$
+      MaxAbsLogJacobianDifference),
     1e-8
   )
   expect_lt(
-    audit$nonlinear_transformation$block_summary$
-      MaxScaledNaturalJacobianDifference,
+    max(audit$nonlinear_transformation$block_summary$
+      MaxScaledNaturalJacobianDifference),
     1e-8
   )
   expect_true(audit$nonlinear_transformation$parameterization_only)
@@ -375,8 +375,8 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
     tolerance = 1e-10
   )
   expect_identical(
-    audit$fitted_information$block_summary$Block,
-    "log_slopes"
+    sort(audit$fitted_information$block_summary$Block),
+    c("log_sigma2", "log_slopes")
   )
   expect_false(audit$fitted_information$weak_information_classified)
   expect_identical(

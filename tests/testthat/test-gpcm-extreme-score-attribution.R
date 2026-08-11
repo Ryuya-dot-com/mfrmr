@@ -82,6 +82,7 @@ test_that("independent projection and cumulative probabilities are exact", {
 test_that("independent analytic scores agree on a regular five-category fit", {
   testthat::skip_on_cran()
   testthat::skip_if_not_installed("digest")
+  skip_if_frozen_gpcm_payload_drifted()
   env <- load_gpcm_extreme_score_attribution()$env
   env$mfrmr_gsea_require_sources()
   scenario <- env$mfrmr_gscr_manifest()

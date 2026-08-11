@@ -61,11 +61,17 @@ test_that("the overlap registry admits no unsupported external claim", {
   )
   expect_true(all(required %in% names(registry)))
   expect_identical(anyDuplicated(registry$OverlapRow), 0L)
-  expect_identical(
+  expect_setequal(
     registry$OverlapRow[registry$ComparisonEligibility == "review"],
-    "CQ-GPCM-ITEM-LR-MML"
+    c("CQ-GPCM-ITEM-LR-MML", "CQ-GPCM-ITEM-INTERCEPT-ONLY-MML")
   )
   expect_false(any(registry$ComparisonEligibility == "eligible"))
+  expect_identical(
+    registry$ComparisonEligibility[
+      registry$OverlapRow == "CQ-GPCM-ITEM-LEGACY-FIXED-MML"
+    ],
+    "rejected"
+  )
   expect_true(all(
     registry$ComparisonEligibility[registry$ConQuestEstimator == "JML"] ==
       "rejected"

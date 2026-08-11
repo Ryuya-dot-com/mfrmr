@@ -47,11 +47,19 @@ selecting `Rater` are distinct evidence strata even though the same code path
 can represent both. Neither stratum contains simultaneous criterion and rater
 slopes.
 
-For default MML, the standard-normal latent distribution already fixes the
-overall ability scale. The geometric-mean-one slope constraint is therefore a
-substantive relative-discrimination restriction. For JML, and for an MML
-extension with a free latent residual variance, it also participates in scale
-identification. These estimator-specific meanings must not be pooled.
+For default MML, 0.2.3 now estimates an intercept-only population distribution
+while retaining geometric-mean-one relative slopes. Population SD carries the
+common discrimination scale, so the conventional fixed-latent-variance GPCM
+degree of freedom is retained. The former standard-normal plus
+geometric-mean-one likelihood is still available as the explicit
+`fixed_standard_normal` legacy restriction. For JML, geometric-mean-one is a
+genuine identification constraint because person coordinates are estimated
+jointly. These estimator-specific meanings must not be pooled.
+
+The sealed v3/v4 score-calibration lineage predates this default and remains
+bound to the fixed-standard-normal likelihood. It is historical compatibility
+evidence, not numerical validation of the added population-intercept and
+log-variance coordinates.
 
 ## Four-axis model identity
 
@@ -243,7 +251,7 @@ JML/MML, DFF, sparse-network, or fit-calibration claims.
 
 | Estimator lane | 0.2.3 interpretation |
 | --- | --- |
-| Direct MML | Current bounded-GPCM engine; conclusions remain conditional on standard-normal latent distribution, quadrature, and the relative-GM1 slope restriction. |
+| Direct MML | Current bounded-GPCM engine; default MML estimates intercept and population variance with relative-GM1 slopes, while the named legacy mode retains fixed-standard-normal MML. Conclusions remain conditional on the chosen population distribution and quadrature. |
 | EM/hybrid input for GPCM | Currently falls back to direct optimization; it is not independent engine-parity evidence. |
 | JML | Separate fixed-Person estimand with incidental-parameter, extreme-score, and nonlinear-boundary risks; convergence cannot promote it. |
 | Bayesian HMC/NUTS | Important external model-family and regularization sensitivity, but not a guarantee for the package's MML/JML likelihood or uncertainty. |

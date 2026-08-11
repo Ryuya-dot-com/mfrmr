@@ -76,7 +76,8 @@ render_r_object_literal <- function(x) {
 # the `replay_inputs` list that `fit_mfrm()` stores on `fit$config`.
 # The helper emits every argument that materially affects the fit
 # (including inputs that older serialized fits may not retain:
-# `missing_codes`, `optimizer`, `mml_engine`, `slope_facet`, `anchor_policy`,
+# `missing_codes`, `optimizer`, `mml_engine`, `slope_facet`,
+# `gpcm_mml_identification`, `anchor_policy`,
 # `min_obs_per_*`, `min_common_anchors`, `facet_shrinkage`,
 # `facet_prior_sd`, `shrink_person`, `attach_diagnostics`).
 #
@@ -113,6 +114,22 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
       facets = as.character(src$facets %||% character(0)),
       score = as.character(src$score %||% "Score")
     )
+  }
+
+  replay_gpcm_identification <- ri$gpcm_mml_identification %||%
+    cfg$gpcm_mml_identification
+  if (is.null(replay_gpcm_identification) ||
+      !nzchar(as.character(replay_gpcm_identification)[1])) {
+    is_legacy_gpcm_mml <- identical(
+      toupper(as.character(ri$model %||% cfg$model %||% "")), "GPCM"
+    ) && identical(
+      public_mfrm_method_label(ri$method %||% cfg$method %||% ""), "MML"
+    ) && !isTRUE(fit_population$active)
+    replay_gpcm_identification <- if (is_legacy_gpcm_mml) {
+      "fixed_standard_normal"
+    } else {
+      "free_population"
+    }
   }
 
   emit <- function(name, value, suffix = ",", literal = NULL) {
@@ -156,6 +173,7 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     ),
     add_optional("step_facet", ri$step_facet),
     add_optional("slope_facet", ri$slope_facet),
+    emit("gpcm_mml_identification", as.character(replay_gpcm_identification)),
     "  anchors = anchors,",
     "  group_anchors = group_anchors,",
     emit("noncenter_facet", as.character(ri$noncenter_facet %||% "Person")),
@@ -414,7 +432,7 @@ validate_bias_results_input <- function(bias_results,
 #' The returned bundle has class `mfrm_manifest` and includes:
 #' - `summary`: one-row analysis overview
 #' - `readiness`, `readiness_components`, and `readiness_parameters`: the
-#'   source fit's current readiness-contract record, its component audit, and
+#'   source fit's current readiness-contract record, its component review, and
 #'   any parameter-level readiness rows
 #' - `environment`: package/R/platform metadata
 #' - `model_settings`: key-value model settings table
@@ -602,10 +620,21 @@ build_mfrm_manifest <- function(fit,
     facet_names = paste(as.character(cfg$facet_names %||% character(0)), collapse = ", "),
     noncenter_facet = as.character(cfg$noncenter_facet %||% ""),
     step_facet = as.character(cfg$step_facet %||% ""),
+    slope_facet = as.character(cfg$slope_facet %||% ""),
+    gpcm_mml_identification = as.character(
+      cfg$gpcm_mml_identification %||% "not_recorded"
+    ),
+    gpcm_common_discrimination = as.character(
+      cfg$gpcm_common_discrimination %||% "not_recorded"
+    ),
     dummy_facets = paste(as.character(cfg$dummy_facets %||% character(0)), collapse = ", "),
     n_categories = as.character(cfg$n_cat %||% NA_character_),
     population_active = isTRUE(fit_population$active),
     posterior_basis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    population_source = as.character(fit_population$source %||% "none"),
+    population_identification_role = as.character(
+      fit_population$identification_role %||% "not_applicable"
+    ),
     population_formula = if (!is.null(fit_population$formula)) {
       paste(deparse(fit_population$formula), collapse = " ")
     } else {
@@ -665,6 +694,10 @@ build_mfrm_manifest <- function(fit,
     plausible_values = !is.null(plausible_values),
     fit_population_active = isTRUE(fit_population$active),
     fit_posterior_basis = as.character(fit_population$posterior_basis %||% "legacy_mml"),
+    fit_population_source = as.character(fit_population$source %||% "none"),
+    fit_gpcm_mml_identification = as.character(
+      cfg$gpcm_mml_identification %||% "not_recorded"
+    ),
     fit_population_formula = if (!is.null(fit_population$formula)) {
       paste(deparse(fit_population$formula), collapse = " ")
     } else {

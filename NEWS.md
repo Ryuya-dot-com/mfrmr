@@ -4,6 +4,20 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Corrected bounded-GPCM MML scale identification. When no population formula
+  is supplied, the new default `gpcm_mml_identification = "free_population"`
+  activates an intercept-only `N(beta0, sigma2)` population model while
+  retaining geometric-mean-one relative slopes. Population SD now carries the
+  common-discrimination degree of freedom, and fixed-latent-SD optimizer
+  slopes are exposed alongside the relative-slope trace. The former
+  fixed-standard-normal plus geometric-mean-one likelihood remains available
+  as the explicit `"fixed_standard_normal"` compatibility mode. JML is
+  unchanged. Automatic and explicit `~ 1` fits are contract-tested as the same
+  likelihood, and replay scripts record the identification convention. Frozen
+  v3/v4 score-calibration artifacts remain bound to their earlier
+  fixed-standard-normal package payload and are not replayed as evidence for
+  the new free-population default.
+
 * Established the exact narrow overlap between ConQuest 5.47.5
   `scoresfree` GPCM and mfrmr's bounded item-owned GPCM under active latent
   regression. A deterministic coordinate/probability contract and one native
@@ -934,10 +948,11 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   closed for active latent regression, facet interactions, and group-anchor
   constraints until complete subgroup linking contracts exist. Documentation
   now treats `min_obs` as a computability guard rather than a universal
-  sample-size rule. The bounded-GPCM contract also states explicitly that
-  default fixed-standard-normal MML plus geometric-mean-one slopes estimates
-  relative discrimination contrasts, not the full conventional GPCM common-
-  slope scale.
+  sample-size rule. The bounded-GPCM contract also identified that the then-
+  default fixed-standard-normal MML plus geometric-mean-one slopes estimated
+  relative discrimination contrasts rather than the full conventional GPCM
+  common-slope scale; the current release line corrects that default as
+  described above and retains the old likelihood only by explicit request.
 
 * Sanitized the workflow vignette's export preview to display path basenames.
   The rendered public artifact no longer embeds a build machine's temporary

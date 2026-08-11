@@ -436,6 +436,10 @@ compact_population_spec <- function(population = NULL, person_levels = character
 
   list(
     active = isTRUE(pop$active),
+    source = as.character(pop$source %||% "none"),
+    identification_role = as.character(
+      pop$identification_role %||% "not_applicable"
+    ),
     posterior_basis = as.character(
       pop$posterior_basis %||%
         if (isTRUE(pop$active)) "population_model" else "legacy_mml"

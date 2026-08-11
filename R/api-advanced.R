@@ -216,7 +216,12 @@ resolve_dff_refit_controls <- function(fit) {
   population_active <- isTRUE(fit$config$population_active) ||
     isTRUE(fit$config$population_spec$active) ||
     !is.null(replay$population_formula)
-  if (population_active) {
+  auto_gpcm_population <- population_active &&
+    identical(as.character(fit$population$source %||% ""),
+              "gpcm_mml_default_identification") &&
+    identical(as.character(fit$config$model %||% ""), "GPCM") &&
+    identical(as.character(fit$config$method %||% ""), "MML")
+  if (population_active && !auto_gpcm_population) {
     stop(
       "`analyze_dff(method = \"refit\")` cannot currently reproduce an active ",
       "latent-regression population model within subgroup fits without changing ",
@@ -281,6 +286,17 @@ resolve_dff_refit_controls <- function(fit) {
     method = fit$config$method %||% fit$summary$Method[1] %||% "JML",
     step_facet = fit$config$step_facet %||% NULL,
     slope_facet = fit$config$slope_facet %||% NULL,
+    gpcm_mml_identification = as.character(
+      replay$gpcm_mml_identification %||%
+        fit$config$gpcm_mml_identification %||%
+        if (identical(as.character(fit$config$model %||% ""), "GPCM") &&
+            identical(as.character(fit$config$method %||% ""), "MML") &&
+            !population_active) {
+          "fixed_standard_normal"
+        } else {
+          "free_population"
+        }
+    )[1],
     rating_min = rating_min,
     rating_max = rating_max,
     weight = fit$config$weight_col %||% NULL,
@@ -519,9 +535,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' The subgroup fits replay the baseline response family, resolved score range,
 #' step/slope facets, weighting, optimizer, MML engine, and numerical controls;
 #' the non-target anchors are the intentional linking change. Refit analysis
-#' fails closed when the baseline uses an active latent-regression population
-#' model, facet interactions, or group-anchor constraints, because those
-#' structures do not yet have a complete subgroup-replay and linking contract.
+#' fails closed when the baseline uses a user-specified active latent-regression
+#' population model, facet interactions, or group-anchor constraints, because
+#' those structures do not yet have a complete subgroup-replay and linking
+#' contract. The automatically generated intercept-only population model used
+#' for default GPCM-MML scale identification is replayed and is not treated as
+#' a substantive covariate model.
 #'
 #' When `facet` refers to an item-like facet (for example `Criterion`), this
 #' recovers the familiar DIF case. When `facet` refers to raters or
@@ -1214,6 +1233,7 @@ analyze_dif <- function(...) {
       model = refit_controls$model,
       step_facet = refit_controls$step_facet,
       slope_facet = refit_controls$slope_facet,
+      gpcm_mml_identification = refit_controls$gpcm_mml_identification,
       anchors = if (nrow(linking_setup$anchor_tbl) > 0) linking_setup$anchor_tbl else NULL,
       noncenter_facet = refit_controls$noncenter_facet,
       dummy_facets = refit_controls$dummy_facets,

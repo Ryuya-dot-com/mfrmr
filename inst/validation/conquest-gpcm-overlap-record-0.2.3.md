@@ -1,10 +1,11 @@
 # ConQuest 5.47.5 bounded-GPCM overlap record for mfrmr 0.2.3
 
-Status: exact item-only latent-regression likelihood/coordinate map established;
-one native MML microcase completed; external comparison remains `review`,
-2026-08-11. This record does not promote GPCM to the mandatory ConQuest core,
-validate a many-facet GPCM, set a cross-engine tolerance, bind a release
-candidate, or authorize a simulation.
+Status: exact item-only likelihood/coordinate map established and used to
+correct the default GPCM-MML scale identification; one native MML microcase
+completed; external comparison remains `review`, 2026-08-11. This record does
+not promote GPCM to the mandatory ConQuest core, validate a many-facet GPCM,
+set a cross-engine tolerance, bind a release candidate, or authorize a
+simulation.
 
 ## Decision
 
@@ -19,16 +20,23 @@ estimate ! method=quadrature, nodes=31;
 `scoresfree` estimates one Tau per item. For category `k`, the exported item
 score is `k * Tau`; the zero category is the reference. The same behavior was
 observed in the installed 5.47.5 executable. This makes ConQuest a useful
-external MML comparator, but only after separating three different strata:
+external MML comparator, but only after separating four different strata:
 
-1. An **item-only GPCM with active latent regression** has an exact statistical
+1. An **item-only GPCM with an active free population model**, either
+   intercept-only or with prespecified covariates, has an exact statistical
    likelihood and coordinate map to the current bounded mfrmr GPCM.
-2. The **default unconditional mfrmr MML** fixes the latent distribution to
-   standard normal and also fixes the slope geometric mean to one. ConQuest's
-   standard `scoresfree` run fixes latent variance to one but freely estimates
-   the common discrimination scale. These are different finite-dimensional
-   models, not merely differently labelled output.
-3. A standard **multifacet ConQuest `scoresfree`** model estimates scores for
+2. The default **intercept-only free-population MML** is the no-covariate case
+   of that same exact map. Its structural map is established, although the
+   retained native microcase includes `X` and is not a separate unconditional
+   candidate.
+3. The former **fixed-standard-normal mfrmr MML** fixed the latent distribution
+   and the slope geometric mean to one. ConQuest's standard `scoresfree` run
+   fixes latent variance to one but freely estimates the common discrimination
+   scale. These are different finite-dimensional models, not merely
+   differently labelled output. That narrower mfrmr likelihood is now the
+   explicit `gpcm_mml_identification = "fixed_standard_normal"` compatibility
+   mode rather than the default.
+4. A standard **multifacet ConQuest `scoresfree`** model estimates scores for
    generalized items, which are combinations of all active facets. It does not
    automatically reproduce mfrmr's single Criterion- or Rater-owned slope that
    multiplies every term in the adjacent-category predictor. The item-only map
@@ -136,6 +144,27 @@ rounding rule remains unestablished, and the run was not candidate-bound.
 Consequently no numerical row is marked eligible and these differences are
 descriptive, not acceptance results.
 
+## Package identification correction
+
+The package default now uses
+`gpcm_mml_identification = "free_population"`. When a GPCM MML call omits
+`population_formula`, mfrmr constructs the intercept-only population model
+
+```text
+theta = beta_0 + sigma epsilon, epsilon ~ N(0, 1), GM(a) = 1.
+```
+
+This is the left side of the exact map above and therefore restores the common
+discrimination degree of freedom. The fixed-latent-SD optimizer slope reported
+for comparison is `sigma * a`; its geometric mean is `sigma`. Automatic and
+explicit `population_formula = ~ 1` calls are tested to produce the same
+objective and optimizer coordinates. JML is unchanged because GM-one slopes
+remain necessary for its joint person/slope scale identification.
+
+This correction establishes likelihood identity, not external acceptance.
+The native ConQuest microcase remains rounded, non-candidate-bound review
+evidence, and the many-facet score-owner mismatch remains open.
+
 ## Identity and retention
 
 | Artifact | SHA-256 |
@@ -150,8 +179,8 @@ descriptive, not acceptance results.
 | ConQuest parameter export | `3f9b60e698c4d68bf2e0170b5fe343281549079ee9336c1396c5f11aa6aab541` |
 | ConQuest history export | `f5bf78c94f88145a5cc10ce0c67a30b3259a33a2b31096db6c9c48d1b7fa3785` |
 | coordinate contract | `8ed505578b1baed4a6b24756bef4f80f2f4b4e3994c02d787ffe07d7316d52f2` |
-| overlap registry | `a559cd5ccc1dc378de598b744c7a779d404ad591b32ed2bd6d730428f204eaff` |
-| deterministic test | `b15d3e7707d1afccc8de01ab828f0da289c0813da70bb3c8b1a7c51672ac50a5` |
+| overlap registry | `e4e5822514d1814113fe21f21dea07a7bdab9c273ad0dd36fd542c77e0971584` |
+| deterministic test | `79846227982d66cb2cccfa1523ea4859007e302fe40993926fad3bd9530e6ab0` |
 
 Raw external outputs remain in the restricted temporary probe directory and
 are not added to the package or source tree. Only data-free formulas,
@@ -160,12 +189,11 @@ are retained here.
 
 ## Roadmap consequence
 
-Checklist row 67 moves from `not_run` to `review` but remains a deferred
-future-GPCM row with no 0.2.3 release effect. The next bounded step, if this
-evidence is later promoted, is one newly generated item-only latent-regression
-candidate with a predeclared integration ladder, raw-token contract, and
-external tolerance. It is lower priority than the retained RSM/PCM release
-spine.
+Checklist row 67 remains `review`; the mathematical map now corrects the
+package default but does not pass the external comparison row. The next
+bounded external step is one newly generated item-only candidate with a
+predeclared integration ladder, raw-token contract, and external tolerance.
+It remains lower priority than the retained RSM/PCM release spine.
 
 Criterion-owned and Rater-owned many-facet GPCM comparisons remain separate.
 Before either can use ConQuest, a design must prove that generalized-item score

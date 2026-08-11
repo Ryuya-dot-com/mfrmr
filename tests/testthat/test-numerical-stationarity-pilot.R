@@ -311,6 +311,7 @@ test_that("canonical-score summaries reject incomplete step ladders", {
 
 test_that("the five-run pilot records review evidence and fails closed", {
   testthat::skip_if_not_installed("digest")
+  skip_if_frozen_gpcm_payload_drifted()
   env <- load_numerical_stationarity_pilot()$env
   pilot <- env$mfrmr_run_numerical_stationarity_pilot()
 

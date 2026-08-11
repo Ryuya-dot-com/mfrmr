@@ -66,10 +66,10 @@ identify whether the opt-in layer ran and retain its test log.
   and companion record: exact item-only active-latent-regression map between
   mfrmr's geometric-mean-one slopes plus estimated residual variance and
   ConQuest's variance-one `scoresfree` Taux. The record binds one completed
-  native MML microcase and explicitly rejects unconditional common-slope,
+  native MML microcase, documents the resulting default-identification
+  correction, and explicitly separates the legacy fixed-standard-normal,
   standard multifacet generalized-item, JML free-score, and multidimensional
-  generalization. It launches no external program and promotes no comparison
-  row.
+  strata. It launches no external program and promotes no comparison row.
 - `readiness-contract-fixtures-0.2.3.csv`: 36 exact positive, negative,
   migration, and FACETS-comparison expectations covering balanced, sparse,
   two-rater, category-support, extreme-score, numerical, and external-result

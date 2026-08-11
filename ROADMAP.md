@@ -55,6 +55,22 @@ multidimensional generalized MFRM, or an unrestricted cell-slope model.
 Maintainer evidence keeps those model families and their validation
 dependencies in separate strata.
 
+For GPCM MML, 0.2.3 now estimates an intercept-only population distribution by
+default while retaining geometric-mean-one relative slopes. The population SD
+therefore carries the common discrimination scale; this is a one-to-one
+reparameterization of the conventional fixed-latent-variance GPCM in the
+documented item-only ConQuest overlap. The former fixed-standard-normal plus
+geometric-mean-one likelihood remains available only as an explicitly named
+legacy restriction. JML continues to use geometric-mean-one slopes as a true
+identification constraint on jointly estimated person coordinates.
+
+The sealed v3/v4 GPCM score artifacts remain attached to their historical
+fixed-standard-normal package payload. They are not reinterpreted or replayed
+as evidence for the free-population default. A future current-lineage numerical
+candidate must cover the population intercept and log-variance coordinates in
+addition to the relative-slope block; this is a bounded deterministic gate,
+not a reason to resume broad simulation.
+
 Priorities are:
 
 - parameter recovery and numerical stability by model, estimator, and
@@ -697,8 +713,12 @@ considered. Native machine-readable exports, raw reported precision,
 likelihood and constraint identity, integration controls, stopping rules, and
 termination state are part of that comparison. Screen-rounded values and
 same-named fit statistics are not acceptance evidence. A ConQuest
-`scoresfree` GPCM result is compared with bounded GPCM only after an exact
-probability-level parameter map exists; raw slope labels are insufficient.
+`scoresfree` GPCM result is compared with bounded GPCM only through the exact
+probability-level item-only map now recorded in the repository; raw slope
+labels remain insufficient. The next work is deterministic public
+adapter/normalizer coverage and a candidate-bound replication, not a broad
+simulation. Multifacet generalized-item score ownership remains a separate,
+unproved overlap.
 
 G-theory remains a 0.2.3 contract/parser/algebra prototype. Its large
 numerical-rule simulation is deferred unless the claim-disposition review

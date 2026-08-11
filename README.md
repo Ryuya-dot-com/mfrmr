@@ -681,9 +681,15 @@ the installed CRAN package and supports only the overlap case stated above;
 identifier-bearing response and case-level files are not included in the
 package.
 
-This route does not cover multidimensional models, arbitrary imported design
-matrices, bounded `GPCM` latent regression, JML latent regression, or the full
-ConQuest plausible-values workflow.
+This public bundle route does not cover multidimensional models, arbitrary
+imported design matrices, bounded `GPCM` latent regression, JML latent
+regression, or the full ConQuest plausible-values workflow. Separately, the
+source validation record establishes an exact item-only probability and
+coordinate map between default bounded-GPCM MML and ConQuest `scoresfree`:
+`mfrmr` estimates an intercept and population SD while fixing the geometric
+mean of relative slopes to one; ConQuest fixes latent mean/variance and frees
+all absolute Taux. This result does not extend automatically to a multifacet
+ConQuest generalized-item design.
 
 The ConQuest overlap bundle is also a controlled analysis bundle. Its long and
 wide response files contain person identifiers and responses; the person-data
@@ -701,7 +707,7 @@ before sharing.
 | Facets | Multiple observed facet roles | The design must remain connected for the intended contrasts |
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
-| Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet` | Not an unrestricted many-facet GPCM implementation |
+| Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
 | Latent regression | Conditional-normal, unidimensional MML population model | Not arbitrary ConQuest design-matrix or multidimensional population modeling |
 | Diagnostics | Residual/EAP and strict marginal screening routes | A flag is not a deletion, fairness, or validity decision |
@@ -716,7 +722,18 @@ vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
 
 Free-slope GPCM fits are currently review-only at the parameter boundary gate.
-The current numerical score-rule work is deliberately bounded: the sealed v4
+For MML, the default
+`gpcm_mml_identification = "free_population"` estimates an intercept-only
+population distribution and retains the conventional common-discrimination
+degree of freedom. `fit$slopes$OptimizerEstimate` remains the
+geometric-mean-one relative slope; the corresponding fixed-latent-SD value is
+stored in `FixedLatentSDOptimizerEstimate`. Use
+`gpcm_mml_identification = "fixed_standard_normal"` only to reproduce the
+legacy likelihood that fixed both latent variance and slope geometric mean.
+The sealed v3/v4 score-calibration artifacts belong to that earlier
+fixed-standard-normal package payload. They remain immutable compatibility-
+lineage evidence and are not replayed as validation of the new free-population
+default. The current numerical score-rule work is deliberately bounded: the sealed v4
 calibration-only boundary completion passed its fixed score and transformation
 rules once and was independently validated without refitting. A no-execution
 seal now freezes that bounded rule for a future disjoint confirmation design.
