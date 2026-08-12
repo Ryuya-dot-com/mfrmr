@@ -617,6 +617,22 @@ reparameterization for this ray, before the separate upper/joint variance path
 and source-selection rule. A denser grid, more iterations, Hessian/DFF/fit/rank
 work, or broad simulation cannot bypass that question.
 
+P1e resolves the coordinate question for the declared symmetric C4 ray. It
+replaces the ill-scaled raw nuisance coordinates by an exact finite affine map:
+C4 location, C4 steps, and Rater coordinates are divided by `exp(-t)`, while
+C1--C3 locations and steps are multiplied by `exp(-t/3)`. Round-trip error is
+at most about `1.39e-17`, and analytic chain-rule gradients agree with an
+independent derivative to about `2.20e-7`. All 32 transformed fits pass their
+declared scale-specific numerical rule; raw absolute-gradient review remains
+visible rather than being overwritten. A separately derived direct reduced
+limit then passes from both starts in all four scenarios. Its routes agree to
+about `3.41e-13` and its objective is 3.38--4.15 above the qualified interior.
+The observed symmetric C4 ray is therefore locally noncompetitive, but other
+asymmetric rate allocations, multiple growing slopes, and curved paths remain
+open. The next efficient lower-boundary gate is a finite rate-cone
+classification and its derived reduced likelihoods, before the separate upper
+boundary and source-selection rule.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

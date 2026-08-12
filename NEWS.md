@@ -4,6 +4,19 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a coordinate-scaled GPCM joint-limit P1e audit for the declared C4
+  lower-boundary ray. An exact rank-20 affine reparameterization separates
+  coordinates shrinking as `exp(-t)` from non-target locations and steps that
+  can grow as `exp(t/3)`. All 32 finite fits pass the declared transformed-
+  scale rule, although only one passes the same absolute rule in raw nuisance
+  coordinates. An independently derived direct `t = Inf` likelihood retains
+  C4 Rater/latent variation and makes C1--C3 deterministic with respect to
+  those facets; all eight two-route fits pass, agree within about `3.41e-13`,
+  and are 3.38--4.15 objective units worse than the interior candidate. This
+  locally closes only the symmetric C4 ray. The next bounded gate is an
+  asymptotic slope-rate-cone audit, not source selection or downstream
+  inference.
+
 * Added a bounded GPCM joint zero-population-variance/log-slope P1d audit. It
   preserves geometric-mean-one slopes while holding the observed C4
   `slope * population SD` term constant, so the fixed-nuisance q=1 limit is

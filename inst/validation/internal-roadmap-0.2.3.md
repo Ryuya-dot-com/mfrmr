@@ -4047,6 +4047,41 @@ starting Hessian/DFF/fit/rank work, or launching broad simulation would not
 resolve the identified problem. The upper/joint variance boundary remains a
 separate later gate.
 
+P1e is now complete in
+`gpcm-coordinate-scaled-joint-limit-p1e-0.2.3.R` and its execution record. For
+the declared C4 ray, write `epsilon = exp(-t)` and `rho = exp(-t/3)`. The exact
+finite transform uses C4 location/steps and Rater divided by `epsilon`, and
+C1--C3 locations/steps multiplied by `rho`. Criterion-specific locations
+`x_c = beta - gamma_c` remove the divergent population-intercept/criterion-
+facet cancellation while preserving `sum(gamma_c) = 0`. The resulting affine
+Jacobian has rank 20 at every finite point, and nuisance round trips differ by
+at most about `1.39e-17`.
+
+All 32 finite transformed fits pass the declared transformed-coordinate rule;
+only one of those same raw vectors passes the raw absolute-gradient rule. The
+largest analytic/numeric transformed-gradient difference is about `2.20e-7`.
+This demonstrates scale-sensitive stopping behavior without relabelling the
+raw package solution as inference-ready. Finite objectives approach the direct
+limit monotonically in absolute difference, from about `0.0315`/`0.0241` at
+`t = 4` to about `1.05e-5`/`8.06e-6` at `t = 10` for exact/near fixtures.
+
+The independently implemented direct limit keeps C4 latent-normal and Rater
+terms, while C1--C3 lose those terms under this rate allocation. Its analytic
+gradient agrees with an independent derivative to at most about `1.79e-7`.
+All eight two-route fits pass, q=61/91/121 ranges and route differences are at
+most about `3.41e-13`, and the limit objectives are 3.38--4.15 above the
+qualified interior candidates. Each reflection is therefore labelled
+`declared_c4_ray_two_route_stationary_limit_above_interior`.
+
+This is a local adjudication of one symmetric one-dominant ray, not a global
+joint-boundary certificate. The next efficient P1 slice is to characterize the
+polyhedral rate cone induced by sum-zero log slopes and declining population
+SD, enumerate its distinct extreme target sets/rates, and derive the
+corresponding reduced likelihoods before executing them. This finite analytic
+classification is preferable to an arbitrary multidimensional grid or broad
+simulation. The upper/joint variance path, source-selection rule, Hessian,
+DFF/fit/rank, and broad simulation remain later gates.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

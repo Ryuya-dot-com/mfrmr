@@ -190,6 +190,19 @@ certified finite turnback or a selected interior solution. The next lower-
 boundary work is a coordinate-aware reduced limit or reparameterization, not
 more grid points or a retrospective stationarity tolerance.
 
+The P1e record,
+`gpcm-coordinate-scaled-joint-limit-p1e-record-0.2.3.md`, derives the required
+coordinate rates and implements both an exact finite affine transform and a
+direct reduced-limit likelihood. Round trips are at machine precision and
+chain-rule gradients agree with independent finite differences. All 32 finite
+transformed fits and all eight direct-limit fits pass their declared numerical
+rules. The two limit routes agree within about `3.41e-13`; their objectives are
+3.38--4.15 above the qualified interior. Thus the symmetric one-dominant C4
+ray is locally noncompetitive. Because only one rate allocation and target set
+has been adjudicated, the global lower boundary and source solution remain
+open. The next admissible lower-boundary work is a prespecified finite
+slope-rate-cone classification, not an arbitrary denser path grid.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -297,8 +310,10 @@ not retrospective widening of the tolerance.
    identity but finds no stationary zero-boundary nuisance candidate. Retain
    the default/high basin only as a diagnostic trace. P1d shows that the first
    declared C4 joint ray is quadrature-coherent but nuisance-nonstationary
-   beyond `t = 2`; next derive its coordinate-aware reduced limit or a well-
-   scaled finite representation, then address the separate upper/joint
+   beyond `t = 2`. P1e now closes the coordinate-aware direct limit for that
+   symmetric C4 ray and finds it locally above the interior solution. Next
+   classify the finite set of asymptotic slope-rate cones and derive only their
+   admissible reduced likelihoods, then address the separate upper/joint
    variance path and source-solution selection contract. Do not add q or path
    points by default, freeze an observed slope or solution tolerance, or call
    finite-grid agreement a continuous-integral certificate.

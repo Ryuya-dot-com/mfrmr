@@ -137,6 +137,14 @@ identify whether the opt-in layer ran and retain its test log.
   stationarity and no `t >= 4` point does. The result is inconclusive and
   redirects the next gate to a coordinate-aware reduced limit rather than
   denser paths, a larger iteration ceiling, or solution selection.
+- `gpcm-coordinate-scaled-joint-limit-p1e-0.2.3.R` and
+  `gpcm-coordinate-scaled-joint-limit-p1e-record-0.2.3.md`: exact finite
+  reparameterization and independently derived direct limit for the declared
+  symmetric C4 ray. All 32 transformed finite fits and all eight direct-limit
+  fits pass their scale-specific rules; direct-limit routes agree to floating-
+  point precision and lie 3.38--4.15 objective units above the interior
+  candidate. Raw-coordinate gradients remain reported. The result adjudicates
+  this ray only and redirects the next gate to a finite slope-rate-cone audit.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

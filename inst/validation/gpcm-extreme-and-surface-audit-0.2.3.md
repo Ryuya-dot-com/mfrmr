@@ -218,6 +218,17 @@ degrades sharply: 14/48 points pass overall and zero of 32 points with
 finite turnback. A coordinate-aware reduced-limit or reparameterized profile
 must precede the separate upper-variance path and source-solution selection.
 
+P1e supplies that coordinate-aware representation for the declared symmetric
+C4 ray. The finite map is affine and full rank, preserves the original
+likelihood exactly, and separates `exp(-t)` target/Rater coordinates from
+`exp(t/3)` non-target location/step coordinates. All 32 transformed fits pass
+their declared scale-specific rule while raw gradients remain visible. The
+independently coded direct limit retains C4 latent/Rater variation, removes it
+from C1--C3, and passes from both starts in every reflection. Its objective is
+3.38--4.15 above the interior candidate. This closes the observed C4 symmetric
+ray locally, not the global lower boundary; asymmetric rate cones and multiple
+growing slopes remain ahead of source-solution selection.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
