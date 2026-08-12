@@ -243,6 +243,14 @@ mfrmr_gocs_p1s_numeric_scalar <- function(value) {
   if (length(value) >= 1L) value[[1L]] else NA_real_
 }
 
+mfrmr_gocs_p1s_expected_identification <- function(estimator) {
+  if (identical(as.character(estimator), "MML")) {
+    "free_population"
+  } else {
+    "not_applicable_jml"
+  }
+}
+
 mfrmr_gocs_p1s_empty_result <- function(row, data_sha) {
   cbind(
     row[, mfrmr_gocd_p1r_identity_fields(), drop = FALSE],
@@ -304,10 +312,14 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
   replay_inputs <- cfg$replay_inputs %||% list()
   population_active <- isTRUE((fit$population %||% list())$active)
   expected_population <- identical(as.character(row$Estimator), "MML")
+  expected_identification <- mfrmr_gocs_p1s_expected_identification(
+    row$Estimator
+  )
   config_match <- identical(as.character(cfg$model), "GPCM") &&
     identical(as.character(cfg$slope_facet), as.character(row$SlopeOwner)) &&
     identical(as.character(cfg$step_facet), as.character(row$StepOwner)) &&
-    identical(as.character(cfg$gpcm_mml_identification), "free_population") &&
+    identical(as.character(cfg$gpcm_mml_identification),
+              expected_identification) &&
     identical(as.integer(cfg$rating_min), 1L) &&
     identical(as.integer(cfg$rating_max), 4L) &&
     identical(population_active, expected_population) &&
@@ -326,7 +338,7 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
     as.character(row$StepOwner)
   ) && identical(
     mfrmr_gocs_p1s_setting(settings, "gpcm_mml_identification"),
-    "free_population"
+    expected_identification
   ) && identical(mfrmr_gocs_p1s_setting(settings, "n_categories"), "4")
 
   replay <- getFromNamespace("build_mfrm_replay_script", "mfrmr")(
@@ -345,13 +357,12 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
   summary_match <- nrow(overview) == 1L &&
     identical(as.character(overview$SlopeFacet), as.character(row$SlopeOwner)) &&
     identical(as.character(overview$StepFacet), as.character(row$StepOwner)) &&
-    identical(as.character(overview$GpcmMmlIdentification), "free_population") &&
+    identical(as.character(overview$GpcmMmlIdentification),
+              expected_identification) &&
     identical(as.numeric(overview$RatingMin), 1) &&
     identical(as.numeric(overview$RatingMax), 4)
 
-  convergence <- fit$convergence %||% list()
-  readiness <- as.data.frame((fit$readiness %||% list())$fit %||% data.frame(),
-                             stringsAsFactors = FALSE)
+  convergence <- getFromNamespace("mfrm_convergence_state", "mfrmr")(fit)
   fit_summary <- as.data.frame(fit$summary %||% data.frame(),
                                stringsAsFactors = FALSE)
   objective_candidates <- c("Objective", "NegativeLogLikelihood", "NLL")
@@ -360,7 +371,7 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
   objective <- if (length(objective_name) == 1L) {
     mfrmr_gocs_p1s_numeric_scalar(fit_summary[[objective_name]])
   } else {
-    mfrmr_gocs_p1s_numeric_scalar((fit$optimization %||% list())$value)
+    mfrmr_gocs_p1s_numeric_scalar((fit$opt %||% list())$value)
   }
   population_sd <- if (population_active) {
     sqrt(mfrmr_gocs_p1s_numeric_scalar(fit$population$sigma2))
@@ -371,13 +382,9 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
   out$PublicManifestIdentityMatch <- manifest_match
   out$ReplayIdentityMatch <- replay_match
   out$PublicSummaryIdentityMatch <- summary_match
-  out$CodeConverged <- isTRUE(convergence$code_converged %||%
-                               fit$converged %||% FALSE)
-  out$FitReadiness <- if (nrow(readiness) == 1L) {
-    as.character(readiness$FitReadiness[1L])
-  } else NA_character_
-  out$InferenceReady <- nrow(readiness) == 1L &&
-    isTRUE(readiness$InferenceReady[1L])
+  out$CodeConverged <- isTRUE(convergence$code_converged)
+  out$FitReadiness <- as.character(convergence$fit_readiness)
+  out$InferenceReady <- isTRUE(convergence$inference_ready)
   out$Objective <- objective
   out$PopulationSD <- population_sd
   out$ReplaySHA256 <- mfrmr_gocs_p1s_hash_object(replay_text)
