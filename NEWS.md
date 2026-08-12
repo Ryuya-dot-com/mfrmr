@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Generated all six mfrmr q31/q61 numerical references for corrected ConQuest
+  candidate 002 from its exact pre-binding source commit. The four additive
+  RSM/PCM arms pass independent probability/marginal-likelihood oracles and
+  exhaustive local score-rank checks; the Binary pair passes its explicitly
+  weaker converged/finite/internal-coordinate-consistency contract. All three
+  families pass the prospective within-engine coordinate and deviance budgets.
+  Every fit remains non-inference-ready, numerical agreement cannot promote
+  inference, and ConQuest execution remains false until a separate exact
+  execution-handoff contract is frozen.
+
 * Invalidated the first prospective ConQuest candidate before execution: its
   RSM/PCM commands were item-only and could not evaluate the Rater/Criterion
   estimands required by the frozen 57-row table. The corrected candidate 002

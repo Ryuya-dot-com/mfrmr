@@ -171,13 +171,15 @@ Priorities are:
   proves six-arm normalizer and exact-decimal parser coverage. It also records
   that only the four RSM/PCM calibration arms have retained native files;
   Binary q31/q61 remain unobserved. Adapter, tolerance, and binding readiness
-  are complete, while execution is deliberately held pending the exact
-  corrected many-facet numerical-reference and handoff preflight. Numerical
-  reference readiness is explicitly distinct from inference readiness: a
-  converged, finite, oracle-checked, locally full-rank point may support
-  arithmetic comparison without licensing inferential claims. Only after that
-  contract is source-bound may ConQuest run. Binary native evidence and all
-  six-arm decisions remain open. Hidden-solution
+  are complete. All six source-bound mfrmr numerical references are now ready:
+  RSM/PCM pass independent probability/marginal-likelihood oracles and local
+  full-rank checks; Binary passes its explicitly weaker converged, finite,
+  internally consistent coordinate contract. All three q31/q61 pairs pass the
+  prospective within-engine coordinate and deviance budgets. Every fit remains
+  non-inference-ready, and numerical agreement cannot promote inference.
+  Execution is deliberately held until a separate exact executable/path/
+  console-capture handoff is frozen. Binary native evidence and all six-arm
+  cross-engine decisions remain open. Hidden-solution
   equivalence remains unavailable without a documented rounding interval or
   full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning

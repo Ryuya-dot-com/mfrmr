@@ -1494,6 +1494,14 @@ identify whether the opt-in layer ran and retain its test log.
   outputs including additive A matrices. Execution remains false pending the
   exact corrected-reference and handoff preflight. Numerical-reference
   readiness is kept distinct from, and cannot promote, inference readiness.
+- `conquest-six-arm-candidate-reference-preflight-0.2.3.R` and its companion
+  record: SHA-bound six-arm mfrmr q31/q61 references generated from the exact
+  candidate pre-binding commit. RSM/PCM retain independent probability and
+  marginal-likelihood oracles plus local full rank; Binary retains an explicit
+  weaker converged/finite/internal-coordinate-consistency basis. Every
+  within-engine integration row passes the frozen prospective budget, while
+  all fits remain non-inference-ready and external execution remains false
+  until a separate handoff is frozen.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration
