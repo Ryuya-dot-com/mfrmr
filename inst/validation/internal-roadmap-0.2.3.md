@@ -4261,10 +4261,37 @@ derivatives at nine points; its smallest observed derivative is about
 `3.91e-5`. This is deliberately not called continuous monotonicity. P1m closes
 the local representative-mechanism question while leaving
 `ContinuousMonotonicityCertified` and `ContinuousGlobalProfileCertified`
-false. The next efficient task is an algebraic category-reversal map for the
-low reflections, with fitting only on identity failure. Three-target faces,
-the remaining hierarchy, source selection, inferential Hessian, DFF/fit/rank,
-and broad simulation remain later gates.
+false. P1n therefore takes an algebraic category-reversal map for the low
+reflections, with fitting only on identity failure. Three-target faces, the
+remaining hierarchy, source selection, inferential Hessian, DFF/fit/rank, and
+broad simulation remain later gates.
+
+##### Draft.36 Exact category-reflection transport
+
+P1n derives and verifies the exact high-to-low map. For zero-based score `k`
+among `0,...,M`, replace it by `M-k`, negate the category location, and map
+`d_h` to `-d_(M+1-h)`. The reflected category log numerator differs from the
+original only by a category-constant term. In the ordered-ratio coordinates,
+Rater and location coordinates change sign, each full step vector is
+reverse-negated, and positive `mu` and `rho` remain unchanged. The resulting
+20-dimensional free-coordinate map is nonsingular and involutive.
+
+At the marginal level, the transformed predictor at node `z` equals the
+negative original predictor at node `-z`. Both endpoint fixture pairs preserve
+row identity and reflect their scores exactly; the 61/91/121 Gaussian rules
+mirror nodes and weights within `2.49e-14`. All 87 P1m stored points preserve
+the marginal objective within `2.28e-13`, mirrored posterior within
+`1.03e-14`, transported analytic gradients within `2.17e-13`, and twice-
+reflected coordinates within `2.09e-17`. Four independent central-gradient
+checks agree within `1.86e-8`, so no low-fixture fallback refit is required.
+
+Hessians transport by `H_high=t(T)*H_low*T`. Because the identified step map
+need not be orthogonal, P1n invokes Sylvester inertia preservation rather than
+claiming equal eigenvalues. This closes only the four reflected local
+mechanisms. The next compact task is to materialize the exact map over the
+complete P1k/P1l finite-grid registry. Continuous ratio closure, three-target
+faces, source selection, inferential Hessian, DFF/fit/rank, and simulation
+remain false.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

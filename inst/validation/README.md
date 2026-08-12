@@ -209,6 +209,14 @@ identify whether the opt-in layer ran and retain its test log.
   increasing on nine points. Local mechanisms are supported, while continuous
   monotonicity, global profile certification, reflection, and inference remain
   false.
+- `gpcm-category-reflection-transport-p1n-0.2.3.R` and
+  `gpcm-category-reflection-transport-p1n-record-0.2.3.md`: exact algebraic and
+  numerical transport of the four P1m local mechanisms to the exact-low and
+  near-low fixtures. All 87 stored points preserve marginal objective,
+  mirrored posterior, and transformed gradient without refitting; four
+  independent numeric-gradient checks also pass. This closes reflected
+  representative transport only. Full finite-grid transport, continuous
+  profile closure, face closure, and inference remain false.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

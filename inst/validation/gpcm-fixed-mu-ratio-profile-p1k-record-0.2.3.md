@@ -145,10 +145,12 @@ monotone-increasing grids, and ten additional minimum brackets in the
 coordinate-only lane. P1m subsequently supplies a compact local
 one-dimensional certificate for four frozen mechanism representatives. It
 supports their local turning-point/grid classifications while leaving
-continuous global certification false. The next efficient gate is exact
-category-reversal/reflection transport, not a denser profile grid. There
-remains no justification for opening three-target faces or running broad
-simulations first.
+continuous global certification false. P1n then verifies exact category
+reflection for both low fixtures and transports those four local mechanisms
+without refitting. The next efficient gate materializes that identity over the
+complete P1k/P1l finite-grid registry, not a denser profile grid. There remains
+no justification for opening three-target faces or running broad simulations
+first.
 
 Hessian inference, intervals, DFF, fit, rank, separation, source selection,
 and capability promotion remain downstream. In particular, “all 336 fits

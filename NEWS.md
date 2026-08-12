@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added an exact GPCM category-reflection transport P1n audit. Reversing scores,
+  negating location/Rater coordinates, reversing and negating full step
+  vectors, and mirroring Gaussian quadrature transports the four P1m local
+  mechanisms to the exact-low and near-low fixtures without refitting. All 87
+  stored points pass; maximum objective and gradient-transport differences are
+  about `2.27e-13` and `2.17e-13`. Four scheduled independent numeric-gradient
+  checks pass within `1.86e-8`. This closes reflected representative transport,
+  not the complete continuous ratio profile, face hierarchy, source selection,
+  or downstream inference.
+
 * Added a four-representative GPCM local profile-turning-point P1m audit. A
   stricter `2e-6` nuisance-gradient contract plus Richardson-Hessian Newton
   polish narrows one profile maximum and two profile minima to `rho` brackets

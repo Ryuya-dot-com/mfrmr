@@ -291,6 +291,15 @@ labels but not the global continuum. The next surface check should exploit an
 exact category-reversal identity for the low reflections and refit only on
 identity failure.
 
+P1n verifies that identity for both reflection pairs and all 87 stored P1m
+points. The free-coordinate map is an involution, Gaussian quadrature mirrors,
+and objective, posterior, and analytic-gradient differences remain below
+about `2.28e-13`; scheduled independent gradients agree within `1.86e-8`.
+Hessian positive definiteness transports by congruence rather than assumed
+eigenvalue equality. No fallback representative fit is needed. The next
+surface check materializes the same exact map across the full P1k/P1l
+finite-grid registry; continuous ratio and three-target closure remain open.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected

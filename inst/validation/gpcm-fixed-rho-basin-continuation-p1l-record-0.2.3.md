@@ -146,10 +146,11 @@ P1m subsequently completes a compact local profiled-`rho` audit for four
 frozen mechanism representatives. Three turning-point brackets narrow below
 `7.2e-8`, their nuisance Hessians are positive definite, and the monotone
 representative retains positive derivatives on a nine-point grid. Continuous
-global certification remains false. The next efficient gate is exact
-category-reversal transport to the reflected fixtures, with refitting only on
-identity failure. Three-target faces, Hessian inference, DFF/fit/rank
-confirmation, and broad simulation remain downstream.
+global certification remains false. P1n subsequently verifies exact
+category-reversal transport on all 87 stored representative points; no
+fallback refit is needed. Full finite-grid materialization comes next.
+Three-target faces, Hessian inference, DFF/fit/rank confirmation, and broad
+simulation remain downstream.
 
 ## Reproduction
 

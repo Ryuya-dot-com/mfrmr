@@ -265,8 +265,18 @@ their nuisance Hessians are positive definite; the monotone representative has
 positive derivatives at nine strict points. Local mechanism support is now
 complete for the representatives. Continuous monotonicity and the global
 profile remain false because point evaluation cannot exclude an unsampled
-turn. The next admissible step is exact score/category reflection transport,
-with refitting limited to any failed identities.
+turn. P1n therefore takes exact score/category reflection transport, with
+refitting limited to any failed identities.
+
+P1n completes that representative transport. The score-reversal fixtures and
+61/91/121-point quadrature schedules satisfy the exact mirror contract. A
+20-dimensional free-coordinate involution carries all 87 stored points to the
+low fixtures with maximum objective and gradient differences of about
+`2.27e-13` and `2.17e-13`; four independent numeric-gradient checks agree
+within `1.86e-8`. The nuisance Hessian relation is congruence, so inertia—not
+eigenvalue equality—is transported. All four local mechanisms transfer with no
+fallback fit. Complete finite-grid materialization and continuous profile
+closure remain separate later gates.
 
 ## Solution selection and coordinate agreement
 
@@ -390,12 +400,14 @@ not retrospective widening of the tolerance.
    continuation and reduces them to 22 maximum brackets, 16 minimum brackets
    across both lanes, and five monotone-increasing grids, with no observed
    common-`rho` nuisance split. P1m locally certifies four frozen mechanism
-   representatives while retaining global fail closure. Next derive exact
-   reflection transport, then evaluate the four three-target vertices as
-   needed. Complete the remaining empty-target hierarchy and address the
-   separate upper/joint variance path and source-solution contract. Do not add
-   q or path points by default, freeze an observed slope or solution tolerance,
-   or call finite-grid agreement a continuous-integral certificate.
+   representatives while retaining global fail closure, and P1n transports
+   those representatives exactly to both low fixtures. Next materialize the
+   map over the complete finite-grid registry, then evaluate the four
+   three-target vertices as needed. Complete the remaining empty-target
+   hierarchy and address the separate upper/joint variance path and
+   source-solution contract. Do not add q or path points by default, freeze an
+   observed slope or solution tolerance, or call finite-grid agreement a
+   continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

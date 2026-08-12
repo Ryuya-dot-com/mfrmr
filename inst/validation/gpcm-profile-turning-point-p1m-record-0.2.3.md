@@ -116,13 +116,12 @@ profile minima, and the monotone case remains increasing on a stricter grid.
 It does not prove that these four representatives exhaust all behavior, nor
 does it convert finite samples into a global lower bound over `rho`.
 
-The next efficient step is algebraic reflection transport: derive the exact
-category-reversal transformation from Person high fixtures to their low
-counterparts and test likelihood, gradient, turning-point type, and endpoint
-ordering invariance. That is preferable to duplicating the 87-point audit by
-refitting reflected fixtures. If exact transport fails, only the failed cells
-should be fitted. Three-target faces, source selection, Hessian inference,
-DFF/fit/rank confirmation, and broad simulation remain downstream.
+P1n subsequently completes that algebraic reflection transport for the four
+local mechanisms. Both reflection pairs and all 87 stored points preserve the
+marginal objective, mirrored posterior, and transformed gradient; no fallback
+refit is needed. The next efficient step is full finite-grid materialization
+over the P1k/P1l registry. Three-target faces, source selection, Hessian
+inference, DFF/fit/rank confirmation, and broad simulation remain downstream.
 
 ## Reproduction
 

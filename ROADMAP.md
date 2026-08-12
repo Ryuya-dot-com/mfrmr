@@ -729,9 +729,22 @@ minimum roots are narrowed to brackets below `7.2e-8`, both starts coalesce,
 and nuisance-Hessian minimum eigenvalues remain about `5.64`. The monotone
 representative has positive derivatives on a nine-point grid. This supports
 the local mechanism taxonomy but cannot prove continuous monotonicity or a
-global profile between numerical points. The next bounded step is an exact
-category-reversal/reflection transport, refitting only if that identity fails;
-it is not a denser `rho` grid.
+global profile between numerical points. P1n therefore takes an exact
+category-reversal/reflection transport, with refitting only on identity
+failure; it is not a denser `rho` grid.
+
+P1n completes that transport for the four P1m local mechanisms without
+refitting. The exact-high/exact-low and near-high/near-low fixtures preserve
+row identity and reverse every score. A linear involution negates location and
+Rater coordinates and reverse-negates each full step vector; symmetric
+quadrature mirrors the latent node. Across all 87 stored points, maximum
+objective and transported-gradient differences are about `2.27e-13` and
+`2.17e-13`; four independent numeric-gradient checks differ by at most
+`1.86e-8`. Nuisance Hessians transport by nonsingular congruence, which
+preserves inertia but does not imply identical eigenvalues. The next bounded
+step is to materialize this identity over the full P1k/P1l finite-grid
+registry. Continuous ratio closure, three-target faces, and inference remain
+false.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
