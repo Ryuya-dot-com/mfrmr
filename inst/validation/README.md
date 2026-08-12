@@ -242,8 +242,17 @@ identify whether the opt-in layer ran and retain its test log.
   estimators. Its eight routes explicitly separate JML Person coordinates from
   `free_population` MML, retain exact 1--4 support and runtime identity on 13
   future surfaces, and fail closed on pairing, scale, support, content-hash, or
-  authority drift. The bounded smoke is admitted after runtime binding but has
-  not run; replication and inferential claims remain unauthorized.
+  authority drift. P1s subsequently executed the admitted smoke; P1r remains
+  the immutable prospective contract.
+- `gpcm-owner-current-default-smoke-p1s-0.2.3.R` and
+  `gpcm-owner-current-default-smoke-p1s-record-0.2.3.md`: completed eight-route
+  current-default identity smoke. All fits, all route identity checks, and all
+  12 required public evidence surfaces pass. The run also exposed and led to
+  correction of recycled nonlinear-block selection in the GPCM MML
+  estimability audit. All eight fits remain review-only and zero are inference
+  ready, so row 88, recovery, owner ranking, external comparison, additional
+  replication, broad simulation, fit/DFF promotion, and confirmation remain
+  open or unauthorized.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
@@ -299,10 +308,12 @@ identify whether the opt-in layer ran and retain its test log.
   response-style, interaction, and local-dependence families outside the
   current claim. Draft.63 adopts its scenario strata as evidence keys without
   promoting any gate or adding a likelihood.
-- `gpcm-model-identity-contract-0.2.3.csv`: machine-readable Draft.63 mapping
-  from current and guarded generalized-MFRM strata to slope owner, step owner,
-  slope composition, latent dimension, estimator/ability-scale contract,
-  implementation status, evidence status, and permitted claim use.
+- `gpcm-model-identity-contract-0.2.3.csv`: hashed machine-readable Draft.63
+  mapping used by the historical Draft.66 owner execution. It retains that
+  run's estimator/ability-scale identity and must not be rewritten as if the
+  sealed MML pilot used today's default. P1r/P1s are the current-default
+  owner/scale/support overlay; guarded generalized-MFRM strata remain here as
+  explicit non-claim rows.
 - `gpcm-owner-specific-pilot-0.2.3.R`: Draft.64--66 repository-only runner for
   identity-stamped criterion-owned and rater-owned aligned GPCM smoke/pilot
   cells across JML/MML and support-topology controls. It provides deterministic

@@ -338,6 +338,16 @@ decision-relevant failure or a prespecified precision requirement.
 P1r has now fixed the prospective smoke contract: two source-owner datasets,
 four common-data fit routes each, explicit current-default MML, exact category
 support, content/runtime hashes, and full identity on 13 future surfaces. This
-admits at most eight fits after real runtime binding. It does not execute them,
-pass row 88, or authorize recovery claims, owner ranking, external comparison,
-additional replication, broad simulation, selection, or confirmation.
+admits at most eight fits after real runtime binding.
+
+P1s has executed exactly those eight routes. All fits return, all route
+identity comparisons pass, and all 12 required evidence surfaces are complete.
+The current-default identity-transport dependency is therefore closed. Row 88
+does not pass: all eight fits remain review-only, zero are inference ready, and
+two retain terminal-gradient review. A nonlinear-block recycling defect found
+by the smoke was corrected and regression tested before the admitted v3. The
+queue now stays in Wave B but moves from identity plumbing to estimator-
+specific nonlinear estimability, slope/joint-boundary completeness, and
+fixed-objective numerical stability. No added replication, broad simulation,
+recovery claim, owner ranking, external comparison, selection, or confirmation
+is authorized.

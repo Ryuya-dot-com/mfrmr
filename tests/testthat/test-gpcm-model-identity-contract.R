@@ -102,4 +102,10 @@ test_that("Draft.63 registers owner-specific GPCM evidence identities", {
                fixed = TRUE)
   expect_match(owner_row$ScenarioId, "NUM-GPCM-ALIGN-RATER", fixed = TRUE)
   expect_false(grepl("NUM-GPCM-BOUND", owner_row$ScenarioId, fixed = TRUE))
+  expect_match(
+    owner_row$PackageSurface,
+    "gpcm-owner-current-default-smoke-p1s-record-0.2.3.md",
+    fixed = TRUE
+  )
+  expect_identical(owner_row$EvidenceStatus, "review")
 })

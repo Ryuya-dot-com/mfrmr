@@ -71,7 +71,9 @@ as an aligned single-owner relative-slope GPCM: exactly one facet owns both
 the slope and step blocks, `slope_facet == step_facet`, and the latent trait is
 unidimensional. Draft.63 adopts separate criterion-owned and rater-owned
 evidence strata plus the machine-readable
-`gpcm-model-identity-contract-0.2.3.csv`. The existing pooled
+`gpcm-model-identity-contract-0.2.3.csv`. That hashed map remains part of the
+historical Draft.66 lineage; P1r/P1s supply the current-default scale/support
+overlay without rewriting it. The existing pooled
 `NUM-GPCM-BOUND` label is retained only for historical calibration traceability
 and cannot promote either substantive owner interpretation.
 
@@ -4365,9 +4367,36 @@ content hash. Thirteen prospective manifest/data/result/checkpoint/aggregate/
 replay surfaces retain the full 12-field source-owner, fitted-owner,
 estimator-scale, support, and runtime identity. An external normalizer is only
 conditional and cannot be admitted later without the same fields. The
-contract is complete, but the smoke has not run. Additional replication,
-recovery, owner-superiority, external, broad-simulation, selection, and
-confirmation claims remain false or unauthorized.
+contract was complete before execution; P1s below records the later admitted
+smoke. Additional replication, recovery, owner-superiority, external, broad-
+simulation, selection, and confirmation claims remain false or unauthorized.
+
+##### P1s current-default paired-owner identity smoke
+
+P1s executes the eight P1r routes without changing data, starts, quadrature,
+or optimization limits by outcome. Both source-owner datasets retain one data
+hash across their four fitted-owner/estimator routes. All eight fits return;
+config, public manifest, replay, and public summary identity agree on every
+route; and all 12 required evidence surfaces retain the full identity. The
+conditional external-normalizer surface is not instantiated and supplies no
+external evidence.
+
+Pre-admission review found three harness/audit defects rather than adapting a
+model result: JML effective identification was initially compared with the
+irrelevant MML input argument; optional objective extraction was not scalar
+safe; and MML nonlinear-block selection recycled a candidate-only logical
+vector against all parameter names. The latter was reproduced with warnings
+as errors, corrected by candidate intersection before size testing, and
+covered by the full estimability audit tests. Only corrected v3 is admitted.
+
+The identity subproblem is complete but row 88 remains `review`. All eight
+routes have optimizer code zero yet `FitReadiness = review` and
+`InferenceReady = FALSE`; two routes also retain terminal-gradient review.
+Current free-slope GPCM estimability and boundary audits deliberately remain
+incomplete. Additional owner-smoke replication and broad simulation remain
+unauthorized. The next dependency is the mathematical and numerical basis for
+estimator-specific free-slope readiness, followed only then by frozen owner-
+specific recovery, uncertainty, support, fit, and DFF rules.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

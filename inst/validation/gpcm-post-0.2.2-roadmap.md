@@ -181,8 +181,17 @@ P1r now fixes that smoke prospectively as two source-owner datasets crossed
 with two fitted owners and JML/current-default MML, for eight routes. It binds
 explicit 1--4 support, scale, runtime, content-hash, pairing, and 13-surface
 propagation requirements before any fit. Passing this contract does not pass
-the owner gate: the smoke remains unexecuted, and replication or inference is
-not authorized.
+the owner gate.
+
+P1s now completes the admitted eight-route execution: every fit returns, every
+route identity check passes, and all 12 required surfaces retain the full
+current-default identity. A recycled-vector warning in nonlinear estimability
+classification was corrected before the admitted v3. The result deliberately
+does not pass the owner gate: all eight fits remain `review`, zero are
+inference ready, and two retain terminal-gradient review. Repetition or broad
+simulation is not the next step. Estimator-specific nonlinear estimability,
+boundary completeness, and numerical stability must be resolved before
+freezing recovery, uncertainty, fit, DFF, or owner-comparison rules.
 
 When a capability changes, update the implementation, capability registry,
 runtime guard coverage, help, tests, release evidence, and this supplement in

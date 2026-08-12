@@ -786,8 +786,20 @@ planned routes. Every manifest row fixes the 1--4 range, common-data pairing,
 ability-scale role, runtime/runner/contract hashes, and no-claim boundary; 13
 future output surfaces must retain the same identity directly or by a
 full eight-route identity registry. The bounded smoke is admissible only after real runtime
-binding. It is not yet executed, and neither row 88 nor any recovery or
-owner-superiority claim is complete.
+binding.
+
+P1s has now executed that exact bounded smoke. All eight fits returned, all
+four route-level identity comparisons passed on every route, and all 12
+required manifest/data/result/checkpoint/aggregate/replay surfaces retained
+the full identity. During pre-admission review, warning-as-error reproduction
+found and fixed recycled nonlinear-block selection in the MML estimability
+audit; the admitted v3 has no such warning. This closes the current-default
+identity-transport gap, not row 88: all eight fits remain `review`, zero are
+inference ready, and two retain terminal-gradient review. Repeating the smoke
+or expanding simulation is not authorized. The next GPCM foundation work is
+estimator-specific nonlinear estimability, slope/joint-boundary completeness,
+and fixed-objective numerical stability before recovery, uncertainty, fit,
+DFF, or owner-comparison rules are frozen.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

@@ -213,3 +213,20 @@ test_that("P1s stored eight-route execution remains separately opt in", {
   expect_false(result$BroadSimulationAuthorized)
   expect_false(result$ConfirmationAuthorized)
 })
+
+test_that("P1s record separates identity completion from inference", {
+  paths <- gpcm_gocs_p1s_paths()
+  testthat::skip_if_not(file.exists(paths[["record"]]))
+  record <- paste(
+    readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
+    collapse = "\n"
+  )
+  expect_match(record, "ExecutedRoutes = 8", fixed = TRUE)
+  expect_match(record, "AllRouteIdentityChecksPass = TRUE", fixed = TRUE)
+  expect_match(record, "InferenceReadyRoutes = 0", fixed = TRUE)
+  expect_match(record, "OwnerEvidenceGatePass = FALSE", fixed = TRUE)
+  expect_match(record, "AdditionalReplicationAuthorized = FALSE", fixed = TRUE)
+  expect_match(record, "v1 and v2 do not enter any aggregate or claim",
+               fixed = TRUE)
+  expect_match(record, "not broad\\s+simulation")
+})

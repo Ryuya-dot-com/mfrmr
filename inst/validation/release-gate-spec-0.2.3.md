@@ -385,7 +385,10 @@ kernel uses geometric-mean-one relative slopes and one latent dimension. This
 does not implement simultaneous criterion and rater slopes, different slope
 and step owners, a rater-by-item slope, or a multidimensional latent trait.
 
-`gpcm-model-identity-contract-0.2.3.csv` is the machine-readable family map.
+`gpcm-model-identity-contract-0.2.3.csv` is the hashed Draft.63/Draft.66 family
+map retained for historical execution identity. P1r/P1s provide the
+prospective current-default overlay; the older map must not be silently
+rewritten and then presented as the contract used by the sealed pilot.
 Every generated GPCM result, replay record, external normalizer, and retained
 aggregate must add the following fields to the common result schema:
 
@@ -395,9 +398,11 @@ aggregate must add the following fields to the common result schema:
 The first four fields are part of the estimand identity. `RuntimeIdentity`
 must resolve to the loaded source or installed package content actually used;
 an ad hoc test that silently dispatches to another installed `mfrmr` cannot
-become release evidence. The JML and MML rows remain separate because fixed
-Person coordinates and a fixed standard-normal latent distribution do not
-give the relative-slope constraint the same inferential meaning.
+become release evidence. The JML and MML rows remain separate because jointly
+estimated Person coordinates and the current estimated intercept-only normal
+population location/scale do not give the relative-slope constraint the same
+inferential meaning. The historical fixed-standard-normal MML branch remains
+an explicit legacy stratum and cannot be pooled with the current default.
 
 `NUM-GPCM-BOUND` is retained only so earlier draft records remain interpretable.
 From Draft.63 onward it is a calibration umbrella, not a claim-promotion row.

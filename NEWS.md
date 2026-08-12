@@ -4,13 +4,22 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Completed the bounded P1s current-default paired-owner GPCM smoke. All eight
+  Criterion/Rater source-owner, fitted-owner, and JML/MML routes returned fit
+  objects; all route identity checks and all 12 required evidence surfaces
+  passed, with exact 1--4 support and common-data hashes retained. A warning-
+  as-error audit also fixed recycled nonlinear-block selection in the GPCM MML
+  estimability audit. All eight fits remain `review` and zero are inference
+  ready; two retain terminal-gradient review. Recovery, owner ranking,
+  external comparison, added replication, broad simulation, fit/DFF
+  promotion, and confirmation remain unauthorized.
+
 * Added a no-fit P1r contract for the current-default paired-owner GPCM smoke.
   Two non-unit source-owner datasets are each shared by Criterion/Rater and
   JML/MML routes, yielding eight planned fits with explicit
   `free_population`, 1--4 support, runtime, replay, and 13-surface identity
-  requirements. Content-hash and mutation guards pass. The smoke has not run;
-  recovery, owner-superiority, external comparison, added replication, broad
-  simulation, selection, and confirmation remain unauthorized.
+  requirements. Content-hash and mutation guards pass. P1s has now executed
+  this admitted smoke; P1r itself remains the immutable prospective contract.
 
 * Added a no-fit owner-identity P1q audit over the sealed 120-row GPCM pilot.
   Row and checkpoint identities are intact, but frozen aggregate tables do not
