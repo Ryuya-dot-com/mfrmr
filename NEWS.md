@@ -4,14 +4,25 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Bound the first prospective six-arm ConQuest candidate to pre-binding source
+  commit `7a04fd4`, the exact ConQuest 5.47.5 executable, six command/input
+  identities, the frozen 57-row tolerance table, and 46 expected-empty output
+  paths. The ignored local bundle matches every hash and contains no expected
+  output. External execution remains held: current v3 readiness classifies the
+  q31 polytomous mfrmr reference as `review`, despite convergence and locally
+  full-rank observed-pattern scores, because global/continuous-integral
+  identification remains unclassified. No fit is relabelled inference-ready,
+  no ConQuest process is launched, and no equivalence is promoted.
+
 * Froze the 57-row future-candidate-only ConQuest numerical budget before any
   new candidate output exists. Symmetric `EXT-CQ-TOL` limits are `1e-5` for
   common model coordinates and `2e-6` for positive deviance;
   `IC-INTEGRATION-TOL` is `2e-6` for both units. The canonical table SHA-256 is
   `64ab3338dc5e5144d98a7a8775512b5665f407e4d8778972521ff5bfe8754521`.
   The opened calibration informed the rule but remains permanently ineligible
-  to pass it. Candidate binding, execution, scientific/hidden-solution
-  equivalence, DFF/fit/rank invariance, and confirmation remain false.
+  to pass it. Candidate binding is handled by the later source-bound contract;
+  execution, scientific/hidden-solution equivalence, DFF/fit/rank invariance,
+  and confirmation remain false.
 
 * Added the missing Binary ConQuest q31/q61 reported-output normalizer. Its
   pre-result registry contains 18 rows: three population coordinates, five

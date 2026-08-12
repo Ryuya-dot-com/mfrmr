@@ -117,9 +117,9 @@ Deterministic tests establish that:
 
 This adapter and the reported-output policy close source precision only for the
 exact decimals written to file; checklist row 64 remains `review`. The
-successor contract now freezes reported-output-scale tolerances for a disjoint
-future candidate, so the next step is to bind the exact source, commands,
-inputs, and empty outputs before a newly generated six-arm core. Hidden-
-solution equivalence stays unavailable unless ConQuest supplies a documented
-rounding interval or a full-precision export. Broad simulation, sparse-design
-expansion, and GPCM owner validation remain downstream.
+successor contracts now freeze reported-output-scale tolerances and the exact
+source, commands, inputs, and empty outputs for a disjoint six-arm candidate.
+Execution remains held on the polytomous mfrmr reference-readiness mismatch.
+Hidden-solution equivalence stays unavailable unless ConQuest supplies a
+documented rounding interval or a full-precision export. Broad simulation,
+sparse-design expansion, and GPCM owner validation remain downstream.

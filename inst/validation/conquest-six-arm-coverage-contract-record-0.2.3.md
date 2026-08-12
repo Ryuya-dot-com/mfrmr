@@ -68,7 +68,7 @@ hashes. A different but syntactically valid 64-character digest fails closed.
 
 The focused Binary adapter and six-arm coverage tests complete with 37 and 39
 passing expectations, respectively. The complete ConQuest-labelled slice
-completes with 666 expectations and no failures, errors, skips, or warnings.
+completes with 729 expectations and no failures, errors, skips, or warnings.
 A source tarball with rebuilt vignettes passes
 `R CMD check --no-manual` with `Status: OK`.
 
@@ -94,7 +94,8 @@ A source tarball with rebuilt vignettes passes
 | `RetainedNativeCalibrationArms` | `4` |
 | `BinaryRetainedNativeEvidenceAvailable` | `FALSE` |
 | `FutureCandidateToleranceFrozen` | `TRUE` |
-| `CandidateBound` | `FALSE` |
+| `SuccessorCandidateBound` | `TRUE` |
+| `CandidateExecutionAuthorized` | `FALSE` |
 | `ComparisonReady` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
 | `ConfirmationAuthorized` | `FALSE` |

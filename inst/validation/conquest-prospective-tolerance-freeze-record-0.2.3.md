@@ -1,9 +1,9 @@
 # ConQuest prospective tolerance-freeze record for mfrmr 0.2.3
 
-Status: canonical tolerance table frozen, candidate unbound, 2026-08-12. This
-is a future-candidate-only engineering decision. It does not launch ConQuest,
-evaluate candidate output, reclassify the opened calibration, infer scientific
-equivalence, or authorize confirmation.
+Status: canonical tolerance table frozen and successor candidate bound,
+2026-08-12. This is a future-candidate-only engineering decision. It does not
+launch ConQuest, evaluate candidate output, reclassify the opened calibration,
+infer scientific equivalence, or authorize confirmation.
 
 ## Frozen decision
 
@@ -57,8 +57,8 @@ are:
 | --- | --- |
 | `ToleranceFrozen` | `TRUE` |
 | `RequiredToleranceRows` | `57` |
-| `CurrentCandidateBound` | `FALSE` |
-| `CandidateCoreStructurallyAuthorized` | `FALSE` |
+| `CurrentCandidateBound` | `TRUE` |
+| `CandidateCoreStructurallyAuthorized` | `TRUE` |
 | `candidate_execution_authorized = FALSE` | invariant |
 | `OpenedCalibrationReclassificationAuthorized` | `FALSE` |
 | `HiddenSolutionEquivalenceEligible` | `FALSE` |
@@ -79,7 +79,7 @@ The focused tolerance-freeze test completed with 72 expectations, zero
 failures, and zero skips. It covers typed budgets, the exact 57-row table
 and table hash, default candidate-unbound closure, structural-readiness versus
 execution-authorization separation, mutation failure, and this record's
-source identities. The complete ConQuest-labelled slice completed with 666
+source identities. The complete ConQuest-labelled slice completed with 729
 expectations, zero failures, zero errors, zero skips, and zero warnings.
 The source-loaded claim-disposition, release-readiness, P1p, and GPCM model-
 identity slices passed; the P1p stored-result audit had its one declared
@@ -98,9 +98,10 @@ check error, warning, or note.
 
 ## Next admissible action
 
-Create an exact candidate binding against the clean source commit produced by
-this slice and a six-arm expected-empty-output manifest. Validate all hashes
-and coverage declarations before launching the candidate. Candidate results
-must then be retained and adjudicated row by row. Only that later evidence can
-change the three ConQuest release rows from `review`; tolerance passage alone
-cannot do so.
+Retain the successor candidate binding and all 46 empty output identities. Do
+not launch ConQuest until the old polytomous reference-generator precondition
+is reconciled with current v3 readiness: the converged local-full-rank fit is
+still `review`, not inference-ready, because global/continuous-integral
+identification is unclassified. Candidate results must eventually be retained
+and adjudicated row by row. Only that later evidence can change the three
+ConQuest release rows from `review`; tolerance or binding passage alone cannot.

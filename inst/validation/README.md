@@ -1482,9 +1482,16 @@ identify whether the opt-in layer ran and retain its test log.
   source-bound canonical 57-row future-candidate table. Cross-engine common
   coordinates use symmetric `1e-5` limits, while cross-engine deviance and
   both integration units use `2e-6`. The opened calibration is ineligible,
-  the table hash is frozen, and candidate binding/execution, hidden-solution
-  or scientific equivalence, DFF/fit/rank invariance, sparse extension,
-  simulation, and confirmation remain unauthorized.
+  the table hash is frozen, and execution, hidden-solution or scientific
+  equivalence, DFF/fit/rank invariance, sparse extension, simulation, and
+  confirmation remain unauthorized.
+- `conquest-six-arm-candidate-binding-0.2.3.R` and its companion record: exact
+  pre-execution binding to commit `7a04fd4`, six q31/q61 command/input arms,
+  the ConQuest executable and source-precision identities, and 46 absent
+  expected outputs. The local ignored bundle passes every identity check. The
+  contract still sets execution false because current v3 readiness retains the
+  polytomous mfrmr numerical reference at `review`; local full rank is not
+  silently treated as global identification or inference readiness.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

@@ -1294,8 +1294,9 @@ ConQuest-minus-mfrmr deviance difference was `1.24811e-6`, the largest free or
 full transformed-parameter difference was `1.604646e-6`, and the
 cross-engine difference in the RSM-minus-PCM deviance drop was `1.10628e-6`.
 Every opened row remains `ComparisonReady = FALSE`. A successor contract now
-freezes a numerical table only for a disjoint future candidate; it cannot make
-these calibration rows pass, and no exact six-arm candidate is bound.
+freezes a numerical table and exact six-arm binding for a disjoint future
+candidate; it cannot make these calibration rows pass. Execution is held on
+the current polytomous mfrmr reference-readiness mismatch.
 
 Draft.11 replaces the one-pair pilot contract with
 `mfrmr_conquest_polytomous_rsm_pcm_ladder_v1` and applies that same fixed input

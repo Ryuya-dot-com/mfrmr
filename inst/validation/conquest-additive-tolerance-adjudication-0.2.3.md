@@ -49,10 +49,9 @@ handoff tolerance is not a cross-engine tolerance.
 ## Ordered next action
 
 Retain the now-frozen future-candidate-only `EXT-CQ-TOL` and
-`IC-INTEGRATION-TOL` table plus the complete 54-row six-arm normalizer and
-source-precision registry identities; bind an exact candidate and six empty
-output targets; and only then run all `Binary/RSM/PCM x q31/q61` arms. The four
-opened RSM/PCM arms remain calibration and cannot fill those six clean slots.
-One connected sparse/load-imbalanced microcase follows only after that core
-passes. Large simulation remains downstream and is not authorized by this
-adjudication.
+`IC-INTEGRATION-TOL` table, complete 54-row normalizer/source-precision
+registries, and exact six-arm binding. Before execution, reconcile the old
+polytomous reference-generator inference-ready assertion with current v3
+`review` semantics without relabelling local rank as global identification.
+The four opened RSM/PCM arms remain calibration and cannot fill the six clean
+slots. Sparse/load-imbalanced work and large simulation remain downstream.

@@ -150,10 +150,11 @@ Priorities are:
   future-candidate-only engineering budgets. The cross-engine rules are
   `1e-5` for common coordinates and `2e-6` for deviance; both q61-minus-q31
   units use `2e-6`. The opened calibration cannot pass these rules, and the
-  freeze does not establish hidden-solution/scientific equivalence. The next
-  task is to bind the exact clean candidate and its six empty output arms
-  before producing any new ConQuest output. The next clean
-  core is six arms (`Binary/RSM/PCM x q31/q61`), because the 57-row registry
+  freeze does not establish hidden-solution/scientific equivalence. The exact
+  clean candidate is now bound to pre-binding commit `7a04fd4`, six command
+  and input identities, and 46 expected-empty output paths. All local bundle
+  hashes match and all expected outputs remain absent. The clean core is six
+  arms (`Binary/RSM/PCM x q31/q61`), because the 57-row registry
   cannot be evaluated by the four additive RSM/PCM arms alone. The additive
   reported points have now been evaluated on a common likelihood: deviance
   increases over the mfrmr point are below `4.75e-10`, all local Hessians are
@@ -164,9 +165,14 @@ Priorities are:
   Together with the additive 36 rows, a content-hashed 54-row registry now
   proves six-arm normalizer and exact-decimal parser coverage. It also records
   that only the four RSM/PCM calibration arms have retained native files;
-  Binary q31/q61 remain unobserved. Thus adapter and tolerance-table readiness
-  are complete, while exact candidate binding, Binary native evidence, and all
-  six-arm decisions remain open. Hidden-solution
+  Binary q31/q61 remain unobserved. Adapter, tolerance, and binding readiness
+  are complete, while execution is deliberately held: current v3 readiness
+  leaves the converged q31 polytomous mfrmr reference at `review` because
+  local score rank does not establish global or continuous-integral
+  identification. The next task is to define an explicitly non-inferential
+  numerical-reference state or supply the stronger identification evidence;
+  only then may ConQuest run. Binary native evidence and all six-arm decisions
+  remain open. Hidden-solution
   equivalence remains unavailable without a documented rounding interval or
   full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning

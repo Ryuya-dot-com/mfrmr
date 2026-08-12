@@ -1,7 +1,7 @@
 # ConQuest prospective tolerance-freeze contract record for 0.2.3
 
-Status: generic validator implemented and successor canonical table frozen,
-2026-08-12. The generic template remains empty, no candidate is bound, no
+Status: generic validator implemented, successor canonical table frozen, and
+successor candidate bound, 2026-08-12. The generic fixture remains empty, no
 ConQuest process is launched, and no scientific-equivalence or confirmation
 claim is authorized.
 
@@ -106,9 +106,11 @@ therefore remains a fail-closed fixture. The successor basis/freeze contract
 now supplies a separate canonical table with all 57 future-candidate-only
 rules ready and SHA-256
 `64ab3338dc5e5144d98a7a8775512b5665f407e4d8778972521ff5bfe8754521`.
-Its current decision is `tolerance_frozen_candidate_binding_required` because
-no exact candidate is bound. Neither the generic synthetic positive fixture
-nor the opened calibration is current passing ConQuest evidence.
+Its own default decision remains `tolerance_frozen_candidate_binding_required`.
+The separate successor binding now supplies the exact candidate and passes the
+generic structural preflight, while holding execution on the current
+polytomous mfrmr reference-readiness mismatch. Neither the generic synthetic
+fixture nor the opened calibration is current passing ConQuest evidence.
 
 This slice closes the missing validation mechanism but does not close release
 rows `conquest_binary_core`, `conquest_rsm_core`, or `conquest_pcm_core`. Their
@@ -130,7 +132,7 @@ zero skips. It covers the exact registry, default fail closure, a structurally
 complete future fixture, opened-calibration rejection, candidate-output timing,
 tolerance-hash binding, exact coverage-registry identities, registry drift,
 and unsupported source paths/types. The complete ConQuest-labelled test slice
-then completed with 666 expectations,
+then completed with 729 expectations,
 zero failures, zero errors, zero skips, and zero warnings. A CRAN-light package
 check completed with zero errors, zero warnings, and zero notes.
 
@@ -156,7 +158,7 @@ check completed with zero errors, zero warnings, and zero notes.
 | `RequiredCandidateArms` | `6` |
 | `CurrentToleranceValuesFrozen` | `TRUE` |
 | `CurrentToleranceTableSHA256` | `64ab3338dc5e5144d98a7a8775512b5665f407e4d8778972521ff5bfe8754521` |
-| `CurrentCandidateBound` | `FALSE` |
+| `CurrentCandidateBound` | `TRUE` |
 | `CurrentReportedOutputPrecisionPolicyFrozen` | `TRUE` |
 | `CurrentHiddenSolutionPrecisionPolicyFrozen` | `FALSE` |
 | `CurrentBinaryReportedOutputNormalizerReady` | `TRUE` |
@@ -165,7 +167,7 @@ check completed with zero errors, zero warnings, and zero notes.
 | `CurrentRetainedNativeCalibrationArms` | `4` |
 | `CurrentBinaryRetainedNativeEvidenceAvailable` | `FALSE` |
 | `OpenedCalibrationReclassificationAuthorized` | `FALSE` |
-| `CurrentCandidateCoreStructurallyAuthorized` | `FALSE` |
+| `CurrentCandidateCoreStructurallyAuthorized` | `TRUE` |
 | `CurrentCandidateCoreRunAuthorized` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
 | `ConfirmationAuthorized` | `FALSE` |

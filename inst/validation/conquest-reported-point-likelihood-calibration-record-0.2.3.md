@@ -89,11 +89,11 @@ result coverage.
 | Hidden ConQuest solution equivalence | unavailable |
 | DFF, fit, or ranking decision invariance | not evaluated by this microcase |
 
-The next action is not a large simulation. The estimand-level future-candidate
-bounds are now frozen by the successor contract; the remaining task is to bind
-the exact source, commands, inputs, and six empty-output arms before execution.
-Binary q31/q61 native outputs must be retained when that authorized core is
-eventually run.
+The next action is not a large simulation. The estimand-level bounds and exact
+six-arm candidate are now bound. Execution remains held until the historical
+polytomous reference-generator requirement is reconciled with current v3
+`review` readiness without promoting local rank to global identification.
+Binary q31/q61 native outputs must be retained if that core is later run.
 
 ## Source binding and verification
 
@@ -106,7 +106,7 @@ eventually run.
 The focused calibration test completes with 42 expectations, zero failures,
 zero errors, zero skips, and zero warnings. Mutation controls reject q31/q61
 token drift, input/review detachment, and any hidden-solution promotion. The
-complete ConQuest-labelled slice completes with 666 expectations and no
+complete ConQuest-labelled slice completes with 729 expectations and no
 failures, errors, skips, or warnings. A clean source tarball with built
 vignettes passes `R CMD check --no-manual` with `Status: OK`.
 
@@ -124,7 +124,8 @@ vignettes passes `R CMD check --no-manual` with `Status: OK`.
 | `CandidateArmsRequired` | `6` |
 | `CalibrationEligibleUnderSuccessorTolerance` | `FALSE` |
 | `FutureCandidateToleranceFrozen` | `TRUE` |
-| `CandidateBound` | `FALSE` |
+| `SuccessorCandidateBound` | `TRUE` |
+| `CandidateExecutionAuthorized` | `FALSE` |
 | `ComparisonReady` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
 | `ConfirmationAuthorized` | `FALSE` |

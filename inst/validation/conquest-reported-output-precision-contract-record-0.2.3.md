@@ -83,7 +83,7 @@ tolerance binding now requires policy
 | `conquest-external-comparison-normalizer-0.2.3.R` | `4ad1d05c4a463e10ca334f2a7512f25389f9bc9dcecffecb8d390e491177a8b4` |
 
 The focused contract test completed with 39 passing expectations. The complete
-ConQuest-labelled slice completed with 666 expectations, zero failures, zero
+ConQuest-labelled slice completed with 729 expectations, zero failures, zero
 errors, zero skips, and zero warnings. A clean source tarball including built
 vignettes passed `R CMD check --no-manual` with `Status: OK`.
 
@@ -98,7 +98,8 @@ vignettes passed `R CMD check --no-manual` with `Status: OK`.
 | `HiddenSolutionEquivalenceEligible` | `FALSE` |
 | `FutureCandidateReportedDecimalToleranceFrozen` | `TRUE` |
 | `HiddenSolutionToleranceFrozen` | `FALSE` |
-| `CandidateBound` | `FALSE` |
+| `SuccessorCandidateBound` | `TRUE` |
+| `CandidateExecutionAuthorized` | `FALSE` |
 | `ComparisonReady` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
 | `ConfirmationAuthorized` | `FALSE` |
