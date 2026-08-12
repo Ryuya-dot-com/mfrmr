@@ -197,11 +197,20 @@ direct reduced-limit likelihood. Round trips are at machine precision and
 chain-rule gradients agree with independent finite differences. All 32 finite
 transformed fits and all eight direct-limit fits pass their declared numerical
 rules. The two limit routes agree within about `3.41e-13`; their objectives are
-3.38--4.15 above the qualified interior. Thus the symmetric one-dominant C4
-ray is locally noncompetitive. Because only one rate allocation and target set
-has been adjudicated, the global lower boundary and source solution remain
-open. The next admissible lower-boundary work is a prespecified finite
-slope-rate-cone classification, not an arbitrary denser path grid.
+3.38--4.15 above the qualified interior conditional on the fixed
+`a_C4 * sigma` coefficient. P1f subsequently recovers these objectives exactly
+inside a canonical free-coefficient model and shows that the released
+coefficient direction is nonstationary. Thus P1e adjudicates its declared
+fixed-coefficient path, not the full C4 face.
+
+The P1f record, `gpcm-slope-rate-cone-p1f-record-0.2.3.md`, proves that the
+normalized finite-random-product rate polytope is affinely a standard simplex.
+It enumerates all 14 nonempty proper four-criterion target faces and derives
+their shared canonical likelihood with one free positive coefficient per
+target. Its analytic gradient agrees with independent differences to about
+`1.51e-7`. The next admissible lower-boundary work is multistart optimization
+of those finite faces, not an arbitrary denser path grid. The empty-target
+deterministic-Rater hierarchy remains a separate unresolved stratum.
 
 ## Solution selection and coordinate agreement
 
@@ -310,11 +319,12 @@ not retrospective widening of the tolerance.
    identity but finds no stationary zero-boundary nuisance candidate. Retain
    the default/high basin only as a diagnostic trace. P1d shows that the first
    declared C4 joint ray is quadrature-coherent but nuisance-nonstationary
-   beyond `t = 2`. P1e now closes the coordinate-aware direct limit for that
-   symmetric C4 ray and finds it locally above the interior solution. Next
-   classify the finite set of asymptotic slope-rate cones and derive only their
-   admissible reduced likelihoods, then address the separate upper/joint
-   variance path and source-solution selection contract. Do not add q or path
+   beyond `t = 2`. P1e closes only its coordinate-aware fixed-coefficient C4
+   path. P1f maps the finite-random-product rates to a simplex, enumerates 14
+   target faces, and shows that P1e is nonstationary in its newly released
+   coefficient. Next optimize those canonical faces from prespecified starts,
+   then classify the empty-target deterministic-Rater stratum and address the
+   separate upper/joint variance path and source-solution contract. Do not add q or path
    points by default, freeze an observed slope or solution tolerance, or call
    finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,

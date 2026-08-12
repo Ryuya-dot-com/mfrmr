@@ -4,6 +4,19 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a GPCM lower-boundary slope-rate-cone P1f audit. Under declining
+  population SD and geometric-mean-one slopes, the normalized finite-random-
+  coefficient rates are affinely identical to a standard simplex. All 14
+  nonempty proper target faces for four criteria are enumerated, and one
+  canonical reduced likelihood with free positive `slope * population SD`
+  coefficients is independently differentiated. Exact conversion reproduces
+  all eight P1e C4 objectives within about `1.14e-13`, but the newly released
+  coefficient direction has objective gradient 2.42--2.89 and a prespecified
+  signed probe improves every point. P1e therefore closed only its fixed-
+  coefficient path, not the entire C4 face. Target-face optimization, the no-
+  random-product deterministic-Rater hierarchy, upper boundary, source
+  selection, and downstream inference remain closed.
+
 * Added a coordinate-scaled GPCM joint-limit P1e audit for the declared C4
   lower-boundary ray. An exact rank-20 affine reparameterization separates
   coordinates shrinking as `exp(-t)` from non-target locations and steps that
@@ -12,10 +25,10 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   coordinates. An independently derived direct `t = Inf` likelihood retains
   C4 Rater/latent variation and makes C1--C3 deterministic with respect to
   those facets; all eight two-route fits pass, agree within about `3.41e-13`,
-  and are 3.38--4.15 objective units worse than the interior candidate. This
-  locally closes only the symmetric C4 ray. The next bounded gate is an
-  asymptotic slope-rate-cone audit, not source selection or downstream
-  inference.
+  and are 3.38--4.15 objective units worse than the interior candidate
+  conditional on their fixed `slope * population SD` coefficient. P1f later
+  showed that this coefficient is not stationary when released, so P1e closes
+  only its declared fixed-coefficient path, not the entire C4 target face.
 
 * Added a bounded GPCM joint zero-population-variance/log-slope P1d audit. It
   preserves geometric-mean-one slopes while holding the observed C4

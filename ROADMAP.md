@@ -626,12 +626,24 @@ independent derivative to about `2.20e-7`. All 32 transformed fits pass their
 declared scale-specific numerical rule; raw absolute-gradient review remains
 visible rather than being overwritten. A separately derived direct reduced
 limit then passes from both starts in all four scenarios. Its routes agree to
-about `3.41e-13` and its objective is 3.38--4.15 above the qualified interior.
-The observed symmetric C4 ray is therefore locally noncompetitive, but other
-asymmetric rate allocations, multiple growing slopes, and curved paths remain
-open. The next efficient lower-boundary gate is a finite rate-cone
-classification and its derived reduced likelihoods, before the separate upper
-boundary and source-selection rule.
+about `3.41e-13` and its objective is 3.38--4.15 above the qualified interior,
+conditional on the path-fixed `slope * population SD` coefficient. P1f now
+shows that this coefficient is not stationary when released, so P1e closes
+only that declared fixed-coefficient path rather than the entire C4 face.
+
+P1f classifies the linear lower-boundary rates that retain at least one finite
+random coefficient. After normalizing the slope rates by the population-SD
+decay rate, `w_c = (1 - u_c) / J` is an exact affine map to the standard
+simplex. For four criteria this gives 14 nonempty proper target faces: four
+single-target faces, six two-target edges, and four three-target vertices. A
+canonical reduced likelihood with free positive target coefficients is now
+implemented with an independently checked analytic gradient. It reproduces
+the eight P1e objectives to about `1.14e-13`, while the released C4 coefficient
+gradient is 2.42--2.89 and a signed local probe improves every point. The next
+bounded gate is multistart optimization of these 14 canonical faces. The
+empty-target deterministic-Rater rate hierarchy, curved/nonconvergent rates,
+upper variance boundary, and source-selection rule remain separate blockers;
+Hessian, DFF/fit/rank, and broad simulation remain downstream.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

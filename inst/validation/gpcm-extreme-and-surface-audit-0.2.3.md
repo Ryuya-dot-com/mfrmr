@@ -225,9 +225,14 @@ likelihood exactly, and separates `exp(-t)` target/Rater coordinates from
 their declared scale-specific rule while raw gradients remain visible. The
 independently coded direct limit retains C4 latent/Rater variation, removes it
 from C1--C3, and passes from both starts in every reflection. Its objective is
-3.38--4.15 above the interior candidate. This closes the observed C4 symmetric
-ray locally, not the global lower boundary; asymmetric rate cones and multiple
-growing slopes remain ahead of source-solution selection.
+3.38--4.15 above the interior candidate conditional on the fixed
+`a_C4 * sigma` coefficient. P1f maps all finite-random-product linear rates to
+a standard simplex and recovers P1e as a fixed-coefficient submodel. The
+released coefficient has a resolved nonzero derivative, so P1e closes only
+its declared path, not the C4 face. P1f enumerates the 14 nonempty proper
+target faces and derives their canonical likelihood; optimizing them and
+classifying the empty-target deterministic-Rater hierarchy remain ahead of
+source-solution selection.
 
 ### Ordered work and exit criteria
 

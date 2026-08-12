@@ -122,7 +122,7 @@ limit monotonically in absolute objective difference:
 Both forward and reverse starts give the same pattern. No observed difference
 is converted into a general solution tolerance.
 
-## Direct reduced-limit likelihood
+## Direct reduced-limit likelihood conditional on the path coefficient
 
 Substituting the transformed coordinates and taking `t -> Inf` gives the C4
 logits
@@ -143,8 +143,9 @@ variation on this ray. P1e reconstructs observation probabilities, personwise
 quadrature aggregation, posterior node weights, and the analytic gradient of
 this reduced likelihood independently of the raw finite model.
 
-All eight direct-limit optimizations return and pass the existing numerical
-rule. Analytic/numeric limit-gradient discrepancies are at most `1.7866e-7`.
+All eight nuisance-coordinate optimizations conditional on the fixed path
+coefficient return and pass the existing numerical rule. Analytic/numeric
+limit-gradient discrepancies in those coordinates are at most `1.7866e-7`.
 The q=61/91/121 objective range is at most `3.4107e-13`. Forward/reverse route
 objective differences are also at most `3.4107e-13`.
 
@@ -156,8 +157,10 @@ objective differences are also at most `3.4107e-13`.
 | `EXT5-P-NEAR-LO` | `643.198713635438` | `639.819148202090` | `3.379565433348` |
 
 The table uses one displayed value per scenario because the two route values
-agree to floating-point precision. Every direct C4-ray limit is worse than the
-qualified interior candidate.
+agree to floating-point precision. Every fixed-coefficient P1e path limit is
+worse than the qualified interior candidate. P1f later embeds this model in a
+free-`lambda_C4 = a_C4 sigma` face likelihood and finds a nonzero derivative;
+this table therefore does not compare the optimized C4 face with the interior.
 
 ## Decision
 
@@ -169,10 +172,12 @@ P1e changes the interpretation of P1d without widening the package claim:
   analytic gradient;
 - **supported locally:** all 32 finite transformed fits and all eight direct
   limit fits pass their declared numerical rules;
-- **supported locally:** two starts agree and the direct C4-ray limit is
-  3.38--4.15 objective units worse than the qualified interior candidate;
-- **adjudicated only for this ray:** the symmetric one-dominant C4 joint limit
-  is locally noncompetitive with the interior candidate;
+- **supported locally:** two starts agree and the fixed-coefficient C4 path
+  limit is 3.38--4.15 objective units worse than the qualified interior;
+- **adjudicated only for this fixed-coefficient path:** its symmetric
+  one-dominant C4 joint limit is locally noncompetitive with the interior;
+- **corrected by P1f:** the released `log(lambda_C4)` direction is
+  nonstationary, so the full C4 target face was not optimized here;
 - **NO-GO:** this result cannot be generalized to asymmetric rate allocations,
   multiple growing slopes, curved paths, or other target sets;
 - **NO-GO:** the global lower joint boundary, upper variance boundary, and
@@ -185,13 +190,11 @@ All four decisions are
 signatures remain invariant. `SelectionAuthorized` and
 `ConfirmationAuthorized` remain false throughout.
 
-The next efficient slice is a rate-cone audit, not another arbitrary `t` grid.
-Under sum-zero log-slope identification, enumerate the finitely distinct
-asymptotic target sets and extreme rate allocations that can retain one or
-more `a_c sigma` products. Derive the corresponding reduced likelihoods before
-running them. This can determine whether the observed C4 ray is representative
-without turning the task into a broad simulation. The upper/joint variance
-path remains separate and later.
+P1f subsequently completes the rate-simplex classification and derives the
+free-coefficient face likelihoods. Its next gate is multistart optimization of
+the 14 nonempty proper target faces, not another arbitrary `t` grid. The
+empty-target deterministic-Rater hierarchy and upper/joint variance path
+remain separate and later.
 
 ## Verification
 

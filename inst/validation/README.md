@@ -143,8 +143,19 @@ identify whether the opt-in layer ran and retain its test log.
   symmetric C4 ray. All 32 transformed finite fits and all eight direct-limit
   fits pass their scale-specific rules; direct-limit routes agree to floating-
   point precision and lie 3.38--4.15 objective units above the interior
-  candidate. Raw-coordinate gradients remain reported. The result adjudicates
-  this ray only and redirects the next gate to a finite slope-rate-cone audit.
+  candidate conditional on a fixed `slope * population SD` coefficient. Raw-
+  coordinate gradients remain reported. P1f later establishes that the fixed
+  coefficient is not stationary when released, so P1e adjudicates only its
+  declared fixed-coefficient path.
+- `gpcm-slope-rate-cone-p1f-0.2.3.R` and
+  `gpcm-slope-rate-cone-p1f-record-0.2.3.md`: exact affine identification of
+  the normalized finite-random-product rates with a standard simplex,
+  enumeration of all 14 nonempty proper four-criterion target faces, and a
+  canonical reduced likelihood with free positive target coefficients. The
+  independently checked likelihood recovers P1e exactly but exposes its fixed
+  C4 coefficient as nonstationary. No face optimization, empty-target
+  deterministic-Rater hierarchy, global boundary, or source selection is
+  claimed.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

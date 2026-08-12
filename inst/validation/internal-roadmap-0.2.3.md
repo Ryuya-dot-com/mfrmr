@@ -4070,16 +4070,31 @@ terms, while C1--C3 lose those terms under this rate allocation. Its analytic
 gradient agrees with an independent derivative to at most about `1.79e-7`.
 All eight two-route fits pass, q=61/91/121 ranges and route differences are at
 most about `3.41e-13`, and the limit objectives are 3.38--4.15 above the
-qualified interior candidates. Each reflection is therefore labelled
+qualified interior candidates conditional on the fixed path coefficient.
+Each reflection is therefore labelled
 `declared_c4_ray_two_route_stationary_limit_above_interior`.
 
-This is a local adjudication of one symmetric one-dominant ray, not a global
-joint-boundary certificate. The next efficient P1 slice is to characterize the
-polyhedral rate cone induced by sum-zero log slopes and declining population
-SD, enumerate its distinct extreme target sets/rates, and derive the
-corresponding reduced likelihoods before executing them. This finite analytic
-classification is preferable to an arbitrary multidimensional grid or broad
-simulation. The upper/joint variance path, source-selection rule, Hessian,
+P1f is now complete in `gpcm-slope-rate-cone-p1f-0.2.3.R` and its execution
+record. With `u_c` denoting the log-slope rate divided by the positive
+population-SD decay rate, finite random coefficients require `sum(u_c)=0` and
+`u_c<=1`. The affine map `w_c=(1-u_c)/J` is an exact bijection to the standard
+simplex. Its zero-coordinate faces give all nonempty retained-random target
+sets: 14 for four criteria, distributed 4/6/4 over target-set sizes 1/2/3.
+P1e's symmetric C4 rate is the barycenter of a two-dimensional face, not a
+vertex.
+
+P1f independently implements the canonical face likelihood with free
+`lambda_c=lim(a_c sigma)>0`. Exact coordinate conversion recovers all eight
+P1e objectives within about `1.14e-13`, and analytic/numeric gradients agree
+within about `1.51e-7`. The released C4 `log(lambda)` gradient is 2.42--2.89;
+a signed `0.001` probe lowers every objective. P1e is therefore a
+nonstationary fixed-coefficient submodel of its C4 face, so its earlier local
+comparison cannot close the whole face.
+
+The next efficient P1 slice is prespecified multistart optimization of the 14
+canonical faces. The empty-target stratum needs a separate deterministic-
+Rater rate hierarchy, and curved or rate-nonconvergent paths remain
+unclassified. The upper/joint variance path, source-selection rule, Hessian,
 DFF/fit/rank, and broad simulation remain later gates.
 
 ##### Draft.33 Person-fixed structural recession certificate
