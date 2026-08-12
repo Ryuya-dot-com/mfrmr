@@ -878,6 +878,17 @@
 #'   of declared utility directions, omitted remainders, arbitrary paths,
 #'   monotonicity, competitiveness, common subsequence limits, global boundary
 #'   status, and MML remain unclassified.
+#'   `config$boundary_audit$gpcm_parameter_path_reachability` records the
+#'   constrained retained free-additive to adjacent-utility operator and its
+#'   coordinate map. An internal wrapper can map caller-declared free-coordinate
+#'   directions forward, accumulate them into category utilities with category
+#'   zero fixed at zero, reconstruct the retained fit base, and then invoke the
+#'   lexicographic oracle. This certifies retained-design reachability by
+#'   construction without a tolerance-dependent inverse projection. The fit
+#'   itself declares and evaluates no path. Arbitrary inverse utility
+#'   reachability, optimizer-trace direction or scale inference, remainders,
+#'   path search, competitiveness, global boundary status, and MML remain
+#'   unclassified.
 #'   `config$boundary_audit$gpcm_terminal_gradient_stability` reconstructs the
 #'   same fixed JML objective and analytic terminal gradient, checks stored
 #'   optimizer/polish summaries and deterministic central-difference probes,

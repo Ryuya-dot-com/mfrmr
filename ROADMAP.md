@@ -1040,6 +1040,25 @@ competitiveness, agreement across accumulation subsequences, global boundary
 classification, MML geometry, inference, FACETS equivalence, recovery, and
 promotion therefore remain open or unchanged.
 
+P2c now closes reachability for the safer forward-declared parameter subclass.
+The retained constrained free-additive design maps a declared coordinate
+direction to adjacent-category utility changes; cumulative sums with category
+zero fixed at zero then produce the P2b utility directions. Because the path is
+constructed from actual free coordinates, its retained-design parameter-space
+reachability is structural rather than a tolerance-dependent inverse
+projection, and exact ties are computed on the constructed path itself. An
+invertible change of free-coordinate basis with the contragredient direction
+leaves every adjacent and cumulative utility unchanged. A current-fit wrapper
+also reconstructs the retained base utilities, score and slope maps, weights,
+and expanded log slopes before evaluating the P2b limit and direct finite-
+distance likelihood. The production fit stores only the sparse operator scope
+and coordinate map: it declares, extracts, searches, and evaluates zero paths.
+Arbitrary caller-supplied utility matrices, inverse reachability, inference of
+directions or scale exponents from optimizer traces, remainder-stable ties,
+tail monotonicity and competitiveness, common subsequence limits, global
+boundary classification, MML geometry, inference, FACETS equivalence,
+recovery, and promotion remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

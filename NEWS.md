@@ -4,6 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a forward parameter-space reachability contract for declared JML GPCM
+  lexicographic paths. Caller-declared directions in the retained constrained
+  free-additive coordinates are mapped through the exact sparse adjacent-
+  utility operator and accumulated with category zero fixed at zero. This
+  makes the resulting cumulative-utility path reachable by construction and
+  preserves P2b's exact-tie contract without a tolerance-dependent inverse
+  projection. A current-fit wrapper reconstructs the retained base utilities,
+  scores, weights, and log slopes before invoking P2b, and its finite-distance
+  evaluator uses the same constructed path. Production fits record the
+  operator and coordinate map but declare no path. Arbitrary inverse utility
+  reachability, optimizer-trace direction or scale inference, path search,
+  remainder-stable ties, monotonicity, competitiveness, global boundary
+  claims, MML, inference, FACETS comparison, recovery, simulation, and
+  promotion remain open or unchanged.
+
 * Added a declared-path lexicographic likelihood-limit oracle for JML GPCM.
   The internal v1 contract accepts at most two strictly ordered positive-power
   scales in each of the expanded sum-zero log-slope and cumulative-utility

@@ -313,6 +313,13 @@ identify whether the opt-in layer ran and retain its test log.
   finite-slope regimes plus direct finite-distance convergence while keeping
   path extraction, parameter-space reachability, remainders, global boundary,
   MML, inference, readiness, and FACETS claims false or open.
+- `gpcm-jml-parameter-path-reachability-p2c-record-0.2.3.md`: forward
+  retained-design reachability for caller-declared free-additive coordinate
+  paths. It maps constrained coordinates to adjacent and cumulative utilities,
+  verifies basis transport, reconstructs current-fit P2b inputs, and avoids a
+  tolerance-dependent inverse projection. Production path extraction,
+  arbitrary utility inversion, remainder-stable ties, global boundary, MML,
+  inference, readiness, and FACETS claims remain false or open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
