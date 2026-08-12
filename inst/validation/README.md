@@ -236,6 +236,14 @@ identify whether the opt-in layer ran and retain its test log.
   records that the fixed-standard-normal MML pilot does not represent the
   current `free_population` default. No additional simulation is needed for
   identity transport; current-default owner evidence and row 88 remain open.
+- `gpcm-owner-current-default-contract-p1r-0.2.3.R` and
+  `gpcm-owner-current-default-contract-p1r-record-0.2.3.md`: no-fit prospective
+  contract for two source-owner datasets crossed with two fit owners and two
+  estimators. Its eight routes explicitly separate JML Person coordinates from
+  `free_population` MML, retain exact 1--4 support and runtime identity on 13
+  future surfaces, and fail closed on pairing, scale, support, content-hash, or
+  authority drift. The bounded smoke is admitted after runtime binding but has
+  not run; replication and inferential claims remain unauthorized.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

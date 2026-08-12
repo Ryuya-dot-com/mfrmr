@@ -177,6 +177,13 @@ result, checkpoint, aggregate, and replay. A small paired common-data smoke is
 the next admissible empirical step; broad simulation remains downstream of a
 decision-relevant need.
 
+P1r now fixes that smoke prospectively as two source-owner datasets crossed
+with two fitted owners and JML/current-default MML, for eight routes. It binds
+explicit 1--4 support, scale, runtime, content-hash, pairing, and 13-surface
+propagation requirements before any fit. Passing this contract does not pass
+the owner gate: the smoke remains unexecuted, and replication or inference is
+not authorized.
+
 When a capability changes, update the implementation, capability registry,
 runtime guard coverage, help, tests, release evidence, and this supplement in
 the same change. A planning sentence alone never changes support status.

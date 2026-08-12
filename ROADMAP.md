@@ -779,6 +779,16 @@ The next step is therefore an explicit prospective owner/scale/support
 contract followed by a small paired common-data smoke, not expanded
 replication. Row 88 remains `review` and broad simulation remains unauthorized.
 
+P1r now freezes that prospective contract without fitting. A Criterion-owned
+and a Rater-owned non-unit source dataset each feed Criterion/Rater fit-owner
+routes under JML and explicit current-default `free_population` MML, for eight
+planned routes. Every manifest row fixes the 1--4 range, common-data pairing,
+ability-scale role, runtime/runner/contract hashes, and no-claim boundary; 13
+future output surfaces must retain the same identity directly or by a
+four-stratum registry. The bounded smoke is admissible only after real runtime
+binding. It is not yet executed, and neither row 88 nor any recovery or
+owner-superiority claim is complete.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

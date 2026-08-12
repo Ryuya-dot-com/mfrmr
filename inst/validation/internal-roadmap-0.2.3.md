@@ -4349,6 +4349,26 @@ simulation. Row 88 remains `review`; the next bounded step is an explicit
 prospective owner/scale/support contract and only then a small paired current-
 default smoke.
 
+##### P1r current-default paired-owner admission contract
+
+P1r freezes the next design before generating data. Two non-unit source-owner
+datasets (Criterion and Rater) each feed Criterion/Rater fitted-owner routes
+under JML and explicit `free_population` MML. The eight rows share a dataset
+seed within each four-route block and distinguish aligned from deliberately
+misspecified alternate-owner fits. This permits common-data attribution but is
+not a replicated operating-characteristic design.
+
+All rows require exact 1--4 support, `keep_original = TRUE`, one dimension,
+aligned step/slope owner, geometric-mean-one relative slopes, complete
+crossing, real runtime/runner/contract hashes, and a recomputed manifest
+content hash. Thirteen prospective manifest/data/result/checkpoint/aggregate/
+replay surfaces retain the full 12-field source-owner, fitted-owner,
+estimator-scale, support, and runtime identity. An external normalizer is only
+conditional and cannot be admitted later without the same fields. The
+contract is complete, but the smoke has not run. Additional replication,
+recovery, owner-superiority, external, broad-simulation, selection, and
+confirmation claims remain false or unauthorized.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

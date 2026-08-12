@@ -334,3 +334,10 @@ admitted work is a prospective contract that makes identification and category
 support explicit on every surface, followed by a paired common-data smoke.
 Expanded replication is not admitted unless that smoke exposes a
 decision-relevant failure or a prespecified precision requirement.
+
+P1r has now fixed the prospective smoke contract: two source-owner datasets,
+four common-data fit routes each, explicit current-default MML, exact category
+support, content/runtime hashes, and full identity on 13 future surfaces. This
+admits at most eight fits after real runtime binding. It does not execute them,
+pass row 88, or authorize recovery claims, owner ranking, external comparison,
+additional replication, broad simulation, selection, or confirmation.
