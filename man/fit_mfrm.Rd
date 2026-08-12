@@ -363,7 +363,7 @@ curved paths, and global boundary absence remain unclassified.
 
 \code{config$boundary_audit$gpcm_rate_hierarchy} records that a declared
 lexicographic family of expanded sum-zero log-slope coefficients can resolve
-all slope levels in at most code{J-1} nonzero stages for code{J} levels. Each
+all slope levels in at most \code{J-1} nonzero stages for \code{J} levels. Each
 stage acts only on levels that were zero at every faster stage; its active
 restriction need not itself sum to zero because slower identification
 compensation can occur in already resolved levels. This is a structural
@@ -371,6 +371,17 @@ finite-depth theorem, not extraction of a hierarchy from the retained
 optimizer trace or a likelihood-boundary result. Additive hierarchies,
 bounded remainders, different accumulation subsequences, global boundary
 absence, and MML remain unclassified.
+
+\code{config$boundary_audit$gpcm_lexicographic_limit} advertises an internal
+declared-path likelihood-limit oracle for at most two strictly ordered
+positive-power scales in each of the expanded sum-zero log-slope and
+cumulative-utility blocks. Infinite slopes concentrate on exact
+lexicographic utility maxima, vanishing slopes give a uniform response, and
+finite slopes use a base-slope softmax on the final additive tie set. No path
+is inferred from the fit or searched. Parameter-space reachability of declared
+utility directions, omitted remainders, arbitrary paths, monotonicity,
+competitiveness, common subsequence limits, global boundary status, and MML
+remain unclassified.
 
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored

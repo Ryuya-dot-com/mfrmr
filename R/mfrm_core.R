@@ -4249,6 +4249,12 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       compactification =
         boundary_audit$gpcm_boundary_compactification
     )
+  boundary_audit$gpcm_lexicographic_limit <-
+    audit_mfrm_jml_gpcm_lexicographic_limit_scope(
+      config = config,
+      sizes = sizes,
+      rate_hierarchy = boundary_audit$gpcm_rate_hierarchy
+    )
   boundary_audit$gpcm_terminal_gradient_stability <-
     audit_mfrm_jml_gpcm_terminal_gradient(
       idx = idx,

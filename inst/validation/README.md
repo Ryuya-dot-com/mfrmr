@@ -307,6 +307,12 @@ identify whether the opt-in layer ran and retain its test log.
   two common-primary paths with different secondary slope roles and likelihood
   limits. Additive hierarchies, arbitrary-path likelihood classification,
   MML, inference, readiness, and FACETS claims remain false or open.
+- `gpcm-jml-lexicographic-limit-p2b-record-0.2.3.md`: analytic declared-path
+  likelihood limits for at most two positive-power stages in each JML-GPCM
+  log-slope and cumulative-utility block. It verifies infinite-, zero-, and
+  finite-slope regimes plus direct finite-distance convergence while keeping
+  path extraction, parameter-space reachability, remainders, global boundary,
+  MML, inference, readiness, and FACETS claims false or open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

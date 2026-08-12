@@ -4,6 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a declared-path lexicographic likelihood-limit oracle for JML GPCM.
+  The internal v1 contract accepts at most two strictly ordered positive-power
+  scales in each of the expanded sum-zero log-slope and cumulative-utility
+  blocks. It analytically separates infinite-slope concentration, vanishing-
+  slope uniformity, and finite-slope softmax limits after exact additive tie
+  resolution; zero-weight rows and excluded observed categories are handled
+  explicitly, and a direct finite-distance evaluator checks representative
+  convergence paths. Production fits advertise the oracle without deriving or
+  searching for a path. Exact coefficient identities, caller-supplied utility
+  directions, and polynomial-versus-exponential dominance are part of the
+  narrow contract; parameter-space reachability, remainders, arbitrary paths,
+  monotonicity, competitiveness, common subsequence limits, global boundary
+  claims, MML, inference, FACETS comparison, recovery, simulation, and
+  promotion remain open or unchanged.
+
 * Added a finite-depth lexicographic log-slope hierarchy audit for JML GPCM.
   For a declared ordered family of expanded sum-zero rate vectors, each stage
   resolves only slope levels which were zero at every faster stage. The first

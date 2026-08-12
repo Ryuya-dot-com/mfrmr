@@ -1022,6 +1022,24 @@ remainders, agreement across accumulation subsequences, general boundary
 classification, MML geometry, inference, FACETS equivalence, recovery, and
 promotion therefore remain open or unchanged.
 
+P2b now adds a likelihood theorem for a deliberately declared and bounded
+subclass of those hierarchies. Expanded sum-zero log slopes and unscaled
+cumulative category utilities may each contain at most two strictly ordered
+positive-power scales. Exact lexicographic utility ties followed by the base
+utility determine infinite-slope support; exponentially vanishing slopes
+dominate all admitted polynomial utility growth and give a uniform category
+limit; finite slopes use a base-slope softmax on the final additive tie set.
+The internal oracle returns row limits and the weighted joint log-likelihood
+limit, including negative infinity when a positive-weight observed category is
+excluded, and representative finite-distance traces converge to the analytic
+answers. Production fits only advertise this facility: no path is extracted
+or searched, declared utility directions are not checked for parameter-space
+reachability, and exact ties are assumed unaffected by omitted remainders.
+Path extraction, reachability, broader scales and remainders, monotonicity,
+competitiveness, agreement across accumulation subsequences, global boundary
+classification, MML geometry, inference, FACETS equivalence, recovery, and
+promotion therefore remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
