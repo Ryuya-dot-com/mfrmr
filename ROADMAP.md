@@ -785,7 +785,7 @@ routes under JML and explicit current-default `free_population` MML, for eight
 planned routes. Every manifest row fixes the 1--4 range, common-data pairing,
 ability-scale role, runtime/runner/contract hashes, and no-claim boundary; 13
 future output surfaces must retain the same identity directly or by a
-four-stratum registry. The bounded smoke is admissible only after real runtime
+full eight-route identity registry. The bounded smoke is admissible only after real runtime
 binding. It is not yet executed, and neither row 88 nor any recovery or
 owner-superiority claim is complete.
 

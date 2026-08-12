@@ -42,7 +42,7 @@ test_that("P1r freezes its P1q dependency and eight-route design", {
     digest::digest(
       paths[["runner"]], algo = "sha256", file = TRUE, serialize = FALSE
     ),
-    "9c2a4be23932826da729c34b0ccf3d7fcf225471ec193eabf49af050f49a8a12"
+    "e029a4cd8b0a42bd593fa4a1d56b539389de20af1c8f766592d7954e1222b75e"
   )
   manifest <- env$mfrmr_gocd_p1r_manifest(
     gpcm_gocd_p1r_hash("a"), gpcm_gocd_p1r_hash("b"),
@@ -134,6 +134,9 @@ test_that("P1r requires identity on every prospective surface", {
   )
   expect_true(all(surfaces$MissingFieldPolicy ==
                     "fail_closed_no_evidence_admission"))
+  aggregate <- grepl("summary|execution_", surfaces$Surface)
+  expect_true(all(surfaces$Binding[aggregate] ==
+                    "eight_route_identity_registry_expansion"))
 })
 
 test_that("P1r admits only a bounded unexecuted smoke", {

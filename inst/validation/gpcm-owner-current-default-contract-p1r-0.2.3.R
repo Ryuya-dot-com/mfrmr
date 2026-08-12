@@ -238,7 +238,7 @@ mfrmr_gocd_p1r_surface_contract <- function() {
     RequiredIdentityFields = fields,
     Binding = ifelse(
       grepl("summary|execution_", surface),
-      "four_stratum_registry_expansion", "direct_columns_or_arguments"
+      "eight_route_identity_registry_expansion", "direct_columns_or_arguments"
     ),
     Admission = ifelse(
       surface == "external_normalizer_if_instantiated",

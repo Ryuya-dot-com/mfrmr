@@ -54,7 +54,7 @@ category support, and runtime identity.
 
 They must be retained on 13 prospective surfaces: declared manifest,
 generated-data ledger, result, checkpoint manifest/result, stratum-expanded
-summary/rate/numeric aggregates, stratum-expanded execution identity/policy,
+summary/rate/numeric aggregates, eight-route execution identity/policy,
 checkpoint ledger, replay call, and any external normalizer that is later
 instantiated. Missing identity fails evidence admission. The external row is
 conditional because P1r authorizes no external comparison; it prevents a
@@ -111,6 +111,6 @@ failure or a later prespecified precision target cannot be answered otherwise.
 - P1q dependency SHA-256:
   `8216884cb08948ae3be3b4134dacc07bcb88a635a6c96dce7e25f26d793dea73`;
 - runner SHA-256:
-  `9c2a4be23932826da729c34b0ccf3d7fcf225471ec193eabf49af050f49a8a12`;
+  `e029a4cd8b0a42bd593fa4a1d56b539389de20af1c8f766592d7954e1222b75e`;
 - test SHA-256:
-  `ba6cd2c8a6286ea3aa3bba22a120c7e7b9def4b5dcd8569fff6b7ff6f411dfb0`.
+  `48f3a02c803315f7230474ba8b14d6c200d2022c90eb24eab3c2895293f40a22`.
