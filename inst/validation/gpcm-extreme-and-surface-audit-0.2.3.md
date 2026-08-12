@@ -256,6 +256,13 @@ keeps two-target and three-target closure false and makes an explicit
 slower/faster-rate chart the next lower-boundary task. No endpoint result here
 authorizes Hessian, DFF, fit, rank, separation, or simulation claims.
 
+P1j regularizes that coefficient-ratio edge through ordered slow/fast
+coefficients. Every positive P1i point and every frozen singleton boundary
+identity transports exactly. The natural ratio derivative is nevertheless
+negative in 392/672 singleton rows, so the identity cannot be promoted to a
+profile optimum. Fixed-`mu`, closed-interval ratio profiling remains the next
+deterministic gate before three-target or inferential work.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected

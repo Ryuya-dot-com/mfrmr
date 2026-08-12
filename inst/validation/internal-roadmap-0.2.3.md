@@ -4167,6 +4167,25 @@ that hierarchy is classified. The remaining deterministic-Rater hierarchy,
 upper boundary, source selection, Hessian, DFF/fit/rank, and broad simulation
 remain later gates.
 
+P1j is now complete in `gpcm-ordered-ratio-boundary-p1j-0.2.3.R` and its
+execution record. Its ordered coordinates set `lambda_slow=mu`,
+`lambda_fast=mu*rho`, and `B=mu*q`. They transport all 288 positive P1i
+points with maximum objective difference about `2.27e-13` and make `rho=0`
+exactly identical to the frozen singleton-target likelihood.
+
+All 672 ordered singleton rows pass objective, nuisance-gradient, and natural-
+`mu` derivative identity checks. The scheduled independent natural-`rho`
+derivatives agree within about `6.32e-8`. Only 280/672 analytic boundary
+derivatives are nonnegative: 392 directions admit local improvement into the
+two-target face, including all 96 rows at each of `mu=0.1` and `mu=0.2`.
+
+This closes the coefficient-ratio likelihood identity but not its profile.
+The next efficient P1 slice is a boundary-aware optimization with `rho` free
+on `[0,1]` at each frozen `mu`, using both singleton and transported-P1i
+starts. The two ordered orientations cover each unordered pair. Three-target
+faces, the remaining Rater hierarchy, upper boundary, source selection,
+Hessian, DFF/fit/rank, and broad simulation remain later gates.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

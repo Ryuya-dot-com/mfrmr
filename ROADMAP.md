@@ -687,6 +687,18 @@ coefficient-rate chart, not a denser `tau` grid or a larger iteration cap.
 Three-target faces remain unopened until that nested two-target hierarchy is
 classified; Hessian, DFF/fit/rank, and broad simulation stay downstream.
 
+P1j supplies the missing ordered closure chart without another fit search.
+Writing `lambda_slow=mu` and `lambda_fast=mu*rho` with shared Rater coordinate
+`B=mu*q` transports all 288 positive P1i points exactly and makes `rho=0`
+identical to the P1h/P1g singleton likelihood. All 672 ordered singleton-grid
+identities pass, including nuisance and natural-`mu` gradients; independent
+natural-`rho` derivatives agree within about `6.32e-8`. The derivative is
+nonnegative in only 280/672 rows and is negative in every ordered direction at
+`mu=0.1` and `0.2`. The identity is therefore closed, but the ratio profile is
+not. The next bounded gate profiles `rho` on `[0,1]` at each frozen `mu`, from
+both singleton and transported-P1i starts. A rectangular two-dimensional grid,
+three-target work, and downstream inference remain unjustified at this stage.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

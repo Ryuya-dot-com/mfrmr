@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a GPCM ordered coefficient-ratio P1j audit. The finite chart
+  `lambda_slow=mu` and `lambda_fast=mu*rho` transports all 288 positive P1i
+  points within about `2.27e-13` objective difference and identifies its
+  `rho=0` edge exactly with all 672 frozen P1h/P1g singleton-grid directions.
+  Nuisance and natural-`mu` gradients agree at that edge, and independent
+  natural-`rho` derivatives agree within about `6.32e-8`. Only 280/672
+  boundary derivatives are nonnegative; all directions at `mu=0.1` and `0.2`
+  improve when the fast coefficient is released. Thus the likelihood identity
+  is certified but fixed-`mu` ratio profiles, two-target closure, three-target
+  faces, source selection, and downstream inference remain open.
+
 * Added a GPCM two-target radial P1i screen. An exact geometric-mean radial
   coordinate and one free log coefficient ratio reproduce the canonical P1f
   two-target likelihood within about `1.14e-13`. Of 336 two-route fits, 318

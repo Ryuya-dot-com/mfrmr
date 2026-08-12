@@ -229,6 +229,15 @@ explicit coefficient-ratio boundary chart for that slower/faster-rate limit;
 the four three-target vertices remain deferred until the two-target closure is
 mathematically complete.
 
+P1j now provides that exact ordered chart. All 288 positive P1i points
+transport to `lambda_slow=mu`, `lambda_fast=mu*rho`, and all 672 `rho=0`
+rows equal their frozen P1h/P1g singleton likelihoods and gradients. Yet only
+280/672 natural-`rho` derivatives are nonnegative; releasing the fast
+coefficient improves every ordered direction at `mu=0.1` and `0.2`. This
+certifies the likelihood nesting but not the ratio profile. The next
+admissible work is a closed-interval `rho` profile at fixed `mu`, using both
+singleton and transported-P1i starts.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -345,11 +354,13 @@ not retrospective widening of the tolerance.
    target faces. P1h completes C1--C3 and therefore all four singleton screens.
    P1i evaluates the six two-target radial charts but leaves 14/24 grids open
    at a coefficient-ratio boundary. Derive and audit that slower/faster-rate
-   chart next, then evaluate the four three-target vertices as needed, complete
-   the remaining empty-target hierarchy, and address the separate upper/joint
-   variance path and source-solution contract. Do not add q or path points by
-   default, freeze an observed slope or solution tolerance, or call finite-grid
-   agreement a continuous-integral certificate.
+   chart next. P1j completes the likelihood identity and shows that fixed-`mu`
+   ratio profiling is necessary. Complete that bounded profile, then evaluate
+   the four three-target vertices as needed, complete the remaining empty-
+   target hierarchy, and address the separate upper/joint variance path and
+   source-solution contract. Do not add q or path points by default, freeze an
+   observed slope or solution tolerance, or call finite-grid agreement a
+   continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

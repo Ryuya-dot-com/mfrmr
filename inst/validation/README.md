@@ -177,6 +177,13 @@ identify whether the opt-in layer ran and retain its test log.
   reach consistent finite-ratio endpoints above the qualified interior. The
   other 14 expose coefficient-ratio branching, so two-target closure,
   three-target work, source selection, and downstream inference remain false.
+- `gpcm-ordered-ratio-boundary-p1j-0.2.3.R` and
+  `gpcm-ordered-ratio-boundary-p1j-record-0.2.3.md`: exact ordered
+  `lambda_slow=mu`, `lambda_fast=mu*rho` transport. All 288 positive P1i
+  points and all 672 P1h/P1g `rho=0` nesting rows pass their identity checks,
+  but only 280 boundary `rho` derivatives are nonnegative. The likelihood
+  boundary is identified while fixed-`mu` ratio profiles and face closure
+  remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

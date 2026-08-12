@@ -144,14 +144,12 @@ ratio-boundary subset (14/24). Hessian inference, intervals, DFF, fit, rank,
 separation, and broad simulation remain downstream because the source
 solution is still unselected.
 
-The next efficient gate is a coefficient-ratio boundary chart for the affected
-two-target faces. It must derive the slower/faster coefficient-rate limits and
-their Rater scaling explicitly, connect them to already-screened strata only
-where the likelihoods are actually identical, and retain separate charts
-where target locations or steps survive. A denser `tau` grid or a larger
-optimizer iteration cap would not resolve this missing coordinate closure.
-Three-target faces should remain unopened until this two-target hierarchy is
-mathematically classified.
+P1j subsequently supplies that coefficient-ratio boundary chart. It proves
+the slower/faster Rater scaling, transports all positive P1i points, and makes
+the zero-ratio edge exactly equal to the appropriate P1h/P1g singleton
+likelihood. However, 392/672 singleton-grid natural-ratio derivatives are
+negative, so the next gate is fixed-`mu` profiling of `rho` on `[0,1]` rather
+than a denser `tau` grid, a larger iteration cap, or the three-target faces.
 
 ## Reproduction
 
