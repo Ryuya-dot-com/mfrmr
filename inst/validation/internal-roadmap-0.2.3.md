@@ -4144,6 +4144,29 @@ target faces paired with their two-criterion Rater endpoints. Three-target
 vertices, the upper boundary, source selection, Hessian, DFF/fit/rank, and
 broad simulation remain later gates.
 
+P1i is now complete in `gpcm-two-target-radial-screen-p1i-0.2.3.R` and its
+execution record. For each of the six target pairs it uses the exact positive-
+`tau` decomposition `lambda_c=tau*kappa_c`, geometric-mean `tau`, and
+product-one relative coefficients. The analytic likelihood, nuisance
+gradient, natural radial derivative, and `tau=0` conditional oracle are
+independently checked. P1f/P1i objective differences are at most about
+`1.14e-13` and q=61/91/121 ranges at most about `5.68e-13`.
+
+The 336-fit run returns 318 eligible fits. Ten of 24 scenario-by-pair grids are
+locally adjudicated; their finite-ratio paired-Rater endpoints remain above
+the qualified interior. Fourteen are inconclusive because the descending and
+reverse routes approach different relative-coefficient branches. The maximum
+objective gap is about `0.0599`, and affected endpoint `d=log(kappa_1)` values
+reach below `-7`. This is a missing coefficient-ratio boundary chart, not a
+reason to increase `maxit` or densify the radial grid.
+
+The next efficient P1 slice must derive the slower/faster target-rate limits,
+including the Rater rescaling and the exact conditions under which they reduce
+to an already-screened singleton stratum. Three-target faces stay closed until
+that hierarchy is classified. The remaining deterministic-Rater hierarchy,
+upper boundary, source selection, Hessian, DFF/fit/rank, and broad simulation
+remain later gates.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

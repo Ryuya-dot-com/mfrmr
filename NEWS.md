@@ -4,6 +4,19 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a GPCM two-target radial P1i screen. An exact geometric-mean radial
+  coordinate and one free log coefficient ratio reproduce the canonical P1f
+  two-target likelihood within about `1.14e-13`. Of 336 two-route fits, 318
+  are eligible and 10/24 scenario-by-pair grids reach mutually consistent
+  finite-ratio deterministic-Rater endpoints, all above the qualified
+  interior. The other 14 grids expose an unresolved coefficient-ratio
+  boundary: the largest route difference is about `0.0599` and returned
+  endpoint log ratios reach about `-7.10`. This is recorded as structural
+  incomplete closure, not repaired by more iterations or a denser radial grid.
+  Coefficient-ratio boundaries, three-target faces, the remaining no-random-
+  product hierarchy, upper boundary, source selection, and downstream
+  inference remain open.
+
 * Added a GPCM remaining-single-target P1h screen. The exact P1g scaled
   construction is applied to C1--C3 while C4 evidence is reused rather than
   refitted. All 168 new two-route fits pass; route differences are at most

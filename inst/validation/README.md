@@ -170,6 +170,13 @@ identify whether the opt-in layer ran and retain its test log.
   with frozen P1g evidence, all four single-target grids are screened. No
   multiple-target face, multi-criterion Rater stratum, or source solution is
   claimed.
+- `gpcm-two-target-radial-screen-p1i-0.2.3.R` and
+  `gpcm-two-target-radial-screen-p1i-record-0.2.3.md`: exact two-target
+  geometric-mean radial and free-relative-coefficient chart for all six pairs.
+  Of 336 two-route fits, 318 are eligible and 10/24 scenario-by-pair grids
+  reach consistent finite-ratio endpoints above the qualified interior. The
+  other 14 expose coefficient-ratio branching, so two-target closure,
+  three-target work, source selection, and downstream inference remain false.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

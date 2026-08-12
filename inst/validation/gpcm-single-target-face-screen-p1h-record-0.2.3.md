@@ -116,11 +116,12 @@ multi-criterion strata remain untested. The upper variance boundary and
 source-selection contract are also open, so Hessian, intervals, DFF, fit,
 rank, separation, and broad simulation remain downstream.
 
-The next efficient gate is the six two-random-target faces together with their
-two-criterion deterministic-Rater endpoints. Their results can determine
-whether the four three-target vertices need full profiling or can be entered
-from well-qualified boundary starts. No denser single-target grid is justified
-by the present evidence.
+P1i subsequently evaluated the six two-random-target radial charts together
+with their finite-ratio two-criterion deterministic-Rater endpoints. It
+locally adjudicated 10/24 scenario-by-pair grids but found coefficient-ratio
+branching in the other 14. The next efficient gate is therefore the explicit
+slower/faster coefficient-rate boundary exposed by P1i, not the four three-
+target vertices and not a denser single- or two-target radial grid.
 
 ## Reproduction
 

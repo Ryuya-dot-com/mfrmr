@@ -220,9 +220,14 @@ P1h now completes C1--C3 using the same exact coordinate and endpoint
 contract. All 168 new fits pass, both routes agree to about `1.21e-9`, and the
 singleton endpoints remain above the interior. Combined with P1g, all four
 single-target grids and singleton deterministic-Rater strata are screened.
-The next admissible work is the six two-target faces plus their two-criterion
-Rater endpoints; the four three-target vertices follow only if those results
-do not already resolve their nested boundary starts.
+P1i then evaluates all six two-target radial charts. It obtains 318/336
+eligible fits and locally adjudicates 10/24 scenario-by-pair grids, whose
+finite-ratio endpoints remain above the interior. The remaining 14 grids show
+route-dependent coefficient-ratio recession, with objective differences up to
+about `0.0599` and endpoint `d` below `-7`. The next admissible work is an
+explicit coefficient-ratio boundary chart for that slower/faster-rate limit;
+the four three-target vertices remain deferred until the two-target closure is
+mathematically complete.
 
 ## Solution selection and coordinate agreement
 
@@ -338,12 +343,13 @@ not retrospective widening of the tolerance.
    finds the entire declared grid above both that endpoint and the qualified
    interior. Next screen C1--C3 with the same construction before multiple-
    target faces. P1h completes C1--C3 and therefore all four singleton screens.
-   Next evaluate the six two-target faces with their paired-Rater endpoints,
-   then the four three-target vertices as needed, complete the remaining
-   empty-target hierarchy, and address the separate upper/joint variance path
-   and source-solution contract. Do not add q or path
-   points by default, freeze an observed slope or solution tolerance, or call
-   finite-grid agreement a continuous-integral certificate.
+   P1i evaluates the six two-target radial charts but leaves 14/24 grids open
+   at a coefficient-ratio boundary. Derive and audit that slower/faster-rate
+   chart next, then evaluate the four three-target vertices as needed, complete
+   the remaining empty-target hierarchy, and address the separate upper/joint
+   variance path and source-solution contract. Do not add q or path points by
+   default, freeze an observed slope or solution tolerance, or call finite-grid
+   agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

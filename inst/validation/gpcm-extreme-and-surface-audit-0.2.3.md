@@ -248,6 +248,14 @@ singleton deterministic-Rater endpoints, which remain above the qualified
 interior. P1g/P1h therefore cover all four singleton screens, while multiple-
 target faces and multi-criterion Rater endpoints remain explicitly open.
 
+P1i begins the multiple-target work with an exact two-target radial/relative
+chart. Ten of 24 fixture-by-pair grids reach stable finite-ratio paired-Rater
+endpoints above the interior. The other 14 reveal an additional
+coefficient-ratio boundary rather than an iteration-ceiling failure. This
+keeps two-target and three-target closure false and makes an explicit
+slower/faster-rate chart the next lower-boundary task. No endpoint result here
+authorizes Hessian, DFF, fit, rank, separation, or simulation claims.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected

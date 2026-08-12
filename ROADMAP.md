@@ -672,6 +672,21 @@ target faces and their two-criterion Rater endpoints. Four three-target
 vertices, multi-criterion empty-target strata, upper variance, source
 selection, Hessian, DFF/fit/rank, and broad simulation remain downstream.
 
+P1i executes that six-pair radial gate in four exact/near endpoint fixtures.
+For each pair it uses `tau=sqrt(lambda_1*lambda_2)` and a free relative
+coordinate `(kappa_1,kappa_2)=(exp(d),exp(-d))`; the transformation is exactly
+P1f-equivalent for positive `tau` and has a direct finite-`d` conditional
+endpoint at `tau=0`. Of 336 fits, 318 are eligible. Ten of 24 scenario-by-pair
+grids are locally adjudicated and their paired deterministic-Rater endpoints
+remain 2.07--2.58 objective units above the qualified interior. The remaining
+14 grids show coefficient-ratio branching: route differences reach about
+`0.0599` and `d` moves below `-7` on affected endpoint traces. Consequently
+`AllSixTwoTargetRadialGridsScreened`, coefficient-ratio closure, and source
+selection remain false. The next bounded gate is an explicit slower/faster
+coefficient-rate chart, not a denser `tau` grid or a larger iteration cap.
+Three-target faces remain unopened until that nested two-target hierarchy is
+classified; Hessian, DFF/fit/rank, and broad simulation stay downstream.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
