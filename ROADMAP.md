@@ -205,6 +205,26 @@ Priorities are:
   calibration input, not a post hoc `EXT-TAM-TOL`; a TAM-specific prospective
   rule and disjoint candidate remain necessary. `tam.mml.mfr()` has fixed
   slopes, so this result does not test free-slope GPCM;
+- a deterministic cross-engine algorithm/correlation audit now separates
+  mathematical-estimand identity from literal solver identity. After excluding
+  deviance and TAM coordinates derived from sum-zero constraints, the smallest
+  observed Pearson correlation is above `0.999999999995` for ConQuest--mfrmr,
+  above `0.999999999999999` for TAM--mfrmr, and above `0.999999999998` for
+  ConQuest--TAM across the matched complete-crossing cells. Correlation remains
+  descriptive: affine slope/intercept, maximum absolute difference, deviance,
+  and q31/q61 stability stay separate. The audit also proves that the mfrmr
+  Person likelihood sums log probabilities and uses shifted log-sum-exp; the
+  negative control `log(0.01^200)` underflows while the production path remains
+  finite and agrees with `200*log(0.01)` to `2.51e-12`. The remaining external
+  differences are not labelled floating-point-only because fixed-grid versus
+  Gauss--Hermite approximation and ConQuest decimal export precision also
+  contribute. TAM is in the same broad MML/EM family as ConQuest, not a proven
+  identical implementation; immer CML/CCML/JML use different objectives.
+  Therefore literal ConQuest solver replication is not a default-release
+  requirement. A fixed-grid/EM compatibility mode should be considered only
+  for a concrete reproducibility use case, after the current disjoint TAM and
+  decision-invariance gates, rather than displacing higher-priority DFF, fit,
+  endpoint, sparse-design, and inference-readiness work;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope

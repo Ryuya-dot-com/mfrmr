@@ -4,6 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a deterministic ConQuest/TAM/immer/mfrmr algorithm, correlation, and
+  log-domain audit. On independent free coordinates and excluding deviance,
+  the smallest observed Pearson correlation is above `0.999999999995` for
+  ConQuest--mfrmr and still closer to one for the matched TAM comparisons.
+  Correlation remains descriptive and is accompanied by affine, RMSE,
+  maximum-difference, deviance, and q31/q61 checks. The audit distinguishes
+  ConQuest/TAM's broad fixed-grid MML/EM relationship from mfrmr's default
+  transformed Gauss--Hermite/direct-optimization route and from immer's
+  conditional, composite-conditional, or joint objectives. It also adds a
+  production-path underflow regression: `log(0.01^200)` is `-Inf`, whereas
+  mfrmr sums log probabilities and remains within `2.51e-12` of
+  `200*log(0.01)`. The external residuals are not mislabelled as
+  floating-point-only, and the audit creates no scientific-equivalence,
+  decision-invariance, or release claim.
+
 * Added a loaded-function-bound estimand-eligibility contract for immer 1.5-13
   CML and CCML. It admits only exactly mapped item, step, criterion-step, and
   rater contrasts to a future structural-reference lane. Person ability and

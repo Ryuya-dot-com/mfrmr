@@ -2,6 +2,7 @@ load_tam_mml_core_calibration <- function() {
   skip_if_not_installed("TAM")
   skip_if_not_installed("digest")
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  pkgload::load_all(root, quiet = TRUE)
   validation <- file.path(root, "inst", "validation")
   paths <- file.path(validation, c(
     "conquest-additive-mfrm-design-0.2.3.R",

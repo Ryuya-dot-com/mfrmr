@@ -43,7 +43,7 @@ The one allowed path fixture is the deliberately fictitious negative case in
 and is not evidence or a real local identity.
 
 The canonical path/family/role/file-hash manifest has SHA-256
-`54e5d2ddfa585e35b73ee6a7e8ed26830696e9594920a050968e7887505907ae`.
+`694f3c86de48b075454708757297898514de923511bbf59341249cd3f4f34a0b`.
 Paths use bytewise radix order so locale cannot change the identity. The
 manifest is reconstructed in memory so a newly tracked or changed external
 artifact cannot inherit an earlier hash.

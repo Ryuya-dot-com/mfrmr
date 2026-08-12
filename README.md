@@ -704,6 +704,22 @@ mean of relative slopes to one; ConQuest fixes latent mean/variance and frees
 all absolute Taux. This result does not extend automatically to a multifacet
 ConQuest generalized-item design.
 
+The 0.2.3 source validation also keeps algorithm identity separate from estimand
+identity. ConQuest candidate 003 uses fixed-grid quadrature with EM updates;
+the matched TAM route is in the same broad MML/EM family but is not documented
+as the identical implementation. Default mfrmr instead evaluates the matched
+marginal likelihood with transformed Gauss--Hermite quadrature and an
+analytic-gradient direct optimizer. This independence is intentional: common
+coordinates, likelihood, deviance, integration sensitivity, and convergence
+must agree within a prespecified claim, but copying another program's optimizer
+is not itself a validity requirement. immer CML, CCML, and JML remain different
+objectives. The bound free-coordinate Pearson correlations on the benign
+complete-crossing fixture exceed `0.999999999995`; they are descriptive only
+and do not establish DFF, fit, Person/Rater rank, sparse-design, or scientific
+decision invariance. The same validation verifies that the production MML path sums
+log probabilities and uses shifted log-sum-exp rather than an underflow-prone
+`log(prod(probability))` calculation.
+
 The ConQuest overlap bundle is also a controlled analysis bundle. Its long and
 wide response files contain person identifiers and responses; the person-data
 file contains identifiers and the covariate; and both mfrmr and ConQuest
