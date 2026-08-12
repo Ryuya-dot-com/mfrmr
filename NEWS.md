@@ -4,6 +4,14 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a loaded-function-bound estimand-eligibility contract for immer 1.5-13
+  CML and CCML. It admits only exactly mapped item, step, criterion-step, and
+  rater contrasts to a future structural-reference lane. Person ability and
+  population parameters are conditioned out; CML and pairwise-composite CCML
+  objectives cannot enter MML/JML objective or IC aggregates; neither route
+  estimates free GPCM slopes. No fit, tolerance, candidate, comparison pass,
+  native mfrmr CML/CCML claim, or release decision is created.
+
 * Added a source- and loaded-function-bound TAM 4.3-25 MML calibration on the
   additive complete-crossing RSM/PCM fixture. The runner makes the TAM
   `constraint="cases"` location transform explicit, compares 46 coordinates

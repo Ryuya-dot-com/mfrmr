@@ -11,7 +11,7 @@ scientific-equivalence claim, simulation, sparse/GPCM extension, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `7c4a5020911bfe66db6b7b0205456ad5e47258db8462de244675e6e13e545de1` |
+| `release-evidence-checklist-0.2.3.csv` | `bf0acd994d0ad3c90fe68411ca39553c7de8fbb085169b02c3f3b663b819ea72` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -52,7 +52,9 @@ differences freeze no tolerance or candidate and remain excluded from numeric
 aggregation. The completed execution-integrity row likewise does not promote
 its parent GPCM claim.
 Nine current `concern` rows are deferred G-theory infrastructure rows and no
-longer count as 0.2.3 release concerns.
+longer count as 0.2.3 release concerns. The remaining deferred rows now contain
+six `not_run` and six `review`: the immer CML/CCML boundary moves one external-
+reference row to `review` without changing the release decision.
 
 ## Interpretation rules
 
@@ -138,7 +140,8 @@ effect: none blocks 0.2.3.
 
 - Three external research rows retain CML/CCML, hierarchical-rater/local-
   dependence, and optional FACETS fit/DFF work as references rather than
-  native or equivalence claims.
+  native or equivalence claims. The CML/CCML row now has a 22-row estimand
+  boundary, but still has no fit, candidate, tolerance, or comparison pass.
 - Four future-GPCM rows retain broader external GPCM, posterior prediction,
   FACETS-style score-side parity, and heavy backends as later research.
 - Fourteen G-theory rows retain the typed algebra, univariate engine,

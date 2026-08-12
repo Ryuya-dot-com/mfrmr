@@ -318,10 +318,13 @@ finite but rejected by `source_precision_mismatch`, and zero enter an
 aggregate. Candidate 003 has since completed the independent numeric-resolution
 and prospective-tolerance path for the bounded Binary/RSM/PCM MML core. Local
 Wave C therefore moves to the prospective TAM tolerance/candidate contract,
-conditional-estimand eligibility for immer, and later decision-level
-invariance, not another ConQuest rerun. The TAM complete-crossing calibration
+positive/adversarial exact-design fixtures for the completed immer
+conditional-estimand boundary, and later decision-level invariance, not
+another ConQuest rerun. The TAM complete-crossing calibration
 is finite and source/function-bound but remains `review` because its observed
-differences cannot define a self-passing tolerance. The current environment
+differences cannot define a self-passing tolerance. The 22-row immer boundary
+likewise remains `review`: it runs no fit and admits no conditioned-out Person,
+population, objective, covariance, or free-slope quantity. The current environment
 cannot execute FACETS. Row 59
 remains `review` and must be completed once in a
 licensed external environment with executable, parser, generator, locale,

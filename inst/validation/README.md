@@ -1543,6 +1543,13 @@ identify whether the opt-in layer ran and retain its test log.
   values inform a future prospective TAM tolerance only; no TAM tolerance,
   candidate, comparison pass, free-slope GPCM extension, or release decision
   is frozen.
+- `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
+  loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
+  step, criterion-step, and rater contrasts can enter a future structural
+  reference. Conditioned-out Person/population quantities, unlike conditional
+  or composite objectives, unresolved covariance bases, and non-estimated free
+  slopes fail closed. No external fit, tolerance, candidate, native mfrmr
+  CML/CCML capability, or comparison pass is created.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

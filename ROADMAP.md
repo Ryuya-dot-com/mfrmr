@@ -221,7 +221,13 @@ Priorities are:
   Equal-discrimination reductions remain the cleaner first lane;
 - conditional-likelihood results from immer as separate Rasch-family reference
   evidence where their estimands match, without treating CML or CCML as current
-  mfrmr fitting methods;
+  mfrmr fitting methods. A loaded-function-bound 22-row eligibility ledger now
+  permits only exact-design item, shared-step, criterion-step, and rater
+  contrasts to proceed to later fixtures. Person ability and population
+  regression/distribution parameters are conditioned out; CML and pairwise-
+  composite CCML objectives do not match MML/JML objectives; neither route
+  estimates free GPCM slopes. Positive and adversarial design/category/rank/
+  constraint fixtures remain necessary before any fitted reference;
 - explicit classification of validated, caveated, exploratory, blocked, and
   unsupported combinations; and
 - clear separation between optimizer completion, statistical readiness, and
