@@ -238,6 +238,11 @@ mfrmr_gocs_p1s_setting <- function(table, key) {
   if (length(value) == 1L) value else NA_character_
 }
 
+mfrmr_gocs_p1s_numeric_scalar <- function(value) {
+  value <- suppressWarnings(as.numeric(value %||% NA_real_))
+  if (length(value) >= 1L) value[[1L]] else NA_real_
+}
+
 mfrmr_gocs_p1s_empty_result <- function(row, data_sha) {
   cbind(
     row[, mfrmr_gocd_p1r_identity_fields(), drop = FALSE],
@@ -353,10 +358,12 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
   objective_name <- objective_candidates[objective_candidates %in%
                                            names(fit_summary)][1L]
   objective <- if (length(objective_name) == 1L) {
-    suppressWarnings(as.numeric(fit_summary[[objective_name]][1L]))
-  } else suppressWarnings(as.numeric((fit$optimization %||% list())$value)[1L])
+    mfrmr_gocs_p1s_numeric_scalar(fit_summary[[objective_name]])
+  } else {
+    mfrmr_gocs_p1s_numeric_scalar((fit$optimization %||% list())$value)
+  }
   population_sd <- if (population_active) {
-    sqrt(suppressWarnings(as.numeric(fit$population$sigma2)[1L]))
+    sqrt(mfrmr_gocs_p1s_numeric_scalar(fit$population$sigma2))
   } else NA_real_
 
   out$FitSucceeded <- TRUE

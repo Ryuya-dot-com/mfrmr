@@ -40,7 +40,7 @@ test_that("P1s dry run binds the current runtime to exactly eight routes", {
     digest::digest(
       paths[["runner"]], algo = "sha256", file = TRUE, serialize = FALSE
     ),
-    "abae209f2897cc4a7fb86b2513c6fcd32a31dddc112567aac7ff750014cf70d8"
+    "07787fb6fb0ff34030041de8edba7552530a977ca2ff8d232fd365cf3ef11990"
   )
   result <- env$mfrmr_run_gpcm_owner_current_default_smoke_p1s(execute = FALSE)
 
@@ -162,6 +162,9 @@ test_that("P1s synthetic aggregates retain all required surface identity", {
 
 test_that("P1s atomic save refuses replacement", {
   env <- gpcm_gocs_p1s_environment()
+  expect_true(is.na(env$mfrmr_gocs_p1s_numeric_scalar(NULL)))
+  expect_true(is.na(env$mfrmr_gocs_p1s_numeric_scalar(numeric(0))))
+  expect_identical(env$mfrmr_gocs_p1s_numeric_scalar(c(2, 3)), 2)
   path <- tempfile("p1s-atomic-", fileext = ".rds")
   on.exit(unlink(path, force = TRUE), add = TRUE)
   expect_invisible(env$mfrmr_gocs_p1s_atomic_save(list(value = 1L), path))
