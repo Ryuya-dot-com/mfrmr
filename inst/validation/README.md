@@ -1508,6 +1508,12 @@ identify whether the opt-in layer ran and retain its test log.
   commands, combined console captures, and 50 absent outputs. Authorization is
   consumed by launch and does not authorize output reuse, comparison,
   equivalence, confirmation, sparse/GPCM extension, or simulation.
+- `conquest-six-arm-execution-incident-0.2.3.R` and its companion record:
+  machine-bound candidate-002 failure evidence. The first Binary arm returned
+  process status zero but ConQuest rejected the generated C-style prose
+  preamble and estimated no model. The remaining five arms were not launched;
+  candidate 002 is non-reusable. The Binary command generator now emits
+  command-only input and a fresh candidate 003 is required.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

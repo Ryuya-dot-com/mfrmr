@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Stopped candidate 002 after its first Binary arm failed semantically despite
+  process exit status zero and an `End of Program` marker. ConQuest 5.47.5
+  rejected the generated multiline C-style prose preamble, so no model was
+  estimated and the remaining five arms were not launched. The public Binary
+  command generator now emits command-only `.cqc` input beginning with
+  `datafile`; explanatory prose remains outside the executable input. Candidate
+  002 is non-reusable, no comparison was attempted, and a fresh candidate 003
+  is required.
+
 * Froze the candidate-002 native execution handoff after rechecking the exact
   ConQuest 5.47.5 executable, pre-handoff source, candidate/model/reference
   bundles, six working-directory/stdin/console mappings, and 50 absent output

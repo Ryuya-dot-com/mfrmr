@@ -1272,8 +1272,7 @@ conquest_overlap_command_scope <- function(object) {
   covariate <- as.character(summary_tbl$Covariate[1] %||% "")
   has_widths <- grepl("pidwidth=", command, fixed = TRUE) &&
     grepl("keepswidth=", command, fixed = TRUE)
-  has_block_comment <- grepl("^\\s*/\\*", command) &&
-    grepl("\\*/", command)
+  comment_free <- !grepl("/\\*|\\*/", command)
   has_exports <- all(vapply(
     c(
       "export parameters ! filetype=csv",
@@ -1296,7 +1295,7 @@ conquest_overlap_command_scope <- function(object) {
     ),
     Status = c(
       "template only",
-      if (has_block_comment) "block comments" else "review required",
+      if (comment_free) "comment-free executable input" else "review required",
       if (has_widths) "explicit CSV widths" else "review required",
       "narrow overlap only",
       if (has_exports) "requested" else "review required",
@@ -1304,7 +1303,11 @@ conquest_overlap_command_scope <- function(object) {
     ),
     Evidence = c(
       "bundle$conquest_command",
-      if (has_block_comment) "command text starts with /* and closes with */" else "ConQuest block comment markers not detected",
+      if (comment_free) {
+        "no prose or C-style comment markers precede the datafile command"
+      } else {
+        "comment markers require runtime review"
+      },
       if (has_widths) "pidwidth and keepswidth are present" else "pidwidth or keepswidth is missing",
       paste0("binary ", facet, " facet with numeric covariate `", covariate, "`"),
       "parameters, reg_coefficients, covariance, and cases EAP CSV outputs",
@@ -1312,7 +1315,7 @@ conquest_overlap_command_scope <- function(object) {
     ),
     Interpretation = c(
       "Use the command text as a starting point for a local ConQuest run, not as an executed benchmark.",
-      "Generated comments follow the documented ConQuest block-comment style rather than FACETS-style leading asterisks.",
+      "The executable command contains commands only; explanatory prose remains in the bundle README.",
       "CSV input with PID/keeps variables needs explicit widths in the command template.",
       "The bundle does not generalize to full many-facet or polytomous ConQuest workflows.",
       "Review and combine external parameter, beta, sigma, and case outputs before review normalization.",

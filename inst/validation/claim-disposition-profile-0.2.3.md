@@ -153,11 +153,11 @@ claim and decision-specific precision argument justify the run.
    microcases, retained-core recovery precision, then candidate and release
    engineering.
 3. Retain the frozen ConQuest numerical budget, corrected model-dimension-bound
-   candidate 002, and its six exact non-inferential numerical references;
-   use the frozen one-way executable/path/console-capture handoff for only the
-   six authorized Binary/RSM/PCM q31/q61 runs, then review every native output
-   without promoting local rank or numerical agreement to inference or
-   equivalence before any sparse extension.
+   design and six exact non-inferential numerical references, plus the consumed
+   candidate-002 semantic-failure incident; bind a fresh command-only candidate
+   003 before another Binary/RSM/PCM q31/q61 handoff, then review every native
+   output without promoting process exit, local rank, or numerical agreement
+   to inference or equivalence before any sparse extension.
 4. Run a conditional simulation only if its fallback is unacceptable for the
    intended 0.2.3 claim and a written precision calculation shows how the
    result can change promotion.

@@ -1167,9 +1167,9 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   expect_true(is.numeric(bundle$person_data$X))
   expect_true(all(c("Person", "X", sprintf("I%03d", 1:6)) %in% names(bundle$response_wide)))
   expect_match(bundle$conquest_command, "filetype=csv", fixed = TRUE)
-  expect_match(bundle$conquest_command, "/*", fixed = TRUE)
-  expect_match(bundle$conquest_command, "*/", fixed = TRUE)
-  expect_false(any(grepl("^\\*\\s", strsplit(bundle$conquest_command, "\n", fixed = TRUE)[[1]])))
+  expect_false(grepl("/*", bundle$conquest_command, fixed = TRUE))
+  expect_false(grepl("*/", bundle$conquest_command, fixed = TRUE))
+  expect_true(startsWith(bundle$conquest_command, "datafile "))
   expect_match(bundle$conquest_command, "pidwidth=32", fixed = TRUE)
   expect_match(bundle$conquest_command, "keepswidth=32", fixed = TRUE)
   expect_match(bundle$conquest_command, "regression X;", fixed = TRUE)
@@ -1218,7 +1218,7 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   )
   expect_identical(
     as.character(s$conquest_command_scope$Status[s$conquest_command_scope$Area == "Command-comment syntax"][1]),
-    "block comments"
+    "comment-free executable input"
   )
   expect_identical(
     as.character(s$conquest_command_scope$Status[s$conquest_command_scope$Area == "External comparison scope"][1]),
@@ -1231,7 +1231,7 @@ test_that("build_conquest_overlap_bundle returns a minimal supported-scope bundl
   expect_match(printed, "Inference ready", fixed = TRUE)
   expect_match(printed, "ConQuest command scope", fixed = TRUE)
   expect_match(printed, "ConQuest output contract", fixed = TRUE)
-  expect_match(printed, "block comments", fixed = TRUE)
+  expect_match(printed, "comment-free executable input", fixed = TRUE)
   expect_match(printed, "explicit CSV widths", fixed = TRUE)
   expect_match(printed, "not claimed", fixed = TRUE)
 })
