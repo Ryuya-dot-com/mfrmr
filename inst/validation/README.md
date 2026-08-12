@@ -1176,8 +1176,14 @@ identify whether the opt-in layer ran and retain its test log.
   eligibility ledger. It creates the 36-row expected registry before reading
   differences and retains missing, failed, unexpected, and rejected rows.
 - `conquest-external-comparison-normalizer-record-0.2.3.md`: actual retained-
-  output binding record. All 36 ConQuest rows are finite but rejected under
-  the unresolved source-precision contract, so zero rows enter an aggregate.
+  output binding record. All 36 ConQuest rows are finite. They remain rejected
+  for the hidden-solution stratum but are structurally eligible under the
+  separately validated exact reported-decimal stratum.
+- `conquest-reported-output-precision-contract-0.2.3.R` and its companion
+  record: SHA-bound lexical-decimal policy for ConQuest native files. It binds
+  each of the 36 retained tokens and file hashes, treats only the written
+  decimal as an exact estimand, and leaves file rounding, hidden precision,
+  tolerance, candidate comparison, and equivalence unresolved.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status
@@ -1448,8 +1454,8 @@ identify whether the opt-in layer ran and retain its test log.
   fail-closed validator for a future pre-candidate tolerance freeze. It
   registers all 19 binary/RSM/PCM `EXT-CQ-TOL` rows and all 38 engine-specific
   `IC-INTEGRATION-TOL` rows, binds the canonical table hash and candidate
-  identities plus an independently frozen raw-token source-precision policy
-  before output exists, and makes the opened calibration
+  identities plus the independently frozen exact reported-decimal source-
+  precision policy before output exists, and makes the opened calibration
   permanently ineligible under any newly frozen rule. The current empty
   template remains `pilot_required`; no numeric tolerance, candidate run,
   equivalence, confirmation, sparse extension, or simulation is authorized.

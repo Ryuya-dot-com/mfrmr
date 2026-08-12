@@ -45,10 +45,13 @@ complete_conquest_prospective_binding <- function(env, tolerances) {
   out$CommandBundleSHA256 <- paste(rep("d", 64L), collapse = "")
   out$InputBundleSHA256 <- paste(rep("e", 64L), collapse = "")
   out$ExpectedEmptyOutputsSHA256 <- paste(rep("f", 64L), collapse = "")
-  out$SourcePrecisionPolicyId <- "cq-raw-token-prospective-policy-v1"
+  out$SourcePrecisionPolicyId <-
+    env$mfrmr_cq_ptc_source_precision_policy_id
+  out$SourcePrecisionScope <- env$mfrmr_cq_ptc_source_precision_scope
   out$SourcePrecisionPolicySHA256 <- paste(rep("1", 64L), collapse = "")
   out$SourcePrecisionReady <- TRUE
   out$SourcePrecisionIndependentOfCandidateOutput <- TRUE
+  out$HiddenSolutionEquivalenceEligible <- FALSE
   out$ToleranceTableSHA256 <- env$mfrmr_cq_ptc_tolerance_sha256(tolerances)
   out$FrozenBeforeCandidateExecution <- TRUE
   out$CandidateOutputsPresentAtFreeze <- FALSE
@@ -175,6 +178,24 @@ test_that("candidate output timing and tolerance hash fail closed", {
   )
   expect_false(precision_preflight$candidate_binding_ready)
   expect_false(precision_preflight$binding_review$SourcePrecisionReady)
+
+  hidden_scope <- binding
+  hidden_scope$SourcePrecisionScope <- "hidden_solution"
+  hidden_scope$HiddenSolutionEquivalenceEligible <- TRUE
+  hidden_preflight <- env$mfrmr_cq_prospective_tolerance_preflight(
+    tolerances, hidden_scope
+  )
+  expect_false(hidden_preflight$candidate_binding_ready)
+  expect_false(hidden_preflight$binding_review$SourcePrecisionScopeOK)
+  expect_false(hidden_preflight$binding_review$HiddenSolutionNotPromoted)
+
+  generic_policy <- binding
+  generic_policy$SourcePrecisionPolicyId <- "cq-raw-token-policy-v1"
+  generic_preflight <- env$mfrmr_cq_prospective_tolerance_preflight(
+    tolerances, generic_policy
+  )
+  expect_false(generic_preflight$candidate_binding_ready)
+  expect_false(generic_preflight$binding_review$SourcePrecisionPolicyIdOK)
 
   wrong_hash <- binding
   wrong_hash$ToleranceTableSHA256 <- paste(rep("0", 64L), collapse = "")

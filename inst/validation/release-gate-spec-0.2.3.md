@@ -1332,11 +1332,14 @@ source and SHA-256, and an explicit prohibition on applying a newly informed
 rule to the opened calibration. A canonical tolerance-table hash is bound to
 the package commit/tree, ConQuest executable, command/input bundles,
 expected-empty-output manifest, and an independently frozen raw-token
-source-precision policy before candidate execution. Structural passage
+source-precision policy before candidate execution. The current policy is now
+fixed specifically as `conquest-reported-decimal-estimand-v1` with scope
+`exact_reported_decimal`; it admits exact file tokens but explicitly leaves
+hidden-solution equivalence false. Structural passage
 authorizes only the fresh small candidate core; it cannot establish scientific
 equivalence, confirmation, a sparse extension, or simulation. The current
-empty template remains `pilot_required` and all three ConQuest release rows
-remain `review`.
+empty tolerance/candidate template remains `pilot_required` and all three
+ConQuest release rows remain `review`.
 
 ## G4: dimensionality challenge
 

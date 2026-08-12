@@ -137,20 +137,23 @@ Priorities are:
 - matched MML comparison with ConQuest and TAM where likelihood,
   identification, and integration conventions can be aligned. The first
   actual ConQuest additive RSM/PCM binding now routes 36 prespecified
-  coordinates through the common eligibility ledger. All are finite but none
-  is eligible because the native CSV rounding rule remains unestablished;
-  zero rows enter an aggregate. This completes plumbing, not comparison
-  acceptance. Numeric-resolution adjudication and a prospective tolerance
-  precede any candidate-bound rerun. The prospective-freeze validator is now
+  coordinates through the common eligibility ledger. All are finite. Under
+  the hidden-solution interpretation, zero rows remain eligible because the
+  native CSV rounding rule and unprinted precision are undocumented. Under the
+  separately frozen exact reported-decimal policy, all 36 rows are
+  structurally eligible for that narrower metric. This completes source-
+  precision plumbing, not comparison acceptance. A prospective tolerance
+  precedes any candidate-bound rerun. The prospective-freeze validator is now
   implemented over 19 cross-engine binary/RSM/PCM estimand rows and 38 engine-specific
   integration-stability rows. Its empty template intentionally remains
   `pilot_required`: it prevents the opened four-arm maximum difference from
   becoming a self-passing threshold, requires source-bound signed and absolute
   rules plus candidate/output timing identities, and authorizes no current
   rerun. The remaining decision is scientific rather than mechanical: justify
-  and review the estimand-level tolerances and a conservative source-precision
-  policy, then bind the exact clean candidate before producing any new
-  ConQuest output;
+  and review reported-output-scale estimand tolerances, then bind the exact
+  clean candidate before producing any new ConQuest output. Hidden-solution
+  equivalence remains unavailable without a documented rounding interval or
+  full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope

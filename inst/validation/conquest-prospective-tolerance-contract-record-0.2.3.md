@@ -75,8 +75,10 @@ rationales do not satisfy the contract.
 
 The one-row binding requires the package version, Git commit, source-tree
 SHA-256, ConQuest 5.47.5 executable SHA-256, command bundle, input bundle,
-expected-empty-output manifest, an independently frozen raw-token
-source-precision policy, and canonical tolerance-table SHA-256. The
+expected-empty-output manifest, the independently frozen
+`conquest-reported-decimal-estimand-v1` policy with scope
+`exact_reported_decimal`, and canonical tolerance-table SHA-256. The binding
+also requires `HiddenSolutionEquivalenceEligible = FALSE`. The
 preflight rejects:
 
 - a tolerance hash mismatch;
@@ -105,18 +107,19 @@ evidence status remains `review`.
 
 ## Verification and identities
 
-The focused test completed with 49 passing expectations, zero failures, and
+The focused test completed with 54 passing expectations, zero failures, and
 zero skips. It covers the exact registry, default fail closure, a structurally
 complete future fixture, opened-calibration rejection, candidate-output timing,
 tolerance-hash binding, registry drift, and unsupported source paths/types.
-The complete ConQuest-labelled test slice then completed with 421 expectations,
+The complete ConQuest-labelled test slice then completed with 465 expectations,
 zero failures, zero errors, zero skips, and zero warnings. A CRAN-light package
 check completed with zero errors, zero warnings, and zero notes.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `conquest-prospective-tolerance-contract-0.2.3.R` | `d479f35023ad0f098abd83bb43543aa03b948ef9dcbd0c5516a6c72212d4ac74` |
-| `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `00631b1f23196bd6354974ce2abfd3128b45fc278975e5ee70b80129da16bba0` |
+| `conquest-prospective-tolerance-contract-0.2.3.R` | `e8bc5a666eb20f0601d9ece9bbe8582df6989f8eb73c6f0ff3219b1d0243db88` |
+| `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `2b9bba9a15e20d1a1267d9dfd223eecd9c3eda3f783d1e2d440f2ea8fe118121` |
+| `conquest-reported-output-precision-contract-0.2.3.R` | `e0e80ebd96c48634ddd39231959bb0c5cfcd6c036c39c4e5bf8224e19164fd53` |
 | `conquest-additive-tolerance-adjudication-0.2.3.md` | `a81bf01a1b654e5b4b6c2254fa16e98f17e8e16264f137fd7bd35e8145813efa` |
 | `conquest-additive-native-four-arm-record-0.2.3.md` | `c83d344920be0fd4c08db7e6931afb2bdc4f52a0d187bd51434c6cc0d1ef7cdd` |
 
@@ -128,7 +131,8 @@ check completed with zero errors, zero warnings, and zero notes.
 | `RequiredToleranceRows` | `57` |
 | `CurrentToleranceValuesFrozen` | `FALSE` |
 | `CurrentCandidateBound` | `FALSE` |
-| `CurrentSourcePrecisionPolicyFrozen` | `FALSE` |
+| `CurrentReportedOutputPrecisionPolicyFrozen` | `TRUE` |
+| `CurrentHiddenSolutionPrecisionPolicyFrozen` | `FALSE` |
 | `OpenedCalibrationReclassificationAuthorized` | `FALSE` |
 | `CurrentCandidateCoreRunAuthorized` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |

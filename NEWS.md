@@ -4,10 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Split ConQuest source precision into exact reported-decimal and hidden-
+  optimizer-solution strata. The SHA-bound 5.47.5 manual documents that the
+  screen `decimals` option is ignored for file output but provides no file
+  rounding rule or hidden-precision interval. A new lexical-decimal contract
+  therefore makes all 36 retained RSM/PCM coordinates structurally eligible
+  only for comparison to the exact decimals written to file; the hidden-
+  solution stratum remains zero-eligible. The prospective tolerance binding is
+  pinned to that reported-output policy and forbids promotion to hidden-
+  solution equivalence. No tolerance, candidate comparison, equivalence, or
+  confirmation is created.
+
 * Added a prospective ConQuest tolerance-freeze validator. It registers 19
   binary/RSM/PCM cross-engine `EXT-CQ-TOL` rows and 38 engine-specific
   `IC-INTEGRATION-TOL` rows, requires signed and absolute estimand-level rules
-  with source hashes, requires an independently frozen raw-token
+  with source hashes, requires the independently frozen exact reported-decimal
   source-precision policy, and binds the clean candidate before any candidate
   output exists or is opened. The opened four-arm calibration may inform a
   future error budget but is permanently ineligible under the new rule. The

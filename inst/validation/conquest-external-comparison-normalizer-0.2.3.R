@@ -164,7 +164,8 @@ mfrmr_cq_ecec_review_identity <- function(review, summary) {
 
 mfrmr_normalize_conquest_native_four_arm_eligibility <- function(
     review,
-    expected_registry = mfrmr_cq_ecec_expected_registry()) {
+    expected_registry = mfrmr_cq_ecec_expected_registry(),
+    reported_output_precision = NULL) {
   mfrmr_cq_ecec_require_helpers(include_eligibility = TRUE)
   mfrmr_cq_ecec_assert(
     inherits(review, "mfrmr_conquest_native_four_arm_review"),
@@ -245,6 +246,74 @@ mfrmr_normalize_conquest_native_four_arm_eligibility <- function(
       ),
     "The ConQuest difference ledger conflicts with its run/model summary."
   )
+  reported_output_scope <- !is.null(reported_output_precision)
+  precision_rows <- NULL
+  if (reported_output_scope) {
+    helper_environment <- environment(
+      mfrmr_normalize_conquest_native_four_arm_eligibility
+    )
+    mfrmr_cq_ecec_assert(
+      exists(
+        "mfrmr_cq_rop_validate_policy", envir = helper_environment,
+        mode = "function", inherits = TRUE
+      ) && isTRUE(tryCatch({
+        get(
+          "mfrmr_cq_rop_validate_policy", envir = helper_environment,
+          inherits = TRUE
+        )(reported_output_precision)
+        TRUE
+      }, error = function(...) FALSE)) &&
+      inherits(
+        reported_output_precision,
+        "mfrmr_conquest_reported_output_precision"
+      ) && identical(
+        as.character(reported_output_precision$contract_version),
+        "mfrmr_conquest_reported_output_precision_v1"
+      ) && isTRUE(reported_output_precision$reported_output_estimand_ready) &&
+        !isTRUE(reported_output_precision$hidden_solution_equivalence_eligible) &&
+        !isTRUE(reported_output_precision$rounding_rule_inferred) &&
+        !isTRUE(reported_output_precision$scientific_equivalence_inferred),
+      "The reported-output precision policy is missing or silently promoted."
+    )
+    precision_rows <- as.data.frame(
+      reported_output_precision$rows,
+      stringsAsFactors = FALSE, check.names = FALSE
+    )
+    required_precision <- c(
+      "RunId", "Model", "Coordinate", "NativeToken", "NativeValue",
+      "CanonicalExactDecimal", "ReportedOutputEstimandReady",
+      "HiddenSolutionEquivalenceEligible", "Metric",
+      "SourcePrecisionStatus"
+    )
+    mfrmr_cq_ecec_assert(
+      all(required_precision %in% names(precision_rows)),
+      "The reported-output precision rows do not satisfy the required schema."
+    )
+    precision_key <- paste(
+      precision_rows$RunId, precision_rows$Coordinate, sep = "\037"
+    )
+    mfrmr_cq_ecec_assert(
+      !anyDuplicated(precision_key) && setequal(precision_key, difference_key),
+      "The reported-output precision rows do not match the review coordinates."
+    )
+    precision_rows <- precision_rows[
+      match(difference_key, precision_key), , drop = FALSE
+    ]
+    mfrmr_cq_ecec_assert(
+      identical(as.character(precision_rows$Model),
+                as.character(differences$Model)) &&
+        identical(as.numeric(precision_rows$NativeValue),
+                  as.numeric(differences$NativeValue)) &&
+        all(as.logical(precision_rows$ReportedOutputEstimandReady)) &&
+        all(!as.logical(precision_rows$HiddenSolutionEquivalenceEligible)) &&
+        all(nzchar(as.character(precision_rows$NativeToken))) &&
+        all(nzchar(as.character(precision_rows$CanonicalExactDecimal))) &&
+        all(as.character(precision_rows$Metric) ==
+              "absolute_difference_to_exact_reported_decimal") &&
+        all(as.character(precision_rows$SourcePrecisionStatus) == "match"),
+      "The reported-output precision policy conflicts with reviewed values or scope."
+    )
+  }
 
   identity <- mfrmr_cq_ecec_review_identity(review, summary)
   registry_key <- paste(registry$RunId, registry$Coordinate, sep = "\037")
@@ -271,6 +340,12 @@ mfrmr_normalize_conquest_native_four_arm_eligibility <- function(
     registry[[column]][observed] <- identity[[column]][
       identity_match[observed]
     ]
+  }
+  if (reported_output_scope) {
+    registry$Metric <- "absolute_difference_to_exact_reported_decimal"
+    registry$SourcePrecisionStatus[observed] <- as.character(
+      precision_rows$SourcePrecisionStatus[result_match[observed]]
+    )
   }
 
   unexpected_index <- which(!difference_key %in% registry_key)
@@ -310,6 +385,12 @@ mfrmr_normalize_conquest_native_four_arm_eligibility <- function(
     for (column in status_columns) {
       extra[[column]] <- identity[[column]][unexpected_identity]
     }
+    if (reported_output_scope) {
+      extra$Metric <- "absolute_difference_to_exact_reported_decimal"
+      extra$SourcePrecisionStatus <- as.character(
+        precision_rows$SourcePrecisionStatus[unexpected_index]
+      )
+    }
     registry <- rbind(registry, extra)
   }
 
@@ -322,6 +403,17 @@ mfrmr_normalize_conquest_native_four_arm_eligibility <- function(
   )
   ledger$Binding <- data.frame(
     NormalizerVersion = mfrmr_cq_ecec_normalizer_version,
+    SourcePrecisionScope = if (reported_output_scope) {
+      "exact_reported_decimal"
+    } else {
+      "hidden_solution"
+    },
+    SourcePrecisionPolicyId = if (reported_output_scope) {
+      as.character(reported_output_precision$policy_id)
+    } else {
+      ""
+    },
+    HiddenSolutionEquivalenceEligible = if (reported_output_scope) FALSE else NA,
     ExpectedRows = sum(ledger$Rows$ExpectedRow),
     ObservedRows = sum(ledger$Rows$ObservedRow),
     EligibleRows = eligible_rows,
@@ -333,6 +425,12 @@ mfrmr_normalize_conquest_native_four_arm_eligibility <- function(
     CandidateBound = isTRUE(review$candidate_bound),
     ComparisonReady = isTRUE(review$comparison_ready),
     Decision = if (
+      reported_output_scope && eligible_rows == sum(ledger$Rows$ExpectedRow) &&
+        included_rows == eligible_rows && source_ready &&
+        !isTRUE(review$candidate_bound) && !isTRUE(review$comparison_ready)
+    ) {
+      "conquest_reported_output_rows_eligible_candidate_tolerance_missing"
+    } else if (
       eligible_rows == 0L && included_rows == 0L && !source_ready
     ) {
       "conquest_binding_complete_numeric_rows_excluded_source_precision"

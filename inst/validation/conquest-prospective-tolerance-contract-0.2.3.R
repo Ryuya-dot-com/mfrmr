@@ -11,6 +11,9 @@ mfrmr_cq_ptc_contract <-
   "mfrmr_conquest_prospective_tolerance_freeze_v1"
 mfrmr_cq_ptc_executable_sha256 <-
   "61d0b87f379f1578466b789866366c5cc633d31a6c3501e872861d44ff02da48"
+mfrmr_cq_ptc_source_precision_policy_id <-
+  "conquest-reported-decimal-estimand-v1"
+mfrmr_cq_ptc_source_precision_scope <- "exact_reported_decimal"
 
 mfrmr_cq_ptc_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -154,9 +157,11 @@ mfrmr_cq_ptc_binding_template <- function() {
     InputBundleSHA256 = "",
     ExpectedEmptyOutputsSHA256 = "",
     SourcePrecisionPolicyId = "",
+    SourcePrecisionScope = "",
     SourcePrecisionPolicySHA256 = "",
     SourcePrecisionReady = FALSE,
     SourcePrecisionIndependentOfCandidateOutput = FALSE,
+    HiddenSolutionEquivalenceEligible = NA,
     ToleranceTableSHA256 = "",
     FrozenBeforeCandidateExecution = FALSE,
     CandidateOutputsPresentAtFreeze = FALSE,
@@ -281,12 +286,20 @@ mfrmr_cq_ptc_validate_binding <- function(binding, tolerance_sha256) {
       tolower(as.character(x$ConQuestExecutableSHA256)),
       mfrmr_cq_ptc_executable_sha256
     ),
-    SourcePrecisionPolicyIdOK = nzchar(trimws(
-      as.character(x$SourcePrecisionPolicyId)
-    )),
+    SourcePrecisionPolicyIdOK = identical(
+      as.character(x$SourcePrecisionPolicyId),
+      mfrmr_cq_ptc_source_precision_policy_id
+    ),
+    SourcePrecisionScopeOK = identical(
+      as.character(x$SourcePrecisionScope),
+      mfrmr_cq_ptc_source_precision_scope
+    ),
     SourcePrecisionReady = strict_flag(x$SourcePrecisionReady, TRUE),
     SourcePrecisionProspective = strict_flag(
       x$SourcePrecisionIndependentOfCandidateOutput, TRUE
+    ),
+    HiddenSolutionNotPromoted = strict_flag(
+      x$HiddenSolutionEquivalenceEligible, FALSE
     ),
     ToleranceHashOK = identical(
       tolower(as.character(x$ToleranceTableSHA256)),

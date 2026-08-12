@@ -1,10 +1,10 @@
 # ConQuest external-comparison normalizer binding for mfrmr 0.2.3
 
-Status: actual retained ConQuest additive output bound to the generic
-metric-specific eligibility ledger; zero numerical rows eligible, 2026-08-11.
-This is a fail-closed normalization result, not an equivalence decision,
-tolerance, candidate freeze, external-input-identity closure, or authorization
-for another ConQuest run.
+Status: actual retained ConQuest additive output bound to two explicit
+source-precision strata, 2026-08-12. Thirty-six exact reported-decimal rows are
+structurally eligible; zero hidden-solution rows are eligible. This is not an
+equivalence decision, tolerance, candidate freeze, external-input-identity
+closure, or authorization for another ConQuest run.
 
 ## Decision
 
@@ -12,14 +12,18 @@ The available ConQuest path is no longer represented only by generic accepted
 and rejected fixtures. The repository now constructs a 36-row expected
 registry before reading numerical results and binds the retained four-arm
 RSM/PCM review to the same contract used for every external metric aggregate.
-All 36 expected coordinates were observed and finite, but all 36 were rejected
-with `source_precision_mismatch`. Zero rows entered an aggregate.
+All 36 expected coordinates were observed and finite. Under the original
+hidden-solution scope, all 36 remain rejected with
+`source_precision_mismatch`. Under the separately validated exact reported-
+decimal scope, all 36 enter the structural ledger with metric
+`absolute_difference_to_exact_reported_decimal`.
 
 This result is intentionally stricter than inspecting small printed
-differences. The native CSV tokens are retained, but their rounding rule is
-unestablished. The adapter therefore has no positive full-precision state in
-version 1: an unfamiliar or newly asserted precision label becomes `unknown`,
-not `match`. A future positive precision state requires a new audited contract.
+differences. The native CSV rounding rule and hidden optimizer precision remain
+unestablished. The positive state therefore applies only to the exact decimal
+tokens actually written to file. It cannot be used as evidence for the
+unprinted optimizer solution. An unfamiliar precision label still becomes
+`unknown`, not `match`.
 
 ## Pre-result registry
 
@@ -54,7 +58,8 @@ Only after that check does the normalizer mark observation, weight, facet,
 orientation, category, step-dimension, constraint, coordinate,
 identification, and conditioning axes as matched. Anchors and JML-style
 boundary output are explicitly not applicable in this MML microcase. The
-source-precision axis remains mismatched.
+source-precision axis is evaluated separately for hidden-solution and exact-
+reported-decimal strata.
 
 ## Actual retained result
 
@@ -62,19 +67,21 @@ The restricted retained bundle
 `validation-results/conquest-additive-native-20260811/` was re-read through the
 source-bound native reviewer and then through the new adapter. The outcome was:
 
-| Quantity | Result |
-| --- | ---: |
-| Expected rows | 36 |
-| Observed rows | 36 |
-| Successful external-fit rows | 36 |
-| Finite metric rows | 36 |
-| Eligible rows | 0 |
-| Included rows | 0 |
-| Ineligible included rows | 0 |
-| `source_precision_mismatch` rows | 36 |
+| Quantity | Hidden solution | Exact reported decimal |
+| --- | ---: | ---: |
+| Expected rows | 36 | 36 |
+| Observed rows | 36 | 36 |
+| Successful external-fit rows | 36 | 36 |
+| Finite metric rows | 36 | 36 |
+| Eligible rows | 0 | 36 |
+| Included rows | 0 | 36 |
+| Ineligible included rows | 0 | 0 |
+| `source_precision_mismatch` rows | 36 | 0 |
 
-The binding decision is
-`conquest_binding_complete_numeric_rows_excluded_source_precision`.
+The default hidden-solution decision is
+`conquest_binding_complete_numeric_rows_excluded_source_precision`. The
+reported-output decision is
+`conquest_reported_output_rows_eligible_candidate_tolerance_missing`.
 The historical evidence also remains `CandidateBound = FALSE` and
 `ComparisonReady = FALSE`. Those states are reported by the adapter but are
 governed independently by the candidate and external-input identity gates.
@@ -94,22 +101,26 @@ Deterministic tests establish that:
   and
 - an unrecognized precision claim produces `source_precision_unknown` rather
   than eligibility.
+- a reported-output policy with a changed token, canonical decimal, file hash,
+  coordinate set, or hidden-solution promotion is rejected.
 
 ## Source binding
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `conquest-external-comparison-normalizer-0.2.3.R` | `f78d4003d90cec18b3e7e94d0dc648d523f24f1ecdce80a610f6d2770b0919d1` |
+| `conquest-external-comparison-normalizer-0.2.3.R` | `4ad1d05c4a463e10ca334f2a7512f25389f9bc9dcecffecb8d390e491177a8b4` |
 | `conquest-additive-native-four-arm-review-0.2.3.R` | `d02f2ab7b4fe26c02d9bf072dbf066f04263afdc9bdf4daf548e9352cae33640` |
 | `test-conquest-external-comparison-normalizer.R` | `dc386fdadd7fb00dfbfa68125339b0df32888d44de9ebde3481d1670739b2ffb` |
+| `conquest-reported-output-precision-contract-0.2.3.R` | `e0e80ebd96c48634ddd39231959bb0c5cfcd6c036c39c4e5bf8224e19164fd53` |
 
 ## Consequence and next gate
 
-This adapter completes the first actual-program plumbing slice, but checklist
-row 64 remains `review`: there is deliberately no eligible ConQuest numerical
-row. The next step is the already-declared independent numeric-resolution and
-prospective-tolerance adjudication, followed by a newly generated,
-candidate-bound small core. The ConQuest executable/version/parser/generator
+This adapter and the reported-output policy close source precision only for the
+exact decimals written to file; checklist row 64 remains `review`. The next
+step is to justify and freeze reported-output-scale tolerances, followed by a
+newly generated, candidate-bound small core. Hidden-solution equivalence stays
+unavailable unless ConQuest supplies a documented rounding interval or a
+full-precision export. The ConQuest executable/version/parser/generator
 identity remains governed by the separate external-input identity gate. Broad
 simulation, sparse-design expansion, and GPCM owner validation cannot repair a
-missing precision rule or candidate identity and therefore remain downstream.
+missing tolerance or candidate identity and therefore remain downstream.
