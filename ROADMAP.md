@@ -192,7 +192,19 @@ Priorities are:
   scope. This is not hidden-solution/scientific equivalence or inference
   readiness; DFF, fit, rank/ordering invariance, sparse allocation, free-slope
   GPCM, and independent-platform replication remain separate claims. No large
-  simulation should be started merely because this bounded core passed;
+  simulation should be started merely because this bounded core passed. The
+  next MML comparator is now a bounded TAM calibration, not another ConQuest
+  execution. TAM 4.3-25 `tam.mml.mfr()` was run on the same additive
+  complete-crossing RSM/PCM fixture at q31/q61 after explicitly transforming
+  its `constraint="cases"` item location into mfrmr's free population
+  intercept plus sum-zero criterion coordinates. All 46 transformed
+  coordinate observations and both deviances are finite; the largest observed
+  coordinate and deviance differences are about `9.90e-8` and `2.23e-7`.
+  The mfrmr side retains independent probability and marginal-likelihood
+  oracle checks. This advances `tam_mml_core` only to `review`: the values are
+  calibration input, not a post hoc `EXT-TAM-TOL`; a TAM-specific prospective
+  rule and disjoint candidate remain necessary. `tam.mml.mfr()` has fixed
+  slopes, so this result does not test free-slope GPCM;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope

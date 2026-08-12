@@ -65,8 +65,11 @@ GPCM umbrella may promote criterion- and rater-owned evidence together.
 1. row 66 `external_privacy_and_license_boundary` is structurally closed;
    row 64 `metric_specific_comparison_eligibility` has a passing deterministic
    contract but remains under review pending all retained real-normalizer
-   bindings. Candidate 003 now supplies the bounded ConQuest core; TAM/immer
-   and broader metric-decision invariance remain open. Row 59
+   bindings. Candidate 003 now supplies the bounded ConQuest core. The TAM
+   RSM/PCM q31/q61 calibration now establishes the cases-to-sum-zero location
+   transform and 46 finite coordinate observations, but freezes no TAM
+   tolerance or candidate; immer and broader metric-decision invariance also
+   remain open. Row 59
    `facets_tool_identity` is an independent external-environment dependency
    because FACETS is unavailable here; it cannot be closed by a mock.
 2. rows 55--57 `conquest_binary_core`, `conquest_rsm_core`, and
@@ -314,9 +317,12 @@ RSM/PCM adapter now binds 36 prespecified native rows to the ledger; all 36 are
 finite but rejected by `source_precision_mismatch`, and zero enter an
 aggregate. Candidate 003 has since completed the independent numeric-resolution
 and prospective-tolerance path for the bounded Binary/RSM/PCM MML core. Local
-Wave C therefore moves to decision-level invariance and the remaining
-TAM/immer lanes, not another ConQuest rerun. The current environment cannot
-execute FACETS. Row 59
+Wave C therefore moves to the prospective TAM tolerance/candidate contract,
+conditional-estimand eligibility for immer, and later decision-level
+invariance, not another ConQuest rerun. The TAM complete-crossing calibration
+is finite and source/function-bound but remains `review` because its observed
+differences cannot define a self-passing tolerance. The current environment
+cannot execute FACETS. Row 59
 remains `review` and must be completed once in a
 licensed external environment with executable, parser, generator, locale,
 command/control/input/output, run-date, and candidate identities in one

@@ -11,7 +11,7 @@ scientific-equivalence claim, simulation, sparse/GPCM extension, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `2b472612ed4aab5dca25a37e80df3c7667016d3eb033f62d8f0db57aa28a7ca9` |
+| `release-evidence-checklist-0.2.3.csv` | `7c4a5020911bfe66db6b7b0205456ad5e47258db8462de244675e6e13e545de1` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -46,8 +46,11 @@ exact-reported-decimal core rows are now complete. They do not close runtime
 readiness propagation, ecosystem positioning, external-tool identity across
 TAM/immer/FACETS, general metric eligibility, hidden-solution equivalence, or
 any broader scientific-equivalence claim. The 32 conditional rows
-contain 10 `not_run`, 21 `review`, and one `ok`; that completed execution-
-integrity row does not promote its parent GPCM claim.
+contain nine `not_run`, 22 `review`, and one `ok`. The new TAM MML calibration
+moves only its conditional secondary-overlap row to `review`; its observed
+differences freeze no tolerance or candidate and remain excluded from numeric
+aggregation. The completed execution-integrity row likewise does not promote
+its parent GPCM claim.
 Nine current `concern` rows are deferred G-theory infrastructure rows and no
 longer count as 0.2.3 release concerns.
 
@@ -104,6 +107,11 @@ decimals under the registered models, inputs, constraints, and executable.
 The undocumented hidden optimizer interval, scientific equivalence,
 inference readiness, DFF/fit/rank/ordering invariance, GPCM free slopes, and
 sparse/unequal-workload extension remain open and cannot inherit this pass.
+The subsequent TAM 4.3-25 RSM/PCM calibration makes its cases-constraint
+location transform explicit and retains 46 finite q31/q61 coordinate rows,
+but is not a second vote for equivalence: `EXT-TAM-TOL` and a disjoint TAM
+candidate remain absent, and the conditional fallback continues to exclude
+secondary external numeric aggregation.
 
 ## Conditional claims and exact fallbacks
 

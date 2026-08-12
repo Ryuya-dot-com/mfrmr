@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a source- and loaded-function-bound TAM 4.3-25 MML calibration on the
+  additive complete-crossing RSM/PCM fixture. The runner makes the TAM
+  `constraint="cases"` location transform explicit, compares 46 coordinates
+  and both deviances at q31/q61, and retains mfrmr's independent probability
+  and marginal-likelihood oracle checks. The observed maximum transformed
+  coordinate and deviance differences are below `1e-7` and `2.23e-7`,
+  respectively. They are calibration observations, not `EXT-TAM-TOL`:
+  candidate binding, comparison passage, free-slope GPCM, sparse/DFF/fit/rank
+  extension, inference readiness, and release authorization remain false.
+
 * Completed the prospectively frozen ConQuest candidate-003 core. All six
   ordered Binary/RSM/PCM q31/q61 executions pass the post-incident semantic
   gate, and all 50 expected native/console outputs are nonempty and SHA-bound.

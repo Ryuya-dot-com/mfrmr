@@ -1535,6 +1535,14 @@ identify whether the opt-in layer ran and retain its test log.
   prospectively frozen table. Hidden-solution/scientific equivalence,
   inference readiness, DFF/fit/rank/ordering invariance, sparse/free-slope
   GPCM extension, large simulation, and release authorization remain false.
+- `tam-mml-core-calibration-0.2.3.R` and its companion record: source- and
+  TAM-4.3-25-function-bound RSM/PCM complete-crossing calibration. It makes the
+  `constraint="cases"` location transformation explicit and retains 46
+  transformed coordinate rows, q31/q61 integration movement, both deviances,
+  and the mfrmr probability/marginal-likelihood oracle checks. The observed
+  values inform a future prospective TAM tolerance only; no TAM tolerance,
+  candidate, comparison pass, free-slope GPCM extension, or release decision
+  is frozen.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration
