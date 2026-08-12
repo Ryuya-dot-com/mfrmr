@@ -48,8 +48,10 @@ handoff tolerance is not a cross-engine tolerance.
 
 ## Ordered next action
 
-Obtain an independently adjudicated, pre-confirmation record for `EXT-CQ-TOL` and
-`IC-INTEGRATION-TOL`; bind an exact candidate; and rerun only the four small
-complete-crossing arms. One connected sparse/load-imbalanced microcase follows
-only after that core passes. Large simulation remains downstream and is not
-authorized by this adjudication.
+Obtain an independently adjudicated, pre-confirmation record for `EXT-CQ-TOL`
+and `IC-INTEGRATION-TOL`; complete the Binary reported-output normalizer; bind
+an exact candidate; and run all six `Binary/RSM/PCM x q31/q61` arms. The four
+opened RSM/PCM arms remain calibration and cannot fill those six clean slots.
+One connected sparse/load-imbalanced microcase follows only after that core
+passes. Large simulation remains downstream and is not authorized by this
+adjudication.

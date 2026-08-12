@@ -151,9 +151,16 @@ Priorities are:
   rules plus candidate/output timing identities, and authorizes no current
   rerun. The remaining decision is scientific rather than mechanical: justify
   and review reported-output-scale estimand tolerances, then bind the exact
-  clean candidate before producing any new ConQuest output. Hidden-solution
-  equivalence remains unavailable without a documented rounding interval or
-  full-precision export;
+  clean candidate before producing any new ConQuest output. The next clean
+  core is six arms (`Binary/RSM/PCM x q31/q61`), because the 57-row registry
+  cannot be evaluated by the four additive RSM/PCM arms alone. The additive
+  reported points have now been evaluated on a common likelihood: deviance
+  increases over the mfrmr point are below `4.75e-10`, all local Hessians are
+  positive definite, and same-point q31/q61 differences are below `2.73e-12`.
+  This calibrates scale without freezing a rule. A Binary reported-output
+  normalizer remains a pre-execution blocker. Hidden-solution equivalence
+  remains unavailable without a documented rounding interval or full-
+  precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope

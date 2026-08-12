@@ -14,6 +14,9 @@ mfrmr_cq_ptc_executable_sha256 <-
 mfrmr_cq_ptc_source_precision_policy_id <-
   "conquest-reported-decimal-estimand-v1"
 mfrmr_cq_ptc_source_precision_scope <- "exact_reported_decimal"
+mfrmr_cq_ptc_candidate_families <- "Binary;RSM;PCM"
+mfrmr_cq_ptc_candidate_nodes <- "31;61"
+mfrmr_cq_ptc_candidate_arm_count <- 6L
 
 mfrmr_cq_ptc_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -156,8 +159,15 @@ mfrmr_cq_ptc_binding_template <- function() {
     CommandBundleSHA256 = "",
     InputBundleSHA256 = "",
     ExpectedEmptyOutputsSHA256 = "",
+    CandidateFamilies = "",
+    CandidateQuadratureNodes = "",
+    CandidateArmCount = NA_integer_,
+    NormalizerCoverageFamilies = "",
+    NormalizerCoverageRegistrySHA256 = "",
     SourcePrecisionPolicyId = "",
     SourcePrecisionScope = "",
+    SourcePrecisionCoverageFamilies = "",
+    SourcePrecisionCoverageRegistrySHA256 = "",
     SourcePrecisionPolicySHA256 = "",
     SourcePrecisionReady = FALSE,
     SourcePrecisionIndependentOfCandidateOutput = FALSE,
@@ -267,7 +277,9 @@ mfrmr_cq_ptc_validate_binding <- function(binding, tolerance_sha256) {
   hashes <- c(
     "SourceTreeSHA256", "ConQuestExecutableSHA256", "CommandBundleSHA256",
     "InputBundleSHA256", "ExpectedEmptyOutputsSHA256",
+    "NormalizerCoverageRegistrySHA256",
     "SourcePrecisionPolicySHA256",
+    "SourcePrecisionCoverageRegistrySHA256",
     "ToleranceTableSHA256"
   )
   hash_ok <- vapply(hashes, function(column) {
@@ -286,6 +298,18 @@ mfrmr_cq_ptc_validate_binding <- function(binding, tolerance_sha256) {
       tolower(as.character(x$ConQuestExecutableSHA256)),
       mfrmr_cq_ptc_executable_sha256
     ),
+    CandidateFamiliesComplete = identical(
+      as.character(x$CandidateFamilies), mfrmr_cq_ptc_candidate_families
+    ),
+    CandidateNodesComplete = identical(
+      as.character(x$CandidateQuadratureNodes), mfrmr_cq_ptc_candidate_nodes
+    ),
+    CandidateArmCountOK = is.integer(x$CandidateArmCount) &&
+      identical(x$CandidateArmCount, mfrmr_cq_ptc_candidate_arm_count),
+    NormalizerCoverageComplete = identical(
+      as.character(x$NormalizerCoverageFamilies),
+      mfrmr_cq_ptc_candidate_families
+    ),
     SourcePrecisionPolicyIdOK = identical(
       as.character(x$SourcePrecisionPolicyId),
       mfrmr_cq_ptc_source_precision_policy_id
@@ -293,6 +317,10 @@ mfrmr_cq_ptc_validate_binding <- function(binding, tolerance_sha256) {
     SourcePrecisionScopeOK = identical(
       as.character(x$SourcePrecisionScope),
       mfrmr_cq_ptc_source_precision_scope
+    ),
+    SourcePrecisionCoverageComplete = identical(
+      as.character(x$SourcePrecisionCoverageFamilies),
+      mfrmr_cq_ptc_candidate_families
     ),
     SourcePrecisionReady = strict_flag(x$SourcePrecisionReady, TRUE),
     SourcePrecisionProspective = strict_flag(
@@ -350,6 +378,9 @@ mfrmr_cq_prospective_tolerance_preflight <- function(tolerances, binding) {
     tolerance_identity_ok = row_status$identity_ok,
     all_tolerance_rows_ready = row_status$all_rows_ready,
     candidate_binding_ready = binding_status$binding_ready,
+    required_candidate_families = mfrmr_cq_ptc_candidate_families,
+    required_candidate_nodes = mfrmr_cq_ptc_candidate_nodes,
+    required_candidate_arms = mfrmr_cq_ptc_candidate_arm_count,
     opened_calibration_reclassification_authorized = FALSE,
     scientific_equivalence_inferred = FALSE,
     confirmation_authorized = FALSE,

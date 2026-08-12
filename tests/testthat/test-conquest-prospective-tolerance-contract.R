@@ -45,9 +45,19 @@ complete_conquest_prospective_binding <- function(env, tolerances) {
   out$CommandBundleSHA256 <- paste(rep("d", 64L), collapse = "")
   out$InputBundleSHA256 <- paste(rep("e", 64L), collapse = "")
   out$ExpectedEmptyOutputsSHA256 <- paste(rep("f", 64L), collapse = "")
+  out$CandidateFamilies <- env$mfrmr_cq_ptc_candidate_families
+  out$CandidateQuadratureNodes <- env$mfrmr_cq_ptc_candidate_nodes
+  out$CandidateArmCount <- env$mfrmr_cq_ptc_candidate_arm_count
+  out$NormalizerCoverageFamilies <- env$mfrmr_cq_ptc_candidate_families
+  out$NormalizerCoverageRegistrySHA256 <-
+    paste(rep("2", 64L), collapse = "")
   out$SourcePrecisionPolicyId <-
     env$mfrmr_cq_ptc_source_precision_policy_id
   out$SourcePrecisionScope <- env$mfrmr_cq_ptc_source_precision_scope
+  out$SourcePrecisionCoverageFamilies <-
+    env$mfrmr_cq_ptc_candidate_families
+  out$SourcePrecisionCoverageRegistrySHA256 <-
+    paste(rep("3", 64L), collapse = "")
   out$SourcePrecisionPolicySHA256 <- paste(rep("1", 64L), collapse = "")
   out$SourcePrecisionReady <- TRUE
   out$SourcePrecisionIndependentOfCandidateOutput <- TRUE
@@ -111,6 +121,9 @@ test_that("a complete future freeze authorizes only the small candidate core", {
   expect_true(preflight$tolerance_identity_ok)
   expect_true(preflight$all_tolerance_rows_ready)
   expect_true(preflight$candidate_binding_ready)
+  expect_identical(preflight$required_candidate_families, "Binary;RSM;PCM")
+  expect_identical(preflight$required_candidate_nodes, "31;61")
+  expect_identical(preflight$required_candidate_arms, 6L)
   expect_true(all(preflight$row_review$RowReady))
   expect_true(all(unlist(preflight$binding_review, use.names = FALSE)))
   expect_match(preflight$tolerance_table_sha256, "^[[:xdigit:]]{64}$")
@@ -196,6 +209,22 @@ test_that("candidate output timing and tolerance hash fail closed", {
   )
   expect_false(generic_preflight$candidate_binding_ready)
   expect_false(generic_preflight$binding_review$SourcePrecisionPolicyIdOK)
+
+  partial_core <- binding
+  partial_core$CandidateFamilies <- "RSM;PCM"
+  partial_core$CandidateArmCount <- 4L
+  partial_core$NormalizerCoverageFamilies <- "RSM;PCM"
+  partial_core$SourcePrecisionCoverageFamilies <- "RSM;PCM"
+  partial_preflight <- env$mfrmr_cq_prospective_tolerance_preflight(
+    tolerances, partial_core
+  )
+  expect_false(partial_preflight$candidate_binding_ready)
+  expect_false(partial_preflight$binding_review$CandidateFamiliesComplete)
+  expect_false(partial_preflight$binding_review$CandidateArmCountOK)
+  expect_false(partial_preflight$binding_review$NormalizerCoverageComplete)
+  expect_false(
+    partial_preflight$binding_review$SourcePrecisionCoverageComplete
+  )
 
   wrong_hash <- binding
   wrong_hash$ToleranceTableSHA256 <- paste(rep("0", 64L), collapse = "")

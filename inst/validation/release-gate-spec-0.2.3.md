@@ -1336,7 +1336,10 @@ source-precision policy before candidate execution. The current policy is now
 fixed specifically as `conquest-reported-decimal-estimand-v1` with scope
 `exact_reported_decimal`; it admits exact file tokens but explicitly leaves
 hidden-solution equivalence false. Structural passage
-authorizes only the fresh small candidate core; it cannot establish scientific
+also requires complete Binary/RSM/PCM normalizer and source-precision coverage
+over q31/q61, or six candidate arms. Four RSM/PCM arms cannot satisfy the
+57-row registry. Structural passage authorizes only that fresh six-arm
+candidate core; it cannot establish scientific
 equivalence, confirmation, a sparse extension, or simulation. The current
 empty tolerance/candidate template remains `pilot_required` and all three
 ConQuest release rows remain `review`.

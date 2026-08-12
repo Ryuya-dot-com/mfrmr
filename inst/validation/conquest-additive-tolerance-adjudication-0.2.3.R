@@ -32,7 +32,7 @@ mfrmr_cq_tolerance_gate_requirements <- function() {
       "Freeze signed and absolute EXT-CQ-TOL values by common estimand before confirmation.",
       "Keep token equality, tolerance passage, and scientific equivalence as separate decisions.",
       "Bind package source, executable, commands, inputs, and expected empty outputs to one candidate manifest.",
-      "Run the small complete-crossing core freshly before any sparse or large-simulation extension."
+      "Run the six Binary/RSM/PCM by q31/q61 arms freshly before any sparse or large-simulation extension."
     ),
     RequiredForEquivalence = TRUE,
     stringsAsFactors = FALSE
@@ -126,8 +126,8 @@ mfrmr_adjudicate_conquest_additive_tolerance <- function(four_arm_review) {
     large_simulation_authorized = FALSE,
     next_action = paste(
       "obtain an independently justified pre-result EXT-CQ-TOL and",
-      "IC-INTEGRATION-TOL record, bind the exact candidate, then rerun",
-      "the small four-arm core freshly"
+      "IC-INTEGRATION-TOL record, complete the Binary normalizer, bind",
+      "the exact candidate, then run all six family-by-node arms freshly"
     ),
     layer_review = layer_review,
     gate_requirements = mfrmr_cq_tolerance_gate_requirements()

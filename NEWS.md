@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Evaluated the retained exact ConQuest RSM/PCM decimal coordinates on an
+  independent common-likelihood oracle. Across q31/q61, reported-point versus
+  mfrmr-point deviance increases are below `4.75e-10`, all Hessians are
+  positive definite, and same-point integration differences are below
+  `2.73e-12`. These are opened calibration scales, not tolerances or
+  equivalence. The audit also corrected the next-core topology: the 57-row
+  registry requires six `Binary/RSM/PCM x q31/q61` arms, complete normalizer
+  and precision coverage, and rejects the former four-arm interpretation.
+
 * Split ConQuest source precision into exact reported-decimal and hidden-
   optimizer-solution strata. The SHA-bound 5.47.5 manual documents that the
   screen `decimals` option is ignored for file output but provides no file

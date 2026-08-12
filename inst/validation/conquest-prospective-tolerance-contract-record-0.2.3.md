@@ -15,7 +15,8 @@ from the observed maximum difference.
 default tolerance and candidate-binding templates deliberately fail with
 `pilot_required`. A future record becomes structurally ready only after every
 required estimand row has a finite, source-bound, frozen rule and the exact
-candidate is bound before any candidate output exists or is opened.
+six-arm `Binary/RSM/PCM x q31/q61` candidate is bound before any candidate
+output exists or is opened.
 
 ## Complete estimand registry
 
@@ -85,11 +86,14 @@ preflight rejects:
 - a different or unbound executable;
 - a missing, unhashed, not-ready, or candidate-output-informed source-precision
   policy;
+- any family, node, arm-count, normalizer-coverage, or source-precision-
+  coverage declaration smaller than `Binary;RSM;PCM x 31;61` (six arms), or
+  an unhashed normalizer/precision coverage registry;
 - a freeze made after candidate execution;
 - candidate outputs already present or opened at freeze; and
 - any attempt to make the opened calibration pass the new rule.
 
-Even a structurally complete future preflight authorizes only the small
+Even a structurally complete future preflight authorizes only the six-arm
 candidate core. It leaves scientific equivalence, confirmation, sparse
 extension, and large simulation false.
 
@@ -107,18 +111,18 @@ evidence status remains `review`.
 
 ## Verification and identities
 
-The focused test completed with 54 passing expectations, zero failures, and
+The focused test completed with 62 passing expectations, zero failures, and
 zero skips. It covers the exact registry, default fail closure, a structurally
 complete future fixture, opened-calibration rejection, candidate-output timing,
 tolerance-hash binding, registry drift, and unsupported source paths/types.
-The complete ConQuest-labelled test slice then completed with 465 expectations,
+The complete ConQuest-labelled test slice then completed with 515 expectations,
 zero failures, zero errors, zero skips, and zero warnings. A CRAN-light package
 check completed with zero errors, zero warnings, and zero notes.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `conquest-prospective-tolerance-contract-0.2.3.R` | `e8bc5a666eb20f0601d9ece9bbe8582df6989f8eb73c6f0ff3219b1d0243db88` |
-| `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `2b9bba9a15e20d1a1267d9dfd223eecd9c3eda3f783d1e2d440f2ea8fe118121` |
+| `conquest-prospective-tolerance-contract-0.2.3.R` | `5b9ae8c169348ffe8ab319fcc755c61fa1442e050e85d5e2295c1fe0f2ef318f` |
+| `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `ca6d6e58c7dc40bf43571d335cc7f5ec644979cd03ef8186b39242b0a13de3af` |
 | `conquest-reported-output-precision-contract-0.2.3.R` | `e0e80ebd96c48634ddd39231959bb0c5cfcd6c036c39c4e5bf8224e19164fd53` |
 | `conquest-additive-tolerance-adjudication-0.2.3.md` | `a81bf01a1b654e5b4b6c2254fa16e98f17e8e16264f137fd7bd35e8145813efa` |
 | `conquest-additive-native-four-arm-record-0.2.3.md` | `c83d344920be0fd4c08db7e6931afb2bdc4f52a0d187bd51434c6cc0d1ef7cdd` |
@@ -129,10 +133,14 @@ check completed with zero errors, zero warnings, and zero notes.
 | --- | --- |
 | `ProspectiveToleranceValidatorImplemented` | `TRUE` |
 | `RequiredToleranceRows` | `57` |
+| `RequiredCandidateFamilies` | `Binary;RSM;PCM` |
+| `RequiredCandidateNodes` | `31;61` |
+| `RequiredCandidateArms` | `6` |
 | `CurrentToleranceValuesFrozen` | `FALSE` |
 | `CurrentCandidateBound` | `FALSE` |
 | `CurrentReportedOutputPrecisionPolicyFrozen` | `TRUE` |
 | `CurrentHiddenSolutionPrecisionPolicyFrozen` | `FALSE` |
+| `CurrentBinaryReportedOutputNormalizerReady` | `FALSE` |
 | `OpenedCalibrationReclassificationAuthorized` | `FALSE` |
 | `CurrentCandidateCoreRunAuthorized` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |

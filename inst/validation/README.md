@@ -1184,6 +1184,13 @@ identify whether the opt-in layer ran and retain its test log.
   each of the 36 retained tokens and file hashes, treats only the written
   decimal as an exact estimand, and leaves file rounding, hidden precision,
   tolerance, candidate comparison, and equivalence unresolved.
+- `conquest-reported-point-likelihood-calibration-0.2.3.R` and its companion
+  record: evaluates the retained exact RSM/PCM decimal coordinates on the
+  independent additive q31/q61 likelihood, including Richardson gradients,
+  Hessians, curvature distance, and same-point integration differences. It
+  identifies the required clean core as six `Binary/RSM/PCM x q31/q61` arms
+  and leaves the missing Binary normalizer, every tolerance, candidate binding,
+  DFF/fit/ranking invariance, and equivalence open.
 - `release-evidence-checklist-0.2.3.csv`: machine-readable 0.2.3 gate
   inventory. It preserves the existing `ReleaseDecision` field used by the
   readiness helper and adds scenario, criterion-state, and evidence-status
