@@ -251,6 +251,19 @@ mfrmr_gocs_p1s_expected_identification <- function(estimator) {
   }
 }
 
+mfrmr_gocs_p1s_fit_objective <- function(fit) {
+  objective <- mfrmr_gocs_p1s_numeric_scalar((fit$opt %||% list())$value)
+  if (is.finite(objective)) return(objective)
+  summary <- as.data.frame(fit$summary %||% data.frame(),
+                           stringsAsFactors = FALSE)
+  log_lik <- if ("LogLik" %in% names(summary)) {
+    mfrmr_gocs_p1s_numeric_scalar(summary$LogLik)
+  } else {
+    NA_real_
+  }
+  if (is.finite(log_lik)) -log_lik else NA_real_
+}
+
 mfrmr_gocs_p1s_empty_result <- function(row, data_sha) {
   cbind(
     row[, mfrmr_gocd_p1r_identity_fields(), drop = FALSE],
@@ -363,16 +376,7 @@ mfrmr_gocs_p1s_run_one <- function(row, built) {
     identical(as.numeric(overview$RatingMax), 4)
 
   convergence <- getFromNamespace("mfrm_convergence_state", "mfrmr")(fit)
-  fit_summary <- as.data.frame(fit$summary %||% data.frame(),
-                               stringsAsFactors = FALSE)
-  objective_candidates <- c("Objective", "NegativeLogLikelihood", "NLL")
-  objective_name <- objective_candidates[objective_candidates %in%
-                                           names(fit_summary)][1L]
-  objective <- if (length(objective_name) == 1L) {
-    mfrmr_gocs_p1s_numeric_scalar(fit_summary[[objective_name]])
-  } else {
-    mfrmr_gocs_p1s_numeric_scalar((fit$opt %||% list())$value)
-  }
+  objective <- mfrmr_gocs_p1s_fit_objective(fit)
   population_sd <- if (population_active) {
     sqrt(mfrmr_gocs_p1s_numeric_scalar(fit$population$sigma2))
   } else NA_real_

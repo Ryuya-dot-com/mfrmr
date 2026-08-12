@@ -40,7 +40,7 @@ test_that("P1s dry run binds the current runtime to exactly eight routes", {
     digest::digest(
       paths[["runner"]], algo = "sha256", file = TRUE, serialize = FALSE
     ),
-    "fed9b5ac53f6ad9c0d873006fe3340dc29c00e5484dcc0e36487f0c9b2335a7a"
+    "b1b096dd137f3f9fdf9f30db24fd3dd6cf3d6fe2acfd59b7d1c218868326800f"
   )
   result <- env$mfrmr_run_gpcm_owner_current_default_smoke_p1s(execute = FALSE)
 
@@ -169,6 +169,18 @@ test_that("P1s atomic save refuses replacement", {
   expect_identical(
     env$mfrmr_gocs_p1s_expected_identification("MML"),
     "free_population"
+  )
+  expect_identical(
+    env$mfrmr_gocs_p1s_fit_objective(list(
+      opt = list(value = 12), summary = data.frame(LogLik = -99)
+    )),
+    12
+  )
+  expect_identical(
+    env$mfrmr_gocs_p1s_fit_objective(list(
+      opt = list(), summary = data.frame(LogLik = -99)
+    )),
+    99
   )
   expect_true(is.na(env$mfrmr_gocs_p1s_numeric_scalar(NULL)))
   expect_true(is.na(env$mfrmr_gocs_p1s_numeric_scalar(numeric(0))))

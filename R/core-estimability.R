@@ -2674,6 +2674,17 @@ audit_mfrm_fitted_information <- function(opt,
   base
 }
 
+mfrmr_estimability_nonlinear_blocks <- function(sizes) {
+  candidates <- intersect(
+    names(sizes), c("log_slopes", "log_sigma2")
+  )
+  candidates[vapply(
+    sizes[candidates],
+    function(x) as.integer(x %||% 0L) > 0L,
+    logical(1)
+  )]
+}
+
 audit_mfrm_estimability <- function(prep, idx, config, sizes) {
   primary <- mfrmr_estimability_adjacent_design(
     prep = prep, idx = idx, config = config, sizes = sizes
@@ -2682,11 +2693,7 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
     primary$design, primary$map
   )
 
-  nonlinear_blocks <- names(sizes)[
-    names(sizes) %in% c("log_slopes", "log_sigma2") &
-      vapply(sizes[names(sizes) %in% c("log_slopes", "log_sigma2")],
-             function(x) as.integer(x %||% 0L) > 0L, logical(1))
-  ]
+  nonlinear_blocks <- mfrmr_estimability_nonlinear_blocks(sizes)
   complete <- length(nonlinear_blocks) == 0L
 
   counterfactual <- NULL

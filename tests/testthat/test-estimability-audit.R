@@ -46,6 +46,24 @@
   )
 }
 
+test_that("nonlinear estimability block selection never recycles", {
+  sizes <- c(
+    theta = 8L, facets = 3L, interactions = 0L, steps = 6L,
+    log_slopes = 2L, beta = 1L, log_sigma2 = 1L
+  )
+  expect_warning(
+    blocks <- mfrmr:::mfrmr_estimability_nonlinear_blocks(sizes),
+    NA
+  )
+  expect_identical(blocks, c("log_slopes", "log_sigma2"))
+
+  sizes[c("log_slopes", "log_sigma2")] <- 0L
+  expect_identical(
+    mfrmr:::mfrmr_estimability_nonlinear_blocks(sizes),
+    character(0)
+  )
+})
+
 test_that("bounded response-pattern enumeration is complete and unique", {
   patterns <- mfrmr:::mfrmr_enumerate_response_patterns(
     n_observations = 2L,
