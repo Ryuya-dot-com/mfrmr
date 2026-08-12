@@ -4309,6 +4309,23 @@ work, the release-scope decision should ask whether a continuous theorem is
 actually required for 0.2.3; otherwise the finite claim should remain bounded
 and effort should move to a different release dependency.
 
+##### P1p GPCM release-scope disposition
+
+P1p is a no-fit claim audit over P1o, the public GPCM capability registry, the
+106-row checklist, and its exact claim-disposition overlay. It finds no public
+continuous ratio-profile claim and no independent release-spine obligation for
+one. `FiniteGridClaimRetained` and `ContinuousRatioWorkDeferred` are therefore
+true together: the bounded evidence is kept without converting it into a
+continuum theorem.
+
+The next GPCM release-spine item is row 88,
+`gpcm_owner_evidence_partition`, still in `review`. Criterion-owned and
+Rater-owned aligned GPCM evidence must retain separate model, estimator,
+ability-scale, category-support, and runtime identities. Conditional fit and
+DFF rows retain `retain_gpcm_fit_as_exploratory_no_decision` and
+`disable_gpcm_dff_inferential_promotion`. P1p authorizes neither a public GPCM
+promotion nor broad simulation.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

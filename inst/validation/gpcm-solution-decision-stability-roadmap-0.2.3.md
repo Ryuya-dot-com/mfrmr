@@ -278,6 +278,13 @@ eigenvalue equality—is transported. All four local mechanisms transfer with no
 fallback fit. Complete finite-grid materialization and continuous profile
 closure remain separate later gates.
 
+P1o then completes the 336-cell four-fixture finite-grid registry. P1p binds
+that result to the public capability matrix and claim-disposition profile: the
+finite evidence is retained, while continuous ratio certification is deferred
+because it is not an advertised 0.2.3 capability. The next mandatory GPCM
+dependency is owner-specific evidence partitioning, not another ratio grid.
+Fit and DFF remain under their explicit exploratory/screening fallbacks.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified

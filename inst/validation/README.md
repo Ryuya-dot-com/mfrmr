@@ -222,6 +222,12 @@ identify whether the opt-in layer ran and retain its test log.
   of all 1,362 stored P1k/P1l points into a 336-cell, four-fixture registry.
   The finite-grid portfolio is complete and every identity passes; continuous
   ratio-profile, face-closure, and inference flags remain false.
+- `gpcm-release-scope-disposition-p1p-0.2.3.R` and
+  `gpcm-release-scope-disposition-p1p-record-0.2.3.md`: no-fit binding of P1o
+  to the public GPCM registry and 106-row claim portfolio. It retains the
+  finite-grid claim, defers an unadvertised continuous ratio theorem, preserves
+  fit/DFF fallbacks, and selects `gpcm_owner_evidence_partition` as the next
+  GPCM release-spine blocker without authorizing simulation or promotion.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

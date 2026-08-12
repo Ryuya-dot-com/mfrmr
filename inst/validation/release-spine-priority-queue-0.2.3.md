@@ -315,3 +315,11 @@ licensed external environment with executable, parser, generator, locale,
 command/control/input/output, run-date, and candidate identities in one
 portable bundle. Historical 4.5.0 output and synthetic placeholders cannot
 close it; no FACETS rerun is authorized or possible here.
+
+The GPCM P1p release-scope disposition also prevents the P1 boundary lineage
+from becoming an accidental new release programme. P1o's 336-cell reflected
+finite-grid claim is retained; an unadvertised continuous coefficient-ratio
+theorem is deferred. The next GPCM release-spine item remains row 88,
+`gpcm_owner_evidence_partition`. Its first action is a deterministic audit of
+the existing owner-specific identity and propagation evidence, not another
+ratio grid or a new simulation.

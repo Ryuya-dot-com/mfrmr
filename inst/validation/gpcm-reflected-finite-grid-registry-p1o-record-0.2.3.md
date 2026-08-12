@@ -80,11 +80,12 @@ The narrow `ReflectedFiniteGridFixturesEvaluated` flag is true. The broader
 finite registry is not a continuous profile theorem. This distinction avoids
 turning numerical completeness into mathematical overclaiming.
 
-The next question is no longer whether to duplicate high/low fitting. It is
-whether continuous certification is necessary for the 0.2.3 claim portfolio,
-or whether the finite-grid evidence should remain explicitly bounded while
-work moves to a different open structural gate. That decision should precede
-three-target enumeration or simulation.
+P1p subsequently answers the remaining scope question. Continuous ratio
+certification is not a currently advertised public capability or an
+independent 0.2.3 release-spine item. The finite-grid result remains explicitly
+bounded, continuous work is deferred, and the next GPCM release-spine blocker
+is the Criterion-versus-Rater owner evidence partition. Three-target
+enumeration and simulation are not authorized by this decision.
 
 ## Reproduction
 

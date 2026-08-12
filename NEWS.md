@@ -4,6 +4,13 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a no-fit GPCM release-scope P1p disposition. The completed reflected
+  finite-grid claim is retained, while a continuous coefficient-ratio theorem
+  is deferred because it is neither publicly advertised nor an independent
+  0.2.3 release-spine item. The next GPCM release blocker is the existing
+  Criterion-versus-Rater owner evidence partition. Core promotion, inferential
+  fit/DFF use, broad simulation, and confirmation remain unauthorized.
+
 * Added a four-fixture GPCM reflected finite-grid P1o registry. The exact P1n
   map verifies all 1,362 stored P1k/P1l high-side points without refitting and
   transports 168 classified cells to 168 low-side cells. Maximum objective and

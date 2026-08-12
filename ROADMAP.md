@@ -756,6 +756,17 @@ gate, the release portfolio must decide whether it actually requires a
 continuous ratio theorem or should retain this explicitly finite claim and
 move to another open structural dependency.
 
+P1p makes that release-scope decision without fitting. The public capability
+registry advertises no continuous ratio-profile or two-target-face closure
+claim, and the 106-row release checklist contains no independent mandatory
+row for such a theorem. The P1o finite-grid evidence is therefore retained as
+bounded repository evidence and continuous ratio work is deferred. The next
+GPCM release-spine blocker is row 88, `gpcm_owner_evidence_partition`, because
+Criterion-owned and Rater-owned aligned GPCM interpretations cannot borrow
+evidence from each other. Fit and DFF claims retain their exploratory and
+screening-only fallbacks; no simulation or public promotion follows from this
+scope decision.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
