@@ -38,6 +38,42 @@ validity, fairness, consequential validity, population transportability, or
 suitability for an operational high-stakes decision; those require separate
 domain evidence.
 
+## GPCM/JML comparison roles
+
+`facets-gpcm-jml-comparison-role-contract-0.2.3.R` makes the GPCM boundary
+executable before any new external run. The direct FACETS comparison remains
+FACETS PCM/JMLE versus mfrmr PCM/JML after the ordinary observation, category,
+step-dimension, constraint, coordinate, identification, boundary, and source-
+precision contracts pass. There is no direct FACETS free-slope route for the
+current aligned single-owner mfrmr GPCM.
+
+The GPCM-centred design is therefore asymmetric:
+
+1. Under unit-slope generating truth, FACETS PCM/JMLE and mfrmr PCM/JML form
+   the direct external comparison; the GPCM/PCM equality is checked through
+   the package's independent probability, objective, and score reduction.
+2. Under non-unit GPCM truth, mfrmr GPCM/JML is evaluated separately by slope,
+   step, additive-facet, and Person recovery plus failure and boundary rates.
+   A FACETS PCM/JMLE fit is a prespecified misspecification control, not a
+   parameter-equivalent GPCM estimate or a model-selection winner.
+3. FACETS Table 7 estimated discrimination may be evaluated for diagnostic
+   rank, direction, or calibration against generating slopes and mfrmr slope
+   results. Because FACETS documents that this post-fit statistic does not
+   alter the other fitted estimates, it cannot enter slope equality, common-
+   likelihood, or free-slope equivalence tolerances.
+4. Extreme Persons are compared by low/high boundary status and, only when
+   explicitly matched, by a separately named display adjustment. Raw finite
+   FACETS display measures are not compared with an unbounded original-JML
+   estimand as though both were finite maxima.
+
+Neighbouring GPCM estimators also retain separate lanes. Wijayanto-style
+penalized JML changes the objective, Rirt JML changes the parameter space
+through finite bounds, and Muraki MML-EM integrates over a random Person
+distribution. They are sensitivity estimators, not alternate labels for
+mfrmr's identified, unpenalized, no-box fixed-effects JML. The comparison-role
+contract authorizes no external execution, tolerance, simulation, or release
+claim; it only prevents these strata from being pooled later.
+
 ## Execution version and identity record
 
 The 2026-08-03 environment audit found three different identities:

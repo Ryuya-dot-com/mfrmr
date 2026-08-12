@@ -59,6 +59,8 @@ test_that("joint GPCM path catches the unanchored checkerboard", {
   fit <- fit_gpcm_joint_boundary_fixture()
   slope_only <- fit$config$boundary_audit$gpcm_slope_boundary
   audit <- fit$config$boundary_audit$gpcm_joint_boundary
+  classified <-
+    fit$config$boundary_audit$gpcm_fixed_objective_classification
 
   expect_identical(slope_only$state, "none_certified")
   expect_identical(
@@ -119,6 +121,13 @@ test_that("joint GPCM path catches the unanchored checkerboard", {
   expect_identical(fit$readiness$fit$FitReadiness, "review")
   expect_false(fit$readiness$fit$InferenceReady)
   expect_match(audit$limitations, "not a proof", fixed = TRUE)
+  expect_identical(
+    classified$state, "certified_competitive_joint_boundary"
+  )
+  expect_false(classified$slope_only_recession_certified)
+  expect_true(classified$competitive_joint_boundary_certified)
+  expect_false(classified$global_boundary_classified)
+  expect_false(classified$global_finite_maximum_certified)
 })
 
 test_that("joint GPCM certificate agrees with a direct likelihood path", {
@@ -190,6 +199,8 @@ test_that("nonseparated data are negative only within the bounded path family", 
   skip_if_not_installed("lpSolve")
   fit <- fit_gpcm_joint_boundary_fixture(nonseparated = TRUE)
   audit <- fit$config$boundary_audit$gpcm_joint_boundary
+  classified <-
+    fit$config$boundary_audit$gpcm_fixed_objective_classification
 
   expect_identical(audit$state, "none_certified")
   expect_true(isTRUE(audit$complete))
@@ -205,6 +216,13 @@ test_that("nonseparated data are negative only within the bounded path family", 
     fit$slopes$ReasonCodes == "jml_gpcm_joint_boundary_none_certified"
   ))
   expect_match(audit$limitations, "negative result does not establish", fixed = TRUE)
+  expect_identical(
+    classified$state, "finite_retained_point_no_path_certified"
+  )
+  expect_true(classified$retained_point_finite)
+  expect_true(classified$no_path_certified_in_audited_families)
+  expect_false(classified$global_finite_maximum_certified)
+  expect_false(classified$global_boundary_absence_certified)
 })
 
 test_that("joint GPCM audit fails closed on workload and estimator scope", {

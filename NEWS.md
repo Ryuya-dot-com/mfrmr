@@ -4,6 +4,94 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a finite-depth lexicographic log-slope hierarchy audit for JML GPCM.
+  For a declared ordered family of expanded sum-zero rate vectors, each stage
+  resolves only slope levels which were zero at every faster stage. The first
+  nonzero stage resolves at least two levels and every later nonzero stage at
+  least one, giving a sharp maximum of `J-1` stages for `J` slope levels.
+  Later active-coordinate restrictions need not themselves sum to zero because
+  slower identification compensation can occur in already resolved levels.
+  A two-stage construction with common primary rate `(1,-1,0)` shows that
+  opposite secondary rates send the zero-primary slope to infinity versus
+  zero and yield likelihood limits `0` versus `-log(2)`. The hierarchy is
+  therefore a structural growth-order decomposition only; arbitrary-path
+  likelihoods, additive hierarchies, global boundary absence, MML, inference,
+  FACETS comparison, recovery, simulation, and promotion remain open or
+  unchanged.
+
+* Added a boundary-compactification scope audit for fixed-objective JML GPCM.
+  Every unbounded finite-dimensional parameter sequence has a convergent
+  normalized subsequence, and every nonzero limiting expanded log-slope
+  direction receives a finite positive/zero/leading-negative/deeper-negative
+  primary role pattern. The audit records exact role counts and separates this
+  structural enumeration from completed boundary-likelihood classification.
+  Alternating normalized directions demonstrate why whole-sequence rate
+  convergence is unnecessary for the subsequence reduction, while an explicit
+  `t(1,-1,0) + sqrt(t)(-0.5,-0.5,1)` construction proves that zero primary-rate
+  coordinates can retain a divergent secondary hierarchy. That hierarchy,
+  nonvanishing residuals, general curved paths, global boundary absence, MML,
+  inference, FACETS comparison, recovery, simulation, and promotion remain
+  unclassified or unchanged.
+
+* Added a positive-only asymptotically-affine transport audit for JML GPCM
+  boundary certificates. An already certified slope-only, ordered-pair, or
+  canonical constant-rate path now carries the same analytic boundary value
+  over curved perturbations whose additive and sum-zero expanded-log-slope
+  residuals converge to zero. A direct `(3,-1,-2)` curve verifies the result.
+  A separate zero-rate construction shows that bounded residuals which do not
+  vanish can produce different subsequential likelihood limits, so general
+  curved and rate-nonconvergent paths remain unclassified. Negative source
+  searches gain no curved-path absence claim, and readiness, uncertainty,
+  FACETS comparison, recovery, simulation, and promotion remain unchanged.
+
+* Extended the fixed-objective JML GPCM joint-boundary audit from ordered
+  `+1/-1` log-slope pairs to canonical general constant-rate vectors. The
+  finite family partitions slope levels into positive, zero,
+  leading-negative, and deeper-negative groups while preserving sum-zero log
+  slopes; pair paths remain exact special cases. A constructed `(3,-1,-2)`
+  path is certified although every pair check is negative, and its direct
+  likelihood trace converges to the analytic boundary. Three-level production
+  fits evaluate 12 additional paths beyond six pairs. Workload non-evaluation,
+  curved or rate-nonconvergent paths, global boundary absence, MML, inference,
+  FACETS equivalence, recovery, and broad simulation remain separate or open.
+
+* Added a fixed-objective terminal-gradient stability audit for free-slope
+  JML GPCM. It reconstructs the retained unpenalized conditional objective and
+  analytic score, checks stored optimizer summaries and selected polish stage,
+  verifies a deterministic set of free coordinates by central differences,
+  and reports parameter-block gradient norms. Positive slope or joint-boundary
+  certificates take precedence even when the finite-point gradient is zero or
+  small. Scoped negative path searches permit only retained-point first-order
+  typing; they do not certify a finite global maximum, boundary absence,
+  uncertainty, FACETS comparability, or inference readiness. The existing
+  implementation tolerance is recorded but is not frozen as a scientific
+  criterion.
+
+* Added an estimator-specific fixed-objective boundary classifier for JML
+  GPCM. It combines the existing slope-only recession and joint
+  additive/log-slope audits while preserving their unequal evidential force:
+  a positive sufficient certificate is typed, but two scoped negatives mean
+  only that no path was certified in the bounded audited families. A finite
+  optimizer iterate remains a numerical trace rather than a finite global-MLE
+  claim. Numerical indeterminacy, workload non-evaluation, unit-slope
+  reduction, and objective mismatch are separate states. The classifier is
+  bound to mfrmr's identified unpenalized fixed-effects JML objective with no
+  finite parameter box; it is not reused for Wijayanto-style PJML, finite-box
+  JML, or MML and does not change readiness, uncertainty, comparison, or GPCM
+  promotion status.
+
+* Added a deterministic no-fit FACETS/GPCM JML comparison-role contract. It
+  freezes seven estimator identities and eight separate comparison lanes:
+  FACETS PCM/JMLE is the only future direct common-estimand FACETS lane;
+  unit-slope GPCM/PCM is an internal reduction; non-unit GPCM uses truth-first
+  recovery with FACETS PCM only as a misspecification control; and FACETS
+  Table 7 discrimination remains a post-fit diagnostic that does not update
+  the fitted PCM estimates. Wijayanto penalized JML, Rirt finite-box JML,
+  Muraki MML-EM, and mfrmr's unpenalized no-box JML retain different objective,
+  parameter-space, and Person-treatment identities. The contract ran no
+  external fit, froze no tolerance, and authorizes no GPCM promotion or broad
+  simulation.
+
 * Added a deterministic ConQuest/TAM/immer/mfrmr algorithm, correlation, and
   log-domain audit. On independent free coordinates and excluding deviance,
   the smallest observed Pearson correlation is above `0.999999999995` for

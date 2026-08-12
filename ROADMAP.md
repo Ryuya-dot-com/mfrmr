@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-12.
+Status: public roadmap, updated 2026-08-13.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -904,6 +904,17 @@ external run must first prove full probability/free-dimension identity or stay
 explicitly in a reduction/sensitivity stratum; numerical closeness cannot
 repair a model mismatch.
 
+A separate FACETS/GPCM JML comparison-role contract now closes the omitted
+role-classification gap without running FACETS. FACETS PCM/JMLE versus mfrmr
+PCM/JML is the only future direct common-estimand FACETS lane. Unit-slope
+GPCM/PCM remains an internal exact reduction; non-unit mfrmr GPCM/JML is
+evaluated against generating truth with FACETS PCM only as a deliberately
+misspecified control; and FACETS Table 7 discrimination is diagnostic-only
+because it does not update the fitted PCM estimates. Wijayanto penalized JML,
+Rirt finite-box JML, Muraki MML-EM, and mfrmr unpenalized no-box JML remain
+separate estimator families. This structural result adds no external fit,
+tolerance, equivalence, simulation, or GPCM promotion authority.
+
 The next P1u slice now gives the retained nonlinear diagnostics a precise
 local interpretation without promoting P1s. For JML GPCM, full column rank of
 the complete conditional adjacent-logit Jacobian is recorded as a sufficient
@@ -918,6 +929,98 @@ direction but leaves global and continuous-integral identification, weak
 information, boundary completeness, and inference readiness false or open.
 The admitted P1s bundle did not retain full fit audits and is not rerun under
 this implementation slice.
+
+The P1v follow-through now combines the two existing conditional-JML GPCM
+path audits under an explicit estimator/objective identity. Monotone
+slope-only recession, competitive joint additive/log-slope boundary,
+finite-retained-point-with-no-certified-audited-path, numerical
+indeterminacy, workload non-evaluation, and unit-slope reduction are separate
+machine-readable states. In particular, two completed negative bounded-path
+audits do not establish a finite global maximum or global boundary absence.
+The classifier is limited to mfrmr's identified, unpenalized fixed-effects
+JML likelihood with no finite box; penalized JML, finite-box JML, and MML
+remain different objectives. It has no readiness, uncertainty, recovery,
+external-comparison, or promotion effect. General rate vectors, curved paths,
+and broader topology/category challenges remain open before simulation or
+comparison expansion.
+
+The next fixed-objective slice now types terminal-gradient stability for that
+same JML-GPCM objective. At the retained vector it reconstructs the objective
+and complete analytic gradient, reconciles the optimizer and selected polish
+records, checks deterministic free-coordinate probes by central differences,
+and reports blockwise norms. A certified slope-only or competitive joint
+boundary path overrides any finite-point zero or small gradient. Only when no
+audited path is certified, both bounded path families complete, optimizer code
+is zero, and the numerical record is coherent can the result be labelled
+retained-point first-order evidence. This is not a finite-interior or global-
+maximum certificate, the implementation threshold is not a frozen scientific
+rule, and readiness, uncertainty, FACETS comparison, recovery, and promotion
+remain unchanged. General rate vectors, curved paths, and broader topology or
+category stress remain the next GPCM foundation work.
+
+P1x now closes the constant-rate-vector part of that next step for the bounded
+joint linear-additive family. Any nonzero constant sum-zero log-slope vector
+with a favorable first negative-rate tier has a canonical asymptotically
+equivalent partition into positive, zero, leading-negative, and deeper-
+negative groups. Enumerating these partitions exactly contains the existing
+ordered `+1/-1` pairs and adds 12 candidates at three slope levels and 98 at
+four. A `(3,-1,-2)` construction passes the generalized LP and direct
+likelihood-limit checks while all six pair checks fail, demonstrating material
+coverage rather than a relabelling of the pair audit. Completed negative
+classification remains scoped: the default workload guard stops before the
+combinatorial family becomes large, and curved paths, paths without limiting
+rates, broader topology/category stress, global boundary absence, MML
+geometry, recovery, uncertainty, FACETS equivalence, and promotion remain
+open or unchanged.
+
+P1y now transports those positive constant-rate certificates across a narrow
+but genuinely curved neighborhood. If the free additive coordinates equal the
+certified affine path plus a residual converging to zero, and expanded log
+slopes equal their certified affine path plus a sum-zero residual converging
+to zero, the strict source inequalities persist and the analytic boundary
+likelihood is unchanged. Production slope-only and joint-pair certificates
+and a direct `(3,-1,-2)` curved construction pass this rule. The scope cannot
+be widened to arbitrary bounded residuals: a zero-rate slope with a
+nonvanishing oscillatory residual yields two different subsequential limits in
+an explicit three-category construction. P1y is therefore positive-only;
+negative constant-rate completion does not exclude curved boundaries. General
+nonvanishing-residual hierarchies, rate-nonconvergent paths, broader topology
+and category stress, MML geometry, inference, and FACETS equivalence remain
+open or unchanged.
+
+P1z now gives the remaining rate-nonconvergence question a finite-dimensional
+compactification without claiming a likelihood result. Every unbounded
+identified JML parameter sequence has a subsequence whose normalized free-
+additive and expanded sum-zero log-slope displacement converges. A nonzero
+limiting log-slope direction has one finite positive, zero, leading-negative,
+and deeper-negative primary role pattern; at three slope levels there are 18
+patterns, six containing a zero primary rate, and 12 beyond the ordered pairs.
+An alternating two-direction construction verifies that the full normalized
+sequence need not converge. A separate
+`t(1,-1,0) + sqrt(t)(-0.5,-0.5,1)` construction shows why the compactification
+does not complete the boundary problem: the zero primary-rate coordinate can
+carry a divergent slower scale. Thus the primary role partition is complete
+as a structural enumeration, but secondary hierarchies, arbitrary
+nonvanishing residuals, likelihood agreement across accumulation directions,
+general curved paths, global boundary absence, MML geometry, inference,
+FACETS equivalence, recovery, and promotion remain open or unchanged.
+
+P2a now resolves the finite-coordinate part of the zero-primary-rate gap. For
+a declared lexicographically ordered family of expanded sum-zero log-slope
+coefficients, each stage acts only on levels which were zero at every faster
+stage. The first nonzero stage resolves at least two levels and every later
+stage at least one, so `J` slope levels require at most `J-1` nonzero stages.
+The sum-zero constraint remains global at every stage; its restriction to the
+still-active levels need not sum to zero because slower compensation can occur
+in levels already resolved at a faster scale. A five-level construction attains
+the `J-1` bound. A separate three-level construction proves why this finite
+depth is not a likelihood theorem: the common primary rate `(1,-1,0)` followed
+by opposite secondary directions sends the third slope to infinity versus
+zero, producing binary top-category log-probability limits `0` and `-log(2)`.
+Actual path-scale extraction, additive-coordinate hierarchies, ties and bounded
+remainders, agreement across accumulation subsequences, general boundary
+classification, MML geometry, inference, FACETS equivalence, recovery, and
+promotion therefore remain open or unchanged.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

@@ -1,23 +1,29 @@
 # JML GPCM joint additive/log-slope boundary-path audit
 # ==============================================================================
 #
-# This audit certifies a deliberately bounded family of nonlinear paths.  For
-# an ordered pair of slope levels, expanded log slopes move at rates +1 and -1
-# while all remaining expanded log slopes stay fixed.  The free additive
-# coordinates move linearly along a constrained direction d.  If
+# This audit certifies a workload-bounded family of nonlinear paths. Expanded
+# log slopes use constant sum-zero rates. Any nonzero rate vector with a
+# strictly favorable leading negative tier has a canonical representative:
+# positive-rate levels, zero-rate levels, a leading negative group at -1, and
+# an unconstrained deeper negative group at -2. Positive rates are equal and
+# chosen to make the expanded rates sum to zero. Existing ordered +1/-1 pairs
+# are exact special cases. The free additive coordinates move linearly along a
+# constrained direction d. If
 #
 # * every positive-rate observation uniquely favors its observed category in
 #   the cumulative additive direction,
 # * every zero-rate observation weakly favors its observed category, and
-# * the negative-rate observations have a strictly favorable aggregate
-#   leading term as their slope tends to zero,
+# * the leading-negative observations have a strictly favorable aggregate
+#   term as their slopes tend to zero,
 #
 # then the likelihood derivative is positive on an asymptotic tail.  A path is
 # retained as a competitive boundary candidate only when its analytic boundary
 # likelihood is no worse than the retained likelihood.  These sufficient
-# conditions detect joint paths missed by both additive-only and slope-only
-# audits.  Failure to certify this path family is not evidence of a finite MLE,
-# and a positive candidate is not a global nonlinear identification proof.
+# Deeper negative groups vanish faster and require no directional inequality.
+# These conditions detect joint paths missed by additive-only, slope-only, and
+# pair-only audits. Failure to certify this family is not evidence of a finite
+# MLE, and a positive candidate is not a global identification proof. Curved
+# or rate-nonconvergent paths remain outside the audit.
 
 mfrmr_jml_gpcm_joint_empty_pair_table <- function() {
   data.frame(
@@ -71,6 +77,76 @@ mfrmr_jml_gpcm_joint_empty_loading_table <- function() {
   )
 }
 
+mfrmr_jml_gpcm_joint_empty_rate_table <- function() {
+  data.frame(
+    RateId = character(0),
+    PositiveLevels = character(0),
+    ZeroLevels = character(0),
+    LeadingNegativeLevels = character(0),
+    DeeperNegativeLevels = character(0),
+    ExpandedRates = character(0),
+    SolverStatus = integer(0),
+    MarginCapacity = numeric(0),
+    PositiveMinimumMargin = numeric(0),
+    ZeroMinimumMargin = numeric(0),
+    LeadingNegativeCoefficient = numeric(0),
+    AdditiveDirectionL1 = numeric(0),
+    CurrentLogLikelihood = numeric(0),
+    BoundaryLogLikelihood = numeric(0),
+    BoundaryImprovement = numeric(0),
+    AnalyticTailCertified = logical(0),
+    CompetitiveBoundary = logical(0),
+    Certified = logical(0),
+    EvaluationState = character(0),
+    ReasonCodes = character(0),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_jml_gpcm_joint_rate_candidate_count <- function(n_levels) {
+  n_levels <- as.integer(n_levels)
+  if (!is.finite(n_levels) || n_levels < 2L) return(0)
+  as.double(4^n_levels - 2 * 3^n_levels + 2^n_levels)
+}
+
+mfrmr_jml_gpcm_joint_rate_candidates <- function(n_levels) {
+  n_levels <- as.integer(n_levels)
+  if (!is.finite(n_levels) || n_levels < 2L) return(list())
+  assignments <- expand.grid(
+    rep(list(c(1L, 0L, -1L, -2L)), n_levels),
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  assignments <- as.matrix(assignments)
+  keep <- rowSums(assignments == 1L) > 0L &
+    rowSums(assignments == -1L) > 0L
+  assignments <- assignments[keep, , drop = FALSE]
+  pair <- rowSums(assignments == 1L) == 1L &
+    rowSums(assignments == -1L) == 1L &
+    rowSums(assignments == -2L) == 0L
+  assignments <- assignments[!pair, , drop = FALSE]
+  lapply(seq_len(nrow(assignments)), function(index) {
+    assignment <- as.integer(assignments[index, ])
+    positive <- which(assignment == 1L)
+    zero <- which(assignment == 0L)
+    leading_negative <- which(assignment == -1L)
+    deeper_negative <- which(assignment == -2L)
+    rates <- numeric(n_levels)
+    rates[positive] <-
+      (length(leading_negative) + 2 * length(deeper_negative)) /
+      length(positive)
+    rates[leading_negative] <- -1
+    rates[deeper_negative] <- -2
+    list(
+      positive = positive,
+      zero = zero,
+      leading_negative = leading_negative,
+      deeper_negative = deeper_negative,
+      rates = rates
+    )
+  })
+}
+
 mfrmr_jml_gpcm_joint_targets <- function(levels, slope_facet,
                                           positive = NULL,
                                           negative = NULL,
@@ -102,14 +178,15 @@ mfrmr_jml_gpcm_joint_targets <- function(levels, slope_facet,
   )
 }
 
-mfrmr_jml_gpcm_joint_pair_lp <- function(
+mfrmr_jml_gpcm_joint_rate_lp <- function(
     contrast,
     contrast_observation,
     slope_index,
     weight,
     n_categories,
-    positive_index,
-    negative_index,
+    positive_indices,
+    zero_indices,
+    leading_negative_indices,
     max_lp_nonzeros,
     lp_timeout,
     certificate_tolerance) {
@@ -118,15 +195,15 @@ mfrmr_jml_gpcm_joint_pair_lp <- function(
   n_parameters <- ncol(contrast)
   effective_contrast <- weight[contrast_observation] > 0
   positive_rows <- which(
-    effective_contrast & slope_index[contrast_observation] == positive_index
+    effective_contrast &
+      slope_index[contrast_observation] %in% positive_indices
   )
   negative_rows <- which(
-    effective_contrast & slope_index[contrast_observation] == negative_index
+    effective_contrast &
+      slope_index[contrast_observation] %in% leading_negative_indices
   )
   neutral_rows <- which(
-    effective_contrast &
-      !slope_index[contrast_observation] %in%
-        c(positive_index, negative_index)
+    effective_contrast & slope_index[contrast_observation] %in% zero_indices
   )
   empty_result <- list(
     evaluated = TRUE,
@@ -144,7 +221,8 @@ mfrmr_jml_gpcm_joint_pair_lp <- function(
     reason = "not_evaluated"
   )
   if (length(positive_rows) == 0L || length(negative_rows) == 0L) {
-    empty_result$reason <- "slope_pair_lacks_positive_weight_support"
+    empty_result$reason <-
+      "joint_rate_lacks_positive_and_leading_negative_support"
     return(empty_result)
   }
 
@@ -207,7 +285,7 @@ mfrmr_jml_gpcm_joint_pair_lp <- function(
   empty_result$lp_nonzeros <- as.double(nrow(triplet))
   if (nrow(triplet) > max_lp_nonzeros) {
     empty_result$evaluated <- FALSE
-    empty_result$reason <- "joint_pair_lp_nonzero_limit"
+    empty_result$reason <- "joint_rate_lp_nonzero_limit"
     return(empty_result)
   }
 
@@ -236,7 +314,7 @@ mfrmr_jml_gpcm_joint_pair_lp <- function(
     } else {
       as.integer(fit$status)
     }
-    empty_result$reason <- "joint_pair_linear_program_failed"
+    empty_result$reason <- "joint_rate_linear_program_failed"
     return(empty_result)
   }
 
@@ -281,22 +359,65 @@ mfrmr_jml_gpcm_joint_pair_lp <- function(
     lp_variables = as.integer(n_variables),
     lp_nonzeros = as.double(nrow(triplet)),
     reason = if (isTRUE(certified)) {
-      "certified_joint_pair_asymptotic_tail"
+      "certified_joint_constant_rate_asymptotic_tail"
     } else {
-      "joint_pair_failed_postsolve_certificate"
+      "joint_rate_failed_postsolve_certificate"
     }
   )
 }
 
-mfrmr_jml_gpcm_joint_boundary_limit <- function(
+mfrmr_jml_gpcm_joint_pair_lp <- function(
+    contrast,
+    contrast_observation,
+    slope_index,
+    weight,
+    n_categories,
+    positive_index,
+    negative_index,
+    max_lp_nonzeros,
+    lp_timeout,
+    certificate_tolerance) {
+  out <- mfrmr_jml_gpcm_joint_rate_lp(
+    contrast = contrast,
+    contrast_observation = contrast_observation,
+    slope_index = slope_index,
+    weight = weight,
+    n_categories = n_categories,
+    positive_indices = positive_index,
+    zero_indices = setdiff(
+      seq_len(max(slope_index)), c(positive_index, negative_index)
+    ),
+    leading_negative_indices = negative_index,
+    max_lp_nonzeros = max_lp_nonzeros,
+    lp_timeout = lp_timeout,
+    certificate_tolerance = certificate_tolerance
+  )
+  reason_map <- c(
+    joint_rate_lacks_positive_and_leading_negative_support =
+      "slope_pair_lacks_positive_weight_support",
+    joint_rate_lp_nonzero_limit = "joint_pair_lp_nonzero_limit",
+    joint_rate_linear_program_failed = "joint_pair_linear_program_failed",
+    certified_joint_constant_rate_asymptotic_tail =
+      "certified_joint_pair_asymptotic_tail",
+    joint_rate_failed_postsolve_certificate =
+      "joint_pair_failed_postsolve_certificate"
+  )
+  if (out$reason %in% names(reason_map)) {
+    out$reason <- unname(reason_map[[out$reason]])
+  }
+  out
+}
+
+mfrmr_jml_gpcm_joint_rate_boundary_limit <- function(
     utilities,
     category_direction,
     score_k,
     slope_index,
     slopes,
     weight,
-    positive_index,
-    negative_index,
+    positive_indices,
+    zero_indices,
+    negative_indices,
     tolerance) {
   n_obs <- nrow(utilities)
   n_categories <- ncol(utilities)
@@ -306,11 +427,11 @@ mfrmr_jml_gpcm_joint_boundary_limit <- function(
     if (weight[observation] <= 0) next
     group <- slope_index[observation]
     observed <- score_k[observation] + 1L
-    if (group == positive_index) {
+    if (group %in% positive_indices) {
       row_limit[observation] <- 0
-    } else if (group == negative_index) {
+    } else if (group %in% negative_indices) {
       row_limit[observation] <- -log(n_categories)
-    } else {
+    } else if (group %in% zero_indices) {
       maximum <- max(category_direction[observation, ])
       top <- which(
         category_direction[observation, ] >= maximum - tolerance
@@ -325,6 +446,9 @@ mfrmr_jml_gpcm_joint_boundary_limit <- function(
       denominator <- scaled_max + log(sum(exp(scaled - scaled_max)))
       row_limit[observation] <-
         slopes[group] * utilities[observation, observed] - denominator
+    } else {
+      valid <- FALSE
+      row_limit[observation] <- NA_real_
     }
   }
   list(
@@ -335,6 +459,32 @@ mfrmr_jml_gpcm_joint_boundary_limit <- function(
     } else {
       NA_real_
     }
+  )
+}
+
+mfrmr_jml_gpcm_joint_boundary_limit <- function(
+    utilities,
+    category_direction,
+    score_k,
+    slope_index,
+    slopes,
+    weight,
+    positive_index,
+    negative_index,
+    tolerance) {
+  mfrmr_jml_gpcm_joint_rate_boundary_limit(
+    utilities = utilities,
+    category_direction = category_direction,
+    score_k = score_k,
+    slope_index = slope_index,
+    slopes = slopes,
+    weight = weight,
+    positive_indices = positive_index,
+    zero_indices = setdiff(
+      seq_along(slopes), c(positive_index, negative_index)
+    ),
+    negative_indices = negative_index,
+    tolerance = tolerance
   )
 }
 
@@ -351,18 +501,25 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
     max_lp_nonzeros = 2e6,
     lp_timeout = 2L,
     certificate_tolerance = 1e-7,
-    likelihood_tolerance = 1e-8) {
+    likelihood_tolerance = 1e-8,
+    max_rate_candidates = 1000L) {
   method <- as.character(config$method %||% NA_character_)
   model <- as.character(config$model %||% NA_character_)
   slope_facet <- as.character(config$slope_facet %||% NA_character_)
   empty_pairs <- mfrmr_jml_gpcm_joint_empty_pair_table()
   empty_targets <- mfrmr_jml_gpcm_joint_empty_target_table()
   empty_loadings <- mfrmr_jml_gpcm_joint_empty_loading_table()
+  empty_rates <- mfrmr_jml_gpcm_joint_empty_rate_table()
 
   finish <- function(state, complete, scope_complete, detail,
                      target_status = empty_targets,
                      certificates = empty_pairs,
                      direction_loadings = empty_loadings,
+                     rate_certificates = empty_rates,
+                     rate_direction_loadings = empty_loadings,
+                     rate_scope_state = "not_evaluated",
+                     rate_scope_complete = FALSE,
+                     positive_certificate_present = FALSE,
                      dimensions = data.frame(),
                      retained_log_likelihood = NA_real_,
                      optimizer_log_likelihood = NA_real_,
@@ -372,8 +529,8 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
       method = method,
       model = model,
       scope = paste(
-        "JML GPCM ordered two-slope joint linear-additive and",
-        "constant-log-slope asymptotic paths"
+        "JML GPCM joint linear-additive paths with canonical constant",
+        "sum-zero log-slope rate vectors"
       ),
       state = state,
       complete = isTRUE(complete),
@@ -382,19 +539,26 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
       target_status = target_status,
       certificates = certificates,
       direction_loadings = direction_loadings,
+      rate_certificates = rate_certificates,
+      rate_direction_loadings = rate_direction_loadings,
+      rate_scope_state = rate_scope_state,
+      rate_scope_complete = isTRUE(rate_scope_complete),
+      positive_certificate_present =
+        isTRUE(positive_certificate_present),
       dimensions = dimensions,
       retained_log_likelihood = as.numeric(retained_log_likelihood),
       optimizer_log_likelihood = as.numeric(optimizer_log_likelihood),
       likelihood_difference = as.numeric(likelihood_difference),
       detail = detail,
       limitations = paste(
-        "This is a sufficient certificate for ordered pair paths with",
-        "linear additive movement and constant expanded log-slope rates",
-        "+1 and -1. A positive competitive path is a boundary candidate,",
-        "not a proof that no better finite maximum exists in the globally",
-        "non-concave GPCM likelihood. A negative result does not establish",
-        "finite slopes or nonlinear structural identification. MML requires",
-        "a separate marginal-likelihood argument."
+        "The finite candidate family covers constant expanded log-slope",
+        "rates through positive, zero, leading-negative, and deeper-negative",
+        "groups; the existing +1/-1 pair paths are exact special cases.",
+        "It does not cover curved paths or paths without a limiting rate",
+        "vector. A positive competitive path is a boundary candidate, not a",
+        "proof of global behavior for the non-concave GPCM likelihood. A completed",
+        "negative result does not establish a finite maximum or nonlinear",
+        "structural identification. MML requires a separate argument."
       )
     )
   }
@@ -424,10 +588,13 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
   n_categories <- as.integer(config$n_cat %||% 0L)
   n_steps <- max(n_categories - 1L, 0L)
   n_pairs <- as.double(n_levels) * as.double(max(n_levels - 1L, 0L))
+  n_rate_candidates <-
+    mfrmr_jml_gpcm_joint_rate_candidate_count(n_levels)
+  n_additional_rate_candidates <- max(n_rate_candidates - n_pairs, 0)
   controls <- list(
     max_observations, max_contrast_rows, max_additive_coordinates,
     max_direction_pairs, max_lp_nonzeros, lp_timeout,
-    certificate_tolerance, likelihood_tolerance
+    certificate_tolerance, likelihood_tolerance, max_rate_candidates
   )
   valid_controls <- all(vapply(controls, function(value) {
     length(value) == 1L && !is.na(value) && is.finite(value) && value >= 0
@@ -487,8 +654,12 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
     AdditiveFreeCoordinates = as.integer(additive_coordinates),
     SlopeLevels = as.integer(n_levels),
     OrderedDirectionPairs = as.double(n_pairs),
+    CanonicalRateCandidates = as.double(n_rate_candidates),
+    AdditionalRateCandidates = as.double(n_additional_rate_candidates),
     EvaluatedPairs = 0L,
     CertifiedPairs = 0L,
+    EvaluatedRateCandidates = 0L,
+    CertifiedRateCandidates = 0L,
     MaximumLPVariables = 0L,
     MaximumLPConstraints = 0L,
     MaximumLPNonzeros = 0,
@@ -747,10 +918,157 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
     ))
   }
 
+  rate_certificates <- empty_rates
+  rate_directions <- list()
+  rate_scope_complete <- TRUE
+  rate_scope_state <- "no_additional_rate_candidates"
+  if (n_additional_rate_candidates > max_rate_candidates) {
+    rate_scope_complete <- FALSE
+    rate_scope_state <- "not_evaluated_size_limit"
+  } else if (n_additional_rate_candidates > 0) {
+    rate_candidates <- mfrmr_jml_gpcm_joint_rate_candidates(n_levels)
+    rate_rows <- vector("list", length(rate_candidates))
+    rate_directions <- vector("list", length(rate_candidates))
+    for (rate_position in seq_along(rate_candidates)) {
+      candidate <- rate_candidates[[rate_position]]
+      solved <- mfrmr_jml_gpcm_joint_rate_lp(
+        contrast = contrast,
+        contrast_observation = contrast_observation,
+        slope_index = slope_index,
+        weight = weight,
+        n_categories = n_categories,
+        positive_indices = candidate$positive,
+        zero_indices = candidate$zero,
+        leading_negative_indices = candidate$leading_negative,
+        max_lp_nonzeros = max_lp_nonzeros,
+        lp_timeout = lp_timeout,
+        certificate_tolerance = certificate_tolerance
+      )
+      dimensions$MaximumLPVariables <- max(
+        dimensions$MaximumLPVariables, solved$lp_variables
+      )
+      dimensions$MaximumLPConstraints <- max(
+        dimensions$MaximumLPConstraints, solved$lp_constraints
+      )
+      dimensions$MaximumLPNonzeros <- max(
+        dimensions$MaximumLPNonzeros, solved$lp_nonzeros
+      )
+      boundary <- list(valid = FALSE, log_likelihood = NA_real_)
+      if (isTRUE(solved$certified)) {
+        adjacent_direction <- matrix(
+          as.numeric(adjacent$design %*% solved$direction),
+          nrow = n_observations, ncol = n_steps
+        )
+        category_direction <- matrix(
+          0, nrow = n_observations, ncol = n_categories
+        )
+        for (transition in seq_len(n_steps)) {
+          category_direction[, transition + 1L] <-
+            category_direction[, transition] +
+            adjacent_direction[, transition]
+        }
+        boundary <- mfrmr_jml_gpcm_joint_rate_boundary_limit(
+          utilities = utilities,
+          category_direction = category_direction,
+          score_k = score_k,
+          slope_index = slope_index,
+          slopes = params$slopes,
+          weight = weight,
+          positive_indices = candidate$positive,
+          zero_indices = candidate$zero,
+          negative_indices = c(
+            candidate$leading_negative, candidate$deeper_negative
+          ),
+          tolerance = certificate_tolerance
+        )
+      }
+      improvement <- boundary$log_likelihood - retained_log_likelihood
+      competitive <- isTRUE(boundary$valid) && is.finite(improvement) &&
+        improvement >= -likelihood_tolerance * likelihood_scale
+      certified <- isTRUE(solved$certified) && isTRUE(competitive)
+      reason <- if (isTRUE(certified)) {
+        "certified_competitive_joint_constant_rate_boundary_candidate"
+      } else if (isTRUE(solved$certified)) {
+        "joint_constant_rate_boundary_not_competitive_with_retained_fit"
+      } else {
+        solved$reason
+      }
+      collapse_levels <- function(indices) {
+        if (length(indices) == 0L) "" else paste(levels[indices], collapse = ";")
+      }
+      rate_rows[[rate_position]] <- data.frame(
+        RateId = sprintf("JR%05d", rate_position),
+        PositiveLevels = collapse_levels(candidate$positive),
+        ZeroLevels = collapse_levels(candidate$zero),
+        LeadingNegativeLevels =
+          collapse_levels(candidate$leading_negative),
+        DeeperNegativeLevels = collapse_levels(candidate$deeper_negative),
+        ExpandedRates = paste(
+          formatC(candidate$rates, digits = 16L, format = "fg"),
+          collapse = ";"
+        ),
+        SolverStatus = as.integer(solved$solver_status),
+        MarginCapacity = as.numeric(solved$margin_capacity),
+        PositiveMinimumMargin =
+          as.numeric(solved$positive_minimum_margin),
+        ZeroMinimumMargin = as.numeric(solved$neutral_minimum_margin),
+        LeadingNegativeCoefficient =
+          as.numeric(solved$negative_leading_coefficient),
+        AdditiveDirectionL1 = as.numeric(solved$direction_l1),
+        CurrentLogLikelihood = retained_log_likelihood,
+        BoundaryLogLikelihood = as.numeric(boundary$log_likelihood),
+        BoundaryImprovement = as.numeric(improvement),
+        AnalyticTailCertified = isTRUE(solved$certified),
+        CompetitiveBoundary = isTRUE(competitive),
+        Certified = isTRUE(certified),
+        EvaluationState = if (isTRUE(solved$evaluated)) {
+          "evaluated"
+        } else {
+          "not_evaluated"
+        },
+        ReasonCodes = reason,
+        stringsAsFactors = FALSE
+      )
+      rate_directions[[rate_position]] <- solved$direction
+    }
+    rate_certificates <- do.call(rbind, rate_rows)
+    rate_evaluated <- rate_certificates$EvaluationState == "evaluated"
+    dimensions$EvaluatedRateCandidates <- sum(rate_evaluated)
+    dimensions$CertifiedRateCandidates <-
+      sum(rate_certificates$Certified)
+    rate_scope_complete <- all(rate_evaluated)
+    rate_scope_state <- if (!rate_scope_complete) {
+      "not_evaluated_rate_solver"
+    } else if (any(rate_certificates$Certified)) {
+      "certified_competitive_constant_rate_boundary_path"
+    } else {
+      "none_certified"
+    }
+  }
+
+  rate_certified_rows <- which(rate_certificates$Certified)
+  split_levels <- function(values) {
+    values <- as.character(values)
+    unlist(strsplit(values[nzchar(values)], ";", fixed = TRUE),
+           use.names = FALSE)
+  }
+  rate_positive_levels <- split_levels(
+    rate_certificates$PositiveLevels[rate_certified_rows]
+  )
+  rate_negative_levels <- c(
+    split_levels(
+      rate_certificates$LeadingNegativeLevels[rate_certified_rows]
+    ),
+    split_levels(
+      rate_certificates$DeeperNegativeLevels[rate_certified_rows]
+    )
+  )
   positive <- seq_len(n_levels) %in%
-    certificates$PositiveIndex[certified_rows]
+    certificates$PositiveIndex[certified_rows] |
+    levels %in% rate_positive_levels
   negative <- seq_len(n_levels) %in%
-    certificates$NegativeIndex[certified_rows]
+    certificates$NegativeIndex[certified_rows] |
+    levels %in% rate_negative_levels
   targets <- mfrmr_jml_gpcm_joint_targets(
     levels, slope_facet, positive = positive, negative = negative
   )
@@ -758,7 +1076,9 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
   slices <- build_param_slices(sizes)
   optimizer_log_slope_index <- as.integer(slices$log_slopes %||% integer(0))
   loading_rows <- list()
+  rate_loading_rows <- list()
   loading_cursor <- 0L
+  rate_loading_cursor <- 0L
   for (certificate_row in certified_rows) {
     pair <- certificates[certificate_row, , drop = FALSE]
     direction <- pair_directions[[certificate_row]]
@@ -804,35 +1124,114 @@ audit_mfrm_jml_gpcm_joint_boundary <- function(
       )
     }
   }
+  for (certificate_row in rate_certified_rows) {
+    rate <- rate_certificates[certificate_row, , drop = FALSE]
+    candidate <- rate_candidates[[certificate_row]]
+    direction <- rate_directions[[certificate_row]]
+    candidate_rows <- list()
+    candidate_cursor <- 0L
+    additive_keep <- which(abs(direction) > certificate_tolerance)
+    if (length(additive_keep) > 0L) {
+      candidate_cursor <- candidate_cursor + 1L
+      candidate_rows[[candidate_cursor]] <- data.frame(
+        PairId = rate$RateId,
+        CoordinateType = "optimizer_additive",
+        OptimizerIndex = optimizer_index[additive_keep],
+        Coordinate = as.character(adjacent$map$Coordinate[additive_keep]),
+        Level = as.character(adjacent$map$Level[additive_keep]),
+        Loading = direction[additive_keep],
+        stringsAsFactors = FALSE
+      )
+    }
+    expanded_keep <- which(candidate$rates != 0)
+    candidate_cursor <- candidate_cursor + 1L
+    candidate_rows[[candidate_cursor]] <- data.frame(
+      PairId = rate$RateId,
+      CoordinateType = "expanded_log_slope",
+      OptimizerIndex = rep(NA_integer_, length(expanded_keep)),
+      Coordinate = paste0("expanded_log_slope:", levels[expanded_keep]),
+      Level = levels[expanded_keep],
+      Loading = candidate$rates[expanded_keep],
+      stringsAsFactors = FALSE
+    )
+    free_direction <- candidate$rates[seq_len(n_levels - 1L)]
+    free_keep <- which(free_direction != 0)
+    if (length(free_keep) > 0L) {
+      candidate_cursor <- candidate_cursor + 1L
+      candidate_rows[[candidate_cursor]] <- data.frame(
+        PairId = rate$RateId,
+        CoordinateType = "optimizer_log_slope",
+        OptimizerIndex = optimizer_log_slope_index[free_keep],
+        Coordinate = paste0("log_slopes:", levels[free_keep]),
+        Level = levels[free_keep],
+        Loading = free_direction[free_keep],
+        stringsAsFactors = FALSE
+      )
+    }
+    candidate_loading <- do.call(rbind, candidate_rows)
+    rate_loading_cursor <- rate_loading_cursor + 1L
+    rate_loading_rows[[rate_loading_cursor]] <- candidate_loading
+    loading_cursor <- loading_cursor + 1L
+    loading_rows[[loading_cursor]] <- candidate_loading
+  }
   direction_loadings <- if (length(loading_rows) > 0L) {
     do.call(rbind, loading_rows)
   } else {
     empty_loadings
   }
+  rate_direction_loadings <- if (length(rate_loading_rows) > 0L) {
+    do.call(rbind, rate_loading_rows)
+  } else {
+    empty_loadings
+  }
+
+  positive_count <- length(certified_rows) + length(rate_certified_rows)
+  overall_complete <- isTRUE(rate_scope_complete)
+  state <- if (positive_count > 0L) {
+    "certified_competitive_joint_boundary_path"
+  } else if (!overall_complete) {
+    if (identical(rate_scope_state, "not_evaluated_size_limit")) {
+      "not_evaluated_rate_size_limit"
+    } else {
+      "not_evaluated_rate_solver"
+    }
+  } else {
+    "none_certified"
+  }
 
   finish(
-    state = if (length(certified_rows) > 0L) {
-      "certified_competitive_joint_boundary_path"
-    } else {
-      "none_certified"
-    },
-    complete = TRUE,
-    scope_complete = TRUE,
-    detail = if (length(certified_rows) > 0L) {
+    state = state,
+    complete = overall_complete,
+    scope_complete = overall_complete,
+    detail = if (positive_count > 0L) {
       paste0(
         "Certified ", length(certified_rows), " of ", nrow(certificates),
-        " ordered slope pairs as competitive joint nonlinear asymptotic",
-        " boundary candidates."
+        " ordered slope pairs and ", length(rate_certified_rows), " of ",
+        nrow(rate_certificates), " additional canonical constant-rate",
+        " paths as competitive joint nonlinear boundary candidates."
+      )
+    } else if (!overall_complete) {
+      paste0(
+        "The ordered slope-pair family completed without a certificate, but",
+        " the additional canonical constant-rate family was not completed",
+        " (state: ", rate_scope_state, ")."
       )
     } else {
       paste0(
         "No competitive path was certified among ", nrow(certificates),
-        " ordered joint additive/log-slope pairs."
+        " ordered joint additive/log-slope pairs or ",
+        nrow(rate_certificates),
+        " additional canonical constant-rate paths."
       )
     },
     target_status = targets,
     certificates = certificates,
     direction_loadings = direction_loadings,
+    rate_certificates = rate_certificates,
+    rate_direction_loadings = rate_direction_loadings,
+    rate_scope_state = rate_scope_state,
+    rate_scope_complete = rate_scope_complete,
+    positive_certificate_present = positive_count > 0L,
     dimensions = dimensions,
     retained_log_likelihood = retained_log_likelihood,
     optimizer_log_likelihood = optimizer_log_likelihood,

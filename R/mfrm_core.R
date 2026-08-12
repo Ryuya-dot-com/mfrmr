@@ -4219,6 +4219,47 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   phase_finish("gpcm_joint_boundary_audit", phase_started, "GPCM joint additive-slope boundary directions")
 
+  boundary_audit$gpcm_fixed_objective_classification <-
+    mfrmr_classify_jml_gpcm_fixed_objective_boundary(
+      config = config,
+      slope_audit = boundary_audit$gpcm_slope_boundary,
+      joint_audit = boundary_audit$gpcm_joint_boundary
+    )
+  boundary_audit$gpcm_asymptotically_affine_transport <-
+    audit_mfrm_jml_gpcm_asymptotically_affine_transport(
+      config = config,
+      slope_audit = boundary_audit$gpcm_slope_boundary,
+      joint_audit = boundary_audit$gpcm_joint_boundary,
+      boundary_classification =
+        boundary_audit$gpcm_fixed_objective_classification
+    )
+  boundary_audit$gpcm_boundary_compactification <-
+    audit_mfrm_jml_gpcm_boundary_compactification(
+      config = config,
+      sizes = sizes,
+      boundary_classification =
+        boundary_audit$gpcm_fixed_objective_classification,
+      affine_transport =
+        boundary_audit$gpcm_asymptotically_affine_transport
+    )
+  boundary_audit$gpcm_rate_hierarchy <-
+    audit_mfrm_jml_gpcm_rate_hierarchy_scope(
+      config = config,
+      sizes = sizes,
+      compactification =
+        boundary_audit$gpcm_boundary_compactification
+    )
+  boundary_audit$gpcm_terminal_gradient_stability <-
+    audit_mfrm_jml_gpcm_terminal_gradient(
+      idx = idx,
+      config = config,
+      sizes = sizes,
+      par = opt$par,
+      opt = opt,
+      boundary_classification =
+        boundary_audit$gpcm_fixed_objective_classification
+    )
+
   phase_started <- phase_clock()
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
   config$boundary_audit <- boundary_audit

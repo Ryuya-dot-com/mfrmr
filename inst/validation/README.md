@@ -267,6 +267,46 @@ identify whether the opt-in layer ran and retain its test log.
   the MML observed-pattern sufficient subset certificate, and exhaustive MML
   fallback from global identification, weak information, boundary, and
   readiness claims. The admitted P1s fits are not rerun or reclassified.
+- `gpcm-jml-fixed-objective-boundary-classification-p1v-record-0.2.3.md`:
+  implementation and decision record for the JML-GPCM boundary classifier. It
+  combines slope-only recession and competitive joint-boundary results under
+  the exact unpenalized no-box JML objective, distinguishes finite optimizer
+  traces from finite maxima, and keeps negative, numerical, workload,
+  unit-slope, PJML, finite-box, and MML states separate.
+- `gpcm-jml-terminal-gradient-stability-p1w-record-0.2.3.md`: implementation
+  and decision record for the fixed-objective JML-GPCM terminal-gradient
+  audit. It reconciles the retained objective, analytic and selected numeric
+  score coordinates, optimizer/polish diagnostics, and parameter-block norms;
+  makes certified boundary paths primary; and limits negative cases to local
+  retained-point first-order evidence without freezing a scientific threshold
+  or changing readiness, inference, recovery, or FACETS comparison status.
+- `gpcm-jml-general-rate-boundary-p1x-record-0.2.3.md`: derivation,
+  implementation, and decision record for the canonical constant-rate
+  extension of the joint JML-GPCM boundary audit. It proves the finite
+  positive/zero/leading-negative/deeper-negative partition, retains the
+  ordered-pair reduction, supplies a pair-negative/general-positive direct
+  likelihood example, and keeps workload, curved-path, MML, inference,
+  recovery, and FACETS boundaries fail-closed.
+- `gpcm-jml-asymptotically-affine-transport-p1y-record-0.2.3.md`: positive-
+  only theorem, production implementation, and counterexample record for
+  carrying certified constant-rate JML-GPCM boundaries to curved paths with
+  vanishing additive and sum-zero log-slope residuals. A zero-rate oscillation
+  proves that bounded nonvanishing residuals cannot share this conclusion;
+  negative curved-path, MML, inference, and FACETS claims remain false.
+- `gpcm-jml-boundary-compactification-p1z-record-0.2.3.md`: structural theorem,
+  production audit, and direct construction record for reducing arbitrary
+  unbounded finite-dimensional JML-GPCM parameter sequences to convergent
+  normalized subsequences and finite primary P/Z/L/D slope-role patterns. It
+  separately demonstrates an unresolved divergent secondary scale inside a
+  zero primary-rate coordinate and therefore makes no global boundary,
+  curved-path, MML, inference, readiness, or FACETS claim.
+- `gpcm-jml-rate-hierarchy-p2a-record-0.2.3.md`: finite-depth lexicographic
+  decomposition of declared expanded sum-zero log-slope rate stages. It proves
+  the sharp `J-1` slope-coordinate depth bound, verifies that slower
+  active-coordinate restrictions need not themselves sum to zero, and gives
+  two common-primary paths with different secondary slope roles and likelihood
+  limits. Additive hierarchies, arbitrary-path likelihood classification,
+  MML, inference, readiness, and FACETS claims remain false or open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
@@ -442,6 +482,15 @@ identify whether the opt-in layer ran and retain its test log.
   unpenalized identified mfrmr JML, Wijayanto penalized JML, and finite-box
   JML, estimator-specific slope-scale qualification, DFF/fit/sparse-data
   implications, and recent literature.
+- `facets-gpcm-jml-comparison-role-contract-0.2.3.R`: deterministic no-fit
+  registry of seven estimator identities and eight comparison lanes. It makes
+  FACETS PCM/JMLE the only direct common-estimand FACETS route, keeps Table 7
+  discrimination diagnostic-only, and separates truth recovery, unit-slope
+  reduction, extreme-status, PJML, finite-box JML, and MML sensitivities.
+- `facets-gpcm-jml-comparison-role-contract-record-0.2.3.md`: source and
+  decision record for that role contract. It binds the contract and focused
+  tests while retaining zero external fits, no tolerance, and no GPCM
+  promotion, simulation, or confirmation authority.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,

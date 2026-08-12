@@ -61,6 +61,8 @@ gpcm_slope_boundary_problem <- function(fit) {
 test_that("GPCM slope-only monotone boundary path is certified", {
   fit <- fit_gpcm_slope_boundary_fixture()
   audit <- fit$config$boundary_audit$gpcm_slope_boundary
+  classified <-
+    fit$config$boundary_audit$gpcm_fixed_objective_classification
 
   expect_identical(audit$state, "certified_monotone_boundary_path")
   expect_true(isTRUE(audit$complete))
@@ -124,6 +126,11 @@ test_that("GPCM slope-only monotone boundary path is certified", {
     "jml_gpcm_joint_boundary_not_evaluated",
     fixed = TRUE
   )
+  expect_identical(classified$state, "certified_slope_only_recession")
+  expect_true(classified$slope_only_recession_certified)
+  expect_true(classified$retained_point_finite)
+  expect_false(classified$global_finite_maximum_certified)
+  expect_identical(classified$readiness_effect, "none_diagnostic_only")
 })
 
 test_that("GPCM slope certificate agrees with an objective path oracle", {

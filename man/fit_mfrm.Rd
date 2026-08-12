@@ -328,11 +328,59 @@ the finite optimizer values for compatibility and numerical diagnosis;
 Read \code{ParameterStatus}, \code{PrimaryLogEstimate}, \code{PrimaryEstimate},
 \code{SEEligible}, \code{CIEligible}, and \code{ReasonCodes} before interpretation. A
 certified JML slope-only path receives a typed extended-real primary
-boundary. A separate bounded check can identify a competitive path in
-which additive coordinates and a pair of log slopes move together. That
-stronger warning remains \code{not_evaluated}, with no primary value, because
-it is not a global result for the non-concave GPCM likelihood. Failure to
-find either path is likewise not promoted to a finite joint-GPCM claim.
+boundary. A separate workload-bounded check can identify competitive paths in
+which additive coordinates and a constant sum-zero log-slope rate vector move
+together. Its canonical candidates partition levels into positive, zero,
+leading-negative, and deeper-negative groups; ordered \code{+1/-1} pairs are
+exact special cases. \code{gpcm_joint_boundary} retains pair results in
+\code{certificates} and the additional results in \code{rate_certificates}. A
+positive warning remains \code{not_evaluated}, with no primary value, because
+it is not a global result for the non-concave GPCM likelihood. Failure to find
+a path is likewise not promoted to a finite joint-GPCM claim; curved and
+rate-nonconvergent paths remain outside the audit.
+\code{config$boundary_audit$gpcm_fixed_objective_classification} combines the
+two path audits under the identified, unpenalized, no-finite-box JML
+objective. It distinguishes positive certificates, a finite retained
+optimizer trace with no path certified in the audited families, numerical
+indeterminacy, and non-evaluation while keeping global finite-maximum and
+global boundary-absence flags false.
+
+\code{config$boundary_audit$gpcm_asymptotically_affine_transport} carries an
+already certified constant-rate boundary and its analytic limit to curved
+perturbations whose additive-coordinate residual and sum-zero expanded-
+log-slope residual both converge to zero. This is a positive continuity result
+only. Bounded residuals that do not vanish, rate-nonconvergent paths, general
+curved-path absence, and MML remain unclassified.
+
+\code{config$boundary_audit$gpcm_boundary_compactification} records the
+finite-dimensional subsequence reduction for arbitrary unbounded JML
+parameter sequences. Every nonzero limiting expanded log-slope direction has
+a finite positive/zero/leading-negative/deeper-negative primary role pattern.
+This completes only the structural role enumeration: zero primary-rate
+coordinates and the all-zero slope-primary sector can carry slower divergent
+scales, so secondary hierarchies, nonconvergent-path likelihoods, general
+curved paths, and global boundary absence remain unclassified.
+
+\code{config$boundary_audit$gpcm_rate_hierarchy} records that a declared
+lexicographic family of expanded sum-zero log-slope coefficients can resolve
+all slope levels in at most code{J-1} nonzero stages for code{J} levels. Each
+stage acts only on levels that were zero at every faster stage; its active
+restriction need not itself sum to zero because slower identification
+compensation can occur in already resolved levels. This is a structural
+finite-depth theorem, not extraction of a hierarchy from the retained
+optimizer trace or a likelihood-boundary result. Additive hierarchies,
+bounded remainders, different accumulation subsequences, global boundary
+absence, and MML remain unclassified.
+
+\code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
+same fixed JML objective and analytic terminal gradient, checks stored
+optimizer/polish summaries and deterministic central-difference probes, and
+reports gradient norms by free-parameter block. Positive boundary certificates
+take precedence over a finite-point zero or small gradient; otherwise a
+coherent small gradient is retained-point first-order evidence only. The
+implementation threshold is not a frozen scientific criterion and the audit
+does not certify a finite global maximum, boundary absence, uncertainty,
+external comparability, or readiness.
 The conditional JML boundary checks are not reused for MML.
 \code{diagnose_mfrm()} may retain observed-information and delta-method values
 in \code{Optimizer*SE} / \code{Optimizer*CI} columns, but ordinary \code{SE} / \code{CI}
