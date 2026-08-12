@@ -1,6 +1,6 @@
 # 0.2.3 release-spine priority queue
 
-Status: repository-only dependency ordering, 2026-08-11. The queue covers all
+Status: repository-only dependency ordering, updated 2026-08-12. The queue covers all
 53 `release_spine` rows from `claim-disposition-profile-0.2.3.csv` exactly
 once. It changes no acceptance rule and does not authorize simulation,
 external execution, confirmation, candidate freeze, or release.
@@ -323,3 +323,14 @@ theorem is deferred. The next GPCM release-spine item remains row 88,
 `gpcm_owner_evidence_partition`. Its first action is a deterministic audit of
 the existing owner-specific identity and propagation evidence, not another
 ratio grid or a new simulation.
+
+That P1q audit is now complete. The 120 historical rows and checkpoints retain
+their owner identity, but the frozen aggregates omit exact category support
+and several owner/scale/runtime fields. A non-mutating derived envelope repairs
+that transport without new fitting. It also establishes that Draft.66 MML used
+the historical fixed-standard-normal contract and cannot stand in for the
+current `free_population` default. Row 88 therefore remains `review`. Its next
+admitted work is a prospective contract that makes identification and category
+support explicit on every surface, followed by a paired common-data smoke.
+Expanded replication is not admitted unless that smoke exposes a
+decision-relevant failure or a prespecified precision requirement.

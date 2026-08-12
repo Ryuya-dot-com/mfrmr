@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a no-fit owner-identity P1q audit over the sealed 120-row GPCM pilot.
+  Row and checkpoint identities are intact, but frozen aggregate tables do not
+  directly retain every owner, ability-scale, exact-category-support, and
+  runtime field. A non-mutating derived envelope restores complete identity on
+  seven aggregate surfaces. The historical MML pilot used the fixed-standard-
+  normal contract and does not represent the current `free_population`
+  default. Identity transport needs no new simulation; current-default owner
+  evidence, gate passage, core promotion, broad simulation, and confirmation
+  remain open or unauthorized.
+
 * Added a no-fit GPCM release-scope P1p disposition. The completed reflected
   finite-grid claim is retained, while a continuous coefficient-ratio theorem
   is deferred because it is neither publicly advertised nor an independent

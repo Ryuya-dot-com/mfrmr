@@ -767,6 +767,18 @@ evidence from each other. Fit and DFF claims retain their exploratory and
 screening-only fallbacks; no simulation or public promotion follows from this
 scope decision.
 
+P1q performs that first deterministic owner-evidence audit. The sealed
+Draft.66 manifest, result rows, and all 120 checkpoints retain their historical
+owner/estimator/ability-scale/runtime identities, but the global and grouped
+aggregate tables are not self-describing and none directly records the exact
+1--4 category range. A derived envelope binds all seven aggregate surfaces to
+a four-stratum identity registry without changing the source bundle or adding
+substantive evidence. More importantly, Draft.66 MML is a historical fixed-
+standard-normal run; it cannot validate today's `free_population` default.
+The next step is therefore an explicit prospective owner/scale/support
+contract followed by a small paired common-data smoke, not expanded
+replication. Row 88 remains `review` and broad simulation remains unauthorized.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

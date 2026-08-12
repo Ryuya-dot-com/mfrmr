@@ -228,6 +228,14 @@ identify whether the opt-in layer ran and retain its test log.
   finite-grid claim, defers an unadvertised continuous ratio theorem, preserves
   fit/DFF fallbacks, and selects `gpcm_owner_evidence_partition` as the next
   GPCM release-spine blocker without authorizing simulation or promotion.
+- `gpcm-owner-identity-propagation-p1q-0.2.3.R` and
+  `gpcm-owner-identity-propagation-p1q-record-0.2.3.md`: no-fit audit of the
+  sealed Draft.66 120-row owner bundle and 120 checkpoints. It distinguishes
+  intact historical row identity from incomplete self-description in frozen
+  aggregates, constructs a non-mutating seven-surface identity envelope, and
+  records that the fixed-standard-normal MML pilot does not represent the
+  current `free_population` default. No additional simulation is needed for
+  identity transport; current-default owner evidence and row 88 remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

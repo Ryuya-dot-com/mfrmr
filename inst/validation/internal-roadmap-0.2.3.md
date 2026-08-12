@@ -4326,6 +4326,29 @@ DFF rows retain `retain_gpcm_fit_as_exploratory_no_decision` and
 `disable_gpcm_dff_inferential_promotion`. P1p authorizes neither a public GPCM
 promotion nor broad simulation.
 
+##### P1q owner-identity propagation and scale separation
+
+P1q reads the sealed Draft.66 bundle without fitting or rewriting it. The
+declared manifest, result rows, and 120/120 checkpoint payloads retain the
+seven historical identity axes, and every checkpoint matches the sealed
+execution SHA. Nevertheless, none of nine frozen tabular surfaces directly
+retains the full identity because exact `RatingMin`, `RatingMax`, and declared
+support are absent; grouped summaries also drop step owner, slope composition,
+dimension, ability-scale, and runtime fields.
+
+A derived four-stratum registry recovers the declared 1--4 support only from
+the hashed execution contract and binds full identity to seven derived
+aggregate surfaces. It leaves the frozen bundle unchanged and adds no
+statistical evidence. Draft.66 MML remains a historical
+`standard_normal_latent_distribution` execution: its runner did not pass the
+identification branch explicitly, whereas the current default is
+`free_population`. Current production replay now emits the identification and
+rating bounds explicitly, so the remaining defect is evidence coverage, not a
+reason to alter the current replay API. Identity propagation needs no further
+simulation. Row 88 remains `review`; the next bounded step is an explicit
+prospective owner/scale/support contract and only then a small paired current-
+default smoke.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

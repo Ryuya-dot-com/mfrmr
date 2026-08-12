@@ -167,6 +167,16 @@ criterion severity interactions, centrality/extremity response-style models,
 and local-dependence rater models remain separate later-family or alternative-
 model proposals; none is implied by completing the aligned route.
 
+That split is now explicit, but P1q shows that its completed Draft.66 MML
+pilot is historical fixed-standard-normal evidence, not evidence for the
+current `free_population` default. The sealed rows/checkpoints remain valid;
+a derived envelope repairs missing aggregate identity without changing their
+meaning. Before any further owner replication, a prospective contract must
+state the identification branch and exact category support in every manifest,
+result, checkpoint, aggregate, and replay. A small paired common-data smoke is
+the next admissible empirical step; broad simulation remains downstream of a
+decision-relevant need.
+
 When a capability changes, update the implementation, capability registry,
 runtime guard coverage, help, tests, release evidence, and this supplement in
 the same change. A planning sentence alone never changes support status.
