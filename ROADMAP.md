@@ -699,6 +699,18 @@ not. The next bounded gate profiles `rho` on `[0,1]` at each frozen `mu`, from
 both singleton and transported-P1i starts. A rectangular two-dimensional grid,
 three-target work, and downstream inference remain unjustified at this stage.
 
+P1k runs that bounded optimizer first on exact-high and near-high
+representatives. All 336 fits pass their boundary-aware KKT and quadrature
+checks, producing 113 lower, 188 interior, and 35 upper solutions. Two starts
+agree on both objective and `rho` in 125/168 cells; ten have the same objective
+but different coordinates, while 33 have distinct eligible KKT objectives.
+The best observed value for every representative unordered pair remains
+2.07--2.58 objective units above the qualified interior, but multi-basin
+stability is not closed. The next bounded gate is fixed-`rho` continuation for
+those 43 nonmatching cells, prioritizing the 33 objective-discordant cases.
+Reflected fixtures and three-target faces remain deferred until that mechanism
+is classified.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

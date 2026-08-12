@@ -153,17 +153,13 @@ SelectionAuthorized = FALSE
 ConfirmationAuthorized = FALSE
 ```
 
-The next efficient numerical gate is not a rectangular two-dimensional grid.
-For each ordered pair and frozen `mu` value, profile the nuisance coordinates
-with `rho` free on the closed interval `[0,1]`, using the analytic natural-
-`rho` derivative and starts from both the singleton boundary and transported
-P1i branch. The two orientations together cover each unordered coefficient
-pair without allowing an unbounded ratio coordinate. Boundary KKT status,
-route agreement, and exact common-objective evaluation must remain separate.
-
-This fixed-`mu` ratio profile should be completed before opening the
-three-target vertices. Hessian inference, intervals, DFF, fit, rank,
-separation, broad simulation, and source selection remain downstream.
+P1k subsequently runs this closed-interval optimizer on the exact-high and
+near-high representatives. All 336 fits are eligible, but 33/168 cells retain
+competing KKT objectives and another ten retain the same objective at distinct
+coordinates. The next gate is therefore fixed-`rho` nuisance continuation for
+those 43 cells, not immediate reflection expansion or three-target work.
+Hessian inference, intervals, DFF, fit, rank, separation, broad simulation,
+and source selection remain downstream.
 
 ## Reproduction
 

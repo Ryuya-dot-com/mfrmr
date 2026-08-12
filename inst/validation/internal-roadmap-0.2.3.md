@@ -4186,6 +4186,30 @@ starts. The two ordered orientations cover each unordered pair. Three-target
 faces, the remaining Rater hierarchy, upper boundary, source selection,
 Hessian, DFF/fit/rank, and broad simulation remain later gates.
 
+P1k is now complete as a representative negative pilot in
+`gpcm-fixed-mu-ratio-profile-p1k-0.2.3.R` and its execution record. It
+optimizes nuisance coordinates and natural `rho` on `[0,1]` at every frozen
+`mu` for exact-high and near-high fixtures, using singleton-boundary and
+P1i-derived equal-side starts. Lower, interior, and upper KKT conditions are
+evaluated separately.
+
+All 336 fits are eligible. Maximum q range is about `5.69e-13`, maximum KKT
+sup-norm about `9.72e-5`, and maximum scheduled independent gradient
+difference about `2.19e-8`. The solutions distribute over 113 lower, 188
+interior, and 35 upper ratio locations.
+
+The two starts reproduce the same solution in 125/168 cells, the same
+objective but different coordinates in ten, and competing eligible KKT
+objectives in 33. Objective gaps reach about `0.0667`. All best observed
+representative pair values remain 2.07--2.58 above the qualified interior, but
+this does not select a basin or certify a face.
+
+The next efficient P1 slice is fixed-`rho` nuisance continuation for the 43
+nonmatching cells, prioritizing the 33 objective-discordant cases. Reflected
+fixtures, three-target faces, the remaining Rater hierarchy, upper boundary,
+source selection, Hessian, DFF/fit/rank, and broad simulation remain later
+gates.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

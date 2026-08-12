@@ -184,6 +184,13 @@ identify whether the opt-in layer ran and retain its test log.
   but only 280 boundary `rho` derivatives are nonnegative. The likelihood
   boundary is identified while fixed-`mu` ratio profiles and face closure
   remain open.
+- `gpcm-fixed-mu-ratio-profile-p1k-0.2.3.R` and
+  `gpcm-fixed-mu-ratio-profile-p1k-record-0.2.3.md`: representative
+  exact-high/near-high optimization of natural `rho` on `[0,1]` with explicit
+  KKT signs. All 336 fits are eligible, but only 125/168 cells reproduce the
+  same objective and coordinate; ten are objective-only matches and 33 retain
+  competing KKT objectives. Reflections, continuation, and face closure remain
+  open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

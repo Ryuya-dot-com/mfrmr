@@ -238,6 +238,14 @@ certifies the likelihood nesting but not the ratio profile. The next
 admissible work is a closed-interval `rho` profile at fixed `mu`, using both
 singleton and transported-P1i starts.
 
+P1k executes that profile as a two-fixture pilot. Every one of 336 fits is KKT
+eligible, but only 125/168 cells reproduce the same objective and coordinate.
+Ten match only in objective and 33 retain competing eligible KKT objectives,
+with gaps up to about `0.0667`. Best observed objectives remain above the
+qualified interior, but this does not close unseen basins. The next admissible
+work is fixed-`rho` continuation for the 43 nonmatching cells before adding
+reflections or three-target faces.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -355,12 +363,13 @@ not retrospective widening of the tolerance.
    P1i evaluates the six two-target radial charts but leaves 14/24 grids open
    at a coefficient-ratio boundary. Derive and audit that slower/faster-rate
    chart next. P1j completes the likelihood identity and shows that fixed-`mu`
-   ratio profiling is necessary. Complete that bounded profile, then evaluate
-   the four three-target vertices as needed, complete the remaining empty-
-   target hierarchy, and address the separate upper/joint variance path and
-   source-solution contract. Do not add q or path points by default, freeze an
-   observed slope or solution tolerance, or call finite-grid agreement a
-   continuous-integral certificate.
+   ratio profiling is necessary. P1k's representative bounded profile exposes
+   43 nonmatching multi-start cells. Continue only those cells at fixed `rho`,
+   then add the reflected fixtures and evaluate the four three-target vertices
+   as needed. Complete the remaining empty-target hierarchy and address the
+   separate upper/joint variance path and source-solution contract. Do not add
+   q or path points by default, freeze an observed slope or solution tolerance,
+   or call finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,
    profile, bootstrap, and posterior intervals; propagate typed status through
    all public surfaces; then run parameter-class coverage pilots with explicit

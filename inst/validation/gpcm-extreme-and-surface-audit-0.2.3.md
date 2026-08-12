@@ -263,6 +263,13 @@ negative in 392/672 singleton rows, so the identity cannot be promoted to a
 profile optimum. Fixed-`mu`, closed-interval ratio profiling remains the next
 deterministic gate before three-target or inferential work.
 
+P1k applies that optimizer to two representative fixtures. Its boundary KKT
+contract succeeds for all 336 fits, yet 33 fixed-`mu` cells retain distinct
+eligible objective basins and ten more retain coordinate-only nonuniqueness.
+All best observed values remain above the interior; nevertheless continuation
+of those 43 cells, not convergence counts, controls the next deterministic
+decision.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
