@@ -216,6 +216,14 @@ values lie above that endpoint. The endpoint remains above the qualified
 interior. C1--C3 single-target screens and the rest of the empty-target
 deterministic-Rater hierarchy remain unresolved.
 
+P1h now completes C1--C3 using the same exact coordinate and endpoint
+contract. All 168 new fits pass, both routes agree to about `1.21e-9`, and the
+singleton endpoints remain above the interior. Combined with P1g, all four
+single-target grids and singleton deterministic-Rater strata are screened.
+The next admissible work is the six two-target faces plus their two-criterion
+Rater endpoints; the four three-target vertices follow only if those results
+do not already resolve their nested boundary starts.
+
 ## Solution selection and coordinate agreement
 
 Initial values are registered before fitting and expressed in the identified
@@ -329,8 +337,11 @@ not retrospective widening of the tolerance.
    coefficient. P1g follows C4 to its direct deterministic-Rater endpoint and
    finds the entire declared grid above both that endpoint and the qualified
    interior. Next screen C1--C3 with the same construction before multiple-
-   target faces, then complete the empty-target deterministic-Rater hierarchy
-   and address the separate upper/joint variance path and source-solution contract. Do not add q or path
+   target faces. P1h completes C1--C3 and therefore all four singleton screens.
+   Next evaluate the six two-target faces with their paired-Rater endpoints,
+   then the four three-target vertices as needed, complete the remaining
+   empty-target hierarchy, and address the separate upper/joint variance path
+   and source-solution contract. Do not add q or path
    points by default, freeze an observed slope or solution tolerance, or call
    finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,

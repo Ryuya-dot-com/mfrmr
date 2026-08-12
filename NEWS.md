@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a GPCM remaining-single-target P1h screen. The exact P1g scaled
+  construction is applied to C1--C3 while C4 evidence is reused rather than
+  refitted. All 168 new two-route fits pass; route differences are at most
+  about `1.21e-9`, q=61/91/121 ranges at most about `5.68e-13`, and direct
+  singleton deterministic-Rater endpoints agree with independent conditional
+  oracles to about `2.50e-12`. All C1--C3 profiles descend toward endpoints
+  above the qualified interior. Together with P1g, all four single-target
+  grids and singleton-Rater strata are screened, but multiple-target faces,
+  multi-criterion Rater strata, the upper boundary, source selection, and
+  downstream inference remain open.
+
 * Added a GPCM C4 face-to-deterministic-Rater P1g audit. The exact scaled
   coordinates `B=lambda*q`, `V4=lambda*u4`, and `G4=lambda*H4` remove the
   false appearance of convergence caused by a vanishing log-coefficient

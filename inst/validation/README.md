@@ -163,6 +163,13 @@ identify whether the opt-in layer ran and retain its test log.
   56 fits pass and the endpoint is stable but remains above the qualified
   interior. The result covers neither an unseen C4 interior basin nor other
   random-target/deterministic-Rater faces and authorizes no solution choice.
+- `gpcm-single-target-face-screen-p1h-0.2.3.R` and
+  `gpcm-single-target-face-screen-p1h-record-0.2.3.md`: C1--C3 application of
+  the exact P1g coefficient-scaled likelihood. All 168 new fits pass and their
+  singleton deterministic-Rater endpoints remain above the interior. Combined
+  with frozen P1g evidence, all four single-target grids are screened. No
+  multiple-target face, multi-criterion Rater stratum, or source solution is
+  claimed.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

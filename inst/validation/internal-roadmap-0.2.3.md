@@ -4121,6 +4121,29 @@ efficient screen reuses this construction for C1--C3 single-target faces;
 multiple-target faces, the upper boundary, source selection, Hessian,
 DFF/fit/rank, and broad simulation remain later.
 
+P1h is now complete in `gpcm-single-target-face-screen-p1h-0.2.3.R` and its
+execution record. It applies the exact P1g scaled likelihood to C1--C3 and
+reuses C4 evidence without refitting it. Qualified-interior target coefficients
+lie within the common 0--0.2 grid. The descending route begins from slope-
+weighted interior coordinates; the reverse route begins at the frozen C4
+endpoint. Exact P1f/P1h objective differences are at most about `2.27e-13`
+and identity-gradient differences at most about `1.68e-7`.
+
+All 168 new fits pass. Route differences are at most about `1.21e-9`,
+q=61/91/121 ranges at most about `5.68e-13`, and scheduled gradient differences
+at most about `2.28e-7`. Direct conditional oracles agree with the 24 fitted
+endpoints to about `2.50e-12`. All positive-grid coefficient derivatives are
+positive and all C1--C3 endpoints lie above the qualified interior. Combined
+with P1g, all four single-target grids and all four singleton deterministic-
+Rater strata are screened.
+
+This does not resolve the six two-target or four three-target random faces.
+Nor does it resolve the 11 multi-criterion deterministic-Rater strata in the
+empty-random-product hierarchy. The next efficient P1 slice is the six two-
+target faces paired with their two-criterion Rater endpoints. Three-target
+vertices, the upper boundary, source selection, Hessian, DFF/fit/rank, and
+broad simulation remain later gates.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

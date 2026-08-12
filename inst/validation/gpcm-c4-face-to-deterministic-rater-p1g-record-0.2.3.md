@@ -166,11 +166,11 @@ It does not support the following broader conclusions:
 - Hessian, intervals, DFF, fit, rank, separation, and broad simulation remain
   downstream.
 
-The next efficient gate is to reuse the same scaled construction for the
-remaining three single-random-target faces and their corresponding
-deterministic-Rater endpoints. This is more informative than densifying the C4
-grid. Multiple-target faces should follow only after those single-target
-screens are complete.
+P1h subsequently reuses the same construction for C1--C3 and finds all three
+declared grids descending to singleton deterministic-Rater endpoints above the
+qualified interior. Together P1g/P1h screen all four single-target grids. The
+next efficient gate is the six two-target faces and their two-criterion Rater
+endpoints, not densification of any single-target grid.
 
 ## Reproduction
 

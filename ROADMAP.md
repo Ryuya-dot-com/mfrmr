@@ -659,6 +659,19 @@ and its deterministic-Rater endpoint, not an unseen C4 interior basin or any
 other face. The next efficient screen applies the same construction to C1--C3
 single-target faces before multiple-target faces or broader boundary work.
 
+P1h completes that remaining single-target screen without repeating the C4
+fits. C1--C3 use the same exact target-specific scaled coordinates, two
+opposite routes, seven fixed coefficient values, q=61/91/121 reevaluation, and
+direct conditional endpoints. All 168 new fits pass; route differences are at
+most about `1.21e-9`, and independent endpoint oracles agree to about
+`2.50e-12`. Every new grid increases from its singleton deterministic-Rater
+endpoint, and every endpoint remains above the qualified interior. Combining
+P1g and P1h closes the declared grids for all four single-random-target faces
+and their four singleton-Rater strata. The next bounded gate is the six two-
+target faces and their two-criterion Rater endpoints. Four three-target
+vertices, multi-criterion empty-target strata, upper variance, source
+selection, Hessian, DFF/fit/rank, and broad simulation remain downstream.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

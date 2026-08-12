@@ -242,6 +242,12 @@ grid, and the endpoint remains 2.08--2.58 objective units above the qualified
 interior. This does not exclude an unseen C4 interior basin and does not
 transport to C1--C3 or multiple-target faces.
 
+P1h now supplies that missing C1--C3 transport through separately derived
+target-specific scaled likelihoods. All three grids descend to their direct
+singleton deterministic-Rater endpoints, which remain above the qualified
+interior. P1g/P1h therefore cover all four singleton screens, while multiple-
+target faces and multi-criterion Rater endpoints remain explicitly open.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
