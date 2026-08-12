@@ -1513,7 +1513,28 @@ identify whether the opt-in layer ran and retain its test log.
   process status zero but ConQuest rejected the generated C-style prose
   preamble and estimated no model. The remaining five arms were not launched;
   candidate 002 is non-reusable. The Binary command generator now emits
-  command-only input and a fresh candidate 003 is required.
+  command-only input; candidate 003 was subsequently rebuilt under that
+  repaired protocol.
+- `conquest-six-arm-candidate-003-binding-0.2.3.R`,
+  `conquest-six-arm-candidate-003-reference-preflight-0.2.3.R`, and their
+  companion records: post-incident source/command/model/input/empty-output
+  binding plus six source-bound mfrmr numerical references. RSM/PCM retain
+  independent probability and likelihood oracles; Binary retains its explicit
+  weaker internal-coordinate basis. All references remain non-inference-ready.
+- `conquest-six-arm-candidate-003-execution-handoff-0.2.3.R` and its companion
+  record: ordered run-once authorization with a mandatory semantic-success
+  gate after each arm. Status zero and `End of Program` are insufficient;
+  frozen error patterns must be absent and every native output must be nonempty
+  before the next arm can launch.
+- `conquest-six-arm-candidate-003-execution-result-0.2.3.R` and its companion
+  record: immutable binding for the completed six-arm run. All six semantic
+  gates and all 50 outputs pass; the handoff is consumed and rerun is false.
+- `conquest-six-arm-candidate-003-numerical-review-0.2.3.R` and its companion
+  record: locale-independent 54-coordinate and 57-row exact-reported-decimal
+  review. All 19 cross-engine and 38 q31/q61 integration rows pass the
+  prospectively frozen table. Hidden-solution/scientific equivalence,
+  inference readiness, DFF/fit/rank/ordering invariance, sparse/free-slope
+  GPCM extension, large simulation, and release authorization remain false.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

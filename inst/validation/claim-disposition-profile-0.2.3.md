@@ -1,16 +1,17 @@
 # 0.2.3 claim-disposition profile
 
-Status: repository-only portfolio overlay, 2026-08-11. This profile reduces
+Status: repository-only portfolio overlay, refreshed 2026-08-12. This profile reduces
 the release programme to the evidence needed for retained 0.2.3 claims. It is
-not a new statistical gate, does not change any evidence status, does not
-promote a pilot, and authorizes no simulation, confirmation, external-program
-execution, candidate binding, or release.
+not a new statistical gate and does not itself promote evidence. The bound
+checklist now records the separately audited candidate-003 ConQuest
+Binary/RSM/PCM exact-reported-decimal passes; it still authorizes no broad
+scientific-equivalence claim, simulation, sparse/GPCM extension, or release.
 
 ## Bound source
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `f354e14ee3c4f7f6ca84543de6c4606daeda202acc0ca524a5e767188f9fd2bb` |
+| `release-evidence-checklist-0.2.3.csv` | `2b472612ed4aab5dca25a37e80df3c7667016d3eb033f62d8f0db57aa28a7ca9` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -37,12 +38,14 @@ that the integrity audit itself failed.
 
 The mapping reduces an undifferentiated 106-row programme to a 53-row release
 spine. It does not assert that those 53 rows currently pass. The current
-checklist snapshot contains 25 `not_run`, 24 `review`, and four `ok` spine
-rows. The completed rows are the deterministic v3 readiness-contract schema,
+checklist snapshot contains 25 `not_run`, 21 `review`, and seven `ok` spine
+rows. In addition to the deterministic v3 readiness-contract schema,
 exact-model reductions, estimator-vocabulary contract, and tracked-repository
-external privacy/license boundary; they do not close runtime readiness
-propagation, a general numerical tolerance, ecosystem positioning, external
-tool identity, metric eligibility, or any external-equivalence claim. The 32 conditional rows
+external privacy/license boundary, the bounded ConQuest Binary/RSM/PCM
+exact-reported-decimal core rows are now complete. They do not close runtime
+readiness propagation, ecosystem positioning, external-tool identity across
+TAM/immer/FACETS, general metric eligibility, hidden-solution equivalence, or
+any broader scientific-equivalence claim. The 32 conditional rows
 contain 10 `not_run`, 21 `review`, and one `ok`; that completed execution-
 integrity row does not promote its parent GPCM claim.
 Nine current `concern` rows are deferred G-theory infrastructure rows and no
@@ -92,18 +95,15 @@ contract:
   identity and generalized-family non-claim guard.
 
 This makes the ConQuest relationship operationally important without claiming
-ConQuest parity. The item-only binary/RSM/PCM rows remain necessary external
-anchors. The additive complete-crossing Person/Rater/Criterion microcase is
-now present as same-platform calibration, with all four RSM/PCM q31/q61 arms
-complete and native A matrices exact. Its rounding/tolerance and candidate-
-bound rerun are still open. The opened result has now been adjudicated without
-freezing a self-passing post hoc tolerance: calibration may inform a future
-candidate rule, but the current public statement is descriptive,
-while the broad scientific-equivalence claim remains a future gate requiring
-an independently justified pre-result `EXT-CQ-TOL`. The connected
-sparse/unequal-workload microcase
-should follow only after that core decision; neither case should become a new
-general-parity gate.
+unqualified ConQuest parity. Candidate 003 was bound after the candidate-002
+semantic failure, then all six Binary/RSM/PCM q31/q61 arms completed in order
+with 50 nonempty SHA-bound outputs and exact additive A matrices. All 19
+cross-engine and 38 integration rows pass the independently frozen tolerance
+table. The completed claim is deliberately narrower: agreement of exact CSV
+decimals under the registered models, inputs, constraints, and executable.
+The undocumented hidden optimizer interval, scientific equivalence,
+inference readiness, DFF/fit/rank/ordering invariance, GPCM free slopes, and
+sparse/unequal-workload extension remain open and cannot inherit this pass.
 
 ## Conditional claims and exact fallbacks
 
@@ -152,12 +152,12 @@ claim and decision-specific precision argument justify the run.
    order: deterministic numerical/readiness contracts, external-core
    microcases, retained-core recovery precision, then candidate and release
    engineering.
-3. Retain the frozen ConQuest numerical budget, corrected model-dimension-bound
-   design and six exact non-inferential numerical references, plus the consumed
-   candidate-002 semantic-failure incident; bind a fresh command-only candidate
-   003 before another Binary/RSM/PCM q31/q61 handoff, then review every native
-   output without promoting process exit, local rank, or numerical agreement
-   to inference or equivalence before any sparse extension.
+3. Retain the completed candidate-003 ConQuest 50-output/54-coordinate/57-row
+   evidence and the candidate-002 semantic-failure incident. Do not rerun or
+   broaden it. Treat hidden-solution equivalence, inference readiness,
+   DFF/fit/rank/ordering invariance, GPCM free slopes, and sparse allocation as
+   distinct later claims; require a decision-value argument before extending
+   this bounded complete-crossing core.
 4. Run a conditional simulation only if its fallback is unacceptable for the
    intended 0.2.3 claim and a written precision calculation shows how the
    result can change promotion.

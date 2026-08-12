@@ -177,16 +177,22 @@ Priorities are:
   internally consistent coordinate contract. All three q31/q61 pairs pass the
   prospective within-engine coordinate and deviance budgets. Every fit remains
   non-inference-ready, and numerical agreement cannot promote inference.
-  The candidate-002 handoff was consumed, but its first Binary arm failed
-  semantically despite process exit zero: ConQuest rejected the generated
-  multiline C-style prose preamble and estimated no model. The remaining five
-  arms were not launched, no comparison was attempted, and the candidate is
-  non-reusable. The public generator now emits command-only input. A fresh
-  candidate 003 must be source-, model-, command-, reference-, and empty-
-  output-bound before another six-arm handoff. Binary native evidence and all
-  six-arm cross-engine decisions remain open. Hidden-solution
-  equivalence remains unavailable without a documented rounding interval or
-  full-precision export;
+  The candidate-002 handoff was consumed when its first Binary arm failed
+  semantically despite process exit zero; ConQuest rejected the generated
+  C-style prose preamble and estimated no model. The remaining arms were not
+  launched and that candidate remains non-reusable. Candidate 003 then bound
+  repaired command-only input, a post-incident source, six numerical
+  references, the exact executable and invocation order, and 50 empty output
+  paths. Its arm-by-arm semantic gate prevents status-zero false success. All
+  six Binary/RSM/PCM q31/q61 arms completed, all 50 outputs are nonempty and
+  hash-bound, and the exact A matrices and 54 native decimal coordinates pass
+  all 19 cross-engine plus 38 integration rows in the prospectively frozen
+  table. Rows `conquest_binary_core`, `conquest_rsm_core`, and
+  `conquest_pcm_core` are therefore closed at the exact-reported-decimal MML
+  scope. This is not hidden-solution/scientific equivalence or inference
+  readiness; DFF, fit, rank/ordering invariance, sparse allocation, free-slope
+  GPCM, and independent-platform replication remain separate claims. No large
+  simulation should be started merely because this bounded core passed;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope

@@ -64,13 +64,17 @@ GPCM umbrella may promote criterion- and rater-owned evidence together.
 
 1. row 66 `external_privacy_and_license_boundary` is structurally closed;
    row 64 `metric_specific_comparison_eligibility` has a passing deterministic
-   contract but remains under review pending real normalizer bindings. Bind
-   ConQuest first, then TAM/immer where available. Row 59
+   contract but remains under review pending all retained real-normalizer
+   bindings. Candidate 003 now supplies the bounded ConQuest core; TAM/immer
+   and broader metric-decision invariance remain open. Row 59
    `facets_tool_identity` is an independent external-environment dependency
    because FACETS is unavailable here; it cannot be closed by a mock.
 2. rows 55--57 `conquest_binary_core`, `conquest_rsm_core`, and
-   `conquest_pcm_core` then run as independent, candidate-replayable,
-   raw-token-preserving microcases.
+   `conquest_pcm_core` are closed for candidate 003 at the
+   exact-reported-decimal MML layer. Their 19 cross-engine and 38 within-engine
+   integration tolerance rows pass without averaging coordinate errors. This
+   does not close hidden-solution equivalence, DFF/fit/rank invariance, sparse
+   behavior, or GPCM extensions.
 3. row 60 `facets_jml_core_stress` remains method-mode-specific and retains
    adjustment, extreme-score, and failed-run denominators, but its next
    candidate-linked execution must occur in a licensed FACETS environment
@@ -104,9 +108,9 @@ Development runs in Waves A--D retain source/runtime/input hashes, but they are
 not automatically candidate evidence. The exact candidate must replay every
 affected retained result under one identity before release.
 
-## Immediate action
+## Completed dependency path and current action
 
-The first bounded closure target is row 22
+The first bounded closure target was row 22
 `readiness_contract_schema`, because it is deterministic, already described as
 `complete_structural_v3` in the internal roadmap, and upstream of multiple
 fit/comparison/output contracts. The required validator, legacy mapping,
@@ -250,11 +254,12 @@ differences are at most `2.74e-6`, but the raw-token state remains
 `LogLikelihood` contains positive deviance. The native review also exposed and
 repaired a reference-export bug that had written PCM step estimates as missing.
 
-The combined decision is
-`four_arm_native_outputs_ready_tolerance_and_candidate_missing`. Thus Wave C is
-no longer runtime-blocked, but it is still not comparison-ready: no independent
-rounding/tolerance decision or release candidate is bound, and no scientific
-equivalence is inferred.
+The calibration decision was
+`four_arm_native_outputs_ready_tolerance_and_candidate_missing`. Candidate 003
+later supplied the independently frozen tolerance table and candidate binding:
+all 19 cross-engine and 38 q31/q61 integration rows pass at the exact reported
+decimal layer. The native export still provides no documented interval for the
+hidden optimizer solution, so scientific equivalence is not inferred.
 
 The opened calibration has now undergone a separate five-layer adjudication
 in `conquest-additive-tolerance-adjudication-0.2.3.R`. CSV representation,
@@ -307,9 +312,11 @@ admissible. Its evidence status is `review`, not `ok`: actual program
 normalizers have not yet populated every retained lane. The ConQuest additive
 RSM/PCM adapter now binds 36 prespecified native rows to the ledger; all 36 are
 finite but rejected by `source_precision_mismatch`, and zero enter an
-aggregate. Local Wave C therefore moves from ConQuest plumbing to independent
-numeric-resolution and prospective-tolerance adjudication before any
-candidate-bound rerun. The current environment cannot execute FACETS. Row 59
+aggregate. Candidate 003 has since completed the independent numeric-resolution
+and prospective-tolerance path for the bounded Binary/RSM/PCM MML core. Local
+Wave C therefore moves to decision-level invariance and the remaining
+TAM/immer lanes, not another ConQuest rerun. The current environment cannot
+execute FACETS. Row 59
 remains `review` and must be completed once in a
 licensed external environment with executable, parser, generator, locale,
 command/control/input/output, run-date, and candidate identities in one

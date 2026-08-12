@@ -2721,7 +2721,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
     expect_true(review$claim_disposition_status$ProfileIntegrityOK[1])
     expect_identical(
       review$claim_disposition_status$ReleaseScopeDecision[1],
-      "release_no_go_49_spine_rows_open"
+      "release_no_go_46_spine_rows_open"
     )
   } else {
     expect_identical(
