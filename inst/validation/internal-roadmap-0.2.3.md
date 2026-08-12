@@ -4293,6 +4293,22 @@ complete P1k/P1l finite-grid registry. Continuous ratio closure, three-target
 faces, source selection, inferential Hessian, DFF/fit/rank, and simulation
 remain false.
 
+##### Draft.37 Reflected four-fixture finite-grid registry
+
+P1o applies the P1n involution to all 336 P1k and 1,026 P1l stored points.
+Every one of the 1,362 objective/gradient identities passes; maximum
+differences are `3.41e-13` and `8.90e-13`. The 168 high-side cells comprise
+125 P1k route-agreeing cells plus 43 P1l continuation cells. Transport produces
+168 low-side cells, or 84 cells in each of four fixtures, without a fallback
+fit. Thus `FullFourFixtureFiniteGridRegistryCompleted` is true.
+
+This is a natural stopping point for the finite-grid lane. It does not make
+`ContinuousGlobalProfileCertified`, face closure, source selection, Hessian
+inference, or DFF/fit/rank true. Before further ratio-grid or three-target
+work, the release-scope decision should ask whether a continuous theorem is
+actually required for 0.2.3; otherwise the finite claim should remain bounded
+and effort should move to a different release dependency.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

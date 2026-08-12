@@ -4,6 +4,13 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a four-fixture GPCM reflected finite-grid P1o registry. The exact P1n
+  map verifies all 1,362 stored P1k/P1l high-side points without refitting and
+  transports 168 classified cells to 168 low-side cells. Maximum objective and
+  gradient differences are about `3.41e-13` and `8.90e-13`. The 336-cell
+  finite-grid registry is complete, while continuous profile, two-target-face,
+  source-selection, and inferential claims remain false.
+
 * Added an exact GPCM category-reflection transport P1n audit. Reversing scores,
   negating location/Rater coordinates, reversing and negating full step
   vectors, and mirroring Gaussian quadrature transports the four P1m local

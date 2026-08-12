@@ -217,6 +217,11 @@ identify whether the opt-in layer ran and retain its test log.
   independent numeric-gradient checks also pass. This closes reflected
   representative transport only. Full finite-grid transport, continuous
   profile closure, face closure, and inference remain false.
+- `gpcm-reflected-finite-grid-registry-p1o-0.2.3.R` and
+  `gpcm-reflected-finite-grid-registry-p1o-record-0.2.3.md`: no-refit transport
+  of all 1,362 stored P1k/P1l points into a 336-cell, four-fixture registry.
+  The finite-grid portfolio is complete and every identity passes; continuous
+  ratio-profile, face-closure, and inference flags remain false.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

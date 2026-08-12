@@ -746,6 +746,16 @@ step is to materialize this identity over the full P1k/P1l finite-grid
 registry. Continuous ratio closure, three-target faces, and inference remain
 false.
 
+P1o completes that finite-grid registry without optimization. It verifies all
+1,362 stored P1k/P1l points and transports 168 high-side cells to 168 low-side
+cells. The resulting four fixtures each contain 84 cells; maximum objective
+and gradient-transport differences are about `3.41e-13` and `8.90e-13`.
+`FullFourFixtureFiniteGridRegistryCompleted` is true, but continuous profile
+and face-closure flags remain false. Before opening another large numerical
+gate, the release portfolio must decide whether it actually requires a
+continuous ratio theorem or should retain this explicitly finite claim and
+move to another open structural dependency.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

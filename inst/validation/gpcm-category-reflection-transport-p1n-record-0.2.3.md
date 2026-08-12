@@ -130,11 +130,11 @@ portfolio and remains false. Likewise, Hessian congruence transports the
 local nuisance-regularity result but does not authorize inferential standard
 errors, DFF, fit, or rank decisions.
 
-The next efficient gate is to materialize this exact map over the complete P1l
-43-cell nonmatching registry and the already-agreeing P1k cells, without
-refitting. That will distinguish complete reflected finite-grid transport from
-the still-open continuous ratio profile. Three-target faces and broad
-simulation remain later tasks.
+P1o subsequently materializes this exact map over the complete P1k/P1l
+registry without refitting. All 1,362 stored points pass and form a 336-cell,
+four-fixture finite-grid registry. The remaining decision is whether continuous
+ratio certification belongs in the 0.2.3 claim portfolio at all. Three-target
+faces and broad simulation remain later tasks.
 
 ## Reproduction
 
