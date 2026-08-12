@@ -189,8 +189,17 @@ identify whether the opt-in layer ran and retain its test log.
   exact-high/near-high optimization of natural `rho` on `[0,1]` with explicit
   KKT signs. All 336 fits are eligible, but only 125/168 cells reproduce the
   same objective and coordinate; ten are objective-only matches and 33 retain
-  competing KKT objectives. Reflections, continuation, and face closure remain
-  open.
+  competing tolerance-eligible KKT objectives. P1l supplies their subsequent
+  mechanism classification; reflections and face closure remain open.
+- `gpcm-fixed-rho-basin-continuation-p1l-0.2.3.R` and
+  `gpcm-fixed-rho-basin-continuation-p1l-record-0.2.3.md`: scoped two-direction
+  nuisance continuation over an eleven-point natural-`rho` base grid plus the
+  P1k returned points. All 766 objective-discordant and 260 coordinate-only
+  lane fits pass. At common `rho`, all 43 cells coalesce to one nuisance
+  solution. The objective lane contains 22 maximum brackets, six minimum
+  brackets, and five monotone-increasing profiles; all ten coordinate-only
+  cells are minimum brackets. This is finite-grid mechanism evidence, not a
+  continuous profile, reflected-fixture, or face certificate.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

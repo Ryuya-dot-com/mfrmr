@@ -4204,11 +4204,40 @@ objectives in 33. Objective gaps reach about `0.0667`. All best observed
 representative pair values remain 2.07--2.58 above the qualified interior, but
 this does not select a basin or certify a face.
 
-The next efficient P1 slice is fixed-`rho` nuisance continuation for the 43
-nonmatching cells, prioritizing the 33 objective-discordant cases. Reflected
-fixtures, three-target faces, the remaining Rater hierarchy, upper boundary,
-source selection, Hessian, DFF/fit/rank, and broad simulation remain later
-gates.
+P1l subsequently takes the next efficient slice: fixed-`rho` nuisance
+continuation for the 43 nonmatching cells, with the 33 objective-discordant
+cases completed before the coordinate-only lane. The mechanism-level result is
+recorded below. Reflected fixtures, three-target faces, the remaining Rater
+hierarchy, upper boundary, source selection, Hessian, DFF/fit/rank, and broad
+simulation remain later gates.
+
+##### Draft.34 Fixed-rho nuisance-continuation mechanism audit
+
+P1l now executes that continuation in separate objective-discordant and
+coordinate-only registries. The priority registry adds the returned P1k points
+to an eleven-point fixed-`rho` base grid and produces 766/766 eligible fits;
+the identifiability registry produces 260/260. At every common `rho`, the two
+directions agree within about `1.21e-9` in objective and `1.36e-5` in nuisance
+coordinates. All 43 route discrepancies therefore coalesce to one observed
+nuisance solution.
+
+The 33 objective-discordant P1k cells are not one homogeneous multiple-basin
+class. Twenty-two have positive-to-negative envelope-derivative brackets,
+consistent with an observed profile maximum between endpoint-side minima. Six
+have negative-to-positive brackets around one profile minimum, and five are
+increasing over the scheduled grid. All ten coordinate-only cells have a
+single minimum bracket. Every P1k lower-route candidate has the better
+objective. Eleven high-side P1k candidates passed the `1e-4` numerical KKT
+rule but are not exact second minima; the 22 maximum-bracket cases retain
+endpoint-side competition on the observed curve.
+
+This is the intended de-escalation: the next step is not a larger simulation,
+three-target enumeration, or dense rectangular `mu`/`rho` grid. It is a small
+continuous one-dimensional certificate that brackets the observed turning
+points, checks endpoint ordering, and states what remains unproved between
+grid points. Only then should the contract be transported to exact-low and
+near-low reflections. Continuous barrier certification, ratio-face closure,
+source selection, Hessian, DFF/fit/rank, and broad simulation all remain false.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

@@ -90,11 +90,13 @@ ratio difference is `1`. The 33 objective-discordant cells occur at small
 `mu=0.01`. None occurs at `mu>=0.03`.
 
 Most discordant cells connect a singleton-side lower solution with a distinct
-upper or near-upper solution. Six connect two interior KKT solutions. Both
-solutions can be numerically valid, so replacing one by the other based on
-start labels would be retrospective selection. The ten same-objective but
-coordinate-distinct cells also remain relevant for parameter, DFF, fit, and
-rank invariance even where the objective decision is unchanged.
+upper or near-upper solution. Six connect two interior tolerance-eligible KKT
+candidates. P1l subsequently shows that both routes coalesce at common fixed
+`rho`; P1k therefore must not be read as establishing 33 distinct nuisance
+basins. Its `1e-4` numerical KKT rule admits near-stationary points and requires
+the profile-mechanism audit recorded in P1l. The ten same-objective but
+coordinate-distinct cells likewise remain an identifiability question until
+that audit, not an automatic DFF/fit/rank split.
 
 ## Observed comparison with the qualified interior
 
@@ -136,14 +138,14 @@ SelectionAuthorized = FALSE
 ConfirmationAuthorized = FALSE
 ```
 
-The next efficient gate is fixed-`rho` nuisance continuation for the 43
-nonmatching representative cells, prioritizing the 33 objective-discordant
-cells and retaining the ten coordinate-only discrepancies as an
-identifiability lane. A small prespecified `rho` path from both endpoints can
-show whether the KKT solutions lie on one barrier-separated curve, cross, or
-belong to distinct nuisance basins. There is no justification yet for doubling
-the pilot into the reflected fixtures, opening three-target faces, or running
-broad simulations.
+P1l completes the next fixed-`rho` nuisance-continuation gate for all 43
+nonmatching representative cells. It finds one nuisance solution at each
+common `rho`, 22 profile-maximum brackets, six profile-minimum brackets, five
+monotone-increasing grids, and ten additional minimum brackets in the
+coordinate-only lane. The next efficient gate is a compact continuous
+one-dimensional certificate for those mechanisms, followed by reflected
+transport. There remains no justification for opening three-target faces or
+running broad simulations first.
 
 Hessian inference, intervals, DFF, fit, rank, separation, source selection,
 and capability promotion remain downstream. In particular, “all 336 fits

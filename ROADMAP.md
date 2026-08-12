@@ -706,10 +706,21 @@ agree on both objective and `rho` in 125/168 cells; ten have the same objective
 but different coordinates, while 33 have distinct eligible KKT objectives.
 The best observed value for every representative unordered pair remains
 2.07--2.58 objective units above the qualified interior, but multi-basin
-stability is not closed. The next bounded gate is fixed-`rho` continuation for
-those 43 nonmatching cells, prioritizing the 33 objective-discordant cases.
-Reflected fixtures and three-target faces remain deferred until that mechanism
-is classified.
+stability is not closed by P1k alone.
+
+P1l now completes scoped fixed-`rho` continuation for those 43 cells without
+rerunning the priority lane when opening the coordinate lane. All 766
+objective-discordant and 260 coordinate-only fits are eligible. Both starts
+coalesce to the same nuisance solution at every common `rho`. The 33-cell
+objective lane resolves into 22 profile-maximum brackets, six profile-minimum
+brackets, and five monotone-increasing grids; the ten coordinate-only cells all
+bracket one profile minimum. Hence P1k's discrepancies reflect natural-`rho`
+profile geometry and a `1e-4` stopping tolerance, not observed multiple
+nuisance basins. The finite grid does not certify a continuous profile or
+exclude an unseen turn. The next bounded gate is a compact one-dimensional
+turning-point/endpoint certificate for these three mechanisms, followed by
+reflected transport. Three-target faces and downstream inference remain
+deferred.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

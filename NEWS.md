@@ -4,6 +4,19 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a scoped GPCM fixed-`rho` nuisance-continuation P1l audit for P1k's 43
+  nonmatching cells. Both starts coalesce at every common `rho`: all 766
+  objective-discordant-lane fits and all 260 coordinate-only-lane fits are
+  eligible, with same-`rho` objective differences below about `1.21e-9` and
+  nuisance-coordinate differences below about `1.36e-5`. The 33 formerly
+  objective-discordant cells separate into 22 profiled-maximum brackets, six
+  profiled-minimum brackets, and five monotone-increasing grids; all ten
+  coordinate-only cells are single-minimum brackets. This narrows the issue
+  from multiple nuisance basins to one-dimensional ratio-profile geometry and
+  KKT stopping tolerance. The audit remains a finite grid: reflected fixtures,
+  continuous profile certification, face closure, source selection, and
+  downstream Hessian/DFF/fit/rank claims remain open.
+
 * Added a representative GPCM fixed-`mu` ratio P1k pilot. Natural `rho` is
   optimized on `[0,1]` with distinct lower/interior/upper KKT rules from
   singleton and P1i-derived starts. All 336 exact-high/near-high fits are
@@ -11,9 +24,11 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   `9.72e-5`, and independent gradient differences below about `2.19e-8`.
   Nevertheless only 125/168 cells reproduce the same solution, ten reproduce
   the same objective at different `rho`, and 33 retain different eligible KKT
-  objectives. All best observed candidates remain above the qualified
-  interior, but reflected fixtures, fixed-`rho` continuation, ratio-profile
-  closure, three-target faces, source selection, and inference remain open.
+  objectives. P1l subsequently classifies those discrepancies; P1k alone does
+  not distinguish approximate KKT stopping from one-dimensional profile
+  geometry. All best observed candidates remain above the qualified interior,
+  but reflected fixtures, ratio-profile closure, three-target faces, source
+  selection, and inference remain open.
 
 * Added a GPCM ordered coefficient-ratio P1j audit. The finite chart
   `lambda_slow=mu` and `lambda_fast=mu*rho` transports all 288 positive P1i

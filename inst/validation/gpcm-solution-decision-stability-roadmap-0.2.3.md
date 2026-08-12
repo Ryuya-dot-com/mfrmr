@@ -242,9 +242,20 @@ P1k executes that profile as a two-fixture pilot. Every one of 336 fits is KKT
 eligible, but only 125/168 cells reproduce the same objective and coordinate.
 Ten match only in objective and 33 retain competing eligible KKT objectives,
 with gaps up to about `0.0667`. Best observed objectives remain above the
-qualified interior, but this does not close unseen basins. The next admissible
-work is fixed-`rho` continuation for the 43 nonmatching cells before adding
-reflections or three-target faces.
+qualified interior, but P1k alone does not distinguish profile geometry from
+nuisance basins or tolerance-admitted near-stationarity.
+
+P1l performs that fixed-`rho` continuation in separate 33-cell objective and
+ten-cell coordinate lanes. All 1026 scoped fits pass. The two routes coalesce
+at every common `rho`, so no separate nuisance basin is observed. The 33-cell
+lane contains 22 positive-to-negative derivative brackets (a profiled
+maximum), six negative-to-positive brackets (a profiled minimum), and five
+monotone-increasing grids. All ten coordinate-only cells bracket one profile
+minimum. This reclassifies eleven P1k high-side candidates as tolerance/stopping
+evidence rather than exact second minima, while retaining 22 endpoint-side
+competitions separated by an observed profile maximum. Because P1l is a finite
+grid, a compact continuous one-dimensional certificate comes before reflected
+transport; three-target faces remain deferred.
 
 ## Solution selection and coordinate agreement
 
@@ -364,7 +375,10 @@ not retrospective widening of the tolerance.
    at a coefficient-ratio boundary. Derive and audit that slower/faster-rate
    chart next. P1j completes the likelihood identity and shows that fixed-`mu`
    ratio profiling is necessary. P1k's representative bounded profile exposes
-   43 nonmatching multi-start cells. Continue only those cells at fixed `rho`,
+   43 nonmatching multi-start cells. P1l completes their scoped fixed-`rho`
+   continuation and reduces them to 22 maximum brackets, 16 minimum brackets
+   across both lanes, and five monotone-increasing grids, with no observed
+   common-`rho` nuisance split. Next certify those one-dimensional mechanisms,
    then add the reflected fixtures and evaluate the four three-target vertices
    as needed. Complete the remaining empty-target hierarchy and address the
    separate upper/joint variance path and source-solution contract. Do not add

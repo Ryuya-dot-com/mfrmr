@@ -156,8 +156,10 @@ ConfirmationAuthorized = FALSE
 P1k subsequently runs this closed-interval optimizer on the exact-high and
 near-high representatives. All 336 fits are eligible, but 33/168 cells retain
 competing KKT objectives and another ten retain the same objective at distinct
-coordinates. The next gate is therefore fixed-`rho` nuisance continuation for
-those 43 cells, not immediate reflection expansion or three-target work.
+coordinates. P1l subsequently completes fixed-`rho` nuisance continuation for
+those 43 cells and finds route coalescence at every common `rho`. A compact
+continuous profile-mechanism certificate, not immediate reflection expansion
+or three-target work, is now the next gate.
 Hessian inference, intervals, DFF, fit, rank, separation, broad simulation,
 and source selection remain downstream.
 

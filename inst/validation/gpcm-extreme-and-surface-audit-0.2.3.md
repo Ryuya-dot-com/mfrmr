@@ -270,6 +270,18 @@ All best observed values remain above the interior; nevertheless continuation
 of those 43 cells, not convergence counts, controls the next deterministic
 decision.
 
+P1l completes that scoped continuation. All 43 cells coalesce to the same
+nuisance solution whenever `rho` is held equal. The earlier discrepancies are
+therefore one-dimensional profile/stopping phenomena in this representative
+slice, not evidence for multiple nuisance basins: 22 objective-discordant
+cells bracket a profile maximum, six bracket a minimum, five are increasing
+over the grid, and all ten coordinate-only cells bracket a minimum. P1k's
+`1e-4` KKT tolerance admitted eleven high-side candidates that are not exact
+second minima. The 22 maximum-bracket cases still display endpoint-side
+competition. A finite grid cannot exclude unobserved turns, so continuous
+ratio certification and reflected transport—not DFF, Hessian, or simulation—
+are the next ordered tasks.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected
