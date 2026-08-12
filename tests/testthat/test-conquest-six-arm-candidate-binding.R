@@ -18,6 +18,8 @@ load_conquest_six_arm_candidate_binding <- function() {
 test_that("the candidate has exactly six bound command/input arms", {
   env <- load_conquest_six_arm_candidate_binding()$env
   arms <- env$mfrmr_cq_cb_arm_registry()
+  dimensions <- env$mfrmr_cq_cb_model_dimension_registry()
+  dimension_status <- env$mfrmr_cq_cb_model_dimension_status()
   outputs <- env$mfrmr_cq_cb_output_registry()
   hashes <- env$mfrmr_cq_cb_bundle_hashes()
 
@@ -28,19 +30,30 @@ test_that("the candidate has exactly six bound command/input arms", {
   expect_true(all(grepl("^[[:xdigit:]]{64}$", arms$CommandSHA256)))
   expect_true(all(grepl("^[[:xdigit:]]{64}$", arms$InputSHA256)))
   expect_identical(length(unique(arms$InputSHA256)), 2L)
-  expect_identical(nrow(outputs), 46L)
+  expect_identical(nrow(dimensions), 6L)
+  expect_true(all(dimensions$RaterDimension[dimensions$Family != "Binary"]))
+  expect_true(all(dimensions$CriterionDimension[dimensions$Family != "Binary"]))
+  expect_identical(
+    dimensions$ExpectedFreeDimension, c(8L, 8L, 7L, 7L, 9L, 9L)
+  )
+  expect_true(dimension_status$estimand_coverage_ok)
+  expect_true(dimension_status$hash_frozen)
+  expect_true(dimension_status$model_dimension_ready)
+  expect_identical(nrow(outputs), 50L)
   expect_false(anyDuplicated(outputs$RelativePath) > 0L)
   expect_true(all(outputs$ExpectedAbsentAtBinding))
   expect_identical(
-    hashes$Bundle, c("command", "input", "expected_empty_outputs")
+    hashes$Bundle,
+    c("command", "input", "model_dimension", "expected_empty_outputs")
   )
   expect_identical(hashes$SHA256, hashes$ExpectedSHA256)
   expect_identical(
     hashes$SHA256,
     c(
-      "be3127562ea8011b8076b8d1f3a0a5213ba5444803ee567fcbab0941c36874e4",
-      "a7d30cb32b08ccb3f50b89dfc21f14352241ff648743ba207c2c38fcbb905fa1",
-      "9850792b061b1d9d5dfdfe360e65e5c6b65fd6e35d70aa3dc0a81ae8f126ce43"
+      "bc0a3cce17f536306c09dc2883d30c1c2852cbff636a40bafe32fede36268fd7",
+      "cd595bc5a914297ea57f13b1f1fc5d8e6d4d9baacd3f7cadcf380a62806fddcb",
+      "12dafad2ac6e622288717ec60062f1eeb42c159db253dd46757834335b9e40f5",
+      "161488319712d87f720ef6dce8b1a3b5ae1dd0c2e40eea3897189655870d6d8a"
     )
   )
 })
@@ -54,10 +67,15 @@ test_that("the exact binding passes structural preflight but not execution", {
   expect_true(status$binding_identical)
   expect_true(status$binding_ready)
   expect_true(status$policy$IdentityOK)
+  expect_true(status$model_dimension$model_dimension_ready)
   expect_identical(binding$CandidateId, env$mfrmr_cq_cb_candidate_id)
   expect_identical(binding$SourceCommit, env$mfrmr_cq_cb_source_commit)
   expect_identical(
     binding$SourceTreeSHA256, env$mfrmr_cq_cb_source_tree_sha256
+  )
+  expect_identical(
+    binding$ModelDimensionBundleSHA256,
+    env$mfrmr_cq_cb_model_dimension_bundle_sha256
   )
   expect_identical(
     status$freeze$status,
@@ -73,10 +91,13 @@ test_that("the exact binding passes structural preflight but not execution", {
   expect_false(review$candidate_execution_authorized)
   expect_identical(
     review$execution_hold_reason,
-    "polytomous_mfrmr_reference_inference_readiness_unresolved"
+    "corrected_many_facet_candidate_reference_and_execution_preflight_pending"
   )
-  expect_identical(review$polytomous_reference_fit_readiness, "review")
-  expect_false(review$polytomous_reference_inference_ready)
+  expect_identical(
+    review$numerical_reference_state,
+    "pending_corrected_candidate_preflight"
+  )
+  expect_false(review$inference_readiness_required_for_numerical_reference)
   expect_false(review$opened_calibration_reclassification_authorized)
   expect_false(review$hidden_solution_equivalence_eligible)
   expect_false(review$scientific_equivalence_inferred)
@@ -88,11 +109,11 @@ test_that("the pre-binding source tree is hash-bound when git is available", {
   source <- ctx$env$mfrmr_cq_cb_source_status(ctx$root)
 
   expect_identical(
-    source$ExpectedCommit, "7a04fd4cde65d4be985aa2a908ab4d8e65fadba5"
+    source$ExpectedCommit, "8ee7958f7af08141df156b333fe1fc732e2b2bc6"
   )
   expect_identical(
     source$ExpectedTreeSHA256,
-    "bcb700d2757afab3aa1e2330210e36add4bc59cdc2f44e458762b445014a4f4b"
+    "d435e745130fd4eaded7898b31504f1fced8af9e6ac12ff13f43a437dfb48bd9"
   )
   if (dir.exists(file.path(ctx$root, ".git"))) {
     expect_true(source$Available)
@@ -113,6 +134,7 @@ test_that("the local ignored bundle is verified when present", {
     review <- ctx$env$mfrmr_cq_cb_review(candidate_root)
     expect_true(audit$all_commands_ready)
     expect_true(audit$all_inputs_ready)
+    expect_true(audit$all_model_dimensions_ready)
     expect_true(audit$all_outputs_absent)
     expect_true(audit$local_bundle_verified)
     expect_identical(
@@ -123,6 +145,37 @@ test_that("the local ignored bundle is verified when present", {
     expect_false(review$candidate_execution_authorized)
   } else {
     expect_false(dir.exists(candidate_root))
+  }
+})
+
+test_that("candidate 001 is invalidated by its item-only polytomous models", {
+  ctx <- load_conquest_six_arm_candidate_binding()
+  old_root <- file.path(
+    ctx$root, "validation-results/conquest-six-arm-candidate-001-core"
+  )
+  review <- ctx$env$mfrmr_cq_cb_invalid_candidate_review(
+    if (dir.exists(old_root)) old_root else NULL
+  )
+
+  expect_identical(review$status, "invalid_model_dimension_contract")
+  expect_identical(
+    review$registry$InvalidReason,
+    "rsm_pcm_item_only_model_dimension_mismatch"
+  )
+  expect_false(review$registry$RaterDimensionPresent)
+  expect_false(review$registry$CriterionDimensionPresent)
+  expect_false(review$registry$FrozenToleranceEstimandsCovered)
+  expect_false(review$candidate_binding_ready)
+  expect_false(review$candidate_execution_authorized)
+  expect_false(review$scientific_equivalence_inferred)
+  if (dir.exists(old_root)) {
+    expect_identical(
+      unname(review$observed_model_statements),
+      c(
+        "model item + step;", "model item + step;",
+        "model item + item*step;", "model item + item*step;"
+      )
+    )
   }
 })
 
@@ -153,6 +206,7 @@ test_that("binding drift and missing or opened bundle files fail closed", {
   audit <- env$mfrmr_cq_cb_file_audit(empty_root)
   expect_false(audit$all_commands_ready)
   expect_false(audit$all_inputs_ready)
+  expect_false(audit$all_model_dimensions_ready)
   expect_true(audit$all_outputs_absent)
   expect_false(audit$local_bundle_verified)
 
@@ -196,8 +250,11 @@ test_that("the candidate-binding record is source-bound", {
     ctx$env$mfrmr_cq_cb_source_tree_sha256,
     ctx$env$mfrmr_cq_cb_command_bundle_sha256,
     ctx$env$mfrmr_cq_cb_input_bundle_sha256,
+    ctx$env$mfrmr_cq_cb_model_dimension_bundle_sha256,
     ctx$env$mfrmr_cq_cb_expected_empty_outputs_sha256,
-    ctx$env$mfrmr_cq_cb_execution_hold_reason
+    ctx$env$mfrmr_cq_cb_execution_hold_reason,
+    ctx$env$mfrmr_cq_cb_invalid_candidate_id,
+    ctx$env$mfrmr_cq_cb_invalid_candidate_reason
   )
   expect_true(all(vapply(
     identities, grepl, logical(1L), x = record, fixed = TRUE

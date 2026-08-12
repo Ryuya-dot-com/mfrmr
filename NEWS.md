@@ -4,15 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
-* Bound the first prospective six-arm ConQuest candidate to pre-binding source
-  commit `7a04fd4`, the exact ConQuest 5.47.5 executable, six command/input
-  identities, the frozen 57-row tolerance table, and 46 expected-empty output
-  paths. The ignored local bundle matches every hash and contains no expected
-  output. External execution remains held: current v3 readiness classifies the
-  q31 polytomous mfrmr reference as `review`, despite convergence and locally
-  full-rank observed-pattern scores, because global/continuous-integral
-  identification remains unclassified. No fit is relabelled inference-ready,
-  no ConQuest process is launched, and no equivalence is promoted.
+* Invalidated the first prospective ConQuest candidate before execution: its
+  RSM/PCM commands were item-only and could not evaluate the Rater/Criterion
+  estimands required by the frozen 57-row table. The corrected candidate 002
+  now binds six command/input identities plus an estimand-derived model-
+  dimension registry. Its RSM/PCM arms use the native additive models
+  `rater + criterion + step` and `rater + criterion + criterion*step`; exact
+  model statements, facet declarations, nodes, input schemas, free dimensions,
+  and estimand classes all pass. All 50 expected outputs, including additive A
+  matrices, remain absent. External execution remains held pending the exact
+  corrected-reference and handoff preflight; numerical-reference use is
+  explicitly non-inferential and cannot promote fit readiness or equivalence.
 
 * Froze the 57-row future-candidate-only ConQuest numerical budget before any
   new candidate output exists. Symmetric `EXT-CQ-TOL` limits are `1e-5` for

@@ -1486,12 +1486,14 @@ identify whether the opt-in layer ran and retain its test log.
   equivalence, DFF/fit/rank invariance, sparse extension, simulation, and
   confirmation remain unauthorized.
 - `conquest-six-arm-candidate-binding-0.2.3.R` and its companion record: exact
-  pre-execution binding to commit `7a04fd4`, six q31/q61 command/input arms,
-  the ConQuest executable and source-precision identities, and 46 absent
-  expected outputs. The local ignored bundle passes every identity check. The
-  contract still sets execution false because current v3 readiness retains the
-  polytomous mfrmr numerical reference at `review`; local full rank is not
-  silently treated as global identification or inference readiness.
+  pre-execution binding for corrected candidate 002. Candidate 001 is
+  explicitly invalid because its RSM/PCM arms were item-only and omitted the
+  Rater/Criterion estimands in the frozen table. The successor binds six
+  q31/q61 command/input arms, an estimand-derived model-dimension registry, the
+  ConQuest executable and source-precision identities, and 50 absent expected
+  outputs including additive A matrices. Execution remains false pending the
+  exact corrected-reference and handoff preflight. Numerical-reference
+  readiness is kept distinct from, and cannot promote, inference readiness.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

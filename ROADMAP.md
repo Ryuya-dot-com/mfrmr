@@ -150,12 +150,17 @@ Priorities are:
   future-candidate-only engineering budgets. The cross-engine rules are
   `1e-5` for common coordinates and `2e-6` for deviance; both q61-minus-q31
   units use `2e-6`. The opened calibration cannot pass these rules, and the
-  freeze does not establish hidden-solution/scientific equivalence. The exact
-  clean candidate is now bound to pre-binding commit `7a04fd4`, six command
-  and input identities, and 46 expected-empty output paths. All local bundle
-  hashes match and all expected outputs remain absent. The clean core is six
-  arms (`Binary/RSM/PCM x q31/q61`), because the 57-row registry
-  cannot be evaluated by the four additive RSM/PCM arms alone. The additive
+  freeze does not establish hidden-solution/scientific equivalence. The first
+  six-arm candidate was invalidated before execution because its RSM/PCM
+  commands were item-only and omitted the Rater/Criterion estimands in the
+  57-row table. Corrected candidate 002 binds six command/input identities,
+  an estimand-derived model-dimension registry, and 50 expected-empty output
+  paths. Its additive RSM/PCM arms use `rater + criterion + step` and
+  `rater + criterion + criterion*step`; all model statements, facet
+  declarations, nodes, input schemas, free dimensions, estimand classes, and
+  local hashes match, while every expected output remains absent. The clean
+  core remains six arms (`Binary/RSM/PCM x q31/q61`), because the 57-row
+  registry cannot be evaluated by the four additive RSM/PCM arms alone. The additive
   reported points have now been evaluated on a common likelihood: deviance
   increases over the mfrmr point are below `4.75e-10`, all local Hessians are
   positive definite, and same-point q31/q61 differences are below `2.73e-12`.
@@ -166,13 +171,13 @@ Priorities are:
   proves six-arm normalizer and exact-decimal parser coverage. It also records
   that only the four RSM/PCM calibration arms have retained native files;
   Binary q31/q61 remain unobserved. Adapter, tolerance, and binding readiness
-  are complete, while execution is deliberately held: current v3 readiness
-  leaves the converged q31 polytomous mfrmr reference at `review` because
-  local score rank does not establish global or continuous-integral
-  identification. The next task is to define an explicitly non-inferential
-  numerical-reference state or supply the stronger identification evidence;
-  only then may ConQuest run. Binary native evidence and all six-arm decisions
-  remain open. Hidden-solution
+  are complete, while execution is deliberately held pending the exact
+  corrected many-facet numerical-reference and handoff preflight. Numerical
+  reference readiness is explicitly distinct from inference readiness: a
+  converged, finite, oracle-checked, locally full-rank point may support
+  arithmetic comparison without licensing inferential claims. Only after that
+  contract is source-bound may ConQuest run. Binary native evidence and all
+  six-arm decisions remain open. Hidden-solution
   equivalence remains unavailable without a documented rounding interval or
   full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
