@@ -88,7 +88,7 @@ preflight rejects:
   policy;
 - any family, node, arm-count, normalizer-coverage, or source-precision-
   coverage declaration smaller than `Binary;RSM;PCM x 31;61` (six arms), or
-  an unhashed normalizer/precision coverage registry;
+  an unhashed or wrong-identity normalizer/precision coverage registry;
 - a freeze made after candidate execution;
 - candidate outputs already present or opened at freeze; and
 - any attempt to make the opened calibration pass the new rule.
@@ -109,22 +109,32 @@ This slice closes the missing validation mechanism but does not close release
 rows `conquest_binary_core`, `conquest_rsm_core`, or `conquest_pcm_core`. Their
 evidence status remains `review`.
 
+The Binary adapter and canonical coverage registries are now implemented.
+Their 54 rows cover 18 Binary, 16 RSM, and 20 PCM coordinates. The prospective
+binding accepts only normalizer registry SHA-256
+`a966ae0d4feb2ef64c6374a5d176182bcec32245a54a7d4534752491b44d0cfb`
+and source-precision registry SHA-256
+`52907c41026726002dcf04167a4b74f94fcd4aa9ca1ac8162c59661b0759734b`.
+This closes implementation coverage, not result coverage: retained native
+calibration files exist for four RSM/PCM arms and not for Binary q31/q61.
+
 ## Verification and identities
 
-The focused test completed with 62 passing expectations, zero failures, and
+The focused test completed with 65 passing expectations, zero failures, and
 zero skips. It covers the exact registry, default fail closure, a structurally
 complete future fixture, opened-calibration rejection, candidate-output timing,
-tolerance-hash binding, registry drift, and unsupported source paths/types.
-The complete ConQuest-labelled test slice then completed with 515 expectations,
+tolerance-hash binding, exact coverage-registry identities, registry drift,
+and unsupported source paths/types. The complete ConQuest-labelled test slice
+then completed with 594 expectations,
 zero failures, zero errors, zero skips, and zero warnings. A CRAN-light package
 check completed with zero errors, zero warnings, and zero notes.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `conquest-prospective-tolerance-contract-0.2.3.R` | `5b9ae8c169348ffe8ab319fcc755c61fa1442e050e85d5e2295c1fe0f2ef318f` |
-| `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `ca6d6e58c7dc40bf43571d335cc7f5ec644979cd03ef8186b39242b0a13de3af` |
+| `conquest-prospective-tolerance-contract-0.2.3.R` | `d00292ede7985ce36c936a38cebe744478fdb0bffee74b75df025b485ca7b605` |
+| `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `ff4dbfad26faa9dea98792cdf56cee35cea691c5f7640623558b31ee02fd1699` |
 | `conquest-reported-output-precision-contract-0.2.3.R` | `e0e80ebd96c48634ddd39231959bb0c5cfcd6c036c39c4e5bf8224e19164fd53` |
-| `conquest-additive-tolerance-adjudication-0.2.3.md` | `a81bf01a1b654e5b4b6c2254fa16e98f17e8e16264f137fd7bd35e8145813efa` |
+| `conquest-additive-tolerance-adjudication-0.2.3.md` | `079e0c350f58a12e49e7cce3c58c77f9ea456e6322e5c98392f54487fbeb04de` |
 | `conquest-additive-native-four-arm-record-0.2.3.md` | `c83d344920be0fd4c08db7e6931afb2bdc4f52a0d187bd51434c6cc0d1ef7cdd` |
 
 ## Machine disposition
@@ -140,7 +150,11 @@ check completed with zero errors, zero warnings, and zero notes.
 | `CurrentCandidateBound` | `FALSE` |
 | `CurrentReportedOutputPrecisionPolicyFrozen` | `TRUE` |
 | `CurrentHiddenSolutionPrecisionPolicyFrozen` | `FALSE` |
-| `CurrentBinaryReportedOutputNormalizerReady` | `FALSE` |
+| `CurrentBinaryReportedOutputNormalizerReady` | `TRUE` |
+| `CurrentSixArmNormalizerImplementationReady` | `TRUE` |
+| `CurrentSixArmSourcePrecisionImplementationReady` | `TRUE` |
+| `CurrentRetainedNativeCalibrationArms` | `4` |
+| `CurrentBinaryRetainedNativeEvidenceAvailable` | `FALSE` |
 | `OpenedCalibrationReclassificationAuthorized` | `FALSE` |
 | `CurrentCandidateCoreRunAuthorized` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |

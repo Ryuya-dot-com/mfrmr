@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added the missing Binary ConQuest q31/q61 reported-output normalizer. Its
+  pre-result registry contains 18 rows: three population coordinates, five
+  free item difficulties, and deviance in each arm. Missing retained Binary
+  files remain 18 explicit missing rows rather than reconstructed evidence.
+  A new content-hashed six-arm registry joins these rows with the 36 retained
+  RSM/PCM coordinates and distinguishes adapter/parser implementation coverage
+  (6/6 arms) from retained native calibration evidence (4/6 arms). The
+  prospective preflight now requires the exact normalizer and source-precision
+  registry hashes, not merely arbitrary SHA-shaped declarations. No tolerance,
+  candidate run, comparison, equivalence, or confirmation is created.
+
 * Evaluated the retained exact ConQuest RSM/PCM decimal coordinates on an
   independent common-likelihood oracle. Across q31/q61, reported-point versus
   mfrmr-point deviance increases are below `4.75e-10`, all Hessians are

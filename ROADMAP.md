@@ -157,10 +157,17 @@ Priorities are:
   reported points have now been evaluated on a common likelihood: deviance
   increases over the mfrmr point are below `4.75e-10`, all local Hessians are
   positive definite, and same-point q31/q61 differences are below `2.73e-12`.
-  This calibrates scale without freezing a rule. A Binary reported-output
-  normalizer remains a pre-execution blocker. Hidden-solution equivalence
-  remains unavailable without a documented rounding interval or full-
-  precision export;
+  This calibrates scale without freezing a rule. The Binary reported-output
+  normalizer is now implemented over 18 pre-result rows: three population
+  coordinates, five free item difficulties, and deviance in each of q31/q61.
+  Together with the additive 36 rows, a content-hashed 54-row registry now
+  proves six-arm normalizer and exact-decimal parser coverage. It also records
+  that only the four RSM/PCM calibration arms have retained native files;
+  Binary q31/q61 remain unobserved. Thus adapter readiness is complete, while
+  the prospective tolerance freeze, exact candidate binding, Binary native
+  evidence, and all six-arm decisions remain open. Hidden-solution
+  equivalence remains unavailable without a documented rounding interval or
+  full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope

@@ -67,9 +67,11 @@ RSM/PCM arms:
 
 The prospective binding now rejects a four-arm `RSM;PCM` declaration. It
 requires all three families in the candidate, source-precision coverage, and
-normalizer coverage before a run can be structurally authorized. In
-particular, the existing 36-row additive normalizer does not yet supply the
-Binary reported-output rows; that adapter is a pre-execution task.
+normalizer coverage before a run can be structurally authorized. The later
+Binary contract now supplies the missing 18 pre-result rows, bringing the
+canonical implementation registry to 54 coordinates. Binary native q31/q61
+outputs are still absent, so implementation coverage must not be read as
+result coverage.
 
 ## What is and is not ready
 
@@ -78,15 +80,17 @@ Binary reported-output rows; that adapter is a pre-execution task.
 | Exact reported-decimal reconstruction | ready for the 36 additive rows |
 | Common-likelihood evaluation mechanics | ready for the 4 additive arms |
 | Additive same-point integration scale | calibration observed |
-| Binary reported-output normalizer | missing |
+| Binary reported-output normalizer | implemented for 18 pre-result rows |
+| Binary retained native q31/q61 evidence | missing |
 | 57 prospective tolerance values | not frozen |
 | Clean six-arm candidate identity | not bound |
 | Hidden ConQuest solution equivalence | unavailable |
 | DFF, fit, or ranking decision invariance | not evaluated by this microcase |
 
-The next action is not a large simulation. It is to implement the narrow
-Binary reported-output adapter, independently review estimand-level future-
-candidate bounds, and seal all six empty-output arms before execution.
+The next action is not a large simulation. It is to independently review
+estimand-level future-candidate bounds, freeze them prospectively, and seal all
+six empty-output arms before execution. Binary q31/q61 native outputs must be
+retained when that authorized core is eventually run.
 
 ## Source binding and verification
 
@@ -99,7 +103,7 @@ candidate bounds, and seal all six empty-output arms before execution.
 The focused calibration test completes with 42 expectations, zero failures,
 zero errors, zero skips, and zero warnings. Mutation controls reject q31/q61
 token drift, input/review detachment, and any hidden-solution promotion. The
-complete ConQuest-labelled slice completes with 515 expectations and no
+complete ConQuest-labelled slice completes with 594 expectations and no
 failures, errors, skips, or warnings. A clean source tarball with built
 vignettes passes `R CMD check --no-manual` with `Status: OK`.
 

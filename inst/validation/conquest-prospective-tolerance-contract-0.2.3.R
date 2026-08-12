@@ -17,6 +17,10 @@ mfrmr_cq_ptc_source_precision_scope <- "exact_reported_decimal"
 mfrmr_cq_ptc_candidate_families <- "Binary;RSM;PCM"
 mfrmr_cq_ptc_candidate_nodes <- "31;61"
 mfrmr_cq_ptc_candidate_arm_count <- 6L
+mfrmr_cq_ptc_normalizer_coverage_registry_sha256 <-
+  "a966ae0d4feb2ef64c6374a5d176182bcec32245a54a7d4534752491b44d0cfb"
+mfrmr_cq_ptc_source_precision_coverage_registry_sha256 <-
+  "52907c41026726002dcf04167a4b74f94fcd4aa9ca1ac8162c59661b0759734b"
 
 mfrmr_cq_ptc_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -310,6 +314,10 @@ mfrmr_cq_ptc_validate_binding <- function(binding, tolerance_sha256) {
       as.character(x$NormalizerCoverageFamilies),
       mfrmr_cq_ptc_candidate_families
     ),
+    NormalizerCoverageRegistryIdentityOK = identical(
+      tolower(as.character(x$NormalizerCoverageRegistrySHA256)),
+      mfrmr_cq_ptc_normalizer_coverage_registry_sha256
+    ),
     SourcePrecisionPolicyIdOK = identical(
       as.character(x$SourcePrecisionPolicyId),
       mfrmr_cq_ptc_source_precision_policy_id
@@ -321,6 +329,10 @@ mfrmr_cq_ptc_validate_binding <- function(binding, tolerance_sha256) {
     SourcePrecisionCoverageComplete = identical(
       as.character(x$SourcePrecisionCoverageFamilies),
       mfrmr_cq_ptc_candidate_families
+    ),
+    SourcePrecisionCoverageRegistryIdentityOK = identical(
+      tolower(as.character(x$SourcePrecisionCoverageRegistrySHA256)),
+      mfrmr_cq_ptc_source_precision_coverage_registry_sha256
     ),
     SourcePrecisionReady = strict_flag(x$SourcePrecisionReady, TRUE),
     SourcePrecisionProspective = strict_flag(

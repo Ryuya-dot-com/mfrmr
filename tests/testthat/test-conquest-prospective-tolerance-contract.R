@@ -50,14 +50,14 @@ complete_conquest_prospective_binding <- function(env, tolerances) {
   out$CandidateArmCount <- env$mfrmr_cq_ptc_candidate_arm_count
   out$NormalizerCoverageFamilies <- env$mfrmr_cq_ptc_candidate_families
   out$NormalizerCoverageRegistrySHA256 <-
-    paste(rep("2", 64L), collapse = "")
+    env$mfrmr_cq_ptc_normalizer_coverage_registry_sha256
   out$SourcePrecisionPolicyId <-
     env$mfrmr_cq_ptc_source_precision_policy_id
   out$SourcePrecisionScope <- env$mfrmr_cq_ptc_source_precision_scope
   out$SourcePrecisionCoverageFamilies <-
     env$mfrmr_cq_ptc_candidate_families
   out$SourcePrecisionCoverageRegistrySHA256 <-
-    paste(rep("3", 64L), collapse = "")
+    env$mfrmr_cq_ptc_source_precision_coverage_registry_sha256
   out$SourcePrecisionPolicySHA256 <- paste(rep("1", 64L), collapse = "")
   out$SourcePrecisionReady <- TRUE
   out$SourcePrecisionIndependentOfCandidateOutput <- TRUE
@@ -224,6 +224,22 @@ test_that("candidate output timing and tolerance hash fail closed", {
   expect_false(partial_preflight$binding_review$NormalizerCoverageComplete)
   expect_false(
     partial_preflight$binding_review$SourcePrecisionCoverageComplete
+  )
+
+  wrong_coverage <- binding
+  wrong_coverage$NormalizerCoverageRegistrySHA256 <-
+    paste(rep("9", 64L), collapse = "")
+  wrong_coverage$SourcePrecisionCoverageRegistrySHA256 <-
+    paste(rep("8", 64L), collapse = "")
+  coverage_preflight <- env$mfrmr_cq_prospective_tolerance_preflight(
+    tolerances, wrong_coverage
+  )
+  expect_false(coverage_preflight$candidate_binding_ready)
+  expect_false(
+    coverage_preflight$binding_review$NormalizerCoverageRegistryIdentityOK
+  )
+  expect_false(
+    coverage_preflight$binding_review$SourcePrecisionCoverageRegistryIdentityOK
   )
 
   wrong_hash <- binding
