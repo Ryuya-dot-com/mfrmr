@@ -177,9 +177,11 @@ Priorities are:
   internally consistent coordinate contract. All three q31/q61 pairs pass the
   prospective within-engine coordinate and deviance budgets. Every fit remains
   non-inference-ready, and numerical agreement cannot promote inference.
-  Execution is deliberately held until a separate exact executable/path/
-  console-capture handoff is frozen. Binary native evidence and all six-arm
-  cross-engine decisions remain open. Hidden-solution
+  The exact executable/path/console-capture handoff is now frozen and
+  authorizes one six-arm native run while all 50 expected outputs are absent.
+  This authorization is consumed at launch and does not authorize comparison,
+  equivalence, sparse/GPCM extension, or simulation. Binary native evidence
+  and all six-arm cross-engine decisions remain open. Hidden-solution
   equivalence remains unavailable without a documented rounding interval or
   full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning

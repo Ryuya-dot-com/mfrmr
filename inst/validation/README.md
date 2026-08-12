@@ -1500,8 +1500,14 @@ identify whether the opt-in layer ran and retain its test log.
   marginal-likelihood oracles plus local full rank; Binary retains an explicit
   weaker converged/finite/internal-coordinate-consistency basis. Every
   within-engine integration row passes the frozen prospective budget, while
-  all fits remain non-inference-ready and external execution remains false
-  until a separate handoff is frozen.
+  all fits remain non-inference-ready. Its own execution flag remains false;
+  only the successor handoff can issue the one-way native-run authorization.
+- `conquest-six-arm-execution-handoff-0.2.3.R` and its companion record: exact
+  one-way authorization for the six candidate-002 native runs. It binds the
+  ConQuest executable, pre-handoff source, six working directories, stdin
+  commands, combined console captures, and 50 absent outputs. Authorization is
+  consumed by launch and does not authorize output reuse, comparison,
+  equivalence, confirmation, sparse/GPCM extension, or simulation.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

@@ -10,7 +10,7 @@ execution, candidate binding, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `8cec2df74d464cd575e5a361c7db575d8dc3309af4f671c783f0d09337583344` |
+| `release-evidence-checklist-0.2.3.csv` | `f354e14ee3c4f7f6ca84543de6c4606daeda202acc0ca524a5e767188f9fd2bb` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -154,9 +154,10 @@ claim and decision-specific precision argument justify the run.
    engineering.
 3. Retain the frozen ConQuest numerical budget, corrected model-dimension-bound
    candidate 002, and its six exact non-inferential numerical references;
-   freeze the executable/path/console-capture handoff without promoting local
-   rank to global identification; only then consider the Binary/RSM/PCM
-   q31/q61 run before any sparse extension.
+   use the frozen one-way executable/path/console-capture handoff for only the
+   six authorized Binary/RSM/PCM q31/q61 runs, then review every native output
+   without promoting local rank or numerical agreement to inference or
+   equivalence before any sparse extension.
 4. Run a conditional simulation only if its fallback is unacceptable for the
    intended 0.2.3 claim and a written precision calculation shows how the
    result can change promotion.

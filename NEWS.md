@@ -4,6 +4,13 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Froze the candidate-002 native execution handoff after rechecking the exact
+  ConQuest 5.47.5 executable, pre-handoff source, candidate/model/reference
+  bundles, six working-directory/stdin/console mappings, and 50 absent output
+  paths. It authorizes exactly one six-arm run and no output reuse. Comparison,
+  equivalence, confirmation, sparse/GPCM extension, and simulation remain
+  unauthorized until the new native outputs pass their separate review.
+
 * Generated all six mfrmr q31/q61 numerical references for corrected ConQuest
   candidate 002 from its exact pre-binding source commit. The four additive
   RSM/PCM arms pass independent probability/marginal-likelihood oracles and
