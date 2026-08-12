@@ -144,14 +144,15 @@ Priorities are:
   structurally eligible for that narrower metric. This completes source-
   precision plumbing, not comparison acceptance. A prospective tolerance
   precedes any candidate-bound rerun. The prospective-freeze validator is now
-  implemented over 19 cross-engine binary/RSM/PCM estimand rows and 38 engine-specific
-  integration-stability rows. Its empty template intentionally remains
-  `pilot_required`: it prevents the opened four-arm maximum difference from
-  becoming a self-passing threshold, requires source-bound signed and absolute
-  rules plus candidate/output timing identities, and authorizes no current
-  rerun. The remaining decision is scientific rather than mechanical: justify
-  and review reported-output-scale estimand tolerances, then bind the exact
-  clean candidate before producing any new ConQuest output. The next clean
+  implemented over 19 cross-engine binary/RSM/PCM estimand rows and 38 engine-
+  specific integration-stability rows. Its generic empty template remains
+  `pilot_required`, while the source-bound canonical table now freezes all 57
+  future-candidate-only engineering budgets. The cross-engine rules are
+  `1e-5` for common coordinates and `2e-6` for deviance; both q61-minus-q31
+  units use `2e-6`. The opened calibration cannot pass these rules, and the
+  freeze does not establish hidden-solution/scientific equivalence. The next
+  task is to bind the exact clean candidate and its six empty output arms
+  before producing any new ConQuest output. The next clean
   core is six arms (`Binary/RSM/PCM x q31/q61`), because the 57-row registry
   cannot be evaluated by the four additive RSM/PCM arms alone. The additive
   reported points have now been evaluated on a common likelihood: deviance
@@ -163,9 +164,9 @@ Priorities are:
   Together with the additive 36 rows, a content-hashed 54-row registry now
   proves six-arm normalizer and exact-decimal parser coverage. It also records
   that only the four RSM/PCM calibration arms have retained native files;
-  Binary q31/q61 remain unobserved. Thus adapter readiness is complete, while
-  the prospective tolerance freeze, exact candidate binding, Binary native
-  evidence, and all six-arm decisions remain open. Hidden-solution
+  Binary q31/q61 remain unobserved. Thus adapter and tolerance-table readiness
+  are complete, while exact candidate binding, Binary native evidence, and all
+  six-arm decisions remain open. Hidden-solution
   equivalence remains unavailable without a documented rounding interval or
   full-precision export;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning

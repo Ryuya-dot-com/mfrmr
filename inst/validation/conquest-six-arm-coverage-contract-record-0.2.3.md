@@ -2,8 +2,9 @@
 
 Status: deterministic implementation coverage complete, 2026-08-12. No new
 ConQuest process was launched. No Binary native output was reconstructed from
-the historical prose record, and no tolerance, candidate comparison,
-equivalence, or confirmation is authorized.
+the historical prose record. A successor contract freezes a disjoint-future-
+candidate table, but no candidate comparison, equivalence, or confirmation is
+authorized.
 
 ## Decision
 
@@ -67,7 +68,7 @@ hashes. A different but syntactically valid 64-character digest fails closed.
 
 The focused Binary adapter and six-arm coverage tests complete with 37 and 39
 passing expectations, respectively. The complete ConQuest-labelled slice
-completes with 594 expectations and no failures, errors, skips, or warnings.
+completes with 666 expectations and no failures, errors, skips, or warnings.
 A source tarball with rebuilt vignettes passes
 `R CMD check --no-manual` with `Status: OK`.
 
@@ -92,7 +93,7 @@ A source tarball with rebuilt vignettes passes
 | `SourcePrecisionImplementationReady` | `TRUE` |
 | `RetainedNativeCalibrationArms` | `4` |
 | `BinaryRetainedNativeEvidenceAvailable` | `FALSE` |
-| `ToleranceFrozen` | `FALSE` |
+| `FutureCandidateToleranceFrozen` | `TRUE` |
 | `CandidateBound` | `FALSE` |
 | `ComparisonReady` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |

@@ -1475,9 +1475,16 @@ identify whether the opt-in layer ran and retain its test log.
   `IC-INTEGRATION-TOL` rows, binds the canonical table hash and candidate
   identities plus the independently frozen exact reported-decimal source-
   precision policy before output exists, and makes the opened calibration
-  permanently ineligible under any newly frozen rule. The current empty
-  template remains `pilot_required`; no numeric tolerance, candidate run,
-  equivalence, confirmation, sparse extension, or simulation is authorized.
+  permanently ineligible under any newly frozen rule. The generic empty
+  template remains `pilot_required`.
+- `conquest-prospective-tolerance-basis-0.2.3.md`,
+  `conquest-prospective-tolerance-freeze-0.2.3.R`, and their companion record:
+  source-bound canonical 57-row future-candidate table. Cross-engine common
+  coordinates use symmetric `1e-5` limits, while cross-engine deviance and
+  both integration units use `2e-6`. The opened calibration is ineligible,
+  the table hash is frozen, and candidate binding/execution, hidden-solution
+  or scientific equivalence, DFF/fit/rank invariance, sparse extension,
+  simulation, and confirmation remain unauthorized.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

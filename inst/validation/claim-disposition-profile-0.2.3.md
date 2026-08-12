@@ -4,13 +4,13 @@ Status: repository-only portfolio overlay, 2026-08-11. This profile reduces
 the release programme to the evidence needed for retained 0.2.3 claims. It is
 not a new statistical gate, does not change any evidence status, does not
 promote a pilot, and authorizes no simulation, confirmation, external-program
-execution, candidate freeze, or release.
+execution, candidate binding, or release.
 
 ## Bound source
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `c6e28be5e2b786c958bb7e51316e024cece39b1c3cc3266551af2219c35c7ad4` |
+| `release-evidence-checklist-0.2.3.csv` | `5a37a25b8c4e3a60c65efcd85760a96b4e184f4b106fe31ae00c401749b2a3db` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`
@@ -152,9 +152,10 @@ claim and decision-specific precision argument justify the run.
    order: deterministic numerical/readiness contracts, external-core
    microcases, retained-core recovery precision, then candidate and release
    engineering.
-3. Independently adjudicate the ConQuest CSV resolution/tolerance boundary,
-   then rerun the small additive RSM/PCM core on the bound candidate before
-   adding one connected sparse/unequal-workload microcase.
+3. Retain the frozen ConQuest exact-reported-decimal numerical budget, bind the
+   exact six-arm candidate before any output exists, and only then run the
+   Binary/RSM/PCM q31/q61 core before adding one connected sparse/unequal-
+   workload microcase.
 4. Run a conditional simulation only if its fallback is unacceptable for the
    intended 0.2.3 claim and a written precision calculation shows how the
    result can change promotion.

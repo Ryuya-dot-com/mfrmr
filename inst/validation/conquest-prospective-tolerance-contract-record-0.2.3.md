@@ -1,15 +1,17 @@
 # ConQuest prospective tolerance-freeze contract record for 0.2.3
 
-Status: deterministic contract implemented, 2026-08-12. No tolerance value is
-frozen, no candidate is bound, no ConQuest process is launched, and no
-scientific-equivalence or confirmation claim is authorized.
+Status: generic validator implemented and successor canonical table frozen,
+2026-08-12. The generic template remains empty, no candidate is bound, no
+ConQuest process is launched, and no scientific-equivalence or confirmation
+claim is authorized.
 
 ## Decision
 
 The opened additive four-arm calibration cannot supply a threshold and then be
-declared to pass that threshold. The next reusable step is therefore a
-prospective freeze validator, not another fit and not a numerical value chosen
-from the observed maximum difference.
+declared to pass that threshold. This record first established the prospective
+freeze validator. Its successor basis/freeze layer now supplies a separate
+canonical table for a disjoint future candidate; it does not choose a value
+that retroactively passes the opened result.
 
 `conquest-prospective-tolerance-contract-0.2.3.R` implements that validator. Its
 default tolerance and candidate-binding templates deliberately fail with
@@ -99,11 +101,14 @@ extension, and large simulation false.
 
 ## Current result
 
-The repository template has 57 missing numerical rules and an unbound
-candidate. Its controlling decision is therefore
-`hold_tolerance_or_candidate_binding_incomplete`. The synthetic positive test
-only proves that a complete future record can be parsed and hash-bound; it is
-not current ConQuest evidence.
+The generic repository template still has 57 missing numerical rules and
+therefore remains a fail-closed fixture. The successor basis/freeze contract
+now supplies a separate canonical table with all 57 future-candidate-only
+rules ready and SHA-256
+`64ab3338dc5e5144d98a7a8775512b5665f407e4d8778972521ff5bfe8754521`.
+Its current decision is `tolerance_frozen_candidate_binding_required` because
+no exact candidate is bound. Neither the generic synthetic positive fixture
+nor the opened calibration is current passing ConQuest evidence.
 
 This slice closes the missing validation mechanism but does not close release
 rows `conquest_binary_core`, `conquest_rsm_core`, or `conquest_pcm_core`. Their
@@ -125,7 +130,7 @@ zero skips. It covers the exact registry, default fail closure, a structurally
 complete future fixture, opened-calibration rejection, candidate-output timing,
 tolerance-hash binding, exact coverage-registry identities, registry drift,
 and unsupported source paths/types. The complete ConQuest-labelled test slice
-then completed with 594 expectations,
+then completed with 666 expectations,
 zero failures, zero errors, zero skips, and zero warnings. A CRAN-light package
 check completed with zero errors, zero warnings, and zero notes.
 
@@ -134,7 +139,10 @@ check completed with zero errors, zero warnings, and zero notes.
 | `conquest-prospective-tolerance-contract-0.2.3.R` | `d00292ede7985ce36c936a38cebe744478fdb0bffee74b75df025b485ca7b605` |
 | `tests/testthat/test-conquest-prospective-tolerance-contract.R` | `ff4dbfad26faa9dea98792cdf56cee35cea691c5f7640623558b31ee02fd1699` |
 | `conquest-reported-output-precision-contract-0.2.3.R` | `e0e80ebd96c48634ddd39231959bb0c5cfcd6c036c39c4e5bf8224e19164fd53` |
-| `conquest-additive-tolerance-adjudication-0.2.3.md` | `079e0c350f58a12e49e7cce3c58c77f9ea456e6322e5c98392f54487fbeb04de` |
+| `conquest-prospective-tolerance-basis-0.2.3.md` | `9b4c76add31061dcee532fcf2528e2614bd151dca75d3792fbde5364361279bd` |
+| `conquest-prospective-tolerance-freeze-0.2.3.R` | `23bd8c5e4f439097afd546f3b726964d18b3438c085fb6cbdf549509e9b420b5` |
+| `tests/testthat/test-conquest-prospective-tolerance-freeze.R` | `8641877be59b82e7d3bde9b5f5837e9a6a81c790a2040e73808453d830362681` |
+| `conquest-additive-tolerance-adjudication-0.2.3.md` | `d40fa4d4341819bf09a1a0db57943f437c69b10f884568b3e570ca1271ac16d4` |
 | `conquest-additive-native-four-arm-record-0.2.3.md` | `c83d344920be0fd4c08db7e6931afb2bdc4f52a0d187bd51434c6cc0d1ef7cdd` |
 
 ## Machine disposition
@@ -146,7 +154,8 @@ check completed with zero errors, zero warnings, and zero notes.
 | `RequiredCandidateFamilies` | `Binary;RSM;PCM` |
 | `RequiredCandidateNodes` | `31;61` |
 | `RequiredCandidateArms` | `6` |
-| `CurrentToleranceValuesFrozen` | `FALSE` |
+| `CurrentToleranceValuesFrozen` | `TRUE` |
+| `CurrentToleranceTableSHA256` | `64ab3338dc5e5144d98a7a8775512b5665f407e4d8778972521ff5bfe8754521` |
 | `CurrentCandidateBound` | `FALSE` |
 | `CurrentReportedOutputPrecisionPolicyFrozen` | `TRUE` |
 | `CurrentHiddenSolutionPrecisionPolicyFrozen` | `FALSE` |
@@ -156,6 +165,7 @@ check completed with zero errors, zero warnings, and zero notes.
 | `CurrentRetainedNativeCalibrationArms` | `4` |
 | `CurrentBinaryRetainedNativeEvidenceAvailable` | `FALSE` |
 | `OpenedCalibrationReclassificationAuthorized` | `FALSE` |
+| `CurrentCandidateCoreStructurallyAuthorized` | `FALSE` |
 | `CurrentCandidateCoreRunAuthorized` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
 | `ConfirmationAuthorized` | `FALSE` |

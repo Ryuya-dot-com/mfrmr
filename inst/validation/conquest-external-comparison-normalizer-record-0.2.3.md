@@ -116,11 +116,10 @@ Deterministic tests establish that:
 ## Consequence and next gate
 
 This adapter and the reported-output policy close source precision only for the
-exact decimals written to file; checklist row 64 remains `review`. The next
-step is to justify and freeze reported-output-scale tolerances, followed by a
-newly generated, candidate-bound small core. Hidden-solution equivalence stays
-unavailable unless ConQuest supplies a documented rounding interval or a
-full-precision export. The ConQuest executable/version/parser/generator
-identity remains governed by the separate external-input identity gate. Broad
-simulation, sparse-design expansion, and GPCM owner validation cannot repair a
-missing tolerance or candidate identity and therefore remain downstream.
+exact decimals written to file; checklist row 64 remains `review`. The
+successor contract now freezes reported-output-scale tolerances for a disjoint
+future candidate, so the next step is to bind the exact source, commands,
+inputs, and empty outputs before a newly generated six-arm core. Hidden-
+solution equivalence stays unavailable unless ConQuest supplies a documented
+rounding interval or a full-precision export. Broad simulation, sparse-design
+expansion, and GPCM owner validation remain downstream.

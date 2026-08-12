@@ -1,8 +1,10 @@
 # ConQuest reported-point common-likelihood calibration for mfrmr 0.2.3
 
 Status: opened additive calibration evaluated on a common likelihood,
-2026-08-12. This record selects no tolerance, binds no candidate, infers no
-equivalence, and authorizes no external run or confirmation.
+2026-08-12. This calibration does not select a self-passing tolerance. A
+successor contract freezes a disjoint-future-candidate table; no candidate is
+bound, no equivalence is inferred, and no external run or confirmation is
+authorized.
 
 ## Why this slice is necessary
 
@@ -82,15 +84,16 @@ result coverage.
 | Additive same-point integration scale | calibration observed |
 | Binary reported-output normalizer | implemented for 18 pre-result rows |
 | Binary retained native q31/q61 evidence | missing |
-| 57 prospective tolerance values | not frozen |
+| 57 prospective tolerance values | frozen later for a disjoint candidate only |
 | Clean six-arm candidate identity | not bound |
 | Hidden ConQuest solution equivalence | unavailable |
 | DFF, fit, or ranking decision invariance | not evaluated by this microcase |
 
-The next action is not a large simulation. It is to independently review
-estimand-level future-candidate bounds, freeze them prospectively, and seal all
-six empty-output arms before execution. Binary q31/q61 native outputs must be
-retained when that authorized core is eventually run.
+The next action is not a large simulation. The estimand-level future-candidate
+bounds are now frozen by the successor contract; the remaining task is to bind
+the exact source, commands, inputs, and six empty-output arms before execution.
+Binary q31/q61 native outputs must be retained when that authorized core is
+eventually run.
 
 ## Source binding and verification
 
@@ -103,7 +106,7 @@ retained when that authorized core is eventually run.
 The focused calibration test completes with 42 expectations, zero failures,
 zero errors, zero skips, and zero warnings. Mutation controls reject q31/q61
 token drift, input/review detachment, and any hidden-solution promotion. The
-complete ConQuest-labelled slice completes with 594 expectations and no
+complete ConQuest-labelled slice completes with 666 expectations and no
 failures, errors, skips, or warnings. A clean source tarball with built
 vignettes passes `R CMD check --no-manual` with `Status: OK`.
 
@@ -119,7 +122,8 @@ vignettes passes `R CMD check --no-manual` with `Status: OK`.
 | `CandidateFamiliesRequired` | `Binary;RSM;PCM` |
 | `CandidateNodesRequired` | `31;61` |
 | `CandidateArmsRequired` | `6` |
-| `ToleranceFrozen` | `FALSE` |
+| `CalibrationEligibleUnderSuccessorTolerance` | `FALSE` |
+| `FutureCandidateToleranceFrozen` | `TRUE` |
 | `CandidateBound` | `FALSE` |
 | `ComparisonReady` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
