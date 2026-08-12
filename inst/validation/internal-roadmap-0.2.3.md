@@ -4232,12 +4232,39 @@ rule but are not exact second minima; the 22 maximum-bracket cases retain
 endpoint-side competition on the observed curve.
 
 This is the intended de-escalation: the next step is not a larger simulation,
-three-target enumeration, or dense rectangular `mu`/`rho` grid. It is a small
-continuous one-dimensional certificate that brackets the observed turning
+three-target enumeration, or dense rectangular `mu`/`rho` grid. P1m therefore
+uses a small local one-dimensional audit that brackets representative turning
 points, checks endpoint ordering, and states what remains unproved between
 grid points. Only then should the contract be transported to exact-low and
 near-low reflections. Continuous barrier certification, ratio-face closure,
 source selection, Hessian, DFF/fit/rank, and broad simulation all remain false.
+
+##### Draft.35 Local profile turning-point audit
+
+P1m freezes four representatives through a metric-first, `CellId` tie-breaking
+rule: objective maximum, objective minimum, monotone increasing, and
+coordinate-only minimum. It tightens nuisance stationarity from the P1l screen
+to a `2e-6` gradient sup-norm. When BFGS/L-BFGS-B stop at objective-rounding
+scale, a Richardson-Hessian Newton correction is accepted only when it reduces
+the gradient and stays within an explicit machine-epsilon objective allowance.
+
+All 87 points pass. The maximum and two minimum roots narrow to widths between
+about `5.96e-8` and `7.16e-8`; refined envelope derivatives are no larger than
+about `2.37e-8` in absolute value. Both route starts agree within about
+`1.14e-13` in objective and `2.53e-7` in nuisance coordinates. Nuisance-Hessian
+minimum eigenvalues remain near `5.64`. On the independently checked maximum,
+the objective-Hessian perturbation has spectral norm only 0.60% of that
+minimum eigenvalue and preserves positive definiteness.
+
+The monotone representative remains objective-nondecreasing with positive
+derivatives at nine points; its smallest observed derivative is about
+`3.91e-5`. This is deliberately not called continuous monotonicity. P1m closes
+the local representative-mechanism question while leaving
+`ContinuousMonotonicityCertified` and `ContinuousGlobalProfileCertified`
+false. The next efficient task is an algebraic category-reversal map for the
+low reflections, with fitting only on identity failure. Three-target faces,
+the remaining hierarchy, source selection, inferential Hessian, DFF/fit/rank,
+and broad simulation remain later gates.
 
 ##### Draft.33 Person-fixed structural recession certificate
 

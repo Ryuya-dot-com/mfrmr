@@ -200,6 +200,15 @@ identify whether the opt-in layer ran and retain its test log.
   brackets, and five monotone-increasing profiles; all ten coordinate-only
   cells are minimum brackets. This is finite-grid mechanism evidence, not a
   continuous profile, reflected-fixture, or face certificate.
+- `gpcm-profile-turning-point-p1m-0.2.3.R` and
+  `gpcm-profile-turning-point-p1m-record-0.2.3.md`: four deterministically
+  selected representatives for the P1l maximum, minimum, monotone, and
+  coordinate-only-minimum mechanisms. All 87 strict points pass; three
+  turning brackets narrow below `7.2e-8`, two starts coalesce, and nuisance
+  Hessians are positive definite. The monotone representative remains
+  increasing on nine points. Local mechanisms are supported, while continuous
+  monotonicity, global profile certification, reflection, and inference remain
+  false.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

@@ -717,10 +717,21 @@ brackets, and five monotone-increasing grids; the ten coordinate-only cells all
 bracket one profile minimum. Hence P1k's discrepancies reflect natural-`rho`
 profile geometry and a `1e-4` stopping tolerance, not observed multiple
 nuisance basins. The finite grid does not certify a continuous profile or
-exclude an unseen turn. The next bounded gate is a compact one-dimensional
-turning-point/endpoint certificate for these three mechanisms, followed by
-reflected transport. Three-target faces and downstream inference remain
-deferred.
+exclude an unseen turn. P1m therefore takes a compact local
+turning-point/endpoint certificate for these three mechanisms before reflected
+transport. Three-target faces and downstream inference remain deferred.
+
+P1m implements that local certificate without expanding to every cell. It
+freezes four mechanism representatives, tightens nuisance stationarity to
+`2e-6`, and uses Richardson-Hessian Newton polishing where ordinary optimizers
+stop at objective-rounding scale. All 87 points pass. The maximum and two
+minimum roots are narrowed to brackets below `7.2e-8`, both starts coalesce,
+and nuisance-Hessian minimum eigenvalues remain about `5.64`. The monotone
+representative has positive derivatives on a nine-point grid. This supports
+the local mechanism taxonomy but cannot prove continuous monotonicity or a
+global profile between numerical points. The next bounded step is an exact
+category-reversal/reflection transport, refitting only if that identity fails;
+it is not a denser `rho` grid.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

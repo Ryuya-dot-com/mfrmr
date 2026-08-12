@@ -142,12 +142,14 @@ SelectionAuthorized = FALSE
 ConfirmationAuthorized = FALSE
 ```
 
-The efficient next gate is not a denser rectangular grid. It is a compact
-one-dimensional profiled-`rho` certificate for the three observed mechanism
-classes, including explicit endpoint comparison and turning-point bracketing.
-Only after that contract is stable should it be transported to the reflected
-fixtures. Three-target faces, Hessian inference, DFF/fit/rank confirmation,
-and broad simulation remain downstream.
+P1m subsequently completes a compact local profiled-`rho` audit for four
+frozen mechanism representatives. Three turning-point brackets narrow below
+`7.2e-8`, their nuisance Hessians are positive definite, and the monotone
+representative retains positive derivatives on a nine-point grid. Continuous
+global certification remains false. The next efficient gate is exact
+category-reversal transport to the reflected fixtures, with refitting only on
+identity failure. Three-target faces, Hessian inference, DFF/fit/rank
+confirmation, and broad simulation remain downstream.
 
 ## Reproduction
 

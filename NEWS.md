@@ -4,6 +4,17 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a four-representative GPCM local profile-turning-point P1m audit. A
+  stricter `2e-6` nuisance-gradient contract plus Richardson-Hessian Newton
+  polish narrows one profile maximum and two profile minima to `rho` brackets
+  below `7.2e-8`; both starts agree at the refined points and all nuisance
+  Hessians are positive definite. One monotone representative remains
+  increasing over a nine-point audit. All 87 recorded points are eligible.
+  These results support the local P1l mechanisms but intentionally leave
+  continuous monotonicity, global profile certification, reflected transport,
+  face closure, source selection, and downstream Hessian/DFF/fit/rank claims
+  false.
+
 * Added a scoped GPCM fixed-`rho` nuisance-continuation P1l audit for P1k's 43
   nonmatching cells. Both starts coalesce at every common `rho`: all 766
   objective-discordant-lane fits and all 260 coordinate-only-lane fits are

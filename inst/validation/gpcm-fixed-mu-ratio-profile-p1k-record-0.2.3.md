@@ -142,10 +142,13 @@ P1l completes the next fixed-`rho` nuisance-continuation gate for all 43
 nonmatching representative cells. It finds one nuisance solution at each
 common `rho`, 22 profile-maximum brackets, six profile-minimum brackets, five
 monotone-increasing grids, and ten additional minimum brackets in the
-coordinate-only lane. The next efficient gate is a compact continuous
-one-dimensional certificate for those mechanisms, followed by reflected
-transport. There remains no justification for opening three-target faces or
-running broad simulations first.
+coordinate-only lane. P1m subsequently supplies a compact local
+one-dimensional certificate for four frozen mechanism representatives. It
+supports their local turning-point/grid classifications while leaving
+continuous global certification false. The next efficient gate is exact
+category-reversal/reflection transport, not a denser profile grid. There
+remains no justification for opening three-target faces or running broad
+simulations first.
 
 Hessian inference, intervals, DFF, fit, rank, separation, source selection,
 and capability promotion remain downstream. In particular, “all 336 fits

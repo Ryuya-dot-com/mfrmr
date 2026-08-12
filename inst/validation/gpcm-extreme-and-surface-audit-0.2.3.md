@@ -282,6 +282,15 @@ competition. A finite grid cannot exclude unobserved turns, so continuous
 ratio certification and reflected transport—not DFF, Hessian, or simulation—
 are the next ordered tasks.
 
+P1m then freezes four mechanism representatives rather than repeating all 43
+profiles. Under a stricter `2e-6` nuisance-gradient rule, all 87 points pass;
+three turning points narrow below `7.2e-8`, route starts coalesce, and nuisance
+Hessians retain minimum eigenvalues near `5.64`. The monotone representative
+has positive derivatives at nine points. This validates the local mechanism
+labels but not the global continuum. The next surface check should exploit an
+exact category-reversal identity for the low reflections and refit only on
+identity failure.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected

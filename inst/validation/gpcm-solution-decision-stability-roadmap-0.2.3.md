@@ -254,8 +254,19 @@ monotone-increasing grids. All ten coordinate-only cells bracket one profile
 minimum. This reclassifies eleven P1k high-side candidates as tolerance/stopping
 evidence rather than exact second minima, while retaining 22 endpoint-side
 competitions separated by an observed profile maximum. Because P1l is a finite
-grid, a compact continuous one-dimensional certificate comes before reflected
-transport; three-target faces remain deferred.
+grid, P1m next takes a compact local one-dimensional certificate before
+reflected transport; three-target faces remain deferred.
+
+P1m supplies a deliberately local version of that certificate. Four frozen
+representatives cover the observed maximum, objective-minimum, monotone, and
+coordinate-only-minimum lanes. All 87 points satisfy a `2e-6` nuisance-gradient
+contract. Three roots are bracketed below `7.2e-8`, route starts coalesce, and
+their nuisance Hessians are positive definite; the monotone representative has
+positive derivatives at nine strict points. Local mechanism support is now
+complete for the representatives. Continuous monotonicity and the global
+profile remain false because point evaluation cannot exclude an unsampled
+turn. The next admissible step is exact score/category reflection transport,
+with refitting limited to any failed identities.
 
 ## Solution selection and coordinate agreement
 
@@ -378,9 +389,10 @@ not retrospective widening of the tolerance.
    43 nonmatching multi-start cells. P1l completes their scoped fixed-`rho`
    continuation and reduces them to 22 maximum brackets, 16 minimum brackets
    across both lanes, and five monotone-increasing grids, with no observed
-   common-`rho` nuisance split. Next certify those one-dimensional mechanisms,
-   then add the reflected fixtures and evaluate the four three-target vertices
-   as needed. Complete the remaining empty-target hierarchy and address the
+   common-`rho` nuisance split. P1m locally certifies four frozen mechanism
+   representatives while retaining global fail closure. Next derive exact
+   reflection transport, then evaluate the four three-target vertices as
+   needed. Complete the remaining empty-target hierarchy and address the
    separate upper/joint variance path and source-solution contract. Do not add
    q or path points by default, freeze an observed slope or solution tolerance,
    or call finite-grid agreement a continuous-integral certificate.
