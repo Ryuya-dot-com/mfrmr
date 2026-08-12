@@ -645,6 +645,20 @@ empty-target deterministic-Rater rate hierarchy, curved/nonconvergent rates,
 upper variance boundary, and source-selection rule remain separate blockers;
 Hessian, DFF/fit/rank, and broad simulation remain downstream.
 
+P1g follows the released C4 coefficient in coordinates that remain finite at
+its lower endpoint. Writing `lambda = a_C4 * population SD`, the exact map
+uses `B=lambda*q`, `V4=lambda*u4`, and `G4=lambda*H4`; at `lambda=0` it becomes
+a direct conditional model retaining C4 Rater severity but no latent-person
+variation. All 56 two-route fits on the declared seven-point grid are
+eligible, route differences are at most about `5.76e-10`, and the endpoint
+matches an independent conditional oracle to about `1.93e-12`. Both routes
+increase monotonically away from zero and have positive natural-coefficient
+derivatives at every positive grid point. The endpoint remains 2.08--2.58
+objective units above the qualified interior. This adjudicates the C4 grid
+and its deterministic-Rater endpoint, not an unseen C4 interior basin or any
+other face. The next efficient screen applies the same construction to C1--C3
+single-target faces before multiple-target faces or broader boundary work.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

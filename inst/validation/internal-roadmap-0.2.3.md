@@ -4097,6 +4097,30 @@ Rater rate hierarchy, and curved or rate-nonconvergent paths remain
 unclassified. The upper/joint variance path, source-selection rule, Hessian,
 DFF/fit/rank, and broad simulation remain later gates.
 
+P1g is now complete in
+`gpcm-c4-face-to-deterministic-rater-p1g-0.2.3.R` and its execution record.
+The preliminary free-log-coefficient fits shrink `lambda_C4` to roughly
+`2.34e-6`--`2.82e-5`, exposing the coordinate artifact
+`dL/dlog(lambda)=lambda*dL/dlambda`. P1g instead uses finite coordinates
+`B=lambda*q`, `V4=lambda*u4`, and `G4=lambda*H4`. P1f/P1g objectives agree
+exactly at the eight converted starts and their scaled gradients agree with
+independent differences to about `1.70e-7`.
+
+All 56 two-route fixed-lambda fits are eligible. Route differences are at most
+about `5.76e-10`, q=61/91/121 ranges at most about `4.55e-13`, and scheduled
+gradient differences at most about `2.06e-7`. Both routes increase from
+`lambda=0` across the declared grid, with positive natural-lambda derivatives
+at every positive point. The direct endpoint matches an independent
+conditional oracle to about `1.93e-12` and lies 2.58/2.08 objective units above
+the exact/near qualified interiors.
+
+This locally adjudicates the declared C4 grid and its maximal-slope
+deterministic-Rater endpoint. It does not globally close the C4 face, the other
+13 random-target faces, or the remaining empty-target hierarchy. The next
+efficient screen reuses this construction for C1--C3 single-target faces;
+multiple-target faces, the upper boundary, source selection, Hessian,
+DFF/fit/rank, and broad simulation remain later.
+
 ##### Draft.33 Person-fixed structural recession certificate
 
 Every retained JML RSM/PCM fit now attempts a bounded linear-program audit of

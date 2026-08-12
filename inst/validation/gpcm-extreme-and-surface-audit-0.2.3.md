@@ -234,6 +234,14 @@ target faces and derives their canonical likelihood; optimizing them and
 classifying the empty-target deterministic-Rater hierarchy remain ahead of
 source-solution selection.
 
+P1g completes the first bounded face screen. Exact scaled coordinates remain
+finite as the C4 random coefficient tends to zero, where an independent
+conditional-GPCM oracle retains C4 Rater effects but removes latent-person
+variation. Both profile routes descend toward this endpoint on the declared
+grid, and the endpoint remains 2.08--2.58 objective units above the qualified
+interior. This does not exclude an unseen C4 interior basin and does not
+transport to C1--C3 or multiple-target faces.
+
 ### Ordered work and exit criteria
 
 1. **Close the 0.2.3 deterministic core.** Retain the completed reflected

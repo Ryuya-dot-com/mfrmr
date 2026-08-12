@@ -209,8 +209,12 @@ It enumerates all 14 nonempty proper four-criterion target faces and derives
 their shared canonical likelihood with one free positive coefficient per
 target. Its analytic gradient agrees with independent differences to about
 `1.51e-7`. The next admissible lower-boundary work is multistart optimization
-of those finite faces, not an arbitrary denser path grid. The empty-target
-deterministic-Rater hierarchy remains a separate unresolved stratum.
+of those finite faces, not an arbitrary denser path grid. P1g now completes
+the first C4 screen: exact scaled coordinates connect its positive coefficient
+face to a stationary deterministic-Rater endpoint, and all declared grid
+values lie above that endpoint. The endpoint remains above the qualified
+interior. C1--C3 single-target screens and the rest of the empty-target
+deterministic-Rater hierarchy remain unresolved.
 
 ## Solution selection and coordinate agreement
 
@@ -322,9 +326,11 @@ not retrospective widening of the tolerance.
    beyond `t = 2`. P1e closes only its coordinate-aware fixed-coefficient C4
    path. P1f maps the finite-random-product rates to a simplex, enumerates 14
    target faces, and shows that P1e is nonstationary in its newly released
-   coefficient. Next optimize those canonical faces from prespecified starts,
-   then classify the empty-target deterministic-Rater stratum and address the
-   separate upper/joint variance path and source-solution contract. Do not add q or path
+   coefficient. P1g follows C4 to its direct deterministic-Rater endpoint and
+   finds the entire declared grid above both that endpoint and the qualified
+   interior. Next screen C1--C3 with the same construction before multiple-
+   target faces, then complete the empty-target deterministic-Rater hierarchy
+   and address the separate upper/joint variance path and source-solution contract. Do not add q or path
    points by default, freeze an observed slope or solution tolerance, or call
    finite-grid agreement a continuous-integral certificate.
 3. **P2 -- uncertainty eligibility.** Separate unregularized, regularized,

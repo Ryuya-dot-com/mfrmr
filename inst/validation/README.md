@@ -156,6 +156,13 @@ identify whether the opt-in layer ran and retain its test log.
   C4 coefficient as nonstationary. No face optimization, empty-target
   deterministic-Rater hierarchy, global boundary, or source selection is
   claimed.
+- `gpcm-c4-face-to-deterministic-rater-p1g-0.2.3.R` and
+  `gpcm-c4-face-to-deterministic-rater-p1g-record-0.2.3.md`: exact
+  `lambda`-scaled C4 coordinates, a two-route seven-point face profile, and a
+  direct `lambda=0` conditional-GPCM endpoint retaining C4 Rater effects. All
+  56 fits pass and the endpoint is stable but remains above the qualified
+  interior. The result covers neither an unseen C4 interior basin nor other
+  random-target/deterministic-Rater faces and authorizes no solution choice.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

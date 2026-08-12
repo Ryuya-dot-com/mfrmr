@@ -4,6 +4,18 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a GPCM C4 face-to-deterministic-Rater P1g audit. The exact scaled
+  coordinates `B=lambda*q`, `V4=lambda*u4`, and `G4=lambda*H4` remove the
+  false appearance of convergence caused by a vanishing log-coefficient
+  gradient and remain finite at `lambda=0`. All 56 two-route fixed-lambda
+  nuisance fits pass; route objectives agree within about `5.76e-10`, and a
+  direct conditional-GPCM oracle matches the deterministic-Rater endpoint to
+  about `1.93e-12`. The declared profile descends toward that endpoint, which
+  remains 2.08--2.58 objective units above the qualified interior. This closes
+  only the bounded C4 grid and its endpoint; the full C4 face, other 13 random-
+  target faces, empty-random hierarchy, upper boundary, source selection, and
+  downstream inference remain open.
+
 * Added a GPCM lower-boundary slope-rate-cone P1f audit. Under declining
   population SD and geometric-mean-one slopes, the normalized finite-random-
   coefficient rates are affinely identical to a standard simplex. All 14

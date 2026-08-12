@@ -142,11 +142,12 @@ P1f does not establish the following:
 - no source solution, Hessian, interval, DFF, fit, rank, separation, or broad
   simulation analysis is authorized.
 
-The next efficient gate is therefore multistart optimization of the 14
-canonical target-face likelihoods, beginning with the now-corrected C4 face
-and then exploiting nested-face warm starts. The empty-target hierarchy
-remains a separate lower-boundary gate. This ordering tests the newly exposed
-direction before adding a general multidimensional search.
+P1g subsequently follows the corrected C4 direction in exact `lambda`-scaled
+coordinates and directly evaluates its deterministic-Rater endpoint. Its
+declared grid descends to an endpoint above the interior, but the remaining
+single-target faces are still open. The next efficient gate applies the same
+screen to C1--C3 before multiple-target faces. The rest of the empty-target
+hierarchy remains a separate lower-boundary gate.
 
 ## Reproduction
 
