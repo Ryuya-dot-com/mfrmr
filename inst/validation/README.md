@@ -253,6 +253,20 @@ identify whether the opt-in layer ran and retain its test log.
   ready, so row 88, recovery, owner ranking, external comparison, additional
   replication, broad simulation, fit/DFF promotion, and confirmation remain
   open or unauthorized.
+- `gpcm-owner-external-reproducibility-preflight-p1t-0.2.3.R` and
+  `gpcm-owner-external-reproducibility-preflight-p1t-record-0.2.3.md`: no-fit
+  source/version-bound classification of the admitted P1s eight-route
+  denominator against ConQuest, TAM, immer, and sirt. All 32 full
+  route-by-program cells are unsupported, lack an established exact route,
+  reduce to PCM, or use a non-equivalent kernel. Five separately labelled
+  projection/near-neighbour lanes remain, but none authorizes execution or a
+  P1s external-reproduction claim.
+- `gpcm-nonlinear-local-estimability-p1u-record-0.2.3.md`: implementation and
+  mathematical record for the estimator-specific retained-point rank
+  classifier. It separates the JML conditional adjacent-logit certificate,
+  the MML observed-pattern sufficient subset certificate, and exhaustive MML
+  fallback from global identification, weak information, boundary, and
+  readiness claims. The admitted P1s fits are not rerun or reclassified.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
@@ -1430,6 +1444,15 @@ identify whether the opt-in layer ran and retain its test log.
   under a newly chosen `EXT-CQ-TOL`. It retains the broad external claim as a
   future gate, restricts the current statement to descriptive calibration,
   and authorizes neither a candidate run nor a sparse/simulation extension.
+- `conquest-prospective-tolerance-contract-0.2.3.R` and its companion record:
+  fail-closed validator for a future pre-candidate tolerance freeze. It
+  registers all 19 binary/RSM/PCM `EXT-CQ-TOL` rows and all 38 engine-specific
+  `IC-INTEGRATION-TOL` rows, binds the canonical table hash and candidate
+  identities plus an independently frozen raw-token source-precision policy
+  before output exists, and makes the opened calibration
+  permanently ineligible under any newly frozen rule. The current empty
+  template remains `pilot_required`; no numeric tolerance, candidate run,
+  equivalence, confirmation, sparse extension, or simulation is authorized.
 - `conquest-tam-immer-tolerance-source-audit-0.2.3.md`: version- and
   function-hash-bound review of the official ConQuest, TAM, and immer
   numerical controls. All three document within-fit stopping or integration

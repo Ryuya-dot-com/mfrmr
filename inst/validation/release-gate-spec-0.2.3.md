@@ -389,6 +389,17 @@ and step owners, a rater-by-item slope, or a multidimensional latent trait.
 map retained for historical execution identity. P1r/P1s provide the
 prospective current-default overlay; the older map must not be silently
 rewritten and then presented as the contract used by the sealed pilot.
+P1t adds a no-fit external-reproducibility preflight over that exact overlay.
+It establishes zero exact full-model ConQuest/TAM/immer/sirt routes for P1s
+and keeps five item-only, unit-slope, equal-discrimination, or near-neighbour
+projections in separate non-P1s strata. It does not authorize an external run.
+P1u then types the narrower retained-point nonlinear result by estimator. Full
+free-coordinate rank of the JML conditional adjacent-logit map, or full rank
+of a unit-weight MML observed-pattern score subset with positive finite
+fixed-quadrature support, is a sufficient local first-order certificate. Rank
+deficiency of the MML observed subset is inconclusive unless exhaustive
+all-pattern information is available. P1u does not complete the global
+estimability, boundary, weak-information, or fit-readiness gates.
 Every generated GPCM result, replay record, external normalizer, and retained
 aggregate must add the following fields to the common result schema:
 
@@ -1311,6 +1322,21 @@ only. Independent platform/version replication, integration-tolerance freeze,
 and candidate-linked mfrmr/TAM/ConQuest runs remain pending;
 `mfrmr_external_ic_v1` must not be used to manufacture cross-engine
 comparability by assigning identical identity strings without that evidence.
+
+The prospective freeze validator
+`mfrmr_conquest_prospective_tolerance_freeze_v1` now makes the unresolved
+numeric criteria machine-checkable without choosing them. It requires 19
+binary/RSM/PCM cross-engine estimand rows and 38 ConQuest/mfrmr integration rows,
+each with signed and absolute bounds, a typed rationale, a repository-relative
+source and SHA-256, and an explicit prohibition on applying a newly informed
+rule to the opened calibration. A canonical tolerance-table hash is bound to
+the package commit/tree, ConQuest executable, command/input bundles,
+expected-empty-output manifest, and an independently frozen raw-token
+source-precision policy before candidate execution. Structural passage
+authorizes only the fresh small candidate core; it cannot establish scientific
+equivalence, confirmation, a sparse extension, or simulation. The current
+empty template remains `pilot_required` and all three ConQuest release rows
+remain `review`.
 
 ## G4: dimensionality challenge
 

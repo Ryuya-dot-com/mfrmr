@@ -9,11 +9,11 @@
 # enter through their actual expansion Jacobians.
 #
 # GPCM log slopes and latent-regression residual variance are nonlinear
-# coordinates. The additive block is audited before fitting. A bounded local
-# fitted-information instrument is available after a stationary fit, but a
-# full-model estimability claim remains deferred until structural nonlinear
-# audits and pilot-calibrated weak-information rules exist. This distinction
-# is retained in `Complete` and `NonlinearBlocks`.
+# coordinates. The additive block is audited before fitting. Retained-point
+# conditional or marginal score maps can supply a sufficient local first-order
+# full-rank certificate, but neither that certificate nor a bounded fitted-
+# information instrument establishes global identification or weak-information
+# readiness. This distinction is retained in `Complete` and `NonlinearBlocks`.
 
 mfrmr_estimability_contract_version <- function() {
   mfrmr_readiness_contract_version()
@@ -1884,7 +1884,8 @@ audit_mfrm_mml_observed_pattern_score <- function(
     sizes,
     quad_points,
     nonlinear_blocks,
-    max_persons = 100L,
+    max_persons = 200L,
+    max_numeric_persons = 100L,
     max_free_dimension = 80L,
     max_score_elements = 8000,
     relative_step = 1e-6,
@@ -1892,6 +1893,9 @@ audit_mfrm_mml_observed_pattern_score <- function(
   nonlinear_blocks <- as.character(nonlinear_blocks %||% character(0))
   free_dimension <- sum(vapply(sizes, as.integer, integer(1)))
   person_rows <- length(unique(as.integer(idx$person)))
+  weights <- as.numeric(idx$weight %||% rep(1, length(idx$score_k)))
+  unit_weights <- length(weights) == length(idx$score_k) &&
+    all(is.finite(weights)) && all(abs(weights - 1) <= 1e-12)
   severity <- as.character(
     opt$optimizer_diagnostics$ConvergenceSeverity %||% NA_character_
   )
@@ -1916,10 +1920,13 @@ audit_mfrm_mml_observed_pattern_score <- function(
     score_elements = as.double(person_rows) * as.double(free_dimension),
     execution_limits = list(
       persons = as.integer(max_persons),
+      numeric_persons = as.integer(max_numeric_persons),
       free_dimension = as.integer(max_free_dimension),
       score_elements = as.double(max_score_elements)
     ),
     quadrature_points = as.integer(quad_points),
+    unit_row_weights_observed = isTRUE(unit_weights),
+    finite_parameter_vector_observed = FALSE,
     observed_patterns_only = TRUE,
     all_possible_response_patterns_evaluated = FALSE,
     conditional_jml_kernel_reused = FALSE,
@@ -2016,11 +2023,13 @@ audit_mfrm_mml_observed_pattern_score <- function(
     )
     return(base)
   }
-  rank <- mfrmr_estimability_rank_audit(
-    design = Matrix::Matrix(built$score, sparse = TRUE),
-    parameter_map = parameter_map,
-    tolerances = tolerances,
-    structural_tolerance = tolerances[1]
+  rank <- suppressWarnings(
+    mfrmr_estimability_rank_audit(
+      design = Matrix::Matrix(built$score, sparse = TRUE),
+      parameter_map = parameter_map,
+      tolerances = tolerances,
+      structural_tolerance = tolerances[1]
+    )
   )
   full_objective <- mfrm_loglik_mml(opt$par, idx, config, sizes, quad)
   full_negative_gradient <- mfrm_grad_mml(
@@ -2031,6 +2040,7 @@ audit_mfrm_mml_observed_pattern_score <- function(
   row_norm <- sqrt(rowSums(built$score^2))
 
   base$status <- "evaluated_observed_pattern_diagnostic_only"
+  base$finite_parameter_vector_observed <- TRUE
   base$score_rank <- rank$Rank
   base$score_nullity <- rank$Nullity
   base$score_rank_state <- if (rank$Nullity == 0L) {
@@ -2061,37 +2071,45 @@ audit_mfrm_mml_observed_pattern_score <- function(
     stringsAsFactors = FALSE
   )
 
-  numeric <- mfrmr_numeric_transformation_jacobian(
-    transform = function(value) {
-      mfrmr_mml_person_log_marginals(
-        par = value,
-        idx = idx,
-        config = config,
-        sizes = sizes,
-        quad = quad
-      )$log_marginal
-    },
-    free = opt$par,
-    relative_step = relative_step
-  )
-  if (isTRUE(numeric$valid) &&
-      identical(dim(numeric$jacobian), dim(built$score))) {
-    difference <- abs(built$score - numeric$jacobian)
-    scaled <- difference /
-      pmax(1, abs(built$score), abs(numeric$jacobian))
-    base$numerical_differentiation$status <- "evaluated"
-    base$numerical_differentiation$max_abs_difference <- max(difference)
-    base$numerical_differentiation$max_scaled_difference <- max(scaled)
+  if (person_rows <= as.integer(max_numeric_persons)) {
+    numeric <- mfrmr_numeric_transformation_jacobian(
+      transform = function(value) {
+        mfrmr_mml_person_log_marginals(
+          par = value,
+          idx = idx,
+          config = config,
+          sizes = sizes,
+          quad = quad
+        )$log_marginal
+      },
+      free = opt$par,
+      relative_step = relative_step
+    )
+    if (isTRUE(numeric$valid) &&
+        identical(dim(numeric$jacobian), dim(built$score))) {
+      difference <- abs(built$score - numeric$jacobian)
+      scaled <- difference /
+        pmax(1, abs(built$score), abs(numeric$jacobian))
+      base$numerical_differentiation$status <- "evaluated"
+      base$numerical_differentiation$max_abs_difference <- max(difference)
+      base$numerical_differentiation$max_scaled_difference <- max(scaled)
+    } else {
+      base$numerical_differentiation$status <- "unavailable"
+    }
   } else {
-    base$numerical_differentiation$status <- "unavailable"
+    base$numerical_differentiation$status <-
+      "not_evaluated_execution_limit"
   }
   base$detail <- paste(
     "Rows are conventional log-likelihood scores for the observed marginal",
     "Person response patterns. Their sum reconstructs the full MML score and",
-    "each row is checked against a central difference of that Person's log",
-    "marginal contribution. This observed-pattern matrix is not the map over",
-    "all possible response patterns and does not classify identification,",
-    "weak information, or readiness."
+    "eligible bounded cases are checked against a central difference of that",
+    "Person's log marginal contribution. The separate local-classification",
+    "layer may use full column rank of unit-weight observed-pattern scores as",
+    "a sufficient subset-of-support certificate for positive fixed-quadrature",
+    "Fisher information. Rank deficiency is inconclusive without the all-",
+    "pattern audit, and no result establishes global identification, weak",
+    "information, or readiness."
   )
   base
 }
@@ -2476,6 +2494,257 @@ audit_mfrm_mml_all_pattern_information <- function(
     "diagnostic; it does not yet classify structural identification, weak",
     "information, readiness, or external-comparison eligibility."
   )
+  base
+}
+
+mfrmr_nonlinear_local_estimability_contract_version <- function() {
+  "mfrmr-nonlinear-local-estimability-0.2.3-v1"
+}
+
+mfrmr_nonlinear_local_map_complete <- function(source) {
+  free_dimension <- as.integer(source$free_dimension %||% NA_integer_)
+  parameter_map <- as.data.frame(
+    source$parameter_map %||% data.frame(), stringsAsFactors = FALSE
+  )
+  is.finite(free_dimension) && free_dimension > 0L &&
+    nrow(parameter_map) == free_dimension &&
+    "OptimizerIndex" %in% names(parameter_map) &&
+    identical(as.integer(parameter_map$OptimizerIndex),
+              seq_len(free_dimension))
+}
+
+mfrmr_classify_nonlinear_local_estimability <- function(audit, config) {
+  method <- as.character(config$method %||% "unknown")
+  model <- as.character(config$model %||% "unknown")
+  nonlinear_blocks <- as.character(
+    audit$nonlinear_blocks %||% character(0)
+  )
+  base <- list(
+    contract_version =
+      mfrmr_nonlinear_local_estimability_contract_version(),
+    method = method,
+    model = model,
+    nonlinear_blocks = nonlinear_blocks,
+    state = if (length(nonlinear_blocks) == 0L) {
+      "not_required"
+    } else {
+      "not_evaluated"
+    },
+    evidence_basis = if (length(nonlinear_blocks) == 0L) {
+      "linear_preflight_complete"
+    } else {
+      "none"
+    },
+    probability_model_scope = if (identical(method, "JML")) {
+      "conditional_response_given_retained_person_coordinates"
+    } else if (identical(method, "MML")) {
+      "implemented_fixed_quadrature_marginal_model"
+    } else {
+      "unsupported_estimator"
+    },
+    local_rank = NA_integer_,
+    local_nullity = NA_integer_,
+    free_dimension = NA_integer_,
+    tolerance_sensitive = NA,
+    parameter_map_complete = FALSE,
+    local_first_order_classified = FALSE,
+    local_full_rank_sufficient = FALSE,
+    local_first_order_rank_deficient = FALSE,
+    local_nonidentifiability_established = FALSE,
+    global_identification_classified = FALSE,
+    continuous_integral_identification_classified = FALSE,
+    weak_information_classified = FALSE,
+    boundary_classified = FALSE,
+    numerical_derivative_status = "not_evaluated",
+    quadrature_points = NA_integer_,
+    reason_codes = if (length(nonlinear_blocks) == 0L) {
+      "nonlinear_coordinates_not_present"
+    } else {
+      "local_nonlinear_map_not_evaluated"
+    },
+    readiness_effect = "none_local_property_only",
+    detail = paste(
+      "No nonlinear local first-order classification was required for this",
+      "fit."
+    )
+  )
+  if (length(nonlinear_blocks) == 0L) return(base)
+
+  classify_source <- function(source, basis, rank_field, nullity_field,
+                              derivative_status, full_rank_reason,
+                              deficient_reason) {
+    rank <- as.integer(source[[rank_field]] %||% NA_integer_)
+    nullity <- as.integer(source[[nullity_field]] %||% NA_integer_)
+    free_dimension <- as.integer(source$free_dimension %||% NA_integer_)
+    map_complete <- mfrmr_nonlinear_local_map_complete(source)
+    tolerance_sensitive <- isTRUE(source$tolerance_sensitive)
+    valid <- is.finite(rank) && is.finite(nullity) &&
+      is.finite(free_dimension) && free_dimension > 0L &&
+      rank >= 0L && nullity >= 0L &&
+      rank + nullity == free_dimension && map_complete
+    if (!valid) return(NULL)
+    state <- if (tolerance_sensitive) {
+      "indeterminate_tolerance_sensitive"
+    } else if (nullity == 0L && rank == free_dimension) {
+      "locally_full_rank_sufficient"
+    } else {
+      "locally_first_order_rank_deficient"
+    }
+    list(
+      state = state,
+      evidence_basis = basis,
+      local_rank = rank,
+      local_nullity = nullity,
+      free_dimension = free_dimension,
+      tolerance_sensitive = tolerance_sensitive,
+      parameter_map_complete = map_complete,
+      local_first_order_classified = !tolerance_sensitive,
+      local_full_rank_sufficient = identical(
+        state, "locally_full_rank_sufficient"
+      ),
+      local_first_order_rank_deficient = identical(
+        state, "locally_first_order_rank_deficient"
+      ),
+      quadrature_points = as.integer(
+        source$quadrature_points %||% NA_integer_
+      ),
+      numerical_derivative_status = derivative_status,
+      reason_codes = if (tolerance_sensitive) {
+        "local_rank_tolerance_sensitive;global_identification_not_classified"
+      } else if (nullity == 0L && rank == free_dimension) {
+        paste0(full_rank_reason,
+               ";global_identification_not_classified")
+      } else {
+        paste0(deficient_reason,
+               ";local_nonidentifiability_not_established;",
+               "global_identification_not_classified")
+      }
+    )
+  }
+
+  classified <- NULL
+  if (identical(method, "JML") && identical(model, "GPCM")) {
+    source <- audit$gpcm_response_kernel %||% list()
+    if (identical(as.character(source$status %||% ""),
+                  "evaluated_local_diagnostic_only") &&
+        isTRUE(source$conditional_response_kernel_jacobian_evaluated)) {
+      classified <- classify_source(
+        source = source,
+        basis = "conditional_adjacent_logit_jacobian_full_free_coordinates",
+        rank_field = "local_rank",
+        nullity_field = "local_nullity",
+        derivative_status = as.character(
+          source$numerical_differentiation$status %||% "not_evaluated"
+        ),
+        full_rank_reason =
+          "conditional_adjacent_logit_map_locally_full_column_rank",
+        deficient_reason =
+          "conditional_adjacent_logit_map_first_order_rank_deficient"
+      )
+    }
+  } else if (identical(method, "MML")) {
+    observed <- audit$mml_observed_pattern_score %||% list()
+    observed_eligible <- identical(
+      as.character(observed$status %||% ""),
+      "evaluated_observed_pattern_diagnostic_only"
+    ) && isTRUE(observed$unit_row_weights_observed) &&
+      isTRUE(observed$finite_parameter_vector_observed)
+    if (observed_eligible) {
+      observed_classification <- classify_source(
+        source = observed,
+        basis = "observed_pattern_subset_score_span_fixed_quadrature",
+        rank_field = "score_rank",
+        nullity_field = "score_nullity",
+        derivative_status = as.character(
+          observed$numerical_differentiation$status %||% "not_evaluated"
+        ),
+        full_rank_reason = paste0(
+          "unit_weight_observed_pattern_scores_span_all_free_coordinates_",
+          "with_positive_pattern_probability"
+        ),
+        deficient_reason =
+          "observed_pattern_subset_score_rank_deficient"
+      )
+      if (!is.null(observed_classification) &&
+          identical(observed_classification$state,
+                    "locally_full_rank_sufficient")) {
+        classified <- observed_classification
+      }
+    }
+
+    # A deficient or tolerance-sensitive observed subset is inconclusive.
+    # Exhaustive all-pattern information, when computationally available,
+    # provides the complete fixed-quadrature first-order classification.
+    if (is.null(classified)) {
+      all_pattern <- audit$mml_all_pattern_information %||% list()
+      if (identical(as.character(all_pattern$status %||% ""),
+                    "evaluated_all_patterns_local_diagnostic_only") &&
+          isTRUE(all_pattern$all_possible_response_patterns_evaluated) &&
+          isTRUE(all_pattern$expected_information_evaluated) &&
+          isTRUE(all_pattern$unit_row_weights_observed)) {
+        classified <- classify_source(
+          source = all_pattern,
+          basis = "all_pattern_expected_score_information_fixed_quadrature",
+          rank_field = "local_rank",
+          nullity_field = "local_nullity",
+          derivative_status = as.character(
+            all_pattern$numerical_differentiation$status %||%
+              "not_evaluated"
+          ),
+          full_rank_reason =
+            "all_pattern_expected_score_information_locally_full_rank",
+          deficient_reason =
+            "all_pattern_expected_score_information_first_order_rank_deficient"
+        )
+      }
+    }
+    if (is.null(classified) && observed_eligible) {
+      classified <- observed_classification
+      if (!is.null(classified) &&
+          identical(classified$state,
+                    "locally_first_order_rank_deficient")) {
+        classified$state <- "not_evaluated"
+        classified$local_first_order_classified <- FALSE
+        classified$local_first_order_rank_deficient <- FALSE
+        classified$reason_codes <- paste0(
+          "observed_pattern_subset_rank_deficient_is_inconclusive;",
+          "all_pattern_information_not_evaluated;",
+          "global_identification_not_classified"
+        )
+      }
+    }
+  }
+
+  if (is.null(classified)) {
+    base$detail <- paste(
+      "The estimator-specific nonlinear probability map did not supply a",
+      "complete retained-point first-order classification. This may reflect",
+      "an execution limit, nonunit weights, an unavailable parameter map, or",
+      "an estimator outside the implemented scope."
+    )
+    return(base)
+  }
+  for (field in names(classified)) base[[field]] <- classified[[field]]
+  base$detail <- if (identical(method, "JML")) {
+    paste(
+      "Full column rank of the smooth conditional adjacent-logit map in all",
+      "optimizer free coordinates is a sufficient retained-point local",
+      "first-order certificate. Rank deficiency is only a first-order",
+      "diagnosis. Neither result establishes global identification, boundary",
+      "interiority, weak information, or inference readiness."
+    )
+  } else {
+    paste(
+      "For the implemented fixed-quadrature marginal model, unit-weight",
+      "observed-pattern score vectors are a subset of the strictly positive",
+      "finite response-pattern support. If they span all optimizer free",
+      "coordinates, the corresponding expected score information is positive",
+      "definite. A deficient observed subset is inconclusive and is classified",
+      "only when exhaustive all-pattern information is available. This does",
+      "not establish continuous-integral or global identification, boundary",
+      "interiority, weak information, or inference readiness."
+    )
+  }
   base
 }
 
@@ -2873,6 +3142,29 @@ audit_mfrm_estimability <- function(prep, idx, config, sizes) {
       structural_identification_classified = FALSE,
       weak_information_classified = FALSE,
       readiness_effect = "none_all_patterns_local_diagnostic_only"
+    ),
+    nonlinear_local_estimability = list(
+      contract_version =
+        mfrmr_nonlinear_local_estimability_contract_version(),
+      method = config$method,
+      model = config$model,
+      nonlinear_blocks = nonlinear_blocks,
+      state = if (length(nonlinear_blocks) > 0L) {
+        "pending_after_optimization"
+      } else {
+        "not_required"
+      },
+      evidence_basis = if (length(nonlinear_blocks) > 0L) {
+        "none"
+      } else {
+        "linear_preflight_complete"
+      },
+      local_full_rank_sufficient = FALSE,
+      global_identification_classified = FALSE,
+      continuous_integral_identification_classified = FALSE,
+      weak_information_classified = FALSE,
+      boundary_classified = FALSE,
+      readiness_effect = "none_local_property_only"
     ),
     fitted_information = list(
       status = if (length(nonlinear_blocks) > 0L) {

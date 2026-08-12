@@ -4117,6 +4117,14 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     config$estimability_audit <- estimability_audit
     data_review$estimability <- estimability_audit
   }
+
+  estimability_audit$nonlinear_local_estimability <-
+    mfrmr_classify_nonlinear_local_estimability(
+      audit = estimability_audit,
+      config = config
+    )
+  config$estimability_audit <- estimability_audit
+  data_review$estimability <- estimability_audit
   phase_finish("post_optimization_audits", phase_started, "nonlinear score, kernel, transformation, and information audits")
 
   # Stage 5: Build human-readable output tables.

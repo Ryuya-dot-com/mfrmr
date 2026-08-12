@@ -141,7 +141,16 @@ Priorities are:
   is eligible because the native CSV rounding rule remains unestablished;
   zero rows enter an aggregate. This completes plumbing, not comparison
   acceptance. Numeric-resolution adjudication and a prospective tolerance
-  precede any candidate-bound rerun;
+  precede any candidate-bound rerun. The prospective-freeze validator is now
+  implemented over 19 cross-engine binary/RSM/PCM estimand rows and 38 engine-specific
+  integration-stability rows. Its empty template intentionally remains
+  `pilot_required`: it prevents the opened four-arm maximum difference from
+  becoming a self-passing threshold, requires source-bound signed and absolute
+  rules plus candidate/output timing identities, and authorizes no current
+  rerun. The remaining decision is scientific rather than mechanical: justify
+  and review the estimand-level tolerances and a conservative source-precision
+  policy, then bind the exact clean candidate before producing any new
+  ConQuest output;
 - a source- and version-bound `sirt::rm.facets()` MML comparison, beginning
   with the item-only GPCM and equal-discrimination many-facet reductions. The
   comparison must align category support, threshold coordinates, slope
@@ -800,6 +809,35 @@ or expanding simulation is not authorized. The next GPCM foundation work is
 estimator-specific nonlinear estimability, slope/joint-boundary completeness,
 and fixed-objective numerical stability before recovery, uncertainty, fit,
 DFF, or owner-comparison rules are frozen.
+
+P1t now prevents the external branch from outrunning that foundation. A
+source/version-bound no-fit preflight crossed the eight admitted P1s routes
+with ConQuest, TAM, immer, and sirt. None of the 32 full route-by-program cells
+has an established exact model-and-estimator identity: ConQuest JML free
+scores are unsupported and its standard multifacet MML score ownership is not
+the P1s single-owner kernel; TAM and immer supply only relevant item-only or
+unit-slope reductions; and sirt's general MML product-trait-slope kernel is a
+near-neighbour with a finite slope box. Five separately labelled projection
+lanes remain, including the exact item-only ConQuest MML coordinate map, but
+none is P1s reproduction and no external execution is authorized. A future
+external run must first prove full probability/free-dimension identity or stay
+explicitly in a reduction/sensitivity stratum; numerical closeness cannot
+repair a model mismatch.
+
+The next P1u slice now gives the retained nonlinear diagnostics a precise
+local interpretation without promoting P1s. For JML GPCM, full column rank of
+the complete conditional adjacent-logit Jacobian is recorded as a sufficient
+retained-point first-order certificate. For unit-weight fixed-quadrature MML,
+full rank of the observed Person-pattern score vectors is also sufficient:
+those vectors are a subset of the strictly positive finite pattern support, so
+their span makes the full expected score information positive definite. A
+deficient observed subset is deliberately inconclusive; exhaustive all-pattern
+information may classify first-order rank when computationally available.
+This removes an avoidable exponential enumeration requirement in the positive
+direction but leaves global and continuous-integral identification, weak
+information, boundary completeness, and inference readiness false or open.
+The admitted P1s bundle did not retain full fit audits and is not rerun under
+this implementation slice.
 
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness

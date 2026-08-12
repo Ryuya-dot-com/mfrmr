@@ -809,8 +809,22 @@ states. Mathematically identical Person observation designs are evaluated
 once and reconstructed by exact multiplicity; active latent-regression
 covariate rows are part of this identity. Only conceptual and evaluated
 workload summaries are retained. These retained-point diagnostics do not
-by themselves establish
-global structural identification, weak-information status, or readiness.
+by themselves establish global structural identification, weak-information
+status, or readiness.
+
+\code{fit$data_review$estimability$nonlinear_local_estimability} interprets only
+the first-order local rank that these maps support. For JML GPCM, full
+column rank of the complete conditional adjacent-logit Jacobian is a
+sufficient retained-point local certificate. For fixed-quadrature MML with
+unit row weights and finite parameters, the Person-specific observed-
+pattern score vectors are part of the positive finite response-pattern
+support. If those vectors span every optimizer free coordinate, the full
+expected score information is positive definite; exhaustive enumeration is
+unnecessary for this sufficient direction. A rank-deficient observed subset
+is inconclusive and is classified only when the all-pattern enumeration is
+available. The record explicitly leaves continuous-integral and global
+identification, boundary status, weak information, and inference readiness
+unclassified.
 }
 
 \section{Choosing maxit without result-driven tuning}{

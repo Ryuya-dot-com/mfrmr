@@ -4,6 +4,34 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a prospective ConQuest tolerance-freeze validator. It registers 19
+  binary/RSM/PCM cross-engine `EXT-CQ-TOL` rows and 38 engine-specific
+  `IC-INTEGRATION-TOL` rows, requires signed and absolute estimand-level rules
+  with source hashes, requires an independently frozen raw-token
+  source-precision policy, and binds the clean candidate before any candidate
+  output exists or is opened. The opened four-arm calibration may inform a
+  future error budget but is permanently ineligible under the new rule. The
+  current template remains `pilot_required`; no numeric tolerance, candidate
+  run, equivalence, confirmation, sparse extension, or simulation is
+  authorized.
+
+* Added an estimator-specific nonlinear local-estimability classification.
+  JML GPCM uses full free-coordinate rank of the conditional adjacent-logit
+  Jacobian. Unit-weight fixed-quadrature MML can use full rank of observed
+  Person-pattern scores as a sufficient subset-of-positive-support certificate,
+  falling back to exhaustive all-pattern information when available. A
+  deficient observed subset remains inconclusive. The typed result does not
+  claim global or continuous-integral identification, classify weak
+  information or boundaries, change fit readiness, or authorize a P1s rerun.
+
+* Added the no-fit P1t external-reproducibility preflight for the admitted P1s
+  GPCM denominator. Its eight owner/estimator routes crossed with ConQuest,
+  TAM, immer, and sirt yield 32 program-route decisions but zero established
+  exact full-model routes. Five item-only, unit-slope, equal-discrimination, or
+  near-neighbour projections remain separately labelled; none is P1s
+  reproduction. No external execution, numeric comparison, replication,
+  broad simulation, or confirmation is authorized.
+
 * Completed the bounded P1s current-default paired-owner GPCM smoke. All eight
   Criterion/Rater source-owner, fitted-owner, and JML/MML routes returned fit
   objects; all route identity checks and all 12 required evidence surfaces

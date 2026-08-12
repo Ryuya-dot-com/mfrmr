@@ -426,6 +426,8 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   )
   expect_true(pattern$attempted)
   expect_identical(pattern$person_rows, 8L)
+  expect_identical(pattern$execution_limits$persons, 200L)
+  expect_identical(pattern$execution_limits$numeric_persons, 100L)
   expect_identical(pattern$free_dimension,
                    audit$readiness$OptimizerFreeDimension)
   expect_true(pattern$observed_patterns_only)
@@ -521,6 +523,23 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_false("expected_information" %in% names(all_pattern))
   expect_false("design_signatures" %in% names(all_pattern))
   expect_false("population_design_rows" %in% names(all_pattern))
+
+  local <- audit$nonlinear_local_estimability
+  expect_identical(local$contract_version,
+                   "mfrmr-nonlinear-local-estimability-0.2.3-v1")
+  expect_identical(local$state, "locally_full_rank_sufficient")
+  expect_identical(
+    local$evidence_basis,
+    "all_pattern_expected_score_information_fixed_quadrature"
+  )
+  expect_true(local$local_first_order_classified)
+  expect_true(local$local_full_rank_sufficient)
+  expect_false(local$global_identification_classified)
+  expect_false(local$continuous_integral_identification_classified)
+  expect_false(local$weak_information_classified)
+  expect_false(local$boundary_classified)
+  expect_identical(local$readiness_effect, "none_local_property_only")
+  expect_false(audit$readiness$Complete)
 
   idx <- mfrmr:::build_indices(
     fit$prep,
@@ -748,6 +767,27 @@ test_that("GPCM additive rank does not overclaim nonlinear completeness", {
   expect_identical(limited$readiness_effect,
                    "none_observed_patterns_diagnostic_only")
 
+  analytic_only <- mfrmr:::audit_mfrm_mml_observed_pattern_score(
+    opt = fit$opt,
+    prep = fit$prep,
+    idx = idx,
+    config = fit$config,
+    sizes = sizes,
+    quad_points = 5L,
+    nonlinear_blocks = "log_slopes",
+    max_numeric_persons = 0L
+  )
+  expect_identical(
+    analytic_only$status,
+    "evaluated_observed_pattern_diagnostic_only"
+  )
+  expect_true(analytic_only$attempted)
+  expect_true(analytic_only$finite_parameter_vector_observed)
+  expect_identical(
+    analytic_only$numerical_differentiation$status,
+    "not_evaluated_execution_limit"
+  )
+
   all_pattern_limited <-
     mfrmr:::audit_mfrm_mml_all_pattern_information(
       opt = fit$opt,
@@ -807,7 +847,8 @@ test_that("JML GPCM response-kernel Jacobian joins additive and slope coordinate
     slope_facet = "Criterion",
     maxit = 100
   ))
-  audit <- fit$data_review$estimability$gpcm_response_kernel
+  estimability <- fit$data_review$estimability
+  audit <- estimability$gpcm_response_kernel
 
   expect_identical(audit$status, "evaluated_local_diagnostic_only")
   expect_true(audit$attempted)
@@ -831,6 +872,19 @@ test_that("JML GPCM response-kernel Jacobian joins additive and slope coordinate
     audit$readiness_effect,
     "none_pending_property_and_marginal_model_audits"
   )
+  local <- estimability$nonlinear_local_estimability
+  expect_identical(local$state, "locally_full_rank_sufficient")
+  expect_identical(
+    local$evidence_basis,
+    "conditional_adjacent_logit_jacobian_full_free_coordinates"
+  )
+  expect_true(local$local_first_order_classified)
+  expect_true(local$local_full_rank_sufficient)
+  expect_false(local$global_identification_classified)
+  expect_false(local$weak_information_classified)
+  expect_false(local$boundary_classified)
+  expect_identical(local$readiness_effect, "none_local_property_only")
+  expect_false(fit$readiness$fit$InferenceReady)
 
   idx <- mfrmr:::build_indices(
     fit$prep,
