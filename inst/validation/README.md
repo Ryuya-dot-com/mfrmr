@@ -320,6 +320,14 @@ identify whether the opt-in layer ran and retain its test log.
   tolerance-dependent inverse projection. Production path extraction,
   arbitrary utility inversion, remainder-stable ties, global boundary, MML,
   inference, readiness, and FACETS claims remain false or open.
+- `gpcm-jml-sequence-remainder-diagnostic-p2d-record-0.2.3.md`: transient
+  optimizer-stage endpoint accounting, finite Euclidean direction/scale
+  description, and the narrow negative-power scaled-logit remainder theorem.
+  It verifies that stage vectors do not persist in returned fits and that only
+  declared vanishing within-row logit contrasts extend a completed P2c limit.
+  Optimizer path extraction, certified scales, arbitrary utility/slope
+  remainders, global boundary, MML, inference, readiness, and FACETS claims
+  remain false or open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

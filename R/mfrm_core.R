@@ -4014,6 +4014,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     optimizer = config$estimation_control$optimizer_requested,
     checkpoint = config$estimation_control$checkpoint
   )
+  optimizer_stage_parameters <- opt$optimizer_stage_parameters %||%
+    matrix(numeric(0), nrow = 0L, ncol = length(opt$par %||% numeric(0)))
+  opt$optimizer_stage_parameters <- NULL
   phase_finish("optimization", phase_started, "objective evaluation and optimizer")
   config$estimation_control$optimizer_used <- as.character(
     opt$optimizer_plan$Used %||% opt$optimizer_diagnostics$OptimizerMethod %||% NA_character_
@@ -4262,6 +4265,14 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       config = config,
       sizes = sizes,
       lexicographic_limit = boundary_audit$gpcm_lexicographic_limit
+    )
+  boundary_audit$gpcm_optimizer_sequence_diagnostic <-
+    audit_mfrm_jml_gpcm_optimizer_sequence_scope(
+      config = config,
+      sizes = sizes,
+      stages = opt$optimizer_polish$Stages %||% data.frame(),
+      parameter_sequence = optimizer_stage_parameters,
+      parameter_path = boundary_audit$gpcm_parameter_path_reachability
     )
   boundary_audit$gpcm_terminal_gradient_stability <-
     audit_mfrm_jml_gpcm_terminal_gradient(

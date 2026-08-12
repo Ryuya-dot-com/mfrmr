@@ -889,6 +889,19 @@
 #'   reachability, optimizer-trace direction or scale inference, remainders,
 #'   path search, competitiveness, global boundary status, and MML remain
 #'   unclassified.
+#'   `config$boundary_audit$gpcm_optimizer_sequence_diagnostic` consumes
+#'   optimizer stage endpoints transiently and never retains their coordinate
+#'   vectors in the returned fit. Fewer than three endpoints are explicitly
+#'   insufficient; an explicitly longer sequence can receive only a finite,
+#'   Euclidean-basis-dependent SVD direction/scale summary. It is not optimizer
+#'   iteration history, supplies no asymptotic path or certified exponent, and
+#'   cannot enter the lexicographic oracle. A separate internal theorem can
+#'   extend a completed parameter-reachable path by finitely many fixed
+#'   scaled-logit residual directions times strictly ordered negative powers,
+#'   because all within-row residual contrasts then vanish. Arbitrary utility,
+#'   slope, or logit remainders, optimizer-derived paths, competitiveness,
+#'   global boundary status, readiness, uncertainty, and MML remain
+#'   unclassified.
 #'   `config$boundary_audit$gpcm_terminal_gradient_stability` reconstructs the
 #'   same fixed JML objective and analytic terminal gradient, checks stored
 #'   optimizer/polish summaries and deterministic central-difference probes,

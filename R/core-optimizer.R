@@ -697,6 +697,9 @@ run_mfrm_direct_optimization <- function(start,
     SelectedStage = as.integer(selected$index),
     Stages = stage_table
   )
+  opt$optimizer_stage_parameters <- do.call(rbind, lapply(stages, function(stage) {
+    as.numeric(stage$opt$par %||% numeric(0))
+  }))
   opt$evaluation_cache <- evaluator$diagnostics()
   opt$evaluation_cache$GPCMSlopeNumericBoundaryRejections <-
     safe_objective$rejections()
@@ -979,6 +982,9 @@ run_mfrm_mml_em_optimization <- function(start,
     ),
     SelectedStage = 1L,
     Stages = mfrm_optimizer_stage_row(em_stage, selected = TRUE)
+  )
+  opt$optimizer_stage_parameters <- matrix(
+    as.numeric(opt$par %||% numeric(0)), nrow = 1L
   )
   opt$em_diagnostics <- list(
     EMIterations = as.integer(length(ll_trace) - 1L),

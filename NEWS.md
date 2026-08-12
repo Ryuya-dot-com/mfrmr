@@ -4,6 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a deliberately non-promoting JML GPCM optimizer-sequence diagnostic
+  and a narrow decaying-logit remainder theorem. Optimizer stage endpoints are
+  available only transiently during fitting and are discarded before the fit
+  is returned. Fewer than three endpoints produce an explicit insufficient-
+  sequence state; longer explicit sequences may receive a finite Euclidean
+  SVD direction/scale summary, but those basis-dependent estimates have no
+  asymptotic force and cannot enter the P2b oracle. Separately, a completed P2c
+  path may be extended by finitely many fixed scaled-logit directions times
+  strictly ordered negative powers: their within-row contrasts vanish, so row
+  probabilities and the joint likelihood retain the declared P2b limit. This
+  does not classify arbitrary utility, slope, or logit remainders; infer a path
+  or power law from optimizer output; establish competitiveness or a global
+  boundary; change readiness or uncertainty; or authorize FACETS comparison,
+  recovery, simulation, or promotion.
+
 * Added a forward parameter-space reachability contract for declared JML GPCM
   lexicographic paths. Caller-declared directions in the retained constrained
   free-additive coordinates are mapped through the exact sparse adjacent-

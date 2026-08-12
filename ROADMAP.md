@@ -1059,6 +1059,26 @@ tail monotonicity and competitiveness, common subsequence limits, global
 boundary classification, MML geometry, inference, FACETS equivalence,
 recovery, and promotion remain open or unchanged.
 
+P2d now separates finite optimizer-sequence description from a theorem that
+can actually extend P2b. The optimizer exposes one coordinate vector per
+optimization or polish stage only while `fit_mfrm()` is assembling its audits;
+those vectors are discarded before the fit is returned, while the existing
+aggregate stage table remains. Fewer than three endpoints yield a typed
+insufficient-sequence state. An explicitly longer sequence can receive a
+finite Euclidean SVD with at most two direction/scale components and optional
+log-log scale estimates, but the result is coordinate-basis dependent, is not
+within-stage iteration history, and certifies no asymptotic direction, power,
+remainder, or P2b handoff. The analytic part instead starts from a completed
+P2c path and admits a finite sum of fixed perturbations on the already scaled
+category logits, each multiplied by a strictly ordered negative power. Every
+within-row contrast of that residual tends to zero, so row log probabilities
+and the finite joint log likelihood have the same declared limit. This theorem
+does not separately classify arbitrary utility or slope remainders, bounded
+oscillation, slower divergent terms, or an optimizer sequence. Production path
+extraction, competitiveness, common-subsequence agreement, global boundary
+classification, MML geometry, inference, FACETS equivalence, recovery, and
+promotion remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
