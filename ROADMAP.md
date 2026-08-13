@@ -1288,6 +1288,40 @@ these rate-hierarchy strata. Nonzero offsets, finite-JMLE adjudication, MML,
 inference, readiness, recovery, FACETS comparison, simulation, and promotion
 remain open or unchanged.
 
+P2l resolves the saturated-optimum slice of that likelihood gate. For a fixed
+zero-offset operator and strictly positive observation-by-ordered-category
+mass `m_ik`, complete adjacent response contrasts give a regular multinomial-
+softmax coordinate system. The unique independent optimum and its value are
+
+```text
+z_ih* = log(m_i,h+1 / m_ih),
+L_sat = sum_ik m_ik log(m_ik / sum_k m_ik).
+```
+
+Strict positivity makes this likelihood strictly concave in each observation's
+cumulative contrasts. It is also coercive: if the adjacent response-contrast
+norm diverges, at least one within-observation utility spread diverges and a
+positive-mass category forces the log likelihood to minus infinity. Hence a
+parameter sequence with finite limsup has a bounded response subsequence, and
+its possible limit is governed by the P2j/P2k response-image closure.
+
+There are three exact dispositions. If `z*` is in the finite response image,
+its finite representative is a global JMLE. If `z*` is in the closure but not
+the finite image, strict concavity makes it the unique response-space optimum,
+the P2j/P2k product-one path attains `L_sat` only in the limit, and no finite
+JMLE exists. This recovers the P2i all-positive binary example and also applies
+to transition-major polytomous adjacent contrasts. If `z*` is outside the
+closure, coercivity guarantees a closure maximum strictly below `L_sat`, but
+P2l does not calculate its value or decide whether its maximizer has a finite
+representative. That remaining constrained closure-envelope problem is the
+next mathematical gate, followed by exact reconstruction of current-fit
+operators. Category mass represents grouped repetitions or likelihood weight
+inside the existing ordered response likelihood; it does not add nominal
+multinomial, grouped-binomial, Poisson/count, or generic frequency outcomes.
+Nonzero offsets, production promotion, MML, inference, readiness, recovery,
+FACETS comparison, simulation, and external-comparison eligibility remain open
+or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

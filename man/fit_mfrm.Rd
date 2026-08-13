@@ -496,6 +496,24 @@ preserves earlier P2j closure certificates under numerical indeterminacy and
 does not construct symbolic whole-operator strata, the boundary likelihood
 envelope, finite-JMLE existence, readiness, inference, MML, or comparison.
 
+A repository theorem-only P2l contract connects that targetwise closure result
+to the positive-mass ordered-category likelihood. For observation masses
+\code{m_ik > 0}, the unique unconstrained response optimum has adjacent
+contrasts \code{z_ih = log(m_i,h+1 / m_ih)} and value
+\code{sum_ik m_ik log(m_ik / sum_k m_ik)}. Positive mass makes the response
+likelihood strictly concave and sends every unbounded contrast sequence to
+minus infinity. If P2j/P2k places this saturated target in the finite image,
+P2l certifies a finite global JMLE. If it lies in the closure but not the
+finite image, the same value is a nonattained global supremum and an explicit
+product-one path proves finite-JMLE nonexistence even though every category
+has positive mass. If the target is outside the closure, the constrained
+maximum exists strictly below the saturated bound, but its location, value,
+and finite representability remain open. This is a grouped repeated-row
+representation of the existing ordered likelihood, not a nominal multinomial,
+count, or new frequency-response family. P2l requires a fixed zero-offset
+operator, is not yet applied to production fits, and changes no readiness,
+inference, MML, FACETS comparison, or external-comparison decision.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

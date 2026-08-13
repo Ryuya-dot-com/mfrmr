@@ -11,7 +11,7 @@ scientific-equivalence claim, simulation, sparse/GPCM extension, or release.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `release-evidence-checklist-0.2.3.csv` | `319451a0304d86ae7e05c257190f5538c86b1c2b3ee084de619b536be978f5b0` |
+| `release-evidence-checklist-0.2.3.csv` | `baa8a883a5e278fc101c5febb9bf402a643e144671a016a885c7e706b475c175` |
 | `claim-disposition-profile-0.2.3.csv` | `545409821e4674a45cc10e3f03483fdbfa87b4762ad5da4521efcafba0f66eff` |
 
 The profile contains exactly one row for each of the checklist's 106 `Item`

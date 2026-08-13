@@ -383,6 +383,16 @@ identify whether the opt-in layer ran and retain its test log.
   first-order-open faces without weakening earlier P2j certificates. Symbolic
   whole-operator strata, the boundary likelihood envelope, MML, inference,
   readiness, and FACETS equivalence remain open.
+- `gpcm-jml-saturated-response-envelope-p2l-record-0.2.3.md`: positive-mass
+  ordered-category saturated-response theorem for a fixed zero-offset GPCM
+  operator. The unique independent adjacent-logit optimum is passed to P2j/P2k:
+  a finite-image target certifies a finite global JMLE, while a missing closure
+  target gives an exact nonattained supremum and a finite product-one path. An
+  outside-closure target has a constrained maximum strictly below the saturated
+  bound, but its value and finite representability remain open. The mass matrix
+  is a grouped-row representation of the existing ordered likelihood, not a
+  new nominal, count, or frequency-response family; production, MML, inference,
+  readiness, and FACETS equivalence remain unchanged.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

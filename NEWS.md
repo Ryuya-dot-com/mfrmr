@@ -16,6 +16,21 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   response family, GPCM slope block,
   external comparison lane, readiness status, or release claim is broadened.
 
+* Connected targetwise zero-offset response-image closure to the positive-mass
+  ordered-category JML objective. P2l derives the unique independent saturated
+  adjacent contrasts as successive log mass ratios and proves strict response-
+  space concavity and coercivity. A saturated target in the finite response
+  image therefore certifies a finite global JMLE; a target in the closure but
+  missing from the finite image gives the exact nonattained global supremum and
+  a certified product-one likelihood-convergent path. The P2i positive-count
+  example is recovered, and the same theorem is exercised with three ordered
+  categories. A target outside the closure is now known to have a constrained
+  maximum strictly below the saturated bound, while its value, location, and
+  finite representability remain open. Grouped category mass only represents
+  repeated rows of the existing ordered likelihood: nominal multinomial,
+  count, frequency-response, nonzero-offset, production-fit, MML, inference,
+  readiness, simulation, and FACETS comparison scopes are unchanged.
+
 * Completed targetwise zero-offset response-image closure membership over
   higher-order slope-owner rate hierarchies. P2k uses semialgebraic curve
   selection and Puiseux leading terms to reduce every boundary approach to an
