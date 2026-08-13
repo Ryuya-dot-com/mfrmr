@@ -343,6 +343,14 @@ identify whether the opt-in layer ran and retain its test log.
   refusing to treat P2e further-subsequence classification or a negative
   bounded search as a complete envelope. Finite existence in the remaining
   cases, MML, inference, readiness, and FACETS equivalence stay open.
+- `gpcm-jml-exponential-balance-p2g-record-0.2.3.md`: exact finite
+  exponential-sum classification for affine JML-GPCM slope--utility balance
+  paths. It aggregates equal combined exponents before the P2e flag limit and
+  uses bounded response-image parameter escapes as nonproperness witnesses.
+  Production certifies the canonical zero-utility path only under an exact
+  structural zero-offset check; nonzero anchors fail closed. The complete
+  bounded-image escape family, finite attainment, MML, inference, readiness,
+  and FACETS equivalence remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

@@ -4295,6 +4295,35 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       joint_slope_boundary = boundary_audit$gpcm_joint_boundary,
       retained_log_likelihood = -as.numeric(opt$value)
     )
+  canonical_zero_utility_center_certified <- if (
+    identical(config$model, "GPCM") && identical(config$method, "JML") &&
+      as.integer(config$gpcm_spec$n_params %||% 0L) > 0L
+  ) {
+    tryCatch({
+      zero_kernel <- mfrmr_gpcm_response_kernel_design(
+        prep = prep,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        par = rep(0, length(opt$par))
+      )
+      offset <- as.numeric(zero_kernel$eta_minus_step)
+      length(offset) == zero_kernel$transition_rows &&
+        all(is.finite(offset)) && all(offset == 0)
+    }, error = function(e) FALSE)
+  } else {
+    FALSE
+  }
+  boundary_audit$gpcm_exponential_balance <-
+    audit_mfrm_jml_gpcm_exponential_balance_scope(
+      config = config,
+      sizes = sizes,
+      parameter_sequence_flag =
+        boundary_audit$gpcm_parameter_sequence_flag,
+      global_existence = boundary_audit$gpcm_global_existence,
+      canonical_zero_utility_center_certified =
+        canonical_zero_utility_center_certified
+    )
   boundary_audit$gpcm_terminal_gradient_stability <-
     audit_mfrm_jml_gpcm_terminal_gradient(
       idx = idx,

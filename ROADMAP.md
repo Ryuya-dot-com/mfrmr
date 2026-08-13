@@ -1122,6 +1122,27 @@ certificate. A negative bounded search and a finite optimizer trace therefore
 leave finite existence open. No readiness, standard-error, MML, recovery,
 FACETS-equivalence, simulation, or promotion decision changes.
 
+P2g now isolates the bounded-response-image branch left open by P2e and P2f.
+Write the retained adjacent utility as the affine map `b + A x`, let `x(t)` be
+a finite sum of exponential free-coordinate directions, and let each expanded
+log slope be affine in `t`. Every reference-category response contrast is then
+an exact finite exponential sum whose rates are log-slope rates plus additive
+rates. Coefficients with the same combined rate are added before
+classification: positive rates form a P2e divergent flag, rate zero forms the
+finite base, and negative rates vanish uniformly. If the parameter path
+escapes every bounded set but no positive response rate remains, the response
+image stays bounded and the parameter-to-response-contrast map is not proper.
+For an unanchored affine operator with `b = 0`, the all-zero additive path and
+any nonzero sum-zero log-slope direction give a canonical witness with every
+contrast identically zero. Production records that witness only after an exact
+structural zero-offset check; a nonzero anchor leaves properness open. This
+refutes a hoped-for universal proper-map shortcut but does not enumerate every
+bounded-image escape or maximize its likelihood limit. The next finite-
+attainment gate is therefore a complete boundary envelope on response-
+equivalence classes, including the bounded-image escape family. MML geometry,
+inference, readiness, recovery, FACETS comparison, simulation, and promotion
+remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

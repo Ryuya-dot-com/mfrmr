@@ -431,6 +431,19 @@ positive recession certificate and a finite optimizer trace leave finite
 attainment open. The audit changes no readiness, uncertainty, MML, or
 external-comparison decision.
 
+\code{config$boundary_audit$gpcm_exponential_balance} applies the P2g exact
+exponential slope--utility balance contract. A finite exponential sum in
+retained free-additive coordinates is combined with an affine sum-zero
+log-slope path; equal combined exponents are aggregated before positive rates
+are passed to the P2e contrast-flag oracle, the zero rate becomes the finite
+base, and negative rates vanish. A divergent parameter path with a bounded
+response-contrast image refutes properness of the parameter-to-contrast map.
+Production certifies the canonical all-zero-utility witness only when the
+affine additive offset is structurally and exactly zero; nonzero anchors leave
+properness open. The finite family is not a complete escaping-sequence
+envelope and changes no finite-attainment, readiness, uncertainty, MML, or
+external-comparison decision.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

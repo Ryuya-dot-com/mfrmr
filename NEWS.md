@@ -4,6 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added an exact exponential slope--utility balance oracle for JML GPCM.
+  Finite exponential sums in the retained constrained free-additive
+  coordinates are combined with affine sum-zero log-slope paths, and terms
+  with equal combined exponents are aggregated before positive, zero, and
+  negative rates are handed to the P2e contrast-flag limit. A divergent
+  parameter path with no positive response-contrast exponent is therefore an
+  explicit bounded-image witness that the parameter-to-response-contrast map
+  is not proper. Production fits certify the canonical all-zero-utility
+  witness only when the affine additive offset is structurally and exactly
+  zero; nonzero anchors fail closed instead of receiving a universal
+  nonproperness claim. The finite exponential family does not enumerate all
+  bounded-image escapes or complete the escaping-sequence boundary envelope,
+  so finite attainment, global boundary absence, readiness, uncertainty, MML,
+  recovery, simulation, FACETS comparison, and promotion are unchanged.
+
 * Added a JML GPCM global finite-attainment and non-attainment adjudicator.
   A parameter-reachable divergent P2c path whose analytic likelihood limit is
   exactly zero now proves that the universal conditional log-likelihood
