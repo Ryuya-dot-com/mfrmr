@@ -103,23 +103,29 @@ maxit-200/maxit-400 comparison `indeterminate` when either fit or its parameter
 contract is unavailable. In the retained diagnostic, all eight fits returned
 and all four comparisons remained `compared`. The gradients, log-likelihood
 changes, parameter changes, readiness decisions, and authority state above are
-unchanged. The evidence identity changed because the previously muffled eight
-convergence-review warnings and explicit comparison status are now part of the
-auditable payload.
+unchanged. The evidence identity includes the previously muffled eight
+convergence-review warnings and explicit comparison status. It now uses the
+same canonical-table representation as the parent smoke, and reproduced
+exactly under fresh R 4.4.2 and R 4.5.1 runs. Code and test identities normalize
+UTF-8 text to LF before hashing.
 
 ## Deterministic identities
 
 Diagnostic script SHA-256:
 
-`b562369c5e495a10eff90c921e2b2f1ffab7fac0f57075924b7bc1518e56d349`
+`cbcaf74193fd38c08248096a902d88e959fa7113c268dc6dbc8f7a243b51c78d`
+
+Canonical-hash helper SHA-256:
+
+`c229fc37f671cf68f7ba8ba5ee80da8b2cf8a5bbfca783081486b785890e276f`
 
 Focused-test SHA-256:
 
-`8565e0add908f49676a151ecd9ba501c0bf3000a6fc731237455069809be4629`
+`31629e0b3b8c113412bd864029505f51fef2bd95ec908bcb89d4bf052204efb2`
 
 Deterministic evidence SHA-256 (elapsed time excluded):
 
-`caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c`
+`8f332428c4bf9e0c5e5391716ea7408492ad6fc963c54877be5407d09699d200`
 
 ## Authority state
 

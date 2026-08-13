@@ -3,6 +3,7 @@
 # Source the prospective contract and the preceding stress-pilot runner first.
 # The default is no execution. Explicit execution is limited to the 12-run
 # smoke manifest and cannot launch feasibility or select an anchor percentage.
+# Source the companion canonical-hash helper before the contract and runners.
 
 mfrmr_rasps_specification <- "0.2.3-draft.1"
 mfrmr_rasps_contract <- "mfrmr_rater_anchor_sparse_prospective_smoke_v1"
@@ -17,13 +18,19 @@ mfrmr_rasps_require_support <- function() {
     "mfrmr_rasp_validate_manifest", "mfrmr_rass_capture",
     "mfrmr_rass_select_link_persons", "mfrmr_rass_pair_support",
     "mfrmr_rass_readiness", "mfrmr_rass_recovery", "build_mfrm_sim_spec",
-    "simulate_mfrm_data", "review_mfrm_anchors", "fit_mfrm"
+    "simulate_mfrm_data", "review_mfrm_anchors", "fit_mfrm",
+    "mfrmr_rash_hash_table", "mfrmr_rash_hash_truth"
   )
   source_environment <- environment(mfrmr_rasps_require_support)
   missing <- required[!vapply(
     required, exists, logical(1), envir = source_environment,
     mode = "function", inherits = TRUE
   )]
+  if (!exists(
+    "mfrmr_rash_format", envir = source_environment, inherits = TRUE
+  )) {
+    missing <- c(missing, "mfrmr_rash_format")
+  }
   if (length(missing) > 0L) {
     stop(
       "Load the prospective contract, stress-pilot helpers, and development ",
@@ -63,10 +70,7 @@ mfrmr_rasps_generate_complete <- function(data_seed) {
   )
   data <- simulate_mfrm_data(sim_spec = spec, seed = as.integer(data_seed))
   truth <- attr(data, "mfrm_truth")
-  truth_hash <- digest::digest(list(
-    person = truth$person, facets = truth$facets,
-    step_table = truth$step_table
-  ), algo = "sha256")
+  truth_hash <- mfrmr_rash_hash_truth(truth)
   list(data = data, truth = truth, spec = spec, TruthSHA256 = truth_hash)
 }
 
@@ -94,13 +98,13 @@ mfrmr_rasps_external_selection <- function(truth, row) {
   if (as.integer(row$AnchorCount) < 1L) {
     return(list(
       estimates = setNames(numeric(), character()),
-      selected = character(), CalibrationSHA256 = digest::digest(
+      selected = character(), CalibrationSHA256 = mfrmr_rash_hash_table(
         data.frame(Level = character(), ExternalEstimate = numeric()),
-        algo = "sha256"
+        domain = "external_rater_calibration"
       ),
-      SelectionSHA256 = digest::digest(
+      SelectionSHA256 = mfrmr_rash_hash_table(
         data.frame(Level = character(), Selected = logical()),
-        algo = "sha256"
+        domain = "external_rater_selection"
       )
     ))
   }
@@ -135,10 +139,13 @@ mfrmr_rasps_external_selection <- function(truth, row) {
   list(
     estimates = estimates,
     selected = selected,
-    CalibrationSHA256 = digest::digest(
-      table[c("Level", "ExternalEstimate")], algo = "sha256"
+    CalibrationSHA256 = mfrmr_rash_hash_table(
+      table[c("Level", "ExternalEstimate")],
+      domain = "external_rater_calibration"
     ),
-    SelectionSHA256 = digest::digest(table, algo = "sha256")
+    SelectionSHA256 = mfrmr_rash_hash_table(
+      table, domain = "external_rater_selection"
+    )
   )
 }
 
@@ -159,8 +166,10 @@ mfrmr_rasps_build_anchors <- function(truth, row) {
       SelectionRankSpearman = NA_real_,
       AnchorErrorMean = NA_real_, AnchorErrorRMSE = NA_real_,
       AnchorErrorMaxAbs = NA_real_,
-      AnchorSHA256 = digest::digest(empty[c("Facet", "Level", "Anchor")],
-                                    algo = "sha256")
+      AnchorSHA256 = mfrmr_rash_hash_table(
+        empty[c("Facet", "Level", "Anchor")],
+        domain = "direct_rater_anchors"
+      )
     ))
   }
   selected <- selection$selected
@@ -199,8 +208,9 @@ mfrmr_rasps_build_anchors <- function(truth, row) {
     AnchorErrorMean = mean(error),
     AnchorErrorRMSE = sqrt(mean(error^2)),
     AnchorErrorMaxAbs = max(abs(error)),
-    AnchorSHA256 = digest::digest(
-      anchors[c("Facet", "Level", "Anchor")], algo = "sha256"
+    AnchorSHA256 = mfrmr_rash_hash_table(
+      anchors[c("Facet", "Level", "Anchor")],
+      domain = "direct_rater_anchors"
     )
   )
 }
@@ -233,10 +243,13 @@ mfrmr_rasps_apply_design <- function(generated, row) {
   pair_support <- mfrmr_rass_pair_support(retained)
   list(
     data = retained,
-    LinkPersonSHA256 = digest::digest(sort(link), algo = "sha256"),
-    DataSHA256 = digest::digest(
+    LinkPersonSHA256 = mfrmr_rash_hash_table(
+      data.frame(Person = link, stringsAsFactors = FALSE),
+      domain = "common_link_persons"
+    ),
+    DataSHA256 = mfrmr_rash_hash_table(
       retained[c("Person", "Rater", "Criterion", "Score")],
-      algo = "sha256"
+      domain = "retained_response_data"
     ),
     DesignDensity = nrow(retained) / nrow(data),
     MinCommonPersons = as.integer(pair_support[["MinCommonPersons"]]),
@@ -518,16 +531,16 @@ mfrmr_rasps_summary <- function(results) {
 }
 
 mfrmr_rasps_evidence_hash <- function(results) {
-  digest::digest(
+  mfrmr_rash_hash_table(
     results[, setdiff(names(results), "FitElapsedSeconds"), drop = FALSE],
-    algo = "sha256"
+    domain = "prospective_smoke_evidence"
   )
 }
 
 mfrmr_rasps_summary_hash <- function(summary) {
-  digest::digest(
+  mfrmr_rash_hash_table(
     summary[, setdiff(names(summary), "FitElapsedSeconds"), drop = FALSE],
-    algo = "sha256"
+    domain = "prospective_smoke_summary"
   )
 }
 
@@ -544,6 +557,7 @@ mfrmr_run_rater_anchor_sparse_prospective_smoke <- function(
     return(list(
       Specification = mfrmr_rasps_specification,
       Contract = mfrmr_rasps_contract,
+      IdentityFormat = mfrmr_rash_format,
       RegistrySHA256 = registry$RegistrySHA256,
       ManifestSHA256 = mfrmr_rasp_manifest_hash(manifest),
       manifest = manifest, results = data.frame(), summary = data.frame(),
@@ -580,6 +594,7 @@ mfrmr_run_rater_anchor_sparse_prospective_smoke <- function(
   list(
     Specification = mfrmr_rasps_specification,
     Contract = mfrmr_rasps_contract,
+    IdentityFormat = mfrmr_rash_format,
     RegistrySHA256 = registry$RegistrySHA256,
     ManifestSHA256 = mfrmr_rasp_manifest_hash(manifest),
     manifest = manifest, results = results, summary = summary,

@@ -1,6 +1,9 @@
 rater_anchor_sparse_prospective_paths <- function() {
   validation <- testthat::test_path("..", "..", "inst", "validation")
   c(
+    canonical = file.path(
+      validation, "rater-anchor-sparse-canonical-hash-0.2.3.R"
+    ),
     contract = file.path(
       validation, "rater-anchor-sparse-prospective-contract-0.2.3.R"
     ),
@@ -15,9 +18,13 @@ rater_anchor_sparse_prospective_environment <- local({
   function() {
     if (!is.null(value)) return(value)
     paths <- rater_anchor_sparse_prospective_paths()
+    if (!file.exists(paths[["canonical"]])) {
+      stop("Required repository canonical-hash helper is missing.", call. = FALSE)
+    }
     testthat::skip_if_not(file.exists(paths[["contract"]]))
     testthat::skip_if_not_installed("digest")
     value <<- new.env(parent = globalenv())
+    sys.source(paths[["canonical"]], envir = value)
     sys.source(paths[["contract"]], envir = value)
     value
   }
@@ -28,6 +35,9 @@ test_that("prospective registry separates percentage, error, and topology", {
   registry <- env$mfrmr_rasp_registry()
 
   expect_s3_class(registry, "mfrmr_rasp_registry")
+  expect_identical(
+    registry$IdentityFormat, "mfrmr_rater_anchor_canonical_tables_v1"
+  )
   expect_identical(nrow(registry$FactorCatalog), 12L)
   expect_identical(nrow(registry$AnchorRegistry), 8L)
   expect_identical(nrow(registry$DesignRegistry), 7L)
@@ -39,6 +49,16 @@ test_that("prospective registry separates percentage, error, and topology", {
   expect_false(registry$GPCMIncluded)
   expect_false(registry$FACETSExternalFitsIncluded)
   expect_false(registry$AppropriateAnchorRateSelected)
+})
+
+test_that("prospective registry fails clearly without canonical identities", {
+  path <- rater_anchor_sparse_prospective_paths()[["contract"]]
+  env <- new.env(parent = globalenv())
+  sys.source(path, envir = env)
+  expect_error(
+    env$mfrmr_rasp_registry(),
+    "canonical-hash helper"
+  )
 })
 
 test_that("sixteen Raters make registered percentages exact counts", {
@@ -271,18 +291,18 @@ test_that("registry and manifest mutations fail closed", {
 test_that("prospective record binds contract and focused tests", {
   paths <- rater_anchor_sparse_prospective_paths()
   skip_if_not(all(file.exists(paths)))
-  contract_hash <- digest::digest(
-    paths[["contract"]], algo = "sha256", file = TRUE, serialize = FALSE
-  )
-  test_hash <- digest::digest(
-    testthat::test_path("test-rater-anchor-sparse-prospective-contract.R"),
-    algo = "sha256", file = TRUE, serialize = FALSE
+  env <- rater_anchor_sparse_prospective_environment()
+  contract_hash <- env$mfrmr_rash_hash_text_file(paths[["contract"]])
+  canonical_hash <- env$mfrmr_rash_hash_text_file(paths[["canonical"]])
+  test_hash <- env$mfrmr_rash_hash_text_file(
+    testthat::test_path("test-rater-anchor-sparse-prospective-contract.R")
   )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
   expect_match(record, contract_hash, fixed = TRUE)
+  expect_match(record, canonical_hash, fixed = TRUE)
   expect_match(record, test_hash, fixed = TRUE)
   expect_match(record, "560 declared feasibility fits", fixed = TRUE)
   expect_match(record, "FeasibilityExecutionAuthorized = FALSE", fixed = TRUE)

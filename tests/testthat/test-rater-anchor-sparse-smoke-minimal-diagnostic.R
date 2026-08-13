@@ -1,6 +1,9 @@
 rater_anchor_sparse_minimal_diagnostic_paths <- function() {
   validation <- testthat::test_path("..", "..", "inst", "validation")
   c(
+    canonical = file.path(
+      validation, "rater-anchor-sparse-canonical-hash-0.2.3.R"
+    ),
     prospective = file.path(
       validation, "rater-anchor-sparse-prospective-contract-0.2.3.R"
     ),
@@ -25,7 +28,12 @@ rater_anchor_sparse_minimal_diagnostic_environment <- local({
   function() {
     if (!is.null(value)) return(value)
     paths <- rater_anchor_sparse_minimal_diagnostic_paths()
-    needed <- paths[c("prospective", "helpers", "smoke", "diagnostic")]
+    if (!file.exists(paths[["canonical"]])) {
+      stop("Required repository canonical-hash helper is missing.", call. = FALSE)
+    }
+    needed <- paths[c(
+      "canonical", "prospective", "helpers", "smoke", "diagnostic"
+    )]
     testthat::skip_if_not(all(file.exists(needed)))
     testthat::skip_if_not_installed("digest")
     value <<- new.env(parent = globalenv())
@@ -49,6 +57,9 @@ rater_anchor_sparse_minimal_diagnostic_result <- local({
 test_that("minimal diagnostic defaults to eight-fit dry-run", {
   env <- rater_anchor_sparse_minimal_diagnostic_environment()
   dry <- env$mfrmr_run_rater_anchor_sparse_smoke_minimal_diagnostic()
+  expect_identical(
+    dry$IdentityFormat, "mfrmr_rater_anchor_canonical_tables_v1"
+  )
 
   expect_identical(dry$PlannedFits, 8L)
   expect_identical(nrow(dry$results), 0L)
@@ -80,7 +91,7 @@ test_that("maxit doubling leaves the complete-design solutions unchanged", {
   expect_true(all(!comparison$InferenceReady400))
   expect_identical(
     result$EvidenceSHA256,
-    "caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c"
+    "8f332428c4bf9e0c5e5391716ea7408492ad6fc963c54877be5407d09699d200"
   )
 })
 
@@ -208,24 +219,24 @@ test_that("minimal diagnostic cannot authorize feasibility or a rate", {
 test_that("minimal diagnostic record binds code, test, and evidence", {
   paths <- rater_anchor_sparse_minimal_diagnostic_paths()
   skip_if_not(file.exists(paths[["record"]]))
-  code_hash <- digest::digest(
-    paths[["diagnostic"]], algo = "sha256", file = TRUE, serialize = FALSE
-  )
-  test_hash <- digest::digest(
+  env <- rater_anchor_sparse_minimal_diagnostic_environment()
+  code_hash <- env$mfrmr_rash_hash_text_file(paths[["diagnostic"]])
+  canonical_hash <- env$mfrmr_rash_hash_text_file(paths[["canonical"]])
+  test_hash <- env$mfrmr_rash_hash_text_file(
     testthat::test_path(
       "test-rater-anchor-sparse-smoke-minimal-diagnostic.R"
-    ),
-    algo = "sha256", file = TRUE, serialize = FALSE
+    )
   )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
   expect_match(record, code_hash, fixed = TRUE)
+  expect_match(record, canonical_hash, fixed = TRUE)
   expect_match(record, test_hash, fixed = TRUE)
   expect_match(
     record,
-    "caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c",
+    "8f332428c4bf9e0c5e5391716ea7408492ad6fc963c54877be5407d09699d200",
     fixed = TRUE
   )
   expect_match(record, "FeasibilityHandoffAuthorized = FALSE", fixed = TRUE)
