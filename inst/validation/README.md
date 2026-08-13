@@ -577,6 +577,16 @@ identify whether the opt-in layer ran and retain its test log.
   decision record for that role contract. It binds the contract and focused
   tests while retaining zero external fits, no tolerance, and no GPCM
   promotion, simulation, or confirmation authority.
+- `pcm-gpcm-jml-paired-calibration-0.2.3.R`: small repository-only paired
+  calibration that fits PCM/JML and criterion-owned GPCM/JML to each of six
+  identical four-category datasets under unit and moderate generating slopes.
+  It records paired-data identity, readiness, typed likelihood differences,
+  apparent fitted slope spread, and log-slope recovery without estimating a
+  model-selection rate or authorizing promotion.
+- `pcm-gpcm-jml-paired-calibration-record-0.2.3.md`: completed six-pair result
+  record. PCM was inference-ready in all six fits and GPCM/JML in none; all
+  likelihood gains therefore remain optimizer-trace evidence. FACETS remains
+  a comparator for the PCM/JML side only.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,

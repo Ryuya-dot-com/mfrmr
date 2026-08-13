@@ -32,6 +32,14 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   remains a direct comparator for the PCM/JML side only rather than for the
   jointly fitted free-slope GPCM side.
 
+* Added a deliberately small paired PCM/GPCM JML calibration under unit and
+  moderate Criterion-owned generating slopes. All six same-data pairs fitted,
+  but only the PCM fits were inference-ready; the GPCM likelihood gains,
+  apparent slope spreads, and recovery errors are consequently retained as
+  optimizer-trace evidence, not a model-selection rate or confirmation. The
+  runner also verifies that FACETS remains a comparator for the PCM/JML side
+  only and authorizes no broad simulation or GPCM promotion.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-
