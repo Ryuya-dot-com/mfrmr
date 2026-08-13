@@ -75,17 +75,36 @@ test_that("GPCM diagnose_mfrm returns measures with caveat status", {
     diag_summary$key_warnings,
     fixed = TRUE
   )))
+  expect_identical(
+    diag_summary$overview$FairAverage[1],
+    "available_direct_only"
+  )
+  expect_true(any(
+    diag_summary$reporting_map$Area == "Fair averages / adjusted-score review" &
+      diag_summary$reporting_map$CoveredHere == "direct_only" &
+      grepl(
+        "fair_average_table(fit, diagnostics = diagnostics)",
+        diag_summary$reporting_map$CompanionOutput,
+        fixed = TRUE
+      )
+  ))
   diag_console <- capture.output(print(diag_summary))
   expect_true(any(grepl("Source fit readiness", diag_console, fixed = TRUE)))
   expect_true(any(grepl("review-only", diag_console, fixed = TRUE)))
-  # The dashboard panel remains unavailable under GPCM; direct
-  # fair_average_table() is supported with its own caveat.
+  expect_true(any(grepl(
+    "Fair average: Available via direct table only",
+    diag_console,
+    fixed = TRUE
+  )))
+  # The embedded dashboard panel remains disabled under GPCM; the diagnostics
+  # object points explicitly to the supported direct fair_average_table().
   if (!is.null(diag$fair_average)) {
-    fa_msg <- as.character(diag$fair_average$status %||% "")
-    expect_true(any(grepl("placeholder|unavailable|GPCM", fa_msg,
-                           ignore.case = TRUE)) ||
-                  is.null(diag$fair_average$table) ||
-                  nrow(as.data.frame(diag$fair_average$table)) == 0L)
+    expect_false(diag$fair_average$available)
+    expect_identical(diag$fair_average$status, "available_direct_only")
+    expect_identical(
+      diag$fair_average$direct_route,
+      "fair_average_table(fit, diagnostics = diagnostics)"
+    )
   }
 })
 

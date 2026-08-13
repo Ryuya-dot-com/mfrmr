@@ -163,7 +163,12 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "compare_mfrm(); build_model_choice_review(); build_weighting_review(); compute_information(); plot_information(); build_summary_table_bundle(); export_summary_appendix()",
       "build_linking_review()",
       "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data(); evaluate_mfrm_recovery(); assess_mfrm_recovery()",
-      "build_apa_outputs(); build_visual_summaries(); run_qc_pipeline(); build_mfrm_manifest(); build_mfrm_replay_script(); export_mfrm_bundle()",
+      paste(
+        "mfrm_results(include = \"gpcm_review\"); mfrm_report();",
+        "export_mfrm_results(); build_apa_outputs(); build_visual_summaries();",
+        "run_qc_pipeline(); build_mfrm_manifest(); build_mfrm_replay_script();",
+        "export_mfrm_bundle()"
+      ),
       "fair_average_table()",
       "evaluate_mfrm_design(); predict_mfrm_population()",
       "evaluate_mfrm_diagnostic_screening(); evaluate_mfrm_signal_detection()",
@@ -244,9 +249,11 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "before RMSE or bias can be interpreted as adequate."
       ),
       paste(
-        "Supported with caveat as a partial reporting/export bundle over",
+        "Supported with caveat as a connected public reporting/export route over",
         "already-supported GPCM diagnostics, direct tables, plots, manifests,",
-        "and replay scripts. Full FACETS-style score-side contract review,",
+        "and replay scripts. The mfrm_results -> mfrm_report -> export/replay",
+        "route preserves the model, step/slope owners, and MML identification.",
+        "Full FACETS-style score-side contract review,",
         "design forecasting, and automatic operational scoring claims remain",
         "outside this route."
       ),
@@ -361,7 +368,8 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "bias, and uncertainty thresholds."
       ),
       paste(
-        "Use the APA/QC/export bundle for caveated GPCM sensitivity reporting;",
+        "Use `mfrm_results(fit, include = \"gpcm_review\")`, `mfrm_report()`,",
+        "and `export_mfrm_results()` for caveated GPCM sensitivity reporting;",
         "use package-native scorefile export, design forecasting, and full",
         "FACETS score-side review only through their separate caveated or",
         "blocked rows."

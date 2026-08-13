@@ -143,7 +143,11 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
   expect_true(any(
     tbl$Area == "APA writer and fit-based export bundles" &
       tbl$Status == "supported_with_caveat" &
-      grepl("caveated GPCM sensitivity reporting", tbl$RecommendedRoute, fixed = TRUE)
+      grepl("caveated GPCM sensitivity reporting", tbl$RecommendedRoute, fixed = TRUE) &
+      grepl("mfrm_results", tbl$Helpers, fixed = TRUE) &
+      grepl("mfrm_report", tbl$Helpers, fixed = TRUE) &
+      grepl("export_mfrm_results", tbl$Helpers, fixed = TRUE) &
+      grepl("connected public reporting/export route", tbl$Boundary, fixed = TRUE)
   ))
   expect_true(any(
     tbl$Area == "Score-side scorefile export under bounded GPCM" &

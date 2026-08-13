@@ -9927,6 +9927,8 @@ mfrm_diagnostics <- function(res,
       by_facet = list(),
       stacked = tibble(),
       available = FALSE,
+      status = "available_direct_only",
+      direct_route = "fair_average_table(fit, diagnostics = diagnostics)",
       reason = gpcm_fair_average_rationale()
     )
   } else {

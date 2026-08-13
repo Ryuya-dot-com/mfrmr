@@ -7128,6 +7128,13 @@ summary.mfrm_diagnostics <- function(object,
   facets_chisq_tbl <- tibble::as_tibble(object$facets_chisq %||% tibble::tibble())
   marginal_available <- isTRUE(object$marginal_fit$available)
   marginal_pairwise_available <- isTRUE(object$marginal_fit$pairwise$available)
+  fair_average_tbl <- tibble::as_tibble(
+    object$fair_average$stacked %||% tibble::tibble()
+  )
+  fair_average_status <- as.character(
+    object$fair_average$status %||%
+      if (nrow(fair_average_tbl) > 0L) "embedded_available" else "not_available"
+  )[1L]
   diagnostic_mode <- as.character(object$diagnostic_mode %||% "legacy")
   fit_readiness_tbl <- tibble::as_tibble(
     object$fit_readiness %||% data.frame()
@@ -7174,7 +7181,8 @@ summary.mfrm_diagnostics <- function(object,
       summary_method = precision_profile_tbl$Method[1] %||% NA_character_
     ),
     PrecisionTier = as.character(precision_profile_tbl$PrecisionTier[1] %||% NA_character_),
-    MarginalFit = if (marginal_available) "available" else "not_available"
+    MarginalFit = if (marginal_available) "available" else "not_available",
+    FairAverage = fair_average_status
   )
 
   reliability_overview <- tibble::tibble()
@@ -7510,6 +7518,7 @@ summary.mfrm_diagnostics <- function(object,
       "Overall fit / reliability",
       "Precision basis / inferential caveats",
       "Strict marginal fit",
+      "Fair averages / adjusted-score review",
       "Residual PCA / local structure",
       "Unexpected responses / displacement",
       "Connectivity / subsets",
@@ -7519,6 +7528,13 @@ summary.mfrm_diagnostics <- function(object,
       "yes",
       "yes",
       if (marginal_available) "yes" else if (identical(diagnostic_mode, "legacy")) "no" else "requested_not_available",
+      if (identical(fair_average_status, "available_direct_only")) {
+        "direct_only"
+      } else if (identical(fair_average_status, "embedded_available")) {
+        "yes"
+      } else {
+        "no"
+      },
       "partial",
       "partial",
       "partial",
@@ -7531,6 +7547,14 @@ summary.mfrm_diagnostics <- function(object,
         "diagnostics$marginal_fit / rating_scale_table(..., diagnostics = diagnostics)"
       } else {
         "diagnose_mfrm(..., diagnostic_mode = \"both\")"
+      },
+      if (identical(fair_average_status, "available_direct_only")) {
+        as.character(
+          object$fair_average$direct_route %||%
+            "fair_average_table(fit, diagnostics = diagnostics)"
+        )
+      } else {
+        "diagnostics$fair_average / fair_average_table(fit, diagnostics = diagnostics)"
       },
       "analyze_residual_pca() / diagnostics$pca details",
       "unexpected_response_table() / displacement_table() / interaction tables",
@@ -7545,6 +7569,16 @@ summary.mfrm_diagnostics <- function(object,
   }
   if (nrow(precision_profile_tbl) > 0 && identical(as.character(precision_profile_tbl$PrecisionTier[1]), "hybrid")) {
     notes <- c(notes, "Precision outputs are hybrid for this run; inspect levels that fell back to observation-table information before treating the run as fully inferential.")
+  }
+  if (identical(fair_average_status, "available_direct_only")) {
+    notes <- c(
+      notes,
+      paste0(
+        "The embedded fair-average dashboard panel is disabled for bounded GPCM; ",
+        "use `fair_average_table(fit, diagnostics = diagnostics)` for the ",
+        "supported slope-aware element-conditional table."
+      )
+    )
   }
   if (isTRUE(n_subsets > 1L)) {
     notes <- c(notes, "Multiple disconnected subsets were detected.")
@@ -7688,6 +7722,8 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
       hybrid = "Mixed model-based and fallback precision",
       exploratory = "Exploratory precision",
       available = "Available",
+      embedded_available = "Available in diagnostics",
+      available_direct_only = "Available via direct table only",
       not_available = "Not available",
       not_requested = "Not requested",
       requested_not_available = "Requested but not available",
@@ -7725,6 +7761,9 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
     if ("DiagnosticMode" %in% names(ov) && "MarginalFit" %in% names(ov)) {
       cat(sprintf("  Diagnostic mode: %s\n", display_value(ov$DiagnosticMode)))
       cat(sprintf("  Strict marginal fit: %s\n", display_value(ov$MarginalFit)))
+    }
+    if ("FairAverage" %in% names(ov)) {
+      cat(sprintf("  Fair average: %s\n", display_value(ov$FairAverage)))
     }
   }
   if (!is.null(x$status) && nrow(x$status) > 0) {

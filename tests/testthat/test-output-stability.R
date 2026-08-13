@@ -143,9 +143,15 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_s3_class(dash, "mfrm_facet_dashboard")
   expect_s3_class(qc, "mfrm_plot_data")
   expect_true(isFALSE(dx$fair_average$available))
+  expect_identical(dx$fair_average$status, "available_direct_only")
+  expect_identical(
+    dx$fair_average$direct_route,
+    "fair_average_table(fit, diagnostics = diagnostics)"
+  )
   expect_true(grepl("disabled for bounded `GPCM`", dx$fair_average$reason, fixed = TRUE))
   expect_true(grepl("slope-aware", dx$fair_average$reason, fixed = TRUE))
   expect_true(isFALSE(qc$data$fair_average$available))
+  expect_identical(qc$data$fair_average$status, "available_direct_only")
   expect_true(grepl("slope-aware", qc$data$fair_average$reason, fixed = TRUE))
 
   qc_pipe <- run_qc_pipeline(fit)
