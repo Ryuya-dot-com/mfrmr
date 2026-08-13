@@ -1143,6 +1143,28 @@ equivalence classes, including the bounded-image escape family. MML geometry,
 inference, readiness, recovery, FACETS comparison, simulation, and promotion
 remain open or unchanged.
 
+P2h resolves the first P2g next-gate branch: quotienting finite parameter
+points only by equality of their response contrasts is not enough. In a
+binary two-Person, two-slope-owner GPCM, let centered owner locations be
+`delta_1 = delta` and `delta_2 = -delta`, take
+`theta(t) = (exp(-t), 2 exp(-t))`, `delta(t) = 0`, and use identified slopes
+`alpha(t) = (exp(t), exp(-t))`. The finite response-contrast vector is exactly
+`(1, 2, exp(-2t), 2 exp(-2t))`, so the escaping finite-parameter classes
+converge to `z* = (1, 2, 0, 0)`. If a finite parameter represented `z*`, the
+last two zero contrasts and positive finite second-owner slope would force
+`theta_1 + delta = theta_2 + delta = 0`. Hence `theta_1 = theta_2`; the first
+two rows share the positive finite first-owner slope and would have equal
+contrasts, contradicting `1 != 2`. Equivalently, the implementation certifies
+the exact affine relation `row_1 - row_2 = row_3 - row_4` and its nonzero
+target witness. Therefore the finite response image, and its response-metric
+equivalence quotient, is not closed or complete. Removing fibres alone cannot
+produce a proper response map; the quotient must be completed with boundary
+strata. This obstruction neither proves that `z*` is competitive nor decides
+finite-JMLE existence. The next gate is now unambiguously the complete
+response-image closure stratification and boundary-limsup envelope. MML,
+inference, readiness, recovery, FACETS comparison, simulation, and promotion
+remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

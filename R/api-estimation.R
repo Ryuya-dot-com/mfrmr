@@ -961,6 +961,16 @@
 #'   exactly zero; nonzero anchors leave properness open. The finite family is
 #'   not a complete escaping-sequence envelope and changes no finite-
 #'   attainment, readiness, uncertainty, MML, or external-comparison decision.
+#'   A repository theorem-only P2h contract then tests the remaining response-
+#'   equivalence-quotient shortcut. Its exact binary two-Person/two-slope-
+#'   owner construction approaches the finite contrast target `(1, 2, 0, 0)`
+#'   from finite parameter points, while an affine utility-row relation proves
+#'   that no finite parameter represents that target. Consequently, merely
+#'   collapsing finite parameter fibres with identical responses does not make
+#'   the response-metric quotient image closed, complete, or proper. Boundary
+#'   completion or strata are required before a complete limsup envelope can
+#'   be built. The theorem does not claim that its target is competitive or
+#'   decide finite-JMLE existence, readiness, uncertainty, MML, or comparison.
 #'   `config$boundary_audit$gpcm_terminal_gradient_stability` reconstructs the
 #'   same fixed JML objective and analytic terminal gradient, checks stored
 #'   optimizer/polish summaries and deterministic central-difference probes,

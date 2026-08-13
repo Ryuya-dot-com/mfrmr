@@ -16,6 +16,21 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   response family, GPCM slope block,
   external comparison lane, readiness status, or release claim is broadened.
 
+* Closed the response-equivalence-quotient branch of the JML GPCM finite-
+  attainment investigation in the negative. An exact binary two-Person,
+  two-slope-owner construction has finite response contrasts
+  `(1, 2, exp(-2t), 2 exp(-2t))` along an escaping parameter path and hence
+  converges to `(1, 2, 0, 0)`. An exact affine row relation proves that no
+  finite GPCM parameter represents that target: the two zero target rows
+  force two unscaled utilities to zero, which would force the two common-
+  slope nonzero target rows to agree. Thus collapsing finite parameter fibres
+  by response equivalence does not make the finite response image closed,
+  complete, or proper; a completion by boundary strata is still required.
+  The P2h certificate is theorem-only and does not assert that this boundary
+  target is competitive, that a finite JMLE fails to exist, or that the full
+  boundary envelope is complete. MML, inference, readiness, recovery,
+  simulation, FACETS comparison, and promotion remain unchanged.
+
 * Added an exact exponential slope--utility balance oracle for JML GPCM.
   Finite exponential sums in the retained constrained free-additive
   coordinates are combined with affine sum-zero log-slope paths, and terms

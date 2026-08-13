@@ -351,6 +351,14 @@ identify whether the opt-in layer ran and retain its test log.
   structural zero-offset check; nonzero anchors fail closed. The complete
   bounded-image escape family, finite attainment, MML, inference, readiness,
   and FACETS equivalence remain open.
+- `gpcm-jml-response-quotient-closure-p2h-record-0.2.3.md`: exact binary
+  two-Person/two-slope-owner counterexample showing that the finite response-
+  equivalence quotient image need not be closed. A P2g path approaches a
+  finite contrast target that an exact affine row relation excludes from the
+  finite GPCM image. Fibre collapse alone is therefore insufficient; response-
+  image boundary completion and a complete limsup envelope remain necessary.
+  Competitiveness, finite-JMLE existence, MML, inference, readiness, and
+  FACETS equivalence remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
