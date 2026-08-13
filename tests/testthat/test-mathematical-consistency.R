@@ -189,6 +189,65 @@ test_that("GPCM response-probability bundle obeys moment identities", {
   )
 })
 
+test_that("GPCM slopes act on the complete adjacent-category predictor", {
+  theta <- 0.7
+  rater_contribution <- -0.35
+  slopes <- c(0.6, 1.5)
+  eta <- c(
+    theta, theta + rater_contribution,
+    theta, theta + rater_contribution
+  )
+  slope_idx <- c(1L, 1L, 2L, 2L)
+
+  probabilities <- mfrmr:::category_prob_gpcm(
+    eta = eta,
+    step_cum_mat = matrix(c(0, 0.25), nrow = 1L),
+    criterion_idx = rep(1L, length(eta)),
+    slopes = slopes,
+    slope_idx = slope_idx
+  )
+  adjacent_logits <- log(probabilities[, 2L] / probabilities[, 1L])
+  observed_rater_shifts <- c(
+    adjacent_logits[2L] - adjacent_logits[1L],
+    adjacent_logits[4L] - adjacent_logits[3L]
+  )
+
+  expect_equal(
+    observed_rater_shifts,
+    slopes * rater_contribution,
+    tolerance = 1e-12
+  )
+  expect_false(isTRUE(all.equal(
+    observed_rater_shifts,
+    rep(rater_contribution, length(slopes)),
+    tolerance = 1e-12
+  )))
+})
+
+test_that("unit GPCM slopes reduce exactly to the PCM probability kernel", {
+  eta <- c(-0.7, 0.2, 0.9)
+  step_cum_mat <- rbind(
+    c(0, -0.4, 0.1, 0.8),
+    c(0, -0.2, 0.4, 0.9)
+  )
+  step_idx <- c(1L, 2L, 1L)
+
+  gpcm <- mfrmr:::category_prob_gpcm(
+    eta = eta,
+    step_cum_mat = step_cum_mat,
+    criterion_idx = step_idx,
+    slopes = c(1, 1),
+    slope_idx = step_idx
+  )
+  pcm <- mfrmr:::category_prob_pcm(
+    eta = eta,
+    step_cum_mat = step_cum_mat,
+    criterion_idx = step_idx
+  )
+
+  expect_equal(gpcm, pcm, tolerance = 1e-15)
+})
+
 test_that("category-curve reports conserve probabilities, moments, and information", {
   expect_curve_moment_identities(make_toy_fit(maxit = 12, model = "RSM"))
   expect_curve_moment_identities(make_consistency_pcm_fit(), theta_points = 9)

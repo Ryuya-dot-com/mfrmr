@@ -269,10 +269,18 @@
 #' identifies slopes by a sum-to-zero constraint on log slopes, so their
 #' geometric mean is 1.
 #' A selected facet owns a vector rather than one common number: if there are
-#' eqn{G} levels, the fit returns eqn{G} positive slopes with eqn{G-1} free
-#' log-slope contrasts. Every other facet remains additive inside eqn{\eta}
+#' \eqn{G} levels, the fit returns \eqn{G} positive slopes with \eqn{G-1} free
+#' log-slope contrasts. Every other facet remains additive inside \eqn{\eta}
 #' and receives no separate slope. Selecting a rater facet is therefore a
 #' different restricted model from selecting a criterion or task facet.
+#' The placement of the slope is part of the model identity: it multiplies the
+#' complete adjacent-category predictor, including the person coordinate, all
+#' additive facet locations and fitted facet interactions inside \eqn{\eta},
+#' and the owned step. It is not a loading-only formulation in which the slope
+#' multiplies ability while rater severity and other intercept terms remain
+#' unscaled. Such a formulation, including TAM multifacet `GPCM.design`
+#' constructions with separate linear intercept and slope designs, is a
+#' different model unless an algebraic reduction establishes equivalence.
 #' This is an aligned single-owner many-facet GPCM: exactly one facet owns both
 #' the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
 #' whose task and rater slopes enter multiplicatively and whose step owner must
@@ -1558,6 +1566,12 @@ fit_mfrm <- function(data,
   } else {
     "marginal_maximum_likelihood"
   }
+  gpcm_identity <- mfrmr_gpcm_model_identity(model)
+  fit$config$gpcm_model_family <- gpcm_identity$model_family
+  fit$config$gpcm_slope_action <- gpcm_identity$slope_action
+  fit$config$gpcm_slope_composition <- gpcm_identity$slope_composition
+  fit$config$gpcm_latent_dimension_count <-
+    gpcm_identity$latent_dimension_count
   # These fields describe the statistical objective, not numerical line-search
   # safeguards. The current GPCM routes use neither a regularization penalty
   # nor finite box constraints on person, location, step, or slope coordinates.

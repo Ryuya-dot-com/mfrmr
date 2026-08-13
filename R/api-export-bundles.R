@@ -628,6 +628,18 @@ build_mfrm_manifest <- function(fit,
     gpcm_common_discrimination = as.character(
       cfg$gpcm_common_discrimination %||% "not_recorded"
     ),
+    gpcm_model_family = as.character(
+      scale_contract$GpcmModelFamily[1]
+    ),
+    gpcm_slope_action = as.character(
+      scale_contract$GpcmSlopeAction[1]
+    ),
+    gpcm_slope_composition = as.character(
+      scale_contract$GpcmSlopeComposition[1]
+    ),
+    gpcm_latent_dimension_count = as.integer(
+      scale_contract$GpcmLatentDimensionCount[1]
+    ),
     gpcm_estimator_family = as.character(
       scale_contract$GpcmEstimatorFamily[1]
     ),
@@ -708,6 +720,18 @@ build_mfrm_manifest <- function(fit,
     fit_population_source = as.character(fit_population$source %||% "none"),
     fit_gpcm_mml_identification = as.character(
       cfg$gpcm_mml_identification %||% "not_recorded"
+    ),
+    fit_gpcm_model_family = as.character(
+      scale_contract$GpcmModelFamily[1]
+    ),
+    fit_gpcm_slope_action = as.character(
+      scale_contract$GpcmSlopeAction[1]
+    ),
+    fit_gpcm_slope_composition = as.character(
+      scale_contract$GpcmSlopeComposition[1]
+    ),
+    fit_gpcm_latent_dimension_count = as.integer(
+      scale_contract$GpcmLatentDimensionCount[1]
     ),
     fit_gpcm_estimator_family = as.character(
       scale_contract$GpcmEstimatorFamily[1]

@@ -622,6 +622,14 @@ A selected facet owns a vector rather than one common number: if there are
 log-slope contrasts. Every other facet remains additive inside \eqn{\eta}
 and receives no separate slope. Selecting a rater facet is therefore a
 different restricted model from selecting a criterion or task facet.
+The placement of the slope is part of the model identity: it multiplies the
+complete adjacent-category predictor, including the person coordinate, all
+additive facet locations and fitted facet interactions inside \eqn{\eta},
+and the owned step. It is not a loading-only formulation in which the slope
+multiplies ability while rater severity and other intercept terms remain
+unscaled. Such a formulation, including TAM multifacet \code{GPCM.design}
+constructions with separate linear intercept and slope designs, is a
+different model unless an algebraic reduction establishes equivalence.
 This is an aligned single-owner many-facet GPCM: exactly one facet owns both
 the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
 whose task and rater slopes enter multiplicatively and whose step owner must

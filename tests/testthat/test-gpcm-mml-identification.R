@@ -59,6 +59,19 @@ test_that("default GPCM MML estimates the common population scale", {
   expect_identical(fit$config$gpcm_statistical_penalty, "none")
   expect_false(fit$config$gpcm_finite_parameter_box)
   expect_identical(
+    fit$config$gpcm_model_family,
+    "aligned_single_owner_relative_slope_gpcm"
+  )
+  expect_identical(
+    fit$config$gpcm_slope_action,
+    "complete_adjacent_predictor"
+  )
+  expect_identical(
+    fit$config$gpcm_slope_composition,
+    "single_owner_relative_gm1"
+  )
+  expect_identical(fit$config$gpcm_latent_dimension_count, 1L)
+  expect_identical(
     fit$config$gpcm_extreme_person_policy,
     "posterior_eap_under_population_model"
   )
@@ -89,6 +102,22 @@ test_that("default GPCM MML estimates the common population scale", {
   expect_identical(
     summary_fit$settings_overview$GpcmStatisticalPenalty[1],
     "none"
+  )
+  expect_identical(
+    summary_fit$settings_overview$GpcmModelFamily[1],
+    "aligned_single_owner_relative_slope_gpcm"
+  )
+  expect_identical(
+    summary_fit$settings_overview$GpcmSlopeAction[1],
+    "complete_adjacent_predictor"
+  )
+  expect_identical(
+    summary_fit$settings_overview$GpcmSlopeComposition[1],
+    "single_owner_relative_gm1"
+  )
+  expect_identical(
+    summary_fit$settings_overview$GpcmLatentDimensionCount[1],
+    1L
   )
   expect_false(summary_fit$settings_overview$GpcmFiniteParameterBox[1])
   expect_identical(
@@ -121,12 +150,18 @@ test_that("default GPCM MML estimates the common population scale", {
     fit_console,
     fixed = TRUE
   )))
+  kernel_console_line <- paste0(
+    "GPCM kernel: aligned_single_owner_relative_slope_gpcm | ",
+    "Slope action: complete_adjacent_predictor"
+  )
+  expect_true(any(grepl(kernel_console_line, fit_console, fixed = TRUE)))
   summary_console <- capture.output(print(summary_fit))
   expect_true(any(grepl(
     "GPCM estimator: marginal_maximum_likelihood",
     summary_console,
     fixed = TRUE
   )))
+  expect_true(any(grepl(kernel_console_line, summary_console, fixed = TRUE)))
   for (plot_type in c("wright", "pathway", "ccc")) {
     plot_payload <- suppressWarnings(plot(fit, type = plot_type, draw = FALSE))
     expect_s3_class(plot_payload, "mfrm_plot_data")
@@ -151,6 +186,22 @@ test_that("default GPCM MML estimates the common population scale", {
       plot_payload$data$scale_contract$GpcmStatisticalPenalty[1],
       "none"
     )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmModelFamily[1],
+      "aligned_single_owner_relative_slope_gpcm"
+    )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmSlopeAction[1],
+      "complete_adjacent_predictor"
+    )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmSlopeComposition[1],
+      "single_owner_relative_gm1"
+    )
+    expect_identical(
+      plot_payload$data$scale_contract$GpcmLatentDimensionCount[1],
+      1L
+    )
     expect_false(
       plot_payload$data$scale_contract$GpcmFiniteParameterBox[1]
     )
@@ -164,6 +215,10 @@ test_that("default GPCM MML estimates the common population scale", {
   legacy_fit$config$gpcm_statistical_penalty <- NULL
   legacy_fit$config$gpcm_finite_parameter_box <- NULL
   legacy_fit$config$gpcm_extreme_person_policy <- NULL
+  legacy_fit$config$gpcm_model_family <- NULL
+  legacy_fit$config$gpcm_slope_action <- NULL
+  legacy_fit$config$gpcm_slope_composition <- NULL
+  legacy_fit$config$gpcm_latent_dimension_count <- NULL
   legacy_contract <- mfrmr:::mfrm_fit_scale_contract(legacy_fit)
   expect_identical(
     legacy_contract$GpcmEstimatorFamily[1],
@@ -174,6 +229,14 @@ test_that("default GPCM MML estimates the common population scale", {
   expect_identical(
     legacy_contract$GpcmExtremePersonPolicy[1],
     "posterior_eap_under_population_model"
+  )
+  expect_identical(
+    legacy_contract$GpcmModelFamily[1],
+    "aligned_single_owner_relative_slope_gpcm"
+  )
+  expect_identical(
+    legacy_contract$GpcmSlopeAction[1],
+    "complete_adjacent_predictor"
   )
   expect_identical(
     mfrmr:::resolve_dff_refit_controls(fit)$gpcm_mml_identification,
@@ -201,6 +264,19 @@ test_that("default GPCM MML estimates the common population scale", {
     "marginal_maximum_likelihood"
   )
   expect_identical(manifest_value("gpcm_statistical_penalty"), "none")
+  expect_identical(
+    manifest_value("gpcm_model_family"),
+    "aligned_single_owner_relative_slope_gpcm"
+  )
+  expect_identical(
+    manifest_value("gpcm_slope_action"),
+    "complete_adjacent_predictor"
+  )
+  expect_identical(
+    manifest_value("gpcm_slope_composition"),
+    "single_owner_relative_gm1"
+  )
+  expect_identical(manifest_value("gpcm_latent_dimension_count"), "1")
   expect_identical(manifest_value("gpcm_finite_parameter_box"), "FALSE")
   expect_identical(
     manifest_value("gpcm_extreme_person_policy"),

@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Made the bounded-GPCM slope action an explicit fitted-model contract. The
+  implemented kernel multiplies the complete adjacent-category predictor,
+  including all additive facet and fitted interaction contributions inside
+  `eta` and the owned step; it is not a latent-trait-loading-only model with
+  unscaled facet intercepts. This identity is now retained by fitted objects,
+  `summary()`/`print()`, plot scale contracts, manifests, and GPCM boundary
+  tables. Algebraic tests lock the non-owner-facet scaling and the exact
+  unit-slope reduction to PCM. No likelihood or readiness rule changed.
+
 * Removed byte- and serialization-hash claims from distributed reporting
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an

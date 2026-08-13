@@ -3794,6 +3794,11 @@ print.mfrm_fit <- function(x, ...) {
           scale_contract$GpcmStatisticalPenalty[1],
           finite_box
         ))
+        cat(sprintf(
+          "  GPCM kernel: %s | Slope action: %s\n",
+          scale_contract$GpcmModelFamily[1],
+          scale_contract$GpcmSlopeAction[1]
+        ))
       }
     }
     ic_lines <- mfrm_ic_console_lines(x$summary, digits = 3L)

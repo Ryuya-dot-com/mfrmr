@@ -204,6 +204,13 @@ test_that("fit-specific GPCM boundaries expose owner and primary-slope status", 
   expect_identical(tbl$SlopeOwner, "Rater")
   expect_identical(tbl$StepOwner, "Rater")
   expect_identical(
+    tbl$ModelFamily,
+    "aligned_single_owner_relative_slope_gpcm"
+  )
+  expect_identical(tbl$SlopeAction, "complete_adjacent_predictor")
+  expect_identical(tbl$SlopeComposition, "single_owner_relative_gm1")
+  expect_identical(tbl$LatentDimensionCount, 1L)
+  expect_identical(
     tbl$PrimarySlopeStatus,
     "primary_slope_suppressed_optimizer_trace_only"
   )

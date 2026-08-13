@@ -47,8 +47,12 @@ current many-facet notation,
 \]
 
 where the additive predictor \(\eta_o\) contains person ability and the signed
-locations of the observed facets. Unit slopes reduce this expression to the
-equal-discrimination PCM kernel.
+locations of the observed facets. Thus the selected slope multiplies the
+complete adjacent-category predictor: person ability, every facet location or
+fitted interaction inside \(\eta_o\), and the owned step. It is not a
+loading-only formulation in which discrimination multiplies ability but leaves
+rater severity and other intercept effects unscaled. Unit slopes reduce this
+expression to the equal-discrimination PCM kernel.
 
 The phrase *generalized many-facet Rasch model* is broader and is not a unique
 synonym for this implementation. For example, Uto and Ueno (2020, equation 9)
@@ -85,7 +89,10 @@ to one.
 
 Every facet that is not selected remains an additive location term inside
 \(\eta\). For example, a criterion-owned GPCM can still estimate rater severity,
-but it does not give each rater a separate discrimination parameter.
+but it does not give each rater a separate discrimination parameter. The
+criterion slope nevertheless scales that rater-severity contribution because
+the contribution is inside \(\eta\). “No separate rater slope” and “rater
+severity is unscaled” are therefore not the same statement.
 
 ### An explanation for a high-school reader
 

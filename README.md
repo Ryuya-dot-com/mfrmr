@@ -857,7 +857,10 @@ many-facet GPCM strata, not interchangeable fits of the full Uto--Ueno model.
 The selected facet receives one slope per level, not one common slope for the
 whole fit. For example, `slope_facet = "Criterion"` estimates a relative slope
 for every criterion; `slope_facet = "Rater"` estimates one for every rater.
-The other facets retain additive location effects but no slope block. mfrmr
+The other facets retain additive location effects but no slope block. Those
+effects are still inside the complete adjacent-category predictor multiplied
+by the selected slope; the current kernel is not a loading-only model with
+unscaled facet intercepts. mfrmr
 0.2.3 cannot estimate criterion and rater slopes simultaneously, and the
 geometric mean of the selected slopes is fixed to one for identification.
 

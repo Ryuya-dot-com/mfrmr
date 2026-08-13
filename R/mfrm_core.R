@@ -35,6 +35,30 @@ mfrm_use_cpp11_backend <- function(config, include_linear_part = FALSE) {
     identical(config$model %in% c("RSM", "PCM"), TRUE)
 }
 
+# Stable model-identity fields shared by fitted objects and reporting surfaces.
+# These describe the implemented likelihood; they are not readiness claims.
+mfrmr_gpcm_model_identity <- function(model) {
+  is_gpcm <- identical(toupper(as.character(model)[1]), "GPCM")
+  list(
+    model_family = if (is_gpcm) {
+      "aligned_single_owner_relative_slope_gpcm"
+    } else {
+      "not_applicable"
+    },
+    slope_action = if (is_gpcm) {
+      "complete_adjacent_predictor"
+    } else {
+      "not_applicable"
+    },
+    slope_composition = if (is_gpcm) {
+      "single_owner_relative_gm1"
+    } else {
+      "not_applicable"
+    },
+    latent_dimension_count = if (is_gpcm) 1L else NA_integer_
+  )
+}
+
 get_weights <- function(df) {
   if (!is.null(df) && "Weight" %in% names(df)) {
     w <- suppressWarnings(as.numeric(df$Weight))
@@ -310,6 +334,10 @@ gpcm_capability_boundary_table <- function(fit = NULL,
     Status = character(0),
     Boundary = character(0),
     RecommendedRoute = character(0),
+    ModelFamily = character(0),
+    SlopeAction = character(0),
+    SlopeComposition = character(0),
+    LatentDimensionCount = integer(0),
     SlopeOwner = character(0),
     StepOwner = character(0),
     PrimarySlopeStatus = character(0),
@@ -332,6 +360,21 @@ gpcm_capability_boundary_table <- function(fit = NULL,
     "Area", "Status", "Boundary", "RecommendedRoute"
   ), drop = FALSE]
   out <- out[match(areas[areas %in% out$Area], out$Area), , drop = FALSE]
+
+  identity <- mfrmr_gpcm_model_identity(model)
+  out$ModelFamily <- as.character(
+    fit$config$gpcm_model_family %||% identity$model_family
+  )
+  out$SlopeAction <- as.character(
+    fit$config$gpcm_slope_action %||% identity$slope_action
+  )
+  out$SlopeComposition <- as.character(
+    fit$config$gpcm_slope_composition %||% identity$slope_composition
+  )
+  out$LatentDimensionCount <- as.integer(
+    fit$config$gpcm_latent_dimension_count %||%
+      identity$latent_dimension_count
+  )
 
   slope_tbl <- as.data.frame(fit$slopes %||% data.frame(),
                              stringsAsFactors = FALSE)

@@ -8671,6 +8671,7 @@ mfrm_fit_scale_contract <- function(object) {
   } else {
     "posterior_eap_under_population_model"
   }
+  gpcm_identity <- mfrmr_gpcm_model_identity(model)
 
   tibble::tibble(
     Model = model,
@@ -8678,6 +8679,20 @@ mfrm_fit_scale_contract <- function(object) {
     CoordinateBasis = coordinate_basis,
     PopulationSD = population_sd,
     SlopeBasis = slope_basis,
+    GpcmModelFamily = as.character(
+      config$gpcm_model_family %||% gpcm_identity$model_family
+    ),
+    GpcmSlopeAction = as.character(
+      config$gpcm_slope_action %||% gpcm_identity$slope_action
+    ),
+    GpcmSlopeComposition = as.character(
+      config$gpcm_slope_composition %||%
+        gpcm_identity$slope_composition
+    ),
+    GpcmLatentDimensionCount = as.integer(
+      config$gpcm_latent_dimension_count %||%
+        gpcm_identity$latent_dimension_count
+    ),
     GpcmMmlIdentification = as.character(
       config$gpcm_mml_identification %||% "not_applicable"
     ),
@@ -9052,6 +9067,14 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     ),
     GpcmCommonDiscrimination = as.character(
       config$gpcm_common_discrimination %||% "not_recorded"
+    ),
+    GpcmModelFamily = as.character(scale_contract$GpcmModelFamily[1]),
+    GpcmSlopeAction = as.character(scale_contract$GpcmSlopeAction[1]),
+    GpcmSlopeComposition = as.character(
+      scale_contract$GpcmSlopeComposition[1]
+    ),
+    GpcmLatentDimensionCount = as.integer(
+      scale_contract$GpcmLatentDimensionCount[1]
     ),
     GpcmEstimatorFamily = as.character(scale_contract$GpcmEstimatorFamily[1]),
     GpcmStatisticalPenalty = as.character(
@@ -10176,6 +10199,11 @@ print.summary.mfrm_fit <- function(x, ...) {
         settings$GpcmEstimatorFamily[1],
         settings$GpcmStatisticalPenalty[1],
         finite_box
+      ))
+      cat(sprintf(
+        "  GPCM kernel: %s | Slope action: %s\n",
+        settings$GpcmModelFamily[1],
+        settings$GpcmSlopeAction[1]
       ))
     }
     if (identical(detail, "brief")) {
