@@ -622,6 +622,13 @@ identify whether the opt-in layer ran and retain its test log.
   record. All fits returned, but complete designs retained terminal-gradient
   review and sparse designs retained extreme-Person exclusions; 0/12 were
   inference-ready, so feasibility handoff remains closed.
+- `rater-anchor-sparse-smoke-minimal-diagnostic-0.2.3.R`: bounded follow-up
+  comparing only maxit 200/400 for the four complete smoke fits and tabulating
+  existing sparse extreme-response patterns without refitting them.
+- `rater-anchor-sparse-smoke-minimal-diagnostic-record-0.2.3.md`: stop record.
+  More iterations changed no retained solution, while two Raters reduced nine
+  endpoint-extreme Persons to three. It identifies, but does not resolve, the
+  Person-readiness-versus-Rater-recovery estimand decision.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,

@@ -80,6 +80,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   The software execution contract passed, while scientific readiness and the
   560-fit feasibility handoff remain explicitly withheld.
 
+* Kept the ensuing diagnosis deliberately small. Across the four complete
+  anchor conditions, doubling `maxit` from 200 to 400 changed no gradient,
+  likelihood, Person estimate, or free-Rater estimate, so iteration budget did
+  not explain the numerical hold. Without refitting sparse models, response-
+  pattern accounting showed that two Raters per Person reduced endpoint-
+  extreme Persons from nine to three. Feasibility remains closed pending one
+  prospective decision about whether Person boundary coverage is a gate or a
+  separately reported outcome for Rater-scale recovery.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-

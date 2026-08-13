@@ -177,3 +177,12 @@ seconds and is descriptive only.
 
 The smoke changes no public default, inference-readiness rule, FACETS claim,
 PCM/GPCM decision, operational anchor percentage, or release gate.
+
+## Subsequent minimal diagnostic
+
+`rater-anchor-sparse-smoke-minimal-diagnostic-record-0.2.3.md` records the
+bounded follow-up. Doubling maxit changed no complete-design solution, and
+existing-response accounting showed that two Raters reduced nine extreme
+Persons to three. The result does not reopen feasibility; it isolates the next
+question as a prospective estimand decision about Person boundary coverage
+versus Rater-scale recovery.
