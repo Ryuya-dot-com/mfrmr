@@ -64,9 +64,14 @@
 #'   explicit value. This argument is not used by `RSM`, which has one shared
 #'   set of rating-scale thresholds.
 #' @param slope_facet Slope facet for the bounded `GPCM` branch. mfrmr
-#'   requires `slope_facet == step_facet` and uses a
-#'   positive-slope identification convention on the log scale with geometric
-#'   mean discrimination fixed to 1.
+#'   estimates one positive slope for every level of this designated facet.
+#'   Thus `slope_facet = "Criterion"` gives criterion-specific slopes, whereas
+#'   `slope_facet = "Rater"` gives rater-specific slopes. The current route
+#'   accepts exactly one slope-owning facet, requires
+#'   `slope_facet == step_facet`, and cannot estimate criterion and rater slope
+#'   blocks simultaneously. Slopes are identified on the log scale with their
+#'   geometric mean fixed to 1, so the table reports relative discrimination
+#'   across the selected facet's levels rather than unrelated absolute weights.
 #' @param gpcm_mml_identification Scale-identification convention for
 #'   `model = "GPCM"` with `method = "MML"`. `"free_population"` (the
 #'   default) estimates an intercept-only person distribution
@@ -263,6 +268,11 @@
 #' The current implementation requires `slope_facet == step_facet` and
 #' identifies slopes by a sum-to-zero constraint on log slopes, so their
 #' geometric mean is 1.
+#' A selected facet owns a vector rather than one common number: if there are
+#' eqn{G} levels, the fit returns eqn{G} positive slopes with eqn{G-1} free
+#' log-slope contrasts. Every other facet remains additive inside eqn{\eta}
+#' and receives no separate slope. Selecting a rater facet is therefore a
+#' different restricted model from selecting a criterion or task facet.
 #' This is an aligned single-owner many-facet GPCM: exactly one facet owns both
 #' the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
 #' whose task and rater slopes enter multiplicatively and whose step owner must
@@ -2574,6 +2584,40 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
     }
   }
 
+  if (setequal(model_pair, c("PCM", "GPCM"))) {
+    idx_pcm <- which(model_pair == "PCM")[1]
+    idx_gpcm <- which(model_pair == "GPCM")[1]
+    pcm_step <- sigs[[idx_pcm]]$step_facet
+    gpcm_step <- sigs[[idx_gpcm]]$step_facet
+    gpcm_slope <- sigs[[idx_gpcm]]$slope_facet
+    aligned_owner <- !is.na(pcm_step) && nzchar(pcm_step) &&
+      identical(pcm_step, gpcm_step) && identical(gpcm_step, gpcm_slope)
+    reason <- if (aligned_owner) {
+      paste0(
+        "PCM is the unit-slope response-kernel reduction of this aligned ",
+        "bounded GPCM on facet '", pcm_step, "', but the current conservative ",
+        "review authorizes information-criterion and weighting-policy review ",
+        "only; a PCM-versus-GPCM chi-square LRT is not implemented."
+      )
+    } else {
+      paste(
+        "PCM and GPCM do not share one explicit aligned step/slope owner,",
+        "so even the unit-slope response-kernel reduction is not established."
+      )
+    }
+    return(list(
+      eligible = FALSE,
+      reason = reason,
+      simpler = if (aligned_owner) lbls[idx_pcm] else NA_character_,
+      complex = if (aligned_owner) lbls[idx_gpcm] else NA_character_,
+      relation = if (aligned_owner) {
+        "PCM_in_GPCM_ic_only"
+      } else {
+        "PCM_GPCM_owner_mismatch"
+      }
+    ))
+  }
+
   list(
     eligible = FALSE,
     reason = paste0(
@@ -4824,6 +4868,11 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #'   `facet_interactions` set is a subset of the larger model's set.
 #' - Do not assume that `nested = TRUE` overrides the package's conservative
 #'   nesting boundary; unsupported relations remain unsupported.
+#' - PCM is the unit-slope response-kernel reduction of the bounded GPCM when
+#'   both use the same explicit step owner. Nevertheless, the current automatic
+#'   nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
+#'   same-basis MML information criteria plus [build_weighting_review()] and
+#'   inspect the recorded `PCM_in_GPCM_ic_only` relation instead.
 #' - Do not compare models fit to different datasets, different score codings,
 #'   or materially different constraint systems as if they were commensurate.
 #' - At large Person counts, a small systematic likelihood gain can dominate an
@@ -4864,10 +4913,15 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #' using IC or LRT results in reporting.
 #'
 #' @section Typical workflow:
-#' 1. Fit two models with [fit_mfrm()] (e.g., RSM and PCM).
-#' 2. Compare with `compare_mfrm(fit_rsm, fit_pcm)`.
+#' 1. Fit two models with [fit_mfrm()] (e.g., PCM and bounded GPCM) on the
+#'    same prepared rows, explicit step owner, constraints, and MML quadrature
+#'    setting. Use at least 31 common quadrature points for selectable ICs.
+#' 2. Compare with `compare_mfrm(fit_pcm, fit_gpcm)` and start by checking
+#'    `comparison$table$ICComparable`.
 #' 3. Inspect `summary(comparison)` for AIC/BIC/SABIC diagnostics and, when
-#'    appropriate, an LRT.
+#'    appropriate, an LRT. PCM-versus-GPCM LRT is currently withheld.
+#' 4. Use `build_weighting_review(fit_pcm, fit_gpcm)` to inspect which selected
+#'    facet levels and information shares were reweighted by the slopes.
 #'
 #' @return
 #' An object of class `mfrm_comparison` (named list) with:

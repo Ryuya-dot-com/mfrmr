@@ -118,9 +118,14 @@ explicit value. This argument is not used by \code{RSM}, which has one shared
 set of rating-scale thresholds.}
 
 \item{slope_facet}{Slope facet for the bounded \code{GPCM} branch. mfrmr
-requires \code{slope_facet == step_facet} and uses a
-positive-slope identification convention on the log scale with geometric
-mean discrimination fixed to 1.}
+estimates one positive slope for every level of this designated facet.
+Thus \code{slope_facet = "Criterion"} gives criterion-specific slopes, whereas
+\code{slope_facet = "Rater"} gives rater-specific slopes. The current route
+accepts exactly one slope-owning facet, requires
+\code{slope_facet == step_facet}, and cannot estimate criterion and rater slope
+blocks simultaneously. Slopes are identified on the log scale with their
+geometric mean fixed to 1, so the table reports relative discrimination
+across the selected facet's levels rather than unrelated absolute weights.}
 
 \item{facet_interactions}{Optional confirmatory two-way interaction terms
 between non-person facets, supplied as explicit character terms such as
@@ -608,6 +613,11 @@ a positive slope for the designated slope-facet level:
 The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes by a sum-to-zero constraint on log slopes, so their
 geometric mean is 1.
+A selected facet owns a vector rather than one common number: if there are
+\eqn{G} levels, the fit returns \eqn{G} positive slopes with \eqn{G-1} free
+log-slope contrasts. Every other facet remains additive inside \eqn{\eta}
+and receives no separate slope. Selecting a rater facet is therefore a
+different restricted model from selecting a criterion or task facet.
 This is an aligned single-owner many-facet GPCM: exactly one facet owns both
 the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
 whose task and rater slopes enter multiplicatively and whose step owner must

@@ -51,6 +51,12 @@ package-native evidence sources:
 The result is intended for substantive review, not for automatic model
 selection. In particular, a better-fitting \code{GPCM} should not by itself be
 interpreted as a reason to discard an equal-weighting Rasch-family route.
+The fitted GPCM contains one slope for every level of one designated facet,
+not one common slope and not simultaneous criterion-by-rater slope blocks.
+The overview records the slope owner, step owner, level count, free relative
+slope contrasts, and whether the supplied reference is the exact unit-slope
+PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
+intentionally withheld in the current comparison contract.
 }
 \section{Recommended input route}{
 
@@ -67,6 +73,9 @@ reweighting is substantively acceptable.
 
 \itemize{
 \item \code{model_comparison}: same-data model-comparison bundle from \code{\link[=compare_mfrm]{compare_mfrm()}}.
+AIC/Person-BIC/SABIC ranking is available only when
+\code{model_comparison$table$ICComparable} is true. PCM-versus-GPCM LRT remains
+unavailable even though PCM is the aligned GPCM's unit-slope reduction.
 \item \code{facet_shift}: how non-person facet estimates move under bounded \code{GPCM}.
 \item \code{slope_profile}: which \code{slope_facet} levels are upweighted or downweighted.
 \item \code{information_redistribution}: within-facet information-share changes

@@ -6773,6 +6773,12 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' The result is intended for substantive review, not for automatic model
 #' selection. In particular, a better-fitting `GPCM` should not by itself be
 #' interpreted as a reason to discard an equal-weighting Rasch-family route.
+#' The fitted GPCM contains one slope for every level of one designated facet,
+#' not one common slope and not simultaneous criterion-by-rater slope blocks.
+#' The overview records the slope owner, step owner, level count, free relative
+#' slope contrasts, and whether the supplied reference is the exact unit-slope
+#' PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
+#' intentionally withheld in the current comparison contract.
 #'
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
@@ -6783,6 +6789,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'
 #' @section What the returned tables mean:
 #' - `model_comparison`: same-data model-comparison bundle from [compare_mfrm()].
+#'   AIC/Person-BIC/SABIC ranking is available only when
+#'   `model_comparison$table$ICComparable` is true. PCM-versus-GPCM LRT remains
+#'   unavailable even though PCM is the aligned GPCM's unit-slope reduction.
 #' - `facet_shift`: how non-person facet estimates move under bounded `GPCM`.
 #' - `slope_profile`: which `slope_facet` levels are upweighted or downweighted.
 #' - `information_redistribution`: within-facet information-share changes
@@ -6938,12 +6947,39 @@ build_weighting_review <- function(rasch_fit,
 
   support_status <- .weighting_review_support_status()
   comparison_mode <- if (isTRUE(basis$ic_comparable)) "same_basis_fit_comparison" else "descriptive_model_contrast_only"
+  reference_model <- as.character(
+    rasch_fit$config$model %||% NA_character_
+  )[1]
+  reference_step_facet <- as.character(
+    rasch_fit$config$step_facet %||% NA_character_
+  )[1]
+  aligned_pcm_owner <- identical(reference_model, "PCM") &&
+    !is.na(reference_step_facet) && nzchar(reference_step_facet) &&
+    identical(reference_step_facet, step_facet) &&
+    identical(step_facet, slope_facet)
+  pcm_gpcm_lrt <- if (!identical(reference_model, "PCM")) {
+    "not_applicable_reference_is_not_pcm"
+  } else if (aligned_pcm_owner) {
+    "withheld_current_scope"
+  } else {
+    "not_available_owner_mismatch"
+  }
+  slope_level_count <- nrow(slope_profile)
   overview <- tibble::tibble(
-    ReferenceModel = as.character(rasch_fit$config$model %||% NA_character_)[1],
+    ReferenceModel = reference_model,
     ComparisonModel = as.character(gpcm_fit$config$model %||% NA_character_)[1],
     ReferenceMethod = public_mfrm_method_label(as.character(rasch_fit$config$method %||% NA_character_)[1]),
     ComparisonMethod = public_mfrm_method_label(as.character(gpcm_fit$config$method %||% NA_character_)[1]),
     SlopeFacet = slope_facet,
+    StepFacet = step_facet,
+    ReferenceStepFacet = reference_step_facet,
+    AlignedStepSlopeOwner = aligned_pcm_owner,
+    SlopeLevelCount = as.integer(slope_level_count),
+    FreeRelativeSlopeContrasts = as.integer(max(slope_level_count - 1L, 0L)),
+    SlopeComposition = "single_aligned_facet_level_specific_relative_slopes",
+    SimultaneousCriterionRaterSlopeBlocks = FALSE,
+    UnitSlopePCMReduction = aligned_pcm_owner,
+    PCMvsGPCMLRT = pcm_gpcm_lrt,
     ReviewStatus = review_status,
     ComparisonMode = comparison_mode,
     MaxAbsLogSlope = max_abs_log_slope,
@@ -6953,7 +6989,11 @@ build_weighting_review <- function(rasch_fit,
   status <- make_summary_block(
     "Overall status" = review_status,
     "Weighting principle" = "Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting",
-    "Comparison basis" = comparison_mode
+    "Slope ownership" = paste0(
+      slope_facet, " levels; one aligned slope/step owner only"
+    ),
+    "Comparison basis" = comparison_mode,
+    "PCM vs GPCM LRT" = pcm_gpcm_lrt
   )
 
   key_warnings <- character(0)
@@ -6961,6 +7001,25 @@ build_weighting_review <- function(rasch_fit,
     key_warnings <- c(
       key_warnings,
       "Model-comparison weights are descriptive only because the two fits do not share a fully comparable formal MML basis."
+    )
+  }
+  if (aligned_pcm_owner) {
+    key_warnings <- c(
+      key_warnings,
+      paste(
+        "PCM is the all-unit-slope response-kernel reduction of this aligned",
+        "GPCM, but the current automatic comparison does not authorize a",
+        "PCM-versus-GPCM chi-square LRT."
+      )
+    )
+  } else if (identical(reference_model, "PCM")) {
+    key_warnings <- c(
+      key_warnings,
+      paste(
+        "PCM and GPCM do not share the same explicit aligned step/slope owner;",
+        "the unit-slope response-kernel reduction and a PCM-versus-GPCM LRT",
+        "are unavailable for this pair."
+      )
     )
   }
   if (nrow(slope_profile) > 0L) {
@@ -7036,6 +7095,11 @@ build_weighting_review <- function(rasch_fit,
 
   notes <- clean_summary_lines(c(
     "Observation weights and discrimination-based reweighting are separate concepts in this package.",
+    paste0(
+      "The fitted slopes vary across levels of `", slope_facet,
+      "`; other facets have no separate slope block."
+    ),
+    "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together in 0.2.3.",
     "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."
   ))
@@ -7183,9 +7247,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     RSM = "Common threshold structure; equal discrimination fixed at 1.",
     PCM = "Step thresholds vary by the designated step facet; equal discrimination fixed at 1.",
     GPCM = paste(
-      "Positive slopes are estimated for the designated slope facet;",
-      "the current bounded route requires slope_facet == step_facet and",
-      "identifies slopes with geometric mean 1."
+      "One positive relative slope is estimated for every level of one",
+      "designated slope facet; the current bounded route requires",
+      "slope_facet == step_facet, identifies slopes with geometric mean 1,",
+      "and does not combine criterion and rater slope blocks."
     ),
     "Ordered-response model; inspect the fitted configuration before reporting."
   )

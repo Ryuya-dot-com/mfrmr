@@ -68,6 +68,47 @@ as an exact fit of Uto and Ueno's equation. Because free discrimination relaxes
 the defining equal-discrimination Rasch restriction, "generalized MFRM" means
 a model generalized from the MFRM baseline rather than a strict Rasch model.
 
+### Which facet receives different slopes?
+
+The slope is not one common number for the entire fitted GPCM. The selected
+`slope_facet` contributes one positive slope for each of its levels. If it has
+\(G\) levels, the returned table contains \(G\) slopes and the model estimates
+\(G-1\) free relative log-slope contrasts because their geometric mean is fixed
+to one.
+
+| Configuration | Meaning | Current status |
+|---|---|---|
+| `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported bounded route. |
+| `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
+| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in 0.2.3. |
+| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in 0.2.3; this is closer to a multiplicative generalized-MFRM extension. |
+
+Every facet that is not selected remains an additive location term inside
+\(\eta\). For example, a criterion-owned GPCM can still estimate rater severity,
+but it does not give each rater a separate discrimination parameter.
+
+### An explanation for a high-school reader
+
+Imagine that several teachers grade presentations on several criteria.
+
+- **PCM** gives everyone rulers with the same magnification. One criterion may
+  be harder and one teacher may be stricter, but a one-unit ability difference
+  changes the rating probabilities at the same basic sharpness everywhere.
+- **The current mfrmr GPCM** lets you choose one box of rulers. If the box is
+  `Criterion`, each criterion can have a different magnification. If the box is
+  `Rater`, each rater can have a different magnification. You may choose only
+  one box, and the same box also owns the category steps.
+- **A broader generalized MFRM** can give both the task/criterion and the rater
+  their own magnification knobs. In the Uto--Ueno example, the effective
+  sharpness is the product of the task and rater settings. It can also model
+  rater severity and rater-specific use of rating categories.
+
+Thus the current GPCM is a smaller branch inside the broader family: it adds a
+carefully controlled slope vector to a many-facet PCM, but it is not the full
+two-knob generalized MFRM. Also, once discrimination is allowed to vary, the
+model is generalized *from* the Rasch baseline; it no longer retains the strict
+equal-discrimination Rasch restriction.
+
 ## Before fitting: model-choice triage
 
 Do not choose `GPCM` only because it is the most flexible model in the menu.
@@ -84,6 +125,62 @@ equal-weighting reference route; bounded `GPCM` is a slope-aware extension.
 If equal contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
+
+### Comparing PCM and bounded GPCM
+
+The package provides three complementary comparison layers:
+
+1. `compare_mfrm()` displays same-data log likelihood, AIC, Person-based BIC,
+   SABIC, deltas, and candidate-set weights. Automatic ranking requires
+   inference-ready MML fits, identical prepared rows and constraints, a common
+   quadrature identity, and at least 31 quadrature points. Always inspect
+   `comparison$table$ICComparable` first.
+2. `build_weighting_review()` shows what the GPCM slopes changed: the slope
+   profile, facet-measure shifts, and redistribution of information across
+   levels.
+3. `build_model_choice_review(..., run_weighting_review = TRUE)` bundles the
+   statistical comparison, operational model roles, support boundaries, and
+   the weighting review.
+
+```r
+fit_pcm <- fit_mfrm(
+  dat, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "PCM",
+  step_facet = "Criterion", quad_points = 31
+)
+
+fit_gpcm <- fit_mfrm(
+  dat, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "GPCM",
+  step_facet = "Criterion", slope_facet = "Criterion",
+  quad_points = 31
+)
+
+comparison <- compare_mfrm(PCM = fit_pcm, GPCM = fit_gpcm)
+comparison$table[, c(
+  "Label", "LogLik", "AIC", "BIC", "SABIC", "ICComparable"
+)]
+
+weighting <- build_weighting_review(fit_pcm, fit_gpcm)
+summary(weighting)
+
+review <- build_model_choice_review(
+  PCM = fit_pcm,
+  GPCM = fit_gpcm,
+  run_weighting_review = TRUE
+)
+summary(review)
+```
+
+PCM is obtained from the aligned GPCM response kernel by setting all slopes to
+one. Nevertheless, the current conservative nesting contract does not compute
+a PCM-versus-GPCM chi-square likelihood-ratio test. Calling
+`compare_mfrm(..., nested = TRUE)` records the relation
+`PCM_in_GPCM_ic_only` and withholds the LRT. This keeps an attractive
+information-criterion result from being overstated when GPCM parameter or
+boundary readiness remains unresolved. When the IC comparison is suppressed,
+the raw fit values and weighting review remain descriptive evidence rather
+than an automatic selection rule.
 
 ## Response-family boundary
 

@@ -47,13 +47,16 @@ will strengthen evidence for the RSM, PCM, bounded GPCM, JML, and MML surfaces
 published in 0.2.2.
 
 The bounded-GPCM route is specifically an aligned single-owner model: one
-selected facet owns both relative slopes and step profiles
+selected facet owns both relative slopes and step profiles, with one slope per
+level and a geometric-mean-one identification constraint
 (`slope_facet == step_facet`) on one latent dimension. Criterion-owned and
 rater-owned uses require separate evidence and interpretation even though they
 share code. It is not the multiplicative task/criterion-by-rater model, a
 multidimensional generalized MFRM, or an unrestricted cell-slope model.
 Maintainer evidence keeps those model families and their validation
-dependencies in separate strata.
+dependencies in separate strata. PCM--GPCM comparison therefore uses the
+same-basis MML information-criterion and weighting-review routes in 0.2.3;
+automatic PCM--GPCM chi-square LRT support is not claimed.
 
 Here, bounded describes the public model/workflow scope, not finite parameter
 boxes. The current GPCM JML estimator is an unpenalized, identified fixed-

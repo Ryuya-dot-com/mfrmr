@@ -854,6 +854,22 @@ owner is stated separately. The current
 criterion-owned and rater-owned fits are therefore separate restricted
 many-facet GPCM strata, not interchangeable fits of the full Uto--Ueno model.
 
+The selected facet receives one slope per level, not one common slope for the
+whole fit. For example, `slope_facet = "Criterion"` estimates a relative slope
+for every criterion; `slope_facet = "Rater"` estimates one for every rater.
+The other facets retain additive location effects but no slope block. mfrmr
+0.2.3 cannot estimate criterion and rater slopes simultaneously, and the
+geometric mean of the selected slopes is fixed to one for identification.
+
+PCM and bounded GPCM can be reviewed on the same data with
+`compare_mfrm(fit_pcm, fit_gpcm)`, `build_weighting_review(fit_pcm, fit_gpcm)`,
+or `build_model_choice_review(..., run_weighting_review = TRUE)`. Selectable
+information-criterion ranking requires comparable, inference-ready MML fits
+on a common quadrature grid with at least 31 points. Although PCM is the
+all-unit-slope reduction of the aligned GPCM kernel, the current automatic
+nesting contract withholds the PCM-versus-GPCM chi-square LRT and records
+`PCM_in_GPCM_ic_only` instead.
+
 Cross-software slope values are not automatically matched estimands. FACETS
 does not jointly fit Muraki's free-slope polytomous GPCM. [FACETS' reported
 element discrimination](https://www.winsteps.com/facetman64/t7menu.htm) is a

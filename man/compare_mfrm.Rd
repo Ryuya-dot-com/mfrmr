@@ -166,6 +166,11 @@ all other structural settings match and the smaller model's
 \code{facet_interactions} set is a subset of the larger model's set.
 \item Do not assume that \code{nested = TRUE} overrides the package's conservative
 nesting boundary; unsupported relations remain unsupported.
+\item PCM is the unit-slope response-kernel reduction of the bounded GPCM when
+both use the same explicit step owner. Nevertheless, the current automatic
+nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
+same-basis MML information criteria plus \code{\link[=build_weighting_review]{build_weighting_review()}} and
+inspect the recorded \code{PCM_in_GPCM_ic_only} relation instead.
 \item Do not compare models fit to different datasets, different score codings,
 or materially different constraint systems as if they were commensurate.
 \item At large Person counts, a small systematic likelihood gain can dominate an
@@ -220,10 +225,15 @@ using IC or LRT results in reporting.
 \section{Typical workflow}{
 
 \enumerate{
-\item Fit two models with \code{\link[=fit_mfrm]{fit_mfrm()}} (e.g., RSM and PCM).
-\item Compare with \code{compare_mfrm(fit_rsm, fit_pcm)}.
+\item Fit two models with \code{\link[=fit_mfrm]{fit_mfrm()}} (e.g., PCM and bounded GPCM) on the
+same prepared rows, explicit step owner, constraints, and MML quadrature
+setting. Use at least 31 common quadrature points for selectable ICs.
+\item Compare with \code{compare_mfrm(fit_pcm, fit_gpcm)} and start by checking
+\code{comparison$table$ICComparable}.
 \item Inspect \code{summary(comparison)} for AIC/BIC/SABIC diagnostics and, when
-appropriate, an LRT.
+appropriate, an LRT. PCM-versus-GPCM LRT is currently withheld.
+\item Use \code{build_weighting_review(fit_pcm, fit_gpcm)} to inspect which selected
+facet levels and information shares were reweighted by the slopes.
 }
 }
 

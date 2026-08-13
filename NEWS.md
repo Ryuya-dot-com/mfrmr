@@ -16,6 +16,17 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   response family, GPCM slope block,
   external comparison lane, readiness status, or release claim is broadened.
 
+* Made the bounded-GPCM slope and PCM-comparison contracts explicit. The
+  selected slope facet now documents one positive relative slope per facet
+  level (G levels, G-1 free log-slope contrasts), while all other facets retain
+  additive location effects only; criterion-owned and rater-owned slopes are
+  supported as separate fits, but simultaneous criterion-by-rater slope blocks
+  are not. `compare_mfrm()` now records aligned PCM versus GPCM as
+  `PCM_in_GPCM_ic_only`: same-basis inference-ready MML fits may be compared by
+  AIC, Person-BIC, and SABIC, and `build_weighting_review()` exposes the
+  resulting reweighting, but the automatic chi-square likelihood-ratio test is
+  intentionally withheld.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-

@@ -36,6 +36,31 @@ test_that("build_weighting_review returns a structured review bundle", {
     "reporting_map", "support_status", "notes", "settings"
   ) %in% names(audit)))
   expect_true(all(c(
+    "SlopeFacet", "StepFacet", "ReferenceStepFacet",
+    "AlignedStepSlopeOwner", "SlopeLevelCount",
+    "FreeRelativeSlopeContrasts", "SlopeComposition",
+    "SimultaneousCriterionRaterSlopeBlocks", "UnitSlopePCMReduction",
+    "PCMvsGPCMLRT"
+  ) %in% names(audit$overview)))
+  expect_identical(audit$overview$SlopeFacet, "Criterion")
+  expect_identical(audit$overview$StepFacet, "Criterion")
+  expect_true(is.na(audit$overview$ReferenceStepFacet))
+  expect_false(audit$overview$AlignedStepSlopeOwner)
+  expect_identical(
+    audit$overview$SlopeLevelCount,
+    as.integer(nrow(audit$slope_profile))
+  )
+  expect_identical(
+    audit$overview$FreeRelativeSlopeContrasts,
+    as.integer(nrow(audit$slope_profile) - 1L)
+  )
+  expect_false(audit$overview$SimultaneousCriterionRaterSlopeBlocks)
+  expect_false(audit$overview$UnitSlopePCMReduction)
+  expect_identical(
+    audit$overview$PCMvsGPCMLRT,
+    "not_applicable_reference_is_not_pcm"
+  )
+  expect_true(all(c(
     "Facet", "Level", "ReferenceEstimate", "ComparisonEstimate",
     "DeltaEstimate", "AbsDeltaEstimate", "ReferenceRank", "ComparisonRank",
     "RankShift"
@@ -81,6 +106,21 @@ test_that("summary methods for build_weighting_review expose front-door tables",
 
   audit <- build_weighting_review(rasch_fit, gpcm_fit, theta_points = 21, top_n = 5)
   sx <- summary(audit, top_n = 3)
+
+  expect_true(audit$overview$UnitSlopePCMReduction)
+  expect_identical(audit$overview$ReferenceStepFacet, "Criterion")
+  expect_true(audit$overview$AlignedStepSlopeOwner)
+  expect_identical(audit$overview$PCMvsGPCMLRT, "withheld_current_scope")
+  expect_true(any(grepl(
+    "PCM-versus-GPCM chi-square LRT",
+    audit$key_warnings,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "other facets have no separate slope block",
+    audit$notes,
+    fixed = TRUE
+  )))
 
   expect_s3_class(sx, "summary.mfrm_weighting_review")
   expect_true(all(c(
