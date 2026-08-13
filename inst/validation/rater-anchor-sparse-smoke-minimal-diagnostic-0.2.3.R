@@ -6,6 +6,7 @@
 
 mfrmr_rasmd_specification <- "0.2.3-draft.1"
 mfrmr_rasmd_contract <- "mfrmr_rater_anchor_sparse_smoke_minimal_diagnostic_v1"
+mfrmr_rasmd_fingerprint_scope <- "within_run_pairing_and_provenance_only"
 
 mfrmr_rasmd_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -307,6 +308,7 @@ mfrmr_run_rater_anchor_sparse_smoke_minimal_diagnostic <- function(
     return(list(
       Specification = mfrmr_rasmd_specification,
       Contract = mfrmr_rasmd_contract,
+      FingerprintScope = mfrmr_rasmd_fingerprint_scope,
       PlannedFits = 8L, results = data.frame(), comparison = data.frame(),
       stages = data.frame(), sparse = list(), DiagnosticExecuted = FALSE,
       FeasibilityHandoffAuthorized = FALSE,
@@ -335,21 +337,14 @@ mfrmr_run_rater_anchor_sparse_smoke_minimal_diagnostic <- function(
   stages <- do.call(rbind, lapply(fits, `[[`, "stages"))
   comparison <- mfrmr_rasmd_compare_budgets(results, parameters)
   sparse <- mfrmr_rasmd_sparse_patterns(generated, manifest)
-  payload <- list(
-    results = results[, setdiff(names(results), "FitElapsedSeconds"),
-                      drop = FALSE],
-    comparison = comparison, stages = stages[, setdiff(
-      names(stages), "ElapsedSeconds"
-    ), drop = FALSE], sparse = sparse
-  )
   list(
     Specification = mfrmr_rasmd_specification,
     Contract = mfrmr_rasmd_contract,
+    FingerprintScope = mfrmr_rasmd_fingerprint_scope,
     RegistrySHA256 = registry$RegistrySHA256,
     ManifestSHA256 = mfrmr_rasp_manifest_hash(manifest),
     PlannedFits = 8L, results = results, comparison = comparison,
     stages = stages, sparse = sparse,
-    EvidenceSHA256 = digest::digest(payload, algo = "sha256"),
     DiagnosticExecuted = TRUE,
     FeasibilityHandoffAuthorized = FALSE,
     AppropriateAnchorRateSelected = FALSE,

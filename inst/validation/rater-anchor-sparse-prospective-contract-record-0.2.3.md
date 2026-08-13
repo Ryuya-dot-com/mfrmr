@@ -146,27 +146,16 @@ credit for reproducing their supplied values.
 Thus 25% remains the primary candidate under test, not the presumed winner.
 No universal percentage is encoded in this contract.
 
-## Deterministic identities
+## Identity and reproduction policy
 
-Registry SHA-256:
+Registry, manifest, data, and anchor fingerprints are retained only for
+within-run pairing and provenance. They detect accidental reuse of a different
+design or response realization inside one study execution. They are not a
+cross-machine numerical reproduction criterion and are not a CRAN-user gate.
 
-`3a58566aa7e9ae6943fad15449cb11852f929cb156030bb425076c543f605c09`
-
-Smoke-manifest SHA-256:
-
-`7ff2334303b5a581b057b0323b23512f27e644c9c7623b6f507cc87adf204cc3`
-
-Feasibility-manifest SHA-256:
-
-`00b2c963456589e01c63ca234a8049c960d44206d4c382828e78ae0732820d9c`
-
-Contract-file SHA-256:
-
-`c446b6eab06d8e2442de5ed3765f6accfdd3880cd385ebd318c7b71f316856db`
-
-Focused-test SHA-256:
-
-`669bfb33a7a86caa45155056a4742c9b51fd924b8cba061f3ec77307bb19354d`
+Scientific reproduction is assessed from declared numerical tolerances,
+failure classifications, recovery measures, and unchanged authority decisions.
+Source provenance belongs to version control rather than checkout-byte hashes.
 
 ## Authority state
 

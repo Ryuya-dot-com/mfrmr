@@ -6,6 +6,7 @@
 
 mfrmr_rasp_specification <- "0.2.3-draft.1"
 mfrmr_rasp_contract <- "mfrmr_rater_anchor_sparse_prospective_contract_v1"
+mfrmr_rasp_fingerprint_scope <- "within_run_pairing_and_provenance_only"
 
 mfrmr_rasp_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -214,6 +215,7 @@ mfrmr_rasp_registry <- function() {
   out <- list(
     Specification = mfrmr_rasp_specification,
     Contract = mfrmr_rasp_contract,
+    FingerprintScope = mfrmr_rasp_fingerprint_scope,
     FactorCatalog = mfrmr_rasp_factor_catalog(),
     AnchorRegistry = mfrmr_rasp_anchor_registry(),
     DesignRegistry = mfrmr_rasp_design_registry(),

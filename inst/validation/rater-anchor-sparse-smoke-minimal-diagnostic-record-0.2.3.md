@@ -107,19 +107,13 @@ unchanged. The evidence identity changed because the previously muffled eight
 convergence-review warnings and explicit comparison status are now part of the
 auditable payload.
 
-## Deterministic identities
+## Reproduction policy
 
-Diagnostic script SHA-256:
-
-`b562369c5e495a10eff90c921e2b2f1ffab7fac0f57075924b7bc1518e56d349`
-
-Focused-test SHA-256:
-
-`8565e0add908f49676a151ecd9ba501c0bf3000a6fc731237455069809be4629`
-
-Deterministic evidence SHA-256 (elapsed time excluded):
-
-`caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c`
+No result-object hash is emitted. Byte equality is not a cross-machine
+numerical acceptance criterion. The diagnostic conclusion is reproduced through the
+eight fit-return states, warning visibility, explicit comparison status, and
+numerical tolerances for gradient, log-likelihood, and parameter changes.
+Source provenance belongs to version control.
 
 ## Authority state
 

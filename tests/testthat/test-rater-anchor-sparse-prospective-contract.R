@@ -28,6 +28,9 @@ test_that("prospective registry separates percentage, error, and topology", {
   registry <- env$mfrmr_rasp_registry()
 
   expect_s3_class(registry, "mfrmr_rasp_registry")
+  expect_identical(
+    registry$FingerprintScope, "within_run_pairing_and_provenance_only"
+  )
   expect_identical(nrow(registry$FactorCatalog), 12L)
   expect_identical(nrow(registry$AnchorRegistry), 8L)
   expect_identical(nrow(registry$DesignRegistry), 7L)
@@ -268,23 +271,16 @@ test_that("registry and manifest mutations fail closed", {
   )
 })
 
-test_that("prospective record binds contract and focused tests", {
+test_that("prospective record documents design and authority boundaries", {
   paths <- rater_anchor_sparse_prospective_paths()
   skip_if_not(all(file.exists(paths)))
-  contract_hash <- digest::digest(
-    paths[["contract"]], algo = "sha256", file = TRUE, serialize = FALSE
-  )
-  test_hash <- digest::digest(
-    testthat::test_path("test-rater-anchor-sparse-prospective-contract.R"),
-    algo = "sha256", file = TRUE, serialize = FALSE
-  )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
-  expect_match(record, contract_hash, fixed = TRUE)
-  expect_match(record, test_hash, fixed = TRUE)
   expect_match(record, "560 declared feasibility fits", fixed = TRUE)
+  expect_match(record, "within-run pairing", fixed = TRUE)
+  expect_match(record, "not a\\s+cross-machine numerical")
   expect_match(record, "FeasibilityExecutionAuthorized = FALSE", fixed = TRUE)
   expect_match(record, "AppropriateAnchorRateSelected = FALSE", fixed = TRUE)
   expect_match(record, "ConfirmationAuthorized = FALSE", fixed = TRUE)

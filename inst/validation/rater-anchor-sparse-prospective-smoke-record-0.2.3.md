@@ -104,7 +104,7 @@ trace, not evidence that error helps.
 
 The software smoke contract passed: all identities, pairing, assignment counts,
 anchor counts, external seeds, support audits, fits, failure classifications,
-and result hashes were complete. The scientific readiness gate failed because
+and decision fields were complete. The scientific readiness gate failed because
 `InferenceReady = FALSE` for 12/12 fits.
 
 The frozen feasibility manifest must not run. The next work is a disjoint
@@ -119,43 +119,14 @@ diagnostic calibration with two separate questions:
 Any adjusted optimizer or data-generating design requires a new prospective
 candidate identity. It cannot overwrite this smoke or its manifest.
 
-## Deterministic identities
+## Reproduction policy
 
-Prospective registry SHA-256:
-
-`3a58566aa7e9ae6943fad15449cb11852f929cb156030bb425076c543f605c09`
-
-Smoke manifest SHA-256:
-
-`7ff2334303b5a581b057b0323b23512f27e644c9c7623b6f507cc87adf204cc3`
-
-Prospective-contract file SHA-256:
-
-`c446b6eab06d8e2442de5ed3765f6accfdd3880cd385ebd318c7b71f316856db`
-
-Stress-pilot helper file SHA-256:
-
-`48092270b7010fe49cff42c6440a83a02c07b99526919f0d05129f5d7d8263d2`
-
-Smoke-runner file SHA-256:
-
-`df084a0447fee350a2982c181692299c097ab826fda31a762771dbb3ad4207f2`
-
-Focused-test SHA-256:
-
-`0a8f944135d5c6544241819af26cd531e068bf2c8ef9fdd183916c835fde3fd2`
-
-Deterministic evidence SHA-256 (elapsed time excluded):
-
-`fef35cde6e64d8d7042ce92520be76e9a025c841eae79a3cd5f67bedb67f3c9a`
-
-Deterministic summary SHA-256 (elapsed time excluded):
-
-`b5bd3a86123e628ad87f7c5a372c423f22af8a44659d5b6e78574472063609d8`
-
-The evidence and summary identities matched independent full reruns after the
-final instrumentation was fixed. Retained fit time was approximately 33
-seconds and is descriptive only.
+Runtime fingerprints are retained for within-run pairing of datasets, external
+calibrations, and anchor sets. They are not a cross-machine numerical
+reproduction criterion. The scientific checks are the declared response counts,
+design densities, fit-return and failure classifications, numerical tolerances,
+recovery measures, readiness decisions, and authority state. Retained fit time
+is descriptive only. Source provenance is supplied by version control.
 
 ## Authority state
 
@@ -183,12 +154,10 @@ PCM/GPCM decision, operational anchor percentage, or release gate.
 The runner now retains warnings from a failed support audit and classifies the
 package's typed `mfrmr_estimability_error` before using a narrowly defined
 legacy-message fallback. Neither path occurred in the retained 12-fit smoke.
-Fresh R 4.4.2 and R 4.5.1 runs reproduced all declared fits and numerical
-checks, but reproduced different serialized result-object hashes even with the
-pre-maintenance HEAD runner. The historical scientific evidence and summary
-identities above are therefore retained rather than rewritten for an unrelated
-runtime-sensitive digest. Updated file identities bind the maintained code and
-tests.
+Fresh R 4.4.2 and R 4.5.1 runs reproduced the declared fits and the relevant
+numerical and decision checks. Result-object hashes are deliberately not
+emitted or imposed on CRAN users; serialized numerical bytes are not the
+scientific estimand.
 
 ## Subsequent minimal diagnostic
 

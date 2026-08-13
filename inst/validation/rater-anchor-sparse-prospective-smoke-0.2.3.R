@@ -6,6 +6,7 @@
 
 mfrmr_rasps_specification <- "0.2.3-draft.1"
 mfrmr_rasps_contract <- "mfrmr_rater_anchor_sparse_prospective_smoke_v1"
+mfrmr_rasps_fingerprint_scope <- "within_run_pairing_and_provenance_only"
 
 mfrmr_rasps_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -517,20 +518,6 @@ mfrmr_rasps_summary <- function(results) {
   )]
 }
 
-mfrmr_rasps_evidence_hash <- function(results) {
-  digest::digest(
-    results[, setdiff(names(results), "FitElapsedSeconds"), drop = FALSE],
-    algo = "sha256"
-  )
-}
-
-mfrmr_rasps_summary_hash <- function(summary) {
-  digest::digest(
-    summary[, setdiff(names(summary), "FitElapsedSeconds"), drop = FALSE],
-    algo = "sha256"
-  )
-}
-
 mfrmr_run_rater_anchor_sparse_prospective_smoke <- function(
     execute = FALSE, profile = "smoke", progress = interactive()) {
   mfrmr_rasps_require_support()
@@ -544,6 +531,7 @@ mfrmr_run_rater_anchor_sparse_prospective_smoke <- function(
     return(list(
       Specification = mfrmr_rasps_specification,
       Contract = mfrmr_rasps_contract,
+      FingerprintScope = mfrmr_rasps_fingerprint_scope,
       RegistrySHA256 = registry$RegistrySHA256,
       ManifestSHA256 = mfrmr_rasp_manifest_hash(manifest),
       manifest = manifest, results = data.frame(), summary = data.frame(),
@@ -580,11 +568,10 @@ mfrmr_run_rater_anchor_sparse_prospective_smoke <- function(
   list(
     Specification = mfrmr_rasps_specification,
     Contract = mfrmr_rasps_contract,
+    FingerprintScope = mfrmr_rasps_fingerprint_scope,
     RegistrySHA256 = registry$RegistrySHA256,
     ManifestSHA256 = mfrmr_rasp_manifest_hash(manifest),
     manifest = manifest, results = results, summary = summary,
-    EvidenceSHA256 = mfrmr_rasps_evidence_hash(results),
-    SummarySHA256 = mfrmr_rasps_summary_hash(summary),
     SmokeExecuted = TRUE,
     SmokeExecutionContractPassed = all(
       results$Executed & results$SupportAuditPassed & results$FitReturned

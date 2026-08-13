@@ -1,3 +1,68 @@
+test_that("mfrm_results only soft-fails typed availability conditions", {
+  unavailable <- mfrmr:::mfrm_results_safe(
+    mfrmr:::stop_mfrm_results_unavailable("Expected capability boundary.")
+  )
+  expect_false(unavailable$ok)
+  expect_match(unavailable$message, "Expected capability boundary", fixed = TRUE)
+  expect_match(
+    unavailable$condition_class,
+    "mfrmr_results_unavailable_error",
+    fixed = TRUE
+  )
+
+  expect_error(
+    mfrmr:::mfrm_results_safe(stop("Unexpected internal regression.", call. = FALSE)),
+    "Unexpected internal regression",
+    fixed = TRUE
+  )
+})
+
+test_that("diagnostic fallback is limited to typed availability failures", {
+  fit <- structure(list(), class = "mfrm_fit")
+  calls <- 0L
+  testthat::local_mocked_bindings(
+    diagnose_mfrm = function(...) {
+      calls <<- calls + 1L
+      stop("Unexpected diagnostic regression.", call. = FALSE)
+    },
+    .package = "mfrmr"
+  )
+
+  expect_error(
+    mfrmr:::mfrm_results_diagnose(fit),
+    "Unexpected diagnostic regression",
+    fixed = TRUE
+  )
+  expect_identical(calls, 1L)
+})
+
+test_that("typed diagnostic unavailability permits the narrow fallback", {
+  fit <- structure(list(), class = "mfrm_fit")
+  calls <- 0L
+  testthat::local_mocked_bindings(
+    diagnose_mfrm = function(...) {
+      calls <<- calls + 1L
+      if (calls == 1L) {
+        mfrmr:::stop_mfrm_results_unavailable(
+          "Broad diagnostic route is unavailable."
+        )
+      }
+      structure(list(), class = "mfrm_diagnostics")
+    },
+    .package = "mfrmr"
+  )
+
+  result <- mfrmr:::mfrm_results_diagnose(fit)
+  expect_identical(calls, 2L)
+  expect_identical(result$provenance, "computed_fallback")
+  expect_identical(result$status$Status, "ok")
+  expect_match(
+    result$status$Detail,
+    "mfrmr_results_unavailable_error",
+    fixed = TRUE
+  )
+})
+
 test_that("mfrm_results builds a comprehensive object from a fitted model", {
   toy <- load_mfrmr_data("example_core")
   toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]

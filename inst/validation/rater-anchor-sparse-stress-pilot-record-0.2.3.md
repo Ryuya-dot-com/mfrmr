@@ -181,29 +181,16 @@ The repository-only runner now retains warnings raised before an anchor-review
 error is returned. Every anchor review in the retained 147-fit calibration
 passed, so this fail-closed maintenance path does not revise any retained
 estimate, readiness decision, evidence identity, or authority state. The runner
-and focused-test file identities below bind the maintained implementation.
+and focused tests in version control bind the maintained implementation.
 
-## Reproducibility identities
+## Reproduction policy
 
-Runner SHA-256:
-
-`48092270b7010fe49cff42c6440a83a02c07b99526919f0d05129f5d7d8263d2`
-
-Focused-test SHA-256:
-
-`5e32faf359fda1a051b9a52fe15b12f8360c846037864fc8d7c913162d877c76`
-
-Deterministic evidence SHA-256 (fit elapsed time excluded):
-
-`c936064b95991d822c3349d9671d2048bbd70b640dcd9e51509e56d6bae2dc26`
-
-Deterministic summary SHA-256 (mean elapsed time excluded):
-
-`3910260d481a91b07ef4b72a3c93fa140c80d1e215f80812cb277730754142fb`
-
-Both deterministic identities matched across two independent full reruns of
-the 147-fit manifest. The original calibration run accumulated 130.51 seconds
-of fit time; timing is descriptive and is not part of either identity.
+Hashes emitted by the repository-only runner are within-run pairing and
+provenance fingerprints. They are not a cross-machine scientific acceptance
+criterion. Reproduction is evaluated from the registered design, explicit
+failure denominators, numerical tolerances, recovery metrics, and the retained
+decision and authority states. The original calibration run accumulated 130.51
+seconds of fit time; timing is descriptive only.
 
 ## Authority state
 

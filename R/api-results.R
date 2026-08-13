@@ -129,11 +129,63 @@ mfrm_results_component_class <- function(x) {
   paste(class(x), collapse = ", ")
 }
 
+mfrm_results_unavailable_error <- function(message, call = NULL) {
+  structure(
+    list(message = as.character(message[1] %||% ""), call = call),
+    class = c("mfrmr_results_unavailable_error", "error", "condition")
+  )
+}
+
+stop_mfrm_results_unavailable <- function(message) {
+  stop(mfrm_results_unavailable_error(message))
+}
+
+mfrm_results_failure_detail <- function(result) {
+  condition_class <- as.character(result$condition_class %||% "")
+  condition_call <- as.character(result$condition_call %||% "")
+  metadata <- condition_class[nzchar(condition_class)]
+  if (nzchar(condition_call)) {
+    metadata <- c(metadata, paste0("call: ", condition_call))
+  }
+  paste0(
+    as.character(result$message %||% ""),
+    if (length(metadata) > 0L) {
+      paste0(" [", paste(metadata, collapse = "; "), "]")
+    } else {
+      ""
+    }
+  )
+}
+
 mfrm_results_safe <- function(expr) {
   tryCatch(
-    list(ok = TRUE, value = expr, message = ""),
+    list(
+      ok = TRUE,
+      value = expr,
+      message = "",
+      condition_class = "",
+      condition_call = ""
+    ),
     error = function(e) {
-      list(ok = FALSE, value = NULL, message = conditionMessage(e))
+      soft_failure <- inherits(
+        e,
+        c("mfrmr_results_unavailable_error", "mfrmr_gpcm_scope_error")
+      )
+      if (!isTRUE(soft_failure)) {
+        stop(e)
+      }
+      condition_call <- conditionCall(e)
+      list(
+        ok = FALSE,
+        value = NULL,
+        message = conditionMessage(e),
+        condition_class = paste(class(e), collapse = ", "),
+        condition_call = if (is.null(condition_call)) {
+          ""
+        } else {
+          paste(deparse(condition_call), collapse = " ")
+        }
+      )
     }
   )
 }
@@ -271,10 +323,11 @@ mfrm_results_maybe_response_time_column <- function(data) {
 
 mfrm_results_resolve_response_time_column <- function(data, response_time = NULL) {
   if (!is.data.frame(data)) {
-    stop(
-      "Response-time review requires `response_time_data` or data-frame input ",
-      "with the timing column.",
-      call. = FALSE
+    stop_mfrm_results_unavailable(
+      paste0(
+        "Response-time review requires `response_time_data` or data-frame input ",
+        "with the timing column."
+      )
     )
   }
   if (!is.null(response_time) && length(response_time) > 0L &&
@@ -294,11 +347,12 @@ mfrm_results_resolve_response_time_column <- function(data, response_time = NULL
       call. = FALSE
     )
   }
-  stop(
-    "No response-time column was supplied or safely detected. ",
-    "Use `response_time = \"ResponseTime\"` and, for fitted objects, ",
-    "`response_time_data = original_data`.",
-    call. = FALSE
+  stop_mfrm_results_unavailable(
+    paste0(
+      "No response-time column was supplied or safely detected. ",
+      "Use `response_time = \"ResponseTime\"` and, for fitted objects, ",
+      "`response_time_data = original_data`."
+    )
   )
 }
 
@@ -665,7 +719,8 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL,
         "diagnostics", "ok",
         paste0(
           "Computed automatically with residual_pca = 'none'. ",
-          "The broader diagnostic_mode route was unavailable: ", first$message
+          "The broader diagnostic_mode route was unavailable: ",
+          mfrm_results_failure_detail(first)
         )
       )
     ))
@@ -676,7 +731,10 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL,
     identity = "not_applicable",
     status = mfrm_results_status_row(
       "diagnostics", "not_available",
-      paste0("Automatic diagnostics failed: ", second$message)
+      paste0(
+        "Automatic diagnostics were unavailable: ",
+        mfrm_results_failure_detail(second)
+      )
     )
   )
 }
@@ -754,7 +812,11 @@ mfrm_results_add_component <- function(name, result, components, tables, status,
   } else {
     status <- rbind(
       status,
-      mfrm_results_status_row(name, "not_available", result$message)
+      mfrm_results_status_row(
+        name,
+        "not_available",
+        mfrm_results_failure_detail(result)
+      )
     )
   }
   list(components = components, tables = tables, status = status)
@@ -833,10 +895,11 @@ mfrm_results_misfit_review_bundle <- function(fit, diagnostics, top_n = 50L) {
 mfrm_results_linking_review_bundle <- function(fit) {
   anchor_review <- fit$config$anchor_review %||% NULL
   if (!inherits(anchor_review, "mfrm_anchor_review")) {
-    stop(
-      "Anchor-review metadata is not available in this fit. ",
-      "Run review_mfrm_anchors() directly with the source data, or refit with fit_mfrm().",
-      call. = FALSE
+    stop_mfrm_results_unavailable(
+      paste0(
+        "Anchor-review metadata is not available in this fit. ",
+        "Run review_mfrm_anchors() directly with the source data, or refit with fit_mfrm()."
+      )
     )
   }
 
@@ -1707,7 +1770,14 @@ mfrm_results_build <- function(ctx, include) {
       tables <- c(tables, mfrm_results_flatten_data_frames(fit_sum$value, "fit_summary"))
       status <- rbind(status, mfrm_results_status_row("fit_summary", "ok", "Available."))
     } else {
-      status <- rbind(status, mfrm_results_status_row("fit_summary", "not_available", fit_sum$message))
+      status <- rbind(
+        status,
+        mfrm_results_status_row(
+          "fit_summary",
+          "not_available",
+          mfrm_results_failure_detail(fit_sum)
+        )
+      )
     }
   }
 
@@ -1718,7 +1788,14 @@ mfrm_results_build <- function(ctx, include) {
       tables <- c(tables, mfrm_results_flatten_data_frames(diag_sum$value, "diagnostics_summary"))
       status <- rbind(status, mfrm_results_status_row("diagnostics_summary", "ok", "Available."))
     } else {
-      status <- rbind(status, mfrm_results_status_row("diagnostics_summary", "not_available", diag_sum$message))
+      status <- rbind(
+        status,
+        mfrm_results_status_row(
+          "diagnostics_summary",
+          "not_available",
+          mfrm_results_failure_detail(diag_sum)
+        )
+      )
     }
   }
 

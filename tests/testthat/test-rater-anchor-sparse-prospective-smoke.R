@@ -48,6 +48,9 @@ rater_anchor_sparse_smoke_result <- local({
 test_that("prospective smoke defaults to dry-run and refuses feasibility", {
   env <- rater_anchor_sparse_smoke_environment()
   dry <- env$mfrmr_run_rater_anchor_sparse_prospective_smoke()
+  expect_identical(
+    dry$FingerprintScope, "within_run_pairing_and_provenance_only"
+  )
 
   expect_identical(nrow(dry$manifest), 12L)
   expect_identical(nrow(dry$results), 0L)
@@ -217,16 +220,6 @@ test_that("smoke execution preserves identities and resource accounting", {
   ) < 1e-12))
   expect_true(all(table(results$DataSHA256) == 4L))
   expect_true(all(table(results$AnchorSHA256) == 3L))
-  expect_identical(nchar(result$EvidenceSHA256), 64L)
-  expect_identical(nchar(result$SummarySHA256), 64L)
-  expect_identical(
-    result$EvidenceSHA256,
-    "fef35cde6e64d8d7042ce92520be76e9a025c841eae79a3cd5f67bedb67f3c9a"
-  )
-  expect_identical(
-    result$SummarySHA256,
-    "b5bd3a86123e628ad87f7c5a372c423f22af8a44659d5b6e78574472063609d8"
-  )
   expect_true(result$SmokeExecuted)
   expect_true(result$SmokeExecutionContractPassed)
   expect_false(result$SmokeScientificReadinessObserved)
@@ -237,25 +230,16 @@ test_that("smoke execution preserves identities and resource accounting", {
   expect_false(result$ConfirmationAuthorized)
 })
 
-test_that("smoke record binds contracts, runner, tests, and evidence", {
+test_that("smoke record documents semantic results and authority", {
   paths <- rater_anchor_sparse_smoke_paths()
   skip_if_not(file.exists(paths[["record"]]))
-  hashes <- vapply(
-    paths[c("prospective", "helpers", "runner")],
-    digest::digest, character(1), algo = "sha256", file = TRUE,
-    serialize = FALSE
-  )
-  test_hash <- digest::digest(
-    testthat::test_path("test-rater-anchor-sparse-prospective-smoke.R"),
-    algo = "sha256", file = TRUE, serialize = FALSE
-  )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
-  expect_true(all(vapply(hashes, grepl, logical(1), x = record, fixed = TRUE)))
-  expect_match(record, test_hash, fixed = TRUE)
   expect_match(record, "12 declared PCM/JML smoke fits", fixed = TRUE)
+  expect_match(record, "numerical tolerances", fixed = TRUE)
+  expect_match(record, "not a\\s+cross-machine")
   expect_match(record, "FeasibilityExecutionAuthorized = FALSE", fixed = TRUE)
   expect_match(record, "AppropriateAnchorRateSelected = FALSE", fixed = TRUE)
   expect_match(record, "ConfirmationAuthorized = FALSE", fixed = TRUE)

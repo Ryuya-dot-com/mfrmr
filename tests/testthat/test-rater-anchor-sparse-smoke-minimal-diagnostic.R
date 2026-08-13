@@ -49,6 +49,9 @@ rater_anchor_sparse_minimal_diagnostic_result <- local({
 test_that("minimal diagnostic defaults to eight-fit dry-run", {
   env <- rater_anchor_sparse_minimal_diagnostic_environment()
   dry <- env$mfrmr_run_rater_anchor_sparse_smoke_minimal_diagnostic()
+  expect_identical(
+    dry$FingerprintScope, "within_run_pairing_and_provenance_only"
+  )
 
   expect_identical(dry$PlannedFits, 8L)
   expect_identical(nrow(dry$results), 0L)
@@ -78,10 +81,6 @@ test_that("maxit doubling leaves the complete-design solutions unchanged", {
                tolerance = 0)
   expect_true(all(!comparison$GradientPass400))
   expect_true(all(!comparison$InferenceReady400))
-  expect_identical(
-    result$EvidenceSHA256,
-    "caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c"
-  )
 })
 
 test_that("fit warnings remain visible when the diagnostic fit errors", {
@@ -205,29 +204,15 @@ test_that("minimal diagnostic cannot authorize feasibility or a rate", {
   expect_false(result$ConfirmationAuthorized)
 })
 
-test_that("minimal diagnostic record binds code, test, and evidence", {
+test_that("minimal diagnostic record documents semantic evidence", {
   paths <- rater_anchor_sparse_minimal_diagnostic_paths()
   skip_if_not(file.exists(paths[["record"]]))
-  code_hash <- digest::digest(
-    paths[["diagnostic"]], algo = "sha256", file = TRUE, serialize = FALSE
-  )
-  test_hash <- digest::digest(
-    testthat::test_path(
-      "test-rater-anchor-sparse-smoke-minimal-diagnostic.R"
-    ),
-    algo = "sha256", file = TRUE, serialize = FALSE
-  )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
-  expect_match(record, code_hash, fixed = TRUE)
-  expect_match(record, test_hash, fixed = TRUE)
-  expect_match(
-    record,
-    "caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c",
-    fixed = TRUE
-  )
+  expect_match(record, "numerical tolerances", fixed = TRUE)
+  expect_match(record, "not a\\s+cross-machine")
   expect_match(record, "FeasibilityHandoffAuthorized = FALSE", fixed = TRUE)
   expect_match(record, "AppropriateAnchorRateSelected = FALSE", fixed = TRUE)
 })

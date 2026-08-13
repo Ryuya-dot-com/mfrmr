@@ -129,6 +129,102 @@ test_that("GPCM APA/QC reporting bundle returns with explicit caveats", {
   expect_true(nrow(qc$gpcm_boundary) > 0)
 })
 
+test_that("GPCM public results, APA report, export, and replay stay connected", {
+  skip_on_cran()
+
+  results <- mfrm_results(.gpcm_fit, include = "gpcm_review")
+  expect_s3_class(results, "mfrm_results")
+  connected_sections <- c(
+    "diagnostics", "fit_summary", "diagnostics_summary", "fair_average",
+    "rating_scale", "reporting_checklist"
+  )
+  expect_identical(
+    results$status$Status[match(connected_sections, results$status$Section)],
+    rep("ok", length(connected_sections))
+  )
+
+  report <- mfrm_report(results, style = "apa", output = "object")
+  expect_s3_class(report, "mfrm_report")
+  expect_match(report$markdown, "GPCM helper coverage")
+  expect_match(report$markdown, "gpcm_capability_matrix()", fixed = TRUE)
+
+  results_dir <- tempfile("mfrmr_gpcm_results_")
+  on.exit(unlink(results_dir, recursive = TRUE), add = TRUE)
+  exported_results <- export_mfrm_results(
+    results,
+    output_dir = results_dir,
+    prefix = "gpcm_results",
+    include = c("summary", "manifest", "replay"),
+    overwrite = TRUE,
+    acknowledge_sensitive = TRUE
+  )
+  expect_s3_class(exported_results, "mfrm_results_export")
+  expect_true(all(file.exists(exported_results$written_files$Path)))
+
+  bundle_dir <- tempfile("mfrmr_gpcm_replay_")
+  dir.create(bundle_dir)
+  on.exit(unlink(bundle_dir, recursive = TRUE), add = TRUE)
+  export_mfrm_bundle(
+    .gpcm_fit,
+    output_dir = bundle_dir,
+    prefix = "gpcm_bundle",
+    include = c("core_tables", "manifest", "script"),
+    data = .toy_gpcm,
+    acknowledge_sensitive = TRUE
+  )
+  old_wd <- getwd()
+  on.exit(setwd(old_wd), add = TRUE)
+  setwd(bundle_dir)
+  replay <- new.env(parent = asNamespace("mfrmr"))
+  .mfrmr_muffle_expected_warnings(
+    sys.source("gpcm_bundle_replay.R", envir = replay),
+    patterns = c(
+      "Optimization convergence review did not produce",
+      "This fit-level bundle is an analysis archive"
+    )
+  )
+
+  expect_s3_class(replay$fit, "mfrm_fit")
+  expect_identical(as.character(replay$fit$config$model), "GPCM")
+  expect_identical(replay$fit$config$step_facet, "Criterion")
+  expect_identical(replay$fit$config$slope_facet, "Criterion")
+  expect_identical(
+    replay$fit$config$gpcm_mml_identification,
+    .gpcm_fit$config$gpcm_mml_identification
+  )
+  expect_equal(
+    replay$fit$summary$LogLik, .gpcm_fit$summary$LogLik,
+    tolerance = 1e-6
+  )
+  slope_columns <- intersect(
+    c(
+      "SlopeFacet", "OptimizerEstimate",
+      "FixedLatentSDOptimizerEstimate", "PopulationSD"
+    ),
+    intersect(names(.gpcm_fit$slopes), names(replay$fit$slopes))
+  )
+  expect_true(all(c(
+    "SlopeFacet", "OptimizerEstimate",
+    "FixedLatentSDOptimizerEstimate", "PopulationSD"
+  ) %in% slope_columns))
+  expect_gt(nrow(replay$fit$slopes), 0L)
+  expect_equal(
+    replay$fit$slopes[, slope_columns, drop = FALSE],
+    .gpcm_fit$slopes[, slope_columns, drop = FALSE],
+    tolerance = 1e-6
+  )
+  expect_equal(
+    replay$fit$population$coefficients,
+    .gpcm_fit$population$coefficients,
+    tolerance = 1e-6
+  )
+  expect_equal(
+    replay$fit$population$sigma2,
+    .gpcm_fit$population$sigma2,
+    tolerance = 1e-6
+  )
+})
+
 test_that("five-category all-maximum persons and raters retain distinct contracts", {
   skip_if_not_installed("lpSolve")
   extreme <- expand.grid(

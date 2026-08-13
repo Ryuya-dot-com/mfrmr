@@ -45,6 +45,9 @@ test_that("Rater-anchor stress manifest separates anchors from links", {
   dry <- env$mfrmr_run_rater_anchor_sparse_stress(
     "pilot", execute = FALSE
   )
+  expect_identical(
+    dry$FingerprintScope, "within_run_pairing_and_provenance_only"
+  )
   expect_identical(nrow(dry$manifest), 147L)
   expect_identical(nrow(dry$results), 0L)
   expect_false(dry$AppropriateAnchorRateSelected)
@@ -180,39 +183,20 @@ test_that("Rater-anchor sparse smoke fits exact and shifted controls", {
   ] == result$results$DataSHA256[
     result$results$DesignId == "complete"
   ][[1L]]))
-  expect_identical(nchar(result$EvidenceSHA256), 64L)
-  expect_identical(nchar(result$SummarySHA256), 64L)
   expect_false(result$AppropriateAnchorRateSelected)
   expect_false(result$ConfirmationAuthorized)
 })
 
-test_that("Rater-anchor stress record binds runner and tests", {
+test_that("Rater-anchor stress record documents scientific decisions", {
   paths <- rater_anchor_sparse_paths()
   skip_if_not(all(file.exists(paths)))
-  runner_hash <- digest::digest(
-    paths[["runner"]], algo = "sha256", file = TRUE, serialize = FALSE
-  )
-  test_hash <- digest::digest(
-    testthat::test_path("test-rater-anchor-sparse-stress-pilot.R"),
-    algo = "sha256", file = TRUE, serialize = FALSE
-  )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
-  expect_match(record, runner_hash, fixed = TRUE)
-  expect_match(record, test_hash, fixed = TRUE)
-  expect_match(
-    record,
-    "c936064b95991d822c3349d9671d2048bbd70b640dcd9e51509e56d6bae2dc26",
-    fixed = TRUE
-  )
-  expect_match(
-    record,
-    "3910260d481a91b07ef4b72a3c93fa140c80d1e215f80812cb277730754142fb",
-    fixed = TRUE
-  )
   expect_match(record, "147 declared PCM/JML fits", fixed = TRUE)
+  expect_match(record, "numerical tolerances", fixed = TRUE)
+  expect_match(record, "not a\\s+cross-machine")
   expect_match(record, "AppropriateAnchorRateSelected = FALSE", fixed = TRUE)
   expect_match(record, "ConfirmationAuthorized = FALSE", fixed = TRUE)
 })

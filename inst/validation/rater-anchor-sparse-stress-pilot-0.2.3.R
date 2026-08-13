@@ -7,6 +7,7 @@
 
 mfrmr_rass_specification <- "0.2.3-draft.1"
 mfrmr_rass_contract <- "mfrmr_rater_anchor_sparse_stress_pilot_v1"
+mfrmr_rass_fingerprint_scope <- "within_run_pairing_and_provenance_only"
 
 mfrmr_rass_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -591,18 +592,6 @@ mfrmr_rass_summary <- function(results) {
   out
 }
 
-mfrmr_rass_evidence_hash <- function(results) {
-  mfrmr_rass_require_support()
-  payload <- results[, setdiff(names(results), "FitElapsedSeconds"), drop = FALSE]
-  digest::digest(payload, algo = "sha256")
-}
-
-mfrmr_rass_summary_hash <- function(summary) {
-  mfrmr_rass_require_support()
-  payload <- summary[, setdiff(names(summary), "MeanElapsedSeconds"), drop = FALSE]
-  digest::digest(payload, algo = "sha256")
-}
-
 mfrmr_run_rater_anchor_sparse_stress <- function(
     profile = c("smoke", "pilot"), execute = TRUE, progress = interactive()) {
   profile <- match.arg(profile)
@@ -611,6 +600,7 @@ mfrmr_run_rater_anchor_sparse_stress <- function(
     return(list(
       Specification = mfrmr_rass_specification,
       Contract = mfrmr_rass_contract,
+      FingerprintScope = mfrmr_rass_fingerprint_scope,
       manifest = manifest, results = data.frame(), summary = data.frame(),
       CalibrationOnly = TRUE,
       AppropriateAnchorRateSelected = FALSE,
@@ -646,11 +636,10 @@ mfrmr_run_rater_anchor_sparse_stress <- function(
   list(
     Specification = mfrmr_rass_specification,
     Contract = mfrmr_rass_contract,
+    FingerprintScope = mfrmr_rass_fingerprint_scope,
     manifest = manifest,
     results = results,
     summary = summary,
-    EvidenceSHA256 = mfrmr_rass_evidence_hash(results),
-    SummarySHA256 = mfrmr_rass_summary_hash(summary),
     CalibrationOnly = TRUE,
     AppropriateAnchorRateSelected = FALSE,
     BroadSimulationAuthorized = FALSE,
