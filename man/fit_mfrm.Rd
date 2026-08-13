@@ -407,6 +407,18 @@ within-row residual contrasts then vanish. Arbitrary utility, slope, or logit
 remainders, optimizer-derived paths, competitiveness, global boundary status,
 readiness, uncertainty, and MML remain unclassified.
 
+\code{config$boundary_audit$gpcm_parameter_sequence_flag} applies compactness
+after the exact nonlinear GPCM parameter-to-logit map. Category logits are
+reduced to contrasts relative to category zero. Every parameter sequence then
+has a further subsequence whose finite-dimensional contrast image is
+convergent or has a finite scale-separated flag, finite base, and
+\code{o(1)} contrast remainder. An internal exact lexicographic oracle
+classifies the row and joint-likelihood limit along such a declared flag
+without assuming power-law scales. The fit declares no sequence and extracts
+no flag. Convergence of the original sequence, equality across subsequences,
+competitiveness, global boundary status, existence of a finite maximum, MML,
+uncertainty, readiness, and external comparison remain unclassified.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

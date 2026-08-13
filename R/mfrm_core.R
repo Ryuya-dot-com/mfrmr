@@ -4274,6 +4274,16 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       parameter_sequence = optimizer_stage_parameters,
       parameter_path = boundary_audit$gpcm_parameter_path_reachability
     )
+  boundary_audit$gpcm_parameter_sequence_flag <-
+    audit_mfrm_jml_gpcm_parameter_sequence_flag_scope(
+      config = config,
+      sizes = sizes,
+      n_observations = length(idx$score_k),
+      n_categories = config$n_cat,
+      compactification = boundary_audit$gpcm_boundary_compactification,
+      sequence_diagnostic =
+        boundary_audit$gpcm_optimizer_sequence_diagnostic
+    )
   boundary_audit$gpcm_terminal_gradient_stability <-
     audit_mfrm_jml_gpcm_terminal_gradient(
       idx = idx,

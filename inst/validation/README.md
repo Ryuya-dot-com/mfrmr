@@ -328,6 +328,13 @@ identify whether the opt-in layer ran and retain its test log.
   Optimizer path extraction, certified scales, arbitrary utility/slope
   remainders, global boundary, MML, inference, readiness, and FACETS claims
   remain false or open.
+- `gpcm-jml-parameter-sequence-flag-p2e-record-0.2.3.md`: exact nonlinear
+  free-parameter to reference-logit-contrast mapping followed by a finite-
+  dimensional further-subsequence flag theorem. It classifies bounded and
+  scale-separated contrast-flag likelihood limits without assuming power-law
+  scales, while production sequence extraction, common subsequence limits,
+  competitiveness, finite-JMLE existence, global boundary, MML, inference,
+  readiness, and FACETS claims remain false or open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

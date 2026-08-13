@@ -4,6 +4,22 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a JML GPCM parameter-sequence contrast-flag compactification theorem.
+  Rather than transporting a Euclidean parameter direction through the
+  nonlinear slope-times-utility map, every finite parameter point is first
+  mapped exactly to category logits relative to category zero. Every sequence
+  in that finite-dimensional contrast space then has a further subsequence
+  which is either convergent or has a finite scale-separated flag, a finite
+  base, and an `o(1)` contrast remainder. Exact lexicographic maximization of
+  the divergent flag followed by a base softmax classifies the row and joint
+  likelihood limit along that further subsequence, including finite and
+  negative-infinite cases, without assuming common power scales. Production
+  fits declare no sequence and extract no flag. Different subsequences may
+  have different limits, so original-sequence convergence, competitiveness,
+  global boundary status, finite-MLE existence, MML, inference, readiness,
+  FACETS comparison, recovery, simulation, and promotion remain open or
+  unchanged.
+
 * Added a deliberately non-promoting JML GPCM optimizer-sequence diagnostic
   and a narrow decaying-logit remainder theorem. Optimizer stage endpoints are
   available only transiently during fitting and are discarded before the fit

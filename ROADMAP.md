@@ -1079,6 +1079,28 @@ extraction, competitiveness, common-subsequence agreement, global boundary
 classification, MML geometry, inference, FACETS equivalence, recovery, and
 promotion remain open or unchanged.
 
+P2e now closes classification only after passing an arbitrary parameter
+sequence through the exact nonlinear response map and taking a further
+subsequence. With category zero as the rowwise logit gauge, the retained
+response image has finite dimension `N(K-1)`. A bounded contrast image has a
+convergent subsequence. For an unbounded image, recursive normalization,
+subsequence compactness, and orthogonal projection produce at most `N(K-1)`
+divergent directions with positive scales `s_g -> infinity`, successive ratios
+`s_(g+1)/s_g -> 0`, a finite base, and a terminal contrast remainder tending to
+zero. This is a general scale flag and does not require common powers. Exact
+lexicographic maximization of the flag followed by a base softmax classifies
+every retained row and the weighted joint-likelihood limit along that further
+subsequence. Mapping before compactification absorbs slope--utility products,
+intermediate growth orders, and cancellations which a parameter-space SVD
+cannot classify. The production fit records only the theorem scope and
+declares zero sequences; a finite caller-supplied sequence can be mapped
+exactly but cannot be relabelled as asymptotic evidence. Different
+subsequences may still produce different flags and limits. P2f must therefore
+compare the complete contrast-boundary closure with finite points before any
+claim about competitiveness, common limits, finite-JMLE existence, or a global
+boundary. MML geometry, inference, FACETS equivalence, recovery, and promotion
+remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer
