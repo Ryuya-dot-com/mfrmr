@@ -375,6 +375,14 @@ identify whether the opt-in layer ran and retain its test log.
   general closure membership. Higher-order lifts, nonzero offsets, the complete
   general likelihood envelope, MML, inference, readiness, and FACETS
   equivalence remain open.
+- `gpcm-jml-higher-order-face-lifts-p2k-record-0.2.3.md`: exhaustive ordered
+  inverse-slope-owner rate hierarchies for targetwise closure membership in a
+  fixed zero-offset operator. Linear leading-coefficient systems either build
+  explicit product-one finite paths or, when every hierarchy is strictly
+  excluded, certify that the target lies outside the closure. It resolves P2j
+  first-order-open faces without weakening earlier P2j certificates. Symbolic
+  whole-operator strata, the boundary likelihood envelope, MML, inference,
+  readiness, and FACETS equivalence remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

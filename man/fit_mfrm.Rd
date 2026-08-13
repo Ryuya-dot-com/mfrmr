@@ -483,6 +483,19 @@ so unlifted faces remain open. The contract requires zero affine offset and
 does not complete higher-order lifts, the general likelihood envelope,
 readiness, inference, MML, or comparison.
 
+A repository theorem-only P2k contract completes targetwise closure membership
+for the workload-admitted zero-offset operator. Semialgebraic curve selection
+and Puiseux leading terms reduce every boundary curve to an ordered hierarchy
+of inverse-slope owner rates. The lower additive coefficients vanish on each
+owner's rows and the leading coefficient reproduces the target; these are
+linear conditions, and every feasible hierarchy gives an explicit product-one
+finite path. Exhaustively excluding all ordered hierarchies excludes the target
+from the closure. P2k resolves two first-order-open rank-one faces with genuine
+higher-order paths and excludes the P2j \code{(1, -2, 0)} outer-only target. It
+preserves earlier P2j closure certificates under numerical indeterminacy and
+does not construct symbolic whole-operator strata, the boundary likelihood
+envelope, finite-JMLE existence, readiness, inference, MML, or comparison.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

@@ -1223,8 +1223,8 @@ diag(z) P w = A beta,  w > 0.
 
 The zero offset makes common rescaling of `(w,beta)` harmless, so
 `product(w) = 1` can be replaced by `sum(w) = 1` for membership. This gives a
-linear program that maximizes the smallest owner weight. Every convergent finite-image
-sequence also has a subsequence whose sum-normalized inverse slopes converge on
+linear program that maximizes the smallest owner weight. Every convergent
+finite-image sequence also has a subsequence whose sum-normalized inverse slopes converge on
 the compact simplex. Its limit is a nonnegative nonzero `w_star` satisfying
 `diag(z) P w_star in col(A)`. Hence every closure point has a simplex-face
 witness, and every missing finite boundary must lie on a proper face. P2j
@@ -1245,6 +1245,46 @@ Positive LP margins below the declared tolerance remain unclassified rather
 than becoming false boundary exclusions. The next gate is higher-order face
 lifts and a proof deciding every surviving face. Nonzero affine offsets, the
 complete general likelihood envelope, finite-JMLE adjudication, MML,
+inference, readiness, recovery, FACETS comparison, simulation, and promotion
+remain open or unchanged.
+
+P2k closes targetwise membership for every fixed zero-offset operator admitted
+by its owner-rate workload. The finite-image relation is semialgebraic, so
+curve selection supplies a boundary curve; after finite reparameterization,
+the normalized inverse slopes have Puiseux leading terms. Their zero exponents
+give the P2j active face, while distinct positive exponents order inactive
+owners into tied rate stages. Only that order matters to the leading equations,
+so the stages compress to consecutive integers `1,...,K`.
+
+For owner rates `r_g`, positive coefficients `c_g`, and additive coefficients
+`beta_k`, P2k imposes
+
+```text
+(A beta_k)_row = 0                       for k < r_owner(row),
+(A beta_r_owner(row))_row = c_owner(row) z_row.
+```
+
+These conditions are linear. A feasible system gives
+`w_g(epsilon)=c_g epsilon^r_g` and
+`beta(epsilon)=sum_k epsilon^k beta_k`, hence an explicit finite product-one
+path. Conversely every closure curve has one of these leading hierarchies.
+Enumerating all ordered partitions of each inactive-owner set therefore
+decides the target: one feasible hierarchy certifies closure membership; all
+strictly infeasible hierarchies certify exclusion. The exact hierarchy count
+for `n` inactive owners is `sum_k k! S(n,k)`; counts through seven owners are
+`1, 3, 13, 75, 541, 4683, 47293`, and incomplete stage or workload caps fail
+closed.
+
+On the three-owner rank-one fixture, P2k finds seven hierarchies for
+`z=(1,0,0)`. Besides the P2j first-order lift `(1,0,0)`, the rates `(2,0,1)`
+and `(2,1,0)` produce genuine higher-order paths from singleton faces that P2j
+left open. For `z=(1,-2,0)`, all three possible hierarchies `(1,1,0)`,
+`(1,2,0)`, and `(2,1,0)` are infeasible, which proves the target outside the
+closure despite its nonnegative P2j face witness. A numerically open P2k
+hierarchy never weakens an existing P2j finite-path certificate. This completes
+targetwise zero-offset closure membership, not a symbolic decomposition of the
+whole response image. The next gate is the likelihood-limsup envelope over
+these rate-hierarchy strata. Nonzero offsets, finite-JMLE adjudication, MML,
 inference, readiness, recovery, FACETS comparison, simulation, and promotion
 remain open or unchanged.
 

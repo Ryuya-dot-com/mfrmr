@@ -16,6 +16,22 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   response family, GPCM slope block,
   external comparison lane, readiness status, or release claim is broadened.
 
+* Completed targetwise zero-offset response-image closure membership over
+  higher-order slope-owner rate hierarchies. P2k uses semialgebraic curve
+  selection and Puiseux leading terms to reduce every boundary approach to an
+  ordered partition of inactive inverse slopes. For each hierarchy, all lower
+  additive coefficients must vanish on the relevant owner rows and the leading
+  coefficient must reproduce the target; these conditions are linear and a
+  feasible solution gives an explicit product-one finite path. Exhaustive
+  numerically decided hierarchy enumeration therefore either certifies a
+  targetwise closure path or excludes the target. In the three-owner rank-one
+  fixture, two genuinely higher-order paths resolve P2j first-order-open faces,
+  while all three possible hierarchies exclude the `(1,-2,0)` outer-only
+  target. A coarse P2k tolerance cannot weaken an earlier P2j path certificate.
+  Symbolic whole-operator strata, the general boundary likelihood envelope,
+  finite-JMLE adjudication, nonzero offsets, MML, inference, readiness,
+  recovery, simulation, FACETS comparison, and promotion remain unchanged.
+
 * Generalized the P2i four-cell response-image calculation to a
   workload-admitted fixed zero-offset JML GPCM operator. P2j proves that finite
   response membership is equivalent to positive inverse-slope feasibility
