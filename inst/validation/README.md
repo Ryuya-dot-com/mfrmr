@@ -606,6 +606,14 @@ identify whether the opt-in layer ran and retain its test log.
   design; common links returned fits but did not remove extreme-Person holds;
   two Raters per Person restored many ready fits. Exact range-spanning 25%
   anchors advance only as a feasibility candidate, not a selected percentage.
+- `rater-anchor-sparse-prospective-contract-0.2.3.R`: no-fit registry for the
+  expanded 16-Rater PCM/JML stress. It fixes eight anchor conditions, seven
+  complete/sparse networks, independent response and external-anchor seeds,
+  exact resource accounting, paired denominators, and Pareto decision rules.
+- `rater-anchor-sparse-prospective-contract-record-0.2.3.md`: structural and
+  authority record for the 12-fit smoke and 560-fit feasibility manifests.
+  Execution, broad simulation, confirmation, and operational percentage
+  selection remain unauthorized.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,

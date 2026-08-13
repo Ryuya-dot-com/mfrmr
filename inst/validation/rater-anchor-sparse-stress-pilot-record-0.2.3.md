@@ -168,6 +168,13 @@ recommended operational percentage. The next study needs more Raters, more
 seeds, separately generated external anchor error, and explicit cost per
 anchor and repeated rating.
 
+That next design is now prospectively frozen in
+`rater-anchor-sparse-prospective-contract-record-0.2.3.md`. It expands to 16
+Raters and 10 feasibility seeds, separates external calibration error from
+response-data seeds, and reports direct anchors and repeated ratings as
+different resource axes. The contract runs no fit and does not strengthen the
+present conclusion.
+
 ## Reproducibility identities
 
 Runner SHA-256:

@@ -61,6 +61,16 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   as a feasibility candidate; no operational rate, public default, or
   confirmation claim is selected.
 
+* Froze the prospective expansion of that Rater-anchor stress before further
+  execution. Its non-factorial 16-Rater registry crosses eight anchor
+  conditions with seven complete or sparse networks and binds 10 independent
+  seeds into 560 paired feasibility fits. External anchor-selection and error
+  identities are separate from response seeds and are reused across networks;
+  direct anchors and added rating assignments remain separate resource axes.
+  Feasibility may calibrate runtime, failures, and dispersion only. The
+  Pareto-based decision rules cannot select a percentage without a separately
+  precisioned confirmation study and externally supplied resource costs.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-
