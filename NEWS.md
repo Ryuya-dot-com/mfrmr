@@ -71,6 +71,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   Pareto-based decision rules cannot select a percentage without a separately
   precisioned confirmation study and externally supplied resource costs.
 
+* Executed the contract-bound 12-fit Rater-anchor smoke. All anchor reviews
+  passed and all PCM/JML fits returned code zero with identified free designs,
+  but none was inference-ready. Four complete-design fits exceeded the common
+  terminal-gradient review tolerance; the single-Rater-plus-5%-link and
+  two-Rater-cycle designs instead contained nine and three extreme Persons.
+  Paired identities and external calibration errors were exactly reproducible.
+  The software execution contract passed, while scientific readiness and the
+  560-fit feasibility handoff remain explicitly withheld.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-

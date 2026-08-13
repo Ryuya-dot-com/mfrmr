@@ -188,3 +188,13 @@ Focused-test SHA-256:
 
 The contract changes no public default, readiness threshold, FACETS comparison
 claim, GPCM conclusion, or release gate.
+
+## Subsequent bounded smoke
+
+The separately authorized execution is recorded in
+`rater-anchor-sparse-prospective-smoke-record-0.2.3.md`. All 12 declared fits
+returned and the software execution contract passed, but 0/12 were inference-
+ready because complete designs retained terminal-gradient review and sparse
+designs retained typed extreme-Person exclusions. The 560-fit feasibility
+handoff therefore remains unauthorized. This subsequent result does not alter
+the prospective registry or manifest identities above.

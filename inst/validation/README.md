@@ -614,6 +614,14 @@ identify whether the opt-in layer ran and retain its test log.
   authority record for the 12-fit smoke and 560-fit feasibility manifests.
   Execution, broad simulation, confirmation, and operational percentage
   selection remain unauthorized.
+- `rater-anchor-sparse-prospective-smoke-0.2.3.R`: explicit opt-in runner sealed
+  to the 12-fit smoke manifest. It realizes independent external selection and
+  value errors, preserves paired identities, audits assignment resources, and
+  refuses the feasibility profile.
+- `rater-anchor-sparse-prospective-smoke-record-0.2.3.md`: completed smoke
+  record. All fits returned, but complete designs retained terminal-gradient
+  review and sparse designs retained extreme-Person exclusions; 0/12 were
+  inference-ready, so feasibility handoff remains closed.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
