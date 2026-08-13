@@ -538,6 +538,13 @@ a positive slope for the designated slope-facet level:
 The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes by a sum-to-zero constraint on log slopes, so their
 geometric mean is 1.
+This is an aligned single-owner many-facet GPCM: exactly one facet owns both
+the slope and step blocks. It is not the broader Uto--Ueno generalized MFRM,
+whose task and rater slopes enter multiplicatively and whose step owner must
+be stated separately. Setting every current slope to one recovers the
+package's equal-discrimination PCM kernel; it does not establish support for
+the omitted second slope block, multidimensional traits, or response-style
+parameters.
 Under the default \code{gpcm_mml_identification = "free_population"} branch,
 the population standard deviation carries the common discrimination scale
 while the geometric-mean-one slopes describe relative discrimination.
@@ -603,10 +610,25 @@ Minimum required columns are:
 \item observed score (\code{score})
 }
 
-Scores are treated as ordered categories.
+Scores are treated as ordered categories. Although the fitted category
+probabilities form a multinomial probability vector, category order is part
+of the likelihood: unordered nominal/multinomial-logit responses are not
+supported. Poisson, negative-binomial, and grouped binomial-trial counts are
+also not response families in \code{fit_mfrm()}. Integer counts supplied as
+\code{score} are interpreted only as ordered category codes.
 Non-numeric score labels are dropped with a warning after coercion, whereas
 fractional numeric scores are rejected with an error instead of being
 silently truncated.
+
+A positive numeric \code{weight} may encode a replication/likelihood weight for
+an ordered-rating row when weighting that conditional contribution is the
+intended estimand. It is not a general collapsed-person frequency-table
+interface: under MML, powering responses inside one Person's conditional
+pattern is not the same as replicating a complete Person pattern after
+marginalization. A weight also does not turn the score into a count outcome
+or model dependence among repeated ratings. Non-positive finite weights are
+excluded during preparation, and non-unit observation-weight fits are not
+eligible for the common MML information-criterion panel in version 0.2.3.
 
 The fitted many-facet ordered-response model assumes conditional
 independence of observations given the person and facet parameters
@@ -1117,6 +1139,9 @@ effects using many-facet Rasch measurement: Part II. \emph{Journal of Applied
 Measurement}, 5(2), 189-227.
 \item Muraki, E. (1992). \emph{A generalized partial credit model: Application of an
 EM algorithm}. Applied Psychological Measurement, 16(2), 159-176.
+\item Uto, M., & Ueno, M. (2020). \emph{A generalized many-facet Rasch model and its
+Bayesian estimation using Hamiltonian Monte Carlo}. Behaviormetrika, 47,
+469-496.
 \item Robitzsch, A., & Steinfeld, J. (2018). \emph{Item response models for human
 ratings: Overview, estimation methods, and implementation in R}.
 Psychological Test and Assessment Modeling, 60(1), 101-139.

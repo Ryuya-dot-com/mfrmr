@@ -34,6 +34,40 @@ statistical penalty. If the likelihood has a certified recession direction,
 the finite optimizer iterate is retained only as a numerical trace and the
 primary result carries an extended-real or typed boundary status.
 
+## Relationship to generalized many-facet models
+
+Ordinary GPCM adds a positive discrimination parameter to the partial-credit
+kernel; it does not replace the item position or step parameters. In the
+current many-facet notation,
+
+\[
+\log\frac{P(Y_o=k)}{P(Y_o=k-1)}
+  = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
+\qquad \prod_g\alpha_g=1,
+\]
+
+where the additive predictor \(\eta_o\) contains person ability and the signed
+locations of the observed facets. Unit slopes reduce this expression to the
+equal-discrimination PCM kernel.
+
+The phrase *generalized many-facet Rasch model* is broader and is not a unique
+synonym for this implementation. For example, Uto and Ueno (2020, equation 9)
+use multiplicative task and rater slope blocks,
+\(\alpha_i\alpha_r\), together with rater severity and rater-specific steps.
+By contrast, mfrmr 0.2.3 requires one facet to own both the slope and step
+blocks: `slope_facet == step_facet`. It does not jointly estimate task and
+rater slopes, decouple the slope owner from the step owner, or introduce a
+multidimensional ability vector. The precise name used in the 0.2.3 evidence
+map is therefore **aligned single-owner relative-slope GPCM**.
+
+A rater-owned fit is close to a restricted Uto--Ueno form after suppressing the
+task-slope block, provided the remaining step and identification contracts are
+also aligned. A criterion-owned fit instead has criterion-owned slopes and
+steps and should be described as an analogous restricted many-facet GPCM, not
+as an exact fit of Uto and Ueno's equation. Because free discrimination relaxes
+the defining equal-discrimination Rasch restriction, "generalized MFRM" means
+a model generalized from the MFRM baseline rather than a strict Rasch model.
+
 ## Before fitting: model-choice triage
 
 Do not choose `GPCM` only because it is the most flexible model in the menu.
@@ -50,6 +84,29 @@ equal-weighting reference route; bounded `GPCM` is a slope-aware extension.
 If equal contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
+
+## Response-family boundary
+
+Every current `fit_mfrm()` likelihood is ordered categorical. The distinction
+between response values and observation frequencies is essential:
+
+| Input or estimand | 0.2.3 treatment |
+|---|---|
+| Ordered binary response | Supported as a two-category ordered response. |
+| Ordered polytomous response | Supported through RSM, PCM, or bounded GPCM. |
+| Unordered nominal/multinomial response | Unsupported; category order enters the current likelihood. |
+| Poisson, negative-binomial, or grouped binomial-trial count | Unsupported as a response family. An integer `Score` is only an ordered category code. |
+| Row-frequency/replication weight for an ordered rating | A positive numeric `weight` can weight that row's conditional ordered-category likelihood contribution. |
+
+Thus, the fact that the fitted category probabilities sum to one does not make
+the model a nominal-response or multinomial-logit model. Likewise, a frequency
+weight does not turn the score into a Poisson count or account for dependence
+among replicated ratings. Nor is it a general collapsed-person frequency
+table: under MML, powering responses inside one Person's conditional pattern
+is not equivalent to replicating a complete Person pattern after
+marginalization. FACETS provides separate `Bn` and `P` response models; those
+are outside the current mfrmr estimator even though FACETS-style coverage
+documentation describes the handoff boundary.
 
 Within that supported scope, an explicit identification contract is still
 required. With default MML,
@@ -439,6 +496,9 @@ object with a `gpcm_boundary`; full FACETS score-side review remains on the
 
 - Muraki, E. (1992). *A generalized partial credit model: Application of an EM
   algorithm*. Applied Psychological Measurement, 16, 159--176.
+- Uto, M., & Ueno, M. (2020). *A generalized many-facet Rasch model and its
+  Bayesian estimation using Hamiltonian Monte Carlo*. Behaviormetrika, 47,
+  469--496.
 - Wijayanto, F., Mul, K., Groot, P., van Engelen, B. G. M., & Heskes, T.
   (2021). *Semi-automated Rasch analysis using in-plus-out-of-questionnaire log
   likelihood*. British Journal of Mathematical and Statistical Psychology, 74,

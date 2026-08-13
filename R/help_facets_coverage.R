@@ -15,8 +15,9 @@
 #'   handoff, and report-organization surfaces;
 #' - external comparison: FACETS comparisons require a supplied external table
 #'   and should separate MnSq differences from df/ZSTD convention differences;
-#' - current model boundary: one response-model family and one observed score
-#'   scale are used per fit; mixed families, multiple independent scales,
+#' - current model boundary: one ordered-categorical response-model family and
+#'   one observed score scale are used per fit; nominal and count-response
+#'   families, mixed families, multiple independent scales,
 #'   general threshold anchoring, and scoring from an imported versioned frozen
 #'   calibration are not part of the current public estimator; posterior
 #'   scoring from an existing fitted object is a separate current route;
@@ -49,7 +50,7 @@ facets_positioning_guide <- function() {
       "mfrmr estimates are package-native; FACETS-style names do not mean that FACETS estimated the model.",
       "FACETS-style wrappers, table labels, and files support transition, handoff, and report organization, not optimizer-level reproduction.",
       "Numerical comparison requires an explicit external FACETS output table supplied by the user.",
-      "Each fit uses one response-model family and one observed score scale; mixed families, multiple independent scales, general threshold anchors, and scoring from an imported versioned frozen calibration are not current public capabilities. Posterior scoring from an existing fitted object is a separate route.",
+      "Each fit uses one ordered-categorical response-model family and one observed score scale; nominal and count-response families, mixed families, multiple independent scales, general threshold anchors, and scoring from an imported versioned frozen calibration are not current public capabilities. Positive observation weights act on row-level conditional ordered-rating contributions; they are not a general collapsed-person frequency-table interface and do not change the response family. Posterior scoring from an existing fitted object is a separate route.",
       "Inference and reporting should be based on native fit, diagnostics, review, table, and plot-data objects.",
       "GPCM, D-study, network, and reusable visualization data are extension routes rather than FACETS menu clones."
     ),
@@ -541,6 +542,27 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "There is no per-observation ScaleId contract, scale-specific category map, or ragged scale-specific PCM threshold block.",
         "Fit supported single-scale designs separately; retain multi-scale and mixed-family workflows for a later release."),
     row("Current scope boundary",
+        "Nominal/multinomial response models",
+        "mfrmr 0.2.3 public contract",
+        "none in 0.2.3", "not_implemented",
+        "The current RSM, PCM, and bounded-GPCM routes model ordered category probabilities only.",
+        "A category-probability vector that sums to one is not an unordered nominal-response or multinomial-logit model; category order enters every current likelihood.",
+        "Use a nominal-response or multinomial-regression implementation externally when category order is not substantively defined."),
+    row("Current scope boundary",
+        "Binomial-trial and Poisson/count response models",
+        "models.htm",
+        "none in 0.2.3", "not_implemented",
+        "Binary ordered scores are available as the two-category special case of the current ordered-response kernel.",
+        "Grouped binomial trials, Poisson counts, negative-binomial counts, and other count likelihoods are not implemented; integer scores are interpreted as ordered category codes.",
+        "Use FACETS or another count-model implementation for an appropriate binomial-trial or Poisson estimand; do not relabel an ordered-category fit as a count model."),
+    row("Observation weighting",
+        "Row-frequency weights for ordered ratings",
+        "mfrmr 0.2.3 weight contract",
+        "fit_mfrm(weight = ...)", "supported_with_caveat",
+        "A positive numeric observation weight multiplies that row's conditional ordered-category likelihood contribution and can represent a defensible row-replication weight.",
+        "It is not a general collapsed-person frequency table: for MML, powering responses inside one Person pattern is not equivalent to replicating a complete Person pattern after marginalization. It also does not create a count-response family, model within-cell dependence, or make non-unit-weight fits eligible for the common information-criterion panel.",
+        "Retain one distinguishable event per row when possible; preserve distinct Person response patterns, and report the exact likelihood-weight interpretation."),
+    row("Current scope boundary",
         "Native multidimensional estimation and dimension-specific scores",
         "mfrmr 0.2.3 public contract",
         "none in 0.2.3", "not_implemented",
@@ -553,7 +575,14 @@ facets_feature_coverage <- function(status = c("all", "implemented",
         "none for unrestricted GPCM in 0.2.3", "not_implemented",
         "The current public GPCM route is bounded and requires slope_facet to equal step_facet.",
         "Bounded GPCM support does not establish an unrestricted free-discrimination model family.",
-        "Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release.")
+        "Use gpcm_capability_matrix() and the documented bounded-GPCM route; retain unrestricted GPCM for a later release."),
+    row("Current scope boundary",
+        "FACETS free-slope polytomous GPCM comparison",
+        "t7menu.htm",
+        "none as a direct common-estimand lane", "not_implemented",
+        "FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.",
+        "FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.",
+        "Use FACETS for the matched PCM/JML lane or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.")
   ))
 
   row.names(out) <- NULL

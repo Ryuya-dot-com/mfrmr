@@ -4,6 +4,18 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Clarified the public response-family and generalized-MFRM boundary. The
+  bounded GPCM is now described consistently as an aligned single-owner
+  relative-slope many-facet GPCM, not the multiplicative task-by-rater
+  generalized MFRM of Uto and Ueno. The FACETS coverage matrix explicitly
+  keeps its Table 7 discrimination as a post-fit diagnostic rather than a
+  jointly fitted GPCM slope. Ordered binary/polytomous responses, unsupported
+  nominal and count likelihoods, and supported row-likelihood weights are
+  separated; a weight cannot relabel an ordered response as a Poisson or
+  grouped-binomial outcome or collapse distinct MML Person patterns. No
+  response family, GPCM slope block,
+  external comparison lane, readiness status, or release claim is broadened.
+
 * Added an exact exponential slope--utility balance oracle for JML GPCM.
   Finite exponential sums in the retained constrained free-additive
   coordinates are combined with affine sum-zero log-slope paths, and terms

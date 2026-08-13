@@ -109,6 +109,28 @@ special missing-value codes before fitting. The design need not be fully
 crossed, but it must contain enough links among persons and facet levels to
 support the intended comparisons.
 
+### Response type and frequencies
+
+The current response likelihood is ordered categorical. Binary scores are the
+two-category special case, and RSM, PCM, and bounded GPCM cover ordered
+polytomous scores. Although their category probabilities form a vector that
+sums to one, they are not unordered nominal-response or multinomial-logit
+models. Poisson, negative-binomial, and grouped binomial-trial count responses
+are also outside the current `fit_mfrm()` scope. Integer counts supplied as
+`Score` are interpreted as ordered category codes, not as Poisson or related
+counts.
+
+A positive numeric `weight` weights one row's conditional ordered-category
+likelihood and can represent a defensible row-replication weight. It is not a
+general collapsed-person frequency table. Under MML, powering responses within
+one Person's conditional pattern is not equivalent to replicating a complete
+Person response pattern after marginalization. It also does not change the
+response family or model dependence among repeated ratings. Non-unit
+observation-weight fits are excluded from the common MML information-criterion
+panel in 0.2.3. [FACETS has separate `Bn` binomial-trial
+and `P` Poisson response models](https://www.winsteps.com/facetman64/models.htm);
+those are not reproduced by mfrmr's binary ordered-score route.
+
 Each row should represent a distinguishable rating event. Exact duplicate
 Person-by-facet combinations are retained but trigger a warning and a Data
 review state because the package does not model within-cell dependence. For a
@@ -815,10 +837,29 @@ finite optimizer traces in `Estimate`. Approximate covariance values can be
 retained under `Optimizer*SE` and `Optimizer*CI`, but ordinary slope SE/CI
 fields remain unavailable until estimator-specific parameter readiness passes.
 
-Cross-software slope values are not automatically matched estimands. FACETS'
-reported element discrimination is a post-fit diagnostic computed after the
-Rasch measures and does not feed back into the other estimates; it must not be
-treated as a free-GPCM slope estimate from `mfrmr`. TAM can estimate GPCM
+The bounded GPCM is an **aligned single-owner relative-slope GPCM**:
+
+$$
+\log\frac{P(Y_o=k)}{P(Y_o=k-1)}
+ = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
+\qquad \prod_g\alpha_g=1.
+$$
+
+Exactly one facet owns both slopes and steps, because
+`slope_facet == step_facet`. Setting all slopes to one recovers the
+equal-discrimination PCM kernel. This is narrower than the generalized MFRM of
+[Uto and Ueno (2020)](https://doi.org/10.1007/s41237-020-00115-7), whose task
+and rater slopes enter multiplicatively as `alpha_i * alpha_r` and whose step
+owner is stated separately. The current
+criterion-owned and rater-owned fits are therefore separate restricted
+many-facet GPCM strata, not interchangeable fits of the full Uto--Ueno model.
+
+Cross-software slope values are not automatically matched estimands. FACETS
+does not jointly fit Muraki's free-slope polytomous GPCM. [FACETS' reported
+element discrimination](https://www.winsteps.com/facetman64/t7menu.htm) is a
+post-fit diagnostic computed after the Rasch measures and does not feed back
+into the other estimates; it must not be treated as a free-GPCM slope estimate
+from `mfrmr`. TAM can estimate GPCM
 slopes through its 2PL/GPCM MML route, but its many-facet fitting route does
 not estimate those slopes. The current `immer` estimation routes provide PCM-
 design and hierarchical-rater references rather than a matched free-GPCM

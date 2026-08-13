@@ -320,8 +320,11 @@ test_that("facets_feature_coverage keeps future 0.2.3 routes fail closed", {
     "Versioned frozen-calibration import and operational scoring",
     "General threshold or step anchors and starting-value import",
     "Multiple observed scales and scale-specific PCM",
+    "Nominal/multinomial response models",
+    "Binomial-trial and Poisson/count response models",
     "Native multidimensional estimation and dimension-specific scores",
-    "Unrestricted GPCM"
+    "Unrestricted GPCM",
+    "FACETS free-slope polytomous GPCM comparison"
   )
   future <- coverage[
     coverage$FACETSArea == "Current scope boundary" &
@@ -344,6 +347,38 @@ test_that("facets_feature_coverage keeps future 0.2.3 routes fail closed", {
     future$FACETSFeature == "Unrestricted GPCM" &
       grepl("bounded", future$Capability, fixed = TRUE)
   ))
+  expect_true(any(
+    future$FACETSFeature == "Nominal/multinomial response models" &
+      grepl("ordered category", future$Capability, fixed = TRUE) &
+      grepl("not an unordered", future$Limitation, fixed = TRUE)
+  ))
+  expect_true(any(
+    future$FACETSFeature == "Binomial-trial and Poisson/count response models" &
+      grepl("integer scores", future$Limitation, fixed = TRUE)
+  ))
+  expect_true(any(
+    future$FACETSFeature == "FACETS free-slope polytomous GPCM comparison" &
+      grepl("post-fit diagnostic", future$Limitation, fixed = TRUE) &
+      grepl("PCM/JML lane", future$Alternative, fixed = TRUE)
+  ))
+})
+
+test_that("facets_feature_coverage separates frequency weights from count outcomes", {
+  coverage <- facets_feature_coverage()
+  frequency <- coverage[
+    coverage$FACETSFeature == "Row-frequency weights for ordered ratings",
+    , drop = FALSE
+  ]
+
+  expect_equal(nrow(frequency), 1L)
+  expect_identical(frequency$Status, "supported_with_caveat")
+  expect_match(frequency$mfrmrRoute, "fit_mfrm(weight = ...)", fixed = TRUE)
+  expect_match(frequency$Capability, "positive numeric observation weight", fixed = TRUE)
+  expect_match(frequency$Capability, "row-replication weight", fixed = TRUE)
+  expect_match(frequency$Limitation, "not a general collapsed-person frequency table", fixed = TRUE)
+  expect_match(frequency$Limitation, "after marginalization", fixed = TRUE)
+  expect_match(frequency$Limitation, "does not create a count-response family", fixed = TRUE)
+  expect_match(frequency$Limitation, "information-criterion panel", fixed = TRUE)
 })
 
 test_that("fit_mfrm signature does not expose later-release calibration routes", {

@@ -30,8 +30,9 @@ FACETS output is explicitly supplied;
 handoff, and report-organization surfaces;
 \item external comparison: FACETS comparisons require a supplied external table
 and should separate MnSq differences from df/ZSTD convention differences;
-\item current model boundary: one response-model family and one observed score
-scale are used per fit; mixed families, multiple independent scales,
+\item current model boundary: one ordered-categorical response-model family and
+one observed score scale are used per fit; nominal and count-response
+families, mixed families, multiple independent scales,
 general threshold anchoring, and scoring from an imported versioned frozen
 calibration are not part of the current public estimator; posterior
 scoring from an existing fitted object is a separate current route;

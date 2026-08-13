@@ -343,6 +343,10 @@
 #' identifies slopes on the log scale with geometric mean 1. This makes bounded
 #' `GPCM` a slope-aware sensitivity/extension route, not a replacement for the
 #' equal-weighting `RSM`/`PCM` interpretation.
+#' It is an aligned single-owner many-facet GPCM rather than the broader
+#' Uto--Ueno generalized MFRM: it does not jointly estimate multiplicative task
+#' and rater slope blocks or allow a distinct step owner. Unit slopes reduce to
+#' the equal-discrimination PCM kernel.
 #' Under default MML, an intercept-only person distribution
 #' \eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
 #' relative discriminations and \eqn{\sigma\alpha_g} are their equivalent
@@ -366,7 +370,16 @@
 #' `mfrmr` supports ordered binary and ordered polytomous data under `RSM` and
 #' `PCM`, plus a narrow bounded `GPCM` branch with one designated
 #' `slope_facet` that currently must equal `step_facet`. Unordered
-#' nominal/multinomial response models are outside the documented model scope.
+#' nominal/multinomial response models are outside the documented model scope,
+#' as are Poisson, negative-binomial, and grouped binomial-trial count-response
+#' families. A positive observation `weight` weights the conditional
+#' ordered-rating contribution; it is not a general collapsed-person frequency
+#' table and does not change the response family or model dependence among
+#' replicated ratings. Under MML, powering conditional responses within one
+#' Person is not the same as replicating a complete Person pattern after
+#' marginalization. Consequently, integer count values supplied as scores are
+#' modeled as ordered category codes, not as counts from a Poisson or related
+#' distribution.
 #'
 #' @section Estimation methods:
 #' **Marginal Maximum Likelihood (MML)**
