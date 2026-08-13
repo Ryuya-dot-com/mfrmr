@@ -177,40 +177,33 @@ present conclusion.
 
 ## Post-run maintenance note
 
-The repository-only runner retains warnings raised before an anchor-review
+The repository-only runner now retains warnings raised before an anchor-review
 error is returned. Every anchor review in the retained 147-fit calibration
-passed. Evidence identities now use the validation family's canonical-table
-format instead of R object serialization, so their values changed without any
-change to estimates, readiness decisions, or authority state. The format fixes
-column and row ordering, UTF-8 bytes, typed missing values, and 12-significant-
-digit numeric values. The runner and focused-test identities below bind the
-maintained implementation after UTF-8/LF text normalization.
+passed, so this fail-closed maintenance path does not revise any retained
+estimate, readiness decision, evidence identity, or authority state. The runner
+and focused-test file identities below bind the maintained implementation.
 
 ## Reproducibility identities
 
 Runner SHA-256:
 
-`0165dff013f959eccc229ff44d2f79474e664aff822cf4934ed76c75f75ad9ab`
-
-Canonical-hash helper SHA-256:
-
-`c229fc37f671cf68f7ba8ba5ee80da8b2cf8a5bbfca783081486b785890e276f`
+`48092270b7010fe49cff42c6440a83a02c07b99526919f0d05129f5d7d8263d2`
 
 Focused-test SHA-256:
 
-`275acfd89a3a986f649ae5bd46e70186c1e22163f01786d82cd5809c7a704e83`
+`5e32faf359fda1a051b9a52fe15b12f8360c846037864fc8d7c913162d877c76`
 
 Deterministic evidence SHA-256 (fit elapsed time excluded):
 
-`f22161a9d6098b3b454612022af12953b8deb0639588c74a6d3ad4795a75fa1e`
+`c936064b95991d822c3349d9671d2048bbd70b640dcd9e51509e56d6bae2dc26`
 
 Deterministic summary SHA-256 (mean elapsed time excluded):
 
-`949b87276944e8df83c7cd955432c7e51b3bc93137987383e5c9996e0043265c`
+`3910260d481a91b07ef4b72a3c93fa140c80d1e215f80812cb277730754142fb`
 
-The canonical identities were regenerated from the complete 147-fit manifest.
-The original calibration run accumulated 130.51 seconds of fit time; timing is
-descriptive and is not part of either identity.
+Both deterministic identities matched across two independent full reruns of
+the 147-fit manifest. The original calibration run accumulated 130.51 seconds
+of fit time; timing is descriptive and is not part of either identity.
 
 ## Authority state
 

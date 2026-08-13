@@ -3,7 +3,6 @@
 # This is deliberately not a generalized framework. It asks only whether the
 # complete-design gradient hold responds to the package-default maxit = 400,
 # and which observed response patterns create sparse-design extreme Persons.
-# Source the companion canonical-hash helper before the contract and runners.
 
 mfrmr_rasmd_specification <- "0.2.3-draft.1"
 mfrmr_rasmd_contract <- "mfrmr_rater_anchor_sparse_smoke_minimal_diagnostic_v1"
@@ -18,18 +17,13 @@ mfrmr_rasmd_require_support <- function() {
     "mfrmr_rass_capture", "mfrmr_rass_select_link_persons",
     "mfrmr_rass_readiness", "mfrmr_rass_recovery",
     "mfrmr_rasps_generate_complete", "mfrmr_rasps_apply_design",
-    "mfrmr_rasps_build_anchors", "fit_mfrm", "mfrmr_rash_hash_tables"
+    "mfrmr_rasps_build_anchors", "fit_mfrm"
   )
   source_environment <- environment(mfrmr_rasmd_require_support)
   missing <- required[!vapply(
     required, exists, logical(1), envir = source_environment,
     mode = "function", inherits = TRUE
   )]
-  if (!exists(
-    "mfrmr_rash_format", envir = source_environment, inherits = TRUE
-  )) {
-    missing <- c(missing, "mfrmr_rash_format")
-  }
   if (length(missing) > 0L) {
     stop(
       "Load the prospective contract, pilot helpers, smoke runner, and ",
@@ -313,7 +307,6 @@ mfrmr_run_rater_anchor_sparse_smoke_minimal_diagnostic <- function(
     return(list(
       Specification = mfrmr_rasmd_specification,
       Contract = mfrmr_rasmd_contract,
-      IdentityFormat = mfrmr_rash_format,
       PlannedFits = 8L, results = data.frame(), comparison = data.frame(),
       stages = data.frame(), sparse = list(), DiagnosticExecuted = FALSE,
       FeasibilityHandoffAuthorized = FALSE,
@@ -347,22 +340,16 @@ mfrmr_run_rater_anchor_sparse_smoke_minimal_diagnostic <- function(
                       drop = FALSE],
     comparison = comparison, stages = stages[, setdiff(
       names(stages), "ElapsedSeconds"
-    ), drop = FALSE],
-    sparse_summary = sparse$summary,
-    sparse_extreme_persons = sparse$extreme_persons,
-    sparse_rater_load = sparse$rater_load
+    ), drop = FALSE], sparse = sparse
   )
   list(
     Specification = mfrmr_rasmd_specification,
     Contract = mfrmr_rasmd_contract,
-    IdentityFormat = mfrmr_rash_format,
     RegistrySHA256 = registry$RegistrySHA256,
     ManifestSHA256 = mfrmr_rasp_manifest_hash(manifest),
     PlannedFits = 8L, results = results, comparison = comparison,
     stages = stages, sparse = sparse,
-    EvidenceSHA256 = mfrmr_rash_hash_tables(
-      payload, domain = "minimal_smoke_diagnostic_evidence"
-    ),
+    EvidenceSHA256 = digest::digest(payload, algo = "sha256"),
     DiagnosticExecuted = TRUE,
     FeasibilityHandoffAuthorized = FALSE,
     AppropriateAnchorRateSelected = FALSE,

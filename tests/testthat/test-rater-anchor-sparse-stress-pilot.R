@@ -1,9 +1,6 @@
 rater_anchor_sparse_paths <- function() {
   validation <- testthat::test_path("..", "..", "inst", "validation")
   c(
-    canonical = file.path(
-      validation, "rater-anchor-sparse-canonical-hash-0.2.3.R"
-    ),
     runner = file.path(
       validation, "rater-anchor-sparse-stress-pilot-0.2.3.R"
     ),
@@ -17,16 +14,11 @@ rater_anchor_sparse_environment <- local({
   value <- NULL
   function() {
     if (!is.null(value)) return(value)
-    paths <- rater_anchor_sparse_paths()
-    if (!file.exists(paths[["canonical"]])) {
-      stop("Required repository canonical-hash helper is missing.", call. = FALSE)
-    }
-    testthat::skip_if_not(file.exists(paths[["runner"]]))
+    path <- rater_anchor_sparse_paths()[["runner"]]
+    testthat::skip_if_not(file.exists(path))
     testthat::skip_if_not_installed("digest")
     value <<- new.env(parent = globalenv())
-    for (path in paths[c("canonical", "runner")]) {
-      sys.source(path, envir = value)
-    }
+    sys.source(path, envir = value)
     value
   }
 })
@@ -53,22 +45,9 @@ test_that("Rater-anchor stress manifest separates anchors from links", {
   dry <- env$mfrmr_run_rater_anchor_sparse_stress(
     "pilot", execute = FALSE
   )
-  expect_identical(
-    dry$IdentityFormat, "mfrmr_rater_anchor_canonical_tables_v1"
-  )
   expect_identical(nrow(dry$manifest), 147L)
   expect_identical(nrow(dry$results), 0L)
   expect_false(dry$AppropriateAnchorRateSelected)
-})
-
-test_that("stress dry-run fails clearly without canonical identities", {
-  path <- rater_anchor_sparse_paths()[["runner"]]
-  env <- new.env(parent = globalenv())
-  sys.source(path, envir = env)
-  expect_error(
-    env$mfrmr_run_rater_anchor_sparse_stress("pilot", execute = FALSE),
-    "canonical-hash helper"
-  )
 })
 
 test_that("sparse designs preserve truth and realize declared support", {
@@ -210,27 +189,27 @@ test_that("Rater-anchor sparse smoke fits exact and shifted controls", {
 test_that("Rater-anchor stress record binds runner and tests", {
   paths <- rater_anchor_sparse_paths()
   skip_if_not(all(file.exists(paths)))
-  env <- rater_anchor_sparse_environment()
-  runner_hash <- env$mfrmr_rash_hash_text_file(paths[["runner"]])
-  canonical_hash <- env$mfrmr_rash_hash_text_file(paths[["canonical"]])
-  test_hash <- env$mfrmr_rash_hash_text_file(
-    testthat::test_path("test-rater-anchor-sparse-stress-pilot.R")
+  runner_hash <- digest::digest(
+    paths[["runner"]], algo = "sha256", file = TRUE, serialize = FALSE
+  )
+  test_hash <- digest::digest(
+    testthat::test_path("test-rater-anchor-sparse-stress-pilot.R"),
+    algo = "sha256", file = TRUE, serialize = FALSE
   )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
     collapse = "\n"
   )
   expect_match(record, runner_hash, fixed = TRUE)
-  expect_match(record, canonical_hash, fixed = TRUE)
   expect_match(record, test_hash, fixed = TRUE)
   expect_match(
     record,
-    "f22161a9d6098b3b454612022af12953b8deb0639588c74a6d3ad4795a75fa1e",
+    "c936064b95991d822c3349d9671d2048bbd70b640dcd9e51509e56d6bae2dc26",
     fixed = TRUE
   )
   expect_match(
     record,
-    "949b87276944e8df83c7cd955432c7e51b3bc93137987383e5c9996e0043265c",
+    "3910260d481a91b07ef4b72a3c93fa140c80d1e215f80812cb277730754142fb",
     fixed = TRUE
   )
   expect_match(record, "147 declared PCM/JML fits", fixed = TRUE)

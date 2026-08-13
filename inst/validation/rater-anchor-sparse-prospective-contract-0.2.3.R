@@ -2,8 +2,7 @@
 #
 # Repository-only: this freezes the expanded PCM/JML design, paired identities,
 # resource accounting, performance measures, and decision rules. It runs no
-# fit and cannot select an operational Rater-anchor percentage. Source the
-# companion canonical-hash helper before using this contract.
+# fit and cannot select an operational Rater-anchor percentage.
 
 mfrmr_rasp_specification <- "0.2.3-draft.1"
 mfrmr_rasp_contract <- "mfrmr_rater_anchor_sparse_prospective_contract_v1"
@@ -12,18 +11,11 @@ mfrmr_rasp_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
 }
 
-mfrmr_rasp_require_canonical_hash <- function() {
-  source_environment <- environment(mfrmr_rasp_require_canonical_hash)
-  available <- exists(
-    "mfrmr_rash_hash_tables", mode = "function",
-    envir = source_environment, inherits = TRUE
-  ) && exists(
-    "mfrmr_rash_format", envir = source_environment, inherits = TRUE
-  )
-  mfrmr_rasp_assert(
-    available,
-    "Source the Rater-anchor canonical-hash helper before this contract."
-  )
+mfrmr_rasp_require_digest <- function() {
+  if (!requireNamespace("digest", quietly = TRUE)) {
+    stop("Package `digest` is required for prospective identities.",
+         call. = FALSE)
+  }
   invisible(TRUE)
 }
 
@@ -208,22 +200,20 @@ mfrmr_rasp_precision_plan <- function() {
 }
 
 mfrmr_rasp_registry_hash <- function(registry) {
-  mfrmr_rasp_require_canonical_hash()
-  mfrmr_rash_hash_tables(
+  mfrmr_rasp_require_digest()
+  digest::digest(
     registry[c(
       "FactorCatalog", "AnchorRegistry", "DesignRegistry",
       "MetricRegistry", "DecisionRegistry", "PrecisionPlan"
     )],
-    domain = "prospective_registry"
+    algo = "sha256"
   )
 }
 
 mfrmr_rasp_registry <- function() {
-  mfrmr_rasp_require_canonical_hash()
   out <- list(
     Specification = mfrmr_rasp_specification,
     Contract = mfrmr_rasp_contract,
-    IdentityFormat = mfrmr_rash_format,
     FactorCatalog = mfrmr_rasp_factor_catalog(),
     AnchorRegistry = mfrmr_rasp_anchor_registry(),
     DesignRegistry = mfrmr_rasp_design_registry(),
@@ -454,11 +444,8 @@ mfrmr_rasp_validate_manifest <- function(registry, manifest,
 }
 
 mfrmr_rasp_manifest_hash <- function(manifest) {
-  mfrmr_rasp_assert(
-    exists("mfrmr_rash_hash_table", mode = "function", inherits = TRUE),
-    "Source the Rater-anchor canonical-hash helper before this contract."
-  )
-  mfrmr_rash_hash_table(manifest, domain = "prospective_manifest")
+  mfrmr_rasp_require_digest()
+  digest::digest(manifest, algo = "sha256")
 }
 
 mfrmr_rasp_result_schema <- function() {

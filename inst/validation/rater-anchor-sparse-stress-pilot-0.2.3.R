@@ -4,7 +4,6 @@
 # It separates the proportion of Rater levels fixed to known values from the
 # proportion of Persons used as a common linking set. It estimates no stable
 # operating characteristic and cannot choose an operational anchor rate.
-# Source the companion canonical-hash helper before using this pilot.
 
 mfrmr_rass_specification <- "0.2.3-draft.1"
 mfrmr_rass_contract <- "mfrmr_rater_anchor_sparse_stress_pilot_v1"
@@ -13,34 +12,12 @@ mfrmr_rass_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
 }
 
-mfrmr_rass_identity_format <- function() {
-  source_environment <- environment(mfrmr_rass_identity_format)
-  if (!exists(
-    "mfrmr_rash_format", envir = source_environment, inherits = TRUE
-  )) {
-    stop(
-      "Source the Rater-anchor canonical-hash helper before this pilot.",
-      call. = FALSE
-    )
-  }
-  get("mfrmr_rash_format", envir = source_environment, inherits = TRUE)
-}
-
 mfrmr_rass_require_support <- function() {
   required <- c(
     "build_mfrm_sim_spec", "simulate_mfrm_data", "review_mfrm_anchors",
-    "fit_mfrm", "mfrmr_rash_hash_table", "mfrmr_rash_hash_truth"
+    "fit_mfrm"
   )
-  source_environment <- environment(mfrmr_rass_require_support)
-  missing <- required[!vapply(
-    required, exists, logical(1), envir = source_environment,
-    mode = "function", inherits = TRUE
-  )]
-  if (!exists(
-    "mfrmr_rash_format", envir = source_environment, inherits = TRUE
-  )) {
-    missing <- c(missing, "mfrmr_rash_format")
-  }
+  missing <- required[!vapply(required, exists, logical(1), mode = "function")]
   if (length(missing) > 0L) {
     stop(
       "Load the development package before running the Rater-anchor stress; missing: ",
@@ -174,7 +151,10 @@ mfrmr_rass_generate_complete <- function(seed) {
   )
   data <- simulate_mfrm_data(sim_spec = spec, seed = as.integer(seed))
   truth <- attr(data, "mfrm_truth")
-  truth_hash <- mfrmr_rash_hash_truth(truth)
+  truth_hash <- digest::digest(list(
+    person = truth$person, facets = truth$facets,
+    step_table = truth$step_table
+  ), algo = "sha256")
   list(data = data, truth = truth, spec = spec, TruthSHA256 = truth_hash)
 }
 
@@ -255,9 +235,9 @@ mfrmr_rass_apply_design <- function(generated, design_row) {
   row.names(retained) <- NULL
   support <- mfrmr_rass_pair_support(retained)
   density <- nrow(retained) / nrow(data)
-  data_hash <- mfrmr_rash_hash_table(
+  data_hash <- digest::digest(
     retained[c("Person", "Rater", "Criterion", "Score")],
-    domain = "retained_response_data"
+    algo = "sha256"
   )
   list(
     data = retained, link_persons = link,
@@ -453,9 +433,7 @@ mfrmr_rass_run_one <- function(row, generated, designed) {
   } else {
     data.frame(Facet = character(), Level = character(), Anchor = numeric())
   }
-  anchor_hash <- mfrmr_rash_hash_table(
-    anchor_payload, domain = "direct_rater_anchors"
-  )
+  anchor_hash <- digest::digest(anchor_payload, algo = "sha256")
   review <- mfrmr_rass_capture(review_mfrm_anchors(
     designed$data, "Person", c("Rater", "Criterion"), "Score",
     anchors = if (nrow(anchor_payload) > 0L) anchor_payload else NULL,
@@ -616,13 +594,13 @@ mfrmr_rass_summary <- function(results) {
 mfrmr_rass_evidence_hash <- function(results) {
   mfrmr_rass_require_support()
   payload <- results[, setdiff(names(results), "FitElapsedSeconds"), drop = FALSE]
-  mfrmr_rash_hash_table(payload, domain = "stress_pilot_evidence")
+  digest::digest(payload, algo = "sha256")
 }
 
 mfrmr_rass_summary_hash <- function(summary) {
   mfrmr_rass_require_support()
   payload <- summary[, setdiff(names(summary), "MeanElapsedSeconds"), drop = FALSE]
-  mfrmr_rash_hash_table(payload, domain = "stress_pilot_summary")
+  digest::digest(payload, algo = "sha256")
 }
 
 mfrmr_run_rater_anchor_sparse_stress <- function(
@@ -633,7 +611,6 @@ mfrmr_run_rater_anchor_sparse_stress <- function(
     return(list(
       Specification = mfrmr_rass_specification,
       Contract = mfrmr_rass_contract,
-      IdentityFormat = mfrmr_rass_identity_format(),
       manifest = manifest, results = data.frame(), summary = data.frame(),
       CalibrationOnly = TRUE,
       AppropriateAnchorRateSelected = FALSE,
@@ -669,7 +646,6 @@ mfrmr_run_rater_anchor_sparse_stress <- function(
   list(
     Specification = mfrmr_rass_specification,
     Contract = mfrmr_rass_contract,
-    IdentityFormat = mfrmr_rass_identity_format(),
     manifest = manifest,
     results = results,
     summary = summary,

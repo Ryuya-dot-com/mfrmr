@@ -146,40 +146,27 @@ credit for reproducing their supplied values.
 Thus 25% remains the primary candidate under test, not the presumed winner.
 No universal percentage is encoded in this contract.
 
-The identities below use the validation family's canonical-table format rather
-than R object serialization. Columns and rows are ordered canonically,
-characters are encoded as UTF-8 bytes, typed missing values are retained, and
-finite numeric values use 12 significant decimal digits. This representation
-is deliberately limited to these evidence tables and is not a general R-object
-serializer.
-Source and focused-test identities likewise use UTF-8 text with LF line endings,
-so checkout-specific CRLF conversion is outside their identity.
-
 ## Deterministic identities
 
 Registry SHA-256:
 
-`d5e014472d93f31aef336388e7232bbfdc8d81635dace84833dfa9b50864ed2e`
+`3a58566aa7e9ae6943fad15449cb11852f929cb156030bb425076c543f605c09`
 
 Smoke-manifest SHA-256:
 
-`b69d015673965c2286f50c1ed943968c7711de42ba60c45a249635fd13d8d949`
+`7ff2334303b5a581b057b0323b23512f27e644c9c7623b6f507cc87adf204cc3`
 
 Feasibility-manifest SHA-256:
 
-`9b1f707bb157062465245ca329d3c3c288b9e9630487952858117e49369d1a3d`
-
-Canonical-hash helper SHA-256:
-
-`c229fc37f671cf68f7ba8ba5ee80da8b2cf8a5bbfca783081486b785890e276f`
+`00b2c963456589e01c63ca234a8049c960d44206d4c382828e78ae0732820d9c`
 
 Contract-file SHA-256:
 
-`b628bcfd5ebe11f23e30ba27738a5e5b1e0a8221d14a43c83fbd47489518a501`
+`c446b6eab06d8e2442de5ed3765f6accfdd3880cd385ebd318c7b71f316856db`
 
 Focused-test SHA-256:
 
-`5242d3da5b3a0623a450b439b0a89799e018e56fce39c0a55c153fa6e6c47796`
+`669bfb33a7a86caa45155056a4742c9b51fd924b8cba061f3ec77307bb19354d`
 
 ## Authority state
 

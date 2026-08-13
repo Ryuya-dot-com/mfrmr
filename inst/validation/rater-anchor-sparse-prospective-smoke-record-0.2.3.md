@@ -123,46 +123,39 @@ candidate identity. It cannot overwrite this smoke or its manifest.
 
 Prospective registry SHA-256:
 
-`d5e014472d93f31aef336388e7232bbfdc8d81635dace84833dfa9b50864ed2e`
+`3a58566aa7e9ae6943fad15449cb11852f929cb156030bb425076c543f605c09`
 
 Smoke manifest SHA-256:
 
-`b69d015673965c2286f50c1ed943968c7711de42ba60c45a249635fd13d8d949`
-
-Canonical-hash helper SHA-256:
-
-`c229fc37f671cf68f7ba8ba5ee80da8b2cf8a5bbfca783081486b785890e276f`
-
-Canonical-hash focused-test SHA-256:
-
-`4a14dcc56c541124eca51a52f16e5ece295156dc090ad51f7c99d75c3b0a660a`
+`7ff2334303b5a581b057b0323b23512f27e644c9c7623b6f507cc87adf204cc3`
 
 Prospective-contract file SHA-256:
 
-`b628bcfd5ebe11f23e30ba27738a5e5b1e0a8221d14a43c83fbd47489518a501`
+`c446b6eab06d8e2442de5ed3765f6accfdd3880cd385ebd318c7b71f316856db`
 
 Stress-pilot helper file SHA-256:
 
-`0165dff013f959eccc229ff44d2f79474e664aff822cf4934ed76c75f75ad9ab`
+`48092270b7010fe49cff42c6440a83a02c07b99526919f0d05129f5d7d8263d2`
 
 Smoke-runner file SHA-256:
 
-`d86fb1c1ea73490ad767c6dfde5f2b84d1e3cbff32c7f95a74adfeaefc58fb67`
+`df084a0447fee350a2982c181692299c097ab826fda31a762771dbb3ad4207f2`
 
 Focused-test SHA-256:
 
-`bfb38037bfec244291808316d3d35d79ef1429dd804d86993e410723ead790c8`
+`0a8f944135d5c6544241819af26cd531e068bf2c8ef9fdd183916c835fde3fd2`
 
 Deterministic evidence SHA-256 (elapsed time excluded):
 
-`172856a67442812f421511c014da2497f809eb04fe227327c7f11d57cf50cfb1`
+`fef35cde6e64d8d7042ce92520be76e9a025c841eae79a3cd5f67bedb67f3c9a`
 
 Deterministic summary SHA-256 (elapsed time excluded):
 
-`24fe3bdf216aa759e0ab673bd7c579d738765bb295ce9e32a31bf02abe9dc4a4`
+`b5bd3a86123e628ad87f7c5a372c423f22af8a44659d5b6e78574472063609d8`
 
-The evidence and summary identities matched fresh R 4.4.2 and R 4.5.1 runs
-after canonicalization. Retained fit time is descriptive only.
+The evidence and summary identities matched independent full reruns after the
+final instrumentation was fixed. Retained fit time was approximately 33
+seconds and is descriptive only.
 
 ## Authority state
 
@@ -187,18 +180,15 @@ PCM/GPCM decision, operational anchor percentage, or release gate.
 
 ## Post-run maintenance note
 
-The runner retains warnings from a failed support audit and classifies the
+The runner now retains warnings from a failed support audit and classifies the
 package's typed `mfrmr_estimability_error` before using a narrowly defined
 legacy-message fallback. Neither path occurred in the retained 12-fit smoke.
-The earlier R-object digests differed from the historical record even when the
-pre-maintenance runner was replayed, while fresh Windows R 4.4.2 and R 4.5.1
-runs agreed with each other. This is consistent with, but does not prove, a
-Mac-versus-Windows runtime difference: serialized attributes, encodings, R
-versions, numerical libraries, or final floating-point bits can all contribute.
-The replacement hashes are derived from canonical evidence tables, while code
-and test identities normalize UTF-8 text to LF. Evidence identities matched
-exactly in R 4.4.2 and R 4.5.1. Scientific values and authority states did not
-change.
+Fresh R 4.4.2 and R 4.5.1 runs reproduced all declared fits and numerical
+checks, but reproduced different serialized result-object hashes even with the
+pre-maintenance HEAD runner. The historical scientific evidence and summary
+identities above are therefore retained rather than rewritten for an unrelated
+runtime-sensitive digest. Updated file identities bind the maintained code and
+tests.
 
 ## Subsequent minimal diagnostic
 

@@ -1,9 +1,6 @@
 rater_anchor_sparse_smoke_paths <- function() {
   validation <- testthat::test_path("..", "..", "inst", "validation")
   c(
-    canonical = file.path(
-      validation, "rater-anchor-sparse-canonical-hash-0.2.3.R"
-    ),
     prospective = file.path(
       validation, "rater-anchor-sparse-prospective-contract-0.2.3.R"
     ),
@@ -24,15 +21,12 @@ rater_anchor_sparse_smoke_environment <- local({
   function() {
     if (!is.null(value)) return(value)
     paths <- rater_anchor_sparse_smoke_paths()
-    if (!file.exists(paths[["canonical"]])) {
-      stop("Required repository canonical-hash helper is missing.", call. = FALSE)
-    }
     testthat::skip_if_not(all(file.exists(paths[c(
       "prospective", "helpers", "runner"
     )])))
     testthat::skip_if_not_installed("digest")
     value <<- new.env(parent = globalenv())
-    for (path in paths[c("canonical", "prospective", "helpers", "runner")]) {
+    for (path in paths[c("prospective", "helpers", "runner")]) {
       sys.source(path, envir = value)
     }
     value
@@ -54,9 +48,6 @@ rater_anchor_sparse_smoke_result <- local({
 test_that("prospective smoke defaults to dry-run and refuses feasibility", {
   env <- rater_anchor_sparse_smoke_environment()
   dry <- env$mfrmr_run_rater_anchor_sparse_prospective_smoke()
-  expect_identical(
-    dry$IdentityFormat, "mfrmr_rater_anchor_canonical_tables_v1"
-  )
 
   expect_identical(nrow(dry$manifest), 12L)
   expect_identical(nrow(dry$results), 0L)
@@ -230,11 +221,11 @@ test_that("smoke execution preserves identities and resource accounting", {
   expect_identical(nchar(result$SummarySHA256), 64L)
   expect_identical(
     result$EvidenceSHA256,
-    "172856a67442812f421511c014da2497f809eb04fe227327c7f11d57cf50cfb1"
+    "fef35cde6e64d8d7042ce92520be76e9a025c841eae79a3cd5f67bedb67f3c9a"
   )
   expect_identical(
     result$SummarySHA256,
-    "24fe3bdf216aa759e0ab673bd7c579d738765bb295ce9e32a31bf02abe9dc4a4"
+    "b5bd3a86123e628ad87f7c5a372c423f22af8a44659d5b6e78574472063609d8"
   )
   expect_true(result$SmokeExecuted)
   expect_true(result$SmokeExecutionContractPassed)
@@ -249,13 +240,14 @@ test_that("smoke execution preserves identities and resource accounting", {
 test_that("smoke record binds contracts, runner, tests, and evidence", {
   paths <- rater_anchor_sparse_smoke_paths()
   skip_if_not(file.exists(paths[["record"]]))
-  env <- rater_anchor_sparse_smoke_environment()
   hashes <- vapply(
-    paths[c("canonical", "prospective", "helpers", "runner")],
-    env$mfrmr_rash_hash_text_file, character(1)
+    paths[c("prospective", "helpers", "runner")],
+    digest::digest, character(1), algo = "sha256", file = TRUE,
+    serialize = FALSE
   )
-  test_hash <- env$mfrmr_rash_hash_text_file(
-    testthat::test_path("test-rater-anchor-sparse-prospective-smoke.R")
+  test_hash <- digest::digest(
+    testthat::test_path("test-rater-anchor-sparse-prospective-smoke.R"),
+    algo = "sha256", file = TRUE, serialize = FALSE
   )
   record <- paste(
     readLines(paths[["record"]], warn = FALSE, encoding = "UTF-8"),
