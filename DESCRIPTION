@@ -55,7 +55,6 @@ Suggests:
     rmarkdown,
     igraph,
     lme4,
-    digest,
     kableExtra,
     flextable,
     future.apply,

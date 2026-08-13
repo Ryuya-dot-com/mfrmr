@@ -1,35 +1,4 @@
-test_that("vignette artifact checksums are independent of text line endings", {
-  write_raw <- function(bytes) {
-    path <- tempfile(fileext = ".csv")
-    con <- file(path, open = "wb")
-    tryCatch(
-      writeBin(bytes, con),
-      finally = close(con)
-    )
-    path
-  }
-
-  paths <- c(
-    lf = write_raw(charToRaw("A,B\n1,2\n")),
-    crlf = write_raw(charToRaw("A,B\r\n1,2\r\n")),
-    cr = write_raw(charToRaw("A,B\r1,2\r")),
-    changed = write_raw(charToRaw("A,B\n1,3\n"))
-  )
-  on.exit(unlink(paths), add = TRUE)
-
-  raw_hashes <- unname(tools::md5sum(paths[c("lf", "crlf", "cr")]))
-  expect_length(unique(raw_hashes), 3L)
-
-  normalized_hashes <- vapply(
-    paths,
-    mfrmr:::mfrmr_normalized_text_md5,
-    character(1)
-  )
-  expect_length(unique(normalized_hashes[c("lf", "crlf", "cr")]), 1L)
-  expect_false(identical(normalized_hashes[["lf"]], normalized_hashes[["changed"]]))
-})
-
-test_that("precomputed vignette artifacts match their manifest", {
+test_that("precomputed vignette artifacts match their semantic manifest", {
   artifact_dir <- system.file(
     "extdata", "vignette-artifacts",
     package = "mfrmr",
@@ -43,9 +12,10 @@ test_that("precomputed vignette artifacts match their manifest", {
 
   expect_true(nrow(manifest) > 0L)
   expect_true(all(c(
-    "Artifact", "Rows", "Columns", "Schema", "MD5", "Source",
+    "Artifact", "Rows", "Columns", "Schema", "Source",
     "DataKey", "GeneratedWith"
   ) %in% names(manifest)))
+  expect_false(any(grepl("sha|md5|hash", names(manifest), ignore.case = TRUE)))
   expect_true(all(manifest$DataKey == "example_operational"))
   expect_true(all(manifest$GeneratedWith == as.character(utils::packageVersion("mfrmr"))))
 
@@ -63,11 +33,6 @@ test_that("precomputed vignette artifacts match their manifest", {
     expect_identical(
       paste(names(artifact), collapse = "|"),
       manifest$Schema[i],
-      info = manifest$Artifact[i]
-    )
-    expect_identical(
-      mfrmr:::mfrmr_normalized_text_md5(path),
-      manifest$MD5[i],
       info = manifest$Artifact[i]
     )
   }

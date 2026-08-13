@@ -1067,7 +1067,11 @@
 #'   replay/export provenance table retained before complete-case omission
 #'   (`person_table_replay`), plus stored categorical `xlevels` / `contrasts`
 #'   for model-matrix replay and scoring, together with
-#'   `posterior_basis = "population_model"`.
+#'   `posterior_basis = "population_model"`. `estimation_converged` records
+#'   optimizer convergence and `inference_ready` records the separate formal
+#'   readiness decision. The older `population$converged` field is retained as
+#'   a compatibility alias of `inference_ready`; its basis is recorded in
+#'   `population$converged_basis`.
 #' - `data_review`: pre-fit Data, Design, Stability, and Reporting readiness
 #'   evidence propagated into summaries and plot-interpretation gates
 #' - `config`: resolved model configuration used for estimation, including
@@ -1884,7 +1888,13 @@ finalize_mfrm_population_fit <- function(fit, population) {
 
   pop$coefficients <- coeff
   pop$sigma2 <- as.numeric(params$population$sigma2[1] %||% NA_real_)
-  pop$converged <- mfrm_inference_ready(fit)
+  convergence <- mfrm_convergence_state(fit)
+  pop$estimation_converged <- isTRUE(convergence$code_converged)
+  pop$inference_ready <- isTRUE(convergence$inference_ready)
+  # Retain the historical field without allowing its ambiguous name to hide
+  # the distinction between optimizer convergence and inference readiness.
+  pop$converged <- pop$inference_ready
+  pop$converged_basis <- "legacy_alias_of_inference_ready"
   pop$logLik_component <- as.numeric(fit$summary$LogLik[1] %||% NA_real_)
   pop$posterior_basis <- "population_model"
   pop$design_columns <- pop$design_columns %||% names(coeff)

@@ -35,11 +35,10 @@ bias bundles.}
 exported anchor table.}
 
 \item{data}{Optional original analysis data frame. When supplied,
-the manifest's \code{input_hash} row for \code{data} is computed against
-the user's untouched input rather than the package's internal
-\code{prep$data} (which carries synthesised \code{Weight} / \code{score_k}
-columns) so the recorded fingerprint matches what
-\code{read.csv()} will produce in a replay session.}
+the manifest's \code{input_summary} row for \code{data} describes the user's
+untouched input rather than the package's internal \code{prep$data} (which
+carries synthesised \code{Weight} / \code{score_k} columns). The summary records
+structure, not a byte-level or serialized-object identity claim.}
 }
 \value{
 A named list with class \code{mfrm_manifest}.
@@ -86,8 +85,9 @@ small-sample design flags
 \item \code{shrinkage_review}: retained traceability table for shrinkage settings
 \item \code{available_outputs}: availability table for diagnostics/bias/PCA/prediction
 outputs
-\item \code{dependencies}, \code{input_hash}, and \code{session_info}: reproducibility
-metadata tables
+\item \code{dependencies}, \code{input_summary}, and \code{session_info}: reproducibility
+metadata tables. \code{input_summary} records object structure and does not
+claim byte-for-byte identity across platforms or serialization formats
 \item \code{settings}: manifest build settings
 }
 }

@@ -548,7 +548,11 @@ estimation table (\code{person_table}), and the observed-person-aligned
 replay/export provenance table retained before complete-case omission
 (\code{person_table_replay}), plus stored categorical \code{xlevels} / \code{contrasts}
 for model-matrix replay and scoring, together with
-\code{posterior_basis = "population_model"}.
+\code{posterior_basis = "population_model"}. \code{estimation_converged} records
+optimizer convergence and \code{inference_ready} records the separate formal
+readiness decision. The older \code{population$converged} field is retained as
+a compatibility alias of \code{inference_ready}; its basis is recorded in
+\code{population$converged_basis}.
 \item \code{data_review}: pre-fit Data, Design, Stability, and Reporting readiness
 evidence propagated into summaries and plot-interpretation gates
 \item \code{config}: resolved model configuration used for estimation, including

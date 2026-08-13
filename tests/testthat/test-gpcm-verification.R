@@ -27,11 +27,138 @@ test_that("GPCM core fit returns a populated mfrm_fit", {
   expect_identical(as.character(.gpcm_fit$config$model), "GPCM")
   expect_true(nrow(.gpcm_fit$summary) > 0L)
   expect_true(nrow(.gpcm_fit$facets$person) > 0L)
+  expect_true(.gpcm_fit$population$estimation_converged)
+  expect_false(.gpcm_fit$population$inference_ready)
+  expect_identical(
+    .gpcm_fit$population$converged_basis,
+    "legacy_alias_of_inference_ready"
+  )
+  expect_identical(
+    .gpcm_fit$population$converged,
+    .gpcm_fit$population$inference_ready
+  )
 })
 
 test_that("GPCM print / summary do not error", {
   expect_no_error(invisible(utils::capture.output(print(.gpcm_fit))))
-  expect_no_error(invisible(utils::capture.output(print(summary(.gpcm_fit)))))
+  fit_summary <- summary(.gpcm_fit)
+  expect_no_error(invisible(utils::capture.output(print(fit_summary))))
+
+  evidence <- as.data.frame(fit_summary$inference_evidence)
+  expect_identical(
+    evidence$EvidenceArea,
+    c(
+      "optimizer_stationarity", "local_estimability",
+      "observed_information_curvature", "slope_boundary_screen",
+      "fit_readiness"
+    )
+  )
+  expect_identical(
+    evidence$State[evidence$EvidenceArea == "optimizer_stationarity"],
+    "stationary_candidate"
+  )
+  expect_identical(
+    evidence$State[evidence$EvidenceArea == "local_estimability"],
+    "locally_full_rank_sufficient"
+  )
+  expect_identical(
+    evidence$State[
+      evidence$EvidenceArea == "observed_information_curvature"
+    ],
+    "locally_positive_definite_at_recorded_tolerances"
+  )
+  expect_match(
+    evidence$State[evidence$EvidenceArea == "slope_boundary_screen"],
+    "^none_certified"
+  )
+  expect_false(.gpcm_fit$readiness$fit$InferenceReady)
+  expect_true(all(!.gpcm_fit$slopes$SEEligible))
+
+  console <- utils::capture.output(print(fit_summary))
+  expect_true(any(grepl("GPCM-MML inference evidence", console, fixed = TRUE)))
+  expect_true(any(grepl(
+    "Resolve stored readiness reviews before reporting",
+    console,
+    fixed = TRUE
+  )))
+  expect_false(any(grepl(
+    "Resolve numerical warnings before reporting",
+    console,
+    fixed = TRUE
+  )))
+})
+
+test_that("q31 and q41 separate stable local evidence from formal readiness", {
+  fit_at <- function(q) {
+    suppressMessages(fit_mfrm(
+      .toy_gpcm,
+      person = "Person",
+      facets = c("Rater", "Criterion"),
+      score = "Score",
+      method = "MML",
+      model = "GPCM",
+      step_facet = "Criterion",
+      slope_facet = "Criterion",
+      quad_points = q,
+      maxit = 100L,
+      reltol = 1e-9
+    ))
+  }
+  fits <- list(q31 = fit_at(31L), q41 = fit_at(41L))
+  evidence <- lapply(fits, function(fit) {
+    as.data.frame(summary(fit)$inference_evidence)
+  })
+  uncertainty <- lapply(fits, function(fit) {
+    covariance <- mfrmr:::compute_mml_parameter_covariance(fit)
+    mfrmr:::compute_mml_structural_parameter_se(
+      fit,
+      covariance = covariance
+    )$slopes
+  })
+
+  for (name in names(fits)) {
+    fit <- fits[[name]]
+    table <- evidence[[name]]
+    curvature <- table[
+      table$EvidenceArea == "observed_information_curvature", , drop = FALSE
+    ]
+    expect_identical(
+      table$State[table$EvidenceArea == "optimizer_stationarity"],
+      "stationary_candidate",
+      info = name
+    )
+    expect_identical(
+      table$State[table$EvidenceArea == "local_estimability"],
+      "locally_full_rank_sufficient",
+      info = name
+    )
+    expect_identical(
+      curvature$State,
+      "locally_positive_definite_at_recorded_tolerances",
+      info = name
+    )
+    expect_equal(curvature$Rank, curvature$Dimension, info = name)
+    expect_true(curvature$MinimumEigenvalue > 0, info = name)
+    expect_false(fit$readiness$fit$InferenceReady, info = name)
+    expect_match(
+      fit$readiness$fit$ReasonCodes,
+      "mml_gpcm_slope_boundary_not_evaluated",
+      fixed = TRUE,
+      info = name
+    )
+    expect_true(any(is.finite(uncertainty[[name]]$OptimizerSE)), info = name)
+    expect_true(all(is.na(uncertainty[[name]]$SE)), info = name)
+  }
+
+  # These are regression tolerances for this fixed teaching fixture, not
+  # general weak-identification or readiness thresholds.
+  expect_lt(max(abs(fits$q41$slopes$Estimate - fits$q31$slopes$Estimate)),
+            0.002)
+  expect_lt(abs(fits$q41$population$sigma2 - fits$q31$population$sigma2),
+            0.01)
+  expect_lt(max(abs(
+    uncertainty$q41$OptimizerSE - uncertainty$q31$OptimizerSE
+  )), 0.001)
 })
 
 test_that("GPCM iteration report is an explicitly caveated replay", {

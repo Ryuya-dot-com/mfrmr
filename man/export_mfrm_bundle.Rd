@@ -82,11 +82,10 @@ local R installation.}
 \item{data}{Optional original analysis data frame. When supplied,
 \code{export_mfrm_bundle()} co-locates a CSV copy of the data
 alongside the replay script and updates the script's
-\code{read.csv()} path to point at it. The manifest's \code{input_hash}
-row for \code{data} is also computed against the user's untouched
-input so the recorded fingerprint matches what the replay
-script will load. Default \code{NULL} falls back to the legacy
-\code{your_data.csv} placeholder path.}
+\code{read.csv()} path to point at it. The manifest's \code{input_summary}
+row for \code{data} describes the user's untouched input structure; it is not
+a byte-level equality claim about the CSV replay representation. Default
+\code{NULL} falls back to the legacy \code{your_data.csv} placeholder path.}
 }
 \value{
 A named list with class \code{mfrm_export_bundle}.

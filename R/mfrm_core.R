@@ -454,6 +454,11 @@ compact_population_spec <- function(population = NULL, person_levels = character
     coefficients = pop$coefficients %||% NULL,
     sigma2 = pop$sigma2 %||% NULL,
     converged = isTRUE(pop$converged),
+    estimation_converged = isTRUE(pop$estimation_converged),
+    inference_ready = isTRUE(pop$inference_ready),
+    converged_basis = as.character(
+      pop$converged_basis %||% "legacy_unspecified"
+    ),
     policy = pop$policy %||% NULL,
     person_lookup = person_lookup,
     person_rows = if (!is.null(person_table) && is.data.frame(person_table)) {

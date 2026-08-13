@@ -4,6 +4,28 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Removed byte- and serialization-hash claims from distributed reporting
+  paths. Reproducibility manifests now expose a semantic `input_summary`
+  (object class, dimensions, fields, classes, and missingness) instead of an
+  environment-sensitive `input_hash`. Precomputed vignette artifacts are
+  validated by rows, columns, and schema without MD5. Repository-only
+  cryptographic identity and external-run validation tests are now excluded
+  together with the `inst/validation` sources they require, and `digest` is no
+  longer a package dependency. Historical validation records remain unchanged
+  and non-authoritative for cross-platform runtime compatibility.
+
+* Separated GPCM-MML numerical evidence from the formal readiness decision.
+  `summary(fit)$inference_evidence` now reports optimizer stationarity, local
+  nonlinear rank, observed-information curvature, the slope-boundary screen,
+  and final readiness as distinct rows. On the fixed `example_core` diagnostic,
+  q=31 and q=41 both passed the numerical gate, were locally full rank, and had
+  positive-definite 19-dimensional Hessians, while formal slope inference
+  remained withheld because absence of a certified boundary path is not proof
+  of an interior finite maximum. The population record now distinguishes
+  `estimation_converged` from `inference_ready`; its older `converged` field is
+  explicitly marked as a compatibility alias of the latter. Summary output no
+  longer mislabels a non-numerical readiness hold as a numerical warning.
+
 * Completed the public PCM/GPCM model-choice warning handoff. Comparison-basis
   warnings are no longer discarded by `build_model_choice_review()`; they are
   retained separately, printed by `summary()`, and exported as an appendix

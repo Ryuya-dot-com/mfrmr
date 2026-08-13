@@ -407,11 +407,10 @@ validate_bias_results_input <- function(bias_results,
 #' @param include_person_anchors If `TRUE`, include person measures in the
 #'   exported anchor table.
 #' @param data Optional original analysis data frame. When supplied,
-#'   the manifest's `input_hash` row for `data` is computed against
-#'   the user's untouched input rather than the package's internal
-#'   `prep$data` (which carries synthesised `Weight` / `score_k`
-#'   columns) so the recorded fingerprint matches what
-#'   `read.csv()` will produce in a replay session.
+#'   the manifest's `input_summary` row for `data` describes the user's
+#'   untouched input rather than the package's internal `prep$data` (which
+#'   carries synthesised `Weight` / `score_k` columns). The summary records
+#'   structure, not a byte-level or serialized-object identity claim.
 #'
 #' @details
 #' This helper creates a compact package-native analysis record. It summarizes
@@ -446,8 +445,9 @@ validate_bias_results_input <- function(bias_results,
 #' - `shrinkage_review`: retained traceability table for shrinkage settings
 #' - `available_outputs`: availability table for diagnostics/bias/PCA/prediction
 #'   outputs
-#' - `dependencies`, `input_hash`, and `session_info`: reproducibility
-#'   metadata tables
+#' - `dependencies`, `input_summary`, and `session_info`: reproducibility
+#'   metadata tables. `input_summary` records object structure and does not
+#'   claim byte-for-byte identity across platforms or serialization formats
 #' - `settings`: manifest build settings
 #'
 #' @section Interpreting output:
@@ -807,27 +807,24 @@ build_mfrm_manifest <- function(fit,
     stringsAsFactors = FALSE
   ))
 
-  # Reproducibility tables are always
-  # populated (never NULL) so downstream writers can rely on the column
-  # contract, but individual fields may be NA when the underlying
-  # helper is unavailable (e.g. `digest` in Suggests but not installed).
+  # Reproducibility tables are always populated (never NULL) so downstream
+  # writers can rely on the column contract.
   dependencies_tbl <- build_mfrm_dependency_table(
     c("dplyr", "tidyr", "tibble", "purrr", "stringr", "psych",
       "lifecycle", "rlang", "cpp11",
-      "igraph", "lme4", "digest", "kableExtra", "flextable")
+      "igraph", "lme4", "kableExtra", "flextable")
   )
 
-  # Hash the user's *original* data when supplied, so the recorded
-  # fingerprint matches what `read.csv()` will produce in the replay
-  # session. `prep$data` carries synthesized `Weight` / `score_k`
-  # columns that the user could not reconstruct from their CSV.
-  hash_data <- if (is.data.frame(data) && nrow(data) > 0L) {
+  # Describe the user's *original* data when supplied. `prep$data` carries
+  # synthesized `Weight` / `score_k` columns that are not part of the input
+  # structure the user provided.
+  summary_data <- if (is.data.frame(data) && nrow(data) > 0L) {
     data
   } else {
     prep$data %||% NULL
   }
-  input_hash_tbl <- build_mfrm_input_hash_table(
-    data = hash_data,
+  input_summary_tbl <- build_mfrm_input_summary_table(
+    data = summary_data,
     anchors = anchor_tbl,
     group_anchors = fit$config$group_anchors %||% NULL,
     score_map = prep$score_map %||% NULL
@@ -884,7 +881,7 @@ build_mfrm_manifest <- function(fit,
     missing_recoding = missing_recoding_review,
     shrinkage_review = shrinkage_review,
     dependencies = dependencies_tbl,
-    input_hash = input_hash_tbl,
+    input_summary = input_summary_tbl,
     session_info = session_info_tbl,
     available_outputs = available_outputs,
     gpcm_boundary = gpcm_capability_boundary_table(
@@ -957,40 +954,71 @@ build_mfrm_dependency_table <- function(pkgs) {
 
 #' @keywords internal
 #' @noRd
-build_mfrm_input_hash_table <- function(data = NULL, anchors = NULL,
-                                        group_anchors = NULL,
-                                        score_map = NULL) {
-  hash_one <- function(x) {
-    if (is.null(x)) return(NA_character_)
-    if (requireNamespace("digest", quietly = TRUE)) {
-      return(digest::digest(x, algo = "sha256"))
+build_mfrm_input_summary_table <- function(data = NULL, anchors = NULL,
+                                           group_anchors = NULL,
+                                           score_map = NULL) {
+  summarize_one <- function(object, name) {
+    if (is.null(object)) {
+      return(data.frame(
+        Object = name,
+        Available = FALSE,
+        ObjectClass = NA_character_,
+        Rows = NA_integer_,
+        Columns = NA_integer_,
+        Elements = NA_integer_,
+        FieldNames = "",
+        FieldClasses = "",
+        MissingValues = NA_integer_,
+        stringsAsFactors = FALSE
+      ))
     }
-    # Fallback: serialize + tools::md5sum via a temp file so we still
-    # record a stable fingerprint even when digest is absent.
-    tf <- tempfile()
-    on.exit(unlink(tf), add = TRUE)
-    saveRDS(x, tf)
-    unname(tools::md5sum(tf))
-  }
-  n_rows <- function(x) if (is.null(x)) NA_integer_ else {
-    if (is.data.frame(x)) nrow(x) else length(x)
+
+    is_rectangular <- is.data.frame(object) || is.matrix(object)
+    field_names <- if (is_rectangular) {
+      colnames(object) %||% character(0)
+    } else {
+      names(object) %||% character(0)
+    }
+    field_classes <- if (is.data.frame(object) || is.list(object)) {
+      vapply(
+        object,
+        function(value) paste(class(value), collapse = "/"),
+        character(1)
+      )
+    } else if (is.matrix(object)) {
+      rep(paste(class(object), collapse = "/"), ncol(object))
+    } else {
+      paste(class(object), collapse = "/")
+    }
+    missing_values <- if (is.atomic(object) || is.data.frame(object)) {
+      as.integer(sum(is.na(object)))
+    } else {
+      NA_integer_
+    }
+
+    data.frame(
+      Object = name,
+      Available = TRUE,
+      ObjectClass = paste(class(object), collapse = "/"),
+      Rows = if (is_rectangular) nrow(object) else NA_integer_,
+      Columns = if (is_rectangular) ncol(object) else NA_integer_,
+      Elements = length(object),
+      FieldNames = paste(field_names, collapse = "|"),
+      FieldClasses = paste(field_classes, collapse = "|"),
+      MissingValues = missing_values,
+      stringsAsFactors = FALSE
+    )
   }
 
-  data.frame(
-    Object = c("data", "anchors", "group_anchors", "score_map"),
-    Hash = c(hash_one(data),
-             hash_one(anchors),
-             hash_one(group_anchors),
-             hash_one(score_map)),
-    NRows = c(n_rows(data),
-              n_rows(anchors),
-              n_rows(group_anchors),
-              n_rows(score_map)),
-    Algorithm = c(rep(
-      if (requireNamespace("digest", quietly = TRUE)) "sha256"
-      else "md5-of-rds",
-      4L)),
-    stringsAsFactors = FALSE
+  objects <- list(
+    data = data,
+    anchors = anchors,
+    group_anchors = group_anchors,
+    score_map = score_map
+  )
+  do.call(
+    rbind,
+    Map(summarize_one, objects, names(objects))
   )
 }
 
@@ -4405,11 +4433,10 @@ export_summary_appendix <- function(x,
 #' @param data Optional original analysis data frame. When supplied,
 #'   `export_mfrm_bundle()` co-locates a CSV copy of the data
 #'   alongside the replay script and updates the script's
-#'   `read.csv()` path to point at it. The manifest's `input_hash`
-#'   row for `data` is also computed against the user's untouched
-#'   input so the recorded fingerprint matches what the replay
-#'   script will load. Default `NULL` falls back to the legacy
-#'   `your_data.csv` placeholder path.
+#'   `read.csv()` path to point at it. The manifest's `input_summary`
+#'   row for `data` describes the user's untouched input structure; it is not
+#'   a byte-level equality claim about the CSV replay representation. Default
+#'   `NULL` falls back to the legacy `your_data.csv` placeholder path.
 #'
 #' @details
 #' This function is the one-call fit-level archive and HTML route. It reuses

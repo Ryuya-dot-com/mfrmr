@@ -391,10 +391,6 @@ test_that("a real serialized 0.2.2 fit cannot acquire current readiness", {
     "mfrmr-saved-fit-migration-0.2.2-v1"
   )
   expect_identical(fixture$metadata$PackageVersion[[1]], "0.2.2")
-  expect_identical(
-    fixture$metadata$TarballSHA256[[1]],
-    "dddeaaba8d2d0684784fa774b349e8fa1d13570143341daad4aa31e2990e5d00"
-  )
   expect_s3_class(fit, "mfrm_fit")
   expect_null(fit$readiness)
   expect_true(fit$summary$InferenceReady[[1]])

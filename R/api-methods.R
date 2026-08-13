@@ -8272,6 +8272,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   ladder, or for the common RSM ladder
 #' - `slope_overview`: parameter-readiness and explicitly labelled optimizer-
 #'   trace summary for `GPCM` discriminations
+#' - `inference_evidence`: for `GPCM` MML, a compact separation of optimizer
+#'   stationarity, retained-point local rank, observed-information curvature,
+#'   slope-boundary screening, and the final readiness decision. Supportive
+#'   local evidence does not override an inconclusive boundary audit
 #' - `interaction_overview`: model-estimated facet-interaction summary
 #'   when the fit was specified with `facet_interactions`
 #' - `settings_overview`: estimation-settings overview that pins the
@@ -8454,6 +8458,163 @@ mfrm_summary_facet_recession_review <- function(object) {
     tibble::as_tibble()
 }
 
+mfrm_gpcm_mml_inference_evidence <- function(object) {
+  config <- object$config %||% list()
+  model <- toupper(as.character(
+    config$model %||% object$summary$Model[1] %||% ""
+  )[1])
+  method <- toupper(as.character(
+    config$method %||% object$summary$Method[1] %||% ""
+  )[1])
+  if (!identical(model, "GPCM") || !identical(method, "MML")) {
+    return(tibble::tibble())
+  }
+
+  estimability <- object$data_review$estimability %||%
+    config$estimability_audit %||% list()
+  local <- estimability$nonlinear_local_estimability %||% list()
+  information <- estimability$fitted_information %||% list()
+  boundary <- config$boundary_audit$gpcm_slope_boundary %||% list()
+  readiness <- as.data.frame(
+    mfrmr_get_readiness_record(object)$fit,
+    stringsAsFactors = FALSE
+  )
+  optimizer <- object$opt$optimizer_diagnostics %||% list()
+
+  eigenvalues <- as.data.frame(
+    information$eigenvalue_summary %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  minimum_eigenvalue <- if (
+    nrow(eigenvalues) > 0L && "Smallest" %in% names(eigenvalues)
+  ) {
+    as.numeric(eigenvalues$Smallest[1])
+  } else {
+    NA_real_
+  }
+  maximum_eigenvalue <- if (
+    nrow(eigenvalues) > 0L && "Largest" %in% names(eigenvalues)
+  ) {
+    as.numeric(eigenvalues$Largest[1])
+  } else {
+    NA_real_
+  }
+  condition_number <- if (
+    is.finite(minimum_eigenvalue) && minimum_eigenvalue > 0 &&
+      is.finite(maximum_eigenvalue)
+  ) {
+    maximum_eigenvalue / minimum_eigenvalue
+  } else {
+    NA_real_
+  }
+
+  rank_ladder <- as.data.frame(
+    information$rank_ladder %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  free_dimension <- as.integer(information$free_dimension %||% NA_integer_)
+  positive_definite <- identical(
+    as.character(information$status %||% ""),
+    "evaluated_diagnostic_only"
+  ) && is.finite(minimum_eigenvalue) && minimum_eigenvalue > 0 &&
+    nrow(rank_ladder) > 0L &&
+    all(c("PositiveRank", "NegativeCount", "NearZeroCount") %in%
+          names(rank_ladder)) &&
+    all(as.integer(rank_ladder$PositiveRank) == free_dimension) &&
+    all(as.integer(rank_ladder$NegativeCount) == 0L) &&
+    all(as.integer(rank_ladder$NearZeroCount) == 0L)
+
+  optimizer_severity <- as.character(
+    optimizer$ConvergenceSeverity %||% "not_evaluated"
+  )[1]
+  optimizer_state <- if (identical(optimizer_severity, "pass")) {
+    "stationary_candidate"
+  } else {
+    paste0("optimizer_", tolower(optimizer_severity))
+  }
+  local_state <- as.character(local$state %||% "not_evaluated")[1]
+  curvature_state <- if (positive_definite) {
+    "locally_positive_definite_at_recorded_tolerances"
+  } else {
+    as.character(information$status %||% "not_evaluated")[1]
+  }
+  boundary_state <- as.character(boundary$state %||% "not_evaluated")[1]
+  readiness_state <- if (nrow(readiness) == 1L) {
+    as.character(readiness$FitReadiness[1])
+  } else {
+    "not_evaluated"
+  }
+  readiness_reasons <- if (
+    nrow(readiness) == 1L && "ReasonCodes" %in% names(readiness)
+  ) {
+    as.character(readiness$ReasonCodes[1])
+  } else {
+    "readiness_record_unavailable"
+  }
+  if (length(readiness_reasons) != 1L || is.na(readiness_reasons) ||
+      !nzchar(readiness_reasons)) {
+    readiness_reasons <- "none_recorded"
+  }
+
+  tibble::tibble(
+    EvidenceArea = c(
+      "optimizer_stationarity", "local_estimability",
+      "observed_information_curvature", "slope_boundary_screen",
+      "fit_readiness"
+    ),
+    State = c(
+      optimizer_state, local_state, curvature_state, boundary_state,
+      readiness_state
+    ),
+    Complete = c(
+      identical(optimizer_severity, "pass"),
+      isTRUE(local$local_first_order_classified),
+      identical(as.character(information$status %||% ""),
+                "evaluated_diagnostic_only"),
+      isTRUE(boundary$complete) && isTRUE(boundary$scope_complete),
+      nrow(readiness) == 1L
+    ),
+    Rank = c(
+      NA_integer_, as.integer(local$local_rank %||% NA_integer_),
+      if (positive_definite) free_dimension else NA_integer_,
+      NA_integer_, NA_integer_
+    ),
+    Dimension = c(
+      NA_integer_, as.integer(local$free_dimension %||% NA_integer_),
+      free_dimension, NA_integer_, NA_integer_
+    ),
+    MinimumEigenvalue = c(
+      NA_real_, NA_real_, minimum_eigenvalue, NA_real_, NA_real_
+    ),
+    MaximumEigenvalue = c(
+      NA_real_, NA_real_, maximum_eigenvalue, NA_real_, NA_real_
+    ),
+    ConditionNumber = c(
+      NA_real_, NA_real_, condition_number, NA_real_, NA_real_
+    ),
+    Interpretation = c(
+      "Necessary numerical condition; not an inference decision.",
+      "Supportive retained-point local rank; not global identification.",
+      paste(
+        "Diagnostic local curvature only; inspect Optimizer*SE in",
+        "diagnose_mfrm(fit)$parameter_uncertainty."
+      ),
+      if (startsWith(boundary_state, "none_certified")) {
+        paste(
+          "No audited path was certified; this is inconclusive and does not",
+          "prove an interior finite maximum."
+        )
+      } else {
+        as.character(boundary$detail %||% "Boundary status was not resolved.")
+      },
+      paste0(
+        "Formal decision; reasons: ",
+        readiness_reasons, "."
+      )
+    )
+  )
+}
+
 mfrm_fit_scale_contract <- function(object) {
   config <- object$config %||% list()
   population <- object$population %||% list()
@@ -8610,6 +8771,17 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     CodingVariables = population_coding_variables,
     ContrastVariables = population_contrast_variables,
     Policy = as.character(population_raw$policy %||% NA_character_),
+    EstimationConverged = isTRUE(
+      population_raw$estimation_converged %||%
+        object$summary$Converged[1] %||% FALSE
+    ),
+    InferenceReady = isTRUE(
+      population_raw$inference_ready %||%
+        object$summary$InferenceReady[1] %||% FALSE
+    ),
+    LegacyConvergedBasis = as.character(
+      population_raw$converged_basis %||% "legacy_unspecified"
+    ),
     ResidualVariance = as.numeric(population_raw$sigma2 %||% NA_real_),
     OmittedPersons = length(population_raw$omitted_persons %||% character(0)),
     OmittedRows = as.integer(population_raw$response_rows_omitted %||% NA_integer_)
@@ -8853,6 +9025,8 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       }
     )
   }
+
+  inference_evidence <- mfrm_gpcm_mml_inference_evidence(object)
 
   interaction_overview <- tibble::tibble()
   if (nrow(interaction_tbl) > 0 &&
@@ -9363,6 +9537,17 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   if (identical(model_label, "GPCM")) {
     next_actions <- c(
       next_actions,
+      if (identical(method_label, "MML") &&
+          identical(numerical_status, "pass") &&
+          !mfrm_inference_ready(object)) {
+        paste(
+          "The optimizer already passed its numerical gate; inspect",
+          "`summary(fit)$inference_evidence` and",
+          "`diagnose_mfrm(fit)$parameter_uncertainty` before changing",
+          "optimizer controls. Optimizer*SE remains diagnostic until",
+          "parameter readiness is established."
+        )
+      },
       "Use `compute_information()` / `plot_information()` for reporting-oriented precision follow-up."
     )
   }
@@ -9398,6 +9583,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     targeting = targeting_overview,
     step_overview = step_overview,
     slope_overview = slope_overview,
+    inference_evidence = inference_evidence,
     interaction_overview = interaction_overview,
     settings_overview = settings_overview,
     attached_diagnostics = attached_diagnostics_flag,
@@ -10030,7 +10216,7 @@ print.summary.mfrm_fit <- function(x, ...) {
         reviewable_fit = "Fit completed, but numerical convergence requires review",
         fit_needs_review = "Fit requires numerical review before interpretation",
         review_required = "Fit completed, but data, design, stability, or diagnostics require review",
-        review_before_reporting = "Resolve numerical warnings before reporting",
+        review_before_reporting = "Resolve stored readiness reviews before reporting",
         hold_for_design_review = "Reporting is on hold until disconnected-design comparability is resolved",
         hold_for_stability_review = "Reporting is on hold until boundary/separation stability is resolved",
         review_design_before_reporting = "Review the design-linking justification before reporting",
@@ -10300,6 +10486,26 @@ print.summary.mfrm_fit <- function(x, ...) {
   if (nrow(x$population_overview) > 0) {
     cat("\nPopulation basis\n")
     print(round_numeric_df(as.data.frame(x$population_overview), digits = digits), row.names = FALSE)
+  }
+  if (nrow(x$inference_evidence %||% data.frame()) > 0L) {
+    cat("\nGPCM-MML inference evidence\n")
+    evidence <- as.data.frame(x$inference_evidence, stringsAsFactors = FALSE)
+    keep <- intersect(
+      c(
+        "EvidenceArea", "State", "Complete", "Rank", "Dimension",
+        "MinimumEigenvalue", "MaximumEigenvalue", "ConditionNumber"
+      ),
+      names(evidence)
+    )
+    print(
+      round_numeric_df(evidence[, keep, drop = FALSE], digits = digits),
+      row.names = FALSE
+    )
+    cat(paste(
+      "  Local rank and curvature are supportive evidence only; the",
+      "slope-boundary row remains inconclusive unless its audit establishes",
+      "a boundary conclusion. See `$inference_evidence$Interpretation`.\n"
+    ))
   }
   if (nrow(x$population_design %||% data.frame()) > 0) {
     cat("\nPopulation design matrix\n")

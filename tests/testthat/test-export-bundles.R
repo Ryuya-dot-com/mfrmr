@@ -663,6 +663,21 @@ test_that("build_mfrm_manifest captures reproducibility metadata", {
   expect_true(is.data.frame(manifest$summary))
   expect_true(is.data.frame(manifest$environment))
   expect_true(is.data.frame(manifest$available_outputs))
+  expect_true(is.data.frame(manifest$input_summary))
+  expect_false("input_hash" %in% names(manifest))
+  expect_identical(
+    manifest$input_summary$Object,
+    c("data", "anchors", "group_anchors", "score_map")
+  )
+  expect_true(all(c(
+    "Available", "ObjectClass", "Rows", "Columns", "Elements",
+    "FieldNames", "FieldClasses", "MissingValues"
+  ) %in% names(manifest$input_summary)))
+  expect_false(any(grepl(
+    "sha|md5|hash",
+    names(manifest$input_summary),
+    ignore.case = TRUE
+  )))
   expect_true(any(manifest$available_outputs$Component == "residual_pca"))
   expect_true(
     manifest$available_outputs$Available[manifest$available_outputs$Component == "bias_results"][1]
