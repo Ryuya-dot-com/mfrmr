@@ -103,7 +103,7 @@ Paired response-data SHA-256 values, in manifest order:
 
 `ConfirmationAuthorized = FALSE`
 
-The next evidence step, if separately authorized, is a prospectively sized
-simulation with explicit readiness denominators and a declared decision
-criterion. These six pairs must not be retrospectively converted into that
+The prospective design is now fixed separately in
+`pcm-gpcm-comparison-ademp-contract-record-0.2.3.md`. Its execution remains
+unauthorized. These six pairs must not be retrospectively converted into that
 study or into a PCM-versus-GPCM cutoff.

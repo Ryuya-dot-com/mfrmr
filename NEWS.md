@@ -40,6 +40,16 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   runner also verifies that FACETS remains a comparator for the PCM/JML side
   only and authorizes no broad simulation or GPCM promotion.
 
+* Fixed a prospective ADEMP contract for the larger paired PCM/GPCM
+  simulation before executing it. The 16-condition covering registry separates
+  JML and MML, Criterion- and Rater-owned slopes, exact unit-slope PCM truth,
+  a five-percent practical indifference band, material GPCM alternatives,
+  sample size and design stresses, 27 recovery/prediction/consequence metrics,
+  and complete planned-pair failure denominators. JML model selection is
+  structurally ineligible; MML information criteria remain blocked pending
+  common-grid integration stability. Smoke, pilot, broad simulation, and
+  confirmation execution are not authorized by the design artifact.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-

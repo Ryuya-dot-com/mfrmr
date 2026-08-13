@@ -587,6 +587,15 @@ identify whether the opt-in layer ran and retain its test log.
   record. PCM was inference-ready in all six fits and GPCM/JML in none; all
   likelihood gains therefore remain optimizer-trace evidence. FACETS remains
   a comparator for the PCM/JML side only.
+- `pcm-gpcm-comparison-ademp-contract-0.2.3.R`: prospective no-fit registry
+  for paired PCM/GPCM simulation. It separates JML and MML, exact and
+  practical slope truth, both slope owners, readiness, recovery, held-out
+  prediction, substantive consequences, gated information criteria, metric
+  availability, and complete planned-pair failure denominators.
+- `pcm-gpcm-comparison-ademp-contract-record-0.2.3.md`: design and authority
+  record for the 16-condition, 27-metric covering registry. Smoke, the
+  five-replicate feasibility pilot, broad simulation, model-selection
+  evidence, FACETS execution, and confirmation all remain unauthorized.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
