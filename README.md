@@ -870,6 +870,15 @@ all-unit-slope reduction of the aligned GPCM kernel, the current automatic
 nesting contract withholds the PCM-versus-GPCM chi-square LRT and records
 `PCM_in_GPCM_ic_only` instead.
 
+`build_weighting_review()` now returns a `comparison_contract` that prevents
+JML and MML evidence from being blended. Comparable MML fits receive the
+`same_basis_mml_information_criteria` tier. JML fits receive a descriptive
+reweighting tier, or an optimizer-trace-only tier when inference readiness is
+not established; their unpenalized log-likelihood difference never becomes an
+automatic PCM-versus-GPCM choice. The contract also records that FACETS can
+serve as a direct comparator for the PCM/JML side only, not for the fitted
+free-slope GPCM side.
+
 Cross-software slope values are not automatically matched estimands. FACETS
 does not jointly fit Muraki's free-slope polytomous GPCM. [FACETS' reported
 element discrimination](https://www.winsteps.com/facetman64/t7menu.htm) is a

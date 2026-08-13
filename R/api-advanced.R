@@ -6745,6 +6745,132 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     dplyr::ungroup()
 }
 
+.weighting_review_comparison_contract <- function(rasch_fit,
+                                                  gpcm_fit,
+                                                  comparison,
+                                                  reference_model,
+                                                  aligned_pcm_owner,
+                                                  pcm_gpcm_lrt) {
+  basis <- comparison$comparison_basis %||% list()
+  comparison_tbl <- as.data.frame(
+    comparison$table %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  reference_method <- public_mfrm_method_label(
+    as.character(rasch_fit$config$method %||% NA_character_)[1]
+  )
+  comparison_method <- public_mfrm_method_label(
+    as.character(gpcm_fit$config$method %||% NA_character_)[1]
+  )
+  same_method <- identical(reference_method, comparison_method)
+  both_jml <- same_method && identical(reference_method, "JML")
+  both_mml <- same_method && identical(reference_method, "MML")
+  same_data <- isTRUE(basis$same_data)
+  both_ready <- isTRUE(
+    basis$all_inference_ready %||% basis$all_converged
+  )
+  ic_comparable <- isTRUE(basis$ic_comparable)
+  ic_selectable <- isTRUE(basis$all_ic_selectable)
+
+  loglik_difference <- NA_real_
+  if (nrow(comparison_tbl) >= 2L && "LogLik" %in% names(comparison_tbl)) {
+    loglik <- suppressWarnings(as.numeric(comparison_tbl$LogLik[seq_len(2L)]))
+    if (length(loglik) == 2L && all(is.finite(loglik))) {
+      loglik_difference <- loglik[2] - loglik[1]
+    }
+  }
+
+  evidence_tier <- if (ic_comparable) {
+    "same_basis_mml_information_criteria"
+  } else if (both_jml && same_data && !both_ready) {
+    "jml_optimizer_trace_only_not_inference_ready"
+  } else if (both_jml && same_data) {
+    "jml_descriptive_reweighting_only"
+  } else if (both_mml && same_data && !both_ready) {
+    "mml_optimizer_trace_only_not_inference_ready"
+  } else if (both_mml && same_data && !ic_selectable) {
+    "mml_screening_or_review_grid_only"
+  } else if (both_mml && same_data) {
+    "mml_noncomparable_descriptive_only"
+  } else {
+    "cross_method_or_data_not_comparable"
+  }
+
+  loglik_status <- if (!is.finite(loglik_difference)) {
+    "unavailable"
+  } else if (!both_ready) {
+    "optimizer_trace_only_not_inference_ready"
+  } else if (both_jml) {
+    "descriptive_unpenalized_gain_not_selection"
+  } else if (ic_comparable) {
+    "available_but_read_with_information_criterion_penalties"
+  } else {
+    "descriptive_noncomparable"
+  }
+
+  formal_selection <- ic_comparable
+  selection_route <- if (formal_selection) {
+    "AIC_PersonBIC_SABIC_candidate_set_review"
+  } else if (both_jml) {
+    "withheld_JML_has_no_automatic_PCM_GPCM_selection"
+  } else {
+    "withheld_comparison_basis_not_selectable"
+  }
+
+  facets_role <- if (identical(reference_model, "PCM") && both_jml &&
+                      aligned_pcm_owner) {
+    "PCM_JML_side_only_no_FACETS_free_slope_GPCM_counterpart"
+  } else if (identical(reference_model, "PCM") && both_jml) {
+    "PCM_JML_side_only_owner_mismatch_blocks_reduction"
+  } else {
+    "not_an_internal_free_slope_comparator"
+  }
+
+  preferred_value <- function(criterion) {
+    if (!formal_selection) return(NA_character_)
+    as.character(comparison$preferred[[criterion]] %||% NA_character_)[1]
+  }
+
+  recommended_use <- if (both_jml) {
+    paste(
+      "Treat the likelihood difference and slopes as descriptive optimizer",
+      "evidence only; use declared unit- and non-unit-slope recovery conditions",
+      "before making a PCM-versus-GPCM claim."
+    )
+  } else if (formal_selection) {
+    paste(
+      "Read candidate-set information criteria together with slope stability,",
+      "information redistribution, and a denser common quadrature sensitivity check."
+    )
+  } else {
+    paste(
+      "Repair inference readiness, integration selectability, or comparison",
+      "identity before using this pair for model selection."
+    )
+  }
+
+  tibble::tibble(
+    ReferenceModel = reference_model,
+    ComparisonModel = as.character(gpcm_fit$config$model %||% NA_character_)[1],
+    ReferenceMethod = reference_method,
+    ComparisonMethod = comparison_method,
+    SameMethod = same_method,
+    SamePreparedData = same_data,
+    BothInferenceReady = both_ready,
+    EvidenceTier = evidence_tier,
+    FormalModelSelectionAvailable = formal_selection,
+    SelectionRoute = selection_route,
+    ObservedLogLikDifference = loglik_difference,
+    LogLikDifferenceStatus = loglik_status,
+    AICPreferred = preferred_value("AIC"),
+    PersonBICPreferred = preferred_value("BIC"),
+    SABICPreferred = preferred_value("SABIC"),
+    PCMvsGPCMLRT = pcm_gpcm_lrt,
+    FACETSComparisonRole = facets_role,
+    RecommendedUse = recommended_use
+  )
+}
+
 #' Build a weighting-policy review between Rasch-family and bounded GPCM fits
 #'
 #' @param rasch_fit Output from [fit_mfrm()] using `model = "RSM"` or `"PCM"`.
@@ -6779,6 +6905,14 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' slope contrasts, and whether the supplied reference is the exact unit-slope
 #' PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
 #' intentionally withheld in the current comparison contract.
+#' The returned `comparison_contract` separates three evidence channels:
+#' selectable same-basis MML information criteria, descriptive JML
+#' reweighting, and non-ready optimizer traces. In particular, a JML
+#' log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
+#' selection because it is unpenalized and the GPCM contains additional slope
+#' parameters. FACETS may serve as a direct comparator for the PCM/JML side
+#' only; its post-fit discrimination statistic is not a jointly estimated
+#' free-slope GPCM counterpart.
 #'
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
@@ -6792,6 +6926,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'   AIC/Person-BIC/SABIC ranking is available only when
 #'   `model_comparison$table$ICComparable` is true. PCM-versus-GPCM LRT remains
 #'   unavailable even though PCM is the aligned GPCM's unit-slope reduction.
+#' - `comparison_contract`: one-row evidence-tier table stating whether formal
+#'   model selection is available, how any observed log-likelihood difference
+#'   may be read, and the bounded role of FACETS in a JML review.
 #' - `facet_shift`: how non-person facet estimates move under bounded `GPCM`.
 #' - `slope_profile`: which `slope_facet` levels are upweighted or downweighted.
 #' - `information_redistribution`: within-facet information-share changes
@@ -6964,6 +7101,14 @@ build_weighting_review <- function(rasch_fit,
   } else {
     "not_available_owner_mismatch"
   }
+  comparison_contract <- .weighting_review_comparison_contract(
+    rasch_fit = rasch_fit,
+    gpcm_fit = gpcm_fit,
+    comparison = comparison,
+    reference_model = reference_model,
+    aligned_pcm_owner = aligned_pcm_owner,
+    pcm_gpcm_lrt = pcm_gpcm_lrt
+  )
   slope_level_count <- nrow(slope_profile)
   overview <- tibble::tibble(
     ReferenceModel = reference_model,
@@ -6980,6 +7125,10 @@ build_weighting_review <- function(rasch_fit,
     SimultaneousCriterionRaterSlopeBlocks = FALSE,
     UnitSlopePCMReduction = aligned_pcm_owner,
     PCMvsGPCMLRT = pcm_gpcm_lrt,
+    EvidenceTier = comparison_contract$EvidenceTier,
+    FormalModelSelectionAvailable = comparison_contract$FormalModelSelectionAvailable,
+    ObservedLogLikDifference = comparison_contract$ObservedLogLikDifference,
+    LogLikDifferenceStatus = comparison_contract$LogLikDifferenceStatus,
     ReviewStatus = review_status,
     ComparisonMode = comparison_mode,
     MaxAbsLogSlope = max_abs_log_slope,
@@ -6993,6 +7142,10 @@ build_weighting_review <- function(rasch_fit,
       slope_facet, " levels; one aligned slope/step owner only"
     ),
     "Comparison basis" = comparison_mode,
+    "Evidence tier" = comparison_contract$EvidenceTier,
+    "Formal model selection" = if (isTRUE(
+      comparison_contract$FormalModelSelectionAvailable
+    )) "available" else "withheld",
     "PCM vs GPCM LRT" = pcm_gpcm_lrt
   )
 
@@ -7001,6 +7154,17 @@ build_weighting_review <- function(rasch_fit,
     key_warnings <- c(
       key_warnings,
       "Model-comparison weights are descriptive only because the two fits do not share a fully comparable formal MML basis."
+    )
+  }
+  if (identical(comparison_contract$ReferenceMethod, "JML") &&
+      identical(comparison_contract$ComparisonMethod, "JML")) {
+    key_warnings <- c(
+      key_warnings,
+      paste(
+        "The JML log-likelihood difference is unpenalized and cannot select",
+        "PCM versus GPCM; when either fit is not inference-ready it is only an",
+        "optimizer-trace difference."
+      )
     )
   }
   if (aligned_pcm_owner) {
@@ -7059,6 +7223,15 @@ build_weighting_review <- function(rasch_fit,
 
   next_actions <- clean_summary_lines(c(
     "Read summary(model_comparison) before interpreting any fit advantage as a scoring recommendation.",
+    if (identical(comparison_contract$ReferenceMethod, "JML") &&
+        identical(comparison_contract$ComparisonMethod, "JML")) {
+      paste(
+        "Use evaluate_mfrm_recovery() under declared unit_slopes and non-unit",
+        "slope regimes before treating JML reweighting as evidence for GPCM."
+      )
+    } else {
+      "For MML selection, require ICComparable and repeat consequential comparisons on a denser common quadrature grid."
+    },
     paste0("Use slope_profile and top_reweighted_levels to inspect whether ", slope_facet, " levels are being upweighted or downweighted in substantively acceptable ways."),
     paste0("Use plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE) and the bounded GPCM analogue to inspect precision redistribution visually."),
     "If equal contributions of items and raters are part of the score interpretation, retain the Rasch-family fit as the operational reference even when bounded GPCM fits better."
@@ -7100,6 +7273,7 @@ build_weighting_review <- function(rasch_fit,
       "`; other facets have no separate slope block."
     ),
     "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together in 0.2.3.",
+    "FACETS is a direct JML comparator only for the aligned equal-discrimination PCM side; its reported discrimination is a post-fit diagnostic, not the fitted free-slope GPCM parameter.",
     "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."
   ))
@@ -7110,6 +7284,7 @@ build_weighting_review <- function(rasch_fit,
     key_warnings = key_warnings,
     next_actions = next_actions,
     model_comparison = comparison,
+    comparison_contract = comparison_contract,
     facet_shift = facet_shift,
     top_measure_shifts = top_measure_shifts,
     slope_profile = slope_profile,
@@ -7143,7 +7318,8 @@ print.mfrm_weighting_review <- function(x, ...) {
 #' @param top_n Number of top rows to retain in compact summary tables.
 #' @param ... Reserved for generic compatibility.
 #'
-#' @return An object of class `summary.mfrm_weighting_review`.
+#' @return An object of class `summary.mfrm_weighting_review`, including the
+#'   evidence-tier `comparison_contract` table.
 #' @seealso [build_weighting_review()]
 #' @export
 summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
@@ -7157,6 +7333,9 @@ summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
   out <- list(
     overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
     status = tibble::as_tibble(object$status %||% tibble::tibble()),
+    comparison_contract = tibble::as_tibble(
+      object$comparison_contract %||% tibble::tibble()
+    ),
     key_warnings = clean_summary_lines(object$key_warnings %||% character(0), max_n = 4L),
     next_actions = clean_summary_lines(object$next_actions %||% character(0), max_n = 4L),
     top_measure_shifts = tibble::as_tibble(object$top_measure_shifts %||% tibble::tibble()) |>
@@ -7187,6 +7366,16 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
   if (nrow(x$status) > 0) {
     cat("\nStatus\n")
     print(as.data.frame(x$status), row.names = FALSE)
+  }
+  if (nrow(x$comparison_contract) > 0) {
+    cat("\nComparison Contract\n")
+    print(
+      round_numeric_df(
+        as.data.frame(x$comparison_contract),
+        digits = digits
+      ),
+      row.names = FALSE
+    )
   }
   print_bullet_section("Key Warnings", x$key_warnings)
   print_bullet_section("Next Actions", x$next_actions)

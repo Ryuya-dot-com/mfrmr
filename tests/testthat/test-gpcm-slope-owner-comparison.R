@@ -104,3 +104,65 @@ test_that("model-choice contract names level-specific single-owner slopes", {
   expect_match(contract, "does not combine criterion and rater slope blocks")
   expect_false(grepl("one common slope for the whole model", contract, fixed = TRUE))
 })
+
+test_that("weighting comparison contract separates selectable MML from descriptive JML", {
+  make_fit <- function(model, method) {
+    list(config = list(model = model, method = method))
+  }
+  make_comparison <- function(method,
+                              ready,
+                              ic_comparable,
+                              ic_selectable = ic_comparable) {
+    list(
+      table = data.frame(
+        Label = c(paste0("PCM/", method), paste0("GPCM/", method)),
+        LogLik = c(-100, -97),
+        stringsAsFactors = FALSE
+      ),
+      preferred = list(AIC = "GPCM/MML", BIC = "PCM/MML", SABIC = "GPCM/MML"),
+      comparison_basis = list(
+        same_data = TRUE,
+        all_inference_ready = ready,
+        ic_comparable = ic_comparable,
+        all_ic_selectable = ic_selectable
+      )
+    )
+  }
+
+  mml <- mfrmr:::.weighting_review_comparison_contract(
+    rasch_fit = make_fit("PCM", "MML"),
+    gpcm_fit = make_fit("GPCM", "MML"),
+    comparison = make_comparison("MML", ready = TRUE, ic_comparable = TRUE),
+    reference_model = "PCM",
+    aligned_pcm_owner = TRUE,
+    pcm_gpcm_lrt = "withheld_current_scope"
+  )
+  expect_identical(mml$EvidenceTier, "same_basis_mml_information_criteria")
+  expect_true(mml$FormalModelSelectionAvailable)
+  expect_equal(mml$ObservedLogLikDifference, 3)
+  expect_identical(mml$AICPreferred, "GPCM/MML")
+  expect_identical(
+    mml$LogLikDifferenceStatus,
+    "available_but_read_with_information_criterion_penalties"
+  )
+
+  jml <- mfrmr:::.weighting_review_comparison_contract(
+    rasch_fit = make_fit("PCM", "JML"),
+    gpcm_fit = make_fit("GPCM", "JML"),
+    comparison = make_comparison("JML", ready = TRUE, ic_comparable = FALSE),
+    reference_model = "PCM",
+    aligned_pcm_owner = TRUE,
+    pcm_gpcm_lrt = "withheld_current_scope"
+  )
+  expect_identical(jml$EvidenceTier, "jml_descriptive_reweighting_only")
+  expect_false(jml$FormalModelSelectionAvailable)
+  expect_true(is.na(jml$AICPreferred))
+  expect_identical(
+    jml$LogLikDifferenceStatus,
+    "descriptive_unpenalized_gain_not_selection"
+  )
+  expect_identical(
+    jml$FACETSComparisonRole,
+    "PCM_JML_side_only_no_FACETS_free_slope_GPCM_counterpart"
+  )
+})

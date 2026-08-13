@@ -56,7 +56,10 @@ multidimensional generalized MFRM, or an unrestricted cell-slope model.
 Maintainer evidence keeps those model families and their validation
 dependencies in separate strata. PCM--GPCM comparison therefore uses the
 same-basis MML information-criterion and weighting-review routes in 0.2.3;
-automatic PCM--GPCM chi-square LRT support is not claimed.
+automatic PCM--GPCM chi-square LRT support is not claimed. JML pairs are
+separately typed as descriptive reweighting or non-ready optimizer-trace
+evidence, never as automatic model selection; FACETS comparison remains on the
+equal-discrimination PCM/JML side.
 
 Here, bounded describes the public model/workflow scope, not finite parameter
 boxes. The current GPCM JML estimator is an unpenalized, identified fixed-

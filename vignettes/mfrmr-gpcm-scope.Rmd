@@ -163,6 +163,7 @@ comparison$table[, c(
 
 weighting <- build_weighting_review(fit_pcm, fit_gpcm)
 summary(weighting)
+weighting$comparison_contract
 
 review <- build_model_choice_review(
   PCM = fit_pcm,
@@ -171,6 +172,24 @@ review <- build_model_choice_review(
 )
 summary(review)
 ```
+
+The `comparison_contract` keeps four situations separate:
+
+| Evidence tier | What may be concluded? |
+|---|---|
+| `same_basis_mml_information_criteria` | AIC, Person-BIC, and SABIC may be read as candidate-set evidence, together with slope stability and a denser common-grid check. |
+| `mml_screening_or_review_grid_only` or other non-comparable MML tier | Raw fit values are descriptive; repair integration selectability, readiness, or comparison identity first. |
+| `jml_descriptive_reweighting_only` | The fitted slopes, measure shifts, and information redistribution may be reviewed, but the unpenalized JML likelihood gain does not select GPCM. |
+| `jml_optimizer_trace_only_not_inference_ready` | Even the likelihood difference is only a comparison of retained optimizer traces; it is not inferential model evidence. |
+
+For a JML question, follow that table with recovery conditions rather than an
+IC or LRT claim. `evaluate_mfrm_recovery()` already distinguishes
+`unit_slopes`, `near_flat`, `moderate`, and `high_dispersion` generator
+conditions. The unit-slope condition asks how often harmless sampling and
+optimizer variation can create an apparent slope spread; the non-unit
+conditions ask whether the declared heterogeneity can be recovered. FACETS
+can support the aligned PCM/JML side of this review, but its Table 7
+discrimination remains a post-fit diagnostic and not a free-slope GPCM fit.
 
 PCM is obtained from the aligned GPCM response kernel by setting all slopes to
 one. Nevertheless, the current conservative nesting contract does not compute

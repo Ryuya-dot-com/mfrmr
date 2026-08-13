@@ -5866,7 +5866,7 @@ summary_table_bundle_required_components <- function(summary_class) {
     "summary.mfrm_linking_review" = c("overview", "top_linking_risks", "group_view_index", "reporting_map"),
     "summary.mfrm_misfit_casebook" = c("overview", "top_cases", "case_rollup", "group_view_index", "reporting_map"),
     "summary.mfrm_model_choice_review" = c("overview", "comparison_table", "model_roles", "downstream_routes", "report_templates", "route_map", "weighting_review_status"),
-    "summary.mfrm_weighting_review" = c("overview", "top_reweighted_levels", "reporting_map"),
+    "summary.mfrm_weighting_review" = c("overview", "comparison_contract", "top_reweighted_levels", "reporting_map"),
     "summary.mfrm_unit_prediction" = c("estimates", "settings"),
     "summary.mfrm_plausible_values" = c("draw_summary", "settings"),
     character(0)
@@ -7237,6 +7237,7 @@ summary_table_bundle_spec <- function(summary_obj) {
     "summary.mfrm_weighting_review" = {
       overview_tbl <- summary_table_bundle_df(summary_obj$overview)
       status_tbl <- summary_table_bundle_df(summary_obj$status)
+      comparison_contract_tbl <- summary_table_bundle_df(summary_obj$comparison_contract)
       top_shift_tbl <- summary_table_bundle_df(summary_obj$top_measure_shifts)
       top_reweighted_tbl <- summary_table_bundle_df(summary_obj$top_reweighted_levels)
       plot_tbl <- summary_table_bundle_df(summary_obj$plot_map)
@@ -7251,6 +7252,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         tables = list(
           overview = overview_tbl,
           status = status_tbl,
+          comparison_contract = comparison_contract_tbl,
           top_measure_shifts = top_shift_tbl,
           top_reweighted_levels = top_reweighted_tbl,
           plot_map = plot_tbl,
@@ -7264,6 +7266,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         roles = c(
           overview = "weighting_review_overview",
           status = "review_status",
+          comparison_contract = "review_status",
           top_measure_shifts = "reweighting_measure_shift",
           top_reweighted_levels = "gpcm_discrimination",
           plot_map = "plot_routing",
@@ -7277,6 +7280,7 @@ summary_table_bundle_spec <- function(summary_obj) {
         descriptions = c(
           overview = "Overview of the equal-weighting versus bounded GPCM weighting review.",
           status = "Compact status block for the weighting-policy review.",
+          comparison_contract = "Evidence-tier contract separating selectable MML information criteria, descriptive JML reweighting, and non-ready optimizer traces.",
           top_measure_shifts = "Largest non-person facet-measure shifts between the Rasch-family reference and bounded GPCM.",
           top_reweighted_levels = "Largest slope-facet reweighting signals under bounded GPCM.",
           plot_map = "Public plot routes for precision redistribution and comparison follow-up.",

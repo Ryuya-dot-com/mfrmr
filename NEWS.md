@@ -25,7 +25,12 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   `PCM_in_GPCM_ic_only`: same-basis inference-ready MML fits may be compared by
   AIC, Person-BIC, and SABIC, and `build_weighting_review()` exposes the
   resulting reweighting, but the automatic chi-square likelihood-ratio test is
-  intentionally withheld.
+  intentionally withheld. Its new `comparison_contract` types each pair as
+  selectable same-basis MML information-criterion evidence, descriptive JML
+  reweighting, or a non-ready optimizer-trace comparison. An unpenalized JML
+  likelihood gain is never promoted to PCM-versus-GPCM selection, and FACETS
+  remains a direct comparator for the PCM/JML side only rather than for the
+  jointly fitted free-slope GPCM side.
 
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
