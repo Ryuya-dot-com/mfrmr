@@ -26,6 +26,19 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   explicitly marked as a compatibility alias of the latter. Summary output no
   longer mislabels a non-numerical readiness hold as a numerical warning.
 
+* Added a bounded external TAM check for the exact item-only GPCM-MML overlap.
+  On TAM's three-item `data.gpcm` fixture at q=31/q=41, an analytic conversion
+  from TAM's fixed-variance absolute slopes to mfrmr's free-variance relative
+  slopes aligned transition thresholds, fitted probabilities, and marginal
+  deviance to small numerical differences. The comparison explicitly excludes
+  the combined rater-plus-free-slope model because TAM's many-facet route does
+  not estimate slopes. TAM's documented `A` plus `GPCM.design` multifacet
+  construction was also checked, but its slope weights the latent-trait term
+  while facet intercepts remain additive; mfrmr weights the complete adjacent-
+  category predictor. It is therefore a different-model sensitivity route,
+  not an exact comparator. The bounded overlap leaves SE validation and mfrmr
+  inference readiness unchanged.
+
 * Completed the public PCM/GPCM model-choice warning handoff. Comparison-basis
   warnings are no longer discarded by `build_model_choice_review()`; they are
   retained separately, printed by `summary()`, and exported as an appendix

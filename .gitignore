@@ -45,6 +45,7 @@ PACKAGES.rds
 
 # local scratch directories
 Library/
+.r-library/
 Outputs/
 validation-results/
 release-candidates/

@@ -379,6 +379,32 @@ routes and a hierarchical rater model, not a direct free-GPCM many-facet match.
 Its role is consequently a unit-slope reduction or alternative-model
 sensitivity analysis rather than free-slope numerical validation.
 
+TAM also documents a multifacet slope construction that sends a facet-model
+intercept design `A` and a slope-group design `E` to `tam.mml.2pl()`. That is
+not automatically the current mfrmr kernel. In the TAM construction the slope
+weights the latent-trait term while shared Rater and step effects remain linear
+intercepts; in mfrmr the selected slope weights the complete adjacent-category
+predictor, including Rater severity and steps. Matching the latter would
+require products such as an estimated Criterion slope times an estimated
+Rater severity, which the two independent linear designs do not impose. A
+q=31 `example_core` re-expression was therefore retained as different-model
+sensitivity evidence, not as an exact full-model comparison. This algebraic
+screen makes a second quadrature run unnecessary.
+
+A repository-only bounded comparison now exercises the exact item-only TAM
+overlap on TAM's `data.gpcm` fixture at q=31 and q=41. TAM fixes the latent
+variance and estimates absolute slopes; mfrmr fixes the geometric mean of its
+relative slopes and estimates the latent variance. After applying the analytic
+scale and location transformation, maximum q-specific differences were about
+`1.8e-5` for relative slopes, `1.3e-5` for transition thresholds, `6e-6` for
+fitted category probabilities, and `1.4e-6` for deviance. The transformed TAM
+probability formula itself agreed to binary64 precision. This is external
+evidence for the item-only GPCM kernel, coordinate map, and continuous MML
+target; it is not a comparison of the rater-plus-slope model, a cross-engine
+SE validation, or permission to override mfrmr readiness. The distinction
+follows TAM's documented separation between
+[`tam.mml.2pl()` and `tam.mml.mfr()`](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html).
+
 These distinctions also govern diagnostics. FACETS' discrimination, `mfrmr`
 residual PCA or bias screens, and hierarchical-rater variance components answer
 different questions. Agreement among them can be supporting evidence; a
