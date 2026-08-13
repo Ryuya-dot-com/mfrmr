@@ -16,6 +16,22 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   response family, GPCM slope block,
   external comparison lane, readiness status, or release claim is broadened.
 
+* Generalized the P2i four-cell response-image calculation to a
+  workload-admitted fixed zero-offset JML GPCM operator. P2j proves that finite
+  response membership is equivalent to positive inverse-slope feasibility
+  `diag(z) P w = A beta`, compactifies inverse slopes on a simplex, enumerates
+  every nonempty owner face, and proves that every finite-image closure point
+  must have a nonnegative face witness. A separate linear lift condition gives
+  explicit product-one finite paths for certified proper faces. The general
+  chart exactly reproduces all five P2i strata. It also supplies a three-owner
+  rank-one counterexample where a nonnegative face exists although the target
+  is outside the true closure, so nonnegative feasibility alone is not promoted
+  to general closure membership. Near-zero positive LP margins remain open
+  rather than becoming false boundary exclusions. Nonzero affine offsets,
+  higher-order face lifts, the complete general closure and likelihood
+  envelope, MML, inference, readiness, recovery, simulation, FACETS
+  comparison, and promotion remain unchanged.
+
 * Completed the finite response-image closure and likelihood envelope for the
   exact binary two-Person, two-slope-owner JML GPCM operator isolated by P2h.
   If `d1 = z1 - z2` and `d2 = z3 - z4`, the finite image is exactly the two

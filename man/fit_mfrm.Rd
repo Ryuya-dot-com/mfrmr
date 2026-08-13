@@ -470,6 +470,19 @@ accepts only the exact unanchored two-Person/two-owner operator. The result is
 not a general GPCM closure theorem and changes no stored production readiness,
 primary estimate, uncertainty, MML, or comparison.
 
+A repository theorem-only P2j contract then replaces the four-cell identity
+by a general fixed zero-offset operator. Finite response-image membership is
+equivalent to positive inverse-slope feasibility
+\code{diag(z) P w = A beta}. Simplex normalization of \code{w} proves that
+every finite-image closure point has a nonnegative owner-face witness, and all
+nonempty faces are enumerated within declared workload caps. A separate linear
+first-order lift constructs exact finite paths for certified proper faces and
+recovers all P2i strata. A three-owner rank-one counterexample shows that
+nonnegative face feasibility alone is not sufficient for the general closure,
+so unlifted faces remain open. The contract requires zero affine offset and
+does not complete higher-order lifts, the general likelihood envelope,
+readiness, inference, MML, or comparison.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

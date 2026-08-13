@@ -1213,6 +1213,41 @@ single identity `d1 = alpha_1^2 d2` with a general-design response-image
 closure stratification. MML, inference, readiness, recovery, FACETS
 comparison, simulation, and promotion remain open or unchanged.
 
+P2j replaces the single P2i identity by a general fixed zero-offset operator.
+For adjacent design `A`, owner incidence `P`, target response contrasts `z`,
+and inverse slopes `w = 1 / alpha`, finite response-image membership is exactly
+
+```text
+diag(z) P w = A beta,  w > 0.
+```
+
+The zero offset makes common rescaling of `(w,beta)` harmless, so
+`product(w) = 1` can be replaced by `sum(w) = 1` for membership. This gives a
+linear program that maximizes the smallest owner weight. Every convergent finite-image
+sequence also has a subsequence whose sum-normalized inverse slopes converge on
+the compact simplex. Its limit is a nonnegative nonzero `w_star` satisfying
+`diag(z) P w_star in col(A)`. Hence every closure point has a simplex-face
+witness, and every missing finite boundary must lie on a proper face. P2j
+enumerates all `2^G - 1` nonempty faces within the declared owner/face workload.
+
+The face condition is necessary, not generally sufficient. P2j separately
+certifies a sufficient first-order lift: for inactive owners `J`, positive
+`c_j` and one additive direction `gamma` must satisfy
+`(A gamma)_r = c_owner(r) z_r` on their rows. Then inactive inverse slopes
+`epsilon c_j` and additive path `beta_star + epsilon gamma` give explicit
+finite product-one parameters converging to the target. This construction
+recovers both missing P2i axes and all five P2i strata. In contrast, the
+three-owner all-ones rank-one operator has a nonnegative face witness for
+`z=(1,-2,0)` even though every nonzero finite point has one common strict sign;
+the target is outside the true closure and its first-order lift is infeasible.
+Thus a nonnegative-kernel shortcut would repeat the P2h mistake at a new level.
+Positive LP margins below the declared tolerance remain unclassified rather
+than becoming false boundary exclusions. The next gate is higher-order face
+lifts and a proof deciding every surviving face. Nonzero affine offsets, the
+complete general likelihood envelope, finite-JMLE adjudication, MML,
+inference, readiness, recovery, FACETS comparison, simulation, and promotion
+remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

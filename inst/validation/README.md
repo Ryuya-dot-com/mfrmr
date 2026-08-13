@@ -367,6 +367,14 @@ identify whether the opt-in layer ran and retain its test log.
   JMLE nonexistence. A guarded current-fit wrapper reconstructs the exact
   operator and masses without changing stored production status. General
   GPCM closure, MML, inference, readiness, and FACETS equivalence remain open.
+- `gpcm-jml-response-image-face-chart-p2j-record-0.2.3.md`: general fixed
+  zero-offset finite-image chart using positive inverse-slope feasibility,
+  complete necessary simplex-face enumeration, and sufficient first-order
+  finite-path lifts. It exactly recovers P2i while a three-owner rank-one
+  counterexample proves that a nonnegative face alone is not sufficient for
+  general closure membership. Higher-order lifts, nonzero offsets, the complete
+  general likelihood envelope, MML, inference, readiness, and FACETS
+  equivalence remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
