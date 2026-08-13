@@ -50,6 +50,17 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   common-grid integration stability. Smoke, pilot, broad simulation, and
   confirmation execution are not authorized by the design artifact.
 
+* Completed a three-seed, 147-fit PCM/JML Rater-anchor-by-sparsity stress
+  calibration. It separates 0--75% directly fixed Raters from all-Rater common
+  linking Persons and one versus two Raters per ordinary Person. Direct
+  anchors did not identify the disconnected one-Rater design; small and
+  moderate common sets returned fits but left extreme-Person readiness holds;
+  a connected two-Rater cycle restored many ready fits. Anchor range coverage
+  and a 0.25-logit misspecification control show why percentage and anchor
+  quality must be reported separately. Exact range-spanning 25% advances only
+  as a feasibility candidate; no operational rate, public default, or
+  confirmation claim is selected.
+
 * Connected targetwise zero-offset response-image closure to the positive-mass
   ordered-category JML objective. P2l derives the unique independent saturated
   adjacent contrasts as successive log mass ratios and proves strict response-

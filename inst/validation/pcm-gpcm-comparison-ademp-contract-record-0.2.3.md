@@ -169,3 +169,9 @@ The next implementation unit is the deterministic paired-data and held-out
 split adapter plus a no-fit preflight validator. It must preserve this registry
 identity and cannot silently convert the smoke or feasibility pilot into
 model-selection evidence.
+
+An adjacent PCM/JML-only Rater-anchor/sparsity calibration has since been
+completed in `rater-anchor-sparse-stress-pilot-record-0.2.3.md`. It establishes
+that direct-anchor percentage cannot repair disconnected assignment and that
+ratings per Person must remain a separate stress axis. It does not execute or
+promote this PCM/GPCM ADEMP registry.

@@ -596,6 +596,16 @@ identify whether the opt-in layer ran and retain its test log.
   record for the 16-condition, 27-metric covering registry. Smoke, the
   five-replicate feasibility pilot, broad simulation, model-selection
   evidence, FACETS execution, and confirmation all remain unauthorized.
+- `rater-anchor-sparse-stress-pilot-0.2.3.R`: paired three-seed PCM/JML
+  calibration crossing seven direct-Rater-anchor configurations with seven
+  complete/sparse assignment designs. It separates direct-anchor rate from
+  all-Rater common-link size, ratings per Person, anchor range coverage, and
+  anchor-value error while preserving common truth and response identities.
+- `rater-anchor-sparse-stress-pilot-record-0.2.3.md`: completed 147-fit record.
+  Direct anchors could not identify a disconnected one-Rater-per-Person
+  design; common links returned fits but did not remove extreme-Person holds;
+  two Raters per Person restored many ready fits. Exact range-spanning 25%
+  anchors advance only as a feasibility candidate, not a selected percentage.
 - `facets-jml-stress-plan-0.2.3.md`: draft.21 plan for recording one selected
   FACETS executable/report/parser identity and running paired, truth-first JML
   RSM/PCM simulation stress tests across connected, anchor, sparse/topology,
