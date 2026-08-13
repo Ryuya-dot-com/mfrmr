@@ -1101,6 +1101,27 @@ claim about competitiveness, common limits, finite-JMLE existence, or a global
 boundary. MML geometry, inference, FACETS equivalence, recovery, and promotion
 remain open or unchanged.
 
+P2f now separates certifiable global non-attainment from the still-missing
+finite-attainment envelope. Every finite positive-category softmax gives a
+strictly negative effective-row log probability, so zero is a universal upper
+bound for the conditional joint log likelihood and no finite parameter vector
+can attain it. Consequently, a P2c parameter-reachable divergent path with
+exact analytic limit zero certifies both the global supremum and nonexistence
+of a finite JMLE. Independently, an otherwise free extreme-Person ray or the
+existing global additive recession-cone certificate strictly improves the
+objective from every finite point; either proves finite-JMLE nonexistence even
+when the supremum value is not identified. Existing analytic slope-only and
+joint paths are promoted only when their certified limit is exactly the
+universal upper bound. For the opposite conclusion, continuity and
+Weierstrass give finite attainment if some finite point lies strictly above a
+verified upper bound on the limsup of every parameter sequence escaping every
+bounded set. P2e guarantees classifiable further subsequences but does not
+enumerate this complete boundary envelope, so the package records the
+implication without treating caller-declared completeness as a production
+certificate. A negative bounded search and a finite optimizer trace therefore
+leave finite existence open. No readiness, standard-error, MML, recovery,
+FACETS-equivalence, simulation, or promotion decision changes.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

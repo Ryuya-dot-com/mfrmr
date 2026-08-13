@@ -4284,6 +4284,17 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       sequence_diagnostic =
         boundary_audit$gpcm_optimizer_sequence_diagnostic
     )
+  boundary_audit$gpcm_global_existence <-
+    audit_mfrm_jml_gpcm_global_existence(
+      config = config,
+      person_boundary = boundary_audit,
+      joint_additive = boundary_audit$joint_additive,
+      parameter_sequence_flag =
+        boundary_audit$gpcm_parameter_sequence_flag,
+      slope_boundary = boundary_audit$gpcm_slope_boundary,
+      joint_slope_boundary = boundary_audit$gpcm_joint_boundary,
+      retained_log_likelihood = -as.numeric(opt$value)
+    )
   boundary_audit$gpcm_terminal_gradient_stability <-
     audit_mfrm_jml_gpcm_terminal_gradient(
       idx = idx,

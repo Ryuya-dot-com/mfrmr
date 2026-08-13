@@ -419,6 +419,18 @@ no flag. Convergence of the original sequence, equality across subsequences,
 competitiveness, global boundary status, existence of a finite maximum, MML,
 uncertainty, readiness, and external comparison remain unclassified.
 
+\code{config$boundary_audit$gpcm_global_existence} applies the P2f global
+adjudication contract. A parameter-reachable divergent path with exact
+likelihood limit zero certifies the universal supremum and finite-JMLE
+nonexistence. A free extreme-Person ray or certified global additive recession
+cone also proves nonexistence by strict improvement from every finite point,
+without necessarily identifying the supremum. Finite existence would follow
+from a finite point strictly above a verified complete boundary-limsup
+envelope, but P2e does not enumerate that envelope. Therefore absence of a
+positive recession certificate and a finite optimizer trace leave finite
+attainment open. The audit changes no readiness, uncertainty, MML, or
+external-comparison decision.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

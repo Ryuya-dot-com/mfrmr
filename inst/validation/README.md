@@ -335,6 +335,14 @@ identify whether the opt-in layer ran and retain its test log.
   scales, while production sequence extraction, common subsequence limits,
   competitiveness, finite-JMLE existence, global boundary, MML, inference,
   readiness, and FACETS claims remain false or open.
+- `gpcm-jml-global-existence-p2f-record-0.2.3.md`: global finite-attainment
+  and non-attainment adjudication for non-unit GPCM/JML. It certifies finite-
+  JMLE nonexistence for parameter-reachable zero-supremum paths, free extreme-
+  Person rays, and strict global additive recession cones. It also records the
+  compact-upper-level-set implication of a complete boundary-limsup gap while
+  refusing to treat P2e further-subsequence classification or a negative
+  bounded search as a complete envelope. Finite existence in the remaining
+  cases, MML, inference, readiness, and FACETS equivalence stay open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling

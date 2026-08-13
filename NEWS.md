@@ -4,6 +4,21 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Added a JML GPCM global finite-attainment and non-attainment adjudicator.
+  A parameter-reachable divergent P2c path whose analytic likelihood limit is
+  exactly zero now proves that the universal conditional log-likelihood
+  supremum is zero and cannot be attained by any finite GPCM parameter vector.
+  Free extreme-Person rays and certified global additive recession cones also
+  prove finite-JMLE nonexistence because they strictly improve the likelihood
+  from every finite point, although they need not identify the supremum value.
+  Conversely, a finite point strictly above a complete upper envelope of all
+  escaping-sequence limsups would imply compactness of its upper level set and
+  finite attainment. P2e does not construct that complete envelope, so the
+  executable implication remains conditional and a negative boundary search
+  never promotes an optimizer trace to a finite JMLE. Production readiness,
+  uncertainty, MML, FACETS comparison, recovery, simulation, and promotion are
+  unchanged.
+
 * Added a JML GPCM parameter-sequence contrast-flag compactification theorem.
   Rather than transporting a Euclidean parameter direction through the
   nonlinear slope-times-utility map, every finite parameter point is first
