@@ -97,6 +97,41 @@ test_that("anchor configurations distinguish count representation and error", {
   expect_false(setequal(span, central))
 })
 
+test_that("anchor-review warnings survive an error result", {
+  env <- rater_anchor_sparse_environment()
+  had_local_review <- exists(
+    "review_mfrm_anchors", envir = env, inherits = FALSE
+  )
+  if (had_local_review) original_review <- env$review_mfrm_anchors
+  on.exit({
+    if (had_local_review) {
+      env$review_mfrm_anchors <- original_review
+    } else {
+      rm("review_mfrm_anchors", envir = env)
+    }
+  }, add = TRUE)
+  env$review_mfrm_anchors <- function(...) {
+    warning("review warning retained", call. = FALSE)
+    stop("review failed", call. = FALSE)
+  }
+  row <- list(
+    ScenarioId = "warning-fixture", Seed = 1L, DesignId = "complete",
+    LinkPersons = 0L, LinkSelection = "none",
+    AnchorConfig = "none", AnchorRate = 0, AnchorCount = 0L,
+    AnchorQuality = "none"
+  )
+
+  expect_no_warning(out <- env$mfrmr_rass_run_one(
+    row,
+    generated = list(truth = list(), TruthSHA256 = "truth"),
+    designed = list(data = data.frame(), DataSHA256 = "data")
+  ))
+
+  expect_identical(out$RunState, "anchor_review_failed")
+  expect_identical(out$Warnings, "review warning retained")
+  expect_identical(out$Error, "review failed")
+})
+
 test_that("result validation preserves pairing and rejects recommendations", {
   env <- rater_anchor_sparse_environment()
   manifest <- env$mfrmr_rass_manifest("smoke")

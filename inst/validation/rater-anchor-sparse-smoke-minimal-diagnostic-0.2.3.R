@@ -80,6 +80,7 @@ mfrmr_rasmd_fit_complete <- function(row, generated, maxit) {
         AnchorConfig = row$AnchorConfig, Maxit = as.integer(maxit),
         FitReturned = FALSE, InferenceReady = FALSE,
         Error = conditionMessage(captured$value), LogLik = NA_real_,
+        Warnings = paste(captured$warnings, collapse = " | "),
         TerminalGradientSupNorm = NA_real_,
         GradientReviewTolerance = NA_real_, ConvergenceStatus = NA_character_,
         FreeRaterAbsoluteRMSE = NA_real_, PersonAbsoluteRMSE = NA_real_,
@@ -109,6 +110,7 @@ mfrmr_rasmd_fit_complete <- function(row, generated, maxit) {
     FitReturned = TRUE,
     InferenceReady = readiness$InferenceReady,
     Error = NA_character_,
+    Warnings = paste(captured$warnings, collapse = " | "),
     LogLik = as.numeric(summary$LogLik[[1L]]),
     TerminalGradientSupNorm = as.numeric(
       summary$TerminalGradientSupNorm[[1L]]
@@ -131,6 +133,24 @@ mfrmr_rasmd_fit_complete <- function(row, generated, maxit) {
   list(result = result, parameters = parameters, stages = stages)
 }
 
+mfrmr_rasmd_indeterminate_comparison <- function(config, low, high, reason) {
+  data.frame(
+    AnchorConfig = config,
+    ComparisonStatus = "indeterminate",
+    ComparisonReason = as.character(reason),
+    Gradient200 = NA_real_, Gradient400 = NA_real_,
+    GradientPass400 = NA,
+    LogLikDelta400Minus200 = NA_real_,
+    PersonMaxAbsEstimateDelta = NA_real_,
+    FreeRaterMaxAbsEstimateDelta = NA_real_,
+    FreeRaterRMSEDelta = NA_real_, PersonRMSEDelta = NA_real_,
+    PersonRankDelta = NA_real_,
+    InferenceReady200 = isTRUE(low$InferenceReady[[1L]]),
+    InferenceReady400 = isTRUE(high$InferenceReady[[1L]]),
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_rasmd_compare_budgets <- function(fit_results, parameters) {
   configs <- unique(fit_results$AnchorConfig)
   rows <- lapply(configs, function(config) {
@@ -142,6 +162,22 @@ mfrmr_rasmd_compare_budgets <- function(fit_results, parameters) {
       fit_results$AnchorConfig == config & fit_results$Maxit == 400L,
       , drop = FALSE
     ]
+    mfrmr_rasmd_assert(
+      nrow(low) == 1L && nrow(high) == 1L,
+      paste0("Expected one maxit comparison pair for ", config, ".")
+    )
+
+    if (!isTRUE(low$FitReturned[[1L]]) || !isTRUE(high$FitReturned[[1L]])) {
+      failed <- c(
+        if (!isTRUE(low$FitReturned[[1L]])) "maxit_200" else character(0),
+        if (!isTRUE(high$FitReturned[[1L]])) "maxit_400" else character(0)
+      )
+      return(mfrmr_rasmd_indeterminate_comparison(
+        config, low, high,
+        paste0("fit_not_returned:", paste(failed, collapse = ","))
+      ))
+    }
+
     low_par <- parameters[
       parameters$AnchorConfig == config & parameters$Maxit == 200L,
       , drop = FALSE
@@ -151,15 +187,36 @@ mfrmr_rasmd_compare_budgets <- function(fit_results, parameters) {
       , drop = FALSE
     ]
     matched <- match(low_par$ParameterId, high_par$ParameterId)
-    mfrmr_rasmd_assert(
-      all(!is.na(matched)),
-      paste0("Parameter identities drifted for ", config, ".")
-    )
+    if (nrow(low_par) == 0L || nrow(high_par) == 0L ||
+        anyDuplicated(low_par$ParameterId) ||
+        anyDuplicated(high_par$ParameterId) ||
+        anyNA(matched) ||
+        !all(low_par$Block %in% c("Person", "FreeRater")) ||
+        !identical(low_par$Block, high_par$Block[matched])) {
+      return(mfrmr_rasmd_indeterminate_comparison(
+        config, low, high, "parameter_contract_failed"
+      ))
+    }
     delta <- high_par$Estimate[matched] - low_par$Estimate
     person <- low_par$Block == "Person"
     rater <- low_par$Block == "FreeRater"
+    required_metrics <- c(
+      low$TerminalGradientSupNorm, high$TerminalGradientSupNorm,
+      high$GradientReviewTolerance, low$LogLik, high$LogLik,
+      low$FreeRaterAbsoluteRMSE, high$FreeRaterAbsoluteRMSE,
+      low$PersonAbsoluteRMSE, high$PersonAbsoluteRMSE,
+      low$PersonRankSpearman, high$PersonRankSpearman,
+      delta
+    )
+    if (!any(person) || !any(rater) || !all(is.finite(required_metrics))) {
+      return(mfrmr_rasmd_indeterminate_comparison(
+        config, low, high, "comparison_metric_unavailable"
+      ))
+    }
     data.frame(
       AnchorConfig = config,
+      ComparisonStatus = "compared",
+      ComparisonReason = NA_character_,
       Gradient200 = low$TerminalGradientSupNorm,
       Gradient400 = high$TerminalGradientSupNorm,
       GradientPass400 = high$TerminalGradientSupNorm <=

@@ -175,15 +175,23 @@ response-data seeds, and reports direct anchors and repeated ratings as
 different resource axes. The contract runs no fit and does not strengthen the
 present conclusion.
 
+## Post-run maintenance note
+
+The repository-only runner now retains warnings raised before an anchor-review
+error is returned. Every anchor review in the retained 147-fit calibration
+passed, so this fail-closed maintenance path does not revise any retained
+estimate, readiness decision, evidence identity, or authority state. The runner
+and focused-test file identities below bind the maintained implementation.
+
 ## Reproducibility identities
 
 Runner SHA-256:
 
-`c427536e8bbc7b0c17c4d3e55e83a276e5fc544f3f3e42eede770a73fa587496`
+`48092270b7010fe49cff42c6440a83a02c07b99526919f0d05129f5d7d8263d2`
 
 Focused-test SHA-256:
 
-`349dcaa4d3e4c89e9cb4031f05b331001c786c0169ea4dec8a74928d7c4c3724`
+`5e32faf359fda1a051b9a52fe15b12f8360c846037864fc8d7c913162d877c76`
 
 Deterministic evidence SHA-256 (fit elapsed time excluded):
 

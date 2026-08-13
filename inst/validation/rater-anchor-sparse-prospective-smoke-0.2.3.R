@@ -304,10 +304,17 @@ mfrmr_rasps_empty_result <- function(row, state, error = NA_character_) {
 
 mfrmr_rasps_failure_code <- function(error) {
   message <- conditionMessage(error)
-  structural <- grepl(
-    "rank|identif|singular|connected|connectivity", message,
-    ignore.case = TRUE
+  structural_class <- inherits(error, "mfrmr_estimability_error")
+  legacy_structural_message <- inherits(error, "simpleError") && any(
+    startsWith(
+      message,
+      c(
+        "The estimator-specific constrained design is structurally unidentified ",
+        "The constrained design is structurally unidentified "
+      )
+    )
   )
+  structural <- structural_class || legacy_structural_message
   list(
     stage = if (structural) "structural_prefit" else "fit",
     code = if (structural) "structural_identification_failure" else
@@ -332,6 +339,7 @@ mfrmr_rasps_run_one <- function(row, generated, designed) {
     out <- mfrmr_rasps_empty_result(
       row_list, "support_audit", conditionMessage(review$value)
     )
+    out$Warnings <- paste(review$warnings, collapse = " | ")
   } else {
     start <- proc.time()
     fitted <- mfrmr_rass_capture(fit_mfrm(

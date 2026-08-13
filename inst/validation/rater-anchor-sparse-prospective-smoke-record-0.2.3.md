@@ -135,15 +135,15 @@ Prospective-contract file SHA-256:
 
 Stress-pilot helper file SHA-256:
 
-`c427536e8bbc7b0c17c4d3e55e83a276e5fc544f3f3e42eede770a73fa587496`
+`48092270b7010fe49cff42c6440a83a02c07b99526919f0d05129f5d7d8263d2`
 
 Smoke-runner file SHA-256:
 
-`641a970862e115e98fb80e904e42bd282acf68aa4345c8485c84883ec0bf4dc1`
+`df084a0447fee350a2982c181692299c097ab826fda31a762771dbb3ad4207f2`
 
 Focused-test SHA-256:
 
-`d64c0fb632c0ac5cf91cf90e9411db39b31680486b64e3a1922124b58b89cd7e`
+`0a8f944135d5c6544241819af26cd531e068bf2c8ef9fdd183916c835fde3fd2`
 
 Deterministic evidence SHA-256 (elapsed time excluded):
 
@@ -177,6 +177,18 @@ seconds and is descriptive only.
 
 The smoke changes no public default, inference-readiness rule, FACETS claim,
 PCM/GPCM decision, operational anchor percentage, or release gate.
+
+## Post-run maintenance note
+
+The runner now retains warnings from a failed support audit and classifies the
+package's typed `mfrmr_estimability_error` before using a narrowly defined
+legacy-message fallback. Neither path occurred in the retained 12-fit smoke.
+Fresh R 4.4.2 and R 4.5.1 runs reproduced all declared fits and numerical
+checks, but reproduced different serialized result-object hashes even with the
+pre-maintenance HEAD runner. The historical scientific evidence and summary
+identities above are therefore retained rather than rewritten for an unrelated
+runtime-sensitive digest. Updated file identities bind the maintained code and
+tests.
 
 ## Subsequent minimal diagnostic
 

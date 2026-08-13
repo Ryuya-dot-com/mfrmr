@@ -96,19 +96,30 @@ considered, but it must leave public fit readiness unchanged and retain Person
 coverage and conditional Person recovery as explicit outcomes. This choice is
 not made here.
 
+## Post-run maintenance note
+
+The diagnostic now preserves every captured fit warning and marks the
+maxit-200/maxit-400 comparison `indeterminate` when either fit or its parameter
+contract is unavailable. In the retained diagnostic, all eight fits returned
+and all four comparisons remained `compared`. The gradients, log-likelihood
+changes, parameter changes, readiness decisions, and authority state above are
+unchanged. The evidence identity changed because the previously muffled eight
+convergence-review warnings and explicit comparison status are now part of the
+auditable payload.
+
 ## Deterministic identities
 
 Diagnostic script SHA-256:
 
-`6cf95c93654008b78ba6c9a636f549ed54d5e89457f746b719173a1dd4c4d2d7`
+`b562369c5e495a10eff90c921e2b2f1ffab7fac0f57075924b7bc1518e56d349`
 
 Focused-test SHA-256:
 
-`292bfff1e8c33232a82279f6bb28cea9d22cc0cfe0197a0f75ddf5d0ad440761`
+`8565e0add908f49676a151ecd9ba501c0bf3000a6fc731237455069809be4629`
 
 Deterministic evidence SHA-256 (elapsed time excluded):
 
-`b6b650c358d5d97153a7c6abdd7329ef8f3a6383866c8c2edd81892b2e6a5a73`
+`caa4a3c659e544c2cfaa2e4efe492f0e6b7ffc7781118c6c1abb8ed43518cc1c`
 
 ## Authority state
 

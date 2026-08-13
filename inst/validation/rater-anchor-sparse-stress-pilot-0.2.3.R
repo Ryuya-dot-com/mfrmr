@@ -445,6 +445,7 @@ mfrmr_rass_run_one <- function(row, generated, designed) {
     out <- mfrmr_rass_empty_result(
       row, "anchor_review_failed", conditionMessage(review$value)
     )
+    out$Warnings <- paste(review$warnings, collapse = " | ")
     out$TruthSHA256 <- generated$TruthSHA256
     out$DataSHA256 <- designed$DataSHA256
     out$AnchorSHA256 <- anchor_hash

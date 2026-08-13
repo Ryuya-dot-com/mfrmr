@@ -131,6 +131,62 @@ test_that("external anchor error is deterministic and design invariant", {
   expect_identical(repeated$AnchorSHA256, built[[1L]]$AnchorSHA256)
 })
 
+test_that("failure classification prefers typed estimability errors", {
+  env <- rater_anchor_sparse_smoke_environment()
+  typed <- structure(
+    list(message = "message wording is irrelevant"),
+    class = c("mfrmr_estimability_error", "error", "condition")
+  )
+  legacy <- simpleError(paste(
+    "The estimator-specific constrained design is structurally unidentified",
+    "(legacy fixture)."
+  ))
+  unrelated <- simpleError("A remote service is not connected.")
+
+  expect_true(env$mfrmr_rasps_failure_code(typed)$structural)
+  expect_true(env$mfrmr_rasps_failure_code(legacy)$structural)
+  expect_false(env$mfrmr_rasps_failure_code(unrelated)$structural)
+  expect_identical(
+    env$mfrmr_rasps_failure_code(unrelated)$stage,
+    "fit"
+  )
+})
+
+test_that("support-audit warnings survive an error result", {
+  env <- rater_anchor_sparse_smoke_environment()
+  had_local_review <- exists(
+    "review_mfrm_anchors", envir = env, inherits = FALSE
+  )
+  if (had_local_review) original_review <- env$review_mfrm_anchors
+  on.exit({
+    if (had_local_review) {
+      env$review_mfrm_anchors <- original_review
+    } else {
+      rm("review_mfrm_anchors", envir = env)
+    }
+  }, add = TRUE)
+  env$review_mfrm_anchors <- function(...) {
+    warning("support warning retained", call. = FALSE)
+    stop("support audit failed", call. = FALSE)
+  }
+  registry <- env$mfrmr_rasp_registry()
+  manifest <- env$mfrmr_rasp_execution_manifest(registry, "smoke")
+  row <- manifest[manifest$AnchorCount == 0L, , drop = FALSE][1L, ]
+  designed <- list(
+    data = data.frame(), DataSHA256 = "data", LinkPersonSHA256 = "link",
+    DesignDensity = 1, MinCommonPersons = 1L,
+    MedianCommonPersons = 1, ZeroCommonRaterPairs = 0L
+  )
+
+  expect_no_warning(out <- env$mfrmr_rasps_run_one(
+    row, generated = list(truth = list(), TruthSHA256 = "truth"), designed
+  ))
+
+  expect_identical(out$FailureStage, "support_audit")
+  expect_identical(out$Warnings, "support warning retained")
+  expect_identical(out$FailureCode, "support audit failed")
+})
+
 test_that("smoke execution preserves identities and resource accounting", {
   skip_on_cran()
   result <- rater_anchor_sparse_smoke_result()
