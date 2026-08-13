@@ -455,6 +455,21 @@ strata are required before a complete limsup envelope can be built. The
 theorem does not claim that its target is competitive or decide finite-JMLE
 existence, readiness, uncertainty, MML, or comparison.
 
+A repository theorem-only P2i contract completes that same minimal binary
+operator. For owner differences \code{d1 = z1 - z2} and
+\code{d2 = z3 - z4}, the finite response image is exactly the two same-sign
+interiors plus their common zero-difference intersection; its closure adds the
+two axes where exactly one difference is zero. With positive success and
+failure mass in all four cells, every unbounded contrast path has likelihood
+limit minus infinity, and pooling the constrained pair on each axis gives the
+complete escaping-sequence likelihood envelope. Integer expanded-row counts
+\code{(2, 4, 1, 1)} versus \code{(1, 1, 1, 1)} put the independent optimum
+\code{(log(2), log(4), 0, 0)} on a missing axis, proving finite-JMLE
+nonexistence without ordinary cell separation. An internal current-fit wrapper
+accepts only the exact unanchored two-Person/two-owner operator. The result is
+not a general GPCM closure theorem and changes no stored production readiness,
+primary estimate, uncertainty, MML, or comparison.
+
 \code{config$boundary_audit$gpcm_terminal_gradient_stability} reconstructs the
 same fixed JML objective and analytic terminal gradient, checks stored
 optimizer/polish summaries and deterministic central-difference probes, and

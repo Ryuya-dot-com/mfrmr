@@ -1165,6 +1165,54 @@ response-image closure stratification and boundary-limsup envelope. MML,
 inference, readiness, recovery, FACETS comparison, simulation, and promotion
 remain open or unchanged.
 
+P2i supplies the first complete closure rather than another obstruction. For
+the exact P2h binary two-Person/two-slope-owner operator, write the response
+contrasts as
+
+```text
+z = (alpha_1(theta_1-delta), alpha_1(theta_2-delta),
+     alpha_2(theta_1+delta), alpha_2(theta_2+delta)),
+alpha_1 alpha_2 = 1.
+```
+
+The owner differences satisfy the exact identity
+`d1 = alpha_1^2 d2`. Conversely, every contrast vector satisfying the
+resulting sign condition has an explicit finite inverse. The finite response
+image is therefore
+
+```text
+(d1 > 0, d2 > 0) union (d1 < 0, d2 < 0) union (d1 = d2 = 0),
+```
+
+and its closure is the same set plus the axes `d1 != 0, d2 = 0` and
+`d1 = 0, d2 != 0`. A bounded-response parameter escape has a further
+subsequence on exactly one of those axes: `alpha_1 -> infinity` forces
+`d2 -> 0`, `alpha_2 -> infinity` forces `d1 -> 0`, and a bounded positive
+slope pair plus bounded contrasts gives bounded additive parameters. Explicit
+inverse paths show that every axis point is reachable. This completes all five
+finite closure strata and the complete bounded-response escape-limit set for
+the fixture.
+
+When each of the four binary design cells has strictly positive success and
+failure mass, any unbounded contrast sends the joint likelihood to minus
+infinity. On `d2 = 0`, cells 3 and 4 pool at their combined success/failure
+logit while cells 1 and 2 retain their independent logits; `d1 = 0` gives the
+symmetric second axis. These two analytic values form the complete parameter-
+sequence limsup envelope. The integer expanded-row fixture with successes
+`(2, 4, 1, 1)` and failures `(1, 1, 1, 1)` has independent optimum
+`(log(2), log(4), 0, 0)`, exactly on the missing `d2 = 0` axis. Its supremum is
+`6 log(2) - 3 log(3) - 5 log(5) = -7.184143344815158` and is approached by
+finite identified slope paths but has no finite representative. Thus finite
+JMLE nonexistence occurs despite both outcomes appearing in every cell and
+despite the existing production P2f additive/extreme screens remaining
+negative. The guarded current-fit wrapper reconstructs the exact `4 x 3`
+operator, masses, and supremum; a retained optimizer trace lies about
+`7.49e-6` below the boundary and is not promoted. This closes the entire
+minimal fixture, not a general GPCM design. The next gate is to replace its
+single identity `d1 = alpha_1^2 d2` with a general-design response-image
+closure stratification. MML, inference, readiness, recovery, FACETS
+comparison, simulation, and promotion remain open or unchanged.
+
 The first runtime-propagation slice is now stable for retained RSM/PCM fits.
 Manifest, export, and replay surfaces preserve the exact v3 source-readiness
 record, while replayed fits recompute rather than inherit readiness. Optimizer

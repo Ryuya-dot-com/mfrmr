@@ -16,6 +16,24 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   response family, GPCM slope block,
   external comparison lane, readiness status, or release claim is broadened.
 
+* Completed the finite response-image closure and likelihood envelope for the
+  exact binary two-Person, two-slope-owner JML GPCM operator isolated by P2h.
+  If `d1 = z1 - z2` and `d2 = z3 - z4`, the finite image is exactly the two
+  same-sign interiors plus their common zero-difference intersection, its
+  finite closure is `d1 * d2 >= 0`, and its only missing finite strata are the
+  two one-zero-difference axes. With strictly positive success and failure
+  mass in every cell, unbounded contrast paths have likelihood limit minus
+  infinity and the two bounded-escape axes have exact pooled-logit maxima.
+  The expanded-row fixture with success counts `(2, 4, 1, 1)` and failure
+  counts `(1, 1, 1, 1)` has independent optimum
+  `(log(2), log(4), 0, 0)` on a missing axis. Thus its global supremum is
+  classified and no finite JMLE exists even though every design cell contains
+  both binary outcomes. A guarded current-fit wrapper reconstructs the exact
+  retained operator and reproduces the result without promoting its finite
+  optimizer trace. The theorem is complete only for this minimal operator;
+  general GPCM designs, MML, inference, readiness, recovery, simulation,
+  FACETS comparison, and promotion remain unchanged.
+
 * Closed the response-equivalence-quotient branch of the JML GPCM finite-
   attainment investigation in the negative. An exact binary two-Person,
   two-slope-owner construction has finite response contrasts

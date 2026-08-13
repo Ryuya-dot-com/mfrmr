@@ -359,6 +359,14 @@ identify whether the opt-in layer ran and retain its test log.
   image boundary completion and a complete limsup envelope remain necessary.
   Competitiveness, finite-JMLE existence, MML, inference, readiness, and
   FACETS equivalence remain open.
+- `gpcm-jml-binary-closure-envelope-p2i-record-0.2.3.md`: complete finite
+  response-image, bounded-escape-axis, and likelihood-limsup envelope for the
+  exact binary two-Person/two-slope-owner P2h operator. Positive success and
+  failure mass in every cell gives an explicit nonseparated fixture whose
+  independent optimum lies on a missing response boundary, proving finite-
+  JMLE nonexistence. A guarded current-fit wrapper reconstructs the exact
+  operator and masses without changing stored production status. General
+  GPCM closure, MML, inference, readiness, and FACETS equivalence remain open.
 - `maxit-ceiling-contract-0.2.3.R` and
   `maxit-ceiling-stable-slice-audit-0.2.3.md`: repository-only attempt-registry
   validator and evidence record enforcing a prespecified increasing ceiling
