@@ -31,7 +31,8 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_s3_class(review, "mfrm_model_choice_review")
   expect_s3_class(review, "mfrm_bundle")
   expect_true(all(c(
-    "overview", "comparison", "comparison_table", "model_roles",
+    "overview", "comparison", "comparison_table", "comparison_warnings",
+    "model_roles",
     "downstream_routes", "report_templates", "route_map", "support_status",
     "weighting_review_status", "weighting_review", "notes", "settings"
   ) %in% names(review)))
@@ -74,6 +75,16 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
     fixed = FALSE
   )))
   expect_true(any(grepl("automatic operational-scoring decision", review$key_warnings, fixed = TRUE)))
+  expect_true(any(grepl(
+    "requires optimizer or convergence review",
+    review$comparison_warnings,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "screening/review-only",
+    review$comparison_warnings,
+    fixed = TRUE
+  )))
   expect_true(nrow(review$support_status) > 0)
   expect_false(isTRUE(review$weighting_review_status$Requested[1]))
   expect_false("weighting_audit_status" %in% names(review))
@@ -83,10 +94,14 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   sx <- summary(review)
   expect_s3_class(sx, "summary.mfrm_model_choice_review")
   expect_true(all(c(
-    "overview", "comparison_table", "model_roles", "downstream_routes",
+    "overview", "comparison_table", "comparison_warnings", "model_roles",
+    "downstream_routes",
     "report_templates", "route_map", "weighting_review_status"
   ) %in% names(sx)))
   expect_false("weighting_audit_status" %in% names(sx))
+  printed <- capture.output(print(sx))
+  expect_true(any(grepl("Comparison Warnings", printed, fixed = TRUE)))
+  expect_true(any(grepl("screening/review-only", printed, fixed = TRUE)))
 
   bundle <- build_summary_table_bundle(review)
   expect_s3_class(bundle, "mfrm_summary_table_bundle")
@@ -95,6 +110,7 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_true(all(c(
     "overview",
     "comparison_table",
+    "comparison_warnings",
     "model_roles",
     "downstream_routes",
     "report_templates",
@@ -108,11 +124,34 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_true(all(c(
     "overview",
     "comparison_table",
+    "comparison_warnings",
     "model_roles",
     "report_templates",
     "weighting_review_status"
   ) %in% names(compact_bundle$tables)))
   expect_false("downstream_routes" %in% names(compact_bundle$tables))
+
+  out_dir <- tempfile("mfrmr-model-choice-appendix-")
+  dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  on.exit(unlink(out_dir, recursive = TRUE, force = TRUE), add = TRUE)
+  appendix <- export_summary_appendix(
+    review,
+    output_dir = out_dir,
+    prefix = "model_choice",
+    include_html = FALSE,
+    overwrite = TRUE
+  )
+  expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  warning_path <- appendix$written_files$Path[
+    grepl("comparison_warnings", appendix$written_files$Component, fixed = TRUE)
+  ]
+  expect_length(warning_path, 1L)
+  exported_warnings <- utils::read.csv(warning_path, stringsAsFactors = FALSE)
+  expect_true(any(grepl(
+    "screening/review-only",
+    exported_warnings$Warning,
+    fixed = TRUE
+  )))
 })
 
 test_that("build_model_choice_review can attach the detailed weighting review", {
@@ -177,4 +216,54 @@ test_that("build_model_choice_review handles RSM versus PCM without GPCM routes"
   expect_equal(nrow(review$support_status), 0)
   expect_true(all(review$downstream_routes$FullAPARoute == "supported"))
   expect_true(any(grepl("score interpretation", review$next_actions, fixed = TRUE)))
+  expect_true(any(grepl(
+    "limited to converged MML fits",
+    review$comparison_warnings,
+    fixed = TRUE
+  )))
+  expect_false(any(review$comparison_table$ICComparable))
+  expect_true(all(is.na(review$comparison_table$Delta_AIC)))
+  expect_length(review$comparison$preferred, 0L)
+})
+
+test_that("PCM versus GPCM JML review remains descriptive and preserves its boundary", {
+  toy <- load_mfrmr_data("example_core")
+  keep_people <- unique(toy$Person)[1:8]
+  toy <- toy[toy$Person %in% keep_people, , drop = FALSE]
+
+  pcm_fit <- suppressWarnings(fit_mfrm(
+    toy,
+    "Person",
+    c("Rater", "Criterion"),
+    "Score",
+    method = "JML",
+    model = "PCM",
+    step_facet = "Criterion",
+    maxit = 18
+  ))
+  gpcm_fit <- suppressWarnings(fit_mfrm(
+    toy,
+    "Person",
+    c("Rater", "Criterion"),
+    "Score",
+    method = "JML",
+    model = "GPCM",
+    step_facet = "Criterion",
+    slope_facet = "Criterion",
+    maxit = 18
+  ))
+
+  review <- build_model_choice_review(PCM = pcm_fit, GPCM = gpcm_fit)
+
+  expect_true(all(review$comparison_table$Method == "JML"))
+  expect_false(any(review$comparison_table$ICComparable))
+  expect_true(all(is.na(review$comparison_table$Delta_AIC)))
+  expect_true(all(is.na(review$comparison_table$Delta_BIC)))
+  expect_true(all(is.na(review$comparison_table$Delta_SABIC)))
+  expect_length(review$comparison$preferred, 0L)
+  expect_true(any(grepl(
+    "limited to converged MML fits",
+    review$comparison_warnings,
+    fixed = TRUE
+  )))
 })

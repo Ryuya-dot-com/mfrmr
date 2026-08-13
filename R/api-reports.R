@@ -7185,6 +7185,10 @@ summary_table_bundle_spec <- function(summary_obj) {
       weighting_status_tbl <- summary_table_bundle_df(summary_obj$weighting_review_status)
       support_tbl <- summary_table_bundle_df(summary_obj$support_status)
       warning_tbl <- summary_table_bundle_text_df(summary_obj$key_warnings, column = "Warning")
+      comparison_warning_tbl <- summary_table_bundle_text_df(
+        summary_obj$comparison_warnings,
+        column = "Warning"
+      )
       actions_tbl <- summary_table_bundle_text_df(summary_obj$next_actions, column = "Action")
       notes_tbl <- summary_table_bundle_text_df(summary_obj$notes, column = "Note")
       settings_tbl <- summary_table_bundle_settings_df(summary_obj$settings)
@@ -7200,6 +7204,7 @@ summary_table_bundle_spec <- function(summary_obj) {
           weighting_review_status = weighting_status_tbl,
           support_status = support_tbl,
           key_warnings = warning_tbl,
+          comparison_warnings = comparison_warning_tbl,
           next_actions = actions_tbl,
           notes = notes_tbl,
           settings = settings_tbl
@@ -7214,6 +7219,7 @@ summary_table_bundle_spec <- function(summary_obj) {
           weighting_review_status = "model_choice_weighting_review",
           support_status = "capability_boundary",
           key_warnings = "review_status",
+          comparison_warnings = "model_choice_comparison_warnings",
           next_actions = "repair_recommendations",
           notes = "interpretation_notes",
           settings = "review_settings"
@@ -7228,6 +7234,7 @@ summary_table_bundle_spec <- function(summary_obj) {
           weighting_review_status = "Whether detailed equal-weighting versus bounded-GPCM weighting review was requested and available.",
           support_status = "Capability boundary when bounded GPCM is present.",
           key_warnings = "Top warning lines for model-choice reporting.",
+          comparison_warnings = "Comparison-boundary warnings retained from compare_mfrm(), including reasons that automatic ranking was withheld.",
           next_actions = "Recommended next-step actions after model-choice review.",
           notes = "Interpretation notes for model-choice reporting.",
           settings = "Model-choice review settings."
@@ -7507,9 +7514,10 @@ build_summary_table_index <- function(tables, roles, descriptions) {
 #' - latent-regression fit summaries expose `population_coding` in the methods
 #'   appendix role so categorical levels, contrasts, and encoded columns can be
 #'   documented with the coefficient table.
-#' - model-choice-review summaries expose `comparison_table`, `model_roles`,
-#'   `downstream_routes`, and `report_templates` so RSM/PCM versus bounded
-#'   `GPCM` comparisons remain tied to their equal-weighting, sensitivity, and
+#' - model-choice-review summaries expose `comparison_table`,
+#'   `comparison_warnings`, `model_roles`, `downstream_routes`, and
+#'   `report_templates` so RSM/PCM versus bounded `GPCM` comparisons remain
+#'   tied to their same-basis limits, equal-weighting, sensitivity, and
 #'   reporting-boundary roles.
 #'
 #' @section Typical workflow:
@@ -8208,6 +8216,7 @@ summary_table_bundle_appendix_role_registry <- function() {
     Role = c(
       "model_choice_overview",
       "model_choice_comparison",
+      "model_choice_comparison_warnings",
       "model_choice_roles",
       "model_choice_downstream_routes",
       "model_choice_report_templates",
@@ -8217,18 +8226,20 @@ summary_table_bundle_appendix_role_registry <- function() {
     AppendixSection = c(
       "methods",
       "results",
+      "diagnostics",
       "methods",
       "workflow",
       "reporting",
       "workflow",
       "diagnostics"
     ),
-    RecommendedAppendix = c(TRUE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE),
-    CompactAppendix = c(TRUE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE),
-    PreferredAppendixOrder = 304:310,
+    RecommendedAppendix = c(TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE),
+    CompactAppendix = c(TRUE, TRUE, TRUE, TRUE, FALSE, TRUE, FALSE, TRUE),
+    PreferredAppendixOrder = 304:311,
     AppendixRationale = c(
       "Recommended overview table for model-choice appendix handoff.",
       "Recommended same-basis comparison table for candidate-model reporting.",
+      "Recommended comparison-boundary warnings explaining why ranking or likelihood-ratio testing was withheld.",
       "Recommended model-role table separating operational references from sensitivity candidates.",
       "Workflow-only route-availability table for model-choice follow-up.",
       "Recommended cautious wording table for model-choice reporting.",

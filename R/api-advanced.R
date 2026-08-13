@@ -7646,6 +7646,8 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #'
 #' - [compare_mfrm()] for verified AIC/Person-BIC/SABIC/log-likelihood
 #'   comparison;
+#' - comparison-boundary warnings captured from [compare_mfrm()] and retained
+#'   in `comparison_warnings` for printing and appendix export;
 #' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
 #' - downstream-route availability for APA output, score-side export, linking,
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
@@ -7702,10 +7704,18 @@ build_model_choice_review <- function(...,
   }
 
   labels <- .model_choice_fit_labels(fits, labels = labels)
-  comparison <- suppressWarnings(do.call(
-    compare_mfrm,
-    c(fits, list(labels = labels, warn_constraints = warn_constraints, nested = FALSE))
-  ))
+  comparison_warnings <- character(0)
+  comparison <- withCallingHandlers(
+    do.call(
+      compare_mfrm,
+      c(fits, list(labels = labels, warn_constraints = warn_constraints, nested = FALSE))
+    ),
+    warning = function(w) {
+      comparison_warnings <<- c(comparison_warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  comparison_warnings <- clean_summary_lines(comparison_warnings)
   role_table <- .model_choice_role_table(fits, labels)
   downstream_routes <- .model_choice_downstream_table(role_table)
   report_templates <- .model_choice_report_templates(role_table)
@@ -7808,6 +7818,7 @@ build_model_choice_review <- function(...,
   out <- list(
     overview = overview,
     key_warnings = key_warnings,
+    comparison_warnings = comparison_warnings,
     next_actions = next_actions,
     comparison = comparison,
     comparison_table = comparison$table,
@@ -7854,6 +7865,7 @@ summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {
   out <- list(
     overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
     key_warnings = clean_summary_lines(object$key_warnings %||% character(0)),
+    comparison_warnings = clean_summary_lines(object$comparison_warnings %||% character(0)),
     next_actions = clean_summary_lines(object$next_actions %||% character(0)),
     comparison_table = tibble::as_tibble(object$comparison_table %||% tibble::tibble()),
     model_roles = tibble::as_tibble(object$model_roles %||% tibble::tibble()),
@@ -7880,6 +7892,7 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
   }
   print_bullet_section("Key Warnings", x$key_warnings)
+  print_bullet_section("Comparison Warnings", x$comparison_warnings)
   print_bullet_section("Next Actions", x$next_actions)
   if (nrow(x$comparison_table) > 0L) {
     cat("\nComparison Table\n")

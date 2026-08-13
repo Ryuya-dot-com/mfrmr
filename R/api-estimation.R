@@ -5142,7 +5142,7 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
         "and automatic preferences are suppressed.",
         call. = FALSE
       )
-    } else if (!all_mml && all_converged) {
+    } else if (!all_mml) {
       warning(
         "Information-criterion ranking is limited to converged MML fits in this package. ",
         "Legacy descriptive values remain separately labelled for ",

@@ -4,6 +4,14 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Completed the public PCM/GPCM model-choice warning handoff. Comparison-basis
+  warnings are no longer discarded by `build_model_choice_review()`; they are
+  retained separately, printed by `summary()`, and exported as an appendix
+  table. `export_summary_appendix()` now accepts model-choice reviews directly.
+  JML ineligibility and optimizer/convergence review are reported as independent
+  reasons when both apply, while IC deltas, weights, automatic preferences, and
+  the PCM/GPCM chi-square LRT remain fail-closed outside their documented scope.
+
 * Clarified the public response-family and generalized-MFRM boundary. The
   bounded GPCM is now described consistently as an aligned single-owner
   relative-slope many-facet GPCM, not the multiplicative task-by-rater

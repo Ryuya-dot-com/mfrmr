@@ -42,6 +42,8 @@ estimate new models. It bundles:
 \itemize{
 \item \code{\link[=compare_mfrm]{compare_mfrm()}} for verified AIC/Person-BIC/SABIC/log-likelihood
 comparison;
+\item comparison-boundary warnings captured from \code{\link[=compare_mfrm]{compare_mfrm()}} and retained
+in \code{comparison_warnings} for printing and appendix export;
 \item model-role guidance for \code{RSM}, \code{PCM}, and bounded \code{GPCM};
 \item downstream-route availability for APA output, score-side export, linking,
 recovery, fair averages, bias screening, and summary-appendix handoff;
