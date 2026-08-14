@@ -15,10 +15,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   smoke passed. A FACETS 4.5.0 qualification then confirmed eight-decimal
   Measure/SE output but two-decimal MnSq/ZSTD/df output and small one-seed
   three-facet common-measure differences. A genuine fixed-information 3--5
-  facet pilot subsequently matched every expected FACETS coordinate and found
-  a maximum common-element measure difference of 0.0342 logits across six
-  RSM/PCM cases. PCM steps, multiple seeds, sparse/large designs, bias, and
-  equivalence remain pending.
+  facet pilot subsequently matched every expected FACETS element and step
+  coordinate. Matching FACETS' stopping rule to `.01` score points and `.0001`
+  logits reduced the six-case maximum element difference from 0.0342 to
+  0.000435 logits; the maximum step difference was 0.000268. A five-seed,
+  30-case candidate-linked pilot admitted 29 converged cases and rejected one
+  return-code-zero RSM case whose final score residual remained 0.0825. Across
+  eligible cases, maximum element and step differences were 0.000633 and
+  0.000363 logits. No tolerance or equivalence is inferred; frozen
+  confirmation, sparse/large designs, bias, and capacity stress remain pending.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,

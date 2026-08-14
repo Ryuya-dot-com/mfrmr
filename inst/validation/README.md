@@ -679,10 +679,13 @@ identify whether the opt-in layer ran and retain its test log.
   six-fit smoke record for total facet counts 3, 4, and 5 at fixed 640-row
   information plus a FACETS 4.5.0 output-precision qualification. The external
   qualification confirms eight-decimal Measure/SE output but two-decimal
-  MnSq/ZSTD/df output. A separate genuine one-seed 3--5 facet run matched every
-  expected coordinate and found at most 0.0342 logits difference in common
-  element measures. The full external registry, PCM step comparison,
-  replication, sparse/large designs, bias, and equivalence remain pending.
+  MnSq/ZSTD/df output. A separate strict-convergence 3--5 facet run matched
+  every expected element and RSM/PCM step coordinate and found at most 0.000435
+  and 0.000268 logits difference, respectively. A five-seed candidate-linked
+  pilot retained 29 of 30 convergence-eligible cases, with maxima 0.000633 and
+  0.000363; return code zero no longer substitutes for achieved convergence.
+  The full external registry, frozen confirmation, sparse/large designs, bias,
+  and equivalence remain pending.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

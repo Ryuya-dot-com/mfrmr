@@ -39,6 +39,10 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
   expect_true(
     contract$authorization$FACETSFixedInformationDimensionQualificationCompleted
   )
+  expect_true(contract$authorization$FACETSStepCoordinateQualificationCompleted)
+  expect_true(
+    contract$authorization$FACETSCandidateLinkedMultiseedPilotCompleted
+  )
   expect_false(contract$authorization$FACETSRegistryExecutionCompleted)
   expect_false(contract$authorization$FACETSExecutionAuthorized)
   expect_false(contract$authorization$EquivalenceClaimAuthorized)
@@ -187,6 +191,8 @@ test_that("external pilot writer emits genuine multifacet FACETS controls", {
   expect_true("Facets = 5" %in% control)
   expect_true("Models = ?,?,?,?,#,R3" %in% control)
   expect_true("Umean = 0, 1, 8" %in% control)
+  expect_true("Iterations = 0" %in% control)
+  expect_true("Convergence = .01, .0001" %in% control)
   expect_true(any(startsWith(control, "Graphfile = ")))
   expect_true(any(startsWith(control, "Anchorfile = ")))
   expect_equal(case$facet_names,
@@ -234,13 +240,25 @@ test_that("external multifacet pilot is dry-run by default", {
 
   expect_false(pilot$executed)
   expect_equal(nrow(pilot$manifest), 2L)
+  expect_equal(pilot$manifest$BaseSeed, rep(451001L, 2L))
+  expect_equal(pilot$manifest$DesignSeed, c(451002L, 451003L))
   expect_true(all(!pilot$manifest$ExecuteRequested))
   expect_true(all(!pilot$manifest$FACETSReportPresent))
   expect_equal(pilot$manifest$ExpectedCoordinates, rep(51L, 2L))
+  expect_equal(pilot$manifest$ExpectedStepCoordinates, c(3L, 12L))
   expect_true(all(is.na(pilot$manifest$CoordinateContractPassed)))
+  expect_true(all(is.na(pilot$manifest$StepCoordinateContractPassed)))
+  expect_equal(
+    pilot$manifest$FACETSConvergenceRequested,
+    rep("0.01,0.0001,0,0", 2L)
+  )
+  expect_true(all(is.na(pilot$manifest$FACETSConvergenceContractPassed)))
+  expect_true(all(is.na(pilot$manifest$FACETSConvergenceAchieved)))
+  expect_true(all(!pilot$manifest$ComparisonEligible))
   expect_true(all(!pilot$manifest$ConfirmationAuthorized))
   expect_true(all(!pilot$manifest$EquivalenceClaimAuthorized))
   expect_equal(nrow(pilot$metrics), 0L)
+  expect_equal(nrow(pilot$step_comparisons), 0L)
   expect_true(all(file.exists(file.path(
     work_dir, c("rsm-f4", "pcm-f4"), "facets_control.txt"
   ))))
@@ -253,6 +271,122 @@ test_that("external multifacet pilot is dry-run by default", {
     ),
     "executable was not found"
   )
+})
+
+test_that("external multiseed pilot preserves explicit seed provenance", {
+  env <- facets_mfp_environment()
+  work_dir <- tempfile("facets-mfp-multiseed-")
+  pilot <- env$mfrmr_run_facets_mfp_external_multiseed_pilot(
+    facets_exe = "deliberately-missing-facets.exe",
+    work_dir = work_dir,
+    base_seeds = c(452001L, 452101L),
+    execute = FALSE,
+    total_facets = 3L,
+    models = "PCM"
+  )
+
+  expect_false(pilot$executed)
+  expect_true(pilot$candidate_linked_pilot)
+  expect_false(pilot$confirmation_authorized)
+  expect_equal(pilot$base_seeds, c(452001L, 452101L))
+  expect_equal(pilot$manifest$BaseSeed, c(452001L, 452101L))
+  expect_equal(pilot$manifest$DesignSeed, c(452003L, 452103L))
+  expect_equal(pilot$manifest$ExpectedStepCoordinates, rep(12L, 2L))
+  expect_equal(nrow(pilot$metrics), 0L)
+  expect_equal(nrow(pilot$step_comparisons), 0L)
+  expect_true(all(file.exists(file.path(
+    work_dir,
+    paste0("seed-", c(452001L, 452101L)),
+    "pcm-f3",
+    "facets_control.txt"
+  ))))
+  expect_error(
+    env$mfrmr_run_facets_mfp_external_multiseed_pilot(
+      facets_exe = "deliberately-missing-facets.exe",
+      work_dir = tempfile("facets-mfp-multiseed-"),
+      base_seeds = c(1L, 1L)
+    ),
+    "unique finite integers"
+  )
+})
+
+test_that("FACETS anchor steps are matched by explicit scale coordinates", {
+  env <- facets_mfp_environment()
+  anchor_path <- tempfile(fileext = ".anc")
+  writeLines(c(
+    "Rating (or partial credit) scale = RS2,R3,G,O",
+    " 0=,0,A",
+    " 1=,-1.1000000,A",
+    " 2=,0.2000000,A",
+    " 3=,0.9000000,A",
+    " ; Rasch-Andrich Thresholds =0, -1.1000000, 0.2000000, 0.9000000",
+    "*",
+    "Rating (or partial credit) scale = RS1,R3,G,O",
+    " 0=,0,A",
+    " 1=,-0.8000000,A",
+    " 2=,-0.1000000,A",
+    " 3=,0.9000000,A",
+    " ; Rasch-Andrich Thresholds =0, -0.8000000, -0.1000000, 0.9000000",
+    "*"
+  ), anchor_path)
+
+  external <- env$mfrmr_facets_mfp_read_anchor_steps(
+    anchor_path, c(C01 = 1L, C02 = 2L)
+  )
+  expect_equal(nrow(external), 6L)
+  expect_equal(external$StepFacet, rep(c("C01", "C02"), each = 3L))
+  expect_equal(external$Step, rep(paste0("Step_", 1:3), 2L))
+  expect_equal(external$FACETSScale, rep(c("RS1", "RS2"), each = 3L))
+  expect_equal(external$ReportedDecimals, rep(7L, 6L))
+
+  fit <- list(steps = external[, c("StepFacet", "Step", "Estimate")])
+  comparison <- env$mfrmr_facets_mfp_compare_steps(fit, external)
+  expect_true(comparison$passed)
+  expect_equal(comparison$matched_coordinates, 6L)
+  expect_equal(comparison$comparison$AbsoluteDifference, rep(0, 6L))
+
+  duplicated <- rbind(external, external[1L, ])
+  expect_false(env$mfrmr_facets_mfp_compare_steps(fit, duplicated)$passed)
+  expect_error(
+    env$mfrmr_facets_mfp_read_anchor_steps(
+      anchor_path, c(C01 = 1L, C02 = 3L)
+    ),
+    "scale contract failed"
+  )
+})
+
+test_that("FACETS convergence is verified from the report", {
+  env <- facets_mfp_environment()
+  report_path <- tempfile(fileext = ".txt")
+  writeLines(c(
+    "Convergence = 0.01, 0.0001, 0, 0 ; requested criteria",
+    "Iterations (maximum) = 0",
+    "| JMLE  25       .0070    .0     -.0023     -.0001   -.0001 |"
+  ), report_path)
+  passed <- env$mfrmr_facets_mfp_convergence_contract(report_path)
+  expect_true(passed$specification_passed)
+  expect_true(passed$achieved)
+  expect_true(passed$passed)
+  expect_equal(passed$final_iteration, 25L)
+  expect_equal(passed$final_element_score_residual, 0.007)
+
+  writeLines(c(
+    "Convergence = 0.01, 0.0001, 0, 0",
+    "| JMLE  75       .0825    .0      .0022      .0000    .0000 |"
+  ), report_path)
+  stalled <- env$mfrmr_facets_mfp_convergence_contract(report_path)
+  expect_true(stalled$specification_passed)
+  expect_false(stalled$achieved)
+  expect_false(stalled$passed)
+
+  writeLines(c(
+    "Convergence = 0.5, 0.01, 0, 0",
+    "| JMLE  14       .4470    .1     -.1162     -.0057   -.0036 |"
+  ), report_path)
+  expect_false(env$mfrmr_facets_mfp_convergence_contract(report_path)$passed)
+  expect_false(env$mfrmr_facets_mfp_convergence_contract(
+    tempfile(fileext = ".txt")
+  )$passed)
 })
 
 test_that("multifacet capture retains rather than hides errors and warnings", {

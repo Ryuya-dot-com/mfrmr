@@ -2,8 +2,9 @@
 
 Status: prospective external contract, completed internal one-seed smoke,
 completed external three-facet output-precision qualification, and completed
-one-seed fixed-information 3--5 facet common-element qualification. The full
-multifacet registry was not executed in FACETS, and no tolerance, replication
+strict-convergence fixed-information 3--5 facet element-and-step qualification.
+A five-seed candidate-linked pilot was also completed. The full multifacet
+registry was not executed in FACETS, and no tolerance, frozen replication
 count, confirmation, or equivalence claim is authorized.
 
 ## Essential distinction
@@ -111,8 +112,9 @@ does not increase the element-level score-file MnSq, ZSTD, or df precision in
 this FACETS version and output route. Exact reported-token retention remains
 necessary for those fixed two-decimal fields.
 
-For the canonical three-facet runs, the current mfrmr candidate and FACETS
-common element measures agreed as follows after label and coordinate matching:
+For the canonical three-facet runs under FACETS default convergence criteria,
+the current mfrmr candidate and FACETS common element measures agreed as
+follows after label and coordinate matching:
 
 | Model | Facet | Matched | MAE | Maximum absolute difference |
 | --- | --- | ---: | ---: | ---: |
@@ -123,13 +125,14 @@ common element measures agreed as follows after label and coordinate matching:
 | PCM | Rater | 8 | 0.002683 | 0.004974 |
 | PCM | Criterion | 5 | 0.002428 | 0.003894 |
 
-These are qualification observations, not a frozen tolerance. They use one
-seed, FACETS 4.5.0 rather than 4.5.1, and do not compare PCM steps, bias terms,
-or sparse designs. The legacy four-column control in this qualification does
-not test genuine four-/five-facet dimensions; those dimensions are tested
-separately in the next section. Raw proprietary output remains outside the
-package repository; the record intentionally does not turn machine-specific
-file hashes into scientific acceptance criteria.
+These values diagnose output precision and the effect of the FACETS default
+stopping rule; they are not the primary numerical agreement result or a frozen
+tolerance. They use one seed and FACETS 4.5.0 rather than 4.5.1. The legacy
+four-column control in this qualification does not test genuine four-/five-
+facet dimensions; those dimensions are tested separately in the next section.
+Raw proprietary output remains outside the package repository; the record
+intentionally does not turn machine-specific file hashes into scientific
+acceptance criteria.
 
 ## Completed external fixed-information 3--5 facet qualification
 
@@ -141,33 +144,68 @@ observations in every case. The runner used seed 451002 for RSM and 451003 for
 PCM so that adding Task and Occasion did not add observations or change the
 model-specific generating seed.
 
-All six FACETS processes returned code zero, all six mfrmr JML fits returned,
-and neither path emitted a recorded warning or error. Before any numerical
-comparison, a fail-closed coordinate contract required the imported FACETS
-facet/level keys to equal the complete expected set with no duplicates,
-missing keys, or unexpected keys. It passed at 48/48 coordinates for three
-facets, 51/51 for four facets, and 53/53 for five facets in both models.
+The comparison control explicitly requested `Iterations=0` and
+`Convergence=.01,.0001`. FACETS documentation describes these as deliberately
+tight criteria for a decisive analysis. The runner verifies both the echoed
+specification and the final JMLE iteration; return code zero alone is not
+treated as convergence. All six single-seed cases met the final displayed
+criteria, all six mfrmr JML fits returned, and neither path emitted a recorded
+warning or error.
+
+Before any numerical comparison, a fail-closed coordinate contract required
+the imported FACETS facet/level keys to equal the complete expected set with no
+duplicates, missing keys, or unexpected keys. It passed at 48/48 coordinates
+for three facets, 51/51 for four facets, and 53/53 for five facets in both
+models. FACETS step calibrations were read from the anchor output's explicit
+`Rasch-Andrich Thresholds` blocks. All 3 common RSM step coordinates and all
+12 Criterion-by-step PCM coordinates matched exactly in every applicable case.
 
 The largest facet-block MAE and the largest individual absolute difference
 among the matched common element measures were:
 
-| Model | Total facets | Compared blocks | Matched coordinates | Maximum block MAE | Maximum absolute difference |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| RSM | 3 | 3 | 48 | 0.007755 | 0.023244 |
-| RSM | 4 | 4 | 51 | 0.005679 | 0.017373 |
-| RSM | 5 | 5 | 53 | 0.007808 | 0.024790 |
-| PCM | 3 | 3 | 48 | 0.010638 | 0.024784 |
-| PCM | 4 | 4 | 51 | 0.013882 | 0.034163 |
-| PCM | 5 | 5 | 53 | 0.006960 | 0.008866 |
+| Model | Total facets | Element coordinates | Maximum block MAE | Maximum element difference | Step coordinates | Step MAE | Maximum step difference |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| RSM | 3 | 48 | 0.000103 | 0.000308 | 3 | 0.000115 | 0.000173 |
+| RSM | 4 | 51 | 0.000109 | 0.000339 | 3 | 0.000124 | 0.000186 |
+| RSM | 5 | 53 | 0.000115 | 0.000362 | 3 | 0.000140 | 0.000211 |
+| PCM | 3 | 48 | 0.000183 | 0.000424 | 12 | 0.000177 | 0.000268 |
+| PCM | 4 | 51 | 0.000179 | 0.000435 | 12 | 0.000172 | 0.000260 |
+| PCM | 5 | 53 | 0.000141 | 0.000152 | 12 | 0.000005 | 0.000008 |
 
-This closes only the first dimension-growth qualification cell: balanced,
-fixed-information, one-seed agreement for common Person and facet-level
-measures. It does **not** establish exact equality or FACETS replacement. PCM
-step parameters were not extracted and matched, FACETS element fit statistics
-remain fixed at two displayed decimals in this route, and no multi-seed,
-large-data, sparse/weak-link, extreme-score, category-support, bias, or
-30-facet comparison was run. FACETS 4.5.1 was not available locally. These
-limitations keep numeric tolerance, confirmation, and equivalence authorization
+The largest common-element difference therefore fell from 0.034163 logits
+under FACETS default stopping to 0.000435 under the matched strict control.
+The earlier discrepancy was dominated by stopping-rule mismatch, not by an
+observed difference in the fitted RSM/PCM equations.
+
+### Five-seed candidate-linked pilot
+
+After inspecting the first candidate result, five additional base seeds were
+declared for a pilot: 452001, 452101, 452201, 452301, and 452401. Each was run
+at three, four, and five total facets for both RSM and PCM, giving 30 expected
+cases. Because these seeds were selected after candidate results were visible,
+they are not confirmation seeds.
+
+All 30 FACETS processes returned code zero and echoed the requested strict
+criteria. Twenty-nine also achieved the final displayed convergence criteria
+and passed the complete element and step coordinate contracts. The RSM
+five-facet case at base seed 452401 stopped after 75 iterations with final
+element score residual 0.0825, above the requested 0.01. The current fail-
+closed runner records `FACETSConvergenceAchieved=FALSE`, does not fit mfrmr for
+that row, sets `ComparisonEligible=FALSE`, and contributes zero numerical
+comparison rows.
+
+Across the 29 eligible cases, the maximum individual common-element difference
+was 0.000633 logits and the maximum step difference was 0.000363 logits. All 15
+PCM cases were eligible; their maxima were 0.000632 and 0.000363 logits,
+respectively. These are observed pilot maxima, not acceptance thresholds.
+
+This closes a candidate-linked fixed-information dimension-growth pilot for
+common elements and RSM/PCM steps. It does **not** establish exact equality or
+FACETS replacement. FACETS element fit statistics remain fixed at two
+displayed decimals in this route, and no frozen confirmation, large-data,
+sparse/weak-link, extreme-score, category-support, bias, or 30-facet comparison
+was run. FACETS 4.5.1 was not available locally. These limitations keep numeric
+tolerance, frozen replication, confirmation, and equivalence authorization
 false.
 
 ## Completed internal smoke
@@ -216,11 +254,11 @@ Before a FACETS row can calibrate a tolerance, it must pass:
 8. replication and Monte Carlo precision frozen before candidate results are
    inspected.
 
-The next licensed-environment work should first extract and coordinate-match
-PCM step parameters, then repeat the fixed-information 3--5 facet core over
-prespecified seeds. Level-growth, large-row, sparse/weak-link, and eventually
-30-facet capacity cells follow as separate strata; none may compensate for a
-failed lower-dimensional core.
+The next licensed-environment work should freeze the replication/MCSE and
+disjoint confirmation-seed protocol without inspecting those seed outcomes.
+Level-growth, large-row, sparse/weak-link, and eventually 30-facet capacity
+cells then follow as separate strata; none may compensate for a failed lower-
+dimensional core.
 
 ## Official FACETS references
 
@@ -228,6 +266,10 @@ failed lower-dimensional core.
   <https://www.winsteps.com/facetman64/scorefileinvisible.htm>
 - Output decimal setting:
   <https://www.winsteps.com/facetman64/modifyspecifications.htm>
+- Anchor output and estimated scale parameters:
+  <https://www.winsteps.com/facetman64/anchorfile.htm>
+- JMLE convergence criteria:
+  <https://www.winsteps.com/facetman64/convergencecriteria.htm>
 - Current 64-bit manual:
   <https://www.winsteps.com/a/Facets64-Manual.pdf>
 - FACETS tutorial discussion of ZSTD thresholds:

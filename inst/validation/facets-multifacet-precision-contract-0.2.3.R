@@ -1,8 +1,9 @@
 # Repository-only prospective FACETS multifacet and displayed-precision contract.
 #
-# This file does not execute FACETS and does not authorize an equivalence
-# claim. It separates facet-dimension growth, level growth, row growth, and
-# sparse topology before a licensed external run is attempted.
+# External runners in this file are dry-run by default and require
+# `execute = TRUE` for a licensed FACETS run. No route authorizes an
+# equivalence claim. The contract separates facet-dimension growth, level
+# growth, row growth, and sparse topology.
 
 mfrmr_facets_mfp_contract_id <- "mfrmr_facets_multifacet_precision_v1"
 
@@ -470,6 +471,8 @@ mfrmr_facets_mfp_write_external_case <- function(design,
     "CSV = CSV",
     "Heading lines = Yes",
     "QM = Double",
+    "Iterations = 0",
+    "Convergence = .01, .0001",
     paste0('Scorefiles = "', normalizePath(score_base, winslash = "\\",
                                             mustWork = FALSE), '"'),
     paste0('Residualfile = "', normalizePath(residual_path, winslash = "\\",
@@ -582,6 +585,225 @@ mfrmr_facets_mfp_external_coordinate_contract <- function(design, external) {
   )
 }
 
+mfrmr_facets_mfp_read_anchor_steps <- function(anchor_path, step_level_codes) {
+  if (!file.exists(anchor_path)) {
+    stop("FACETS anchor output was not found: ", anchor_path, ".",
+         call. = FALSE)
+  }
+  level_names <- names(step_level_codes)
+  valid_codes <- is.numeric(step_level_codes) && length(step_level_codes) > 0L &&
+    !is.null(level_names) && !anyNA(step_level_codes) &&
+    all(is.finite(step_level_codes)) &&
+    all(step_level_codes == floor(step_level_codes)) &&
+    all(step_level_codes > 0) && !anyDuplicated(step_level_codes) &&
+    !anyNA(level_names) && all(nzchar(level_names)) && !anyDuplicated(level_names)
+  if (!valid_codes) {
+    stop("Step-level codes must be uniquely named positive integers.",
+         call. = FALSE)
+  }
+  step_level_codes <- as.integer(step_level_codes)
+  expected_scales <- paste0("RS", step_level_codes)
+  lines <- trimws(readLines(anchor_path, warn = FALSE))
+  header_pattern <-
+    "^Rating \\(or partial credit\\) scale\\s*=\\s*"
+  header_positions <- grep(header_pattern, lines)
+  scale_ids <- sub(
+    ",.*$", "",
+    sub(header_pattern, "", lines[header_positions])
+  )
+  if (anyDuplicated(scale_ids)) {
+    stop("FACETS anchor output contains duplicate rating-scale identifiers.",
+         call. = FALSE)
+  }
+  if (!identical(sort(scale_ids), sort(expected_scales))) {
+    stop(
+      "FACETS anchor scale contract failed: expected ",
+      paste(expected_scales, collapse = ", "), "; found ",
+      paste(scale_ids, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+  threshold_pattern <- "^;\\s*Rasch-Andrich Thresholds\\s*="
+  rows <- lapply(seq_along(expected_scales), function(i) {
+    scale_id <- expected_scales[i]
+    header_index <- match(scale_id, scale_ids)
+    block_start <- header_positions[header_index] + 1L
+    block_end <- if (header_index < length(header_positions)) {
+      header_positions[header_index + 1L] - 1L
+    } else {
+      length(lines)
+    }
+    threshold_lines <- lines[block_start:block_end]
+    threshold_lines <- threshold_lines[grepl(threshold_pattern, threshold_lines)]
+    if (length(threshold_lines) != 1L) {
+      stop("FACETS anchor scale ", scale_id,
+           " must contain exactly one Rasch-Andrich threshold line.",
+           call. = FALSE)
+    }
+    tokens <- trimws(strsplit(
+      sub(threshold_pattern, "", threshold_lines), ",", fixed = TRUE
+    )[[1L]])
+    valid_tokens <- grepl(
+      "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$", tokens
+    )
+    if (length(tokens) != 4L || !all(valid_tokens)) {
+      stop("FACETS anchor scale ", scale_id,
+           " must report category 0 plus exactly three numeric thresholds.",
+           call. = FALSE)
+    }
+    values <- as.numeric(tokens)
+    if (!isTRUE(values[1L] == 0)) {
+      stop("FACETS anchor scale ", scale_id,
+           " must use zero as the category-0 placeholder.", call. = FALSE)
+    }
+    step_tokens <- tokens[-1L]
+    resolution <- mfrmr_facets_mfp_display_resolution(
+      step_tokens, rep(0, length(step_tokens))
+    )
+    data.frame(
+      StepFacet = level_names[i],
+      Step = paste0("Step_", seq_along(step_tokens)),
+      Estimate = values[-1L],
+      FACETSScale = scale_id,
+      ReportedToken = step_tokens,
+      ReportedDecimals = resolution$ReportedDecimals,
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, rows)
+}
+
+mfrmr_facets_mfp_compare_steps <- function(fit, external_steps) {
+  internal <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
+  external <- as.data.frame(external_steps, stringsAsFactors = FALSE)
+  if (!"StepFacet" %in% names(internal)) internal$StepFacet <- "Common"
+  required <- c("StepFacet", "Step", "Estimate")
+  if (!all(required %in% names(internal)) ||
+      !all(required %in% names(external))) {
+    stop("Step comparison requires StepFacet, Step, and Estimate columns.",
+         call. = FALSE)
+  }
+  internal_key <- paste(internal$StepFacet, internal$Step, sep = "::")
+  external_key <- paste(external$StepFacet, external$Step, sep = "::")
+  coordinate_passed <- !anyDuplicated(internal_key) &&
+    !anyDuplicated(external_key) &&
+    identical(sort(internal_key), sort(external_key))
+  finite_passed <- all(is.finite(as.numeric(internal$Estimate))) &&
+    all(is.finite(as.numeric(external$Estimate)))
+  if (!coordinate_passed || !finite_passed) {
+    return(list(
+      passed = FALSE,
+      expected_coordinates = length(internal_key),
+      imported_coordinates = length(external_key),
+      matched_coordinates = 0L,
+      internal_duplicate_keys = sum(duplicated(internal_key)),
+      external_duplicate_keys = sum(duplicated(external_key)),
+      missing_keys = setdiff(internal_key, external_key),
+      unexpected_keys = setdiff(external_key, internal_key),
+      comparison = data.frame()
+    ))
+  }
+  external <- external[match(internal_key, external_key), , drop = FALSE]
+  difference <- as.numeric(internal$Estimate) - as.numeric(external$Estimate)
+  comparison <- data.frame(
+    StepFacet = as.character(internal$StepFacet),
+    Step = as.character(internal$Step),
+    MfrmrEstimate = as.numeric(internal$Estimate),
+    FACETSEstimate = as.numeric(external$Estimate),
+    Difference = difference,
+    AbsoluteDifference = abs(difference),
+    FACETSScale = if ("FACETSScale" %in% names(external)) {
+      as.character(external$FACETSScale)
+    } else {
+      NA_character_
+    },
+    FACETSReportedToken = if ("ReportedToken" %in% names(external)) {
+      as.character(external$ReportedToken)
+    } else {
+      NA_character_
+    },
+    stringsAsFactors = FALSE
+  )
+  list(
+    passed = TRUE,
+    expected_coordinates = length(internal_key),
+    imported_coordinates = length(external_key),
+    matched_coordinates = length(internal_key),
+    internal_duplicate_keys = 0L,
+    external_duplicate_keys = 0L,
+    missing_keys = character(0),
+    unexpected_keys = character(0),
+    comparison = comparison
+  )
+}
+
+mfrmr_facets_mfp_convergence_contract <- function(
+    report_path,
+    requested = c(0.01, 0.0001, 0, 0)) {
+  empty_result <- function(reported_line = NA_character_) {
+    list(
+      passed = FALSE, specification_passed = FALSE, achieved = FALSE,
+      values = numeric(0), reported_line = reported_line,
+      final_iteration = NA_integer_, final_element_score_residual = NA_real_,
+      final_element_logit_change = NA_real_, final_step_logit_change = NA_real_
+    )
+  }
+  if (!file.exists(report_path)) {
+    return(empty_result())
+  }
+  lines <- trimws(readLines(report_path, warn = FALSE))
+  reported <- lines[grepl("^Convergence\\s*=", lines)]
+  if (length(reported) != 1L) {
+    return(empty_result(reported))
+  }
+  rhs <- trimws(sub("^Convergence\\s*=\\s*", "", reported))
+  rhs <- trimws(sub(";.*$", "", rhs))
+  tokens <- trimws(strsplit(rhs, ",", fixed = TRUE)[[1L]])
+  valid_tokens <- grepl(
+    "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$", tokens
+  )
+  if (length(tokens) != length(requested) || !all(valid_tokens)) {
+    return(empty_result(reported))
+  }
+  values <- as.numeric(tokens)
+  specification_passed <- isTRUE(all.equal(
+    values, as.numeric(requested), tolerance = 1e-12, check.attributes = FALSE
+  ))
+  iteration_lines <- lines[grepl("^\\| JMLE", lines)]
+  iteration_tokens <- if (length(iteration_lines)) {
+    strsplit(trimws(gsub("^\\||\\|$", "", tail(iteration_lines, 1L))),
+             "\\s+")[[1L]]
+  } else {
+    character(0)
+  }
+  iteration_numeric <- iteration_tokens[-1L]
+  valid_iteration <- length(iteration_tokens) == 7L &&
+    identical(iteration_tokens[1L], "JMLE") &&
+    all(grepl("^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$",
+              iteration_numeric))
+  final_values <- if (valid_iteration) {
+    as.numeric(iteration_numeric)
+  } else {
+    rep(NA_real_, 6L)
+  }
+  achieved <- valid_iteration &&
+    abs(final_values[2L]) <= requested[1L] &&
+    abs(final_values[5L]) <= requested[2L] &&
+    (requested[3L] == 0 || abs(final_values[4L]) <= requested[3L]) &&
+    (requested[4L] == 0 || abs(final_values[6L]) <= requested[4L])
+  list(
+    passed = specification_passed && achieved,
+    specification_passed = specification_passed,
+    achieved = achieved,
+    values = values,
+    reported_line = reported,
+    final_iteration = as.integer(final_values[1L]),
+    final_element_score_residual = final_values[2L],
+    final_element_logit_change = final_values[5L],
+    final_step_logit_change = final_values[6L]
+  )
+}
+
 mfrmr_run_facets_mfp_external_pilot <- function(
     facets_exe,
     work_dir,
@@ -593,6 +815,12 @@ mfrmr_run_facets_mfp_external_pilot <- function(
   if (!is.logical(execute) || length(execute) != 1L || is.na(execute)) {
     stop("`execute` must be one nonmissing logical value.", call. = FALSE)
   }
+  valid_seed <- is.numeric(seed) && length(seed) == 1L && !is.na(seed) &&
+    is.finite(seed) && seed == floor(seed)
+  if (!valid_seed) {
+    stop("`seed` must be one finite integer.", call. = FALSE)
+  }
+  seed <- as.integer(seed)
   total_facets <- as.integer(total_facets)
   if (length(total_facets) == 0L || any(!total_facets %in% 3:5)) {
     stop("External pilot total facets must be selected from 3, 4, and 5.",
@@ -612,6 +840,7 @@ mfrmr_run_facets_mfp_external_pilot <- function(
 
   manifest_rows <- list()
   metric_rows <- list()
+  step_comparison_rows <- list()
   index <- 0L
   for (total in total_facets) {
     for (model in models) {
@@ -619,7 +848,7 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       design <- mfrmr_facets_mfp_smoke_design(
         total_facets = total,
         model = model,
-        seed = as.integer(seed + match(model, c("RSM", "PCM")))
+        seed = seed + match(model, c("RSM", "PCM"))
       )
       case_dir <- file.path(work_dir, paste0(tolower(model), "-f", total))
       case <- mfrmr_facets_mfp_write_external_case(design, model, case_dir)
@@ -636,6 +865,23 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       imported_coordinates <- NA_integer_
       matched_coordinates <- NA_integer_
       coordinate_contract_passed <- NA
+      expected_step_coordinates <- if (identical(model, "PCM")) {
+        3L * length(case$level_maps$Criterion)
+      } else {
+        3L
+      }
+      imported_step_coordinates <- NA_integer_
+      matched_step_coordinates <- NA_integer_
+      step_coordinate_contract_passed <- NA
+      step_mae <- NA_real_
+      step_maximum_absolute_difference <- NA_real_
+      facets_convergence_specification_passed <- NA
+      facets_convergence_achieved <- NA
+      facets_convergence_contract_passed <- NA
+      facets_final_iteration <- NA_integer_
+      facets_final_element_score_residual <- NA_real_
+      facets_final_element_logit_change <- NA_real_
+      facets_final_step_logit_change <- NA_real_
       if (isTRUE(execute)) {
         stdout_path <- file.path(case_dir, "facets_stdout.txt")
         stderr_path <- file.path(case_dir, "facets_stderr.txt")
@@ -664,8 +910,38 @@ mfrmr_run_facets_mfp_external_pilot <- function(
           process_status <- NA_integer_
         } else {
           process_status <- as.integer(process_status)
+          if (!identical(process_status, 0L)) {
+            error <- paste0("FACETS process returned code ", process_status, ".")
+          }
         }
         if (identical(process_status, 0L)) {
+          convergence_contract <- mfrmr_facets_mfp_convergence_contract(
+            case$report_path
+          )
+          facets_convergence_specification_passed <-
+            isTRUE(convergence_contract$specification_passed)
+          facets_convergence_achieved <-
+            isTRUE(convergence_contract$achieved)
+          facets_convergence_contract_passed <-
+            isTRUE(convergence_contract$passed)
+          facets_final_iteration <- convergence_contract$final_iteration
+          facets_final_element_score_residual <-
+            convergence_contract$final_element_score_residual
+          facets_final_element_logit_change <-
+            convergence_contract$final_element_logit_change
+          facets_final_step_logit_change <-
+            convergence_contract$final_step_logit_change
+          if (!facets_convergence_contract_passed) {
+            error <- paste0(
+              "FACETS convergence contract failed: specification=",
+              facets_convergence_specification_passed, ", achieved=",
+              facets_convergence_achieved, ", final element score residual=",
+              facets_final_element_score_residual, "."
+            )
+          }
+        }
+        if (identical(process_status, 0L) &&
+            isTRUE(facets_convergence_contract_passed)) {
           score_files <- list.files(
             case_dir, pattern = "^score[.][0-9]+[.]txt$", full.names = TRUE
           )
@@ -721,17 +997,71 @@ mfrmr_run_facets_mfp_external_pilot <- function(
                   metrics <- data.frame()
                 } else {
                   metrics$Model <- model
+                  metrics$BaseSeed <- seed
+                  metrics$DesignSeed <- design$seed
                   metrics$TotalFacets <- total
                   metrics$QualificationOnly <- TRUE
                   metrics$ToleranceFrozen <- FALSE
+                  step_codes <- if (identical(model, "PCM")) {
+                    case$level_maps$Criterion
+                  } else {
+                    c(Common = 1L)
+                  }
+                  captured_steps <- mfrmr_facets_mfp_capture(
+                    mfrmr_facets_mfp_read_anchor_steps(
+                      case$anchor_path, step_codes
+                    )
+                  )
+                  warning_text <- c(warning_text, captured_steps$warnings)
+                  if (is.null(captured_steps$value)) {
+                    error <- captured_steps$error
+                  } else {
+                    step_contract <- mfrmr_facets_mfp_compare_steps(
+                      captured$value, captured_steps$value
+                    )
+                    imported_step_coordinates <-
+                      step_contract$imported_coordinates
+                    matched_step_coordinates <- step_contract$matched_coordinates
+                    step_coordinate_contract_passed <-
+                      isTRUE(step_contract$passed)
+                    if (!step_coordinate_contract_passed) {
+                      error <- paste0(
+                        "Step-coordinate contract failed: expected=",
+                        step_contract$expected_coordinates,
+                        ", imported=", step_contract$imported_coordinates,
+                        ", matched=", step_contract$matched_coordinates,
+                        ", missing=", length(step_contract$missing_keys),
+                        ", unexpected=",
+                        length(step_contract$unexpected_keys), "."
+                      )
+                    } else {
+                      step_comparison <- step_contract$comparison
+                      step_mae <- mean(step_comparison$AbsoluteDifference)
+                      step_maximum_absolute_difference <-
+                        max(step_comparison$AbsoluteDifference)
+                      step_comparison$Model <- model
+                      step_comparison$BaseSeed <- seed
+                      step_comparison$DesignSeed <- design$seed
+                      step_comparison$TotalFacets <- total
+                      step_comparison$QualificationOnly <- TRUE
+                      step_comparison$ToleranceFrozen <- FALSE
+                      step_comparison_rows[[index]] <- step_comparison
+                    }
+                  }
                 }
               }
             }
           }
         }
       }
+      comparison_eligible <- isTRUE(facets_convergence_contract_passed) &&
+        isTRUE(coordinate_contract_passed) &&
+        isTRUE(step_coordinate_contract_passed) && fit_returned &&
+        is.na(error)
       manifest_rows[[index]] <- data.frame(
         Model = model,
+        BaseSeed = seed,
+        DesignSeed = design$seed,
         TotalFacets = total,
         NonPersonFacets = total - 1L,
         FacetNames = paste(design$facet_names, collapse = ";"),
@@ -745,7 +1075,23 @@ mfrmr_run_facets_mfp_external_pilot <- function(
         MatchedCoordinates = matched_coordinates,
         CoordinateContractPassed = coordinate_contract_passed,
         ComparedFacetBlocks = nrow(metrics),
-        Warnings = paste(warning_text, collapse = " | "),
+        ExpectedStepCoordinates = expected_step_coordinates,
+        ImportedStepCoordinates = imported_step_coordinates,
+        MatchedStepCoordinates = matched_step_coordinates,
+        StepCoordinateContractPassed = step_coordinate_contract_passed,
+        StepMAE = step_mae,
+        StepMaximumAbsoluteDifference = step_maximum_absolute_difference,
+        FACETSConvergenceRequested = "0.01,0.0001,0,0",
+        FACETSConvergenceSpecificationPassed =
+          facets_convergence_specification_passed,
+        FACETSConvergenceAchieved = facets_convergence_achieved,
+        FACETSConvergenceContractPassed = facets_convergence_contract_passed,
+        FACETSFinalIteration = facets_final_iteration,
+        FACETSFinalElementScoreResidual = facets_final_element_score_residual,
+        FACETSFinalElementLogitChange = facets_final_element_logit_change,
+        FACETSFinalStepLogitChange = facets_final_step_logit_change,
+        ComparisonEligible = comparison_eligible,
+        Warnings = paste(unique(warning_text), collapse = " | "),
         Error = error,
         QualificationOnly = TRUE,
         ToleranceFrozen = FALSE,
@@ -753,14 +1099,70 @@ mfrmr_run_facets_mfp_external_pilot <- function(
         EquivalenceClaimAuthorized = FALSE,
         stringsAsFactors = FALSE
       )
-      if (nrow(metrics) > 0L) metric_rows[[index]] <- metrics
+      if (comparison_eligible) metric_rows[[index]] <- metrics
     }
   }
   list(
     manifest = do.call(rbind, manifest_rows),
     metrics = if (length(metric_rows)) do.call(rbind, metric_rows) else data.frame(),
+    step_comparisons = if (length(step_comparison_rows)) {
+      do.call(rbind, step_comparison_rows)
+    } else {
+      data.frame()
+    },
     work_dir = work_dir,
     executed = isTRUE(execute),
+    confirmation_authorized = FALSE,
+    equivalence_claim_authorized = FALSE
+  )
+}
+
+mfrmr_run_facets_mfp_external_multiseed_pilot <- function(
+    facets_exe,
+    work_dir,
+    base_seeds,
+    execute = FALSE,
+    total_facets = 3:5,
+    models = c("RSM", "PCM"),
+    maxit = 100L) {
+  valid_seeds <- is.numeric(base_seeds) && length(base_seeds) > 0L &&
+    !anyNA(base_seeds) && all(is.finite(base_seeds)) &&
+    all(base_seeds == floor(base_seeds)) && !anyDuplicated(base_seeds)
+  if (!valid_seeds) {
+    stop("`base_seeds` must contain unique finite integers.", call. = FALSE)
+  }
+  base_seeds <- as.integer(base_seeds)
+  work_dir <- normalizePath(work_dir, winslash = "/", mustWork = FALSE)
+  if (dir.exists(work_dir) && length(list.files(work_dir, all.files = TRUE,
+                                                no.. = TRUE)) > 0L) {
+    stop("External multiseed work directory must be absent or empty: ",
+         work_dir, ".", call. = FALSE)
+  }
+  dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
+  runs <- lapply(base_seeds, function(base_seed) {
+    mfrmr_run_facets_mfp_external_pilot(
+      facets_exe = facets_exe,
+      work_dir = file.path(work_dir, paste0("seed-", base_seed)),
+      execute = execute,
+      total_facets = total_facets,
+      models = models,
+      seed = base_seed,
+      maxit = maxit
+    )
+  })
+  bind_component <- function(name) {
+    components <- lapply(runs, `[[`, name)
+    components <- components[vapply(components, nrow, integer(1)) > 0L]
+    if (length(components)) do.call(rbind, components) else data.frame()
+  }
+  list(
+    manifest = bind_component("manifest"),
+    metrics = bind_component("metrics"),
+    step_comparisons = bind_component("step_comparisons"),
+    work_dir = work_dir,
+    base_seeds = base_seeds,
+    executed = isTRUE(execute),
+    candidate_linked_pilot = TRUE,
     confirmation_authorized = FALSE,
     equivalence_claim_authorized = FALSE
   )
@@ -863,7 +1265,8 @@ print.mfrmr_facets_mfp_contract <- function(x, ...) {
   cat("FACETS multifacet and displayed-precision contract\n")
   cat("Rows:", nrow(x$registry), "\n")
   cat("External precision qualification: completed for the three-facet core\n")
-  cat("Fixed-information 3--5 facet qualification: completed for common element measures\n")
+  cat("Fixed-information 3--5 facet qualification: completed for elements and steps\n")
+  cat("Candidate-linked five-seed pilot: completed; confirmation: no\n")
   cat("Multifacet registry executed in FACETS: no\n")
   cat("Scientific byte equality required: no\n")
   invisible(x)
@@ -878,14 +1281,15 @@ mfrmr_facets_mfp_contract <- function() {
     decisions = data.frame(
       Area = c(
         "Facet count", "Facet levels", "Large data", "Sparse topology",
-        "Requested precision", "Reported precision", "ZSTD threshold",
-        "Scientific equality"
+        "JML convergence", "Requested precision", "Reported precision",
+        "ZSTD threshold", "Scientific equality"
       ),
       Policy = c(
         "Vary total facets 3, 4, and 5 while holding rows and Person exposure fixed.",
         "Vary levels separately from the number of facet dimensions.",
         "Increase Persons and rows in a separate capacity stratum.",
         "Compare distributed, weak-bridge, and disconnected graphs separately.",
+        "Verify both the echoed criteria and the final JMLE iteration; return code zero is insufficient.",
         "Request eight decimals for configurable FACETS measure and residual outputs.",
         "Retain exact FACETS numeric tokens and displayed decimal counts.",
         "Use boundary-indeterminate only when the actual ZSTD output remains fixed-precision at |ZSTD| = 2.",
@@ -897,6 +1301,8 @@ mfrmr_facets_mfp_contract <- function() {
     authorization = data.frame(
       FACETSPrecisionQualificationCompleted = TRUE,
       FACETSFixedInformationDimensionQualificationCompleted = TRUE,
+      FACETSStepCoordinateQualificationCompleted = TRUE,
+      FACETSCandidateLinkedMultiseedPilotCompleted = TRUE,
       FACETSRegistryExecutionCompleted = FALSE,
       FACETSExecutionAuthorized = FALSE,
       NumericToleranceFrozen = FALSE,
