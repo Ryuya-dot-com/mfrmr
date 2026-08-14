@@ -283,6 +283,12 @@ JML likelihood.
    or external GPCM/GMFRM estimates in separate prior/model strata. Quadrature
    and latent-distribution sensitivity remain mandatory for consequential MML
    claims.
+9. **Separate Person count from within-Person information.** The repository-only
+   `gpcm-estimator-asymptotics-0.2.3.R` diagnostic now creates nested fixed-
+   exposure and increasing-exposure sequences from one generated response
+   table. Its smoke is directional only; the guarded replicated pilot must run
+   before making any incidental-bias, estimator-selection, correction, or
+   Bayesian-necessity decision.
 
 ## Zotero evidence consulted
 
