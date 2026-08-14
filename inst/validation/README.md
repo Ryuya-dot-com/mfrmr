@@ -721,6 +721,17 @@ identify whether the opt-in layer ran and retain its test log.
   coordinate passed the separately frozen 0.005-logit rule. These are pilot-
   only checks; no confirmation response was opened and no replacement claim
   was made.
+- `facets-rsm-pcm-stress-envelope-0.2.3.R` and corresponding record: six
+  already-open truth-first designs separating 40,000-row capacity, distributed
+  and weak-bridge sparsity, a typed disconnected negative control, and 10/30
+  total facets. The adapter runs mfrmr independently of FACETS entrance state,
+  retains coordinate-level recovery eligibility, and never treats one-seed
+  Bias/RMSE as Monte Carlo evidence. The local FACETS executable later returned
+  code 5 even for the unchanged 640-row control, so external stress comparison
+  remains blocked rather than failed. At maxit 800, two of ten connected mfrmr
+  fits passed the strict gradient gate; both disconnected fits were rejected
+  before optimization. The record narrows the next question to the scale of
+  the terminal-gradient readiness criterion rather than more repetitions.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

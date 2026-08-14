@@ -907,9 +907,15 @@ mfrmr_run_facets_mfp_external_pilot <- function(
     total_facets = 3:5,
     models = c("RSM", "PCM"),
     seed = 451001L,
-    maxit = 100L) {
+    maxit = 100L,
+    design_builder = NULL,
+    retain_fit = FALSE) {
   if (!is.logical(execute) || length(execute) != 1L || is.na(execute)) {
     stop("`execute` must be one nonmissing logical value.", call. = FALSE)
+  }
+  if (!is.logical(retain_fit) || length(retain_fit) != 1L ||
+      is.na(retain_fit)) {
+    stop("`retain_fit` must be one nonmissing logical value.", call. = FALSE)
   }
   valid_seed <- is.numeric(seed) && length(seed) == 1L && !is.na(seed) &&
     is.finite(seed) && seed == floor(seed)
@@ -918,9 +924,24 @@ mfrmr_run_facets_mfp_external_pilot <- function(
   }
   seed <- as.integer(seed)
   total_facets <- as.integer(total_facets)
-  if (length(total_facets) == 0L || any(!total_facets %in% 3:5)) {
-    stop("External pilot total facets must be selected from 3, 4, and 5.",
-         call. = FALSE)
+  standard_design <- is.null(design_builder)
+  if (!standard_design && !is.function(design_builder)) {
+    stop("`design_builder` must be NULL or a function.", call. = FALSE)
+  }
+  valid_total_facets <- length(total_facets) > 0L && !anyNA(total_facets) &&
+    all(is.finite(total_facets)) && all(total_facets == floor(total_facets)) &&
+    !anyDuplicated(total_facets)
+  if (!valid_total_facets ||
+      (standard_design && any(!total_facets %in% 3:5)) ||
+      (!standard_design && any(total_facets < 3L))) {
+    stop(
+      if (standard_design) {
+        "External pilot total facets must be selected from 3, 4, and 5."
+      } else {
+        "Injected pilot designs require unique total-facet counts of at least 3."
+      },
+      call. = FALSE
+    )
   }
   models <- match.arg(models, c("RSM", "PCM"), several.ok = TRUE)
   if (isTRUE(execute) && !file.exists(facets_exe)) {
@@ -938,15 +959,34 @@ mfrmr_run_facets_mfp_external_pilot <- function(
   metric_rows <- list()
   element_comparison_rows <- list()
   step_comparison_rows <- list()
+  fit_rows <- list()
   index <- 0L
   for (total in total_facets) {
     for (model in models) {
       index <- index + 1L
-      design <- mfrmr_facets_mfp_smoke_design(
-        total_facets = total,
-        model = model,
-        seed = seed + match(model, c("RSM", "PCM"))
-      )
+      design_seed <- seed + match(model, c("RSM", "PCM"))
+      design <- if (standard_design) {
+        mfrmr_facets_mfp_smoke_design(
+          total_facets = total, model = model, seed = design_seed
+        )
+      } else {
+        design_builder(
+          total_facets = total, model = model, seed = design_seed
+        )
+      }
+      valid_design <- is.list(design) && is.data.frame(design$data) &&
+        is.character(design$facet_names) &&
+        length(design$facet_names) == total - 1L &&
+        identical(as.character(design$model), model) &&
+        identical(as.integer(design$total_facets), total) &&
+        is.numeric(design$seed) && length(design$seed) == 1L &&
+        !is.na(design$seed) && is.finite(design$seed)
+      if (!valid_design) {
+        stop(
+          "Injected FACETS design does not match its requested model, facet ",
+          "count, data, or seed contract.", call. = FALSE
+        )
+      }
       case_dir <- file.path(work_dir, paste0(tolower(model), "-f", total))
       case <- mfrmr_facets_mfp_write_external_case(design, model, case_dir)
       process_status <- NA_integer_
@@ -955,6 +995,7 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       metrics <- data.frame()
       element_comparison <- data.frame()
       fit_returned <- FALSE
+      mfrmr_error_class <- NA_character_
       mfrmr_convergence_code <- NA_integer_
       mfrmr_estimation_converged <- FALSE
       mfrmr_terminal_gradient_sup_norm <- NA_real_
@@ -1087,7 +1128,9 @@ mfrmr_run_facets_mfp_external_pilot <- function(
               warning_text <- captured$warnings
               if (is.null(captured$value)) {
                 error <- captured$error
+                mfrmr_error_class <- paste(captured$error_class, collapse = ";")
               } else {
+                if (isTRUE(retain_fit)) fit_rows[[index]] <- captured$value
                 telemetry <- mfrmr_facets_mfp_fit_telemetry(captured$value)
                 mfrmr_convergence_code <- telemetry$ConvergenceCode
                 mfrmr_estimation_converged <- telemetry$EstimationConverged
@@ -1207,6 +1250,7 @@ mfrmr_run_facets_mfp_external_pilot <- function(
         FACETSReturnCode = process_status,
         FACETSReportPresent = file.exists(case$report_path),
         MfrmrFitReturned = fit_returned,
+        MfrmrErrorClass = mfrmr_error_class,
         MfrmrConvergenceCode = mfrmr_convergence_code,
         MfrmrEstimationConverged = mfrmr_estimation_converged,
         MfrmrTerminalGradientSupNorm = mfrmr_terminal_gradient_sup_norm,
@@ -1264,6 +1308,7 @@ mfrmr_run_facets_mfp_external_pilot <- function(
     } else {
       data.frame()
     },
+    fits = fit_rows,
     work_dir = work_dir,
     executed = isTRUE(execute),
     confirmation_authorized = FALSE,
@@ -1338,6 +1383,7 @@ mfrmr_facets_mfp_capture <- function(expr) {
   list(
     value = if (inherits(value, "error")) NULL else value,
     error = if (inherits(value, "error")) conditionMessage(value) else NA_character_,
+    error_class = if (inherits(value, "error")) class(value) else character(0),
     warnings = unique(warnings)
   )
 }
@@ -1462,8 +1508,11 @@ mfrmr_facets_mfp_contract <- function() {
       FACETSNumericalAcceptanceRuleFrozen = TRUE,
       FACETSConfirmationSemanticRunnerReady = TRUE,
       FACETSPilotExecutionAdapterImplemented = TRUE,
+      FACETSStressEnvelopeImplemented = TRUE,
+      MfrmrOpenedSeedStressPilotCompleted = TRUE,
       FACETSConfirmationExecutionAdapterImplemented = FALSE,
       FACETSConfirmationExecutionAuthorized = FALSE,
+      FACETSStressRegistryExecutionCompleted = FALSE,
       FACETSRegistryExecutionCompleted = FALSE,
       FACETSExecutionAuthorized = FALSE,
       NumericToleranceFrozen = TRUE,

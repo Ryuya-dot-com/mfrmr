@@ -47,6 +47,8 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
   expect_true(contract$authorization$FACETSNumericalAcceptanceRuleFrozen)
   expect_true(contract$authorization$FACETSConfirmationSemanticRunnerReady)
   expect_true(contract$authorization$FACETSPilotExecutionAdapterImplemented)
+  expect_true(contract$authorization$FACETSStressEnvelopeImplemented)
+  expect_true(contract$authorization$MfrmrOpenedSeedStressPilotCompleted)
   expect_false(
     contract$authorization$FACETSConfirmationExecutionAdapterImplemented
   )
@@ -54,6 +56,7 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
   expect_true(contract$authorization$ReplicationFrozen)
   expect_false(contract$authorization$FACETSConfirmationExecutionAuthorized)
   expect_false(contract$authorization$FACETSRegistryExecutionCompleted)
+  expect_false(contract$authorization$FACETSStressRegistryExecutionCompleted)
   expect_false(contract$authorization$FACETSExecutionAuthorized)
   expect_false(contract$authorization$EquivalenceClaimAuthorized)
 
@@ -274,6 +277,7 @@ test_that("external multifacet pilot is dry-run by default", {
   expect_equal(nrow(pilot$metrics), 0L)
   expect_equal(nrow(pilot$element_comparisons), 0L)
   expect_equal(nrow(pilot$step_comparisons), 0L)
+  expect_equal(length(pilot$fits), 0L)
   expect_true(all(file.exists(file.path(
     work_dir, c("rsm-f4", "pcm-f4"), "facets_control.txt"
   ))))
@@ -285,6 +289,14 @@ test_that("external multifacet pilot is dry-run by default", {
       total_facets = 4L
     ),
     "executable was not found"
+  )
+  expect_error(
+    env$mfrmr_run_facets_mfp_external_pilot(
+      facets_exe = "deliberately-missing-facets.exe",
+      work_dir = tempfile("facets-mfp-pilot-"),
+      retain_fit = NA
+    ),
+    "nonmissing logical"
   )
 })
 
@@ -477,4 +489,5 @@ test_that("multifacet capture retains rather than hides errors and warnings", {
   expect_match(warned$warnings, "visible warning")
   expect_null(failed$value)
   expect_match(failed$error, "visible error")
+  expect_true("simpleError" %in% failed$error_class)
 })

@@ -46,6 +46,8 @@
 ^tests/testthat/test-conquest-.*[.]R$
 ^tests/testthat/test-external-(comparison-eligibility-contract|mml-algorithm-correlation-audit|repository-boundary-audit)[.]R$
 ^tests/testthat/test-facets-gpcm-jml-comparison-role-contract[.]R$
+^tests/testthat/test-facets-multifacet-.*[.]R$
+^tests/testthat/test-facets-rsm-pcm-stress-envelope[.]R$
 ^tests/testthat/test-gpcm-.*-p[0-9][a-z]?[.]R$
 ^tests/testthat/test-gpcm-(extreme-score-attribution|owner-specific-pilot)[.]R$
 ^tests/testthat/test-gpcm-optimizer-boundary-identity[.]R$

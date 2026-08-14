@@ -58,6 +58,17 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   separately frozen 0.005-logit rule. Maximum Element and Step differences were
   0.0006329638 and 0.0003632125. These remain pilot results, add no replacement
   evidence, and leave confirmation blocked.
+  Added a separate opened-seed stress envelope for 40,000-row,
+  distributed-sparse, weak-bridge, disconnected, and 10/30-facet RSM/PCM JML
+  designs. It runs mfrmr independently of FACETS availability, retains typed
+  structural rejection and coordinate-level recovery eligibility, and does
+  not promote one-seed Bias/RMSE. Both disconnected models were correctly
+  rejected at nullity one. At maxit 800, two of ten connected fits cleared the
+  strict terminal-gradient gate; the other code-zero solutions identify a
+  stopping-rule/readiness-scale question rather than a reason to relax the
+  gate. The local FACETS executable returned code 5 even for the unchanged
+  previously successful 640-row control, so large/sparse/many-facet external
+  comparison remains unavailable, not numerically failed.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
