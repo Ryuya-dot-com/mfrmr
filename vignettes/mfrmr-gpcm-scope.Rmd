@@ -450,6 +450,23 @@ selection performance. The design lesson is to inspect which slope and
 severity contrasts are traversed by cycles, not to infer identifiability from
 connectedness, density, or an anchor percentage alone.
 
+A subsequent repository-only pilot removed the known-ability advantage and
+refitted both slope actions by direct MML. The common identification estimated
+geometric-mean-one relative slopes, sum-zero Rater severities, mean-zero
+transition boundaries, and a normal population mean and standard deviation.
+Across 12 replications per truth and design at 250 training Persons, all 96
+candidate fits converged and all full 19-coordinate Hessians were positive
+definite. Two starts differed by at most about `7.9e-6` log-likelihood units,
+and q=31 versus q=41 changed none of the 48 paired family decisions. Complete
+crossing selected the true family in every training and independent holdout
+dataset. Under the balanced cycle, training selected the truth in 7--9 of 12
+datasets and median relative-slope RMSE increased from about 0.06 to as much as
+0.12. A stricter retained-solution polish reduced the largest gradient by
+roughly an order of magnitude without materially changing likelihoods. These
+small fixed counts clarify optimizer, curvature, and design contributions;
+they do not calibrate a universal selection, standard-error, or readiness
+rule.
+
 ## Source-grounded recovery interpretation
 
 The bounded `GPCM` route follows Muraki's generalized partial credit model

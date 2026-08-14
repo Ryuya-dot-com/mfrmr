@@ -31,6 +31,16 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   levels. This is not JML/MML model selection and does not justify a universal
   anchor or density percentage.
 
+* Added a repository-only finite-sample direct-MML refit of both GPCM slope
+  actions under a common 19-coordinate free-population identification. In a
+  fixed 12-replication pilot, two starts converged to effectively the same
+  objectives, every retained Hessian was full-rank positive definite, and
+  q=31/q=41 changed no paired family decision. Balanced cycle coverage still
+  weakened selection and relative-slope recovery. A stricter retained-solution
+  polish reduced gradient flags without materially changing likelihoods. The
+  pilot does not expose loading-only publicly, calibrate standard errors, or
+  alter readiness.
+
 * Removed byte- and serialization-hash claims from distributed reporting
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an
