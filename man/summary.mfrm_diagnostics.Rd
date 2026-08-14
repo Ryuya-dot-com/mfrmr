@@ -33,6 +33,8 @@ person-level rows remain available in the returned object.}
 An object of class \code{summary.mfrm_diagnostics} with:
 \itemize{
 \item \code{overview}: design-level counts and residual-PCA mode
+\item \code{decision}: the same plain-language fit-readiness decision used by
+\code{summary(fit)}, retained ahead of diagnostic screening results
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: readiness provenance inherited from the source
 fit and retained separately from diagnostic-screening status

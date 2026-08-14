@@ -114,6 +114,13 @@ test_that("major beginner-facing summaries respect the 80-column privacy contrac
     )
   )
 
+  diagnostics_lines <- outputs$diagnostics$lines
+  results_lines <- outputs$results_brief$lines
+  expect_true(any(grepl("^Decision$", diagnostics_lines)))
+  expect_true(any(grepl("Formal inference:", diagnostics_lines, fixed = TRUE)))
+  expect_true(any(grepl("^Decision$", results_lines)))
+  expect_true(any(grepl("Formal inference:", results_lines, fixed = TRUE)))
+
   conquest_lines <- outputs$conquest_bundle$lines
   expect_false(conquest_bundle$summary$MfrmrInferenceReady[[1]])
   expect_true(any(grepl("mfrmr fit status", conquest_lines, fixed = TRUE)))

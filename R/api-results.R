@@ -4696,6 +4696,9 @@ mfrm_report_markdown <- function(report) {
     c(
       paste0("# ", report$title),
       "",
+      "## Fit Decision",
+      mfrm_report_markdown_table(report$decision, max_rows = 1L),
+      "",
       "## Narrative",
       narrative_lines,
       "",
@@ -4842,10 +4845,18 @@ mfrm_report_build <- function(x, style) {
     report_index = report_index,
     template_index = template_index
   )
+  decision <- as.data.frame(
+    sx$decision %||% mfrm_fit_decision_summary(
+      x$fit_readiness %||% data.frame(),
+      next_action = first_screen$NextAction[1L] %||% NA_character_
+    ),
+    stringsAsFactors = FALSE
+  )
   narrative <- mfrm_report_narrative(x, sx, style, sections)
   actions <- mfrm_report_action_items(sx, sections, style)
   tables <- list(
     overview = sx$overview,
+    decision = decision,
     fit_readiness = as.data.frame(
       x$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
     ),
@@ -4897,6 +4908,7 @@ mfrm_report_build <- function(x, style) {
     title = mfrm_report_title(style),
     source_include = as.character(x$include %||% character(0)),
     summary = sx,
+    decision = decision,
     fit_readiness = as.data.frame(
       x$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
     ),
@@ -5104,6 +5116,13 @@ summary.mfrm_report <- function(object, top_n = 8,
 
   out <- list(
     overview = overview,
+    decision = as.data.frame(
+      object$decision %||% mfrm_fit_decision_summary(
+        object$fit_readiness %||% data.frame(),
+        next_action = overview$FirstAction[1L] %||% NA_character_
+      ),
+      stringsAsFactors = FALSE
+    ),
     fit_readiness = as.data.frame(
       object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
     ),
@@ -5147,6 +5166,7 @@ mfrm_report_html_tables <- function(report) {
   sx <- summary(report)
   summary_tables <- list(
     report_summary_overview = sx$overview,
+    report_summary_decision = sx$decision,
     report_summary_first_screen = sx$first_screen,
     report_summary_status_counts = sx$status_counts,
     report_summary_immediate_actions = sx$immediate_actions,
@@ -5197,7 +5217,8 @@ mfrm_report_html <- function(report) {
 #' report.
 #' The object and its table list retain the exact source-fit
 #' `fit_readiness*` tables from `mfrm_results()`; report synthesis does not
-#' reinterpret or upgrade them.
+#' reinterpret or upgrade them. The `decision` table translates that same
+#' record into interpretation, formal-inference, reason, and next-action text.
 #'
 #' @param x An [mfrm_results()] object.
 #' @param style Report emphasis. `"qc"` is the default first-screen report.
@@ -5469,6 +5490,7 @@ mfrm_results_export_summary_tables <- function(x) {
   )
   tables <- list(
     overview = sx$overview,
+    decision = sx$decision,
     status = sx$status,
     fit_readiness = sx$fit_readiness,
     fit_readiness_components = sx$fit_readiness_components,
@@ -6030,6 +6052,8 @@ export_mfrm_results <- function(x,
 #' @section What to inspect first:
 #' Start with `summary(res)`. The most useful fields are:
 #' - `overview`: input mode, model, method, table count, and plot-route count
+#' - `decision`: plain-language interpretation, formal-inference, reason, and
+#'   next-action text derived from the source-fit readiness record
 #' - `readiness`: separate analysis and plot-interpretation gates
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: the exact source-fit readiness record retained
@@ -6424,9 +6448,22 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
   next_actions <- as.data.frame(object$next_actions %||% data.frame(), stringsAsFactors = FALSE)
   mapping <- mfrm_results_mapping_table(object$input$mapping %||% NULL)
   reproducible_code <- mfrm_results_code_table(object$input$reproducible_code %||% "")
+  next_action <- if (
+    nrow(next_actions) > 0L && "RecommendedAction" %in% names(next_actions)
+  ) {
+    as.character(next_actions$RecommendedAction[1L])
+  } else if (nrow(next_actions) > 0L && "Action" %in% names(next_actions)) {
+    as.character(next_actions$Action[1L])
+  } else {
+    NA_character_
+  }
+  decision <- mfrm_fit_decision_summary(
+    fit_readiness, next_action = next_action
+  )
 
   out <- list(
     overview = round_numeric_df(overview, digits = digits),
+    decision = decision,
     status = status,
     component_index = component_index,
     table_index = table_index,
@@ -6455,6 +6492,7 @@ print.summary.mfrm_results <- function(x, ...) {
     cat("\nOverview\n")
     print(as.data.frame(x$overview), row.names = FALSE)
   }
+  print_fit_decision_section(x$decision)
   if (!brief &&
       !is.null(x$status) && nrow(x$status) > 0L) {
     cat("\nSection status\n")
@@ -6560,6 +6598,7 @@ print.mfrm_report <- function(x, ...) {
   if (length(x$source_include %||% character(0)) > 0L) {
     cat("  Source include: ", paste(x$source_include, collapse = ", "), "\n", sep = "")
   }
+  print_fit_decision_section(x$decision)
   cat("  Read order: summary(report) -> report$first_screen -> report$report_index -> report$template_index\n", sep = "")
   first_screen <- as.data.frame(x$first_screen %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(first_screen) > 0L) {
@@ -6603,6 +6642,7 @@ print.summary.mfrm_report <- function(x, ...) {
     cat("\nOverview\n")
     print(as.data.frame(x$overview), row.names = FALSE)
   }
+  print_fit_decision_section(x$decision)
   if (!is.null(x$first_screen) && nrow(x$first_screen) > 0L) {
     cat("\nFirst screen\n")
     print(as.data.frame(x$first_screen), row.names = FALSE)

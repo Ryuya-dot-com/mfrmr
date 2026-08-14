@@ -987,17 +987,23 @@ test_that("build_apa_outputs produces structured APA text", {
   expect_equal(apa$fit_readiness_parameters, readiness_record$parameters)
   expect_equal(apa$contract$readiness$fit, readiness_record$fit)
   expect_equal(summary(apa)$fit_readiness, readiness_record$fit)
+  expect_equal(apa$decision$FitReadiness, readiness_record$fit$FitReadiness)
   expect_s3_class(apa, "mfrm_apa_outputs")
   expect_true("report_text" %in% names(apa))
   expect_true("section_map" %in% names(apa))
   expect_true(nchar(apa$report_text) > 50)
   s <- summary(apa)
   expect_s3_class(s, "summary.mfrm_apa_outputs")
+  expect_identical(
+    names(s$decision),
+    c("Interpretation", "FormalInference", "FitReadiness", "Why", "NextAction")
+  )
   expect_true(is.data.frame(s$sections))
   expect_true("DraftContractPass" %in% names(s$overview))
   expect_true(any(grepl("contract completeness", s$notes, fixed = TRUE)))
   out <- capture.output(print(s))
-  expect_true(length(out) > 0)
+  expect_true(any(grepl("^Decision$", out)))
+  expect_true(any(grepl("Formal inference:", out, fixed = TRUE)))
 })
 
 test_that("APA precision cannot override blocked fit readiness", {
@@ -1022,6 +1028,8 @@ test_that("APA precision cannot override blocked fit readiness", {
 
   expect_identical(apa$fit_readiness$FitReadiness[[1]], "blocked")
   expect_false(apa$fit_readiness$InferenceReady[[1]])
+  expect_identical(apa$decision$FormalInference[[1]], "No")
+  expect_match(apa$decision$Why[[1]], "Numerical convergence failed", fixed = TRUE)
   expect_false(apa$contract$precision$supports_formal_inference)
   expect_match(
     apa$fit_readiness$ReasonCodes[[1]],

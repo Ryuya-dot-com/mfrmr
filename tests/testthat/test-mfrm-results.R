@@ -117,6 +117,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_equal(sx$fit_readiness, readiness_record$fit)
   expect_equal(sx$fit_readiness_components, readiness_record$components)
   expect_equal(sx$fit_readiness_parameters, readiness_record$parameters)
+  expect_equal(sx$decision$FitReadiness, readiness_record$fit$FitReadiness)
 
   primary_plot <- plot(res, draw = FALSE)
   expect_s3_class(primary_plot, "mfrm_plot_data")
@@ -154,6 +155,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_equal(report$fit_readiness, readiness_record$fit)
   expect_equal(report$fit_readiness_components, readiness_record$components)
   expect_equal(report$fit_readiness_parameters, readiness_record$parameters)
+  expect_equal(report$decision, sx$decision)
   printed_report <- capture.output(print(report))
   expect_true(any(grepl("Read order: summary(report)", printed_report, fixed = TRUE)))
   expect_true(any(grepl("Detailed tables are available in report$tables.", printed_report, fixed = TRUE)))
@@ -162,8 +164,9 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   report_summary <- summary(report)
   expect_s3_class(report_summary, "summary.mfrm_report")
   expect_equal(report_summary$fit_readiness, readiness_record$fit)
+  expect_equal(report_summary$decision, report$decision)
   expect_true(all(c(
-    "overview", "first_screen", "status_counts", "immediate_actions",
+    "overview", "decision", "first_screen", "status_counts", "immediate_actions",
     "optional_sections", "claim_readiness", "report_gaps", "boundary_index",
     "routes"
   ) %in% names(report_summary)))
@@ -300,6 +303,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_type(markdown, "character")
   expect_length(markdown, 1L)
   expect_match(markdown, "Evidence Boundary", fixed = TRUE)
+  expect_match(markdown, "Fit Decision", fixed = TRUE)
   expect_match(markdown, "First Screen", fixed = TRUE)
   expect_match(markdown, "Report Index", fixed = TRUE)
   expect_match(markdown, "Template Index", fixed = TRUE)
@@ -323,6 +327,7 @@ test_that("mfrm_results builds a comprehensive object from a fitted model", {
   expect_true(file.exists(html$path))
   expect_match(html$html, "Reader guidance", fixed = TRUE)
   expect_match(html$html, "report_summary_overview", fixed = TRUE)
+  expect_match(html$html, "report_summary_decision", fixed = TRUE)
   expect_match(html$html, "report_summary_first_screen", fixed = TRUE)
   expect_match(html$html, "Report Markdown", fixed = TRUE)
   expect_lt(

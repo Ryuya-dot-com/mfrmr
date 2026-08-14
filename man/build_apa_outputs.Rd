@@ -27,6 +27,8 @@ build_apa_outputs(
 An object of class \code{mfrm_apa_outputs} with:
 \itemize{
 \item \code{report_text}: APA-style Method/Results draft prose
+\item \code{decision}: plain-language source-fit interpretation, formal-inference,
+reason, and next-action guidance
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: exact source-fit readiness provenance
 \item \code{table_figure_notes}: consolidated draft notes for tables/visuals

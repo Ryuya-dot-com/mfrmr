@@ -7036,6 +7036,8 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #'
 #' @return An object of class `summary.mfrm_diagnostics` with:
 #' - `overview`: design-level counts and residual-PCA mode
+#' - `decision`: the same plain-language fit-readiness decision used by
+#'   `summary(fit)`, retained ahead of diagnostic screening results
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: readiness provenance inherited from the source
 #'   fit and retained separately from diagnostic-screening status
@@ -7498,6 +7500,10 @@ summary.mfrm_diagnostics <- function(object,
     )
   }
   next_actions <- clean_summary_lines(next_actions, max_n = 4L)
+  decision <- mfrm_fit_decision_summary(
+    fit_readiness_tbl,
+    next_action = next_actions[1L] %||% NA_character_
+  )
 
   overall_status <- dplyr::case_when(
     any(key_warnings != "No immediate warnings from diagnostics summary.") ~ "follow_up_needed",
@@ -7672,6 +7678,7 @@ summary.mfrm_diagnostics <- function(object,
 
   out <- list(
     overview = overview,
+    decision = decision,
     status = status,
     fit_readiness = fit_readiness_tbl,
     fit_readiness_components = fit_readiness_components_tbl,
@@ -7766,6 +7773,7 @@ print.summary.mfrm_diagnostics <- function(x, ...) {
       cat(sprintf("  Fair average: %s\n", display_value(ov$FairAverage)))
     }
   }
+  print_fit_decision_section(x$decision)
   if (!is.null(x$status) && nrow(x$status) > 0) {
     print_bullet_section(
       "Status",

@@ -4848,6 +4848,8 @@ plot_bias_interaction <- function(x,
 #' @return
 #' An object of class `mfrm_apa_outputs` with:
 #' - `report_text`: APA-style Method/Results draft prose
+#' - `decision`: plain-language source-fit interpretation, formal-inference,
+#'   reason, and next-action guidance
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: exact source-fit readiness provenance
 #' - `table_figure_notes`: consolidated draft notes for tables/visuals
@@ -4933,15 +4935,28 @@ build_apa_outputs <- function(fit,
     context = context,
     whexact = whexact
   )
+  fit_readiness <- as.data.frame(
+    contract$readiness$fit %||% data.frame(), stringsAsFactors = FALSE
+  )
+  apa_next_action <- if (
+    nrow(fit_readiness) == 1L &&
+      "InferenceReady" %in% names(fit_readiness) &&
+      isTRUE(fit_readiness$InferenceReady[1L])
+  ) {
+    "Review `summary(apa)$content_checks` before inserting draft text into a manuscript."
+  } else {
+    "Resolve the source fit-readiness decision before using the APA draft for substantive inference."
+  }
 
   out <- list(
     report_text = structure(
       as.character(contract$report_text),
       class = c("mfrm_apa_text", "character")
     ),
-    fit_readiness = as.data.frame(
-      contract$readiness$fit %||% data.frame(), stringsAsFactors = FALSE
+    decision = mfrm_fit_decision_summary(
+      fit_readiness, next_action = apa_next_action
     ),
+    fit_readiness = fit_readiness,
     fit_readiness_components = as.data.frame(
       contract$readiness$components %||% data.frame(),
       stringsAsFactors = FALSE
@@ -5216,6 +5231,8 @@ print.mfrm_apa_text <- function(x, ...) {
 #'
 #' @section Interpreting output:
 #' - `overview`: total coverage across standard text components.
+#' - `decision`: the source-fit decision shown before draft-completeness checks;
+#'   text completeness cannot promote a review or blocked fit.
 #' - `components`: per-component density and mention checks
 #'   (including residual-PCA mentions).
 #' - `sections`: package-native section coverage table.
@@ -5354,6 +5371,13 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
 
   out <- list(
     overview = overview,
+    decision = as.data.frame(
+      object$decision %||% mfrm_fit_decision_summary(
+        object$fit_readiness %||% data.frame(),
+        next_action = "Resolve fit readiness, then review the APA content checks."
+      ),
+      stringsAsFactors = FALSE
+    ),
     fit_readiness = as.data.frame(
       object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
     ),
@@ -5387,6 +5411,7 @@ print.summary.mfrm_apa_outputs <- function(x, ...) {
     cat("\nOverview\n")
     print(round_numeric_df(as.data.frame(x$overview), digits = 0), row.names = FALSE)
   }
+  print_fit_decision_section(x$decision)
   if (!is.null(x$components) && nrow(x$components) > 0) {
     cat("\nComponent stats\n")
     print(round_numeric_df(as.data.frame(x$components), digits = 0), row.names = FALSE)
