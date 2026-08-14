@@ -1303,6 +1303,8 @@ mfrmr_facets_mfp_contract <- function() {
       FACETSFixedInformationDimensionQualificationCompleted = TRUE,
       FACETSStepCoordinateQualificationCompleted = TRUE,
       FACETSCandidateLinkedMultiseedPilotCompleted = TRUE,
+      FACETSConfirmationDesignFrozen = TRUE,
+      FACETSConfirmationExecutionAuthorized = FALSE,
       FACETSRegistryExecutionCompleted = FALSE,
       FACETSExecutionAuthorized = FALSE,
       NumericToleranceFrozen = FALSE,

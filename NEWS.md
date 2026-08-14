@@ -24,6 +24,11 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   eligible cases, maximum element and step differences were 0.000633 and
   0.000363 logits. No tolerance or equivalence is inferred; frozen
   confirmation, sparse/large designs, bias, and capacity stress remain pending.
+  A semantic, no-fit confirmation design now fixes 30 disjoint seeds per
+  model-by-facet-count cell (180 expected cases), complete failed-run
+  denominators, and continuous/binomial MCSE rules without hashes or opened
+  responses. Execution remains blocked because no numerical acceptance rule
+  has been frozen.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,

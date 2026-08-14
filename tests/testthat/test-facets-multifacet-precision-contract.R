@@ -43,6 +43,8 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
   expect_true(
     contract$authorization$FACETSCandidateLinkedMultiseedPilotCompleted
   )
+  expect_true(contract$authorization$FACETSConfirmationDesignFrozen)
+  expect_false(contract$authorization$FACETSConfirmationExecutionAuthorized)
   expect_false(contract$authorization$FACETSRegistryExecutionCompleted)
   expect_false(contract$authorization$FACETSExecutionAuthorized)
   expect_false(contract$authorization$EquivalenceClaimAuthorized)
