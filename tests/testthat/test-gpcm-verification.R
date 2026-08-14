@@ -43,6 +43,21 @@ test_that("GPCM print / summary do not error", {
   expect_no_error(invisible(utils::capture.output(print(.gpcm_fit))))
   fit_summary <- summary(.gpcm_fit)
   expect_no_error(invisible(utils::capture.output(print(fit_summary))))
+  expect_identical(
+    fit_summary$decision$Interpretation,
+    "Review before reporting or inference"
+  )
+  expect_identical(fit_summary$decision$FormalInference, "No")
+  expect_match(
+    fit_summary$decision$Why,
+    "Identifiability evidence is incomplete",
+    fixed = TRUE
+  )
+  expect_match(
+    fit_summary$decision$Why,
+    "Boundary evidence is incomplete",
+    fixed = TRUE
+  )
 
   evidence <- as.data.frame(fit_summary$inference_evidence)
   expect_identical(
@@ -440,9 +455,10 @@ test_that("five-category all-maximum persons and raters retain distinct contract
   )))
   jml_fit_console <- capture.output(print(jml))
   expect_true(any(grepl(
-    "Statistical penalty: none | Finite parameter box: no",
-    jml_fit_console,
-    fixed = TRUE
+    "Statistical penalty: none", jml_fit_console, fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Finite parameter box: no", jml_fit_console, fixed = TRUE
   )))
   jml_plot <- suppressWarnings(plot(jml, type = "wright", draw = FALSE))
   expect_identical(

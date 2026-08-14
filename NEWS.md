@@ -4,6 +4,13 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Made `print(fit)` and `summary(fit)` decision-first: both now lead with a
+  plain-language interpretation status, whether formal inference is supported,
+  the readiness evidence that prevents interpretation, and the highest-priority
+  next action. Core fit lines are wrapped to the configured console width so
+  GPCM scale and identification details remain readable without hiding their
+  scientific caveats.
+
 * Preserved exact reported numeric tokens and displayed decimal counts when
   importing FACETS fit/score tables. External comparison runs now require
   eight requested decimals wherever FACETS output is configurable and verify

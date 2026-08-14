@@ -8250,6 +8250,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' @return An object of class `summary.mfrm_fit` with:
 #' - `overview`: global model/fit indicators
 #' - `status`: concise front-door status block for quick review
+#' - `decision`: plain-language interpretation, formal-inference status,
+#'   reason, and highest-priority next action derived from the stored readiness
+#'   contract
 #' - `readiness`: the stored fit-level state plus numerical, data, design,
 #'   stability, diagnostic, and reporting workflow states
 #' - `data_review`: structured connectivity and facet-support evidence used by
@@ -9559,7 +9562,6 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
   }
   if (identical(model_label, "GPCM")) {
     next_actions <- c(
-      next_actions,
       if (identical(method_label, "MML") &&
           identical(numerical_status, "pass") &&
           !mfrm_inference_ready(object)) {
@@ -9571,6 +9573,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
           "parameter readiness is established."
         )
       },
+      next_actions,
       "Use `compute_information()` / `plot_information()` for reporting-oriented precision follow-up."
     )
   }
@@ -9586,6 +9589,10 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."
   )
   next_actions <- clean_summary_lines(next_actions, max_n = 6L)
+  decision <- mfrm_fit_decision_summary(
+    stored_readiness,
+    next_action = next_actions[1L] %||% NA_character_
+  )
 
   attached_diagnostics_flag <- isTRUE(config$attached_diagnostics)
   attached_diagnostics_cols <- as.character(config$attached_diagnostics_cols %||% character(0))
@@ -9594,6 +9601,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     overview = overview,
     status = status,
     readiness = readiness,
+    decision = decision,
     data_review = data_review,
     key_warnings = key_warnings,
     next_actions = next_actions,
@@ -10004,6 +10012,7 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
     digits = out$digits %||% 3L,
     top_n = max(5L, nrow(out$facet_extremes %||% data.frame()))
   )
+  out$decision$NextAction <- out$next_actions[1L] %||% NA_character_
   class(out) <- "summary.mfrm_fit"
   out
 }
@@ -10048,18 +10057,140 @@ make_summary_block <- function(...) {
   )
 }
 
+mfrm_fit_decision_summary <- function(readiness, next_action = NA_character_) {
+  readiness <- as.data.frame(readiness %||% data.frame(), stringsAsFactors = FALSE)
+  required <- c(
+    "InputState", "EstimabilityState", "CategoryState", "BoundaryState",
+    "NumericalState", "FitReadiness", "InferenceReady"
+  )
+  if (nrow(readiness) != 1L || !all(required %in% names(readiness))) {
+    return(data.frame(
+      Interpretation = "Re-audit or refit before interpretation",
+      FormalInference = "No",
+      FitReadiness = "legacy_unknown",
+      Why = "A current fit-readiness record is unavailable.",
+      NextAction = as.character(next_action)[1L],
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  value <- function(field) as.character(readiness[[field]][1L])
+  fit_state <- value("FitReadiness")
+  interpretation <- switch(
+    fit_state,
+    ready = "Ready for the configured inference",
+    ready_with_exclusions = "Usable only with the recorded exclusions",
+    review = "Review before reporting or inference",
+    blocked = "Do not interpret this fit",
+    legacy_unknown = "Re-audit or refit before interpretation",
+    "Review before reporting or inference"
+  )
+  reasons <- c(
+    if (value("InputState") == "review")
+      "Input preparation requires review",
+    if (value("InputState") == "blocked")
+      "The retained input is blocked",
+    if (value("EstimabilityState") == "not_evaluated")
+      "Identifiability evidence is incomplete",
+    if (value("EstimabilityState") == "weak_information")
+      "The design provides weak information",
+    if (value("EstimabilityState") == "structurally_unidentified")
+      "The model is structurally unidentified",
+    if (value("EstimabilityState") == "population_assumption_linked")
+      "Identification depends on the population model",
+    if (value("CategoryState") == "weak_information")
+      "One or more categories provide weak information",
+    if (value("CategoryState") == "unsupported_coordinate")
+      "One or more category parameters are unsupported",
+    if (value("CategoryState") == "not_evaluated")
+      "Category support is incomplete",
+    if (value("BoundaryState") == "has_exclusions")
+      "One or more boundary parameters are excluded",
+    if (value("BoundaryState") == "not_evaluated")
+      "Boundary evidence is incomplete",
+    if (value("NumericalState") == "review")
+      "Numerical convergence requires review",
+    if (value("NumericalState") %in% c("failed", "not_run"))
+      "Numerical convergence failed",
+    if (fit_state == "legacy_unknown")
+      "The stored readiness contract is not current"
+  )
+  reasons <- unique(reasons[!is.na(reasons) & nzchar(reasons)])
+  if (!length(reasons)) {
+    reasons <- if (identical(fit_state, "ready")) {
+      "All stored fit-readiness components passed."
+    } else {
+      "Review the stored readiness components before interpretation."
+    }
+  } else {
+    reasons <- paste0(paste(reasons, collapse = "; "), ".")
+  }
+  data.frame(
+    Interpretation = interpretation,
+    FormalInference = if (isTRUE(readiness$InferenceReady[1L])) "Yes" else "No",
+    FitReadiness = fit_state,
+    Why = reasons,
+    NextAction = as.character(next_action)[1L],
+    stringsAsFactors = FALSE
+  )
+}
+
 summary_lines_are_default <- function(lines, default_line) {
   lines <- clean_summary_lines(lines)
   length(lines) == 1L && identical(lines, default_line)
+}
+
+print_fit_decision_section <- function(decision) {
+  decision <- as.data.frame(decision %||% data.frame(), stringsAsFactors = FALSE)
+  required <- c(
+    "Interpretation", "FormalInference", "FitReadiness", "Why", "NextAction"
+  )
+  if (nrow(decision) != 1L || !all(required %in% names(decision))) {
+    return(invisible(NULL))
+  }
+  print_bullet_section("Decision", c(
+    paste0("Interpretation: ", decision$Interpretation[1L]),
+    paste0(
+      "Formal inference: ", decision$FormalInference[1L],
+      " (fit readiness: ", decision$FitReadiness[1L], ")"
+    ),
+    paste0("Why: ", decision$Why[1L]),
+    if (!is.na(decision$NextAction[1L]) &&
+        nzchar(decision$NextAction[1L])) {
+      paste0("Next: ", decision$NextAction[1L])
+    }
+  ))
+  invisible(NULL)
+}
+
+mfrm_console_width <- function() {
+  width <- getOption("width", 80L)
+  if (length(width) != 1L || !is.numeric(width) || is.na(width) ||
+      !is.finite(width)) {
+    width <- 80L
+  }
+  min(100L, max(50L, as.integer(width)))
+}
+
+print_wrapped_line <- function(line, prefix = "  ") {
+  line <- as.character(line)
+  line <- line[!is.na(line) & nzchar(line)]
+  if (!length(line)) return(invisible(NULL))
+  console_width <- mfrm_console_width()
+  content_width <- max(30L, console_width - nchar(prefix))
+  for (value in line) {
+    wrapped <- strwrap(value, width = content_width)
+    if (!length(wrapped)) next
+    for (part in wrapped) cat(prefix, part, "\n", sep = "")
+  }
+  invisible(NULL)
 }
 
 print_bullet_section <- function(title, lines, prefix = " - ") {
   lines <- clean_summary_lines(lines)
   if (length(lines) == 0) return(invisible(NULL))
   cat("\n", title, "\n", sep = "")
-  console_width <- suppressWarnings(as.integer(getOption("width", 80L)))
-  if (!is.finite(console_width)) console_width <- 80L
-  console_width <- min(100L, max(50L, console_width))
+  console_width <- mfrm_console_width()
   content_width <- max(30L, console_width - nchar(prefix))
   continuation <- paste(rep(" ", nchar(prefix)), collapse = "")
   for (line in lines) {
@@ -10153,15 +10284,16 @@ print.summary.mfrm_fit <- function(x, ...) {
   cat("Many-Facet Measurement Model Summary\n")
   if (nrow(overview) > 0) {
     ov <- overview[1, , drop = FALSE]
-    cat(sprintf(
-      "  Model: %s | Method: %s | N: %s | Persons: %s | Facets: %s | Categories: %s\n",
+    print_wrapped_line(sprintf(
+      "Model: %s | Method: %s | N: %s | Persons: %s | Facets: %s | Categories: %s",
       ov$Model, ov$Method, ov$N, ov$Persons, ov$Facets, ov$Categories
     ))
+    print_fit_decision_section(x$decision)
     if (isTRUE(x$attached_diagnostics)) {
       attached_cols <- as.character(x$attached_diagnostics_cols %||% character(0))
       if (length(attached_cols) > 0L) {
-        cat(sprintf(
-          "  Attached diagnostics: %s\n",
+        print_wrapped_line(sprintf(
+          "Attached diagnostics: %s",
           paste(attached_cols, collapse = ", ")
         ))
       } else {
@@ -10172,18 +10304,18 @@ print.summary.mfrm_fit <- function(x, ...) {
     if (!is.na(ov$MethodUsed %||% NA_character_) &&
         nzchar(as.character(ov$MethodUsed %||% "")) &&
         !identical(as.character(used_public), as.character(ov$Method))) {
-      cat(sprintf("  Resolved estimator: %s\n", ov$MethodUsed))
+      print_wrapped_line(paste0("Resolved estimator: ", ov$MethodUsed))
     }
     if (identical(as.character(ov$Method %||% NA_character_), "MML") &&
         !is.na(ov$MMLEngineUsed %||% NA_character_)) {
-      cat(sprintf(
-        "  MML engine: %s (requested: %s)\n",
+      print_wrapped_line(sprintf(
+        "MML engine: %s (requested: %s)",
         ov$MMLEngineUsed %||% NA_character_,
         ov$MMLEngineRequested %||% NA_character_
       ))
       if (is.finite(ov$EMIterations %||% NA_real_)) {
-        cat(sprintf(
-          "  EM iterations: %s | EM converged: %s | Last relative change: %s\n",
+        print_wrapped_line(sprintf(
+          "EM iterations: %s | EM converged: %s | Last relative change: %s",
           ov$EMIterations %||% NA,
           ifelse(isTRUE(ov$EMConverged), "Yes", "No"),
           ov$EMRelativeChange %||% NA_real_
@@ -10194,14 +10326,14 @@ print.summary.mfrm_fit <- function(x, ...) {
     if (identical(as.character(ov$Model %||% NA_character_), "GPCM") &&
         nrow(settings) > 0L && "GpcmEstimatorFamily" %in% names(settings)) {
       finite_box <- if (isTRUE(settings$GpcmFiniteParameterBox[1])) "yes" else "no"
-      cat(sprintf(
-        "  GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s\n",
+      print_wrapped_line(sprintf(
+        "GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s",
         settings$GpcmEstimatorFamily[1],
         settings$GpcmStatisticalPenalty[1],
         finite_box
       ))
-      cat(sprintf(
-        "  GPCM kernel: %s | Slope action: %s\n",
+      print_wrapped_line(sprintf(
+        "GPCM kernel: %s | Slope action: %s",
         settings$GpcmModelFamily[1],
         settings$GpcmSlopeAction[1]
       ))
@@ -10209,7 +10341,7 @@ print.summary.mfrm_fit <- function(x, ...) {
     if (identical(detail, "brief")) {
       ic_lines <- mfrm_ic_console_lines(overview_raw, digits = digits)
       if (length(ic_lines) > 0L) {
-        cat(paste0("  ", ic_lines, "\n"), sep = "")
+        print_wrapped_line(ic_lines)
       }
     }
   }
@@ -10218,8 +10350,8 @@ print.summary.mfrm_fit <- function(x, ...) {
       x$provenance$OrganizationBoundary[1] %||%
         "FACETS-style organization; not numerical equivalence."
     )
-    cat(sprintf("\nWorkflow profile: %s\n", profile))
-    cat("  ", boundary, "\n", sep = "")
+    cat("\nWorkflow profile: ", profile, "\n", sep = "")
+    print_wrapped_line(boundary)
   }
   if (nrow(x$required_visual %||% data.frame()) > 0L) {
     cat("\nVisual workflow (in order)\n")
@@ -10256,7 +10388,10 @@ print.summary.mfrm_fit <- function(x, ...) {
       )
       value <- gsub("sup-norm", "maximum absolute gradient", value, fixed = TRUE)
       status_line <- paste0(x$status$Item[i], ": ", value)
-      wrapped <- strwrap(status_line, width = 96L)
+      wrapped <- strwrap(
+        status_line,
+        width = max(30L, mfrm_console_width() - 3L)
+      )
       cat(" - ", wrapped[1], "\n", sep = "")
       if (length(wrapped) > 1L) {
         for (part in wrapped[-1L]) cat("   ", part, "\n", sep = "")

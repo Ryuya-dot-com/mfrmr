@@ -55,6 +55,9 @@ An object of class \code{summary.mfrm_fit} with:
 \itemize{
 \item \code{overview}: global model/fit indicators
 \item \code{status}: concise front-door status block for quick review
+\item \code{decision}: plain-language interpretation, formal-inference status,
+reason, and highest-priority next action derived from the stored readiness
+contract
 \item \code{readiness}: the stored fit-level state plus numerical, data, design,
 stability, diagnostic, and reporting workflow states
 \item \code{data_review}: structured connectivity and facet-support evidence used by

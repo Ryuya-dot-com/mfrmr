@@ -3766,9 +3766,20 @@ print.mfrm_fit <- function(x, ...) {
       error = function(e) tibble::tibble()
     )
     cat("mfrm_fit object\n")
-    cat(sprintf("  Model: %s | Method: %s\n", ov$Model %||% NA_character_, ov$Method %||% NA_character_))
-    cat(sprintf("  N: %s | Persons: %s | Facets: %s | Categories: %s\n",
-                ov$N %||% NA, ov$Persons %||% NA, ov$Facets %||% NA, ov$Categories %||% NA))
+    print_wrapped_line(sprintf(
+      "Model: %s | Method: %s",
+      ov$Model %||% NA_character_, ov$Method %||% NA_character_
+    ))
+    print_wrapped_line(sprintf(
+      "N: %s | Persons: %s | Facets: %s | Categories: %s",
+      ov$N %||% NA, ov$Persons %||% NA, ov$Facets %||% NA,
+      ov$Categories %||% NA
+    ))
+    decision_available <- !is.null(fit_summary) &&
+      nrow(fit_summary$decision %||% data.frame()) == 1L
+    if (decision_available) {
+      print_fit_decision_section(fit_summary$decision)
+    }
     if (nrow(scale_contract) > 0L) {
       population_sd <- as.numeric(scale_contract$PopulationSD[1])
       population_text <- if (is.finite(population_sd)) {
@@ -3776,8 +3787,8 @@ print.mfrm_fit <- function(x, ...) {
       } else {
         ""
       }
-      cat(sprintf(
-        "  Scale: %s | Discrimination: %s%s\n",
+      print_wrapped_line(sprintf(
+        "Scale: %s | Discrimination: %s%s",
         scale_contract$CoordinateBasis[1],
         scale_contract$SlopeBasis[1],
         population_text
@@ -3788,14 +3799,14 @@ print.mfrm_fit <- function(x, ...) {
         } else {
           "no"
         }
-        cat(sprintf(
-          "  GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s\n",
+        print_wrapped_line(sprintf(
+          "GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s",
           scale_contract$GpcmEstimatorFamily[1],
           scale_contract$GpcmStatisticalPenalty[1],
           finite_box
         ))
-        cat(sprintf(
-          "  GPCM kernel: %s | Slope action: %s\n",
+        print_wrapped_line(sprintf(
+          "GPCM kernel: %s | Slope action: %s",
           scale_contract$GpcmModelFamily[1],
           scale_contract$GpcmSlopeAction[1]
         ))
@@ -3803,7 +3814,7 @@ print.mfrm_fit <- function(x, ...) {
     }
     ic_lines <- mfrm_ic_console_lines(x$summary, digits = 3L)
     if (length(ic_lines) > 0L) {
-      cat(paste0("  ", ic_lines, "\n"), sep = "")
+      print_wrapped_line(ic_lines)
     }
     if ("Converged" %in% names(ov) && "ConvergenceStatus" %in% names(ov)) {
       convergence <- mfrm_convergence_state(x)
@@ -3817,43 +3828,53 @@ print.mfrm_fit <- function(x, ...) {
         unknown = "Status unavailable",
         convergence$status
       )
-      cat(sprintf(
-        "  Optimizer returned code 0: %s | Convergence review: %s\n",
+      print_wrapped_line(sprintf(
+        "Optimizer returned code 0: %s | Convergence review: %s",
         ifelse(convergence$code_converged, "Yes", "No"),
         status_label
       ))
-      cat(sprintf(
-        "  Formal inference: %s\n",
-        ifelse(convergence$inference_ready, "Ready", "Not ready")
-      ))
+      if (!decision_available) {
+        print_wrapped_line(sprintf(
+          "Formal inference: %s",
+          ifelse(convergence$inference_ready, "Ready", "Not ready")
+        ))
+      }
     }
     if (isTRUE(x$config$attached_diagnostics)) {
       attached_cols <- as.character(x$config$attached_diagnostics_cols %||% character(0))
       if (length(attached_cols) > 0L) {
-        cat(sprintf(
-          "  Attached diagnostics: %s\n",
+        print_wrapped_line(sprintf(
+          "Attached diagnostics: %s",
           paste(attached_cols, collapse = ", ")
         ))
       } else {
         cat("  Attached diagnostics: yes (per-element fit columns merged)\n")
       }
     }
-    if (!is.null(fit_summary) && nrow(fit_summary$status %||% data.frame()) > 0) {
-      first_status <- fit_summary$status[1, , drop = FALSE]
-      cat(sprintf("  Summary status: %s\n", first_status$Value[1] %||% NA_character_))
-    }
-    if (!is.null(fit_summary) &&
-        length(fit_summary$key_warnings) > 0 &&
-        !summary_lines_are_default(
-          fit_summary$key_warnings,
-          "No immediate warnings from fit-level summary checks."
-        )) {
-      cat(sprintf("  Key warning: %s\n", fit_summary$key_warnings[1]))
-    }
-    if (!is.null(fit_summary) && length(fit_summary$next_actions) > 0) {
-      cat(sprintf("  Next: %s\n", fit_summary$next_actions[1]))
-    } else {
-      cat("  Next: use `summary(x)` for details.\n")
+    if (!decision_available) {
+      if (!is.null(fit_summary) &&
+          nrow(fit_summary$status %||% data.frame()) > 0) {
+        first_status <- fit_summary$status[1, , drop = FALSE]
+        print_wrapped_line(sprintf(
+          "Summary status: %s",
+          first_status$Value[1] %||% NA_character_
+        ))
+      }
+      if (!is.null(fit_summary) &&
+          length(fit_summary$key_warnings) > 0 &&
+          !summary_lines_are_default(
+            fit_summary$key_warnings,
+            "No immediate warnings from fit-level summary checks."
+          )) {
+        print_wrapped_line(paste0(
+          "Key warning: ", fit_summary$key_warnings[1]
+        ))
+      }
+      if (!is.null(fit_summary) && length(fit_summary$next_actions) > 0) {
+        print_wrapped_line(paste0("Next: ", fit_summary$next_actions[1]))
+      } else {
+        cat("  Next: use `summary(x)` for details.\n")
+      }
     }
     cat("  Use `summary(x)` for the full fit summary.\n")
   } else {
