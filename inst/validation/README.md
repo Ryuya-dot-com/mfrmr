@@ -690,8 +690,16 @@ identify whether the opt-in layer ran and retain its test log.
   semantic, no-fit 30-seed-per-cell confirmation design for the fixed-
   information RSM/PCM 3--5 facet core. It freezes 180 expected cases, complete
   failed-run denominators, and MCSE rules without hashes, generated responses,
-  fits, or external execution. Execution remains blocked until a separately
-  justified numerical acceptance rule is frozen.
+  fits, or external execution. The version-1 design preserves the pre-rule
+  boundary and remains unopened.
+- `facets-multifacet-acceptance-rule-0.2.3.R` and corresponding record:
+  separately frozen, no-fit coordinate rule for that confirmation design.
+  Every eligible element and step difference must be at most 0.005 logits,
+  with only a machine-epsilon-scale inclusive-boundary allowance. The rule was
+  not chosen from pilot maxima and requires neither hashes nor binary floating-
+  point identity. Ineligible cases stay in the full denominator and prevent a
+  complete-confirmation pass. Execution remains blocked pending a reviewed
+  semantic runner and preflight.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

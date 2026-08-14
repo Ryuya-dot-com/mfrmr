@@ -69,3 +69,12 @@ semantic registry fields, exact seed set, complete denominators, and tests.
 The future run must record the package commit and FACETS version for provenance,
 but those identifiers do not determine scientific equality across user
 machines.
+
+## Successor rule
+
+The separate `facets-multifacet-acceptance-rule-0.2.3.R` artifact subsequently
+froze a 0.005-logit inclusive coordinate rule without opening confirmation
+outcomes. This version-1 design remains an immutable record of the earlier
+no-rule boundary; the successor rule consumes its semantic registry rather
+than rewriting its seeds or denominators. Confirmation execution remains
+unauthorized until a reviewed runner and preflight exist.

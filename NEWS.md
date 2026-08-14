@@ -22,13 +22,20 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   30-case candidate-linked pilot admitted 29 converged cases and rejected one
   return-code-zero RSM case whose final score residual remained 0.0825. Across
   eligible cases, maximum element and step differences were 0.000633 and
-  0.000363 logits. No tolerance or equivalence is inferred; frozen
+  0.000363 logits. No tolerance or equivalence is inferred from that pilot;
   confirmation, sparse/large designs, bias, and capacity stress remain pending.
   A semantic, no-fit confirmation design now fixes 30 disjoint seeds per
   model-by-facet-count cell (180 expected cases), complete failed-run
   denominators, and continuous/binomial MCSE rules without hashes or opened
-  responses. Execution remains blocked because no numerical acceptance rule
-  has been frozen.
+  responses. That versioned design preserves its original no-rule boundary.
+  A separate pre-confirmation rule now freezes the numerical decision:
+  every comparison-eligible element and step coordinate must differ by no more
+  than 0.005 logits, chosen as half of FACETS' documented 0.01-logit smallest
+  useful or printable increment rather than from the pilot maximum. Only a
+  machine-epsilon-scale inclusive-boundary allowance is applied; hashes, file
+  bytes, and hidden binary floating-point identity remain irrelevant. Missing
+  or ineligible cases cannot produce a complete-confirmation pass. Execution
+  is still blocked until a reviewed semantic runner and preflight exist.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
