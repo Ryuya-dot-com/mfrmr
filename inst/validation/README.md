@@ -757,7 +757,26 @@ identify whether the opt-in layer ran and retain its test log.
   with interior maximum movement from `2.17e-5` to `1.21e-4` logits. Centered
   or grouped mappings that mix boundary and estimable levels fail closed. This
   is numerical diagnosis only: it does not produce SEs, change readiness,
-  select a threshold, or establish FACETS equivalence.
+  select a threshold, or establish FACETS equivalence. A later unfiltered
+  sensitivity run used `Newton = 0.5`; all four sparse FACETS fits then met the
+  same declared convergence rule in 596--2,896 iterations. Weak-bridge PCM
+  became the second joint comparison cell. All 1,034 FACETS coordinates were
+  imported, five extreme Persons were separated as a boundary-policy stratum,
+  and all 1,029 ordinary coordinates plus 30 Steps matched identity. The
+  approximately 0.0135-logit Person/Rater difference followed the two weakly
+  linked rater blocks and is not treated as floating-point noise.
+- `facets-readiness-calibration-0.2.3.R` and corresponding record: dry-run by
+  default, opened-seed-only calibration of numerical-readiness scales across
+  six stress designs, RSM/PCM, and six seeds. The executed 72-case matrix
+  retained all 12 typed disconnected rejections and 60 fits. All 60
+  retained-point and boundary-conditioned displacement audits completed, while
+  only six fits passed the fixed raw-gradient gate and all six changed gate
+  result under exact likelihood replication. Mean element residual associated
+  more strongly with conditional displacement than raw gradient (`0.842`
+  versus `0.590`). Weak-bridge RSM produced a repeated upper tail up to
+  `0.005882` logits; balanced F10/F30 cases stayed below `0.000065`. No
+  threshold was selected, readiness was not changed, and confirmation remains
+  unopened.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.
