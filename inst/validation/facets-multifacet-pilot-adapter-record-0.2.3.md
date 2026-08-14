@@ -67,3 +67,35 @@ These use pilot responses already examined in the earlier qualification and
 therefore validate the adapter but are not independent confirmation evidence.
 Confirmation responses remain unopened, and the confirmation execution adapter
 remains unimplemented and unauthorized.
+
+## Complete already-open sweep
+
+The same local route then executed all six allowed base seeds across RSM/PCM
+and three, four, and five total facets: 36 planned cases. All 36 FACETS
+processes returned code zero, all 36 report headers identified version 4.5.0,
+and all 36 echoed the requested convergence criteria. There were no recorded
+warnings. The previously observed `MFX-PILOT-RSM-F5-B452401` case again stopped
+at iteration 75 with final Element score residual 0.0825. It remained in the
+36-case denominator as `convergence_failure`, did not launch mfrmr, and
+contributed no coordinate rows.
+
+The other 35 cases passed both numerical gates and both coordinate contracts.
+The largest mfrmr terminal gradient was 0.00009925830 against the unchanged
+0.0001 review tolerance (`MFX-PILOT-RSM-F3-B452201`). No criterion was adjusted
+after observing this value.
+
+| Model | Total facets | Planned | Eligible | Maximum mfrmr terminal gradient | Maximum Element difference | Maximum Step difference |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RSM | 3 | 6 | 6 | 0.00009925830 | 0.0004385272 | 0.0003044221 |
+| PCM | 3 | 6 | 6 | 0.00009615037 | 0.0004236722 | 0.0002679638 |
+| RSM | 4 | 6 | 6 | 0.00006608758 | 0.0006329638 | 0.0003591656 |
+| PCM | 4 | 6 | 6 | 0.00008721265 | 0.0006315225 | 0.0003632125 |
+| RSM | 5 | 6 | 5 | 0.00009578918 | 0.0004843736 | 0.0003074616 |
+| PCM | 5 | 6 | 6 | 0.00007656920 | 0.0002138938 | 0.0000770561 |
+
+Across the 35 eligible cases, 1,771 Element and 267 Step coordinates were
+retained. Every coordinate passed the independently frozen 0.005-logit rule.
+The global Element maximum was 0.0006329638 in
+`MFX-PILOT-RSM-F4-B452201`; the global Step maximum was 0.0003632125 in
+`MFX-PILOT-PCM-F4-B452401`. Neither value changes the rule, opens confirmation,
+or supports exact equality or FACETS replacement.

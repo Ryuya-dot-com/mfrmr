@@ -715,9 +715,12 @@ identify whether the opt-in layer ran and retain its test log.
   Step coordinate plus FACETS and mfrmr numerical telemetry, validates report-
   header version 4.5.0, and uses no file hash. Confirmation seeds are rejected.
   Its Windows launcher follows FACETS' native wait route. A local execution
-  audit completed the already-open RSM and PCM three-facet cases, retaining all
-  48 Element and 3/12 Step coordinates. These are pilot-only checks; no
-  confirmation response was opened and no replacement claim was made.
+  audit completed all 36 already-open RSM/PCM cases across three to five facets,
+  reproduced the one expected FACETS convergence failure, and retained 1,771
+  Element plus 267 Step coordinates for the other 35 cases. Every retained
+  coordinate passed the separately frozen 0.005-logit rule. These are pilot-
+  only checks; no confirmation response was opened and no replacement claim
+  was made.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

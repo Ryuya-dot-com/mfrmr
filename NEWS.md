@@ -51,10 +51,13 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   as descriptive provenance, never as a hash-based acceptance condition. On
   Windows, FACETS is launched through its documented native wait route because
   direct child-process APIs caused an access violation. A local live audit then
-  completed the already-open RSM and PCM three-facet cases with 48 Element
-  coordinates each and 3/12 Step coordinates; their maximum differences were
-  0.000308/0.000173 and 0.000424/0.000268 logits. These remain pilot results,
-  add no replacement evidence, and leave confirmation blocked.
+  completed all 36 already-open cases across six seeds, RSM/PCM, and three to
+  five facets. It reproduced the single prespecified ineligible RSM five-facet
+  row at final FACETS score residual 0.0825, retained 35 eligible cases with
+  1,771 Element and 267 Step coordinates, and found zero failures of the
+  separately frozen 0.005-logit rule. Maximum Element and Step differences were
+  0.0006329638 and 0.0003632125. These remain pilot results, add no replacement
+  evidence, and leave confirmation blocked.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
