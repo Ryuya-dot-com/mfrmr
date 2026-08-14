@@ -911,6 +911,24 @@ all-unit-slope reduction of the aligned GPCM kernel, the current automatic
 nesting contract withholds the PCM-versus-GPCM chi-square LRT and records
 `PCM_in_GPCM_ic_only` instead.
 
+The practical comparison is available without reconstructing the model
+matrices manually. After fitting the same data as `fit_pcm` and `fit_gpcm`
+(see the GPCM scope vignette), use:
+
+```r
+choice <- build_model_choice_review(PCM = fit_pcm, GPCM = fit_gpcm)
+choice$model_roles[, c(
+  "Model", "StepCoordinates", "FreeStepParameters",
+  "SlopeCoordinates", "FreeSlopeParameters",
+  "FitReadiness", "FormalInference", "Interpretation"
+)]
+```
+
+The coordinate columns count values reported in the fitted step and slope
+tables. The free-parameter columns apply the sum-zero step constraints and,
+for bounded GPCM, the geometric-mean-one slope constraint. This prevents a
+12-row step table from being misreported as 12 independent step parameters.
+
 `build_weighting_review()` now returns a `comparison_contract` that prevents
 JML and MML evidence from being blended. Comparable MML fits receive the
 `same_basis_mml_information_criteria` tier. JML fits receive a descriptive

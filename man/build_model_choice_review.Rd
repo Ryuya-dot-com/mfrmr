@@ -45,6 +45,8 @@ comparison;
 \item comparison-boundary warnings captured from \code{\link[=compare_mfrm]{compare_mfrm()}} and retained
 in \code{comparison_warnings} for printing and appendix export;
 \item model-role guidance for \code{RSM}, \code{PCM}, and bounded \code{GPCM};
+\item reported step/slope coordinate counts, identified free-parameter counts,
+and the stored fit-readiness decision for every supplied model;
 \item downstream-route availability for APA output, score-side export, linking,
 recovery, fair averages, bias screening, and summary-appendix handoff;
 \item report wording templates that avoid treating better bounded-\code{GPCM} fit as

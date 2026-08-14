@@ -12,7 +12,10 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   scientific caveats. Updated the RSM/PCM/GPCM first-use, GPCM, and FACETS
   migration guides to use this same stop/review/proceed route. CRAN-safe
   vignette artifacts now include the decision block, and their generator no
-  longer computes or records file hashes.
+  longer computes or records file hashes. The model-choice review now places
+  reported versus independently free step/slope counts beside each fit's
+  readiness decision, preventing table-row counts from being mistaken for the
+  number of unconstrained parameters.
 
 * Preserved exact reported numeric tokens and displayed decimal counts when
   importing FACETS fit/score tables. External comparison runs now require

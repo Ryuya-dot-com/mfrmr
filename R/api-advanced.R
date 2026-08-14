@@ -7525,12 +7525,33 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     method <- public_mfrm_method_label(as.character(fit$config$method %||% NA_character_)[1])
     step_facet <- as.character(fit$config$step_facet %||% NA_character_)[1]
     slope_facet <- as.character(fit$config$slope_facet %||% NA_character_)[1]
+    sizes <- build_param_sizes(fit$config)
+    readiness <- mfrmr_get_readiness_record(fit)$fit
+    decision <- mfrm_fit_decision_summary(readiness)
     tibble::tibble(
       Label = labels[[i]],
       Model = model,
       Method = method,
       StepFacet = step_facet,
+      StepStructure = if (identical(model, "RSM")) {
+        "shared_ladder"
+      } else {
+        "step_facet_specific_ladders"
+      },
+      StepCoordinates = nrow(as.data.frame(fit$steps %||% data.frame())),
+      FreeStepParameters = as.integer(sizes$steps %||% 0L),
       SlopeFacet = slope_facet,
+      SlopeStructure = if (identical(model, "GPCM")) {
+        "relative_by_slope_facet_geometric_mean_1"
+      } else {
+        "fixed_equal_at_1"
+      },
+      SlopeCoordinates = nrow(as.data.frame(fit$slopes %||% data.frame())),
+      FreeSlopeParameters = as.integer(sizes$log_slopes %||% 0L),
+      FitReadiness = decision$FitReadiness[1L],
+      FormalInference = decision$FormalInference[1L],
+      Interpretation = decision$Interpretation[1L],
+      ReadinessReason = decision$Why[1L],
       RecommendedRole = .model_choice_role(model),
       ScoreContract = .model_choice_score_contract(model),
       ReportTemplate = .model_choice_report_template(model)
@@ -7649,6 +7670,8 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' - comparison-boundary warnings captured from [compare_mfrm()] and retained
 #'   in `comparison_warnings` for printing and appendix export;
 #' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+#' - reported step/slope coordinate counts, identified free-parameter counts,
+#'   and the stored fit-readiness decision for every supplied model;
 #' - downstream-route availability for APA output, score-side export, linking,
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
 #' - report wording templates that avoid treating better bounded-`GPCM` fit as
@@ -7913,9 +7936,39 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
     cat("  Full IC audit fields remain available in `$comparison_table`.\n")
   }
   if (nrow(x$model_roles) > 0L) {
-    cat("\nModel Roles\n")
-    print(as.data.frame(x$model_roles[, c("Label", "Model", "RecommendedRole", "ScoreContract"), drop = FALSE]),
-          row.names = FALSE)
+    cat("\nModel Contracts and Readiness\n")
+    roles <- as.data.frame(x$model_roles, stringsAsFactors = FALSE)
+    roles$StepStructure <- dplyr::recode(
+      roles$StepStructure,
+      shared_ladder = "shared ladder",
+      step_facet_specific_ladders = "facet-specific ladders"
+    )
+    roles$SlopeStructure <- dplyr::recode(
+      roles$SlopeStructure,
+      fixed_equal_at_1 = "fixed at 1",
+      relative_by_slope_facet_geometric_mean_1 =
+        "relative by slope facet (GM = 1)"
+    )
+    cat("\nStep parameters (reported values versus independent parameters)\n")
+    steps <- roles[, c(
+      "Label", "Model", "StepStructure", "StepCoordinates",
+      "FreeStepParameters"
+    ), drop = FALSE]
+    names(steps)[4:5] <- c("Reported", "Free")
+    print(steps, row.names = FALSE)
+    cat("\nSlope parameters (reported values versus independent parameters)\n")
+    slopes <- roles[, c(
+      "Label", "Model", "SlopeStructure", "SlopeCoordinates",
+      "FreeSlopeParameters"
+    ), drop = FALSE]
+    names(slopes)[4:5] <- c("Reported", "Free")
+    print(slopes, row.names = FALSE)
+    cat("\nFit readiness\n")
+    print(roles[, c(
+      "Label", "Model", "FitReadiness", "FormalInference",
+      "Interpretation"
+    ), drop = FALSE], row.names = FALSE)
+    cat("  Full score contracts and readiness reasons remain in `$model_roles`.\n")
   }
   if (nrow(x$downstream_routes) > 0L) {
     cat("\nDownstream Routes\n")

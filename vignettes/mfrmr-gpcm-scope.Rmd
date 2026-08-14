@@ -178,7 +178,20 @@ review <- build_model_choice_review(
   run_weighting_review = TRUE
 )
 summary(review)
+review$model_roles[, c(
+  "Model", "StepStructure", "StepCoordinates", "FreeStepParameters",
+  "SlopeStructure", "SlopeCoordinates", "FreeSlopeParameters",
+  "FitReadiness", "FormalInference", "Interpretation"
+)]
 ```
+
+`StepCoordinates` and `SlopeCoordinates` count the values shown in fitted
+tables. `FreeStepParameters` and `FreeSlopeParameters` count the independent
+coordinates optimized after identification constraints. For example, with
+four score categories and four levels of the step facet, PCM and GPCM display
+12 step coordinates but optimize 8 free step parameters because each
+three-step ladder is sum-zero. GPCM additionally displays four relative slopes
+but optimizes three free log slopes because their geometric mean is one.
 
 The `comparison_contract` keeps four situations separate:
 
