@@ -41,6 +41,17 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   pilot does not expose loading-only publicly, calibrate standard errors, or
   alter readiness.
 
+* Bound the complete-predictor arm of that pilot to the current public
+  `fit_mfrm()` GPCM-MML estimator. On fixed complete and balanced-cycle data at
+  q=31/q=41, an independent likelihood reproduced the public objective,
+  parameters, category probabilities, and raw observed-information slope and
+  population-scale SEs to small numerical differences; all Hessians were
+  19-dimensional and positive definite. Both implementations also reproduced
+  the same quadrature sensitivity. The public fits were estimation-converged
+  but remained review-only because structural and global boundary evidence is
+  incomplete. The bridge uses semantic quantities and numerical regression
+  guards, not byte hashes, and changes no public SE eligibility or readiness.
+
 * Removed byte- and serialization-hash claims from distributed reporting
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an
