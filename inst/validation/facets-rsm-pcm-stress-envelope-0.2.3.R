@@ -496,6 +496,296 @@ mfrmr_facets_mfs_fit_mfrmr <- function(design, maxit = 400L,
   )
 }
 
+# Diagnose a retained RSM/PCM JML point without changing fit readiness. The
+# free-coordinate gradient is the optimizer quantity; the expanded element
+# score residuals retain the observed-minus-expected score scale. They answer
+# different questions and must not be treated as interchangeable thresholds.
+mfrmr_facets_mfs_jml_stationarity_audit <- function(
+    fit, max_numeric_probes = 12L, numeric_relative_step = 3e-5,
+    curvature_relative_step = 1e-3,
+    numeric_agreement_tolerance = 1e-6,
+    replication_factors = c(1L, 2L, 10L)) {
+  if (!inherits(fit, "mfrm_fit") || !is.list(fit$config) ||
+      !is.list(fit$prep) || !is.list(fit$opt)) {
+    stop("`fit` must be a complete mfrm_fit object.", call. = FALSE)
+  }
+  config <- fit$config
+  if (!identical(config$method, "JML") ||
+      !config$model %in% c("RSM", "PCM")) {
+    stop("The stress stationarity audit requires an RSM or PCM JML fit.",
+         call. = FALSE)
+  }
+  valid_probe_count <- is.numeric(max_numeric_probes) &&
+    length(max_numeric_probes) == 1L && is.finite(max_numeric_probes) &&
+    max_numeric_probes == floor(max_numeric_probes) && max_numeric_probes >= 1L
+  controls <- c(
+    numeric_relative_step, curvature_relative_step,
+    numeric_agreement_tolerance
+  )
+  valid_replication <- is.numeric(replication_factors) &&
+    length(replication_factors) > 0L && !anyNA(replication_factors) &&
+    all(is.finite(replication_factors)) &&
+    all(replication_factors == floor(replication_factors)) &&
+    all(replication_factors >= 1L) && !anyDuplicated(replication_factors)
+  if (!valid_probe_count || length(controls) != 3L ||
+      any(!is.finite(controls)) || any(controls <= 0) ||
+      !valid_replication) {
+    stop("Stationarity-audit controls must be finite positive scalars.",
+         call. = FALSE)
+  }
+  max_numeric_probes <- as.integer(max_numeric_probes)
+  replication_factors <- as.integer(replication_factors)
+
+  namespace <- asNamespace("mfrmr")
+  internal <- function(name) get(name, envir = namespace, inherits = FALSE)
+  build_indices <- internal("build_indices")
+  build_param_sizes <- internal("build_param_sizes")
+  objective_function <- internal("mfrm_loglik_jml")
+  gradient_function <- internal("mfrm_grad_jml")
+  expand_params <- internal("expand_params")
+  compute_eta <- internal("compute_eta")
+  probability_bundle <- internal("compute_response_probability_bundle")
+
+  idx <- build_indices(
+    fit$prep, step_facet = config$step_facet,
+    slope_facet = config$slope_facet,
+    interaction_specs = config$interaction_specs
+  )
+  sizes <- build_param_sizes(config)
+  size_values <- vapply(sizes, as.integer, integer(1))
+  par <- as.numeric(fit$opt$par)
+  if (length(par) != sum(size_values) || any(!is.finite(par))) {
+    stop("The retained optimizer vector does not match the model dimensions.",
+         call. = FALSE)
+  }
+  block_labels <- rep(names(size_values), size_values)
+  objective <- function(candidate) {
+    as.numeric(objective_function(candidate, idx, config, sizes))[1L]
+  }
+  retained_objective <- objective(par)
+  stored_objective <- as.numeric(fit$opt$value)[1L]
+  gradient <- as.numeric(gradient_function(par, idx, config, sizes))
+  if (length(gradient) != length(par) || any(!is.finite(gradient)) ||
+      !is.finite(retained_objective) || !is.finite(stored_objective)) {
+    stop("The retained objective or analytic gradient is not finite.",
+         call. = FALSE)
+  }
+
+  block_indices <- split(seq_along(gradient), block_labels)
+  free_gradient_blocks <- do.call(rbind, lapply(
+    names(block_indices), function(block) {
+      values <- gradient[block_indices[[block]]]
+      data.frame(
+        Block = block, FreeCoordinates = length(values),
+        GradientSupNorm = max(abs(values)),
+        GradientRMS = sqrt(mean(values^2)), stringsAsFactors = FALSE
+      )
+    }
+  ))
+  per_block_maximum <- vapply(block_indices, function(indices) {
+    indices[which.max(abs(gradient[indices]))]
+  }, integer(1))
+  probe_order <- unique(c(
+    per_block_maximum, order(abs(gradient), decreasing = TRUE)
+  ))
+  probe_indices <- probe_order[seq_len(min(
+    length(probe_order), max_numeric_probes
+  ))]
+  numeric_probes <- do.call(rbind, lapply(probe_indices, function(index) {
+    step <- numeric_relative_step * max(1, abs(par[index]))
+    plus <- minus <- par
+    plus[index] <- plus[index] + step
+    minus[index] <- minus[index] - step
+    numeric_gradient <- (objective(plus) - objective(minus)) / (2 * step)
+    difference <- numeric_gradient - gradient[index]
+    data.frame(
+      OptimizerIndex = index, Block = block_labels[index],
+      ParameterValue = par[index], Step = step,
+      AnalyticGradient = gradient[index], NumericGradient = numeric_gradient,
+      AbsoluteDifference = abs(difference),
+      ScaledDifference = abs(difference) /
+        max(1, abs(numeric_gradient), abs(gradient[index])),
+      stringsAsFactors = FALSE
+    )
+  }))
+
+  worst_index <- which.max(abs(gradient))
+  curvature_step <- curvature_relative_step * max(1, abs(par[worst_index]))
+  plus <- minus <- par
+  plus[worst_index] <- plus[worst_index] + curvature_step
+  minus[worst_index] <- minus[worst_index] - curvature_step
+  local_curvature <- (
+    objective(plus) - 2 * retained_objective + objective(minus)
+  ) / curvature_step^2
+  local_newton_step <- if (is.finite(local_curvature) &&
+      local_curvature > 0) {
+    -gradient[worst_index] / local_curvature
+  } else {
+    NA_real_
+  }
+  moved_objective <- NA_real_
+  if (is.finite(local_newton_step)) {
+    moved <- par
+    moved[worst_index] <- moved[worst_index] + local_newton_step
+    moved_objective <- objective(moved)
+  }
+
+  params <- expand_params(par, sizes, config)
+  eta <- compute_eta(idx, params, config)
+  response <- probability_bundle(config, idx, params, eta)
+  row_weight <- if (is.null(idx$weight)) {
+    rep(1, length(idx$score_k))
+  } else {
+    as.numeric(idx$weight)
+  }
+  row_score_residual <- (idx$score_k - response$expected_k) * row_weight
+  element_rows <- function(block, ids, level_names) {
+    score <- numeric(length(level_names))
+    grouped <- rowsum(
+      matrix(row_score_residual, ncol = 1L), ids, reorder = FALSE
+    )
+    score[as.integer(rownames(grouped))] <- as.numeric(grouped)
+    observations <- tabulate(ids, nbins = length(level_names))
+    grouped_weight <- rowsum(
+      matrix(row_weight, ncol = 1L), ids, reorder = FALSE
+    )
+    weighted_observations <- numeric(length(level_names))
+    weighted_observations[as.integer(rownames(grouped_weight))] <-
+      as.numeric(grouped_weight)
+    data.frame(
+      ParameterBlock = block, ParameterId = as.character(level_names),
+      Observations = observations,
+      WeightedObservations = weighted_observations,
+      ScoreResidual = score,
+      MeanScoreResidual = score / weighted_observations,
+      stringsAsFactors = FALSE
+    )
+  }
+  expanded_element_residuals <- element_rows(
+    "Person", idx$person, fit$prep$levels$Person
+  )
+  for (facet in config$facet_names) {
+    expanded_element_residuals <- rbind(
+      expanded_element_residuals,
+      element_rows(
+        facet, idx$facets[[facet]], fit$prep$levels[[facet]]
+      )
+    )
+  }
+  element_groups <- split(
+    expanded_element_residuals,
+    expanded_element_residuals$ParameterBlock
+  )
+  expanded_element_summary <- do.call(rbind, lapply(
+    names(element_groups), function(block) {
+      values <- element_groups[[block]]
+      data.frame(
+        ParameterBlock = block, Levels = nrow(values),
+        ScoreResidualSupNorm = max(abs(values$ScoreResidual)),
+        MeanScoreResidualSupNorm = max(abs(values$MeanScoreResidual)),
+        stringsAsFactors = FALSE
+      )
+    }
+  ))
+
+  gradient_tolerance <- as.numeric(
+    fit$summary$GradientReviewTolerance[1L]
+  )
+  terminal_gradient <- max(abs(gradient))
+  objective_difference <- retained_objective - stored_objective
+  objective_scale <- max(1, abs(retained_objective), abs(stored_objective))
+  local_objective_improvement <- retained_objective - moved_objective
+  replication_transport <- do.call(rbind, lapply(
+    replication_factors, function(factor) {
+      transported_idx <- idx
+      transported_idx$weight <- row_weight * factor
+      transported_objective <- as.numeric(objective_function(
+        par, transported_idx, config, sizes
+      ))[1L]
+      transported_gradient <- as.numeric(gradient_function(
+        par, transported_idx, config, sizes
+      ))
+      expected_objective <- retained_objective * factor
+      expected_gradient <- gradient * factor
+      transport_scale <- max(1, abs(expected_objective))
+      data.frame(
+        ReplicationFactor = factor,
+        Objective = transported_objective,
+        ExpectedObjective = expected_objective,
+        ObjectiveScaledDifference =
+          abs(transported_objective - expected_objective) / transport_scale,
+        GradientSupNorm = max(abs(transported_gradient)),
+        ExpectedGradientSupNorm = terminal_gradient * factor,
+        GradientScaledDifference = max(
+          abs(transported_gradient - expected_gradient)
+        ) / max(1, max(abs(expected_gradient))),
+        RawGradientGatePassed = is.finite(gradient_tolerance) &&
+          max(abs(transported_gradient)) <= gradient_tolerance,
+        SameMLESetByConstantScaling = TRUE,
+        ReadinessChanged = FALSE,
+        stringsAsFactors = FALSE
+      )
+    }
+  ))
+  # This checks two floating-point summation routes for an exact algebraic
+  # scaling identity. It is an implementation tolerance, not a fit threshold.
+  replication_transport_tolerance <- 1e-10
+  replication_transport_agrees <- all(
+    replication_transport$ObjectiveScaledDifference <=
+      replication_transport_tolerance
+  ) && all(
+    replication_transport$GradientScaledDifference <=
+      replication_transport_tolerance
+  )
+  out <- list(
+    summary = data.frame(
+      Model = config$model, Method = config$method,
+      FreeCoordinates = length(par),
+      RetainedObjective = retained_objective,
+      StoredObjective = stored_objective,
+      ObjectiveDifference = objective_difference,
+      ObjectiveReconstructionAgrees =
+        abs(objective_difference) <=
+          100 * .Machine$double.eps * objective_scale,
+      TerminalGradientSupNorm = terminal_gradient,
+      GradientReviewTolerance = gradient_tolerance,
+      CurrentGradientGatePassed = is.finite(gradient_tolerance) &&
+        terminal_gradient <= gradient_tolerance,
+      NumericGradientAgrees = all(
+        numeric_probes$ScaledDifference <= numeric_agreement_tolerance
+      ),
+      ReplicationTransportAgrees = replication_transport_agrees,
+      ReplicationTransportTolerance = replication_transport_tolerance,
+      RawGradientGateStableAcrossRequestedReplication =
+        length(unique(replication_transport$RawGradientGatePassed)) == 1L,
+      WorstGradientIndex = worst_index,
+      WorstGradientBlock = block_labels[worst_index],
+      WorstExpandedElementScoreResidual = max(
+        abs(expanded_element_residuals$ScoreResidual)
+      ),
+      WorstExpandedMeanScoreResidual = max(
+        abs(expanded_element_residuals$MeanScoreResidual)
+      ),
+      LocalCurvature = local_curvature,
+      LocalNewtonParameterChange = local_newton_step,
+      LocalObjectiveImprovement = local_objective_improvement,
+      LocalRelativeObjectiveImprovement =
+        local_objective_improvement / max(1, abs(retained_objective)),
+      ReadinessChanged = FALSE,
+      FACETSStoppingRuleApplied = FALSE,
+      DecisionUse = "diagnostic_only",
+      stringsAsFactors = FALSE
+    ),
+    free_gradient_blocks = free_gradient_blocks,
+    numeric_probes = numeric_probes,
+    replication_transport = replication_transport,
+    expanded_element_residuals = expanded_element_residuals,
+    expanded_element_summary = expanded_element_summary
+  )
+  class(out) <- c("mfrmr_facets_mfs_stationarity_audit", "list")
+  out
+}
+
 mfrmr_facets_mfs_bind_rows <- function(rows) {
   rows <- rows[lengths(rows) > 0L]
   if (!length(rows)) return(data.frame())

@@ -69,6 +69,17 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   gate. The local FACETS executable returned code 5 even for the unchanged
   previously successful 640-row control, so large/sparse/many-facet external
   comparison remains unavailable, not numerically failed.
+  Added a read-only retained-point audit for those RSM/PCM JML fits. Across all
+  ten connected cases it reconstructed the stored objective, matched selected
+  analytic and central-difference gradients within `3.76e-7`, and found at
+  most `4.15e-5` logits one-coordinate local movement and `3.62e-13` relative
+  objective improvement. The result identifies the fixed raw `1e-4` gradient
+  cutoff as a scale-sensitive implementation review rather than a sufficient,
+  dataset-size-invariant readiness criterion; no threshold, readiness state,
+  FACETS rule, or replacement claim changed. An exact replication transport
+  further showed that the same ready 10-facet PCM point changes to raw-gradient
+  review after two identical likelihood copies although its MLE set is
+  unchanged. This freezes the invariance failure, not a replacement rule.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,

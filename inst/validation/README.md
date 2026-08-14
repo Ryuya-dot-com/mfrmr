@@ -730,8 +730,15 @@ identify whether the opt-in layer ran and retain its test log.
   code 5 even for the unchanged 640-row control, so external stress comparison
   remains blocked rather than failed. At maxit 800, two of ten connected mfrmr
   fits passed the strict gradient gate; both disconnected fits were rejected
-  before optimization. The record narrows the next question to the scale of
-  the terminal-gradient readiness criterion rather than more repetitions.
+  before optimization. A read-only fixed-point audit then reproduced every
+  stored objective, matched selected analytic and numeric gradients within
+  `3.76e-7`, and found at most `4.15e-5` logits one-coordinate local movement
+  and `3.62e-13` relative objective improvement. It changes no readiness state
+  or FACETS claim. An exact likelihood-replication transport then made the same
+  ready PCM point fail the raw gate after two identical copies while preserving
+  the MLE set. The record therefore narrows the next question to an observed-
+  information parameter-displacement scale rather than more repetitions or a
+  larger iteration ceiling.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

@@ -207,6 +207,71 @@ test_that("independent mfrmr recovery is not gated by FACETS availability", {
   )
 })
 
+test_that("stationarity audit separates gradient checks from readiness", {
+  env <- facets_mfs_environment()
+  fit <- make_toy_fit(maxit = 25L, model = "RSM")
+  audit <- env$mfrmr_facets_mfs_jml_stationarity_audit(
+    fit, max_numeric_probes = 4L
+  )
+
+  expect_s3_class(audit, "mfrmr_facets_mfs_stationarity_audit")
+  expect_true(audit$summary$ObjectiveReconstructionAgrees)
+  expect_true(audit$summary$NumericGradientAgrees)
+  expect_true(audit$summary$ReplicationTransportAgrees)
+  expect_false(audit$summary$ReadinessChanged)
+  expect_false(audit$summary$FACETSStoppingRuleApplied)
+  expect_identical(audit$summary$DecisionUse, "diagnostic_only")
+  expect_equal(nrow(audit$numeric_probes), 4L)
+  expect_true(all(is.finite(audit$numeric_probes$NumericGradient)))
+  expect_true(all(audit$numeric_probes$ScaledDifference <= 1e-6))
+  expect_equal(audit$replication_transport$ReplicationFactor, c(1L, 2L, 10L))
+  expect_equal(
+    audit$replication_transport$GradientSupNorm,
+    audit$summary$TerminalGradientSupNorm * c(1, 2, 10),
+    tolerance = 1e-12
+  )
+  expect_true(all(audit$replication_transport$SameMLESetByConstantScaling))
+  expect_true(all(!audit$replication_transport$ReadinessChanged))
+
+  gate_fixture <- fit
+  gate_fixture$summary$GradientReviewTolerance <-
+    1.5 * audit$summary$TerminalGradientSupNorm
+  gate_audit <- env$mfrmr_facets_mfs_jml_stationarity_audit(gate_fixture)
+  expect_identical(
+    gate_audit$replication_transport$RawGradientGatePassed,
+    c(TRUE, FALSE, FALSE)
+  )
+  expect_false(
+    gate_audit$summary$RawGradientGateStableAcrossRequestedReplication
+  )
+  expect_true(all(c("theta", "steps") %in%
+                    audit$free_gradient_blocks$Block))
+  expect_equal(
+    nrow(audit$expanded_element_residuals),
+    nrow(fit$facets$person) + nrow(fit$facets$others)
+  )
+  expect_true(all(audit$expanded_element_residuals$Observations > 0L))
+
+  wrong_method <- fit
+  wrong_method$config$method <- "MML"
+  expect_error(
+    env$mfrmr_facets_mfs_jml_stationarity_audit(wrong_method),
+    "requires an RSM or PCM JML fit"
+  )
+  expect_error(
+    env$mfrmr_facets_mfs_jml_stationarity_audit(
+      fit, numeric_relative_step = 0
+    ),
+    "finite positive scalars"
+  )
+  expect_error(
+    env$mfrmr_facets_mfs_jml_stationarity_audit(
+      fit, replication_factors = c(1, 1)
+    ),
+    "finite positive scalars"
+  )
+})
+
 test_that("stress envelope contains no cryptographic file identity operation", {
   path <- testthat::test_path(
     "..", "..", "inst", "validation",
