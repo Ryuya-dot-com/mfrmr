@@ -738,7 +738,11 @@ identify whether the opt-in layer ran and retain its test log.
   ready PCM point fail the raw gate after two identical copies while preserving
   the MLE set. The record therefore narrows the next question to an observed-
   information parameter-displacement scale rather than more repetitions or a
-  larger iteration ceiling.
+  larger iteration ceiling. Dense correlated-information audits of the four
+  10/30-facet fits found positive-definite Hessians, maximum displacement no
+  larger than `4.14e-5` logits, at most 4.3% amplification over diagonal
+  curvature, and exact replication invariance within `1e-12`. No displacement
+  threshold was selected; large/sparse cases still need a matrix-free audit.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

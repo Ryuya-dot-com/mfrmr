@@ -133,6 +133,36 @@ set were identical. Reconstructed objective and gradient scaling agreed within
 It records the counterfactual gate result but deliberately does not rewrite the
 fit readiness state.
 
+## Correlated information displacement
+
+A second diagnostic computes the complete dense observed-information Hessian
+by central differences of the analytic gradient and solves the correlated
+Newton system. It is bounded to 300 free coordinates, so this run covers the
+balanced 10- and 30-facet cases but not the roughly 1,000-coordinate large and
+sparse cases. The Hessian is used for numerical displacement only, not standard
+errors, intervals, or a readiness decision.
+
+| Scenario | Model | Free coordinates | Minimum eigenvalue | Condition number | Full displacement | Diagonal displacement | Full/diagonal | Relative objective improvement |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Many F10 | RSM | 221 | 2.9058 | 1485.3 | 0.000041387 | 0.000041419 | 0.9992 | 7.39e-13 |
+| Many F10 | PCM | 231 | 1.9630 | 2214.7 | 0.000021800 | 0.000021568 | 1.0107 | 1.37e-13 |
+| Many F30 | RSM | 241 | 13.5888 | 616.5 | 0.000015960 | 0.000015296 | 1.0434 | 3.11e-13 |
+| Many F30 | PCM | 251 | 9.5166 | 853.3 | 0.000012490 | 0.000012236 | 1.0208 | 9.57e-14 |
+
+All four Hessians were positive definite under the diagnostic relative
+eigenvalue tolerance. Predicted quadratic objective improvements agreed with
+directly reevaluated improvements. Exact 1/2/10-fold likelihood scaling left
+the full parameter-displacement vector unchanged within `1e-12`. In these
+balanced facet-count cases, correlated directions therefore increased the
+maximum local displacement by at most about 4.3%; there is no hidden large
+weak-direction movement behind the raw-gradient review. These four observed
+values are calibration evidence and are not a selected displacement cutoff.
+Repeating every Hessian at free-coordinate difference steps `3e-4`, `1e-3`,
+and `3e-3` changed the maximum displacement by at most `1.35e-6` relatively;
+the largest relative range of the minimum eigenvalue was also `1.35e-6`.
+The dense reference is therefore numerically stable enough to test a later
+matrix-free implementation, without turning its observed maxima into rules.
+
 ## Interpretation and next step
 
 No readiness threshold was relaxed. The one-seed recovery values for the two
@@ -140,14 +170,13 @@ ready PCM cases remain diagnostic only, and the other finite estimates remain
 review-only. In particular, this run does not establish JML bias, large-design
 accuracy, FACETS equivalence, or a FACETS replacement boundary.
 
-The retained-point and replication audits answer the immediate implementation
-and invariance questions but do not freeze a replacement rule. The next
-bounded task is to compare representation-invariant candidate scales. The
-primary candidate is the maximum parameter displacement implied by the local
-observed-information system, checked against actual warm-start and optimizer-
-route changes. Mean element score residual is retained as an interpretable
-secondary quantity. A simple division of every free gradient by row count is
-not justified for constrained facet contrasts, and a diagonal curvature alone
-cannot detect correlated weak directions. Only after that calibration should
-the package supplement or replace the `1e-4` raw-gradient gate. More seeds or
-a larger `maxit` would not answer this question.
+The retained-point, replication, and moderate-size information audits answer
+the immediate implementation and invariance questions but do not freeze a
+replacement rule. The next bounded task is to extend the full-displacement
+calculation to the roughly 1,000-coordinate large and sparse cases without
+materializing a dense Hessian. A Hessian-vector conjugate-gradient prototype
+must first reproduce the four dense solutions above and fail closed on weak or
+non-positive curvature. Mean element score residual remains an interpretable
+secondary quantity. Only after the sparse/topology cases are covered should
+the package calibrate or replace the `1e-4` raw-gradient gate. More seeds or a
+larger `maxit` would not answer this question.

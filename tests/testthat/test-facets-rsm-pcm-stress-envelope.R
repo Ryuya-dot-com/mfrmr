@@ -272,6 +272,61 @@ test_that("stationarity audit separates gradient checks from readiness", {
   )
 })
 
+test_that("information displacement is correlated and replication invariant", {
+  env <- facets_mfs_environment()
+  fit <- make_toy_fit(maxit = 25L, model = "RSM")
+  audit <- env$mfrmr_facets_mfs_information_displacement_audit(fit)
+
+  expect_s3_class(
+    audit, "mfrmr_facets_mfs_information_displacement_audit"
+  )
+  expect_identical(audit$summary$Status, "evaluated_positive_definite")
+  expect_true(audit$summary$Evaluated)
+  expect_true(audit$summary$HessianPositiveDefiniteAtTolerance)
+  expect_true(audit$summary$ReplicationDisplacementStable)
+  expect_false(audit$summary$ReadinessChanged)
+  expect_false(audit$summary$ParameterDisplacementThresholdSelected)
+  expect_identical(audit$summary$DecisionUse, "diagnostic_only")
+  expect_equal(audit$hessian, t(audit$hessian), tolerance = 0)
+  expect_equal(
+    dim(audit$hessian),
+    rep(audit$summary$FreeCoordinates, 2L)
+  )
+  expect_true(all(audit$eigenvalues > 0))
+  expect_gt(audit$summary$FullNewtonParameterChangeSupNorm, 0)
+  expect_gt(audit$summary$ActualObjectiveImprovement, 0)
+  expect_lte(
+    max(audit$replication_transport$MaximumDifferenceFromBase), 1e-12
+  )
+  expect_true(all(audit$replication_transport$SameMLESetByConstantScaling))
+
+  wider_step <- env$mfrmr_facets_mfs_information_displacement_audit(
+    fit, difference_step = 3e-3
+  )
+  expect_lt(
+    abs(wider_step$summary$FullNewtonParameterChangeSupNorm -
+          audit$summary$FullNewtonParameterChangeSupNorm) /
+      audit$summary$FullNewtonParameterChangeSupNorm,
+    1e-3
+  )
+
+  limited <- env$mfrmr_facets_mfs_information_displacement_audit(
+    fit, max_free_dimension = 1L
+  )
+  expect_identical(
+    limited$summary$Status, "not_evaluated_dimension_limit"
+  )
+  expect_false(limited$summary$Evaluated)
+  expect_null(limited$hessian)
+  expect_false(limited$summary$ReadinessChanged)
+  expect_error(
+    env$mfrmr_facets_mfs_information_displacement_audit(
+      fit, replication_factors = c(1, 1)
+    ),
+    "controls are invalid"
+  )
+})
+
 test_that("stress envelope contains no cryptographic file identity operation", {
   path <- testthat::test_path(
     "..", "..", "inst", "validation",

@@ -500,11 +500,7 @@ mfrmr_facets_mfs_fit_mfrmr <- function(design, maxit = 400L,
 # free-coordinate gradient is the optimizer quantity; the expanded element
 # score residuals retain the observed-minus-expected score scale. They answer
 # different questions and must not be treated as interchangeable thresholds.
-mfrmr_facets_mfs_jml_stationarity_audit <- function(
-    fit, max_numeric_probes = 12L, numeric_relative_step = 3e-5,
-    curvature_relative_step = 1e-3,
-    numeric_agreement_tolerance = 1e-6,
-    replication_factors = c(1L, 2L, 10L)) {
+mfrmr_facets_mfs_jml_context <- function(fit) {
   if (!inherits(fit, "mfrm_fit") || !is.list(fit$config) ||
       !is.list(fit$prep) || !is.list(fit$opt)) {
     stop("`fit` must be a complete mfrm_fit object.", call. = FALSE)
@@ -515,6 +511,62 @@ mfrmr_facets_mfs_jml_stationarity_audit <- function(
     stop("The stress stationarity audit requires an RSM or PCM JML fit.",
          call. = FALSE)
   }
+  namespace <- asNamespace("mfrmr")
+  internal <- function(name) get(name, envir = namespace, inherits = FALSE)
+  build_indices <- internal("build_indices")
+  build_param_sizes <- internal("build_param_sizes")
+  objective_function <- internal("mfrm_loglik_jml")
+  gradient_function <- internal("mfrm_grad_jml")
+  idx <- build_indices(
+    fit$prep, step_facet = config$step_facet,
+    slope_facet = config$slope_facet,
+    interaction_specs = config$interaction_specs
+  )
+  sizes <- build_param_sizes(config)
+  size_values <- vapply(sizes, as.integer, integer(1))
+  par <- as.numeric(fit$opt$par)
+  if (length(par) != sum(size_values) || any(!is.finite(par))) {
+    stop("The retained optimizer vector does not match the model dimensions.",
+         call. = FALSE)
+  }
+  objective <- function(candidate) {
+    as.numeric(objective_function(candidate, idx, config, sizes))[1L]
+  }
+  gradient <- function(candidate) {
+    as.numeric(gradient_function(candidate, idx, config, sizes))
+  }
+  retained_objective <- objective(par)
+  stored_objective <- as.numeric(fit$opt$value)[1L]
+  retained_gradient <- gradient(par)
+  if (length(retained_gradient) != length(par) ||
+      any(!is.finite(retained_gradient)) ||
+      !is.finite(retained_objective) || !is.finite(stored_objective)) {
+    stop("The retained objective or analytic gradient is not finite.",
+         call. = FALSE)
+  }
+  list(
+    fit = fit, config = config, idx = idx, sizes = sizes,
+    size_values = size_values, par = par,
+    block_labels = rep(names(size_values), size_values),
+    objective_function = objective_function,
+    gradient_function = gradient_function,
+    expand_params = internal("expand_params"),
+    compute_eta = internal("compute_eta"),
+    probability_bundle = internal("compute_response_probability_bundle"),
+    objective = objective, gradient = gradient,
+    retained_objective = retained_objective,
+    stored_objective = stored_objective,
+    retained_gradient = retained_gradient
+  )
+}
+
+mfrmr_facets_mfs_jml_stationarity_audit <- function(
+    fit, max_numeric_probes = 12L, numeric_relative_step = 3e-5,
+    curvature_relative_step = 1e-3,
+    numeric_agreement_tolerance = 1e-6,
+    replication_factors = c(1L, 2L, 10L)) {
+  context <- mfrmr_facets_mfs_jml_context(fit)
+  config <- context$config
   valid_probe_count <- is.numeric(max_numeric_probes) &&
     length(max_numeric_probes) == 1L && is.finite(max_numeric_probes) &&
     max_numeric_probes == floor(max_numeric_probes) && max_numeric_probes >= 1L
@@ -536,40 +588,20 @@ mfrmr_facets_mfs_jml_stationarity_audit <- function(
   max_numeric_probes <- as.integer(max_numeric_probes)
   replication_factors <- as.integer(replication_factors)
 
-  namespace <- asNamespace("mfrmr")
-  internal <- function(name) get(name, envir = namespace, inherits = FALSE)
-  build_indices <- internal("build_indices")
-  build_param_sizes <- internal("build_param_sizes")
-  objective_function <- internal("mfrm_loglik_jml")
-  gradient_function <- internal("mfrm_grad_jml")
-  expand_params <- internal("expand_params")
-  compute_eta <- internal("compute_eta")
-  probability_bundle <- internal("compute_response_probability_bundle")
-
-  idx <- build_indices(
-    fit$prep, step_facet = config$step_facet,
-    slope_facet = config$slope_facet,
-    interaction_specs = config$interaction_specs
-  )
-  sizes <- build_param_sizes(config)
-  size_values <- vapply(sizes, as.integer, integer(1))
-  par <- as.numeric(fit$opt$par)
-  if (length(par) != sum(size_values) || any(!is.finite(par))) {
-    stop("The retained optimizer vector does not match the model dimensions.",
-         call. = FALSE)
-  }
-  block_labels <- rep(names(size_values), size_values)
-  objective <- function(candidate) {
-    as.numeric(objective_function(candidate, idx, config, sizes))[1L]
-  }
-  retained_objective <- objective(par)
-  stored_objective <- as.numeric(fit$opt$value)[1L]
-  gradient <- as.numeric(gradient_function(par, idx, config, sizes))
-  if (length(gradient) != length(par) || any(!is.finite(gradient)) ||
-      !is.finite(retained_objective) || !is.finite(stored_objective)) {
-    stop("The retained objective or analytic gradient is not finite.",
-         call. = FALSE)
-  }
+  idx <- context$idx
+  sizes <- context$sizes
+  size_values <- context$size_values
+  par <- context$par
+  block_labels <- context$block_labels
+  objective_function <- context$objective_function
+  gradient_function <- context$gradient_function
+  expand_params <- context$expand_params
+  compute_eta <- context$compute_eta
+  probability_bundle <- context$probability_bundle
+  objective <- context$objective
+  retained_objective <- context$retained_objective
+  stored_objective <- context$stored_objective
+  gradient <- context$retained_gradient
 
   block_indices <- split(seq_along(gradient), block_labels)
   free_gradient_blocks <- do.call(rbind, lapply(
@@ -783,6 +815,213 @@ mfrmr_facets_mfs_jml_stationarity_audit <- function(
     expanded_element_summary = expanded_element_summary
   )
   class(out) <- c("mfrmr_facets_mfs_stationarity_audit", "list")
+  out
+}
+
+# Evaluate the complete correlated local Newton displacement for moderate-size
+# retained points. This is deliberately separate from the production
+# covariance and readiness paths: it calibrates a representation-invariant
+# numerical scale and does not provide standard errors or inferential claims.
+mfrmr_facets_mfs_information_displacement_audit <- function(
+    fit, max_free_dimension = 300L, difference_step = 1e-3,
+    eigen_relative_tolerance = 1e-10,
+    replication_factors = c(1L, 2L, 10L)) {
+  valid_dimension <- is.numeric(max_free_dimension) &&
+    length(max_free_dimension) == 1L && is.finite(max_free_dimension) &&
+    max_free_dimension == floor(max_free_dimension) &&
+    max_free_dimension >= 1L
+  valid_controls <- is.numeric(difference_step) &&
+    length(difference_step) == 1L && is.finite(difference_step) &&
+    difference_step > 0 && is.numeric(eigen_relative_tolerance) &&
+    length(eigen_relative_tolerance) == 1L &&
+    is.finite(eigen_relative_tolerance) && eigen_relative_tolerance > 0
+  valid_replication <- is.numeric(replication_factors) &&
+    length(replication_factors) > 0L && !anyNA(replication_factors) &&
+    all(is.finite(replication_factors)) &&
+    all(replication_factors == floor(replication_factors)) &&
+    all(replication_factors >= 1L) && !anyDuplicated(replication_factors)
+  if (!valid_dimension || !valid_controls || !valid_replication) {
+    stop(
+      "Information-displacement controls are invalid; use a positive integer ",
+      "dimension, positive finite tolerances, and unique positive integer ",
+      "replication factors.", call. = FALSE
+    )
+  }
+  max_free_dimension <- as.integer(max_free_dimension)
+  replication_factors <- as.integer(replication_factors)
+  context <- mfrmr_facets_mfs_jml_context(fit)
+  free_dimension <- length(context$par)
+
+  empty_summary <- data.frame(
+    Model = context$config$model, Method = context$config$method,
+    Status = "not_evaluated_dimension_limit", Evaluated = FALSE,
+    FreeCoordinates = free_dimension, DimensionLimit = max_free_dimension,
+    DifferenceStep = difference_step,
+    HessianMaximumAsymmetry = NA_real_,
+    HessianMinimumEigenvalue = NA_real_,
+    HessianMaximumEigenvalue = NA_real_,
+    HessianConditionNumber = NA_real_,
+    HessianPositiveDefiniteAtTolerance = FALSE,
+    GradientSupNorm = max(abs(context$retained_gradient)),
+    FullNewtonParameterChangeSupNorm = NA_real_,
+    DiagonalNewtonParameterChangeSupNorm = NA_real_,
+    CorrelatedToDiagonalDisplacementRatio = NA_real_,
+    PredictedObjectiveImprovement = NA_real_,
+    ActualObjectiveImprovement = NA_real_,
+    RelativeObjectiveImprovement = NA_real_,
+    ReplicationDisplacementStable = FALSE,
+    ReplicationDisplacementTolerance = 1e-12,
+    ReadinessChanged = FALSE,
+    ParameterDisplacementThresholdSelected = FALSE,
+    DecisionUse = "diagnostic_only", stringsAsFactors = FALSE
+  )
+  if (free_dimension > max_free_dimension) {
+    out <- list(
+      summary = empty_summary, block_displacement = data.frame(),
+      replication_transport = data.frame(), hessian = NULL,
+      eigenvalues = numeric(0), parameter_change = numeric(0)
+    )
+    class(out) <- c(
+      "mfrmr_facets_mfs_information_displacement_audit", "list"
+    )
+    return(out)
+  }
+
+  raw_hessian <- stats::optimHess(
+    par = context$par, fn = context$objective,
+    gr = context$gradient,
+    control = list(
+      fnscale = 1,
+      parscale = rep(1, free_dimension),
+      ndeps = rep(difference_step, free_dimension)
+    )
+  )
+  if (!is.matrix(raw_hessian) ||
+      !identical(dim(raw_hessian), c(free_dimension, free_dimension)) ||
+      any(!is.finite(raw_hessian))) {
+    stop("The observed-information Hessian was malformed or non-finite.",
+         call. = FALSE)
+  }
+  maximum_asymmetry <- max(abs(raw_hessian - t(raw_hessian)))
+  hessian <- (raw_hessian + t(raw_hessian)) / 2
+  decomposition <- eigen(hessian, symmetric = TRUE, only.values = TRUE)
+  eigenvalues <- as.numeric(decomposition$values)
+  eigen_scale <- max(abs(eigenvalues))
+  eigen_threshold <- eigen_relative_tolerance * max(1, eigen_scale)
+  positive_definite <- min(eigenvalues) > eigen_threshold
+
+  if (!positive_definite) {
+    empty_summary$Status <- "evaluated_nonpositive_or_weak_information"
+    empty_summary$Evaluated <- TRUE
+    empty_summary$HessianMaximumAsymmetry <- maximum_asymmetry
+    empty_summary$HessianMinimumEigenvalue <- min(eigenvalues)
+    empty_summary$HessianMaximumEigenvalue <- max(eigenvalues)
+    empty_summary$HessianConditionNumber <- if (min(eigenvalues) > 0) {
+      max(eigenvalues) / min(eigenvalues)
+    } else {
+      Inf
+    }
+    out <- list(
+      summary = empty_summary, block_displacement = data.frame(),
+      replication_transport = data.frame(), hessian = hessian,
+      eigenvalues = eigenvalues, parameter_change = numeric(0)
+    )
+    class(out) <- c(
+      "mfrmr_facets_mfs_information_displacement_audit", "list"
+    )
+    return(out)
+  }
+
+  factor <- chol(hessian)
+  information_solve <- function(right_hand_side, multiplier = 1) {
+    scaled_factor <- sqrt(multiplier) * factor
+    scaled_right_hand_side <- multiplier * right_hand_side
+    backsolve(
+      scaled_factor,
+      forwardsolve(t(scaled_factor), scaled_right_hand_side)
+    )
+  }
+  newton_displacement <- information_solve(context$retained_gradient)
+  parameter_change <- -as.numeric(newton_displacement)
+  moved <- context$par + parameter_change
+  moved_objective <- context$objective(moved)
+  actual_improvement <- context$retained_objective - moved_objective
+  predicted_improvement <- as.numeric(
+    crossprod(context$retained_gradient, newton_displacement) / 2
+  )
+  diagonal_change <- -context$retained_gradient / diag(hessian)
+  full_sup_norm <- max(abs(parameter_change))
+  diagonal_sup_norm <- max(abs(diagonal_change))
+
+  displacement_groups <- split(
+    seq_along(parameter_change), context$block_labels
+  )
+  block_displacement <- do.call(rbind, lapply(
+    names(displacement_groups), function(block) {
+      indices <- displacement_groups[[block]]
+      values <- parameter_change[indices]
+      diagonal_values <- diagonal_change[indices]
+      data.frame(
+        Block = block, FreeCoordinates = length(indices),
+        ParameterChangeSupNorm = max(abs(values)),
+        ParameterChangeRMS = sqrt(mean(values^2)),
+        DiagonalChangeSupNorm = max(abs(diagonal_values)),
+        stringsAsFactors = FALSE
+      )
+    }
+  ))
+
+  replication_transport <- do.call(rbind, lapply(
+    replication_factors, function(replication_factor) {
+      transported <- -as.numeric(information_solve(
+        context$retained_gradient, replication_factor
+      ))
+      data.frame(
+        ReplicationFactor = replication_factor,
+        ParameterChangeSupNorm = max(abs(transported)),
+        MaximumDifferenceFromBase = max(abs(transported - parameter_change)),
+        SameMLESetByConstantScaling = TRUE,
+        ReadinessChanged = FALSE,
+        stringsAsFactors = FALSE
+      )
+    }
+  ))
+  replication_stable <- all(
+    replication_transport$MaximumDifferenceFromBase <= 1e-12
+  )
+  condition_number <- max(eigenvalues) / min(eigenvalues)
+  summary <- empty_summary
+  summary$Status <- "evaluated_positive_definite"
+  summary$Evaluated <- TRUE
+  summary$HessianMaximumAsymmetry <- maximum_asymmetry
+  summary$HessianMinimumEigenvalue <- min(eigenvalues)
+  summary$HessianMaximumEigenvalue <- max(eigenvalues)
+  summary$HessianConditionNumber <- condition_number
+  summary$HessianPositiveDefiniteAtTolerance <- TRUE
+  summary$FullNewtonParameterChangeSupNorm <- full_sup_norm
+  summary$DiagonalNewtonParameterChangeSupNorm <- diagonal_sup_norm
+  summary$CorrelatedToDiagonalDisplacementRatio <-
+    if (diagonal_sup_norm > 0) {
+      full_sup_norm / diagonal_sup_norm
+    } else if (full_sup_norm == 0) {
+      1
+    } else {
+      Inf
+    }
+  summary$PredictedObjectiveImprovement <- predicted_improvement
+  summary$ActualObjectiveImprovement <- actual_improvement
+  summary$RelativeObjectiveImprovement <-
+    actual_improvement / max(1, abs(context$retained_objective))
+  summary$ReplicationDisplacementStable <- replication_stable
+
+  out <- list(
+    summary = summary, block_displacement = block_displacement,
+    replication_transport = replication_transport, hessian = hessian,
+    eigenvalues = eigenvalues, parameter_change = parameter_change
+  )
+  class(out) <- c(
+    "mfrmr_facets_mfs_information_displacement_audit", "list"
+  )
   out
 }
 

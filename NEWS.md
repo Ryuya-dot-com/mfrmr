@@ -79,7 +79,14 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   FACETS rule, or replacement claim changed. An exact replication transport
   further showed that the same ready 10-facet PCM point changes to raw-gradient
   review after two identical likelihood copies although its MLE set is
-  unchanged. This freezes the invariance failure, not a replacement rule.
+  unchanged. A bounded dense observed-information audit then covered all four
+  balanced 10/30-facet fits: their Hessians were positive definite, correlated
+  Newton displacement was at most `4.14e-5` logits and at most 4.3% above its
+  diagonal counterpart, and the displacement was invariant to exact
+  likelihood replication within `1e-12`. These results freeze the raw-gate
+  invariance failure and a candidate numerical scale, not a replacement rule;
+  the roughly 1,000-coordinate large/sparse cases remain outside the dense
+  instrumentation limit.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
