@@ -2298,10 +2298,10 @@ recovery_diagnostic_df_sensitive_rate <- function(fit_tbl) {
   if (nrow(fit_tbl) == 0L || !all(required %in% names(fit_tbl))) {
     return(NA_real_)
   }
-  engine_flag <- abs(suppressWarnings(as.numeric(fit_tbl$InfitZSTD_ENGINE))) > 2 |
-    abs(suppressWarnings(as.numeric(fit_tbl$OutfitZSTD_ENGINE))) > 2
-  facets_flag <- abs(suppressWarnings(as.numeric(fit_tbl$InfitZSTD_FACETS))) > 2 |
-    abs(suppressWarnings(as.numeric(fit_tbl$OutfitZSTD_FACETS))) > 2
+  engine_flag <- abs(suppressWarnings(as.numeric(fit_tbl$InfitZSTD_ENGINE))) >= 2 |
+    abs(suppressWarnings(as.numeric(fit_tbl$OutfitZSTD_ENGINE))) >= 2
+  facets_flag <- abs(suppressWarnings(as.numeric(fit_tbl$InfitZSTD_FACETS))) >= 2 |
+    abs(suppressWarnings(as.numeric(fit_tbl$OutfitZSTD_FACETS))) >= 2
   changed <- engine_flag != facets_flag
   if (all(is.na(changed))) return(NA_real_)
   mean(changed, na.rm = TRUE)

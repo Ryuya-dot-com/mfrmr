@@ -4,6 +4,16 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Preserved exact reported numeric tokens and displayed decimal counts when
+  importing FACETS fit/score tables. External comparison runs now require
+  eight requested decimals wherever FACETS output is configurable and verify
+  the actual digits written per metric. Displayed absolute ZSTD values exactly
+  at 2 are carried as boundary-indeterminate only when the output route remains
+  fixed-precision, instead of being silently interpreted as hidden values. Added a
+  prospective RSM/PCM JML registry separating total facet-count growth from
+  level, row, and sparse-topology growth; a six-fit internal fixed-information
+  smoke passed, but FACETS execution and equivalence remain pending.
+
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
   including all additive facet and fitted interaction contributions inside

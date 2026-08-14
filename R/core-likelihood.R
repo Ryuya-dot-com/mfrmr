@@ -241,7 +241,7 @@ compute_response_probability_bundle <- function(config, idx, params, eta) {
 #   ZSTD = (MnSq^(1/3) - (1 - 2/(9*df))) / sqrt(2/(9*df))
 # When whexact = TRUE, uses the simpler linear approximation:
 #   ZSTD = (MnSq - 1) * sqrt(df / 2)
-# Values near 0 indicate expected fit; |ZSTD| > 2 flags potential misfit.
+# Values near 0 indicate expected fit; mfrmr uses |ZSTD| >= 2 as its review flag.
 zstd_from_mnsq <- function(mnsq, df, whexact = FALSE) {
   mnsq <- as.numeric(mnsq)
   df <- as.numeric(df)

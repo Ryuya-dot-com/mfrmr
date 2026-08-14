@@ -490,7 +490,7 @@
 #'                            {\sqrt{2/(9\,\mathit{df})}}}
 #'
 #' Values near 0 indicate expected fit. The conventional
-#' \eqn{|\mathrm{ZSTD}| > 2} and \eqn{|\mathrm{ZSTD}| > 3} cutoffs are heuristic
+#' \eqn{|\mathrm{ZSTD}| \ge 2} and \eqn{|\mathrm{ZSTD}| \ge 3} cutoffs are heuristic
 #' two- and three-standard-deviation reference bands (Wright & Linacre, 1994;
 #' see also Wilson & Hilferty, 1931), not calibrated 5\% and 1\% hypothesis
 #' tests. Parameter estimation, sparse cells, the selected df convention, and

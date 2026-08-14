@@ -4331,7 +4331,7 @@ make_anchor_table <- function(fit,
 #' - MnSq < 0.5: overfit (too predictable; may inflate reliability)
 #' - MnSq 0.5--1.5: productive for measurement
 #' - MnSq > 1.5: underfit (noise degrades measurement)
-#' - \eqn{|\mathrm{ZSTD}| > 2}: conventional approximate-normal review flag;
+#' - \eqn{|\mathrm{ZSTD}| \ge 2}: package convention for the approximate-normal review flag;
 #'   not a calibrated 5\% hypothesis test, especially after parameter estimation
 #'   and repeated screening across elements
 #'

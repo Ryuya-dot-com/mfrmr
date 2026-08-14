@@ -167,7 +167,7 @@ external FACETS fit comparison requires a JMLE-style residual basis
 \item MnSq < 0.5: overfit (too predictable; may inflate reliability)
 \item MnSq 0.5--1.5: productive for measurement
 \item MnSq > 1.5: underfit (noise degrades measurement)
-\item \eqn{|\mathrm{ZSTD}| > 2}: conventional approximate-normal review flag;
+\item \eqn{|\mathrm{ZSTD}| \ge 2}: package convention for the approximate-normal review flag;
 not a calibrated 5\\% hypothesis test, especially after parameter estimation
 and repeated screening across elements
 }

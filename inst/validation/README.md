@@ -667,6 +667,18 @@ identify whether the opt-in layer ran and retain its test log.
   first 44-run, one-seed pilot, including tool identity, scenario accounting,
   recovery/agreement warnings, disconnected fail-closed behavior, and the
   weak-link diagnostic gap. It freezes no tolerance and is not confirmation.
+- `facets-multifacet-precision-contract-0.2.3.R`: prospective 16-row RSM/PCM
+  JML registry that separates total facet dimensions, levels, row growth, and
+  sparse topology. It requires eight requested decimals wherever FACETS output
+  is configurable, validates the actual decimals written for each metric, and
+  keeps displayed `|ZSTD| = 2` rows boundary-indeterminate only for output that
+  remains fixed-precision. It executes no FACETS program and requires no
+  scientific file-byte equality.
+- `facets-multifacet-precision-contract-record-0.2.3.md`: completed internal
+  six-fit smoke record for total facet counts 3, 4, and 5 at fixed 640-row
+  information. All mfrmr JML fits returned ready without warnings, but the
+  one-seed result is neither an external comparison nor operating-characteristic
+  evidence.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

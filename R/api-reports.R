@@ -10998,6 +10998,66 @@ fit_review_numeric_col <- function(df, col) {
   fit_review_clean_numeric(df[[col]])
 }
 
+fit_review_raw_numeric_col <- function(df, col, raw_candidates = character(0),
+                                       reported_tokens_retained = FALSE) {
+  raw_col <- intersect(raw_candidates, names(df))
+  if (length(raw_col) > 0L) {
+    out <- trimws(as.character(df[[raw_col[1L]]]))
+  } else if (!is.na(col) && nzchar(col) && col %in% names(df) &&
+             (isTRUE(reported_tokens_retained) || is.character(df[[col]]))) {
+    out <- trimws(as.character(df[[col]]))
+  } else {
+    return(rep(NA_character_, nrow(df)))
+  }
+  out[out %in% c("", ".", "*", "NA", "N/A", "NaN", "Inf", "-Inf")] <- NA_character_
+  out
+}
+
+fit_review_reported_decimal_places <- function(x) {
+  token <- trimws(as.character(x))
+  token <- gsub(",", "", token, fixed = TRUE)
+  token <- sub("^[<>]", "", token)
+  valid <- !is.na(token) & grepl(
+    "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$",
+    token
+  )
+  out <- rep(NA_integer_, length(token))
+  has_decimal <- valid & grepl(".", token, fixed = TRUE)
+  out[valid & !has_decimal] <- 0L
+  out[has_decimal] <- nchar(sub("^[^.]*\\.", "", token[has_decimal]))
+  out
+}
+
+fit_review_zstd_display_state <- function(x, zstd_cut = 2) {
+  token <- trimws(as.character(x))
+  value <- fit_review_clean_numeric(x)
+  out <- rep("not_available", length(value))
+  supplied <- !is.na(token) & nzchar(token)
+  valid_token <- supplied & grepl(
+    "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$",
+    token
+  )
+  out[supplied & (!valid_token | !is.finite(value))] <- "invalid_reported_token"
+  finite <- valid_token & is.finite(value)
+  out[finite & abs(value) < abs(zstd_cut)] <- "display_below_threshold"
+  out[finite & abs(value) > abs(zstd_cut)] <- "display_above_threshold"
+  out[finite & abs(value) == abs(zstd_cut)] <- "display_boundary_indeterminate"
+  out
+}
+
+fit_review_combine_zstd_display_state <- function(infit_state, outfit_state) {
+  states <- Map(c, as.character(infit_state), as.character(outfit_state))
+  vapply(states, function(x) {
+    if ("display_above_threshold" %in% x) return("display_above_threshold")
+    if ("display_boundary_indeterminate" %in% x) {
+      return("display_boundary_indeterminate")
+    }
+    if ("invalid_reported_token" %in% x) return("invalid_reported_token")
+    if ("display_below_threshold" %in% x) return("display_below_threshold")
+    "not_available"
+  }, character(1), USE.NAMES = FALSE)
+}
+
 fit_review_pmax_na <- function(...) {
   out <- pmax(..., na.rm = TRUE)
   out[!is.finite(out)] <- NA_real_
@@ -11071,6 +11131,7 @@ fit_review_read_delimited_file <- function(path, delimiter = NULL, encoding = "U
     fill = TRUE,
     check.names = FALSE,
     stringsAsFactors = FALSE,
+    colClasses = "character",
     na.strings = c("", "NA", "N/A", ".", "*")
   )
 }
@@ -11125,6 +11186,16 @@ fit_review_scorefile_fixed_data <- function(path, raw = NULL, encoding = "UTF-8"
   outfit_z <- field_num(raw, 91, 100)
   infit_df <- field_num(raw, 191, 200)
   outfit_df <- field_num(raw, 221, 230)
+  raw_score_token <- field_chr(raw, 1, 10)
+  t_count_token <- field_chr(raw, 11, 20)
+  measure_token <- field_chr(raw, 41, 50)
+  se_token <- field_chr(raw, 51, 60)
+  infit_token <- field_chr(raw, 61, 70)
+  infit_z_token <- field_chr(raw, 71, 80)
+  outfit_token <- field_chr(raw, 81, 90)
+  outfit_z_token <- field_chr(raw, 91, 100)
+  infit_df_token <- field_chr(raw, 191, 200)
+  outfit_df_token <- field_chr(raw, 221, 230)
   element_number <- field_chr(raw, 241, 250)
   element_label <- field_chr(raw, 251, NA_integer_)
   element_label[!nzchar(element_label)] <- element_number[!nzchar(element_label)]
@@ -11147,6 +11218,16 @@ fit_review_scorefile_fixed_data <- function(path, raw = NULL, encoding = "UTF-8"
     OutfitZ = outfit_z[keep],
     InfitDF = infit_df[keep],
     OutfitDF = outfit_df[keep],
+    TScoreRaw = raw_score_token[keep],
+    TCountRaw = t_count_token[keep],
+    MeasureRaw = measure_token[keep],
+    SERaw = se_token[keep],
+    InfitMSRaw = infit_token[keep],
+    InfitZRaw = infit_z_token[keep],
+    OutfitMSRaw = outfit_token[keep],
+    OutfitZRaw = outfit_z_token[keep],
+    InfitDFRaw = infit_df_token[keep],
+    OutfitDFRaw = outfit_df_token[keep],
     ElementNumber = element_number[keep],
     stringsAsFactors = FALSE,
     check.names = FALSE
@@ -11172,6 +11253,7 @@ fit_review_scorefile_data <- function(path, encoding = "UTF-8") {
     fill = TRUE,
     check.names = FALSE,
     stringsAsFactors = FALSE,
+    colClasses = "character",
     na.strings = c("", "NA", "N/A", ".", "*")
   )
 }
@@ -11181,14 +11263,25 @@ fit_review_standardize_frame <- function(df,
                                          facet_col = NULL,
                                          level_col = NULL,
                                          source = "facets_fit_table",
-                                         data_label = "FACETS fit table") {
+                                         data_label = "FACETS fit table",
+                                         reported_tokens_retained = FALSE) {
   df <- as.data.frame(df, stringsAsFactors = FALSE)
   if (nrow(df) == 0L) {
     return(tibble::tibble(
       Facet = character(0), Level = character(0), Estimate = numeric(0),
       SE = numeric(0), N = numeric(0), Infit = numeric(0), Outfit = numeric(0),
       InfitZSTD = numeric(0), OutfitZSTD = numeric(0),
-      DF_Infit = numeric(0), DF_Outfit = numeric(0), Source = character(0)
+      DF_Infit = numeric(0), DF_Outfit = numeric(0),
+      EstimateRaw = character(0), SERaw = character(0), NRaw = character(0),
+      InfitRaw = character(0), OutfitRaw = character(0),
+      InfitZSTDRaw = character(0), OutfitZSTDRaw = character(0),
+      DF_InfitRaw = character(0), DF_OutfitRaw = character(0),
+      InfitZSTDReportedDecimals = integer(0),
+      OutfitZSTDReportedDecimals = integer(0),
+      InfitZSTDDisplayState = character(0),
+      OutfitZSTDDisplayState = character(0),
+      ZSTDDisplayFlagState = character(0),
+      SourcePrecisionStatus = character(0), Source = character(0)
     ))
   }
 
@@ -11286,6 +11379,38 @@ fit_review_standardize_frame <- function(df,
     required = FALSE, data_label = data_label
   )
 
+  estimate_raw <- fit_review_raw_numeric_col(
+    df, estimate_col, c("EstimateRaw", "MeasureRaw"), reported_tokens_retained
+  )
+  se_raw <- fit_review_raw_numeric_col(
+    df, se_col, c("SERaw", "S.E.Raw"), reported_tokens_retained
+  )
+  n_raw <- fit_review_raw_numeric_col(
+    df, n_col, c("NRaw", "TCountRaw", "T.CountRaw"), reported_tokens_retained
+  )
+  infit_raw <- fit_review_raw_numeric_col(
+    df, infit_col, c("InfitRaw", "InfitMSRaw"), reported_tokens_retained
+  )
+  outfit_raw <- fit_review_raw_numeric_col(
+    df, outfit_col, c("OutfitRaw", "OutfitMSRaw"), reported_tokens_retained
+  )
+  infit_z_raw <- fit_review_raw_numeric_col(
+    df, infit_z_col, c("InfitZSTDRaw", "InfitZRaw"), reported_tokens_retained
+  )
+  outfit_z_raw <- fit_review_raw_numeric_col(
+    df, outfit_z_col, c("OutfitZSTDRaw", "OutfitZRaw"), reported_tokens_retained
+  )
+  df_infit_raw <- fit_review_raw_numeric_col(
+    df, df_infit_col, c("DF_InfitRaw", "InfitDFRaw"), reported_tokens_retained
+  )
+  df_outfit_raw <- fit_review_raw_numeric_col(
+    df, df_outfit_col, c("DF_OutfitRaw", "OutfitDFRaw"), reported_tokens_retained
+  )
+  infit_z_state <- fit_review_zstd_display_state(infit_z_raw)
+  outfit_z_state <- fit_review_zstd_display_state(outfit_z_raw)
+  token_retained <- !is.na(infit_z_raw) | !is.na(outfit_z_raw) |
+    !is.na(estimate_raw) | !is.na(infit_raw) | !is.na(outfit_raw)
+
   tibble::tibble(
     Facet = facet_values,
     Level = level_values,
@@ -11298,6 +11423,25 @@ fit_review_standardize_frame <- function(df,
     OutfitZSTD = fit_review_numeric_col(df, outfit_z_col),
     DF_Infit = fit_review_numeric_col(df, df_infit_col),
     DF_Outfit = fit_review_numeric_col(df, df_outfit_col),
+    EstimateRaw = estimate_raw,
+    SERaw = se_raw,
+    NRaw = n_raw,
+    InfitRaw = infit_raw,
+    OutfitRaw = outfit_raw,
+    InfitZSTDRaw = infit_z_raw,
+    OutfitZSTDRaw = outfit_z_raw,
+    DF_InfitRaw = df_infit_raw,
+    DF_OutfitRaw = df_outfit_raw,
+    InfitZSTDReportedDecimals = fit_review_reported_decimal_places(infit_z_raw),
+    OutfitZSTDReportedDecimals = fit_review_reported_decimal_places(outfit_z_raw),
+    InfitZSTDDisplayState = infit_z_state,
+    OutfitZSTDDisplayState = outfit_z_state,
+    ZSTDDisplayFlagState = fit_review_combine_zstd_display_state(
+      infit_z_state, outfit_z_state
+    ),
+    SourcePrecisionStatus = ifelse(
+      token_retained, "reported_tokens_retained", "numeric_values_only"
+    ),
     Source = as.character(source[1])
   ) |>
     dplyr::filter(
@@ -11333,7 +11477,8 @@ fit_review_read_score_file <- function(path,
     facet = facet_name,
     level_col = level_col,
     source = basename(path),
-    data_label = "FACETS score file"
+    data_label = "FACETS score file",
+    reported_tokens_retained = TRUE
   )
   if (!is.na(fit_review_scorefile_number(path))) {
     out$RawFacetNumber <- rep(fit_review_scorefile_number(path), nrow(out))
@@ -11354,7 +11499,8 @@ fit_review_read_table_file <- function(path,
     facet_col = facet_col,
     level_col = level_col,
     source = basename(path),
-    data_label = "FACETS fit table"
+    data_label = "FACETS fit table",
+    reported_tokens_retained = TRUE
   )
 }
 
@@ -11439,7 +11585,14 @@ fit_review_read_one_path <- function(path,
 #' This helper does not run FACETS. It reads FACETS output that already exists
 #' on disk and normalizes it to columns that [facets_fit_review()] can consume:
 #' `Facet`, `Level`, `Estimate`, `SE`, `N`, `Infit`, `Outfit`, `InfitZSTD`,
-#' `OutfitZSTD`, `DF_Infit`, and `DF_Outfit`.
+#' `OutfitZSTD`, `DF_Infit`, and `DF_Outfit`. File imports also retain the
+#' exact reported numeric tokens (for example, `InfitZSTDRaw = "2.0"`) and
+#' their displayed decimal counts. FACETS comparison runs should first request
+#' the highest practical output precision (for example, `Udecim=8` for Measure
+#' and SE). If the resulting displayed absolute ZSTD is still exactly equal to
+#' 2, it is classified as `display_boundary_indeterminate`: the text file does
+#' not expose whether the unrounded value lies just below, at, or just above
+#' the conventional threshold.
 #'
 #' Two common workflows are supported:
 #' - a FACETS score file such as `score.2.txt`, where the facet name is supplied
@@ -11529,7 +11682,16 @@ normalize_facets_fit_frame <- function(x,
       FACETS_Infit = numeric(0), FACETS_Outfit = numeric(0),
       FACETS_InfitZSTD = numeric(0), FACETS_OutfitZSTD = numeric(0),
       FACETS_DF_Infit = numeric(0), FACETS_DF_Outfit = numeric(0),
-      FACETS_N = numeric(0)
+      FACETS_N = numeric(0),
+      FACETS_InfitRaw = character(0), FACETS_OutfitRaw = character(0),
+      FACETS_InfitZSTDRaw = character(0), FACETS_OutfitZSTDRaw = character(0),
+      FACETS_DF_InfitRaw = character(0), FACETS_DF_OutfitRaw = character(0),
+      FACETS_InfitZSTDReportedDecimals = integer(0),
+      FACETS_OutfitZSTDReportedDecimals = integer(0),
+      FACETS_InfitZSTDDisplayState = character(0),
+      FACETS_OutfitZSTDDisplayState = character(0),
+      FACETS_ZSTDDisplayFlagState = character(0),
+      FACETS_SourcePrecisionStatus = character(0)
     ))
   }
 
@@ -11607,6 +11769,41 @@ normalize_facets_fit_frame <- function(x,
     )
   )
 
+  carry_character <- function(name, fallback = NA_character_) {
+    if (name %in% names(df)) return(as.character(df[[name]]))
+    rep(fallback, nrow(df))
+  }
+  carry_integer <- function(name) {
+    if (name %in% names(df)) {
+      return(suppressWarnings(as.integer(df[[name]])))
+    }
+    rep(NA_integer_, nrow(df))
+  }
+  raw_from_input <- function(raw_name, value_col) {
+    if (raw_name %in% names(df)) return(carry_character(raw_name))
+    retain <- !is.na(value_col) && nzchar(value_col) &&
+      value_col %in% names(df) && is.character(df[[value_col]])
+    fit_review_raw_numeric_col(
+      df, value_col, reported_tokens_retained = retain
+    )
+  }
+  infit_raw <- raw_from_input("InfitRaw", infit_col)
+  outfit_raw <- raw_from_input("OutfitRaw", outfit_col)
+  infit_z_raw <- raw_from_input("InfitZSTDRaw", infit_z_col)
+  outfit_z_raw <- raw_from_input("OutfitZSTDRaw", outfit_z_col)
+  df_infit_raw <- raw_from_input("DF_InfitRaw", df_infit_col)
+  df_outfit_raw <- raw_from_input("DF_OutfitRaw", df_outfit_col)
+  infit_z_state <- if ("InfitZSTDDisplayState" %in% names(df)) {
+    carry_character("InfitZSTDDisplayState")
+  } else {
+    fit_review_zstd_display_state(infit_z_raw)
+  }
+  outfit_z_state <- if ("OutfitZSTDDisplayState" %in% names(df)) {
+    carry_character("OutfitZSTDDisplayState")
+  } else {
+    fit_review_zstd_display_state(outfit_z_raw)
+  }
+
   tibble::tibble(
     Source = as.character(source[1]),
     Facet = facet,
@@ -11617,7 +11814,40 @@ normalize_facets_fit_frame <- function(x,
     FACETS_OutfitZSTD = fit_review_numeric_col(df, outfit_z_col),
     FACETS_DF_Infit = fit_review_numeric_col(df, df_infit_col),
     FACETS_DF_Outfit = fit_review_numeric_col(df, df_outfit_col),
-    FACETS_N = fit_review_numeric_col(df, n_col)
+    FACETS_N = fit_review_numeric_col(df, n_col),
+    FACETS_InfitRaw = infit_raw,
+    FACETS_OutfitRaw = outfit_raw,
+    FACETS_InfitZSTDRaw = infit_z_raw,
+    FACETS_OutfitZSTDRaw = outfit_z_raw,
+    FACETS_DF_InfitRaw = df_infit_raw,
+    FACETS_DF_OutfitRaw = df_outfit_raw,
+    FACETS_InfitZSTDReportedDecimals = carry_integer(
+      "InfitZSTDReportedDecimals"
+    ),
+    FACETS_OutfitZSTDReportedDecimals = carry_integer(
+      "OutfitZSTDReportedDecimals"
+    ),
+    FACETS_InfitZSTDDisplayState = infit_z_state,
+    FACETS_OutfitZSTDDisplayState = outfit_z_state,
+    FACETS_ZSTDDisplayFlagState = if (
+      "ZSTDDisplayFlagState" %in% names(df)
+    ) {
+      carry_character("ZSTDDisplayFlagState")
+    } else {
+      fit_review_combine_zstd_display_state(infit_z_state, outfit_z_state)
+    },
+    FACETS_SourcePrecisionStatus = if (
+      "SourcePrecisionStatus" %in% names(df)
+    ) {
+      carry_character("SourcePrecisionStatus")
+    } else {
+      ifelse(
+        !is.na(infit_raw) | !is.na(outfit_raw) |
+          !is.na(infit_z_raw) | !is.na(outfit_z_raw) |
+          !is.na(df_infit_raw) | !is.na(df_outfit_raw),
+        "reported_tokens_retained", "numeric_values_only"
+      )
+    }
   ) |>
     dplyr::filter(
       !is.na(.data$Facet), !is.na(.data$Level),
@@ -11632,7 +11862,16 @@ normalize_facets_fit_input <- function(facets_fit, facet_col = NULL, level_col =
       FACETS_Infit = numeric(0), FACETS_Outfit = numeric(0),
       FACETS_InfitZSTD = numeric(0), FACETS_OutfitZSTD = numeric(0),
       FACETS_DF_Infit = numeric(0), FACETS_DF_Outfit = numeric(0),
-      FACETS_N = numeric(0)
+      FACETS_N = numeric(0),
+      FACETS_InfitRaw = character(0), FACETS_OutfitRaw = character(0),
+      FACETS_InfitZSTDRaw = character(0), FACETS_OutfitZSTDRaw = character(0),
+      FACETS_DF_InfitRaw = character(0), FACETS_DF_OutfitRaw = character(0),
+      FACETS_InfitZSTDReportedDecimals = integer(0),
+      FACETS_OutfitZSTDReportedDecimals = integer(0),
+      FACETS_InfitZSTDDisplayState = character(0),
+      FACETS_OutfitZSTDDisplayState = character(0),
+      FACETS_ZSTDDisplayFlagState = character(0),
+      FACETS_SourcePrecisionStatus = character(0)
     ))
   }
   if (is.data.frame(facets_fit)) {
@@ -11675,6 +11914,9 @@ summarize_external_facets_fit_quality <- function(external_tbl) {
       CompleteDFRows = 0L,
       CompleteNRows = 0L,
       CompleteExternalFitRows = 0L,
+      ReportedTokenRows = 0L,
+      NumericOnlyRows = 0L,
+      ZSTDBoundaryRows = 0L,
       stringsAsFactors = FALSE
     ))
   }
@@ -11696,6 +11938,12 @@ summarize_external_facets_fit_quality <- function(external_tbl) {
   complete_mnsq <- has_infit & has_outfit
   complete_zstd <- has_infit_z & has_outfit_z
   complete_df <- has_df_infit & has_df_outfit
+  precision_status <- as.character(
+    external_tbl$FACETS_SourcePrecisionStatus %||% rep("numeric_values_only", nrow(external_tbl))
+  )
+  zstd_display_state <- as.character(
+    external_tbl$FACETS_ZSTDDisplayFlagState %||% rep("not_available", nrow(external_tbl))
+  )
   data.frame(
     Rows = nrow(external_tbl),
     UniqueFacetLevelRows = length(unique(key)),
@@ -11705,6 +11953,9 @@ summarize_external_facets_fit_quality <- function(external_tbl) {
     CompleteDFRows = sum(complete_df, na.rm = TRUE),
     CompleteNRows = sum(has_n, na.rm = TRUE),
     CompleteExternalFitRows = sum(complete_mnsq & complete_zstd & complete_df, na.rm = TRUE),
+    ReportedTokenRows = sum(precision_status == "reported_tokens_retained", na.rm = TRUE),
+    NumericOnlyRows = sum(precision_status == "numeric_values_only", na.rm = TRUE),
+    ZSTDBoundaryRows = sum(zstd_display_state == "display_boundary_indeterminate", na.rm = TRUE),
     stringsAsFactors = FALSE
   )
 }
@@ -11896,6 +12147,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
       "Primary comparison",
       "Residual basis",
       "ZSTD convention",
+      "Reported precision",
       "Small df",
       "External FACETS fit",
       "Bounded GPCM"
@@ -11904,6 +12156,7 @@ facets_fit_review_guidance <- function(model, external_supplied) {
       "Compare MnSq values separately from ZSTD values; MnSq differences indicate fit-statistic or estimation differences.",
       "MML fits evaluate residuals at shrunken EAP person measures while FACETS uses JMLE estimates, so MnSq itself can differ across the two bases; refit with method = \"JML\" before attributing MnSq gaps to fit computation.",
       "Use the FACETS-style companion columns for FACETS ZSTD comparison; engine ZSTD columns retain the package-native df convention.",
+      "Request the highest practical FACETS output precision first (for example, Udecim=8 for Measure and SE). File imports retain the resulting tokens; a displayed |ZSTD| still exactly equal to 2 is boundary-indeterminate and must not be counted automatically as threshold agreement or disagreement.",
       "FACETS permits chi-square df below 1 under WHEXACT=Y; mfrmr withholds ZSTD as NA when df < 1, so an NA-vs-finite ZSTD pair on a sparse cell is an availability difference (compare MnSq for that row), not a fit difference.",
       if (isTRUE(external_supplied)) {
         "External rows are matched by Facet and Level. Rows without a match are marked no_external_match."
@@ -11973,7 +12226,8 @@ facets_fit_review_guidance <- function(model, external_supplied) {
 #'   the |ZSTD| flag or materially changes ZSTD interpretation
 #' - `df_sensitivity_summary`: counts by df-sensitivity status
 #' - `external_table_quality`: completeness and duplicate-key review for the
-#'   supplied FACETS fit table
+#'   supplied FACETS fit table, including reported-token and displayed-ZSTD
+#'   boundary counts
 #' - `external_comparison`: optional external FACETS-vs-mfrmr comparison
 #' - `df_conversion_guide`: formulas, column map, and comparison decisions for
 #'   FACETS-style df/ZSTD review
@@ -12084,6 +12338,9 @@ facets_fit_review <- function(fit,
     ExternalCompleteMnSqRows = external_table_quality$CompleteMnSqRows[1],
     ExternalCompleteZSTDRows = external_table_quality$CompleteZSTDRows[1],
     ExternalCompleteDFRows = external_table_quality$CompleteDFRows[1],
+    ExternalReportedTokenRows = external_table_quality$ReportedTokenRows[1],
+    ExternalNumericOnlyRows = external_table_quality$NumericOnlyRows[1],
+    ExternalZSTDBoundaryRows = external_table_quality$ZSTDBoundaryRows[1],
     ExternalMatched = external_matched,
     ExternalNeedsReview = external_review,
     ExternalComparison = if (external_supplied) "supplied" else "not_supplied"
@@ -12108,7 +12365,8 @@ facets_fit_review <- function(fit,
       df_tolerance = df_tolerance,
       df_zstd_tolerance = df_zstd_tolerance,
       df_zstd_large_shift = df_zstd_large_shift,
-      df_ratio_tolerance = df_ratio_tolerance
+      df_ratio_tolerance = df_ratio_tolerance,
+      external_zstd_threshold_policy = "display_equality_indeterminate"
     )
   )
   as_mfrm_bundle(out, "mfrm_facets_fit_review")

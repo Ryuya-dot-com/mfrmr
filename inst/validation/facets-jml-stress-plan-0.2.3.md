@@ -195,6 +195,7 @@ Pilot starting values below are planning values, not frozen criteria:
 | Axis | Pilot levels or structures |
 | --- | --- |
 | Persons | 100, 300, 1000 |
+| Total facets (including Person) | 3, 4, 5; dimension growth is held separate from level and row growth |
 | Raters | 2, 3, 5, 20, 50, with 2-rater cases stratified by shared-Person support |
 | Tasks | 3, 8 |
 | Criteria/items | 4, 10 |
@@ -236,6 +237,16 @@ Before any numeric comparison, each scenario record must define:
 - the free and expanded parameter vectors and the transformation between
   engine-native and common coordinates; and
 - which SE, fit, fair-average, or interaction statistic is genuinely common.
+
+The prospective facet-count and displayed-precision implementation is frozen
+separately in `facets-multifacet-precision-contract-0.2.3.R`. Comparison runs
+must first request eight decimals for configurable FACETS measure and
+residual/response outputs, then record the actual written decimals separately
+for Measure, SE, MnSq, ZSTD, and df. FACETS numeric tokens and their displayed
+decimal counts must be retained. Only when ZSTD remains fixed-precision is a
+displayed `|ZSTD|` exactly equal to 2 boundary-indeterminate rather than
+silently classified by an assumed hidden value or an undocumented rounding
+rule.
 
 The executable comparison contract must additionally verify constrained
 full-rank estimability and the retained category/step dimension reported by
