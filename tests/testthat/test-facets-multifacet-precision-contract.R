@@ -56,7 +56,7 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
   expect_true(contract$authorization$ReplicationFrozen)
   expect_false(contract$authorization$FACETSConfirmationExecutionAuthorized)
   expect_false(contract$authorization$FACETSRegistryExecutionCompleted)
-  expect_false(contract$authorization$FACETSStressRegistryExecutionCompleted)
+  expect_true(contract$authorization$FACETSStressRegistryExecutionCompleted)
   expect_false(contract$authorization$FACETSExecutionAuthorized)
   expect_false(contract$authorization$EquivalenceClaimAuthorized)
 
@@ -187,6 +187,51 @@ test_that("multifacet smoke generator preserves RNG and declared dimensions", {
     expect_identical(design$truth$Rater, coupled[[1L]]$truth$Rater)
     expect_identical(design$truth$Criterion, coupled[[1L]]$truth$Criterion)
   }
+})
+
+test_that("FACETS score files follow numeric facet order beyond nine facets", {
+  env <- facets_mfp_environment()
+  case_dir <- tempfile("facets-score-order-")
+  dir.create(case_dir)
+  paths <- file.path(case_dir, paste0("score.", 1:10, ".txt"))
+  file.create(paths[c(1L, 10L, 2:9)])
+
+  ordered <- env$mfrmr_facets_mfp_score_files(case_dir)
+
+  expect_identical(basename(ordered), paste0("score.", 1:10, ".txt"))
+})
+
+test_that("FACETS case execution uses and removes a short system work directory", {
+  env <- facets_mfp_environment()
+  original <- env$mfrmr_facets_mfp_run_process
+  observed_temp <- NULL
+  assign(
+    "mfrmr_facets_mfp_run_process",
+    function(..., temp_dir) {
+      observed_temp <<- temp_dir
+      expect_true(dir.exists(temp_dir))
+      0L
+    },
+    envir = env
+  )
+  status <- tryCatch(
+    env$mfrmr_facets_mfp_run_case_process(
+      facets_exe = "facets.exe", case_dir = "case",
+      control_path = "control.txt", report_path = "report.txt",
+      stdout_path = "stdout.txt", stderr_path = "stderr.txt"
+    ),
+    finally = assign(
+      "mfrmr_facets_mfp_run_process", original, envir = env
+    )
+  )
+
+  expect_identical(status, 0L)
+  expect_false(is.null(observed_temp))
+  expect_false(dir.exists(observed_temp))
+  expect_true(startsWith(
+    normalizePath(observed_temp, winslash = "/", mustWork = FALSE),
+    normalizePath(tempdir(), winslash = "/", mustWork = TRUE)
+  ))
 })
 
 test_that("external pilot writer emits genuine multifacet FACETS controls", {

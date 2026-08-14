@@ -28,7 +28,7 @@ Carlo bias estimate. Recovery rows from a fit that misses the numerical gate
 remain in the denominator with `RecoveryEligible = FALSE` and cannot support a
 performance claim.
 
-## External execution state
+## Initial external execution state
 
 All 12 FACETS launches returned code 5 before producing a report. This was not
 classified as nonconvergence or numerical disagreement. A subsequent 640-row,
@@ -43,7 +43,62 @@ full version as supporting far larger
 analyses and the free MINIFAC version as limited to 2,000 responses. Neither
 description identifies the observed code-5 state, and the successful 640-row
 control later failed unchanged. No license-capacity diagnosis is inferred.
-The external large/sparse/many-facet comparison remains unexecuted.
+At that point the external large/sparse/many-facet comparison remained
+unexecuted.
+
+## Requalification and completed external rerun
+
+On 2026-08-15 the same FACETS 4.5.0 executable was requalified in stages. A
+sandboxed launch returned code 5 for the bundled `Dives.txt`. A normal local
+launch that placed its work directory under the long Dropbox case path exposed
+FACETS error F50, `Work file problem`. The official error reference identifies
+F50 as a temporary-work-file failure. Running with normal local permissions
+and a short dedicated directory under the user's system `TEMP` produced the
+complete 50,623-byte `Dives.out.txt` report with return code zero. The unchanged
+640-row, 53-coordinate five-facet RSM and PCM controls then both returned code
+zero, met both numerical gates, and passed complete Element and Step coordinate
+contracts. Their global maximum Element and Step differences were 0.0003622826
+and 0.000210636 logits.
+
+The stress runner was changed to create and remove a short case-specific
+FACETS work directory under the system `TEMP`, independent of the requested
+evidence directory. The first 10-facet rerun also exposed a separate adapter
+defect: lexicographic file order placed `score.10.txt` before `score.2.txt`.
+Score files are now ordered and validated by their numeric facet indices. A
+focused test covers ten files, and the rerun passed all 228 Element coordinate
+identities for both RSM and PCM.
+
+All 12 registered stress launches were then completed with return code zero.
+The result is an executed stress registry, not a blanket agreement result.
+
+| Scenario | Model | FACETS convergence gate | mfrmr numerical gate | Comparison state |
+| --- | --- | --- | --- | --- |
+| Large F5, 40,000 rows | RSM | pass | review, gradient 0.000783974 | withheld |
+| Large F5, 40,000 rows | PCM | pass | review, gradient 0.001173623 | withheld |
+| Sparse distributed F5, 10,000 rows | RSM | review, residual -0.0456 | review, gradient 0.000186109 | withheld |
+| Sparse distributed F5, 10,000 rows | PCM | review, residual 0.0810 | review, gradient 0.000399110 | withheld |
+| Sparse weak bridge F5, 10,000 rows | RSM | review, residual 0.2434 | review, gradient 0.000152096 | withheld |
+| Sparse weak bridge F5, 10,000 rows | PCM | review, residual -0.1010 | pass, gradient 0.000060078 | withheld |
+| Many F10, 6,400 rows | RSM | pass | review, gradient 0.000121420 | withheld |
+| Many F10, 6,400 rows | PCM | pass | pass, gradient 0.000058897 | compared |
+| Many F30, 12,800 rows | RSM | pass | review, gradient 0.000212349 | withheld |
+| Many F30, 12,800 rows | PCM | pass | review, gradient 0.000180062 | withheld |
+| Disconnected F5, 10,000 rows | RSM | review, residual 0.0135 | structural rejection | negative control retained |
+| Disconnected F5, 10,000 rows | PCM | pass | structural rejection | negative control retained |
+
+The four connected sparse FACETS fits each reported `Subset connection O.K.`
+and ran for 301--415 iterations, but their maximum score residual did not reach
+the frozen 0.01 criterion even when logit changes displayed as zero. The
+30-facet RSM/PCM FACETS portion required about 29 minutes locally, making runtime
+an operational result of this stress condition. Both disconnected mfrmr fits
+were again rejected before optimization at nullity one; neither became falsely
+ready even though the disconnected PCM FACETS run met its own stopping rule.
+
+Only the 10-facet PCM case passed both programs' numerical gates. Its 228
+Element coordinates had maximum absolute difference 0.0001136842 logits, and
+its 18 Step coordinates had maximum absolute difference 0.00003751122 logits.
+This one opened-seed cell is useful agreement evidence, but it is not a bias
+study, exact equality, confirmation evidence, or a FACETS replacement claim.
 
 ## Independent mfrmr result
 
@@ -229,6 +284,12 @@ boundary-conditioned displacement and mean element score residual across row,
 facet-count, and sparse-topology strata. That design must be frozen before new
 responses are opened and must retain readiness consequences, not merely a
 numerical maximum. No cutoff should be selected from this one-seed envelope.
-The external FACETS stress comparison also remains separately blocked by the
-local code-5 entrance failure; an internal stationary-point diagnosis cannot
-substitute for FACETS equivalence evidence.
+The local code-5 entrance failure is resolved by the qualified short-TEMP
+route, and the complete external stress registry has now been executed. The
+remaining blockers are scientific rather than launcher availability: sparse
+FACETS convergence, mfrmr's replication-sensitive raw-gradient gate, JML
+boundary states, and the absence of multi-seed bias evidence. The next bounded
+task should compare estimator states only where both programs meet a declared
+stopping contract, while separately calibrating an invariant mfrmr readiness
+rule prospectively. One executed agreement cell cannot substitute for that
+work or establish FACETS equivalence.

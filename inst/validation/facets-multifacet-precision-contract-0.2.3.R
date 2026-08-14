@@ -632,6 +632,16 @@ mfrmr_facets_mfp_external_coordinate_contract <- function(design, external) {
   )
 }
 
+mfrmr_facets_mfp_score_files <- function(case_dir) {
+  paths <- list.files(
+    case_dir, pattern = "^score[.][0-9]+[.]txt$", full.names = TRUE
+  )
+  indices <- as.integer(sub(
+    "^score[.]([0-9]+)[.]txt$", "\\1", basename(paths)
+  ))
+  paths[order(indices)]
+}
+
 mfrmr_facets_mfp_read_anchor_steps <- function(anchor_path, step_level_codes) {
   if (!file.exists(anchor_path)) {
     stop("FACETS anchor output was not found: ", anchor_path, ".",
@@ -900,6 +910,26 @@ mfrmr_facets_mfp_run_process <- function(
   )
 }
 
+mfrmr_facets_mfp_run_case_process <- function(
+    facets_exe, case_dir, control_path, report_path, stdout_path,
+    stderr_path) {
+  temp_dir <- tempfile("mfrmr-facets-work-", tmpdir = tempdir())
+  if (!dir.create(temp_dir, recursive = TRUE, showWarnings = FALSE)) {
+    stop("Could not create the short FACETS work directory: ", temp_dir, ".",
+         call. = FALSE)
+  }
+  on.exit(unlink(temp_dir, recursive = TRUE, force = TRUE), add = TRUE)
+  mfrmr_facets_mfp_run_process(
+    facets_exe = facets_exe,
+    case_dir = case_dir,
+    control_path = control_path,
+    report_path = report_path,
+    stdout_path = stdout_path,
+    stderr_path = stderr_path,
+    temp_dir = temp_dir
+  )
+}
+
 mfrmr_run_facets_mfp_external_pilot <- function(
     facets_exe,
     work_dir,
@@ -1031,17 +1061,14 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       if (isTRUE(execute)) {
         stdout_path <- file.path(case_dir, "facets_stdout.txt")
         stderr_path <- file.path(case_dir, "facets_stderr.txt")
-        temp_dir <- file.path(case_dir, "facets_temp")
-        dir.create(temp_dir, showWarnings = FALSE)
         process_status <- tryCatch(
-          mfrmr_facets_mfp_run_process(
+          mfrmr_facets_mfp_run_case_process(
             facets_exe = facets_exe,
             case_dir = case_dir,
             control_path = case$control_path,
             report_path = case$report_path,
             stdout_path = stdout_path,
-            stderr_path = stderr_path,
-            temp_dir = temp_dir
+            stderr_path = stderr_path
           ),
           error = function(e) e
         )
@@ -1088,12 +1115,21 @@ mfrmr_run_facets_mfp_external_pilot <- function(
         }
         if (identical(process_status, 0L) &&
             isTRUE(facets_convergence_contract_passed)) {
-          score_files <- list.files(
-            case_dir, pattern = "^score[.][0-9]+[.]txt$", full.names = TRUE
-          )
-          if (length(score_files) != length(case$facet_names)) {
-            error <- paste0("Expected ", length(case$facet_names),
-                            " FACETS score files; found ", length(score_files), ".")
+          score_files <- mfrmr_facets_mfp_score_files(case_dir)
+          score_indices <- as.integer(sub(
+            "^score[.]([0-9]+)[.]txt$", "\\1", basename(score_files)
+          ))
+          expected_score_indices <- seq_along(case$facet_names)
+          if (!identical(score_indices, expected_score_indices)) {
+            error <- paste0(
+              "Expected FACETS score files indexed 1--",
+              length(case$facet_names), "; found ",
+              if (length(score_indices)) {
+                paste(score_indices, collapse = ",")
+              } else {
+                "none"
+              }, "."
+            )
           } else {
             external <- getExportedValue("mfrmr", "read_facets_fit_table")(
               score_files,
@@ -1512,7 +1548,7 @@ mfrmr_facets_mfp_contract <- function() {
       MfrmrOpenedSeedStressPilotCompleted = TRUE,
       FACETSConfirmationExecutionAdapterImplemented = FALSE,
       FACETSConfirmationExecutionAuthorized = FALSE,
-      FACETSStressRegistryExecutionCompleted = FALSE,
+      FACETSStressRegistryExecutionCompleted = TRUE,
       FACETSRegistryExecutionCompleted = FALSE,
       FACETSExecutionAuthorized = FALSE,
       NumericToleranceFrozen = TRUE,

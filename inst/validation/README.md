@@ -726,11 +726,17 @@ identify whether the opt-in layer ran and retain its test log.
   and weak-bridge sparsity, a typed disconnected negative control, and 10/30
   total facets. The adapter runs mfrmr independently of FACETS entrance state,
   retains coordinate-level recovery eligibility, and never treats one-seed
-  Bias/RMSE as Monte Carlo evidence. The local FACETS executable later returned
-  code 5 even for the unchanged 640-row control, so external stress comparison
-  remains blocked rather than failed. At maxit 800, two of ten connected mfrmr
-  fits passed the strict gradient gate; both disconnected fits were rejected
-  before optimization. A read-only fixed-point audit then reproduced every
+  Bias/RMSE as Monte Carlo evidence. A rerun qualified a short disposable
+  system-TEMP route after a long-path F50 work-file failure, restored the
+  bundled example and 640-row controls, and completed all 12 FACETS launches
+  with return code zero. Six of ten connected FACETS fits met the frozen
+  convergence contract; two of ten connected mfrmr fits passed the strict
+  gradient gate; only the 10-facet PCM cell passed both. Its 228 Element and 18
+  Step coordinates differed by at most 0.0001136842 and 0.00003751122 logits.
+  The four sparse FACETS fits remained above their 0.01 score-residual rule, so
+  their comparisons were withheld. Both disconnected mfrmr fits were rejected
+  before optimization. Numeric ordering of FACETS score files now covers ten
+  and 30 facets. A read-only fixed-point audit then reproduced every
   stored objective, matched selected analytic and numeric gradients within
   `3.76e-7`, and found at most `4.15e-5` logits one-coordinate local movement
   and `3.62e-13` relative objective improvement. It changes no readiness state

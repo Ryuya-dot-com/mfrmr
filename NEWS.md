@@ -79,9 +79,19 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   rejected at nullity one. At maxit 800, two of ten connected fits cleared the
   strict terminal-gradient gate; the other code-zero solutions identify a
   stopping-rule/readiness-scale question rather than a reason to relax the
-  gate. The local FACETS executable returned code 5 even for the unchanged
-  previously successful 640-row control, so large/sparse/many-facet external
-  comparison remains unavailable, not numerically failed.
+  gate. An initial sandboxed FACETS attempt returned code 5 even for the
+  unchanged 640-row control. Requalification isolated a FACETS F50 work-file
+  failure on the long case-local TEMP path; normal local execution with a short
+  system-TEMP work directory restored the bundled example and both 640-row
+  controls. All 12 stress launches then returned code zero. Six of ten
+  connected FACETS fits met the frozen convergence contract, two of ten mfrmr
+  fits met its existing numerical gate, and their intersection contained the
+  10-facet PCM case. Its 228 Element and 18 Step coordinates differed by at
+  most 0.0001136842 and 0.00003751122 logits. Four sparse FACETS fits retained
+  score residuals 0.0456--0.2434 after 301--415 iterations, so those comparisons
+  remain withheld rather than mislabeled as disagreement. The runner now uses
+  a short disposable system-TEMP work directory and orders `score.10.txt` and
+  later files by numeric facet index.
   Added a read-only retained-point audit for those RSM/PCM JML fits. Across all
   ten connected cases it reconstructed the stored objective, matched selected
   analytic and central-difference gradients within `3.76e-7`, and found at
