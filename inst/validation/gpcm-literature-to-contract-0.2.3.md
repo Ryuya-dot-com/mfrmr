@@ -292,6 +292,14 @@ JML likelihood.
    MML had lower numerical recovery error under the correctly specified normal
    population model. No estimator-selection, correction, Bayesian-necessity,
    confirmation, or release decision follows from that calibration pilot.
+10. **Stress the fitted Person distribution separately from structural truth.**
+    `gpcm-latent-distribution-stress-0.2.3.R` quantile-couples normal,
+    skewed-gamma, and symmetric-mixture Person supports while holding the
+    Rater, Criterion, step, slope, and design truth fixed. Its calibration
+    record found that sparse-exposure MML structural recovery remained better
+    than JML under both nonnormal stresses, while the fitted normal population
+    variance remained shape-sensitive. This does not authorize a Bayesian
+    comparator or erase the GPCM readiness boundary.
 
 ## Zotero evidence consulted
 

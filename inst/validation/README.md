@@ -97,6 +97,11 @@ identify whether the opt-in layer ran and retain its test log.
   decision, or release threshold. The guarded 20-replicate pilot adds
   coordinate-specific error, Monte Carlo uncertainty, paired method contrasts,
   and MML population-scale recovery while retaining the same non-authorization.
+- `gpcm-latent-distribution-stress-0.2.3.R`, its contract, and pilot record:
+  coupled normal, skewed-gamma, and symmetric-mixture Person distributions at
+  sparse and dense exposure. The pilot separates structural recovery from
+  normal-population moment sensitivity and does not authorize a Bayesian or
+  estimator-selection route.
 - `gpcm-solution-decision-stability-roadmap-0.2.3.md`: cross-cutting roadmap
   from canonical objective/gradient/free-dimension and multiple-start/
   quadrature checks through boundary adjudication, Hessian/interval
