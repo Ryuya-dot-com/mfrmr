@@ -22,6 +22,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   treating loading-only as a separate future family; it does not add that
   family, freeze a practical threshold, or change readiness.
 
+* Extended that model-identity audit to sparse Rater-by-Criterion graphs and
+  a finite-sample known-ability oracle. Connectedness alone was insufficient:
+  a connected tree made the two slope actions exactly re-expressible, while
+  cycle placement strongly changed the available signal. Two connected
+  eight-edge designs with cycle rank one produced markedly different oracle
+  selection rates because only one cycle spanned all Rater and Criterion
+  levels. This is not JML/MML model selection and does not justify a universal
+  anchor or density percentage.
+
 * Removed byte- and serialization-hash claims from distributed reporting
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an

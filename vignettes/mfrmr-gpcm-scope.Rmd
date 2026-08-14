@@ -435,6 +435,21 @@ finite-sample operating characteristics. They support treating a loading-only
 kernel as a separate possible future family rather than as an interpretation
 switch for an existing `GPCM` fit.
 
+Sparsity changes this distinction structurally, not merely by reducing sample
+size. On an observed Rater-by-Criterion graph with no cycles, the products
+\(\alpha_c\rho_r\) can be represented exactly by new additive Rater and
+Criterion coordinates. Thus even a connected tree cannot distinguish the two
+slope actions. A repository-only known-ability oracle compared four connected
+graphs. At 250 Persons, truth-selection rates were about 0.96 under complete
+crossing, 0.76--0.78 for a balanced eight-edge cycle, and only 0.58 for an
+eight-edge cycle localized to two Raters and two Criteria; the connected tree
+remained observationally equivalent. Each Person was observed on every edge,
+and abilities and both parameter vectors were supplied to the comparison, so
+these are optimistic fixed-parameter results rather than JML or MML model-
+selection performance. The design lesson is to inspect which slope and
+severity contrasts are traversed by cycles, not to infer identifiability from
+connectedness, density, or an anchor percentage alone.
+
 ## Source-grounded recovery interpretation
 
 The bounded `GPCM` route follows Muraki's generalized partial credit model
