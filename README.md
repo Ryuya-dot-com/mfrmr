@@ -234,6 +234,24 @@ sensitivity grid. A close or consequential comparison still requires a
 prespecified common-grid sensitivity check; q>=31 alone is not evidence that
 integration error is negligible.
 
+After fitting a bounded GPCM-MML object as `fit_gpcm`, run the comparison
+explicitly rather than making `summary()` refit the model in the background:
+
+```r
+q_review <- gpcm_mml_quadrature_sensitivity(
+  fit_gpcm,
+  data = dat,
+  quad_points = c(31, 41)
+)
+summary(q_review)
+apa_table(q_review)
+```
+
+The review reports changes in marginal likelihood per Person, relative slopes,
+raw local-curvature SEs, population SD, and fitted probabilities. It does not
+assign a universal stable/unstable cutoff, make raw slope SEs inferentially
+eligible, or change the fit-readiness decision.
+
 Use `model = "PCM", step_facet = "Criterion"` when category steps differ
 across that facet. Choose the model from the scoring design and measurement
 rationale, not from a single fit statistic.

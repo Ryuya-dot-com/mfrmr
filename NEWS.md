@@ -52,6 +52,16 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   incomplete. The bridge uses semantic quantities and numerical regression
   guards, not byte hashes, and changes no public SE eligibility or readiness.
 
+* Added an explicit same-data quadrature-sensitivity diagnostic for the
+  additive bounded GPCM-MML route. It reuses the original fit at its recorded
+  grid, reconstructs denser fits from the retained model contract, verifies
+  the prepared response rows semantically, and reports continuous changes in
+  likelihood per Person, relative slopes, raw observed-information SEs,
+  population SD, and fitted probabilities over every observed facet cell.
+  `summary()`, `print()`, `as.data.frame()`, and `apa_table()` are supported.
+  No refit occurs implicitly, and no universal stability cutoff, SE
+  eligibility, readiness promotion, or byte/hash identity is introduced.
+
 * Removed byte- and serialization-hash claims from distributed reporting
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an
