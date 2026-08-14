@@ -156,6 +156,7 @@ facets_summary_toy <- summary(
 )
 res_toy <- facets_summary_toy$results
 
+fit_summary_toy$decision
 fit_summary_toy$overview
 fit_summary_toy$readiness
 fit_summary_toy$data_review
@@ -195,6 +196,14 @@ plot(
   preset = "publication"
 )
 ```
+
+Read `$decision` before the parameter tables. The same five fields are used
+for RSM, PCM, and bounded GPCM: interpretation status, formal-inference status,
+fit readiness, the reason, and the highest-priority next action. This block
+does not add a new acceptance test. It translates the stored readiness record.
+When `FormalInference` is `"No"`, diagnostic work may continue to investigate
+the stated reason, but estimates and plots remain review-only and must not be
+reported as formal results.
 
 Optimizer code zero is only one numerical signal. `fit_mfrm()` also checks the
 terminal gradient; when the initial direct or hybrid solution stops with a
@@ -264,6 +273,7 @@ auto-run by any summary profile. They require explicit contrasts, diagnostic
 settings, or multi-fit designs.
 
 ```{r toy-setup-artifacts, echo = FALSE, eval = is_cran_check}
+vignette_artifact("workflow_fit_decision.csv")
 vignette_artifact("workflow_fit_overview.csv")
 vignette_artifact("workflow_diagnostic_overview.csv")
 vignette_artifact("workflow_plot_components.csv")

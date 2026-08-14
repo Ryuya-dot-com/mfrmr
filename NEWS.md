@@ -9,7 +9,10 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   the readiness evidence that prevents interpretation, and the highest-priority
   next action. Core fit lines are wrapped to the configured console width so
   GPCM scale and identification details remain readable without hiding their
-  scientific caveats.
+  scientific caveats. Updated the RSM/PCM/GPCM first-use, GPCM, and FACETS
+  migration guides to use this same stop/review/proceed route. CRAN-safe
+  vignette artifacts now include the decision block, and their generator no
+  longer computes or records file hashes.
 
 * Preserved exact reported numeric tokens and displayed decimal counts when
   importing FACETS fit/score tables. External comparison runs now require
@@ -116,7 +119,7 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   tables. Algebraic tests lock the non-owner-facet scaling and the exact
   unit-slope reduction to PCM. No likelihood or readiness rule changed.
 
-* Added a repository-only population projection comparing the implemented
+* Added a 0.2.3 validation projection comparing the implemented
   complete-predictor GPCM slope with a loading-only alternative. Exact
   difference-in-differences and KL controls show that the families coincide
   under unit slopes or zero non-owner Rater contrasts, but remain distinct
@@ -134,7 +137,7 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   levels. This is not JML/MML model selection and does not justify a universal
   anchor or density percentage.
 
-* Added a repository-only finite-sample direct-MML refit of both GPCM slope
+* Added a 0.2.3 finite-sample direct-MML validation of both GPCM slope
   actions under a common 19-coordinate free-population identification. In a
   fixed 12-replication pilot, two starts converged to effectively the same
   objectives, every retained Hessian was full-rank positive definite, and
@@ -169,7 +172,7 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an
   environment-sensitive `input_hash`. Precomputed vignette artifacts are
-  validated by rows, columns, and schema without MD5. Repository-only
+  validated by rows, columns, and schema without MD5. Development validation
   cryptographic identity and external-run validation tests are now excluded
   together with the `inst/validation` sources they require, and `digest` is no
   longer a package dependency. Historical validation records remain unchanged
@@ -213,7 +216,7 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   limit, providing a genuine sign counterexample. Within this microcase, a
   complete sample is increasing whenever its discordant-pattern count is at
   least its concordant-pattern count; a concordant majority can reverse sign.
-  A repository-only adaptive-integration audit confirms the symmetric-pair
+  A 0.2.3 adaptive-integration validation confirms the symmetric-pair
   identity and
   analytic derivative, but the proof itself is quadrature-independent. The
   result covers neither a general fitted GPCM nor moving nuisance coordinates

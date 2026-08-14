@@ -14,11 +14,6 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
   } else {
     requireNamespace("mfrmr", quietly = TRUE)
   }
-  normalized_text_md5 <- getFromNamespace(
-    "mfrmr_normalized_text_md5",
-    "mfrmr"
-  )
-
   write_artifact <- function(name, x, source) {
     path <- file.path(output_dir, name)
     x <- as.data.frame(x, stringsAsFactors = FALSE)
@@ -28,25 +23,25 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
       Rows = nrow(x),
       Columns = ncol(x),
       Schema = paste(names(x), collapse = "|"),
-      MD5 = normalized_text_md5(path),
       Source = source,
       stringsAsFactors = FALSE
     )
   }
 
   toy <- mfrmr::load_mfrmr_data("example_operational")
-  fit_toy <- suppressWarnings(mfrmr::fit_mfrm(
+  fit_toy <- mfrmr::fit_mfrm(
     data = toy,
     person = "Person",
     facets = c("Rater", "Criterion"),
     score = "Score",
     method = "MML",
     model = "RSM"
-  ))
-  diag_toy <- suppressWarnings(mfrmr::diagnose_mfrm(
+  )
+  diag_toy <- mfrmr::diagnose_mfrm(
     fit_toy,
     residual_pca = "none"
-  ))
+  )
+  fit_summary_toy <- summary(fit_toy)
   res_toy <- mfrmr::mfrm_results(fit_toy)
   report_toy <- mfrmr::mfrm_report(res_toy, style = "qc")
 
@@ -107,7 +102,8 @@ mfrmr_generate_vignette_artifacts <- function(pkg_dir = ".",
   )
 
   manifest <- rbind(
-    write_artifact("workflow_fit_overview.csv", summary(fit_toy)$overview, "summary(fit_toy)$overview"),
+    write_artifact("workflow_fit_overview.csv", fit_summary_toy$overview, "summary(fit_toy)$overview"),
+    write_artifact("workflow_fit_decision.csv", fit_summary_toy$decision, "summary(fit_toy)$decision"),
     write_artifact("workflow_diagnostic_overview.csv", summary(diag_toy)$overview, "summary(diag_toy)$overview"),
     write_artifact("workflow_plot_components.csv", data.frame(Component = names(plot(fit_toy, draw = FALSE))), "names(plot(fit_toy, draw = FALSE))"),
     write_artifact("workflow_next_actions.csv", summary(res_toy)$next_actions, "summary(res_toy)$next_actions"),

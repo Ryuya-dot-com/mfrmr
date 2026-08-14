@@ -16,6 +16,12 @@ test_that("precomputed vignette artifacts match their semantic manifest", {
     "DataKey", "GeneratedWith"
   ) %in% names(manifest)))
   expect_false(any(grepl("sha|md5|hash", names(manifest), ignore.case = TRUE)))
+  generator_path <- testthat::test_path(
+    "..", "..", "inst", "validation", "generate-vignette-artifacts.R"
+  )
+  generator_text <- paste(readLines(generator_path, warn = FALSE), collapse = "\n")
+  hash_terms <- "\\b(?:md5|sha(?:1|224|256|384|512)?|hash(?:es|ed|ing)?)\\b"
+  expect_false(grepl(hash_terms, generator_text, ignore.case = TRUE, perl = TRUE))
   expect_true(all(manifest$DataKey == "example_operational"))
   expect_true(all(manifest$GeneratedWith == as.character(utils::packageVersion("mfrmr"))))
 
@@ -54,12 +60,24 @@ test_that("precomputed workflow artifacts represent the canonical successful fit
     stringsAsFactors = FALSE,
     check.names = FALSE
   )
+  fit_decision <- utils::read.csv(
+    file.path(artifact_dir, "workflow_fit_decision.csv"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
 
   expect_identical(fit_overview$Model, "RSM")
   expect_identical(fit_overview$Method, "MML")
   expect_true(isTRUE(fit_overview$Converged))
   expect_true(isTRUE(fit_overview$InferenceReady))
   expect_identical(fit_overview$ConvergenceSeverity, "pass")
+  expect_identical(fit_decision$Interpretation,
+                   "Ready for the configured inference")
+  expect_identical(fit_decision$FormalInference, "Yes")
+  expect_identical(fit_decision$FitReadiness, "ready")
+  expect_identical(fit_decision$Why,
+                   "All stored fit-readiness components passed.")
+  expect_match(fit_decision$NextAction, "profile = \"facets\"", fixed = TRUE)
   expect_true(all(c(
     "OptimizerInitialMethod", "OptimizerMethod", "OptimizerPolished",
     "RequestedReltol", "EffectiveReltol", "OptimizerFactr",

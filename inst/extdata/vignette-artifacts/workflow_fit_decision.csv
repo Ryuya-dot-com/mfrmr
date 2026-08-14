@@ -1,0 +1,2 @@
+"Interpretation","FormalInference","FitReadiness","Why","NextAction"
+"Ready for the configured inference","Yes","ready","All stored fit-readiness components passed.","After reviewing convergence, run `review <- summary(fit, profile = ""facets"", detail = ""brief"")` for the comprehensive FACETS-organized result surface."

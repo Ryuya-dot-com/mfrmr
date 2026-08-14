@@ -178,6 +178,24 @@ test_that("public maxit guidance prevents result-driven tuning", {
   expect_false(grepl("fast exploratory JML pass", docs_flat, fixed = TRUE))
 })
 
+test_that("first-use guides share one decision-first readiness route", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  paths <- c(
+    file.path(pkg_root, "README.md"),
+    file.path(pkg_root, "vignettes", "mfrmr-workflow.Rmd"),
+    file.path(pkg_root, "vignettes", "mfrmr-gpcm-scope.Rmd"),
+    file.path(pkg_root, "vignettes", "mfrmr-facets-migration.Rmd")
+  )
+  docs <- read_public_text(pkg_root, paths)
+
+  for (path in names(docs)) {
+    text <- paste(docs[[path]], collapse = "\n")
+    expect_match(text, "$decision", fixed = TRUE, info = path)
+    expect_match(text, "FormalInference", fixed = TRUE, info = path)
+  }
+})
+
 test_that("CRAN-facing documentation excludes development-process language", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")

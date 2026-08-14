@@ -404,7 +404,7 @@ q=31 `example_core` re-expression was therefore retained as different-model
 sensitivity evidence, not as an exact full-model comparison. This algebraic
 screen makes a second quadrature run unnecessary.
 
-A repository-only bounded comparison now exercises the exact item-only TAM
+A bounded validation comparison exercises the exact item-only TAM
 overlap on TAM's `data.gpcm` fixture at q=31 and q=41. TAM fixes the latent
 variance and estimates absolute slopes; mfrmr fixes the geometric mean of its
 relative slopes and estimates the latent variance. After applying the analytic
@@ -435,7 +435,7 @@ difference is not a software error until the fitted likelihood, estimand,
 identification, data rows, and output transformation have first been shown to
 match.
 
-A repository-only population projection also asked whether the current
+A population-level validation also asked whether the current
 complete-predictor slope and a loading-only slope are merely two coordinate
 systems. They reduce exactly when slopes are all one or when the non-owner
 Rater contrast is zero. In a fully crossed four-Criterion/four-Rater design,
@@ -455,7 +455,7 @@ Sparsity changes this distinction structurally, not merely by reducing sample
 size. On an observed Rater-by-Criterion graph with no cycles, the products
 \(\alpha_c\rho_r\) can be represented exactly by new additive Rater and
 Criterion coordinates. Thus even a connected tree cannot distinguish the two
-slope actions. A repository-only known-ability oracle compared four connected
+slope actions. A known-ability validation compared four connected
 graphs. At 250 Persons, truth-selection rates were about 0.96 under complete
 crossing, 0.76--0.78 for a balanced eight-edge cycle, and only 0.58 for an
 eight-edge cycle localized to two Raters and two Criteria; the connected tree
@@ -466,7 +466,7 @@ selection performance. The design lesson is to inspect which slope and
 severity contrasts are traversed by cycles, not to infer identifiability from
 connectedness, density, or an anchor percentage alone.
 
-A subsequent repository-only pilot removed the known-ability advantage and
+A subsequent finite-sample validation removed the known-ability advantage and
 refitted both slope actions by direct MML. The common identification estimated
 geometric-mean-one relative slopes, sum-zero Rater severities, mean-zero
 transition boundaries, and a normal population mean and standard deviation.
@@ -641,6 +641,7 @@ fit_gpcm <- fit_mfrm(
   person = "Person",
   facets = c("Rater", "Criterion"),
   step_facet = "Criterion",
+  slope_facet = "Criterion",
   score = "Score",
   model = "GPCM",
   method = "MML",
@@ -648,7 +649,10 @@ fit_gpcm <- fit_mfrm(
   maxit = 20
 )
 
-summary(fit_gpcm)
+fit_gpcm
+gpcm_summary <- summary(fit_gpcm, profile = "fit", detail = "brief")
+gpcm_summary$decision
+gpcm_summary$inference_evidence
 
 diag_gpcm <- diagnose_mfrm(fit_gpcm)
 summary(diag_gpcm)
@@ -698,6 +702,12 @@ plot(review_gpcm, type = "status")
 plot(review_gpcm, type = "metrics", metric = "rmse")
 
 ```
+
+Use the same `Decision` fields as for RSM and PCM. In particular, optimizer
+convergence does not override incomplete GPCM identifiability, curvature, or
+slope-boundary evidence. If `FormalInference` is `"No"`, the diagnostic and
+information calls above are investigative routes for resolving the recorded
+reason; they do not promote the fit to an inferential result.
 
 The fit, summary, residual diagnostics, information, recovery, fair-average, and
 conditional bias-screening helpers all run under `GPCM` with the caveats listed

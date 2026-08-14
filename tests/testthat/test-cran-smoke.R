@@ -68,6 +68,16 @@ test_that("CRAN smoke covers the primary MML review and export route", {
   expect_s3_class(fit_summary, "summary.mfrm_fit")
   expect_s3_class(facets_summary, "summary.mfrm_fit")
   expect_s3_class(facets_summary$results, "mfrm_results")
+  expect_identical(
+    fit_summary$decision$Interpretation,
+    "Ready for the configured inference"
+  )
+  expect_identical(fit_summary$decision$FormalInference, "Yes")
+  expect_identical(fit_summary$decision$FitReadiness, "ready")
+  expect_identical(
+    fit_summary$decision$NextAction,
+    fit_summary$next_actions[1L]
+  )
 
   native <- plot(
     fit,

@@ -31,7 +31,9 @@ The recommended workflow is:
 ```text
 long-format data + describe_mfrm_data()
   -> fit_mfrm(method = "MML")
-  -> summary(profile = "facets")
+  -> print(fit) / summary(fit)$decision
+  -> if ready: summary(profile = "facets")
+     if review/blocked: follow summary(fit)$decision$NextAction
   -> native Wright map with uncertainty
   -> focused diagnostics
   -> report and export
@@ -44,7 +46,9 @@ asterisk ruler and labelled category transitions are useful.
 The three basic fitted-object methods have deliberately different jobs:
 `print(fit)` is a compact triage view, `summary(fit)` is the canonical
 structured review surface, and `plot(fit, draw = FALSE)` returns reusable plot
-data. All three carry the same model/readiness basis; fitted-model plots also
+data. The printed `Decision` and structured `summary(fit)$decision` are the
+common first-read for RSM, PCM, and bounded GPCM. All three methods carry the
+same model/readiness basis; fitted-model plots also
 retain a `scale_contract` table so the latent-coordinate and discrimination
 scales are not inferred from axis labels alone.
 
@@ -267,6 +271,7 @@ fit_summary <- summary(
   detail = "brief"
 )
 
+fit_summary$decision
 fit_summary$overview
 fit_summary$status
 fit_summary$readiness
@@ -277,7 +282,16 @@ fit_summary$person_overview
 fit_summary$step_overview
 ```
 
-Start with convergence and estimation settings. When optimizer code zero is
+Read `fit_summary$decision` first. It translates the stored readiness contract
+into four practical questions: may this fit be interpreted, is formal
+inference supported, what evidence prevents it, and what should be done next.
+It is a presentation of existing evidence, not a new statistical test or an
+automatic model-selection rule. `FormalInference = "No"` means that estimates
+and plots may be inspected only for the stated review purpose; it does not
+mean that changing optimizer settings until the answer becomes `"Yes"` is
+appropriate. Follow `NextAction` and retain the original reason in reports.
+
+Then review convergence and estimation settings. When optimizer code zero is
 reached before the common terminal-gradient check passes, `fit_mfrm()` makes a
 bounded sequence of warm-started polishing attempts when the requested setting
 is at least as strict as the public default (`reltol <= 1e-9`). It retains the
