@@ -88,12 +88,15 @@ identify whether the opt-in layer ran and retain its test log.
   interaction/category cases, estimator-specific semantics, and downstream
   fit/DFF eligibility without authorizing a large simulation. It changes no
   GPCM capability status.
-- `gpcm-estimator-asymptotics-0.2.3.R`, its contract, and smoke record:
+- `gpcm-estimator-asymptotics-0.2.3.R`, its contract, smoke record, and pilot
+  record:
   nested matched GPCM cells that separate increasing Persons at fixed exposure
   from increasing exposure at fixed Persons under JML and MML. The one-seed
   smoke retains all failures and optimizer slope traces without assigning an
   incidental-bias limit, correction, estimator preference, Bayesian-necessity
-  decision, or release threshold.
+  decision, or release threshold. The guarded 20-replicate pilot adds
+  coordinate-specific error, Monte Carlo uncertainty, paired method contrasts,
+  and MML population-scale recovery while retaining the same non-authorization.
 - `gpcm-solution-decision-stability-roadmap-0.2.3.md`: cross-cutting roadmap
   from canonical objective/gradient/free-dimension and multiple-start/
   quadrature checks through boundary adjudication, Hessian/interval

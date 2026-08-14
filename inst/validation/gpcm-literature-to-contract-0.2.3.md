@@ -286,9 +286,12 @@ JML likelihood.
 9. **Separate Person count from within-Person information.** The repository-only
    `gpcm-estimator-asymptotics-0.2.3.R` diagnostic now creates nested fixed-
    exposure and increasing-exposure sequences from one generated response
-   table. Its smoke is directional only; the guarded replicated pilot must run
-   before making any incidental-bias, estimator-selection, correction, or
-   Bayesian-necessity decision.
+   table. Its smoke remains directional only. The guarded replicated pilot is
+   now recorded in `gpcm-estimator-asymptotics-pilot-record-0.2.3.md`: sparse
+   fixed exposure retained a coordinate-specific JML step-error signal, while
+   MML had lower numerical recovery error under the correctly specified normal
+   population model. No estimator-selection, correction, Bayesian-necessity,
+   confirmation, or release decision follows from that calibration pilot.
 
 ## Zotero evidence consulted
 

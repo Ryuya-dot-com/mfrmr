@@ -145,7 +145,11 @@ mfrmr_gas_manifest <- function(profile = c("smoke", "pilot"),
   out$QuadPoints <- ifelse(out$Method == "MML",
                            settings$quad_points, NA_integer_)
   out$EvidenceUse <- settings$evidence_use
-  out$IncidentalBiasDecision <- "not_assigned_replicated_pilot_required"
+  out$IncidentalBiasDecision <- if (identical(profile, "pilot")) {
+    "pilot_planned_no_prespecified_decision_rule"
+  } else {
+    "not_assigned_replicated_pilot_required"
+  }
   out$EstimatorSelectionAuthorized <- FALSE
   out$BiasCorrectionAuthorized <- FALSE
   out$BayesianEstimatorRequired <- NA
@@ -199,7 +203,14 @@ mfrmr_gas_generate_base <- function(manifest, replicate = 1L) {
     assignment = "crossed"
   )
   data <- simulate(sim_spec = spec, seed = unique(rows$Seed))
-  list(data = data, truth = attr(data, "mfrm_truth"), spec = spec)
+  truth <- attr(data, "mfrm_truth")
+  truth$population <- list(
+    coefficients = stats::setNames(0, "(Intercept)"),
+    sigma2 = 1,
+    basis = "generating_normal_distribution_not_realized_sample_moments"
+  )
+  attr(data, "mfrm_truth") <- truth
+  list(data = data, truth = truth, spec = spec)
 }
 
 mfrmr_gas_subset_cell <- function(base, cell) {
@@ -518,7 +529,11 @@ mfrmr_run_gpcm_estimator_asymptotics <- function(
       recovery = mfrmr_gas_bind(recovery_rows),
       slope_optimizer_trace = mfrmr_gas_bind(slope_rows),
       decisions = data.frame(
-        IncidentalBiasDecision = "not_assigned_replicated_pilot_required",
+        IncidentalBiasDecision = if (identical(profile, "pilot")) {
+          "pilot_completed_no_prespecified_decision_rule"
+        } else {
+          "not_assigned_replicated_pilot_required"
+        },
         EstimatorSelectionAuthorized = FALSE,
         BiasCorrectionAuthorized = FALSE,
         BayesianEstimatorRequired = NA,
@@ -540,6 +555,269 @@ mfrmr_gas_safe_rmse <- function(value) {
   value <- as.numeric(value)
   value <- value[is.finite(value)]
   if (length(value) == 0L) NA_real_ else sqrt(mean(value^2))
+}
+
+mfrmr_gas_group_rows <- function(data, keys) {
+  missing <- setdiff(keys, names(data))
+  if (length(missing) > 0L) {
+    stop("Grouping columns are missing: ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+  parts <- lapply(data[keys], function(value) {
+    value <- as.character(value)
+    value[is.na(value)] <- "<missing>"
+    value
+  })
+  split(
+    seq_len(nrow(data)),
+    interaction(parts, drop = TRUE, lex.order = TRUE, sep = "\r")
+  )
+}
+
+mfrmr_gas_replicate_metrics <- function(data, error_column, component) {
+  keys <- c(
+    "Replicate", "CellId", "NPersons", "ObservationsPerPerson", "Method"
+  )
+  missing <- setdiff(c(keys, error_column), names(data))
+  if (length(missing) > 0L) {
+    stop("Metric columns are missing: ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+  if (length(component) != nrow(data)) {
+    stop("`component` must contain one label per metric row.", call. = FALSE)
+  }
+  error <- as.numeric(data[[error_column]])
+  if (any(!is.finite(error))) {
+    stop("Replicate metrics require finite recovery errors.", call. = FALSE)
+  }
+  data$Component <- as.character(component)
+  groups <- mfrmr_gas_group_rows(data, c(keys, "Component"))
+  rows <- lapply(groups, function(index) {
+    data.frame(
+      data[index[1L], c(keys, "Component"), drop = FALSE],
+      Coordinates = length(index),
+      RMSE = sqrt(mean(error[index]^2)),
+      MAE = mean(abs(error[index])),
+      stringsAsFactors = FALSE
+    )
+  })
+  mfrmr_gas_bind(rows)
+}
+
+mfrmr_gas_mc_interval <- function(value) {
+  value <- as.numeric(value)
+  if (any(!is.finite(value))) {
+    stop("Monte Carlo summaries require finite replicate values.",
+         call. = FALSE)
+  }
+  replicates <- length(value)
+  estimate <- mean(value)
+  spread <- if (replicates > 1L) stats::sd(value) else NA_real_
+  mcse <- spread / sqrt(replicates)
+  critical <- if (replicates > 1L) {
+    stats::qt(0.975, df = replicates - 1L)
+  } else {
+    NA_real_
+  }
+  c(
+    Replicates = replicates,
+    Mean = estimate,
+    SD = spread,
+    MCSE = mcse,
+    Lower95 = estimate - critical * mcse,
+    Upper95 = estimate + critical * mcse
+  )
+}
+
+mfrmr_gas_component_mc <- function(replicate_metrics) {
+  if (!is.data.frame(replicate_metrics) || nrow(replicate_metrics) == 0L) {
+    return(data.frame())
+  }
+  keys <- c(
+    "CellId", "NPersons", "ObservationsPerPerson", "Method", "Component"
+  )
+  identity <- c("Replicate", keys)
+  if (anyDuplicated(replicate_metrics[identity])) {
+    stop("Each component must have one metric row per replicate and cell.",
+         call. = FALSE)
+  }
+  groups <- mfrmr_gas_group_rows(replicate_metrics, keys)
+  rows <- lapply(groups, function(index) {
+    rmse <- mfrmr_gas_mc_interval(replicate_metrics$RMSE[index])
+    mae <- mfrmr_gas_mc_interval(replicate_metrics$MAE[index])
+    data.frame(
+      replicate_metrics[index[1L], keys, drop = FALSE],
+      Replicates = as.integer(rmse[["Replicates"]]),
+      MeanRMSE = rmse[["Mean"]],
+      SDRMSE = rmse[["SD"]],
+      MCSERMSE = rmse[["MCSE"]],
+      Lower95RMSE = rmse[["Lower95"]],
+      Upper95RMSE = rmse[["Upper95"]],
+      MeanMAE = mae[["Mean"]],
+      MCSEMAE = mae[["MCSE"]],
+      stringsAsFactors = FALSE
+    )
+  })
+  mfrmr_gas_bind(rows)
+}
+
+mfrmr_gas_endpoint_contrasts <- function(replicate_metrics, membership) {
+  if (!is.data.frame(replicate_metrics) || nrow(replicate_metrics) == 0L) {
+    return(data.frame())
+  }
+  required_membership <- c("CellId", "Sequence", "XName", "XValue")
+  missing <- setdiff(required_membership, names(membership))
+  if (length(missing) > 0L) {
+    stop("Sequence columns are missing: ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+  pair_keys <- c("Replicate", "Method", "Component")
+  rows <- list()
+  for (sequence in unique(membership$Sequence)) {
+    sequence_rows <- membership[membership$Sequence == sequence, , drop = FALSE]
+    sequence_rows <- sequence_rows[order(sequence_rows$XValue), , drop = FALSE]
+    low <- sequence_rows[1L, , drop = FALSE]
+    high <- sequence_rows[nrow(sequence_rows), , drop = FALSE]
+    low_metrics <- replicate_metrics[
+      replicate_metrics$CellId == low$CellId, , drop = FALSE
+    ]
+    high_metrics <- replicate_metrics[
+      replicate_metrics$CellId == high$CellId, , drop = FALSE
+    ]
+    if (anyDuplicated(low_metrics[pair_keys]) ||
+        anyDuplicated(high_metrics[pair_keys])) {
+      stop("Endpoint metrics must be unique by replicate, method, and component.",
+           call. = FALSE)
+    }
+    paired <- merge(
+      low_metrics[, c(pair_keys, "RMSE", "MAE"), drop = FALSE],
+      high_metrics[, c(pair_keys, "RMSE", "MAE"), drop = FALSE],
+      by = pair_keys, suffixes = c("Low", "High"), sort = FALSE
+    )
+    if (nrow(paired) != nrow(low_metrics) || nrow(paired) != nrow(high_metrics)) {
+      stop("Endpoint contrasts require exactly matched replicate metrics.",
+           call. = FALSE)
+    }
+    paired$RMSEDifference <- paired$RMSEHigh - paired$RMSELow
+    paired$MAEDifference <- paired$MAEHigh - paired$MAELow
+    groups <- mfrmr_gas_group_rows(paired, c("Method", "Component"))
+    sequence_summary <- lapply(groups, function(index) {
+      rmse <- mfrmr_gas_mc_interval(paired$RMSEDifference[index])
+      mae <- mfrmr_gas_mc_interval(paired$MAEDifference[index])
+      data.frame(
+        Sequence = as.character(sequence),
+        XName = as.character(low$XName),
+        LowCell = as.character(low$CellId),
+        HighCell = as.character(high$CellId),
+        LowX = as.numeric(low$XValue),
+        HighX = as.numeric(high$XValue),
+        Method = as.character(paired$Method[index[1L]]),
+        Component = as.character(paired$Component[index[1L]]),
+        Replicates = as.integer(rmse[["Replicates"]]),
+        MeanRMSEDifference = rmse[["Mean"]],
+        MCSERMSEDifference = rmse[["MCSE"]],
+        Lower95RMSEDifference = rmse[["Lower95"]],
+        Upper95RMSEDifference = rmse[["Upper95"]],
+        RMSEImprovementRate = mean(paired$RMSEDifference[index] < 0),
+        MeanMAEDifference = mae[["Mean"]],
+        stringsAsFactors = FALSE
+      )
+    })
+    rows <- c(rows, sequence_summary)
+  }
+  mfrmr_gas_bind(rows)
+}
+
+mfrmr_gas_method_contrasts <- function(replicate_metrics) {
+  if (!is.data.frame(replicate_metrics) || nrow(replicate_metrics) == 0L) {
+    return(data.frame())
+  }
+  methods <- unique(as.character(replicate_metrics$Method))
+  if (!setequal(methods, c("JML", "MML"))) {
+    stop("Method contrasts require matched JML and MML metrics.",
+         call. = FALSE)
+  }
+  pair_keys <- c(
+    "Replicate", "CellId", "NPersons", "ObservationsPerPerson", "Component"
+  )
+  jml <- replicate_metrics[replicate_metrics$Method == "JML", , drop = FALSE]
+  mml <- replicate_metrics[replicate_metrics$Method == "MML", , drop = FALSE]
+  shared_components <- intersect(unique(jml$Component), unique(mml$Component))
+  jml <- jml[jml$Component %in% shared_components, , drop = FALSE]
+  mml <- mml[mml$Component %in% shared_components, , drop = FALSE]
+  if (length(shared_components) == 0L) return(data.frame())
+  if (anyDuplicated(jml[pair_keys]) || anyDuplicated(mml[pair_keys])) {
+    stop("Method metrics must be unique within each replicate and cell.",
+         call. = FALSE)
+  }
+  paired <- merge(
+    jml[, c(pair_keys, "RMSE", "MAE"), drop = FALSE],
+    mml[, c(pair_keys, "RMSE", "MAE"), drop = FALSE],
+    by = pair_keys, suffixes = c("JML", "MML"), sort = FALSE
+  )
+  if (nrow(paired) != nrow(jml) || nrow(paired) != nrow(mml)) {
+    stop("Method contrasts require exactly matched JML and MML metrics.",
+         call. = FALSE)
+  }
+  paired$RMSEDifference <- paired$RMSEJML - paired$RMSEMML
+  paired$MAEDifference <- paired$MAEJML - paired$MAEMML
+  group_keys <- c(
+    "CellId", "NPersons", "ObservationsPerPerson", "Component"
+  )
+  groups <- mfrmr_gas_group_rows(paired, group_keys)
+  rows <- lapply(groups, function(index) {
+    rmse <- mfrmr_gas_mc_interval(paired$RMSEDifference[index])
+    mae <- mfrmr_gas_mc_interval(paired$MAEDifference[index])
+    data.frame(
+      paired[index[1L], group_keys, drop = FALSE],
+      Contrast = "JML_minus_MML",
+      Replicates = as.integer(rmse[["Replicates"]]),
+      MeanRMSEDifference = rmse[["Mean"]],
+      MCSERMSEDifference = rmse[["MCSE"]],
+      Lower95RMSEDifference = rmse[["Lower95"]],
+      Upper95RMSEDifference = rmse[["Upper95"]],
+      MMLLowerRMSERate = mean(paired$RMSEDifference[index] > 0),
+      MeanMAEDifference = mae[["Mean"]],
+      stringsAsFactors = FALSE
+    )
+  })
+  mfrmr_gas_bind(rows)
+}
+
+mfrmr_gas_coordinate_mc <- function(data, keys, error_column) {
+  if (!is.data.frame(data) || nrow(data) == 0L) return(data.frame())
+  missing <- setdiff(c("Replicate", keys, error_column), names(data))
+  if (length(missing) > 0L) {
+    stop("Coordinate columns are missing: ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+  identity <- c("Replicate", keys)
+  if (anyDuplicated(data[identity])) {
+    stop("Each coordinate must occur once per replicate and cell.",
+         call. = FALSE)
+  }
+  error <- as.numeric(data[[error_column]])
+  if (any(!is.finite(error))) {
+    stop("Coordinate summaries require finite recovery errors.",
+         call. = FALSE)
+  }
+  groups <- mfrmr_gas_group_rows(data, keys)
+  rows <- lapply(groups, function(index) {
+    signed <- mfrmr_gas_mc_interval(error[index])
+    data.frame(
+      data[index[1L], keys, drop = FALSE],
+      Replicates = as.integer(signed[["Replicates"]]),
+      MeanError = signed[["Mean"]],
+      SDError = signed[["SD"]],
+      MCSEMeanError = signed[["MCSE"]],
+      Lower95MeanError = signed[["Lower95"]],
+      Upper95MeanError = signed[["Upper95"]],
+      MAE = mean(abs(error[index])),
+      RMSE = sqrt(mean(error[index]^2)),
+      stringsAsFactors = FALSE
+    )
+  })
+  mfrmr_gas_bind(rows)
 }
 
 mfrmr_gas_aggregate <- function(data, keys, error_column = NULL) {
@@ -601,6 +879,11 @@ mfrmr_gas_summarize <- function(result) {
     )
   }
   slope_summary <- data.frame()
+  slope_replicate <- data.frame()
+  slope_component_mc <- data.frame()
+  slope_coordinate_mc <- data.frame()
+  slope_endpoint_contrasts <- data.frame()
+  slope_method_contrasts <- data.frame()
   if (nrow(result$slope_optimizer_trace) > 0L) {
     slope <- merge(membership, result$slope_optimizer_trace,
                    by = "CellId", sort = FALSE)
@@ -608,16 +891,89 @@ mfrmr_gas_summarize <- function(result) {
       slope, c("Sequence", "XName", "XValue", "Method"),
       error_column = "Error"
     )
+    slope_replicate <- mfrmr_gas_replicate_metrics(
+      result$slope_optimizer_trace,
+      error_column = "Error",
+      component = rep("optimizer_log_slope", nrow(result$slope_optimizer_trace))
+    )
+    slope_component_mc <- mfrmr_gas_component_mc(slope_replicate)
+    slope_endpoint_contrasts <- mfrmr_gas_endpoint_contrasts(
+      slope_replicate, membership
+    )
+    slope_method_contrasts <- mfrmr_gas_method_contrasts(slope_replicate)
+    slope_coordinate_mc <- mfrmr_gas_coordinate_mc(
+      result$slope_optimizer_trace,
+      keys = c(
+        "CellId", "NPersons", "ObservationsPerPerson", "Method", "SlopeFacet"
+      ),
+      error_column = "Error"
+    )
+  }
+
+  recovery_replicate <- data.frame()
+  recovery_component_mc <- data.frame()
+  recovery_coordinate_mc <- data.frame()
+  recovery_endpoint_contrasts <- data.frame()
+  recovery_method_contrasts <- data.frame()
+  if (nrow(result$recovery) > 0L) {
+    component <- ifelse(
+      result$recovery$ParameterType == "facet",
+      paste0("facet_", tolower(result$recovery$Facet)),
+      ifelse(
+        result$recovery$ParameterType == "population",
+        paste0("population_", result$recovery$Subparameter),
+        as.character(result$recovery$ParameterType)
+      )
+    )
+    recovery_replicate <- mfrmr_gas_replicate_metrics(
+      result$recovery, error_column = "ErrorAligned", component = component
+    )
+    recovery_component_mc <- mfrmr_gas_component_mc(recovery_replicate)
+    recovery_endpoint_contrasts <- mfrmr_gas_endpoint_contrasts(
+      recovery_replicate, membership
+    )
+    recovery_method_contrasts <- mfrmr_gas_method_contrasts(
+      recovery_replicate
+    )
+    recovery_coordinate_mc <- mfrmr_gas_coordinate_mc(
+      result$recovery,
+      keys = c(
+        "CellId", "NPersons", "ObservationsPerPerson", "Method",
+        "ParameterType", "Facet", "Level", "Subparameter"
+      ),
+      error_column = "ErrorAligned"
+    )
+  }
+  profile <- unique(as.character(result$manifest$Profile))
+  interpretation <- if (identical(profile, "pilot")) {
+    paste(
+      "The replicated pilot estimates numerical recovery trends and Monte",
+      "Carlo uncertainty but had no prespecified estimator-selection rule.",
+      "Finite optimizer slope traces remain inferentially ineligible, and a",
+      "separate confirmation design is required for a release decision."
+    )
+  } else {
+    paste(
+      "Directional smoke results do not establish an incidental-bias limit.",
+      "Only a prespecified replicated pilot may compare trends, and finite",
+      "optimizer slope traces remain inferentially ineligible."
+    )
   }
   list(
     status = status_summary,
     recovery = recovery_summary,
     slope_optimizer_trace = slope_summary,
+    recovery_replicate = recovery_replicate,
+    recovery_component_mc = recovery_component_mc,
+    recovery_coordinate_mc = recovery_coordinate_mc,
+    recovery_endpoint_contrasts = recovery_endpoint_contrasts,
+    recovery_method_contrasts = recovery_method_contrasts,
+    slope_replicate = slope_replicate,
+    slope_component_mc = slope_component_mc,
+    slope_coordinate_mc = slope_coordinate_mc,
+    slope_endpoint_contrasts = slope_endpoint_contrasts,
+    slope_method_contrasts = slope_method_contrasts,
     decisions = result$decisions,
-    interpretation = paste(
-      "Directional smoke results do not establish an incidental-bias limit.",
-      "Only a prespecified replicated pilot may compare trends, and finite",
-      "optimizer slope traces remain inferentially ineligible."
-    )
+    interpretation = interpretation
   )
 }

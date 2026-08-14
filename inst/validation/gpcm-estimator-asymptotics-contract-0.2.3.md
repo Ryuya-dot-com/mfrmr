@@ -62,7 +62,9 @@ JML and MML Person estimates are not compared. Recovery targets are Rater and
 Criterion locations, within-owner step contrasts, and relative log slopes.
 Optimizer slope values are stored separately as numerical traces. They cannot
 enter inferential recovery when the fitted primary slope is boundary-typed or
-comparison-ineligible.
+comparison-ineligible. For MML, the generating population mean zero and
+variance one are retained as distribution-level truth; they are not replaced
+by the realized finite-sample mean and variance of the simulated Persons.
 
 ## Required outputs
 
@@ -73,7 +75,8 @@ The runner retains:
 - fit return, optimizer convergence, readiness, boundary state, extreme-Person
   count, warnings, errors, and runtime;
 - coordinate-level truth, estimate, and aligned recovery error for eligible
-  structural rows; and
+  structural rows;
+- separate MML population-intercept and population-variance recovery; and
 - a separately labelled, inferentially ineligible optimizer-log-slope trace.
 
 All failed fits remain in the status denominator. Warnings are captured into
@@ -92,7 +95,7 @@ cancel algebraically. Component summaries therefore expose MAE and RMSE, while
 signed error remains only at the coordinate level. Confirmation seeds and
 replication counts remain unassigned.
 
-The following fields therefore remain fixed:
+The smoke retains the following fields:
 
 ```text
 IncidentalBiasDecision = not_assigned_replicated_pilot_required
@@ -101,3 +104,16 @@ BiasCorrectionAuthorized = FALSE
 BayesianEstimatorRequired = NA
 ConfirmationAuthorized = FALSE
 ```
+
+After the guarded pilot has executed, only the factual pilot state advances:
+
+```text
+IncidentalBiasDecision = pilot_completed_no_prespecified_decision_rule
+EstimatorSelectionAuthorized = FALSE
+BiasCorrectionAuthorized = FALSE
+BayesianEstimatorRequired = NA
+ConfirmationAuthorized = FALSE
+```
+
+This state permits descriptive interpretation of the prespecified trends. It
+does not create a post-hoc estimator-selection threshold or authorize release.
