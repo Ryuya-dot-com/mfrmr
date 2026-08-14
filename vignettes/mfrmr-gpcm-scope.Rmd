@@ -347,7 +347,13 @@ restrictive for those controls. MML slope readiness remains blocked pending a
 broader Person-marginal path condition. An internal analytic prototype
 reconstructs the wider path's value, derivatives, surviving-node boundary, and
 leading tail term, but it does not prove the complete half-line and cannot
-change a fitted object's status.
+change a fitted object's status. A separate exact continuous-normal microcase
+does prove a complete half-line result for two zero-threshold binary items:
+the `(1, 0)` marginal strictly increases under slopes `exp(t)` and `exp(-t)`
+toward an unattained probability of one quarter, whereas `(1, 1)` strictly
+decreases. This proves that the wider Person-marginal boundary mechanism can
+survive continuous integration; it does not generalize the certificate to a
+fitted multifacet GPCM.
 
 The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
 local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for

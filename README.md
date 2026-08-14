@@ -849,7 +849,13 @@ MML slope readiness remains blocked while a broader Person-marginal path
 condition is developed. An internal analytic prototype can reconstruct that
 path's value, derivatives, surviving-node boundary, and leading tail term, but
 it does not yet prove the complete half-line and has no effect on fitted
-objects. Inspect `fit$slopes$ParameterStatus` and
+objects. Separately, an exact continuous-normal microcase now proves a full
+half-line result for two zero-threshold binary items: the `(1, 0)` marginal
+strictly increases under slopes `exp(t)` and `exp(-t)` toward an unattained
+one-quarter limit, while `(1, 1)` strictly decreases. This establishes that
+the Person-marginal boundary mechanism is not merely a finite-quadrature
+artifact, but it does not certify any general fitted GPCM. Inspect
+`fit$slopes$ParameterStatus` and
 `PrimaryEstimate` before the
 finite optimizer traces in `Estimate`. Approximate covariance values can be
 retained under `Optimizer*SE` and `Optimizer*CI`, but ordinary slope SE/CI

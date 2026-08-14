@@ -102,6 +102,20 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   TAM marginal SEs yet give different transformed SEs, so no direct cross-
   engine SE comparison is reported or implied.
 
+* Proved a deliberately minimal continuous-normal GPCM boundary microcase.
+  With two zero-threshold binary items, relative slopes `exp(t)` and `exp(-t)`,
+  and response pattern `(1, 0)`, the exact Person-marginal probability is
+  strictly increasing for every finite `t > 0` and approaches an unattained
+  limit of one quarter. The paired `(1, 1)` pattern decreases to the same
+  limit, providing a genuine sign counterexample. Within this microcase, a
+  complete sample is increasing whenever its discordant-pattern count is at
+  least its concordant-pattern count; a concordant majority can reverse sign.
+  A repository-only adaptive-integration audit confirms the symmetric-pair
+  identity and
+  analytic derivative, but the proof itself is quadrature-independent. The
+  result covers neither a general fitted GPCM nor moving nuisance coordinates
+  and has no readiness effect.
+
 * Completed the public PCM/GPCM model-choice warning handoff. Comparison-basis
   warnings are no longer discarded by `build_model_choice_review()`; they are
   retained separately, printed by `summary()`, and exported as an appendix

@@ -562,6 +562,14 @@ identify whether the opt-in layer ran and retain its test log.
   coexist with positive Person-marginal derivatives, and a generalized
   boundary/tail calculation recovers the dense-grid positive path without
   claiming the unsampled half-line.
+- `gpcm-mml-continuous-binary-path-0.2.3.R`: repository-only numerical audit
+  of an exact continuous-normal two-item binary GPCM half-line theorem. It
+  compares the whole-line and symmetric paired integrals and checks the closed-
+  form derivative without making the theorem depend on numerical integration.
+- `gpcm-mml-continuous-binary-path-record-0.2.3.md`: derivation and bounded
+  claim record. The discordant `(1, 0)` marginal increases strictly toward an
+  unattained one-quarter boundary, while `(1, 1)` supplies the decreasing-sign
+  counterexample; neither result propagates to fitted-object readiness.
 - `gpcm-literature-to-contract-0.2.3.md`: source-grounded mathematical and
   implementation audit for the current bounded route, including the supplied
   generalized-MFRM memorandum corrections, the separation of Muraki MML-EM,
