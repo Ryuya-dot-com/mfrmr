@@ -84,9 +84,21 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   Newton displacement was at most `4.14e-5` logits and at most 4.3% above its
   diagonal counterpart, and the displacement was invariant to exact
   likelihood replication within `1e-12`. These results freeze the raw-gate
-  invariance failure and a candidate numerical scale, not a replacement rule;
-  the roughly 1,000-coordinate large/sparse cases remain outside the dense
-  instrumentation limit.
+  invariance failure and a candidate numerical scale, not a replacement rule.
+  A matrix-free conjugate-gradient audit reproduced the four dense solutions
+  to at most `3.49e-8` relative parameter difference and then covered the two
+  roughly 1,000-coordinate large fits. Its initial full-space sparse solves
+  reached the iteration limit because three to five Persons in each sparse fit
+  had already been classified as JML-unbounded. Dense diagnostic references
+  confirmed that every roughly one-logit maximum displacement occurred on
+  one of those known boundary coordinates. After the constraint Jacobian
+  certified that the boundary coordinates did not mix with estimable Persons,
+  the boundary-conditioned matrix-free solves converged in all four sparse
+  cases. Interior maximum displacement ranged from `2.17e-5` to `1.21e-4`
+  logits and relative objective improvement from `3.72e-13` to `2.61e-11`.
+  Ambiguous centered/grouped mappings fail closed. The diagnostic does not
+  certify global positive definiteness, produce standard errors, select a
+  displacement cutoff, change readiness, or add FACETS replacement evidence.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,

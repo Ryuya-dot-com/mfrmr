@@ -742,7 +742,16 @@ identify whether the opt-in layer ran and retain its test log.
   10/30-facet fits found positive-definite Hessians, maximum displacement no
   larger than `4.14e-5` logits, at most 4.3% amplification over diagonal
   curvature, and exact replication invariance within `1e-12`. No displacement
-  threshold was selected; large/sparse cases still need a matrix-free audit.
+  threshold was selected. A matrix-free implementation reproduced those four
+  dense solutions within `3.49e-8` relatively and covered the large cases.
+  Full-space sparse solves exposed roughly one-logit directions, but every
+  maximum belonged to a Person already classified as JML-unbounded. A
+  constraint-Jacobian guard then isolated those coordinates without mixing
+  estimable Persons; all four boundary-conditioned sparse solves converged,
+  with interior maximum movement from `2.17e-5` to `1.21e-4` logits. Centered
+  or grouped mappings that mix boundary and estimable levels fail closed. This
+  is numerical diagnosis only: it does not produce SEs, change readiness,
+  select a threshold, or establish FACETS equivalence.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

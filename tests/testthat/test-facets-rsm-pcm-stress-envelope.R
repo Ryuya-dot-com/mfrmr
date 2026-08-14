@@ -287,6 +287,18 @@ test_that("information displacement is correlated and replication invariant", {
   expect_false(audit$summary$ReadinessChanged)
   expect_false(audit$summary$ParameterDisplacementThresholdSelected)
   expect_identical(audit$summary$DecisionUse, "diagnostic_only")
+  expect_identical(
+    audit$summary$BoundaryCoordinateMapStatus,
+    "no_known_person_boundary"
+  )
+  expect_true(audit$summary$BoundaryCoordinateMapCertified)
+  expect_equal(audit$summary$KnownBoundaryPersonCount, 0L)
+  expect_identical(audit$summary$InteriorSubspaceStatus, "positive_definite")
+  expect_equal(
+    audit$summary$InteriorNewtonParameterChangeSupNorm,
+    audit$summary$FullNewtonParameterChangeSupNorm,
+    tolerance = 1e-12
+  )
   expect_equal(audit$hessian, t(audit$hessian), tolerance = 0)
   expect_equal(
     dim(audit$hessian),
@@ -324,6 +336,125 @@ test_that("information displacement is correlated and replication invariant", {
       fit, replication_factors = c(1, 1)
     ),
     "controls are invalid"
+  )
+
+  matrix_free <- env$mfrmr_facets_mfs_matrix_free_displacement_audit(
+    fit, dense_reference = audit
+  )
+  expect_s3_class(
+    matrix_free, "mfrmr_facets_mfs_matrix_free_displacement_audit"
+  )
+  expect_identical(matrix_free$summary$Status, "converged_krylov")
+  expect_true(matrix_free$summary$Converged)
+  expect_true(matrix_free$summary$DenseReferenceAvailable)
+  expect_true(matrix_free$summary$DenseReferenceAgrees)
+  expect_lt(matrix_free$summary$DenseRelativeParameterDifference, 1e-5)
+  expect_lte(matrix_free$summary$ExplicitRelativeResidual, 1e-8)
+  expect_false(matrix_free$summary$GlobalPositiveDefinitenessCertified)
+  expect_false(matrix_free$summary$StandardErrorsAuthorized)
+  expect_false(matrix_free$summary$ReadinessChanged)
+  expect_false(matrix_free$summary$ParameterDisplacementThresholdSelected)
+})
+
+test_that("boundary-conditioned information audit fails closed on mixed directions", {
+  env <- facets_mfs_environment()
+  fit <- make_toy_fit(maxit = 25L, model = "RSM")
+  fit$facets$person$ParameterStatus[1L] <- "unbounded_high"
+  context <- env$mfrmr_facets_mfs_jml_context(fit)
+  mapping <- env$mfrmr_facets_mfs_boundary_coordinate_map(context)
+
+  expect_true(mapping$certified)
+  expect_identical(mapping$status, "boundary_coordinates_certified")
+  expect_identical(mapping$boundary_persons, fit$facets$person$Person[1L])
+  expect_identical(mapping$optimizer_indices, 1L)
+
+  dense_boundary <- env$mfrmr_facets_mfs_information_displacement_audit(fit)
+  matrix_free_boundary <-
+    env$mfrmr_facets_mfs_matrix_free_displacement_audit(
+      fit, dense_reference = dense_boundary
+    )
+  expect_true(matrix_free_boundary$summary$Converged)
+  expect_true(matrix_free_boundary$summary$BoundaryConditioningRequested)
+  expect_equal(
+    matrix_free_boundary$summary$ExcludedBoundaryOptimizerCoordinates, 1L
+  )
+  expect_equal(
+    matrix_free_boundary$summary$RetainedInteriorCoordinates,
+    matrix_free_boundary$summary$FreeCoordinates - 1L
+  )
+  expect_true(matrix_free_boundary$summary$DenseReferenceAgrees)
+  expect_equal(matrix_free_boundary$parameter_change[1L], 0)
+
+  mixed_context <- list(
+    fit = list(facets = list(person = data.frame(
+      Person = c("P1", "P2"),
+      ParameterStatus = c("unbounded_high", "estimable"),
+      stringsAsFactors = FALSE
+    ))),
+    config = list(theta_spec = list(levels = c("P1", "P2"))),
+    sizes = list(theta = 1L),
+    constraint_jacobian = function(spec) matrix(c(1, -1), ncol = 1L)
+  )
+  mixed <- env$mfrmr_facets_mfs_boundary_coordinate_map(mixed_context)
+  expect_false(mixed$certified)
+  expect_identical(mixed$status, "ambiguous_constraint_mixing")
+  expect_length(mixed$optimizer_indices, 0L)
+
+  weak_information <- diag(c(1e-12, 2, 4))
+  gradient <- c(1, 0.2, -0.3)
+  full <- env$mfrmr_facets_mfs_information_subspace(
+    weak_information, gradient
+  )
+  interior <- env$mfrmr_facets_mfs_information_subspace(
+    weak_information, gradient, excluded_indices = 1L
+  )
+  expect_identical(full$status, "nonpositive_or_weak_information")
+  expect_false(full$positive_definite)
+  expect_identical(interior$status, "positive_definite")
+  expect_true(interior$positive_definite)
+  expect_equal(interior$parameter_change, c(0, -0.1, 0.075))
+  expect_error(
+    env$mfrmr_facets_mfs_information_subspace(
+      weak_information, gradient, excluded_indices = 4L
+    ),
+    "inputs are invalid"
+  )
+})
+
+test_that("matrix-free solver fails closed on nonpositive curvature", {
+  env <- facets_mfs_environment()
+  positive <- matrix(c(4, 1, 1, 3), nrow = 2L)
+  right_hand_side <- c(2, -1)
+  solved <- env$mfrmr_facets_mfs_cg_solve(
+    right_hand_side, function(direction) positive %*% direction
+  )
+
+  expect_identical(solved$status, "converged_krylov")
+  expect_true(solved$converged)
+  expect_equal(
+    solved$solution,
+    as.numeric(solve(positive, right_hand_side)),
+    tolerance = 1e-12
+  )
+  expect_lte(solved$explicit_relative_residual, 1e-8)
+
+  indefinite <- diag(c(1, -1))
+  rejected <- env$mfrmr_facets_mfs_cg_solve(
+    c(1, 2), function(direction) indefinite %*% direction
+  )
+  expect_identical(
+    rejected$status, "nonpositive_curvature_encountered"
+  )
+  expect_false(rejected$converged)
+  expect_true(rejected$nonpositive_curvature_encountered)
+  expect_length(rejected$solution, 0L)
+  expect_equal(nrow(rejected$trace), 1L)
+  expect_lte(rejected$trace$Curvature, 0)
+  expect_error(
+    env$mfrmr_facets_mfs_cg_solve(
+      right_hand_side, function(direction) 1
+    ),
+    "malformed or non-finite"
   )
 })
 

@@ -550,6 +550,7 @@ mfrmr_facets_mfs_jml_context <- function(fit) {
     block_labels = rep(names(size_values), size_values),
     objective_function = objective_function,
     gradient_function = gradient_function,
+    constraint_jacobian = internal("constraint_jacobian"),
     expand_params = internal("expand_params"),
     compute_eta = internal("compute_eta"),
     probability_bundle = internal("compute_response_probability_bundle"),
@@ -818,6 +819,144 @@ mfrmr_facets_mfs_jml_stationarity_audit <- function(
   out
 }
 
+# Identify optimizer coordinates that represent only Persons already classified
+# as unbounded. A centered or grouped constraint can mix an unbounded Person
+# with estimable Persons in the same free direction; that case is deliberately
+# not guessed at and cannot authorize the boundary-conditioned audit below.
+mfrmr_facets_mfs_boundary_coordinate_map <- function(context) {
+  person <- as.data.frame(context$fit$facets$person, stringsAsFactors = FALSE)
+  required <- c("Person", "ParameterStatus")
+  if (!all(required %in% names(person))) {
+    return(list(
+      status = "person_status_unavailable", certified = FALSE,
+      boundary_persons = character(0), optimizer_indices = integer(0)
+    ))
+  }
+  spec <- context$config$theta_spec
+  levels <- as.character(spec$levels)
+  matched <- match(levels, as.character(person$Person))
+  if (anyNA(matched) || anyDuplicated(as.character(person$Person)) ||
+      length(matched) != nrow(person)) {
+    return(list(
+      status = "person_level_alignment_failed", certified = FALSE,
+      boundary_persons = character(0), optimizer_indices = integer(0)
+    ))
+  }
+  status <- as.character(person$ParameterStatus[matched])
+  boundary <- status %in% c(
+    "unbounded_low", "unbounded_high", "unbounded_both"
+  )
+  boundary_persons <- levels[boundary]
+  if (!length(boundary_persons)) {
+    return(list(
+      status = "no_known_person_boundary", certified = TRUE,
+      boundary_persons = character(0), optimizer_indices = integer(0)
+    ))
+  }
+
+  jacobian <- context$constraint_jacobian(spec)
+  theta_coordinates <- as.integer(context$sizes$theta)
+  if (!is.matrix(jacobian) ||
+      !identical(dim(jacobian), c(length(levels), theta_coordinates)) ||
+      any(!is.finite(jacobian))) {
+    return(list(
+      status = "constraint_jacobian_unavailable", certified = FALSE,
+      boundary_persons = boundary_persons, optimizer_indices = integer(0)
+    ))
+  }
+  nonzero <- jacobian != 0
+  boundary_columns <- which(colSums(nonzero[boundary, , drop = FALSE]) > 0L)
+  mixed_columns <- boundary_columns[
+    colSums(nonzero[!boundary, boundary_columns, drop = FALSE]) > 0L
+  ]
+  if (length(mixed_columns)) {
+    return(list(
+      status = "ambiguous_constraint_mixing", certified = FALSE,
+      boundary_persons = boundary_persons, optimizer_indices = integer(0)
+    ))
+  }
+  list(
+    status = "boundary_coordinates_certified", certified = TRUE,
+    boundary_persons = boundary_persons,
+    optimizer_indices = as.integer(boundary_columns)
+  )
+}
+
+# Solve the observed-information system after fixing selected optimizer
+# coordinates. The returned vector remains on the full optimizer scale, with
+# excluded coordinates set to zero. This is diagnostic only; it is not a
+# covariance calculation and never authorizes standard errors.
+mfrmr_facets_mfs_information_subspace <- function(
+    hessian, gradient, excluded_indices = integer(0),
+    eigen_relative_tolerance = 1e-10) {
+  gradient <- as.numeric(gradient)
+  dimension <- length(gradient)
+  valid <- is.matrix(hessian) &&
+    identical(dim(hessian), c(dimension, dimension)) &&
+    dimension > 0L && all(is.finite(hessian)) && all(is.finite(gradient)) &&
+    is.numeric(excluded_indices) && !anyNA(excluded_indices) &&
+    all(excluded_indices == floor(excluded_indices)) &&
+    all(excluded_indices >= 1L & excluded_indices <= dimension) &&
+    !anyDuplicated(excluded_indices) &&
+    is.numeric(eigen_relative_tolerance) &&
+    length(eigen_relative_tolerance) == 1L &&
+    is.finite(eigen_relative_tolerance) && eigen_relative_tolerance > 0
+  if (!valid) {
+    stop("The information-subspace inputs are invalid.", call. = FALSE)
+  }
+  excluded_indices <- as.integer(excluded_indices)
+  retained_indices <- setdiff(seq_len(dimension), excluded_indices)
+  if (!length(retained_indices)) {
+    return(list(
+      status = "no_interior_coordinates", evaluated = FALSE,
+      retained_indices = retained_indices,
+      parameter_change = numeric(0), eigenvalues = numeric(0),
+      minimum_eigenvalue = NA_real_, maximum_eigenvalue = NA_real_,
+      condition_number = NA_real_, positive_definite = FALSE,
+      predicted_objective_improvement = NA_real_
+    ))
+  }
+
+  information <- hessian[retained_indices, retained_indices, drop = FALSE]
+  information <- (information + t(information)) / 2
+  eigenvalues <- as.numeric(eigen(
+    information, symmetric = TRUE, only.values = TRUE
+  )$values)
+  minimum <- min(eigenvalues)
+  maximum <- max(eigenvalues)
+  threshold <- eigen_relative_tolerance * max(1, max(abs(eigenvalues)))
+  positive_definite <- minimum > threshold
+  if (!positive_definite) {
+    return(list(
+      status = "nonpositive_or_weak_information", evaluated = TRUE,
+      retained_indices = retained_indices,
+      parameter_change = numeric(0), eigenvalues = eigenvalues,
+      minimum_eigenvalue = minimum, maximum_eigenvalue = maximum,
+      condition_number = if (minimum > 0) maximum / minimum else Inf,
+      positive_definite = FALSE,
+      predicted_objective_improvement = NA_real_
+    ))
+  }
+
+  factor <- chol(information)
+  right_hand_side <- gradient[retained_indices]
+  solution <- backsolve(
+    factor, forwardsolve(t(factor), right_hand_side)
+  )
+  parameter_change <- numeric(dimension)
+  parameter_change[retained_indices] <- -as.numeric(solution)
+  list(
+    status = "positive_definite", evaluated = TRUE,
+    retained_indices = retained_indices,
+    parameter_change = parameter_change, eigenvalues = eigenvalues,
+    minimum_eigenvalue = minimum, maximum_eigenvalue = maximum,
+    condition_number = maximum / minimum, positive_definite = TRUE,
+    predicted_objective_improvement = as.numeric(
+      crossprod(right_hand_side, solution) / 2
+    )
+  )
+}
+
 # Evaluate the complete correlated local Newton displacement for moderate-size
 # retained points. This is deliberately separate from the production
 # covariance and readiness paths: it calibrates a representation-invariant
@@ -851,6 +990,9 @@ mfrmr_facets_mfs_information_displacement_audit <- function(
   replication_factors <- as.integer(replication_factors)
   context <- mfrmr_facets_mfs_jml_context(fit)
   free_dimension <- length(context$par)
+  boundary_map <- mfrmr_facets_mfs_boundary_coordinate_map(context)
+  boundary_count <- length(boundary_map$boundary_persons)
+  boundary_coordinate_count <- length(boundary_map$optimizer_indices)
 
   empty_summary <- data.frame(
     Model = context$config$model, Method = context$config$method,
@@ -869,6 +1011,20 @@ mfrmr_facets_mfs_information_displacement_audit <- function(
     PredictedObjectiveImprovement = NA_real_,
     ActualObjectiveImprovement = NA_real_,
     RelativeObjectiveImprovement = NA_real_,
+    KnownBoundaryPersonCount = boundary_count,
+    BoundaryCoordinateMapStatus = boundary_map$status,
+    BoundaryCoordinateMapCertified = isTRUE(boundary_map$certified),
+    KnownBoundaryOptimizerCoordinates = boundary_coordinate_count,
+    FullWorstChangeAtKnownBoundary = NA,
+    InteriorSubspaceStatus = "not_evaluated_dimension_limit",
+    InteriorSubspaceEvaluated = FALSE,
+    InteriorCoordinates = NA_integer_,
+    InteriorHessianMinimumEigenvalue = NA_real_,
+    InteriorHessianConditionNumber = NA_real_,
+    InteriorNewtonParameterChangeSupNorm = NA_real_,
+    InteriorActualObjectiveImprovement = NA_real_,
+    InteriorRelativeObjectiveImprovement = NA_real_,
+    KnownBoundaryPrecedenceRequired = boundary_count > 0L,
     ReplicationDisplacementStable = FALSE,
     ReplicationDisplacementTolerance = 1e-12,
     ReadinessChanged = FALSE,
@@ -879,7 +1035,9 @@ mfrmr_facets_mfs_information_displacement_audit <- function(
     out <- list(
       summary = empty_summary, block_displacement = data.frame(),
       replication_transport = data.frame(), hessian = NULL,
-      eigenvalues = numeric(0), parameter_change = numeric(0)
+      eigenvalues = numeric(0), parameter_change = numeric(0),
+      boundary_map = boundary_map,
+      interior_parameter_change = numeric(0)
     )
     class(out) <- c(
       "mfrmr_facets_mfs_information_displacement_audit", "list"
@@ -910,6 +1068,46 @@ mfrmr_facets_mfs_information_displacement_audit <- function(
   eigen_threshold <- eigen_relative_tolerance * max(1, eigen_scale)
   positive_definite <- min(eigenvalues) > eigen_threshold
 
+  interior <- NULL
+  interior_actual_improvement <- NA_real_
+  if (isTRUE(boundary_map$certified)) {
+    interior <- mfrmr_facets_mfs_information_subspace(
+      hessian = hessian, gradient = context$retained_gradient,
+      excluded_indices = boundary_map$optimizer_indices,
+      eigen_relative_tolerance = eigen_relative_tolerance
+    )
+    if (length(interior$parameter_change) == free_dimension) {
+      interior_moved_objective <- context$objective(
+        context$par + interior$parameter_change
+      )
+      interior_actual_improvement <-
+        context$retained_objective - interior_moved_objective
+    }
+  }
+  fill_interior_summary <- function(summary) {
+    if (is.null(interior)) {
+      summary$InteriorSubspaceStatus <- boundary_map$status
+      return(summary)
+    }
+    summary$InteriorSubspaceStatus <- interior$status
+    summary$InteriorSubspaceEvaluated <- isTRUE(interior$evaluated)
+    summary$InteriorCoordinates <- length(interior$retained_indices)
+    summary$InteriorHessianMinimumEigenvalue <- interior$minimum_eigenvalue
+    summary$InteriorHessianConditionNumber <- interior$condition_number
+    summary$InteriorNewtonParameterChangeSupNorm <-
+      if (length(interior$parameter_change) == free_dimension) {
+        max(abs(interior$parameter_change))
+      } else {
+        NA_real_
+      }
+    summary$InteriorActualObjectiveImprovement <-
+      interior_actual_improvement
+    summary$InteriorRelativeObjectiveImprovement <-
+      interior_actual_improvement /
+        max(1, abs(context$retained_objective))
+    summary
+  }
+
   if (!positive_definite) {
     empty_summary$Status <- "evaluated_nonpositive_or_weak_information"
     empty_summary$Evaluated <- TRUE
@@ -921,10 +1119,17 @@ mfrmr_facets_mfs_information_displacement_audit <- function(
     } else {
       Inf
     }
+    empty_summary <- fill_interior_summary(empty_summary)
     out <- list(
       summary = empty_summary, block_displacement = data.frame(),
       replication_transport = data.frame(), hessian = hessian,
-      eigenvalues = eigenvalues, parameter_change = numeric(0)
+      eigenvalues = eigenvalues, parameter_change = numeric(0),
+      boundary_map = boundary_map,
+      interior_parameter_change = if (is.null(interior)) {
+        numeric(0)
+      } else {
+        interior$parameter_change
+      }
     )
     class(out) <- c(
       "mfrmr_facets_mfs_information_displacement_audit", "list"
@@ -1012,15 +1217,316 @@ mfrmr_facets_mfs_information_displacement_audit <- function(
   summary$ActualObjectiveImprovement <- actual_improvement
   summary$RelativeObjectiveImprovement <-
     actual_improvement / max(1, abs(context$retained_objective))
+  if (boundary_coordinate_count > 0L) {
+    summary$FullWorstChangeAtKnownBoundary <-
+      which.max(abs(parameter_change)) %in% boundary_map$optimizer_indices
+  } else {
+    summary$FullWorstChangeAtKnownBoundary <- FALSE
+  }
+  summary <- fill_interior_summary(summary)
   summary$ReplicationDisplacementStable <- replication_stable
 
   out <- list(
     summary = summary, block_displacement = block_displacement,
     replication_transport = replication_transport, hessian = hessian,
-    eigenvalues = eigenvalues, parameter_change = parameter_change
+    eigenvalues = eigenvalues, parameter_change = parameter_change,
+    boundary_map = boundary_map,
+    interior_parameter_change = if (is.null(interior)) {
+      numeric(0)
+    } else {
+      interior$parameter_change
+    }
   )
   class(out) <- c(
     "mfrmr_facets_mfs_information_displacement_audit", "list"
+  )
+  out
+}
+
+mfrmr_facets_mfs_cg_solve <- function(
+    right_hand_side, hessian_vector, residual_tolerance = 1e-8,
+    max_iterations = 500L) {
+  right_hand_side <- as.numeric(right_hand_side)
+  valid <- length(right_hand_side) > 0L &&
+    all(is.finite(right_hand_side)) && is.function(hessian_vector) &&
+    is.numeric(residual_tolerance) && length(residual_tolerance) == 1L &&
+    is.finite(residual_tolerance) && residual_tolerance > 0 &&
+    is.numeric(max_iterations) && length(max_iterations) == 1L &&
+    is.finite(max_iterations) && max_iterations == floor(max_iterations) &&
+    max_iterations >= 1L
+  if (!valid) {
+    stop("Conjugate-gradient controls or right-hand side are invalid.",
+         call. = FALSE)
+  }
+  max_iterations <- as.integer(max_iterations)
+  initial_norm <- sqrt(sum(right_hand_side^2))
+  if (initial_norm == 0) {
+    return(list(
+      status = "zero_right_hand_side", converged = TRUE,
+      solution = numeric(length(right_hand_side)), iterations = 0L,
+      recurrence_relative_residual = 0,
+      explicit_relative_residual = 0,
+      nonpositive_curvature_encountered = FALSE,
+      trace = data.frame()
+    ))
+  }
+
+  solution <- numeric(length(right_hand_side))
+  residual <- right_hand_side
+  direction <- residual
+  residual_squared <- sum(residual^2)
+  trace_rows <- vector("list", max_iterations)
+  restarted <- FALSE
+  for (iteration in seq_len(max_iterations)) {
+    product <- as.numeric(hessian_vector(direction))
+    if (length(product) != length(direction) || any(!is.finite(product))) {
+      stop("The Hessian-vector product was malformed or non-finite.",
+           call. = FALSE)
+    }
+    curvature <- sum(direction * product)
+    if (!is.finite(curvature) || curvature <= 0) {
+      trace_rows[[iteration]] <- data.frame(
+        Iteration = iteration,
+        RelativeResidual = sqrt(residual_squared) / initial_norm,
+        Curvature = curvature, StepLength = NA_real_,
+        SolutionSupNorm = max(abs(solution)), Restarted = restarted,
+        stringsAsFactors = FALSE
+      )
+      trace <- do.call(rbind, trace_rows[seq_len(iteration)])
+      return(list(
+        status = "nonpositive_curvature_encountered", converged = FALSE,
+        solution = numeric(0), iterations = iteration,
+        recurrence_relative_residual =
+          sqrt(residual_squared) / initial_norm,
+        explicit_relative_residual = NA_real_,
+        nonpositive_curvature_encountered = TRUE, trace = trace
+      ))
+    }
+    step_length <- residual_squared / curvature
+    solution <- solution + step_length * direction
+    residual <- residual - step_length * product
+    next_residual_squared <- sum(residual^2)
+    relative_residual <- sqrt(next_residual_squared) / initial_norm
+    trace_rows[[iteration]] <- data.frame(
+      Iteration = iteration, RelativeResidual = relative_residual,
+      Curvature = curvature, StepLength = step_length,
+      SolutionSupNorm = max(abs(solution)), Restarted = restarted,
+      stringsAsFactors = FALSE
+    )
+    restarted <- FALSE
+
+    if (relative_residual <= residual_tolerance) {
+      explicit_residual <- right_hand_side -
+        as.numeric(hessian_vector(solution))
+      if (length(explicit_residual) != length(solution) ||
+          any(!is.finite(explicit_residual))) {
+        stop("The explicit matrix-free residual was malformed or non-finite.",
+             call. = FALSE)
+      }
+      explicit_relative <- sqrt(sum(explicit_residual^2)) / initial_norm
+      if (explicit_relative <= residual_tolerance) {
+        return(list(
+          status = "converged_krylov", converged = TRUE,
+          solution = solution, iterations = iteration,
+          recurrence_relative_residual = relative_residual,
+          explicit_relative_residual = explicit_relative,
+          nonpositive_curvature_encountered = FALSE,
+          trace = do.call(rbind, trace_rows[seq_len(iteration)])
+        ))
+      }
+      # Finite-difference Hessian-vector products are only approximately
+      # additive. Restart from the explicitly reconstructed residual rather
+      # than accepting a small recurrence residual that has drifted.
+      residual <- explicit_residual
+      direction <- residual
+      residual_squared <- sum(residual^2)
+      restarted <- TRUE
+      next
+    }
+    beta <- next_residual_squared / residual_squared
+    direction <- residual + beta * direction
+    residual_squared <- next_residual_squared
+  }
+
+  explicit_residual <- right_hand_side -
+    as.numeric(hessian_vector(solution))
+  explicit_relative <- sqrt(sum(explicit_residual^2)) / initial_norm
+  list(
+    status = "iteration_limit", converged = FALSE,
+    solution = numeric(0), iterations = max_iterations,
+    recurrence_relative_residual = sqrt(residual_squared) / initial_norm,
+    explicit_relative_residual = explicit_relative,
+    nonpositive_curvature_encountered = FALSE,
+    trace = do.call(rbind, trace_rows)
+  )
+}
+
+# Matrix-free displacement on the gradient-generated Krylov subspace,
+# optionally conditional on certified Person-boundary coordinates. A
+# successful solve establishes a local score-correction vector only; it cannot
+# certify positive curvature in directions orthogonal to that subspace.
+mfrmr_facets_mfs_matrix_free_displacement_audit <- function(
+    fit, direction_step = 1e-3, residual_tolerance = 1e-8,
+    max_iterations = 500L, dense_reference = NULL,
+    dense_relative_tolerance = 1e-5,
+    condition_on_known_person_boundaries = TRUE) {
+  controls <- c(
+    direction_step, residual_tolerance, dense_relative_tolerance
+  )
+  valid_iterations <- is.numeric(max_iterations) &&
+    length(max_iterations) == 1L && is.finite(max_iterations) &&
+    max_iterations == floor(max_iterations) && max_iterations >= 1L
+  valid_conditioning <- is.logical(condition_on_known_person_boundaries) &&
+    length(condition_on_known_person_boundaries) == 1L &&
+    !is.na(condition_on_known_person_boundaries)
+  if (length(controls) != 3L || any(!is.finite(controls)) ||
+      any(controls <= 0) || !valid_iterations || !valid_conditioning) {
+    stop("Matrix-free displacement controls are invalid.",
+         call. = FALSE)
+  }
+  context <- mfrmr_facets_mfs_jml_context(fit)
+  boundary_map <- mfrmr_facets_mfs_boundary_coordinate_map(context)
+  if (isTRUE(condition_on_known_person_boundaries) &&
+      !isTRUE(boundary_map$certified)) {
+    stop(
+      "Known Person boundaries could not be isolated in optimizer ",
+      "coordinates: ", boundary_map$status, ".", call. = FALSE
+    )
+  }
+  excluded_indices <- if (isTRUE(condition_on_known_person_boundaries)) {
+    boundary_map$optimizer_indices
+  } else {
+    integer(0)
+  }
+  retained_indices <- setdiff(seq_along(context$par), excluded_indices)
+  if (!length(retained_indices)) {
+    stop("No optimizer coordinates remain after boundary conditioning.",
+         call. = FALSE)
+  }
+  hessian_vector_evaluations <- 0L
+  hessian_vector <- function(retained_direction) {
+    retained_direction <- as.numeric(retained_direction)
+    if (length(retained_direction) != length(retained_indices) ||
+        any(!is.finite(retained_direction))) {
+      stop("A Hessian-vector direction was malformed or non-finite.",
+           call. = FALSE)
+    }
+    direction <- numeric(length(context$par))
+    direction[retained_indices] <- retained_direction
+    direction <- as.numeric(direction)
+    direction_norm <- max(abs(direction))
+    if (direction_norm == 0) return(numeric(length(retained_indices)))
+    epsilon <- direction_step / direction_norm
+    hessian_vector_evaluations <<- hessian_vector_evaluations + 1L
+    product <- (
+      context$gradient(context$par + epsilon * direction) -
+        context$gradient(context$par - epsilon * direction)
+    ) / (2 * epsilon)
+    product[retained_indices]
+  }
+  solved <- mfrmr_facets_mfs_cg_solve(
+    right_hand_side = context$retained_gradient[retained_indices],
+    hessian_vector = hessian_vector,
+    residual_tolerance = residual_tolerance,
+    max_iterations = max_iterations
+  )
+
+  parameter_change <- numeric(0)
+  if (isTRUE(solved$converged)) {
+    parameter_change <- numeric(length(context$par))
+    parameter_change[retained_indices] <- -as.numeric(solved$solution)
+  }
+  block_displacement <- data.frame()
+  predicted_improvement <- actual_improvement <- NA_real_
+  if (length(parameter_change) == length(context$par)) {
+    groups <- split(seq_along(parameter_change), context$block_labels)
+    block_displacement <- do.call(rbind, lapply(names(groups), function(block) {
+      values <- parameter_change[groups[[block]]]
+      data.frame(
+        Block = block, FreeCoordinates = length(values),
+        ParameterChangeSupNorm = max(abs(values)),
+        ParameterChangeRMS = sqrt(mean(values^2)),
+        stringsAsFactors = FALSE
+      )
+    }))
+    predicted_improvement <- as.numeric(
+      -crossprod(context$retained_gradient, parameter_change) / 2
+    )
+    moved_objective <- context$objective(context$par + parameter_change)
+    actual_improvement <- context$retained_objective - moved_objective
+  }
+
+  dense_candidate <- numeric(0)
+  dense_is_audit <- !is.null(dense_reference) &&
+    inherits(
+      dense_reference,
+      "mfrmr_facets_mfs_information_displacement_audit"
+    ) && isTRUE(dense_reference$summary$Evaluated)
+  if (dense_is_audit) {
+    dense_candidate <- if (isTRUE(condition_on_known_person_boundaries)) {
+      dense_reference$interior_parameter_change
+    } else {
+      dense_reference$parameter_change
+    }
+  }
+  dense_available <- length(dense_candidate) == length(context$par)
+  dense_maximum_difference <- dense_relative_difference <- NA_real_
+  dense_agrees <- NA
+  if (dense_available && length(parameter_change) == length(context$par)) {
+    dense_maximum_difference <- max(abs(
+      parameter_change - dense_candidate
+    ))
+    dense_scale <- max(1e-12, max(abs(dense_candidate)))
+    dense_relative_difference <- dense_maximum_difference / dense_scale
+    dense_agrees <- dense_relative_difference <= dense_relative_tolerance
+  }
+
+  summary <- data.frame(
+    Model = context$config$model, Method = context$config$method,
+    Status = solved$status, Converged = isTRUE(solved$converged),
+    FreeCoordinates = length(context$par),
+    RetainedInteriorCoordinates = length(retained_indices),
+    BoundaryConditioningRequested =
+      isTRUE(condition_on_known_person_boundaries),
+    BoundaryCoordinateMapStatus = boundary_map$status,
+    BoundaryCoordinateMapCertified = isTRUE(boundary_map$certified),
+    KnownBoundaryPersonCount = length(boundary_map$boundary_persons),
+    ExcludedBoundaryOptimizerCoordinates = length(excluded_indices),
+    DirectionStep = direction_step,
+    ResidualTolerance = residual_tolerance,
+    Iterations = solved$iterations,
+    HessianVectorEvaluations = hessian_vector_evaluations,
+    RecurrenceRelativeResidual = solved$recurrence_relative_residual,
+    ExplicitRelativeResidual = solved$explicit_relative_residual,
+    NonpositiveCurvatureEncountered =
+      solved$nonpositive_curvature_encountered,
+    ParameterChangeSupNorm = if (length(parameter_change)) {
+      max(abs(parameter_change))
+    } else {
+      NA_real_
+    },
+    PredictedObjectiveImprovement = predicted_improvement,
+    ActualObjectiveImprovement = actual_improvement,
+    RelativeObjectiveImprovement = actual_improvement /
+      max(1, abs(context$retained_objective)),
+    DenseReferenceAvailable = dense_available,
+    DenseMaximumParameterDifference = dense_maximum_difference,
+    DenseRelativeParameterDifference = dense_relative_difference,
+    DenseReferenceAgrees = dense_agrees,
+    DenseReferenceTolerance = dense_relative_tolerance,
+    GlobalPositiveDefinitenessCertified = FALSE,
+    StandardErrorsAuthorized = FALSE,
+    ReadinessChanged = FALSE,
+    ParameterDisplacementThresholdSelected = FALSE,
+    DecisionUse = "diagnostic_only", stringsAsFactors = FALSE
+  )
+  out <- list(
+    summary = summary, block_displacement = block_displacement,
+    parameter_change = parameter_change, solver_trace = solved$trace,
+    boundary_map = boundary_map
+  )
+  class(out) <- c(
+    "mfrmr_facets_mfs_matrix_free_displacement_audit", "list"
   )
   out
 }

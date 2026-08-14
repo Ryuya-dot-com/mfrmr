@@ -163,6 +163,52 @@ the largest relative range of the minimum eigenvalue was also `1.35e-6`.
 The dense reference is therefore numerically stable enough to test a later
 matrix-free implementation, without turning its observed maxima into rules.
 
+## Matrix-free and boundary-conditioned displacement
+
+A conjugate-gradient implementation evaluates central-difference
+Hessian-vector products without materializing the Hessian. On the four
+balanced 10/30-facet cases it reproduced the dense parameter changes within
+`3.49e-8` relatively. Explicit relative residuals were at most `9.81e-9`.
+The two large 40,000-row cases then converged without a dense reference.
+
+| Scenario | Model | Free coordinates | Iterations | Hessian-vector evaluations | Explicit relative residual | Maximum displacement | Relative objective improvement |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Large F5 | RSM | 1032 | 173 | 175 | 4.93e-9 | 0.000051697 | 1.92e-12 |
+| Large F5 | PCM | 1050 | 224 | 226 | 7.27e-9 | 0.000149052 | 2.80e-12 |
+
+The initial full-space Krylov solves for all four sparse cases reached the
+500-iteration diagnostic limit. A dense diagnostic run, permitted locally by
+raising the explicit dimension guard to 1,100, showed positive but extremely
+ill-conditioned information. Its maximum Newton changes were about one logit.
+In every case the largest change occurred on a Person coordinate that the
+existing JML boundary audit had already classified as `unbounded_low` or
+`unbounded_high`. The apparently large numerical displacement was therefore
+not evidence that all estimable parameters were moving together.
+
+The follow-up uses the exact Person constraint Jacobian. It removes an
+unbounded Person optimizer coordinate only when that free direction has no
+support on an estimable Person. Centered or grouped constraints that mix the
+two statuses are labelled `ambiguous_constraint_mixing` and are not reduced.
+For these noncentered stress fits the mapping was certified. Solving the
+principal information system conditional on the known boundary coordinates
+gave the following results.
+
+| Scenario | Model | Boundary Persons | Full condition number | Full maximum change | Interior condition number | Interior maximum change | Interior relative objective improvement | Conditional CG iterations |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Sparse distributed F5 | RSM | 5 | 9.05e9 | 1.000002 | 4.40e4 | 0.000121029 | 2.61e-11 | 236 |
+| Sparse distributed F5 | PCM | 3 | 1.24e9 | 1.000009 | 4.36e4 | 0.000040507 | 2.44e-12 | 285 |
+| Sparse weak bridge F5 | RSM | 4 | 6.84e8 | 1.000112 | 2.29e5 | 0.000116534 | 1.50e-11 | 242 |
+| Sparse weak bridge F5 | PCM | 5 | 4.14e8 | 1.000015 | 2.16e5 | 0.000021723 | 3.72e-13 | 310 |
+
+All four conditional matrix-free solves converged with explicit relative
+residual below `1e-8` and reproduced the displayed dense interior changes.
+This explains the original matrix-free iteration limits: the full system was
+dominated by already-known JML boundary directions. It does not prove global
+positive definiteness outside the Krylov subspace, turn the information into
+standard errors, or make an extreme Person estimate finite. Existing boundary
+precedence already kept these fits from inference even where the raw numerical
+component alone was ready.
+
 ## Interpretation and next step
 
 No readiness threshold was relaxed. The one-seed recovery values for the two
@@ -170,13 +216,19 @@ ready PCM cases remain diagnostic only, and the other finite estimates remain
 review-only. In particular, this run does not establish JML bias, large-design
 accuracy, FACETS equivalence, or a FACETS replacement boundary.
 
-The retained-point, replication, and moderate-size information audits answer
-the immediate implementation and invariance questions but do not freeze a
-replacement rule. The next bounded task is to extend the full-displacement
-calculation to the roughly 1,000-coordinate large and sparse cases without
-materializing a dense Hessian. A Hessian-vector conjugate-gradient prototype
-must first reproduce the four dense solutions above and fail closed on weak or
-non-positive curvature. Mean element score residual remains an interpretable
-secondary quantity. Only after the sparse/topology cases are covered should
-the package calibrate or replace the `1e-4` raw-gradient gate. More seeds or a
-larger `maxit` would not answer this question.
+The retained-point, replication, dense, and matrix-free audits answer the
+immediate implementation and invariance questions but do not freeze a
+replacement rule. They establish two distinct facts: the fixed raw `1e-4`
+score cutoff is not likelihood-replication invariant, and the large sparse
+full-space displacements are boundary-primary rather than evidence of broad
+interior movement. Existing boundary readiness must continue to take
+precedence.
+
+The next bounded task is prospective multi-seed calibration of the
+boundary-conditioned displacement and mean element score residual across row,
+facet-count, and sparse-topology strata. That design must be frozen before new
+responses are opened and must retain readiness consequences, not merely a
+numerical maximum. No cutoff should be selected from this one-seed envelope.
+The external FACETS stress comparison also remains separately blocked by the
+local code-5 entrance failure; an internal stationary-point diagnosis cannot
+substitute for FACETS equivalence evidence.
