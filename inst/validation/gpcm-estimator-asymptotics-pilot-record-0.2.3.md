@@ -77,6 +77,11 @@ observations and narrowed as within-Person exposure increased. The same broad
 pattern appeared in the optimizer log-slope trace, but that trace is not a
 primary inferential slope estimate.
 
+The `N240-L08` step contrast was .1014 [.0677, .1351] when restricted to the
+18 replicates in which both methods converged, versus .1037 in the all-returned-
+fit analysis above. The two JML iteration-limit cases therefore did not explain
+the paired step-recovery difference.
+
 ## Coordinate-specific step error
 
 Pooled signed bias is prohibited because the within-owner step coordinates
