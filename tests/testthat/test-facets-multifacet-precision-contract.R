@@ -251,6 +251,7 @@ test_that("external pilot writer emits genuine multifacet FACETS controls", {
   expect_true("Umean = 0, 1, 8" %in% control)
   expect_true("Iterations = 0" %in% control)
   expect_true("Convergence = .01, .0001" %in% control)
+  expect_false(any(startsWith(control, "Newton = ")))
   expect_true(any(startsWith(control, "Graphfile = ")))
   expect_true(any(startsWith(control, "Anchorfile = ")))
   expect_true('Scorefiles = "score.txt"' %in% control)
@@ -267,6 +268,21 @@ test_that("external pilot writer emits genuine multifacet FACETS controls", {
       design, model = "PCM", case_dir = case_dir
     ),
     "absent or empty"
+  )
+
+  newton_case <- env$mfrmr_facets_mfp_write_external_case(
+    design, model = "PCM", case_dir = tempfile("facets-mfp-newton-"),
+    facets_newton = 0.5
+  )
+  newton_control <- readLines(newton_case$control_path, warn = FALSE)
+  expect_true("Newton = 0.5" %in% newton_control)
+  expect_equal(newton_case$facets_newton, 0.5)
+  expect_error(
+    env$mfrmr_facets_mfp_write_external_case(
+      design, model = "PCM", case_dir = tempfile("facets-mfp-newton-"),
+      facets_newton = 0
+    ),
+    "finite value in"
   )
 
   expected_external <- do.call(rbind, lapply(case$facet_names, function(facet) {
@@ -309,6 +325,8 @@ test_that("external multifacet pilot is dry-run by default", {
   expect_equal(pilot$manifest$ExpectedCoordinates, rep(51L, 2L))
   expect_equal(pilot$manifest$ExpectedStepCoordinates, c(3L, 12L))
   expect_true(all(is.na(pilot$manifest$CoordinateContractPassed)))
+  expect_true(all(is.na(pilot$manifest$ExpectedComparableCoordinates)))
+  expect_true(all(is.na(pilot$manifest$BoundaryPersonCoordinatesExcluded)))
   expect_true(all(is.na(pilot$manifest$StepCoordinateContractPassed)))
   expect_equal(
     pilot$manifest$FACETSConvergenceRequested,
@@ -316,6 +334,9 @@ test_that("external multifacet pilot is dry-run by default", {
   )
   expect_true(all(is.na(pilot$manifest$FACETSConvergenceContractPassed)))
   expect_true(all(is.na(pilot$manifest$FACETSConvergenceAchieved)))
+  expect_true(all(is.na(pilot$manifest$FACETSNewton)))
+  expect_true(all(is.na(pilot$manifest$FACETSFinalIterationToken)))
+  expect_true(all(is.na(pilot$manifest$FACETSFinalIterationExact)))
   expect_true(all(!pilot$manifest$ComparisonEligible))
   expect_true(all(!pilot$manifest$ConfirmationAuthorized))
   expect_true(all(!pilot$manifest$EquivalenceClaimAuthorized))
@@ -459,6 +480,20 @@ test_that("external element comparison retains coordinates before aggregation", 
     abs(coordinates$MfrmrEstimate - coordinates$FACETSEstimate)
   )
   expect_equal(sum(metrics$Matched), nrow(coordinates))
+
+  fit$facets$person <- data.frame(
+    Person = c("P001", "P002"), Estimate = c(0.2, 9),
+    Extreme = c("none", "high")
+  )
+  public_coordinates <- env$mfrmr_facets_mfp_external_measure_comparison(
+    fit, external
+  )
+  expect_equal(nrow(public_coordinates), 3L)
+  expect_false("P002" %in% public_coordinates$Level)
+  expect_identical(
+    env$mfrmr_facets_mfp_person_status(fit$facets$person),
+    c("estimable", "extreme_high")
+  )
   expect_error(
     env$mfrmr_facets_mfp_external_measure_comparison(
       fit, external[, c("Facet", "Level")]
@@ -501,7 +536,30 @@ test_that("FACETS convergence is verified from the report", {
   expect_true(passed$achieved)
   expect_true(passed$passed)
   expect_equal(passed$final_iteration, 25L)
+  expect_identical(passed$final_iteration_token, "25")
+  expect_true(passed$final_iteration_exact)
   expect_equal(passed$final_element_score_residual, 0.007)
+
+  writeLines(c(
+    "Convergence = 0.01, 0.0001, 0, 0",
+    "| JMLE2906      -.0099    .0     -.0010      .0000    .0000 |"
+  ), report_path)
+  attached <- env$mfrmr_facets_mfp_convergence_contract(report_path)
+  expect_true(attached$passed)
+  expect_equal(attached$final_iteration, 2906L)
+  expect_identical(attached$final_iteration_token, "2906")
+  expect_true(attached$final_iteration_exact)
+
+  writeLines(c(
+    "Convergence = 0.01, 0.0001, 0, 0",
+    "| JMLE14E3       .0099    .0     -.0007      .0000    .0000 |"
+  ), report_path)
+  compressed <- env$mfrmr_facets_mfp_convergence_contract(report_path)
+  expect_true(compressed$passed)
+  expect_true(is.na(compressed$final_iteration))
+  expect_identical(compressed$final_iteration_token, "14E3")
+  expect_false(compressed$final_iteration_exact)
+  expect_equal(compressed$final_element_score_residual, 0.0099)
 
   writeLines(c(
     "Convergence = 0.01, 0.0001, 0, 0",

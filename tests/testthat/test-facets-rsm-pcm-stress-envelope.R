@@ -66,13 +66,15 @@ test_that("stress preflight opens no files and rejects protected seeds", {
     work_dir = work_dir,
     base_seed = 451001L,
     scenario_ids = c("MFS-LARGE-F5", "MFS-MANY-F30"),
-    models = c("RSM", "PCM")
+    models = c("RSM", "PCM"),
+    facets_newton = 0.5
   )
 
   expect_s3_class(result, "mfrmr_facets_mfs_result")
   expect_false(dir.exists(work_dir))
   expect_equal(nrow(result$manifest), 4L)
   expect_true(all(result$manifest$ExecutionStatus == "not_run"))
+  expect_equal(result$manifest$FACETSNewton, rep(0.5, 4L))
   expect_true(all(!result$manifest$FileHashUsed))
   expect_false(result$decision$ExternalExecutionRequested)
   expect_false(result$decision$BiasIsMonteCarloEstimate)
@@ -102,7 +104,8 @@ test_that("injected many-facet design reuses the semantic FACETS runner", {
     execute = FALSE,
     total_facets = 10L,
     models = "RSM",
-    design_builder = builder
+    design_builder = builder,
+    facets_newton = 0.5
   )
 
   expect_equal(nrow(result$manifest), 1L)
@@ -110,11 +113,13 @@ test_that("injected many-facet design reuses the semantic FACETS runner", {
   expect_equal(result$manifest$Rows, 6400L)
   expect_equal(result$manifest$ExpectedCoordinates, 228L)
   expect_equal(result$manifest$ExpectedStepCoordinates, 3L)
+  expect_equal(result$manifest$FACETSNewton, 0.5)
   control <- readLines(file.path(
     work_dir, "rsm-f10", "facets_control.txt"
   ), warn = FALSE)
   expect_true("Facets = 10" %in% control)
   expect_true("Models = ?,?,?,?,?,?,?,?,?,?,R3" %in% control)
+  expect_true("Newton = 0.5" %in% control)
   expect_error(
     env$mfrmr_run_facets_mfp_external_pilot(
       facets_exe = "deliberately-missing-facets.exe",
@@ -201,6 +206,19 @@ test_that("independent mfrmr recovery is not gated by FACETS availability", {
   expect_equal(nrow(result$recovery), 228L + 3L)
   expect_true(all(result$recovery$RecoveryEligible))
   expect_equal(result$recovery$Error, rep(0, nrow(result$recovery)))
+
+  fit$facets$person$ParameterStatus <- NULL
+  fit$facets$person$Extreme <- c("high", rep(
+    "none", nrow(fit$facets$person) - 1L
+  ))
+  boundary_result <- env$mfrmr_facets_mfs_fit_mfrmr(
+    design, existing_fit = fit
+  )
+  boundary_person <- boundary_result$recovery$ParameterId == paste0(
+    "Person::", fit$facets$person$Person[1L]
+  )
+  expect_false(boundary_result$recovery$RecoveryEligible[boundary_person])
+  expect_true(all(boundary_result$recovery$RecoveryEligible[!boundary_person]))
   expect_identical(
     env$mfrmr_facets_mfs_collapse_messages(c("", NA, "first", "first")),
     "first"

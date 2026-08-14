@@ -394,10 +394,24 @@ mfrmr_facets_mfp_recovery <- function(fit, design) {
   )
 }
 
+mfrmr_facets_mfp_normalize_newton <- function(facets_newton) {
+  if (is.null(facets_newton)) return(NULL)
+  valid <- is.numeric(facets_newton) && length(facets_newton) == 1L &&
+    !is.na(facets_newton) && is.finite(facets_newton) &&
+    facets_newton > 0 && facets_newton <= 1
+  if (!valid) {
+    stop("`facets_newton` must be NULL or one finite value in (0, 1].",
+         call. = FALSE)
+  }
+  as.numeric(facets_newton)
+}
+
 mfrmr_facets_mfp_write_external_case <- function(design,
                                                   model = c("RSM", "PCM"),
-                                                  case_dir) {
+                                                  case_dir,
+                                                  facets_newton = NULL) {
   model <- match.arg(model)
+  facets_newton <- mfrmr_facets_mfp_normalize_newton(facets_newton)
   data <- as.data.frame(design$data, stringsAsFactors = FALSE)
   facet_names <- c("Person", as.character(design$facet_names))
   required <- c(facet_names, "Score")
@@ -473,6 +487,7 @@ mfrmr_facets_mfp_write_external_case <- function(design,
     "QM = Double",
     "Iterations = 0",
     "Convergence = .01, .0001",
+    if (!is.null(facets_newton)) paste0("Newton = ", facets_newton),
     paste0('Scorefiles = "', basename(score_base), '"'),
     paste0('Residualfile = "', basename(residual_path), '"'),
     paste0('Graphfile = "', basename(graph_path), '"'),
@@ -506,15 +521,30 @@ mfrmr_facets_mfp_write_external_case <- function(design,
     score_base = score_base,
     residual_path = residual_path,
     graph_path = graph_path,
-    anchor_path = anchor_path
+    anchor_path = anchor_path,
+    facets_newton = facets_newton
   )
+}
+
+mfrmr_facets_mfp_person_status <- function(person) {
+  person <- as.data.frame(person, stringsAsFactors = FALSE)
+  if ("ParameterStatus" %in% names(person)) {
+    return(as.character(person$ParameterStatus))
+  }
+  if ("Extreme" %in% names(person)) {
+    extreme <- tolower(trimws(as.character(person$Extreme)))
+    return(ifelse(
+      !is.na(extreme) & extreme == "none",
+      "estimable",
+      ifelse(is.na(extreme), "boundary_unknown", paste0("extreme_", extreme))
+    ))
+  }
+  rep("estimable", nrow(person))
 }
 
 mfrmr_facets_mfp_external_measure_comparison <- function(fit, external) {
   person <- as.data.frame(fit$facets$person, stringsAsFactors = FALSE)
-  person_status <- if ("ParameterStatus" %in% names(person)) {
-    as.character(person$ParameterStatus)
-  } else rep("estimable", nrow(person))
+  person_status <- mfrmr_facets_mfp_person_status(person)
   internal <- rbind(
     data.frame(
       Facet = "Person", Level = as.character(person$Person),
@@ -801,7 +831,9 @@ mfrmr_facets_mfp_convergence_contract <- function(
     list(
       passed = FALSE, specification_passed = FALSE, achieved = FALSE,
       values = numeric(0), reported_line = reported_line,
-      final_iteration = NA_integer_, final_element_score_residual = NA_real_,
+      final_iteration = NA_integer_, final_iteration_token = NA_character_,
+      final_iteration_exact = NA,
+      final_element_score_residual = NA_real_,
       final_element_logit_change = NA_real_, final_step_logit_change = NA_real_
     )
   }
@@ -827,37 +859,57 @@ mfrmr_facets_mfp_convergence_contract <- function(
     values, as.numeric(requested), tolerance = 1e-12, check.attributes = FALSE
   ))
   iteration_lines <- lines[grepl("^\\| JMLE", lines)]
-  iteration_tokens <- if (length(iteration_lines)) {
-    strsplit(trimws(gsub("^\\||\\|$", "", tail(iteration_lines, 1L))),
-             "\\s+")[[1L]]
+  iteration_body <- if (length(iteration_lines)) {
+    trimws(gsub("^\\||\\|$", "", tail(iteration_lines, 1L)))
+  } else {
+    ""
+  }
+  iteration_match <- regexec(
+    "^JMLE\\s*([0-9]+(?:[Ee][0-9]+)?)\\s+(.+)$",
+    iteration_body,
+    perl = TRUE
+  )
+  iteration_parts <- regmatches(iteration_body, iteration_match)[[1L]]
+  iteration_token <- if (length(iteration_parts) == 3L) {
+    iteration_parts[2L]
+  } else {
+    NA_character_
+  }
+  metric_tokens <- if (length(iteration_parts) == 3L) {
+    strsplit(trimws(iteration_parts[3L]), "\\s+")[[1L]]
   } else {
     character(0)
   }
-  iteration_numeric <- iteration_tokens[-1L]
-  valid_iteration <- length(iteration_tokens) == 7L &&
-    identical(iteration_tokens[1L], "JMLE") &&
-    all(grepl("^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$",
-              iteration_numeric))
-  final_values <- if (valid_iteration) {
-    as.numeric(iteration_numeric)
+  valid_metrics <- length(metric_tokens) == 5L && all(grepl(
+    "^[+-]?([0-9]+(\\.[0-9]*)?|\\.[0-9]+)$", metric_tokens
+  ))
+  exact_iteration <- !is.na(iteration_token) &&
+    grepl("^[0-9]+$", iteration_token)
+  compressed_iteration <- !is.na(iteration_token) &&
+    grepl("^[0-9]+[Ee][0-9]+$", iteration_token)
+  valid_iteration <- (exact_iteration || compressed_iteration) && valid_metrics
+  final_metrics <- if (valid_iteration) {
+    as.numeric(metric_tokens)
   } else {
-    rep(NA_real_, 6L)
+    rep(NA_real_, 5L)
   }
   achieved <- valid_iteration &&
-    abs(final_values[2L]) <= requested[1L] &&
-    abs(final_values[5L]) <= requested[2L] &&
-    (requested[3L] == 0 || abs(final_values[4L]) <= requested[3L]) &&
-    (requested[4L] == 0 || abs(final_values[6L]) <= requested[4L])
+    abs(final_metrics[1L]) <= requested[1L] &&
+    abs(final_metrics[4L]) <= requested[2L] &&
+    (requested[3L] == 0 || abs(final_metrics[3L]) <= requested[3L]) &&
+    (requested[4L] == 0 || abs(final_metrics[5L]) <= requested[4L])
   list(
     passed = specification_passed && achieved,
     specification_passed = specification_passed,
     achieved = achieved,
     values = values,
     reported_line = reported,
-    final_iteration = as.integer(final_values[1L]),
-    final_element_score_residual = final_values[2L],
-    final_element_logit_change = final_values[5L],
-    final_step_logit_change = final_values[6L]
+    final_iteration = if (exact_iteration) as.integer(iteration_token) else NA_integer_,
+    final_iteration_token = iteration_token,
+    final_iteration_exact = if (valid_iteration) exact_iteration else NA,
+    final_element_score_residual = final_metrics[1L],
+    final_element_logit_change = final_metrics[4L],
+    final_step_logit_change = final_metrics[5L]
   )
 }
 
@@ -939,7 +991,8 @@ mfrmr_run_facets_mfp_external_pilot <- function(
     seed = 451001L,
     maxit = 100L,
     design_builder = NULL,
-    retain_fit = FALSE) {
+    retain_fit = FALSE,
+    facets_newton = NULL) {
   if (!is.logical(execute) || length(execute) != 1L || is.na(execute)) {
     stop("`execute` must be one nonmissing logical value.", call. = FALSE)
   }
@@ -947,6 +1000,7 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       is.na(retain_fit)) {
     stop("`retain_fit` must be one nonmissing logical value.", call. = FALSE)
   }
+  facets_newton <- mfrmr_facets_mfp_normalize_newton(facets_newton)
   valid_seed <- is.numeric(seed) && length(seed) == 1L && !is.na(seed) &&
     is.finite(seed) && seed == floor(seed)
   if (!valid_seed) {
@@ -1018,7 +1072,9 @@ mfrmr_run_facets_mfp_external_pilot <- function(
         )
       }
       case_dir <- file.path(work_dir, paste0(tolower(model), "-f", total))
-      case <- mfrmr_facets_mfp_write_external_case(design, model, case_dir)
+      case <- mfrmr_facets_mfp_write_external_case(
+        design, model, case_dir, facets_newton = facets_newton
+      )
       process_status <- NA_integer_
       error <- NA_character_
       warning_text <- character(0)
@@ -1039,6 +1095,8 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       imported_coordinates <- NA_integer_
       matched_coordinates <- NA_integer_
       coordinate_contract_passed <- NA
+      expected_comparable_coordinates <- NA_integer_
+      boundary_person_coordinates_excluded <- NA_integer_
       expected_step_coordinates <- if (identical(model, "PCM")) {
         3L * length(case$level_maps$Criterion)
       } else {
@@ -1055,6 +1113,8 @@ mfrmr_run_facets_mfp_external_pilot <- function(
       facets_reported_convergence_score_residual <- NA_real_
       facets_reported_convergence_logit_change <- NA_real_
       facets_final_iteration <- NA_integer_
+      facets_final_iteration_token <- NA_character_
+      facets_final_iteration_exact <- NA
       facets_final_element_score_residual <- NA_real_
       facets_final_element_logit_change <- NA_real_
       facets_final_step_logit_change <- NA_real_
@@ -1098,6 +1158,10 @@ mfrmr_run_facets_mfp_external_pilot <- function(
               convergence_contract$values[2L]
           }
           facets_final_iteration <- convergence_contract$final_iteration
+          facets_final_iteration_token <-
+            convergence_contract$final_iteration_token
+          facets_final_iteration_exact <-
+            convergence_contract$final_iteration_exact
           facets_final_element_score_residual <-
             convergence_contract$final_element_score_residual
           facets_final_element_logit_change <-
@@ -1185,6 +1249,14 @@ mfrmr_run_facets_mfp_external_pilot <- function(
                     mfrmr_gradient_review_tolerance, "."
                   )
                 } else {
+                  person_status <- mfrmr_facets_mfp_person_status(
+                    captured$value$facets$person
+                  )
+                  boundary_person_coordinates_excluded <- sum(
+                    person_status != "estimable"
+                  )
+                  expected_comparable_coordinates <- expected_coordinates -
+                    boundary_person_coordinates_excluded
                   metrics <- mfrmr_facets_mfp_external_measure_metrics(
                     captured$value, external
                   )
@@ -1194,12 +1266,14 @@ mfrmr_run_facets_mfp_external_pilot <- function(
                     )
                   matched_coordinates <- sum(metrics$Matched)
                   if (nrow(metrics) != total ||
-                      matched_coordinates != expected_coordinates ||
-                      nrow(element_comparison) != expected_coordinates) {
+                      matched_coordinates != expected_comparable_coordinates ||
+                      nrow(element_comparison) != expected_comparable_coordinates) {
                     error <- paste0(
                       "Matched-coordinate contract failed: blocks=",
                       nrow(metrics), "/", total, ", coordinates=",
-                      matched_coordinates, "/", expected_coordinates, "."
+                      matched_coordinates, "/",
+                      expected_comparable_coordinates, ", boundary Persons=",
+                      boundary_person_coordinates_excluded, "."
                     )
                     metrics <- data.frame()
                   } else {
@@ -1296,6 +1370,9 @@ mfrmr_run_facets_mfp_external_pilot <- function(
         ImportedCoordinates = imported_coordinates,
         MatchedCoordinates = matched_coordinates,
         CoordinateContractPassed = coordinate_contract_passed,
+        ExpectedComparableCoordinates = expected_comparable_coordinates,
+        BoundaryPersonCoordinatesExcluded =
+          boundary_person_coordinates_excluded,
         ComparedFacetBlocks = nrow(metrics),
         ExpectedStepCoordinates = expected_step_coordinates,
         ImportedStepCoordinates = imported_step_coordinates,
@@ -1312,7 +1389,14 @@ mfrmr_run_facets_mfp_external_pilot <- function(
           facets_convergence_specification_passed,
         FACETSConvergenceAchieved = facets_convergence_achieved,
         FACETSConvergenceContractPassed = facets_convergence_contract_passed,
+        FACETSNewton = if (is.null(case$facets_newton)) {
+          NA_real_
+        } else {
+          case$facets_newton
+        },
         FACETSFinalIteration = facets_final_iteration,
+        FACETSFinalIterationToken = facets_final_iteration_token,
+        FACETSFinalIterationExact = facets_final_iteration_exact,
         FACETSFinalElementScoreResidual = facets_final_element_score_residual,
         FACETSFinalElementLogitChange = facets_final_element_logit_change,
         FACETSFinalStepLogitChange = facets_final_step_logit_change,

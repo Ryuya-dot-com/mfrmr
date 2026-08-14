@@ -94,11 +94,57 @@ an operational result of this stress condition. Both disconnected mfrmr fits
 were again rejected before optimization at nullity one; neither became falsely
 ready even though the disconnected PCM FACETS run met its own stopping rule.
 
-Only the 10-facet PCM case passed both programs' numerical gates. Its 228
+With the default FACETS Newton update, only the 10-facet PCM case passed both
+programs' numerical gates. Its 228
 Element coordinates had maximum absolute difference 0.0001136842 logits, and
 its 18 Step coordinates had maximum absolute difference 0.00003751122 logits.
 This one opened-seed cell is useful agreement evidence, but it is not a bias
 study, exact equality, confirmation evidence, or a FACETS replacement claim.
+
+## Sparse convergence sensitivity
+
+The four sparse reports contained 3--5 raw-score-extreme Persons, depending on
+model and topology. Removing those Persons did not make the default FACETS
+update meet the 0.01 maximum score-residual rule: the final residual magnitudes
+were 0.0375, 0.0491, 0.2444, and 0.0991. Extreme scores were therefore not the
+sole cause of the earlier stopping failures.
+
+The report traces instead showed alternating residual signs with displayed
+logit changes of zero. A bounded rerun of the original, unfiltered data used
+`Newton = 0.5`, leaving the model, data, convergence criteria, and mfrmr gate
+unchanged. All four FACETS fits then met the declared rule. Independent repeats
+returned the same iteration labels and terminal residuals.
+
+| Scenario | Model | FACETS iterations | Final score residual | mfrmr gradient | Joint comparison |
+| --- | --- | ---: | ---: | ---: | --- |
+| Sparse distributed F5 | RSM | 596 | 0.0099 | 0.000186109 | withheld by mfrmr gate |
+| Sparse distributed F5 | PCM | 605 | 0.0099 | 0.000399110 | withheld by mfrmr gate |
+| Sparse weak bridge F5 | RSM | 2,896 | -0.0099 | 0.000152096 | withheld by mfrmr gate |
+| Sparse weak bridge F5 | PCM | 2,265 | 0.0099 | 0.000060078 | compared |
+
+This is a solver-sensitivity result, not a reason to change either program's
+default. Halving the FACETS update removed the oscillation at the cost of many
+more iterations. The convergence parser now accepts ordinary `JMLE 25` and
+attached `JMLE2906` labels. It also reads terminal metrics from compact labels
+such as `JMLE14E3`, but retains `14E3` as the reported token and does not claim
+an exact iteration count.
+
+For the weak-bridge PCM comparison, all 1,034 FACETS Element coordinates were
+imported. Five extreme-Person coordinates were classified as a separate
+boundary-policy stratum and excluded from the ordinary numeric-difference
+aggregation: FACETS reports finite extreme-score adjustments, whereas mfrmr
+reports its JML extended-real boundary approximation. The ordinary-coordinate
+contract matched all remaining 1,029 coordinates. Maximum absolute differences
+were 0.0000143 for Aux03, 0.00000021 for Aux04, 0.0000527 for Criterion,
+0.0135205 for non-extreme Persons, and 0.0135089 for Raters. The 30 PCM Steps
+had MAE 0.0000348 and maximum difference 0.0000827 logits.
+
+The approximately 0.0135-logit differences are not floating-point noise. Rater
+differences were negative in one ten-rater block and positive in the other,
+with the corresponding pattern among Persons. They quantify a small relative
+block-location difference under the six-Person weak bridge. This is precisely
+why distributed and weak-bridge topologies must not share an automatic
+equivalence rule.
 
 ## Independent mfrmr result
 
@@ -286,10 +332,13 @@ responses are opened and must retain readiness consequences, not merely a
 numerical maximum. No cutoff should be selected from this one-seed envelope.
 The local code-5 entrance failure is resolved by the qualified short-TEMP
 route, and the complete external stress registry has now been executed. The
-remaining blockers are scientific rather than launcher availability: sparse
-FACETS convergence, mfrmr's replication-sensitive raw-gradient gate, JML
-boundary states, and the absence of multi-seed bias evidence. The next bounded
-task should compare estimator states only where both programs meet a declared
+remaining blockers are scientific rather than launcher availability. Sparse
+FACETS convergence is now understood as update-sensitive residual oscillation
+in these four cells, not structural failure, but the appropriate solver policy
+is not yet frozen. Other blockers are mfrmr's replication-sensitive
+raw-gradient gate, JML boundary states, weak-bridge relative-location
+sensitivity, and the absence of multi-seed bias evidence. The next bounded task
+should compare estimator states only where both programs meet a declared
 stopping contract, while separately calibrating an invariant mfrmr readiness
-rule prospectively. One executed agreement cell cannot substitute for that
+rule prospectively. Two executed agreement cells cannot substitute for that
 work or establish FACETS equivalence.

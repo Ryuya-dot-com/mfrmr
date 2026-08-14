@@ -390,9 +390,7 @@ mfrmr_facets_mfs_summarize_recovery <- function(recovery) {
 
 mfrmr_facets_mfs_internal_recovery <- function(fit, design, eligible) {
   person <- as.data.frame(fit$facets$person, stringsAsFactors = FALSE)
-  person_status <- if ("ParameterStatus" %in% names(person)) {
-    as.character(person$ParameterStatus)
-  } else rep("estimable", nrow(person))
+  person_status <- mfrmr_facets_mfp_person_status(person)
   element <- rbind(
     data.frame(
       Facet = "Person", Level = as.character(person$Person),
@@ -1549,7 +1547,8 @@ mfrmr_facets_mfs_collapse_messages <- function(messages) {
   paste(messages, collapse = " | ")
 }
 
-mfrmr_facets_mfs_preflight <- function(request, facets_exe, work_dir) {
+mfrmr_facets_mfs_preflight <- function(request, facets_exe, work_dir,
+                                        facets_newton = NULL) {
   registry <- merge(
     request$registry,
     data.frame(Model = request$models, stringsAsFactors = FALSE),
@@ -1564,6 +1563,11 @@ mfrmr_facets_mfs_preflight <- function(request, facets_exe, work_dir) {
     match(registry$Model, c("RSM", "PCM"))
   registry$ExecutionStatus <- "not_run"
   registry$ComparisonEligible <- FALSE
+  registry$FACETSNewton <- if (is.null(facets_newton)) {
+    NA_real_
+  } else {
+    facets_newton
+  }
   registry$FileHashUsed <- FALSE
   registry$ConfirmationAuthorized <- FALSE
   registry$FACETSReplacementClaimAuthorized <- FALSE
@@ -1591,12 +1595,16 @@ mfrmr_facets_mfs_preflight <- function(request, facets_exe, work_dir) {
 mfrmr_run_facets_mfs_pilot <- function(
     facets_exe, work_dir, base_seed = 451001L,
     scenario_ids = mfrmr_facets_mfs_registry()$ScenarioId,
-    models = c("RSM", "PCM"), execute = FALSE, maxit = 400L) {
+    models = c("RSM", "PCM"), execute = FALSE, maxit = 400L,
+    facets_newton = NULL) {
+  facets_newton <- mfrmr_facets_mfp_normalize_newton(facets_newton)
   request <- mfrmr_facets_mfs_validate_request(
     base_seed, scenario_ids, models
   )
   if (!isTRUE(execute)) {
-    return(mfrmr_facets_mfs_preflight(request, facets_exe, work_dir))
+    return(mfrmr_facets_mfs_preflight(
+      request, facets_exe, work_dir, facets_newton = facets_newton
+    ))
   }
   if (!file.exists(facets_exe)) {
     stop("FACETS executable was not found: ", facets_exe, ".", call. = FALSE)
@@ -1633,7 +1641,8 @@ mfrmr_run_facets_mfs_pilot <- function(
           facets_exe = facets_exe, work_dir = case_root, execute = TRUE,
           total_facets = scenario$TotalFacets, models = model,
           seed = request$base_seed, maxit = maxit,
-          design_builder = builder, retain_fit = TRUE
+          design_builder = builder, retain_fit = TRUE,
+          facets_newton = facets_newton
         )
       )
       raw <- captured$value
