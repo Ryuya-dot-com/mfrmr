@@ -707,8 +707,17 @@ identify whether the opt-in layer ran and retain its test log.
   trusting a supplied flag, verifies coordinate arithmetic, and applies the
   frozen tolerance plus MCSE rules. Complete synthetic evidence exercises the
   entire contract but cannot establish external provenance or authorize a
-  claim. Response generation and the external execution adapter remain
+  claim. Response generation and the confirmation execution adapter remain
   intentionally unimplemented and unauthorized.
+- `facets-multifacet-pilot-adapter-0.2.3.R` and corresponding record:
+  execution adapter restricted to the six already-open pilot seeds. Dry-run
+  preflight creates no response or file; execution retains every Element and
+  Step coordinate plus FACETS and mfrmr numerical telemetry, validates report-
+  header version 4.5.0, and uses no file hash. Confirmation seeds are rejected.
+  Its Windows launcher follows FACETS' native wait route. A local execution
+  audit completed the already-open RSM and PCM three-facet cases, retaining all
+  48 Element and 3/12 Step coordinates. These are pilot-only checks; no
+  confirmation response was opened and no replacement claim was made.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

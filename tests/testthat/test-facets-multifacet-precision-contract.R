@@ -46,6 +46,7 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
   expect_true(contract$authorization$FACETSConfirmationDesignFrozen)
   expect_true(contract$authorization$FACETSNumericalAcceptanceRuleFrozen)
   expect_true(contract$authorization$FACETSConfirmationSemanticRunnerReady)
+  expect_true(contract$authorization$FACETSPilotExecutionAdapterImplemented)
   expect_false(
     contract$authorization$FACETSConfirmationExecutionAdapterImplemented
   )
@@ -204,6 +205,10 @@ test_that("external pilot writer emits genuine multifacet FACETS controls", {
   expect_true("Convergence = .01, .0001" %in% control)
   expect_true(any(startsWith(control, "Graphfile = ")))
   expect_true(any(startsWith(control, "Anchorfile = ")))
+  expect_true('Scorefiles = "score.txt"' %in% control)
+  expect_true('Data = "facets_data.txt"' %in% control)
+  expect_false(any(grepl(normalizePath(case_dir, winslash = "/"), control,
+                         fixed = TRUE)))
   expect_equal(case$facet_names,
                c("Person", "Rater", "Task", "Occasion", "Criterion"))
   expect_equal(length(strsplit(data_lines[1], ",", fixed = TRUE)[[1]]), 6L)
@@ -267,6 +272,7 @@ test_that("external multifacet pilot is dry-run by default", {
   expect_true(all(!pilot$manifest$ConfirmationAuthorized))
   expect_true(all(!pilot$manifest$EquivalenceClaimAuthorized))
   expect_equal(nrow(pilot$metrics), 0L)
+  expect_equal(nrow(pilot$element_comparisons), 0L)
   expect_equal(nrow(pilot$step_comparisons), 0L)
   expect_true(all(file.exists(file.path(
     work_dir, c("rsm-f4", "pcm-f4"), "facets_control.txt"
@@ -302,6 +308,7 @@ test_that("external multiseed pilot preserves explicit seed provenance", {
   expect_equal(pilot$manifest$DesignSeed, c(452003L, 452103L))
   expect_equal(pilot$manifest$ExpectedStepCoordinates, rep(12L, 2L))
   expect_equal(nrow(pilot$metrics), 0L)
+  expect_equal(nrow(pilot$element_comparisons), 0L)
   expect_equal(nrow(pilot$step_comparisons), 0L)
   expect_true(all(file.exists(file.path(
     work_dir,
@@ -362,6 +369,66 @@ test_that("FACETS anchor steps are matched by explicit scale coordinates", {
     ),
     "scale contract failed"
   )
+})
+
+test_that("external element comparison retains coordinates before aggregation", {
+  env <- facets_mfp_environment()
+  fit <- list(
+    facets = list(
+      person = data.frame(
+        Person = c("P001", "P002"), Estimate = c(0.2, Inf),
+        ParameterStatus = c("estimable", "extreme_high")
+      ),
+      others = data.frame(
+        Facet = c("Rater", "Rater"), Level = c("R01", "R02"),
+        Estimate = c(-0.1, 0.1)
+      )
+    )
+  )
+  external <- data.frame(
+    Facet = c("Person", "Person", "Rater", "Rater"),
+    Level = c("P001", "P002", "R01", "R02"),
+    Estimate = c(0.19, 9, -0.12, 0.11)
+  )
+
+  coordinates <- env$mfrmr_facets_mfp_external_measure_comparison(
+    fit, external
+  )
+  metrics <- env$mfrmr_facets_mfp_external_measure_metrics(fit, external)
+
+  expect_equal(nrow(coordinates), 3L)
+  expect_equal(
+    coordinates$AbsoluteDifference,
+    abs(coordinates$MfrmrEstimate - coordinates$FACETSEstimate)
+  )
+  expect_equal(sum(metrics$Matched), nrow(coordinates))
+  expect_error(
+    env$mfrmr_facets_mfp_external_measure_comparison(
+      fit, external[, c("Facet", "Level")]
+    ),
+    "requires Facet, Level, and Estimate"
+  )
+})
+
+test_that("mfrmr pilot telemetry requires code, flag, and terminal gradient", {
+  env <- facets_mfp_environment()
+  fit <- list(summary = data.frame(
+    ConvergenceCode = 0L,
+    Converged = TRUE,
+    TerminalGradientSupNorm = 5e-5,
+    GradientReviewTolerance = 1e-4
+  ))
+  passed <- env$mfrmr_facets_mfp_fit_telemetry(fit)
+  expect_true(passed$NumericalGatePassed)
+
+  fit$summary$Converged <- FALSE
+  expect_false(env$mfrmr_facets_mfp_fit_telemetry(fit)$NumericalGatePassed)
+  fit$summary$Converged <- TRUE
+  fit$summary$TerminalGradientSupNorm <- 2e-4
+  expect_false(env$mfrmr_facets_mfp_fit_telemetry(fit)$NumericalGatePassed)
+  expect_false(env$mfrmr_facets_mfp_fit_telemetry(
+    list(summary = data.frame(ConvergenceCode = 0L, Converged = TRUE))
+  )$NumericalGatePassed)
 })
 
 test_that("FACETS convergence is verified from the report", {

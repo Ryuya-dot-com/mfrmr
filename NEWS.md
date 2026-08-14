@@ -43,7 +43,18 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   duplicate coordinates, and inconsistent arithmetic fail closed. The runner
   does not generate confirmation responses, launch either solver, validate
   external provenance, or authorize a confirmation claim; those execution
-  concerns remain a separate next step.
+  concerns remain a separate next step. Added a separate pilot-only execution
+  adapter for the six already-open seeds. It preserves full Element and Step
+  coordinate rows, FACETS convergence fields, and mfrmr convergence-code and
+  terminal-gradient telemetry; rejects every confirmation seed; checks FACETS
+  4.5.0 from the report header; and treats executable path, size, and time only
+  as descriptive provenance, never as a hash-based acceptance condition. On
+  Windows, FACETS is launched through its documented native wait route because
+  direct child-process APIs caused an access violation. A local live audit then
+  completed the already-open RSM and PCM three-facet cases with 48 Element
+  coordinates each and 3/12 Step coordinates; their maximum differences were
+  0.000308/0.000173 and 0.000424/0.000268 logits. These remain pilot results,
+  add no replacement evidence, and leave confirmation blocked.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
