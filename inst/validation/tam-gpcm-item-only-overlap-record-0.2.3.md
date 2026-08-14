@@ -60,6 +60,38 @@ slope, `9.32e-8` for an mfrmr transition threshold, `2.58e-8` for the mfrmr
 population variance, and `4.43e-7` for TAM deviance. These are observations on
 one fixed fixture, not general comparison tolerances.
 
+## Why the reported TAM SEs are not an exact coordinate comparison
+
+The TAM 4.3-25 fit retained finite marginal slope SEs in `se.B` and marginal
+intercept SEs in `xsi$se.xsi`. It retained no joint parameter-covariance or
+Hessian component, and no TAM `vcov()` method was registered. This matches the
+documented boundary of `TAM::tam.se()`: that numerical procedure ignores
+covariances between parameter estimates and does not implement variance-
+component SEs. See the official
+[`tam.se()` reference](https://alexanderrobitzsch.github.io/TAM/reference/tam.se.html).
+
+Those omissions matter because mfrmr's relative slopes and population SD are
+nonlinear functions of *all* TAM absolute slopes. The runner now carries a
+constructive non-identifiability witness. It builds two positive-definite
+covariance matrices with exactly the same TAM marginal slope SEs: one has zero
+off-diagonal correlations and the other has correlation 0.5. Delta-method
+transformation gives different answers even though both matrices are
+compatible with the reported marginals:
+
+| q | Mapped parameter | SE with zero off-diagonals | SE with correlation 0.5 | Absolute difference |
+| ---: | --- | ---: | ---: | ---: |
+| 31 | Relative slope: Comfort | 0.119841 | 0.091596 | 0.028245 |
+| 31 | Relative slope: Work | 0.054010 | 0.044088 | 0.009922 |
+| 31 | Relative slope: Benefit | 0.116667 | 0.091626 | 0.025041 |
+| 31 | Population SD | 0.056961 | 0.074867 | 0.017906 |
+
+The q=41 witness agrees to the displayed precision. The minimum eigenvalues of
+the two q=31 covariance witnesses were `0.00434` and `0.00250`, so this is not
+an invalid-covariance construction. Threshold SE transformation additionally
+requires the unavailable slope--intercept cross-covariances. Consequently,
+directly comparing TAM's marginal SE columns with mfrmr's observed-information
+SEs would compare different quantities. No such comparison is reported.
+
 ## Why TAM's documented multifacet slope example is not the exact overlap
 
 The TAM manual also documents a multifacet slope construction (Example 14,
@@ -106,10 +138,10 @@ stability result.
 It does not resolve the remaining inference question. The item-only mfrmr fit
 still reports `InferenceReady = FALSE`, and its nonlinear local-estimability
 row is not evaluated for this reduced design. TAM's reported standard errors
-cannot substitute for mfrmr's global slope-boundary/readiness contract, and a
-cross-engine SE comparison is not performed because the full covariance needed
-for the nonlinear identification map is not available from the retained TAM
-summary components.
+cannot substitute for mfrmr's global slope-boundary/readiness contract. The
+new feasibility audit establishes why a cross-engine SE comparison is not
+identified by TAM's retained marginal SEs; it does not treat that absence as
+evidence for or against mfrmr's local Hessian.
 
 ```text
 ComparisonScope = item_only_gpcm_mml_projection
@@ -117,6 +149,7 @@ FullManyFacetGPCMCompared = FALSE
 CommonContinuousLikelihoodTarget = TRUE
 IdenticalFiniteQuadratureRule = FALSE
 CrossEngineSEComparisonAvailable = FALSE
+SEFeasibilityAudit = marginal_SEs_insufficient_without_joint_covariance
 InferenceReadinessOverridden = FALSE
 ComparisonToleranceFrozen = FALSE
 ReleaseAuthorized = FALSE

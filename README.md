@@ -915,6 +915,14 @@ comparison is numeric only after the response kernel, slope grouping,
 threshold parameterization, latent-scale identification, retained rows, and
 category map have all been matched.
 
+Even in the exact item-only overlap, TAM's marginal slope and intercept SEs
+cannot be transformed exactly into mfrmr's relative-slope/free-scale
+coordinates without their joint covariance. TAM 4.3-25 exposes neither that
+matrix nor a `vcov()` method. The repository audit therefore withholds a
+cross-engine SE comparison instead of silently assuming zero covariance; this
+is an information boundary, not evidence that either engine's SE is correct or
+incorrect.
+
 For strict MML diagnostics, keep the two evidence bases distinct:
 
 ```r

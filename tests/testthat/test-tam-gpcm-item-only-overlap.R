@@ -38,6 +38,11 @@ test_that("TAM GPCM overlap keeps the item-only boundary explicit", {
     cryptographic_term, record_text, ignore.case = TRUE, perl = TRUE
   ))
   expect_match(record_text, "FullManyFacetGPCMCompared = FALSE", fixed = TRUE)
+  expect_match(
+    record_text,
+    "SEFeasibilityAudit = marginal_SEs_insufficient_without_joint_covariance",
+    fixed = TRUE
+  )
   expect_match(record_text, "InferenceReadinessOverridden = FALSE", fixed = TRUE)
 })
 
@@ -71,6 +76,23 @@ test_that("TAM and mfrmr agree on the bounded item-only GPCM overlap", {
     max(result$stability$PopulationVarianceAbsQ41MinusQ31),
     1e-3
   )
+
+  expect_identical(nrow(result$se_requirements), 12L)
+  expect_identical(nrow(result$se_witnesses), 8L)
+  expect_identical(nrow(result$covariance_witnesses), 4L)
+  expect_true(all(result$covariance_witnesses$MinimumEigenvalue > 0))
+  expect_true(all(result$covariance_witnesses$MarginalSEsPreserved))
+  expect_true(all(result$se_witnesses$AbsoluteWitnessDifference > 0))
+  expect_true(all(result$se_requirements$Observed[
+    result$se_requirements$EvidenceItem == "TAM marginal slope SEs"
+  ]))
+  expect_true(all(result$se_requirements$Observed[
+    result$se_requirements$EvidenceItem == "TAM marginal xsi SEs"
+  ]))
+  expect_false(any(result$se_requirements$Observed[
+    result$se_requirements$EvidenceItem ==
+      "Exact cross-engine coordinate-SE comparison"
+  ]))
 
   expect_false(result$full_many_facet_gpcm_compared)
   expect_true(result$common_continuous_likelihood_target)

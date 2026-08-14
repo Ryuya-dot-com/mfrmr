@@ -412,6 +412,16 @@ SE validation, or permission to override mfrmr readiness. The distinction
 follows TAM's documented separation between
 [`tam.mml.2pl()` and `tam.mml.mfr()`](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html).
 
+The same coordinate discipline prevents a direct SE comparison. TAM 4.3-25
+retains marginal slope and intercept SEs, but not the joint slope covariance or
+slope--intercept cross-covariance required by the nonlinear transformation to
+mfrmr's relative slopes, thresholds, and free population scale. Two positive-
+definite covariance matrices can preserve exactly those reported marginal SEs
+while producing different transformed SEs. The repository audit demonstrates
+this explicitly and withholds the comparison rather than assuming zero
+covariance. TAM's documented `tam.se()` route also ignores parameter
+covariances, so it does not close this gap.
+
 These distinctions also govern diagnostics. FACETS' discrimination, `mfrmr`
 residual PCA or bias screens, and hierarchical-rater variance components answer
 different questions. Agreement among them can be supporting evidence; a

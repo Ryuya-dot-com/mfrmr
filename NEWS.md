@@ -95,7 +95,12 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   while facet intercepts remain additive; mfrmr weights the complete adjacent-
   category predictor. It is therefore a different-model sensitivity route,
   not an exact comparator. The bounded overlap leaves SE validation and mfrmr
-  inference readiness unchanged.
+  inference readiness unchanged. A follow-up SE-feasibility audit now records
+  that TAM exposes finite marginal slope and intercept SEs but not the joint
+  covariance needed to transform them into mfrmr's relative-slope/free-scale
+  coordinates. Two positive-definite covariance witnesses preserve the same
+  TAM marginal SEs yet give different transformed SEs, so no direct cross-
+  engine SE comparison is reported or implied.
 
 * Completed the public PCM/GPCM model-choice warning handoff. Comparison-basis
   warnings are no longer discarded by `build_model_choice_review()`; they are

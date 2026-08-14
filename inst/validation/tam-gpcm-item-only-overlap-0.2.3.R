@@ -181,6 +181,122 @@ mfrmr_tgio_tam_map <- function(fit, items) {
   )
 }
 
+mfrmr_tgio_delta_standard_error <- function(jacobian, covariance) {
+  variance <- diag(jacobian %*% covariance %*% t(jacobian))
+  sqrt(pmax(variance, 0))
+}
+
+mfrmr_tgio_se_feasibility <- function(fit, items, nodes) {
+  slopes <- as.numeric(fit$B[items, 2L, 1L])
+  slope_se <- as.numeric(fit$se.B[items, 2L, 1L])
+  xsi_se <- as.numeric(fit$xsi$se.xsi)
+  mfrmr_tgio_assert(
+    length(slopes) == length(items) && all(is.finite(slopes)) &&
+      all(slopes > 0) && length(slope_se) == length(items) &&
+      all(is.finite(slope_se)) && all(slope_se > 0) &&
+      length(xsi_se) > 0L && all(is.finite(xsi_se)),
+    "TAM did not retain finite positive marginal SE inputs."
+  )
+
+  parameter_count <- length(slopes)
+  scale_multiplier <- exp(mean(log(slopes)))
+  relative_slopes <- slopes / scale_multiplier
+  relative_jacobian <- matrix(NA_real_, parameter_count, parameter_count)
+  for (row in seq_len(parameter_count)) {
+    for (column in seq_len(parameter_count)) {
+      relative_jacobian[row, column] <- relative_slopes[[row]] *
+        ((row == column) / slopes[[row]] -
+           1 / (parameter_count * slopes[[column]]))
+    }
+  }
+  scale_jacobian <- matrix(
+    scale_multiplier / (parameter_count * slopes),
+    nrow = 1L
+  )
+  jacobian <- rbind(relative_jacobian, scale_jacobian)
+  rownames(jacobian) <- c(paste0("RelativeSlope:", items), "PopulationSD")
+
+  marginal_scale <- diag(slope_se, nrow = parameter_count)
+  independent_correlation <- diag(parameter_count)
+  correlated_correlation <- matrix(0.5, parameter_count, parameter_count)
+  diag(correlated_correlation) <- 1
+  independent_covariance <- marginal_scale %*%
+    independent_correlation %*% marginal_scale
+  correlated_covariance <- marginal_scale %*%
+    correlated_correlation %*% marginal_scale
+  independent_se <- mfrmr_tgio_delta_standard_error(
+    jacobian, independent_covariance
+  )
+  correlated_se <- mfrmr_tgio_delta_standard_error(
+    jacobian, correlated_covariance
+  )
+
+  covariance_component_names <- c(
+    "vcov", "covariance", "parameter_covariance", "hessian", "information"
+  )
+  has_covariance_component <- any(
+    covariance_component_names %in% names(fit)
+  )
+  vcov_methods <- methods("vcov")
+  has_vcov_method <- any(
+    c("vcov.tam", "vcov.tam.mml", "vcov.tam.mml.2pl") %in% vcov_methods
+  )
+
+  list(
+    requirements = data.frame(
+      Nodes = as.integer(nodes),
+      EvidenceItem = c(
+        "TAM marginal slope SEs",
+        "TAM marginal xsi SEs",
+        "TAM joint parameter covariance component",
+        "TAM vcov method",
+        "Exact nonlinear coordinate-SE adapter",
+        "Exact cross-engine coordinate-SE comparison"
+      ),
+      Observed = c(
+        TRUE,
+        TRUE,
+        has_covariance_component,
+        has_vcov_method,
+        FALSE,
+        FALSE
+      ),
+      ReasonCode = c(
+        "available",
+        "available",
+        "not_exposed_by_tam_fit",
+        "not_exposed_by_tam_api",
+        "joint_covariance_required",
+        "joint_covariance_required"
+      ),
+      stringsAsFactors = FALSE
+    ),
+    witness = data.frame(
+      Nodes = as.integer(nodes),
+      Parameter = rownames(jacobian),
+      SEWithZeroOffDiagonalCorrelation = independent_se,
+      SEWithHalfOffDiagonalCorrelation = correlated_se,
+      AbsoluteWitnessDifference = abs(correlated_se - independent_se),
+      stringsAsFactors = FALSE
+    ),
+    covariance_witness = data.frame(
+      Nodes = as.integer(nodes),
+      Witness = c("zero_off_diagonal", "half_off_diagonal_correlation"),
+      MinimumEigenvalue = c(
+        min(eigen(independent_covariance, symmetric = TRUE,
+                  only.values = TRUE)$values),
+        min(eigen(correlated_covariance, symmetric = TRUE,
+                  only.values = TRUE)$values)
+      ),
+      MarginalSEsPreserved = c(
+        isTRUE(all.equal(sqrt(diag(independent_covariance)), slope_se)),
+        isTRUE(all.equal(sqrt(diag(correlated_covariance)), slope_se))
+      ),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
 mfrmr_tgio_mfrmr_map <- function(fit, items) {
   slope_table <- as.data.frame(fit$slopes)
   slopes <- setNames(
@@ -335,6 +451,9 @@ mfrmr_run_tam_gpcm_item_only_overlap <- function() {
       tam_map, mfrmr_map, nodes
     )
     probability <- mfrmr_tgio_probability_audit(tam_map, mfrmr_map)
+    se_feasibility <- mfrmr_tgio_se_feasibility(
+      tam_fit, fixture$items, nodes
+    )
     fit_summary <- as.data.frame(mfrmr_fit$summary)
     inference_evidence <- as.data.frame(summary(mfrmr_fit)$inference_evidence)
     local_state <- inference_evidence$State[
@@ -377,6 +496,7 @@ mfrmr_run_tam_gpcm_item_only_overlap <- function() {
       probability = probability,
       tam_map = tam_map,
       mfrmr_map = mfrmr_map,
+      se_feasibility = se_feasibility,
       tam_fit = tam_fit,
       mfrmr_fit = mfrmr_fit
     )
@@ -384,6 +504,21 @@ mfrmr_run_tam_gpcm_item_only_overlap <- function() {
 
   summaries <- do.call(rbind, lapply(runs, `[[`, "summary"))
   parameters <- do.call(rbind, lapply(runs, `[[`, "parameters"))
+  se_requirements <- do.call(rbind, lapply(runs, function(run) {
+    run$se_feasibility$requirements
+  }))
+  se_witnesses <- do.call(rbind, lapply(runs, function(run) {
+    run$se_feasibility$witness
+  }))
+  covariance_witnesses <- do.call(rbind, lapply(runs, function(run) {
+    run$se_feasibility$covariance_witness
+  }))
+  exact_se_rows <- se_requirements$Observed[
+    se_requirements$EvidenceItem ==
+      "Exact cross-engine coordinate-SE comparison"
+  ]
+  cross_engine_se_available <- length(exact_se_rows) == nrow(plan) &&
+    all(exact_se_rows)
   q31 <- runs[[1L]]
   q41 <- runs[[2L]]
   stability <- data.frame(
@@ -415,11 +550,14 @@ mfrmr_run_tam_gpcm_item_only_overlap <- function() {
     summaries = summaries,
     parameters = parameters,
     stability = stability,
+    se_requirements = se_requirements,
+    se_witnesses = se_witnesses,
+    covariance_witnesses = covariance_witnesses,
     comparison_scope = "item_only_gpcm_mml_projection",
     full_many_facet_gpcm_compared = FALSE,
     common_continuous_likelihood_target = TRUE,
     identical_finite_quadrature_rule = FALSE,
-    cross_engine_se_comparison_available = FALSE,
+    cross_engine_se_comparison_available = cross_engine_se_available,
     inference_readiness_overridden = FALSE,
     comparison_tolerance_frozen = FALSE,
     release_authorized = FALSE,
