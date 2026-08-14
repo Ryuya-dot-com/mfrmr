@@ -777,6 +777,13 @@ identify whether the opt-in layer ran and retain its test log.
   `0.005882` logits; balanced F10/F30 cases stayed below `0.000065`. No
   threshold was selected, readiness was not changed, and confirmation remains
   unopened.
+- `facets-jml-final-handoff-record-0.2.3.md`: final external handoff for the
+  current RSM/PCM JML kernel. A fresh five-facet RSM/PCM sentinel reproduced
+  the frozen scientific manifest and maxima (`0.0003622826` Element,
+  `0.000210636` Step) exactly, without using file hashes or byte identity.
+  Routine FACETS reruns now stop; the record lists the estimator, constraint,
+  step/category, boundary, adapter, and version changes that would reopen the
+  small sentinel. User-facing diagnostics and reporting are the next priority.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.
