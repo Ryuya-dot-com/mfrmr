@@ -13,6 +13,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   tables. Algebraic tests lock the non-owner-facet scaling and the exact
   unit-slope reduction to PCM. No likelihood or readiness rule changed.
 
+* Added a repository-only population projection comparing the implemented
+  complete-predictor GPCM slope with a loading-only alternative. Exact
+  difference-in-differences and KL controls show that the families coincide
+  under unit slopes or zero non-owner Rater contrasts, but remain distinct
+  when heterogeneous Criterion slopes and crossed Rater contrasts coexist.
+  q=31/q=41 results were stable in the fixed design. The audit supports
+  treating loading-only as a separate future family; it does not add that
+  family, freeze a practical threshold, or change readiness.
+
 * Removed byte- and serialization-hash claims from distributed reporting
   paths. Reproducibility manifests now expose a semantic `input_summary`
   (object class, dimensions, fields, classes, and missingness) instead of an

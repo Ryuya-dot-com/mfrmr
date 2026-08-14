@@ -419,6 +419,22 @@ difference is not a software error until the fitted likelihood, estimand,
 identification, data rows, and output transformation have first been shown to
 match.
 
+A repository-only population projection also asked whether the current
+complete-predictor slope and a loading-only slope are merely two coordinate
+systems. They reduce exactly when slopes are all one or when the non-owner
+Rater contrast is zero. In a fully crossed four-Criterion/four-Rater design,
+however, their identifying adjacent-logit difference in differences is zero
+for loading-only and
+\(-\{\alpha_c-\alpha_d\}\{\rho_r-\rho_s\}\) for the current kernel. After all
+available slopes, severities, and transition boundaries were re-estimated,
+moderate and strong fixed conditions retained population KL losses of about
+0.0016 and 0.0085--0.0088 per response, with maximum common-grid probability
+differences of about 0.047--0.184. q=31 and q=41 conclusions agreed closely.
+These are fixed model-form demonstrations, not practical cutoffs or
+finite-sample operating characteristics. They support treating a loading-only
+kernel as a separate possible future family rather than as an interpretation
+switch for an existing `GPCM` fit.
+
 ## Source-grounded recovery interpretation
 
 The bounded `GPCM` route follows Muraki's generalized partial credit model
