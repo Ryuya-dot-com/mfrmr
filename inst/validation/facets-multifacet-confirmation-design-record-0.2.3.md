@@ -77,4 +77,6 @@ froze a 0.005-logit inclusive coordinate rule without opening confirmation
 outcomes. This version-1 design remains an immutable record of the earlier
 no-rule boundary; the successor rule consumes its semantic registry rather
 than rewriting its seeds or denominators. Confirmation execution remains
-unauthorized until a reviewed runner and preflight exist.
+unauthorized. A successor semantic runner and preflight now validate the full
+result schema without opening outcomes, but no external execution adapter or
+authorization has been created.

@@ -698,8 +698,17 @@ identify whether the opt-in layer ran and retain its test log.
   with only a machine-epsilon-scale inclusive-boundary allowance. The rule was
   not chosen from pilot maxima and requires neither hashes nor binary floating-
   point identity. Ineligible cases stay in the full denominator and prevent a
-  complete-confirmation pass. Execution remains blocked pending a reviewed
-  semantic runner and preflight.
+  complete-confirmation pass. Execution remains blocked pending an external
+  execution adapter and separate authorization.
+- `facets-multifacet-confirmation-runner-0.2.3.R` and corresponding record:
+  no-fit semantic preflight and result reviewer for the same 180-case design.
+  It reconstructs all 9,120 Element and 1,350 Step identities without opening
+  responses, recomputes FACETS and mfrmr numerical eligibility instead of
+  trusting a supplied flag, verifies coordinate arithmetic, and applies the
+  frozen tolerance plus MCSE rules. Complete synthetic evidence exercises the
+  entire contract but cannot establish external provenance or authorize a
+  claim. Response generation and the external execution adapter remain
+  intentionally unimplemented and unauthorized.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

@@ -123,8 +123,11 @@ mfrmr_facets_mfa_validate_design <- function(design) {
   invisible(TRUE)
 }
 
-mfrmr_facets_mfa_fp_allowance <- function(difference, tolerance) {
-  8 * .Machine$double.eps * pmax(1, abs(difference), abs(tolerance))
+mfrmr_facets_mfa_fp_allowance <- function(difference, tolerance,
+                                           comparison_scale = 1) {
+  8 * .Machine$double.eps * pmax(
+    1, abs(difference), abs(tolerance), abs(comparison_scale)
+  )
 }
 
 mfrmr_facets_mfa_adjudicate_coordinates <- function(
@@ -144,6 +147,16 @@ mfrmr_facets_mfa_adjudicate_coordinates <- function(
     stop("AbsoluteDifference must contain finite non-negative numbers.",
          call. = FALSE)
   }
+  comparison_scale <- if ("ComparisonScale" %in% names(coordinates)) {
+    coordinates$ComparisonScale
+  } else {
+    rep(1, length(difference))
+  }
+  if (!is.numeric(comparison_scale) || any(!is.finite(comparison_scale)) ||
+      any(comparison_scale < 0)) {
+    stop("ComparisonScale must contain finite non-negative numbers.",
+         call. = FALSE)
+  }
   rule_key <- paste(
     rule$Model, rule$TotalFacets, rule$ParameterClass, sep = "::"
   )
@@ -157,7 +170,9 @@ mfrmr_facets_mfa_adjudicate_coordinates <- function(
          call. = FALSE)
   }
   tolerance <- rule$AbsoluteDifferenceTolerance[matched]
-  allowance <- mfrmr_facets_mfa_fp_allowance(difference, tolerance)
+  allowance <- mfrmr_facets_mfa_fp_allowance(
+    difference, tolerance, comparison_scale
+  )
   out <- coordinates
   out$AbsoluteDifferenceTolerance <- tolerance
   out$FloatingPointComparisonAllowance <- allowance

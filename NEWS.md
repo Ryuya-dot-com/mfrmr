@@ -35,7 +35,15 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   machine-epsilon-scale inclusive-boundary allowance is applied; hashes, file
   bytes, and hidden binary floating-point identity remain irrelevant. Missing
   or ineligible cases cannot produce a complete-confirmation pass. Execution
-  is still blocked until a reviewed semantic runner and preflight exist.
+  remains blocked. A no-fit semantic runner now reconstructs all 9,120 Element
+  and 1,350 Step identities, recomputes comparison eligibility from FACETS and
+  mfrmr stopping evidence, verifies every coordinate difference, and reports
+  the frozen cellwise MCSE endpoints. Full synthetic evidence passes the
+  numerical contract, while nonconvergence, eligibility drift, missing or
+  duplicate coordinates, and inconsistent arithmetic fail closed. The runner
+  does not generate confirmation responses, launch either solver, validate
+  external provenance, or authorize a confirmation claim; those execution
+  concerns remain a separate next step.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,

@@ -1305,6 +1305,8 @@ mfrmr_facets_mfp_contract <- function() {
       FACETSCandidateLinkedMultiseedPilotCompleted = TRUE,
       FACETSConfirmationDesignFrozen = TRUE,
       FACETSNumericalAcceptanceRuleFrozen = TRUE,
+      FACETSConfirmationSemanticRunnerReady = TRUE,
+      FACETSConfirmationExecutionAdapterImplemented = FALSE,
       FACETSConfirmationExecutionAuthorized = FALSE,
       FACETSRegistryExecutionCompleted = FALSE,
       FACETSExecutionAuthorized = FALSE,

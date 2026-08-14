@@ -72,6 +72,13 @@ test_that("inclusive boundary uses only a machine-scale comparison allowance", {
     adjudicated$FloatingPointComparisonAllowance < 2e-15
   ))
   expect_true(all(adjudicated$AbsoluteDifferenceTolerance == 0.005))
+
+  scaled <- evidence[4L, , drop = FALSE]
+  scaled$ComparisonScale <- 10
+  scaled_adjudication <- env$mfrmr_facets_mfa_adjudicate_coordinates(scaled)
+  expect_equal(scaled_adjudication$NumericalAgreementStatus, "numeric_pass")
+  expect_true(scaled_adjudication$FloatingPointComparisonAllowance >
+                adjudicated$FloatingPointComparisonAllowance[4L])
 })
 
 test_that("agreement rule fails closed under evidence or contract drift", {

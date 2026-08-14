@@ -43,11 +43,13 @@ References:
 ## Floating-point handling
 
 The scientific tolerance is 0.005 logits. The executable comparison adds only
-`8 * .Machine$double.eps * max(1, |difference|, tolerance)` at the inclusive
-boundary so that decimal parsing and one subtraction do not turn a boundary
-value into a failure by a few representational ulps. This allowance is about
-1.8e-15 near the present boundary. It is not an empirical tolerance, an
-environment fingerprint, or permission to absorb optimizer differences.
+`8 * .Machine$double.eps * max(1, |mfrmr|, |FACETS|, |difference|, tolerance)`
+at the inclusive boundary when the compared coordinate scale is available.
+This prevents one subtraction from turning a boundary value into a failure by
+a few representational ulps. The allowance is about 1.8e-15 for coordinates
+within one logit and grows only with the magnitude of the compared coordinates.
+It is not an empirical tolerance, an environment fingerprint, or permission to
+absorb optimizer differences.
 
 No SHA, file-byte, serialized-object, or binary64 identity enters the decision.
 Package commit and FACETS version are provenance fields only.
@@ -72,8 +74,9 @@ replaced for every workflow.
 
 ## Remaining execution boundary
 
-This artifact freezes the rule but does not run confirmation seeds. A separate
-runner/preflight must bind the semantic design, complete denominators, raw
-warnings and errors, convergence evidence, coordinate matching, and a fresh
-output location. Until that exists and is reviewed, execution and confirmation
-claims remain unauthorized.
+This artifact freezes the rule but does not run confirmation seeds. The
+successor semantic runner/preflight now binds the design, complete denominators,
+raw warnings and errors, convergence evidence, and coordinate matching without
+opening outcomes. It deliberately omits response generation and external
+execution. Until a separate adapter, provenance validator, and authorization
+are reviewed, execution and confirmation claims remain unauthorized.
