@@ -35,6 +35,11 @@ test_that("multifacet registry separates dimensions, levels, rows, and topology"
 
   contract <- env$mfrmr_facets_mfp_contract()
   expect_s3_class(contract, "mfrmr_facets_mfp_contract")
+  expect_true(contract$authorization$FACETSPrecisionQualificationCompleted)
+  expect_true(
+    contract$authorization$FACETSFixedInformationDimensionQualificationCompleted
+  )
+  expect_false(contract$authorization$FACETSRegistryExecutionCompleted)
   expect_false(contract$authorization$FACETSExecutionAuthorized)
   expect_false(contract$authorization$EquivalenceClaimAuthorized)
 
@@ -165,6 +170,89 @@ test_that("multifacet smoke generator preserves RNG and declared dimensions", {
     expect_identical(design$truth$Rater, coupled[[1L]]$truth$Rater)
     expect_identical(design$truth$Criterion, coupled[[1L]]$truth$Criterion)
   }
+})
+
+test_that("external pilot writer emits genuine multifacet FACETS controls", {
+  env <- facets_mfp_environment()
+  design <- env$mfrmr_facets_mfp_smoke_design(
+    total_facets = 5L, model = "PCM", seed = 451002L
+  )
+  case_dir <- tempfile("facets-mfp-external-")
+  case <- env$mfrmr_facets_mfp_write_external_case(
+    design, model = "PCM", case_dir = case_dir
+  )
+  control <- readLines(case$control_path, warn = FALSE)
+  data_lines <- readLines(case$data_path, warn = FALSE)
+
+  expect_true("Facets = 5" %in% control)
+  expect_true("Models = ?,?,?,?,#,R3" %in% control)
+  expect_true("Umean = 0, 1, 8" %in% control)
+  expect_true(any(startsWith(control, "Graphfile = ")))
+  expect_true(any(startsWith(control, "Anchorfile = ")))
+  expect_equal(case$facet_names,
+               c("Person", "Rater", "Task", "Occasion", "Criterion"))
+  expect_equal(length(strsplit(data_lines[1], ",", fixed = TRUE)[[1]]), 6L)
+  expect_gt(length(case$level_maps$Task), 1L)
+  expect_gt(length(case$level_maps$Occasion), 1L)
+  expect_error(
+    env$mfrmr_facets_mfp_write_external_case(
+      design, model = "PCM", case_dir = case_dir
+    ),
+    "absent or empty"
+  )
+
+  expected_external <- do.call(rbind, lapply(case$facet_names, function(facet) {
+    data.frame(
+      Facet = facet,
+      Level = unique(as.character(design$data[[facet]])),
+      Estimate = 0,
+      stringsAsFactors = FALSE
+    )
+  }))
+  coordinate_contract <- env$mfrmr_facets_mfp_external_coordinate_contract(
+    design, expected_external
+  )
+  expect_true(coordinate_contract$passed)
+  expect_equal(coordinate_contract$expected_coordinates, 53L)
+  expect_equal(coordinate_contract$imported_coordinates, 53L)
+  duplicated_external <- rbind(expected_external, expected_external[1, ])
+  expect_false(env$mfrmr_facets_mfp_external_coordinate_contract(
+    design, duplicated_external
+  )$passed)
+})
+
+test_that("external multifacet pilot is dry-run by default", {
+  env <- facets_mfp_environment()
+  work_dir <- tempfile("facets-mfp-pilot-")
+  pilot <- env$mfrmr_run_facets_mfp_external_pilot(
+    facets_exe = "deliberately-missing-facets.exe",
+    work_dir = work_dir,
+    execute = FALSE,
+    total_facets = 4L,
+    models = c("RSM", "PCM")
+  )
+
+  expect_false(pilot$executed)
+  expect_equal(nrow(pilot$manifest), 2L)
+  expect_true(all(!pilot$manifest$ExecuteRequested))
+  expect_true(all(!pilot$manifest$FACETSReportPresent))
+  expect_equal(pilot$manifest$ExpectedCoordinates, rep(51L, 2L))
+  expect_true(all(is.na(pilot$manifest$CoordinateContractPassed)))
+  expect_true(all(!pilot$manifest$ConfirmationAuthorized))
+  expect_true(all(!pilot$manifest$EquivalenceClaimAuthorized))
+  expect_equal(nrow(pilot$metrics), 0L)
+  expect_true(all(file.exists(file.path(
+    work_dir, c("rsm-f4", "pcm-f4"), "facets_control.txt"
+  ))))
+  expect_error(
+    env$mfrmr_run_facets_mfp_external_pilot(
+      facets_exe = "deliberately-missing-facets.exe",
+      work_dir = tempfile("facets-mfp-pilot-"),
+      execute = TRUE,
+      total_facets = 4L
+    ),
+    "executable was not found"
+  )
 })
 
 test_that("multifacet capture retains rather than hides errors and warnings", {

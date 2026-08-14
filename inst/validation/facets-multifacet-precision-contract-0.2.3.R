@@ -393,6 +393,379 @@ mfrmr_facets_mfp_recovery <- function(fit, design) {
   )
 }
 
+mfrmr_facets_mfp_write_external_case <- function(design,
+                                                  model = c("RSM", "PCM"),
+                                                  case_dir) {
+  model <- match.arg(model)
+  data <- as.data.frame(design$data, stringsAsFactors = FALSE)
+  facet_names <- c("Person", as.character(design$facet_names))
+  required <- c(facet_names, "Score")
+  missing <- setdiff(required, names(data))
+  if (length(missing) > 0L) {
+    stop("External FACETS case is missing: ", paste(missing, collapse = ", "),
+         ".", call. = FALSE)
+  }
+  if (anyDuplicated(facet_names) ||
+      any(!grepl("^[A-Za-z][A-Za-z0-9_.-]*$", facet_names))) {
+    stop("External FACETS facet names must be unique simple identifiers.",
+         call. = FALSE)
+  }
+  score_values <- data$Score
+  valid_scores <- is.numeric(score_values) && !anyNA(score_values) &&
+    all(is.finite(score_values)) && all(score_values == floor(score_values)) &&
+    identical(sort(unique(as.numeric(score_values))), as.numeric(0:3))
+  if (!valid_scores) {
+    stop("External qualification requires observed integer scores 0, 1, 2, 3.",
+         call. = FALSE)
+  }
+  scores <- as.integer(score_values)
+  case_dir <- normalizePath(case_dir, winslash = "/", mustWork = FALSE)
+  if (dir.exists(case_dir) && length(list.files(case_dir, all.files = TRUE,
+                                                no.. = TRUE)) > 0L) {
+    stop("External FACETS case directory must be absent or empty: ", case_dir,
+         ".", call. = FALSE)
+  }
+  dir.create(case_dir, recursive = TRUE, showWarnings = FALSE)
+
+  level_maps <- lapply(facet_names, function(facet) {
+    values <- unique(as.character(data[[facet]]))
+    if (anyNA(values) || any(!nzchar(values)) ||
+        any(!grepl("^[A-Za-z0-9_.-]+$", values))) {
+      stop("External FACETS level labels must be nonmissing simple identifiers.",
+           call. = FALSE)
+    }
+    stats::setNames(seq_along(values), values)
+  })
+  names(level_maps) <- facet_names
+  encoded <- vapply(facet_names, function(facet) {
+    unname(level_maps[[facet]][as.character(data[[facet]])])
+  }, integer(nrow(data)))
+  data_lines <- apply(cbind(encoded, Score = scores), 1L, paste, collapse = ",")
+
+  data_path <- file.path(case_dir, "facets_data.txt")
+  control_path <- file.path(case_dir, "facets_control.txt")
+  report_path <- file.path(case_dir, "report.txt")
+  score_base <- file.path(case_dir, "score.txt")
+  residual_path <- file.path(case_dir, "residuals.txt")
+  graph_path <- file.path(case_dir, "graph.txt")
+  anchor_path <- file.path(case_dir, "anchor.anc")
+  writeLines(data_lines, data_path, useBytes = TRUE)
+
+  model_tokens <- rep("?", length(facet_names))
+  if (identical(model, "PCM")) {
+    criterion_index <- match("Criterion", facet_names)
+    if (is.na(criterion_index)) {
+      stop("PCM external qualification requires a Criterion facet.", call. = FALSE)
+    }
+    model_tokens[criterion_index] <- "#"
+  }
+  control <- c(
+    paste0("Title = mfrmr FACETS multifacet qualification ", model),
+    paste0("Facets = ", length(facet_names)),
+    "Positive = 1",
+    "Noncentered = 1",
+    paste0("Models = ", paste(model_tokens, collapse = ","), ",R3"),
+    "Umean = 0, 1, 8",
+    "Tables = No",
+    "CSV = CSV",
+    "Heading lines = Yes",
+    "QM = Double",
+    paste0('Scorefiles = "', normalizePath(score_base, winslash = "\\",
+                                            mustWork = FALSE), '"'),
+    paste0('Residualfile = "', normalizePath(residual_path, winslash = "\\",
+                                              mustWork = FALSE), '"'),
+    paste0('Graphfile = "', normalizePath(graph_path, winslash = "\\",
+                                           mustWork = FALSE), '"'),
+    paste0('Anchorfile = "', normalizePath(anchor_path, winslash = "\\",
+                                            mustWork = FALSE), '"'),
+    "Labels ="
+  )
+  for (facet_index in seq_along(facet_names)) {
+    facet <- facet_names[facet_index]
+    labels <- names(level_maps[[facet]])
+    control <- c(
+      control,
+      paste0(facet_index, ", ", facet),
+      paste0(seq_along(labels), " = ", labels),
+      "*"
+    )
+  }
+  control <- c(
+    control,
+    paste0('Data = "', normalizePath(data_path, winslash = "\\",
+                                      mustWork = TRUE), '"')
+  )
+  writeLines(control, control_path, useBytes = TRUE)
+
+  list(
+    model = model,
+    facet_names = facet_names,
+    level_maps = level_maps,
+    case_dir = case_dir,
+    data_path = data_path,
+    control_path = control_path,
+    report_path = report_path,
+    score_base = score_base,
+    residual_path = residual_path,
+    graph_path = graph_path,
+    anchor_path = anchor_path
+  )
+}
+
+mfrmr_facets_mfp_external_measure_metrics <- function(fit, external) {
+  person <- as.data.frame(fit$facets$person, stringsAsFactors = FALSE)
+  person_status <- if ("ParameterStatus" %in% names(person)) {
+    as.character(person$ParameterStatus)
+  } else rep("estimable", nrow(person))
+  internal <- rbind(
+    data.frame(
+      Facet = "Person", Level = as.character(person$Person),
+      Estimate = as.numeric(person$Estimate), Status = person_status,
+      stringsAsFactors = FALSE
+    ),
+    transform(
+      as.data.frame(fit$facets$others, stringsAsFactors = FALSE),
+      Facet = as.character(Facet), Level = as.character(Level),
+      Estimate = as.numeric(Estimate), Status = "estimable"
+    )[, c("Facet", "Level", "Estimate", "Status"), drop = FALSE]
+  )
+  external <- as.data.frame(external, stringsAsFactors = FALSE)
+  matched <- merge(
+    internal, external[, c("Facet", "Level", "Estimate")],
+    by = c("Facet", "Level"), suffixes = c("_mfrmr", "_facets")
+  )
+  matched <- matched[
+    matched$Status == "estimable" & is.finite(matched$Estimate_mfrmr) &
+      is.finite(matched$Estimate_facets), , drop = FALSE
+  ]
+  if (nrow(matched) == 0L) return(data.frame())
+  groups <- split(matched, matched$Facet)
+  do.call(rbind, lapply(names(groups), function(facet) {
+    x <- groups[[facet]]
+    difference <- x$Estimate_mfrmr - x$Estimate_facets
+    data.frame(
+      Facet = facet,
+      Matched = nrow(x),
+      MAE = mean(abs(difference)),
+      MaximumAbsoluteDifference = max(abs(difference)),
+      MeanDifference = mean(difference),
+      stringsAsFactors = FALSE
+    )
+  }))
+}
+
+mfrmr_facets_mfp_external_coordinate_contract <- function(design, external) {
+  data <- as.data.frame(design$data, stringsAsFactors = FALSE)
+  facet_names <- c("Person", as.character(design$facet_names))
+  expected <- do.call(rbind, lapply(facet_names, function(facet) {
+    data.frame(
+      Facet = facet,
+      Level = unique(as.character(data[[facet]])),
+      stringsAsFactors = FALSE
+    )
+  }))
+  observed <- unique(as.data.frame(external, stringsAsFactors = FALSE)[
+    , c("Facet", "Level"), drop = FALSE
+  ])
+  expected_key <- sort(paste(expected$Facet, expected$Level, sep = "::"))
+  observed_key <- sort(paste(observed$Facet, observed$Level, sep = "::"))
+  duplicate_key_count <- sum(duplicated(paste(
+    as.character(external$Facet), as.character(external$Level), sep = "::"
+  )))
+  list(
+    passed = identical(expected_key, observed_key) && duplicate_key_count == 0L,
+    expected_coordinates = length(expected_key),
+    imported_coordinates = length(observed_key),
+    duplicate_keys = duplicate_key_count,
+    missing_keys = setdiff(expected_key, observed_key),
+    unexpected_keys = setdiff(observed_key, expected_key)
+  )
+}
+
+mfrmr_run_facets_mfp_external_pilot <- function(
+    facets_exe,
+    work_dir,
+    execute = FALSE,
+    total_facets = 3:5,
+    models = c("RSM", "PCM"),
+    seed = 451001L,
+    maxit = 100L) {
+  if (!is.logical(execute) || length(execute) != 1L || is.na(execute)) {
+    stop("`execute` must be one nonmissing logical value.", call. = FALSE)
+  }
+  total_facets <- as.integer(total_facets)
+  if (length(total_facets) == 0L || any(!total_facets %in% 3:5)) {
+    stop("External pilot total facets must be selected from 3, 4, and 5.",
+         call. = FALSE)
+  }
+  models <- match.arg(models, c("RSM", "PCM"), several.ok = TRUE)
+  if (isTRUE(execute) && !file.exists(facets_exe)) {
+    stop("FACETS executable was not found: ", facets_exe, ".", call. = FALSE)
+  }
+  work_dir <- normalizePath(work_dir, winslash = "/", mustWork = FALSE)
+  if (dir.exists(work_dir) && length(list.files(work_dir, all.files = TRUE,
+                                                no.. = TRUE)) > 0L) {
+    stop("External pilot work directory must be absent or empty: ", work_dir,
+         ".", call. = FALSE)
+  }
+  dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
+
+  manifest_rows <- list()
+  metric_rows <- list()
+  index <- 0L
+  for (total in total_facets) {
+    for (model in models) {
+      index <- index + 1L
+      design <- mfrmr_facets_mfp_smoke_design(
+        total_facets = total,
+        model = model,
+        seed = as.integer(seed + match(model, c("RSM", "PCM")))
+      )
+      case_dir <- file.path(work_dir, paste0(tolower(model), "-f", total))
+      case <- mfrmr_facets_mfp_write_external_case(design, model, case_dir)
+      process_status <- NA_integer_
+      error <- NA_character_
+      warning_text <- character(0)
+      metrics <- data.frame()
+      fit_returned <- FALSE
+      expected_coordinates <- sum(vapply(
+        c("Person", design$facet_names),
+        function(facet) length(unique(as.character(design$data[[facet]]))),
+        integer(1)
+      ))
+      imported_coordinates <- NA_integer_
+      matched_coordinates <- NA_integer_
+      coordinate_contract_passed <- NA
+      if (isTRUE(execute)) {
+        stdout_path <- file.path(case_dir, "facets_stdout.txt")
+        stderr_path <- file.path(case_dir, "facets_stderr.txt")
+        temp_dir <- file.path(case_dir, "facets_temp")
+        dir.create(temp_dir, showWarnings = FALSE)
+        run_external <- function() {
+          old_dir <- getwd()
+          on.exit(setwd(old_dir), add = TRUE)
+          setwd(case_dir)
+          system2(
+            normalizePath(facets_exe, winslash = "/", mustWork = TRUE),
+            args = c("BATCH=YES", shQuote(case$control_path),
+                     shQuote(case$report_path)),
+            stdout = stdout_path,
+            stderr = stderr_path,
+            env = c(paste0("TEMP=", temp_dir), paste0("TMP=", temp_dir),
+                    paste0("TMPDIR=", temp_dir))
+          )
+        }
+        process_status <- tryCatch(
+          run_external(),
+          error = function(e) e
+        )
+        if (inherits(process_status, "error")) {
+          error <- conditionMessage(process_status)
+          process_status <- NA_integer_
+        } else {
+          process_status <- as.integer(process_status)
+        }
+        if (identical(process_status, 0L)) {
+          score_files <- list.files(
+            case_dir, pattern = "^score[.][0-9]+[.]txt$", full.names = TRUE
+          )
+          if (length(score_files) != length(case$facet_names)) {
+            error <- paste0("Expected ", length(case$facet_names),
+                            " FACETS score files; found ", length(score_files), ".")
+          } else {
+            external <- getExportedValue("mfrmr", "read_facets_fit_table")(
+              score_files,
+              facet = case$facet_names
+            )
+            coordinate_contract <- mfrmr_facets_mfp_external_coordinate_contract(
+              design, external
+            )
+            imported_coordinates <- coordinate_contract$imported_coordinates
+            coordinate_contract_passed <- isTRUE(coordinate_contract$passed)
+            if (!coordinate_contract_passed) {
+              error <- paste0(
+                "External coordinate contract failed: expected=",
+                coordinate_contract$expected_coordinates,
+                ", imported=", coordinate_contract$imported_coordinates,
+                ", duplicate=", coordinate_contract$duplicate_keys,
+                ", missing=", length(coordinate_contract$missing_keys),
+                ", unexpected=", length(coordinate_contract$unexpected_keys), "."
+              )
+            } else {
+              args <- list(
+                data = design$data, person = "Person",
+                facets = design$facet_names, score = "Score",
+                rating_min = 0L, rating_max = 3L, model = model,
+                method = "JML", maxit = as.integer(maxit)
+              )
+              if (identical(model, "PCM")) args$step_facet <- "Criterion"
+              captured <- mfrmr_facets_mfp_capture(
+                do.call(getExportedValue("mfrmr", "fit_mfrm"), args)
+              )
+              fit_returned <- !is.null(captured$value)
+              warning_text <- captured$warnings
+              if (is.null(captured$value)) {
+                error <- captured$error
+              } else {
+                metrics <- mfrmr_facets_mfp_external_measure_metrics(
+                  captured$value, external
+                )
+                matched_coordinates <- sum(metrics$Matched)
+                if (nrow(metrics) != total ||
+                    matched_coordinates != expected_coordinates) {
+                  error <- paste0(
+                    "Matched-coordinate contract failed: blocks=", nrow(metrics),
+                    "/", total, ", coordinates=", matched_coordinates, "/",
+                    expected_coordinates, "."
+                  )
+                  metrics <- data.frame()
+                } else {
+                  metrics$Model <- model
+                  metrics$TotalFacets <- total
+                  metrics$QualificationOnly <- TRUE
+                  metrics$ToleranceFrozen <- FALSE
+                }
+              }
+            }
+          }
+        }
+      }
+      manifest_rows[[index]] <- data.frame(
+        Model = model,
+        TotalFacets = total,
+        NonPersonFacets = total - 1L,
+        FacetNames = paste(design$facet_names, collapse = ";"),
+        Rows = nrow(design$data),
+        ExecuteRequested = isTRUE(execute),
+        FACETSReturnCode = process_status,
+        FACETSReportPresent = file.exists(case$report_path),
+        MfrmrFitReturned = fit_returned,
+        ExpectedCoordinates = expected_coordinates,
+        ImportedCoordinates = imported_coordinates,
+        MatchedCoordinates = matched_coordinates,
+        CoordinateContractPassed = coordinate_contract_passed,
+        ComparedFacetBlocks = nrow(metrics),
+        Warnings = paste(warning_text, collapse = " | "),
+        Error = error,
+        QualificationOnly = TRUE,
+        ToleranceFrozen = FALSE,
+        ConfirmationAuthorized = FALSE,
+        EquivalenceClaimAuthorized = FALSE,
+        stringsAsFactors = FALSE
+      )
+      if (nrow(metrics) > 0L) metric_rows[[index]] <- metrics
+    }
+  }
+  list(
+    manifest = do.call(rbind, manifest_rows),
+    metrics = if (length(metric_rows)) do.call(rbind, metric_rows) else data.frame(),
+    work_dir = work_dir,
+    executed = isTRUE(execute),
+    confirmation_authorized = FALSE,
+    equivalence_claim_authorized = FALSE
+  )
+}
+
 mfrmr_facets_mfp_capture <- function(expr) {
   warnings <- character(0)
   value <- tryCatch(
@@ -489,7 +862,9 @@ mfrmr_run_facets_mfp_internal_smoke <- function(maxit = 100L,
 print.mfrmr_facets_mfp_contract <- function(x, ...) {
   cat("FACETS multifacet and displayed-precision contract\n")
   cat("Rows:", nrow(x$registry), "\n")
-  cat("FACETS executed: no\n")
+  cat("External precision qualification: completed for the three-facet core\n")
+  cat("Fixed-information 3--5 facet qualification: completed for common element measures\n")
+  cat("Multifacet registry executed in FACETS: no\n")
   cat("Scientific byte equality required: no\n")
   invisible(x)
 }
@@ -520,6 +895,9 @@ mfrmr_facets_mfp_contract <- function() {
     ),
     precision_requirements = mfrmr_facets_mfp_precision_requirements(),
     authorization = data.frame(
+      FACETSPrecisionQualificationCompleted = TRUE,
+      FACETSFixedInformationDimensionQualificationCompleted = TRUE,
+      FACETSRegistryExecutionCompleted = FALSE,
       FACETSExecutionAuthorized = FALSE,
       NumericToleranceFrozen = FALSE,
       ReplicationFrozen = FALSE,

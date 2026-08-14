@@ -672,13 +672,17 @@ identify whether the opt-in layer ran and retain its test log.
   sparse topology. It requires eight requested decimals wherever FACETS output
   is configurable, validates the actual decimals written for each metric, and
   keeps displayed `|ZSTD| = 2` rows boundary-indeterminate only for output that
-  remains fixed-precision. It executes no FACETS program and requires no
-  scientific file-byte equality.
+  remains fixed-precision. Its external runner is dry-run by default and
+  requires explicit execution; scientific file-byte equality is never an
+  acceptance criterion.
 - `facets-multifacet-precision-contract-record-0.2.3.md`: completed internal
   six-fit smoke record for total facet counts 3, 4, and 5 at fixed 640-row
-  information. All mfrmr JML fits returned ready without warnings, but the
-  one-seed result is neither an external comparison nor operating-characteristic
-  evidence.
+  information plus a FACETS 4.5.0 output-precision qualification. The external
+  qualification confirms eight-decimal Measure/SE output but two-decimal
+  MnSq/ZSTD/df output. A separate genuine one-seed 3--5 facet run matched every
+  expected coordinate and found at most 0.0342 logits difference in common
+  element measures. The full external registry, PCM step comparison,
+  replication, sparse/large designs, bias, and equivalence remain pending.
 - `interaction-bias-pca-stress-pilot-0.2.3.R`: repository-only diagnostic
   runner that keeps fitted interactions, residual bias screening, and
   residual PCA separate while reusing exact paired FACETS scenario seeds.

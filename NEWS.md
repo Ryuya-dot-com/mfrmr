@@ -12,7 +12,13 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   fixed-precision, instead of being silently interpreted as hidden values. Added a
   prospective RSM/PCM JML registry separating total facet-count growth from
   level, row, and sparse-topology growth; a six-fit internal fixed-information
-  smoke passed, but FACETS execution and equivalence remain pending.
+  smoke passed. A FACETS 4.5.0 qualification then confirmed eight-decimal
+  Measure/SE output but two-decimal MnSq/ZSTD/df output and small one-seed
+  three-facet common-measure differences. A genuine fixed-information 3--5
+  facet pilot subsequently matched every expected FACETS coordinate and found
+  a maximum common-element measure difference of 0.0342 logits across six
+  RSM/PCM cases. PCM steps, multiple seeds, sparse/large designs, bias, and
+  equivalence remain pending.
 
 * Made the bounded-GPCM slope action an explicit fitted-model contract. The
   implemented kernel multiplies the complete adjacent-category predictor,
