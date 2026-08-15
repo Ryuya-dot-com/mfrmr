@@ -89,7 +89,7 @@ test_that("the observation cannot fit, integrate, read artifacts, or launch", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("record and roadmap retain the exact next authorization boundary", {
+test_that("record retains its boundary while roadmap may advance", {
   ctx <- load_conquest_p2_candidate_004_mfrmr_preflight_observation()
   record_path <- file.path(
     ctx$validation,
@@ -109,7 +109,12 @@ test_that("record and roadmap retain the exact next authorization boundary", {
   )
   expect_match(
     roadmap,
-    "[ ] Bind a fit-eligible candidate 004",
+    "[x] Bind and execute fit-eligible candidate 004",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "conquest-p2-candidate-004-execution-observation-record-0.2.3.md",
     fixed = TRUE
   )
 })
