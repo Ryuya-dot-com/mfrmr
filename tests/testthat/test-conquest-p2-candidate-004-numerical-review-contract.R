@@ -150,6 +150,76 @@ test_that("table extraction reconstructs constraints but not hidden precision", 
   expect_false(out$hidden_solution_interval_available)
 })
 
+test_that("A-matrix review is semantic but rejects a coefficient mutation", {
+  env <- load_conquest_p2_candidate_004_numerical_review_contract()$env
+  make_native <- function(family) {
+    expected <- env$mfrmr_cq_p2_matrix_contract(family)
+    registry <- env$mfrmr_cq_p2c4nr_coordinate_registry(family)
+    conditional <- registry[
+      registry$ConstraintRole == "free" &
+        registry$SourceRole == "parameter_export", , drop = FALSE
+    ]
+    grid <- expand.grid(
+      Category = 1:4, GIN = 1:12,
+      KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+    )
+    rater <- paste0("R", ((grid$GIN - 1L) %% 4L) + 1L)
+    criterion <- paste0("C", ((grid$GIN - 1L) %/% 4L) + 1L)
+    key <- paste0(rater, "::", criterion, "::k", grid$Category - 1L)
+    value <- expected$A[match(key, expected$C$RowKey), , drop = FALSE]
+    out <- data.frame(GIN = grid$GIN, Category = grid$Category, value,
+                      check.names = FALSE)
+    names(out)[-(1:2)] <- paste0(" ", conditional$ExpectedLabel)
+    out
+  }
+
+  for (family in c("RSM", "PCM")) {
+    native <- make_native(family)
+    expect_true(env$mfrmr_cq_p2c4nr_a_matrix_exact(native, family))
+    reordered <- native[rev(seq_len(nrow(native))), , drop = FALSE]
+    expect_true(env$mfrmr_cq_p2c4nr_a_matrix_exact(reordered, family))
+    mutated <- native
+    mutated[2L, 3L] <- as.numeric(mutated[2L, 3L]) + 1
+    expect_false(env$mfrmr_cq_p2c4nr_a_matrix_exact(mutated, family))
+  }
+})
+
+test_that("label and history mutations fail before numerical adjudication", {
+  env <- load_conquest_p2_candidate_004_numerical_review_contract()$env
+  parameters <- data.frame(
+    Estimate = c("-0.3", "-0.2", "0.1", "-0.4", "0.15", "-1.1", "0.2"),
+    Label = c(
+      " rater R1", " rater R2", " rater R3", " criterion C1",
+      " criterion C2", " category 1", " category 2"
+    ), stringsAsFactors = FALSE
+  )
+  regression <- data.frame(
+    Regressor = c("1", "2"), Estimate = c("0.1", "0.5"),
+    stringsAsFactors = FALSE
+  )
+  covariance <- data.frame(Covariance = "0.7", stringsAsFactors = FALSE)
+  history <- data.frame(
+    Iteration = as.character(1:2), LogLikelihood = c("101.0", "100.0"),
+    stringsAsFactors = FALSE
+  )
+  bad_label <- parameters
+  bad_label$Label[1L] <- " rater R2"
+  expect_error(
+    env$mfrmr_cq_p2c4nr_extract_arm_tables(
+      "RSM", 61L, bad_label, regression, covariance, history
+    ),
+    "parameter labels", fixed = TRUE
+  )
+  bad_history <- history
+  bad_history$Iteration[2L] <- "3"
+  expect_error(
+    env$mfrmr_cq_p2c4nr_extract_arm_tables(
+      "RSM", 61L, parameters, regression, covariance, bad_history
+    ),
+    "iteration history", fixed = TRUE
+  )
+})
+
 test_that("review contract cannot fit, launch, hash-gate, or promote", {
   ctx <- load_conquest_p2_candidate_004_numerical_review_contract()
   source <- paste(readLines(tail(ctx$paths, 1L), warn = FALSE), collapse = "\n")
@@ -178,4 +248,18 @@ test_that("record and roadmap retain the no-result boundary", {
     "candidate-004 numerical-review contract is now frozen",
     fixed = TRUE
   )
+})
+
+test_that("adversarial-control record retains the intended asymmetries", {
+  ctx <- load_conquest_p2_candidate_004_numerical_review_contract()
+  record <- paste(readLines(file.path(
+    ctx$validation,
+    "conquest-p2-candidate-004-reviewer-adversarial-controls-record-0.2.3.md"
+  ), warn = FALSE), collapse = "\n")
+
+  expect_match(record, "semantic row reorder", fixed = TRUE)
+  expect_match(record, "coefficient mutation", fixed = TRUE)
+  expect_match(record, "numeric storage-mode change", fixed = TRUE)
+  expect_match(record, "response-value mutation", fixed = TRUE)
+  expect_match(record, "ExternalRerunAuthorized=FALSE", fixed = TRUE)
 })

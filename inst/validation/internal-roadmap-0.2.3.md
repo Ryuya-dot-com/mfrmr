@@ -521,6 +521,13 @@ wording.
   `design_rank_not_evaluated` hold
   (`conquest-p2-candidate-004-numerical-observation-record-0.2.3.md`,
   2026-08-15).
+- [x] Challenge the candidate-004 reviewer with semantic positive and negative
+  controls before independent review. Semantic A-matrix row reordering and
+  numeric storage-mode changes pass, while coefficient, response, parameter-
+  label, iteration-sequence, and denominator mutations fail closed. These
+  controls do not use byte identity and do not reopen external execution
+  (`conquest-p2-candidate-004-reviewer-adversarial-controls-record-0.2.3.md`,
+  2026-08-15).
 - [x] Disaggregate candidate 004's internal design-rank hold without refitting
   or using ConQuest agreement as a substitute. Audit the additive constrained
   design, nonlinear variance map, observed-pattern score span, retained
