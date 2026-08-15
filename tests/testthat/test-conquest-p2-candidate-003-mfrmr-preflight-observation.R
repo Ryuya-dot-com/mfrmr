@@ -104,7 +104,12 @@ test_that("internal records retain failure and successor ordering", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze a successor integration ladder before generating candidate 004",
+    "[x] Freeze and test a first successor integration ladder before generating",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "[ ] Freeze a bounded design-adaptive density ladder",
     fixed = TRUE
   )
 })

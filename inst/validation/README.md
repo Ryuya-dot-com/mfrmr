@@ -141,8 +141,13 @@ identify whether the opt-in layer ran and retain its test log.
   `conquest-p2-successor-integration-contract-record-0.2.3.md`: prospectively
   separates required q31--q61 diagnostics from governing q61--q121 and
   q121--continuous layers for a future disjoint P2 candidate. It cannot rescue
-  candidate 003, copies no P3 numerical budget, and holds candidate 004 until a
-  thirteen-fixture, no-fit truth-oracle audit passes.
+  candidate 003 and copies no P3 numerical budget. Its thirteen-fixture no-fit
+  audit was consumed and rejected the fixed q121 ceiling.
+- `conquest-p2-successor-integration-observation-0.2.3.R` and
+  `conquest-p2-successor-integration-observation-record-0.2.3.md`: retains all
+  thirteen truth-oracle rows and the two unequal-workload failures. Candidate
+  004 remains held until a bounded design-adaptive density contract passes
+  without changing the numeric budgets.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

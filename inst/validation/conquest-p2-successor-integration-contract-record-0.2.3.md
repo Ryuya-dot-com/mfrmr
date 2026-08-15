@@ -1,7 +1,8 @@
 # ConQuest P2 successor integration contract for mfrmr 0.2.3
 
-Status: `P2_successor_integration_contract_frozen_truth_oracles_unopened`,
-2026-08-15.
+Status: contract frozen before audit; the audit was subsequently consumed and
+rejected the fixed q121 ceiling on both unequal-workload fixtures. See the
+separate observation record, 2026-08-15.
 
 - Specification: `0.2.3-conquest-p2-successor-integration-contract-v1`
 - Contract: `mfrmr_conquest_p2_successor_integration_contract_v1`
@@ -44,10 +45,16 @@ No model is fitted and no candidate-003 output is read.
 
 ## Current decision
 
-- `TruthOracleAuditOpened=FALSE`
+- `TruthOracleAuditOpened=TRUE`
+- `TruthOracleAuditConsumed=TRUE`
+- `TruthOracleAuditPassed=FALSE`
 - `Candidate003Reclassified=FALSE`
 - `Candidate004GenerationAuthorized=FALSE`
 - `Candidate004FitAuthorized=FALSE`
 - `ExternalExecutionAuthorized=FALSE`
 - `EvidencePromotionAuthorized=FALSE`
 - `ScientificEquivalenceInferred=FALSE`
+
+Observed values and the failure decision are retained in
+`conquest-p2-successor-integration-observation-record-0.2.3.md`. The budgets
+remain unchanged.

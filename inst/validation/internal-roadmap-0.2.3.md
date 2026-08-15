@@ -431,15 +431,23 @@ wording.
   `design_rank_not_evaluated` holds without relabelling them inference-ready
   (`conquest-p2-candidate-003-mfrmr-preflight-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Freeze a successor integration ladder before generating candidate 004.
+- [x] Freeze and test a first successor integration ladder before generating
+  candidate 004.
   Separate the diagnostic starting grid from the governing dense-grid pair,
   justify the choice from integration theory and pre-candidate evidence, retain
   a complete coordinate/deviance denominator, and do not tune the `2e-6` budget
   from candidate-003 output. The `31;61;121` contract is now frozen with
   q31--q61 diagnostic, q61--q121 governing at the unchanged P2 budget, and a
-  q121--continuous gate; its thirteen-fixture no-fit truth-oracle audit remains
-  unopened (`conquest-p2-successor-integration-contract-record-0.2.3.md`,
-  2026-08-15).
+  q121--continuous gate. Its thirteen-fixture no-fit audit was consumed and
+  rejected the fixed q121 ceiling because both unequal-workload rows failed
+  q61--q121 and q121--continuous limits; thresholds remain unchanged
+  (`conquest-p2-successor-integration-observation-record-0.2.3.md`, 2026-08-15).
+- [ ] Freeze a bounded design-adaptive density ladder before candidate 004.
+  Require q31--q61 as a complete-denominator diagnostic, search only the
+  predeclared adjacent dense pairs up to a fixed node cap, select the lowest
+  pair that passes unchanged coordinate/deviance budgets for every numerical
+  arm, and require its higher node to pass a continuous-target gate. If no pair
+  passes, stop rather than extend or relax the rule.
 - [ ] Generate one disjoint candidate-004 fixture only after the successor
   integration contract is frozen. It must use a new candidate identity and
   seed, the same thirteen pre-fit gates, probability-weighted support

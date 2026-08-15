@@ -113,7 +113,7 @@ test_that("the contract fits and launches nothing", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("the record leaves the no-fit audit and candidate held", {
+test_that("the record retains the consumed failed audit and candidate hold", {
   ctx <- load_conquest_p2_successor_integration_contract()
   record_path <- file.path(
     ctx$validation,
@@ -126,11 +126,12 @@ test_that("the record leaves the no-fit audit and candidate held", {
 
   expect_match(record, ctx$env$mfrmr_cq_p2si_specification, fixed = TRUE)
   expect_match(record, "Candidate 003 reclassification: prohibited", fixed = TRUE)
-  expect_match(record, "`TruthOracleAuditOpened=FALSE`", fixed = TRUE)
+  expect_match(record, "`TruthOracleAuditOpened=TRUE`", fixed = TRUE)
+  expect_match(record, "`TruthOracleAuditPassed=FALSE`", fixed = TRUE)
   expect_match(record, "`Candidate004GenerationAuthorized=FALSE`", fixed = TRUE)
   expect_match(
     roadmap,
-    "[ ] Freeze a successor integration ladder before generating candidate 004",
+    "[x] Freeze and test a first successor integration ladder before generating",
     fixed = TRUE
   )
 })
