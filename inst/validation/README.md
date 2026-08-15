@@ -84,6 +84,14 @@ identify whether the opt-in layer ran and retain its test log.
   the conditional-probability bound from the independent A matrix; and retains
   147 metric rows/5,073 atomic outcomes. EAP/SD remain typed ineligible pending
   posterior-identity proof. Independent review and execution remain pending.
+- `conquest-minimum-diagnostic-authorization-0.2.3.R` and
+  `conquest-minimum-diagnostic-authorization-record-0.2.3.md`: separates the
+  minimum pre-execution fatal-gate audit from independent post-output evidence
+  review. It freezes exactly the paired connected-multibridge RSM/PCM rows,
+  q=31/61, four ConQuest fits, four mfrmr fits, and fifteen non-waivable gates.
+  A declared same-author audit may authorize only this sealed diagnostic;
+  evidence promotion, widening, P3, and public claims still require independent
+  review. The current runtime and attestation remain unbound.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

@@ -363,6 +363,29 @@ wording.
   (`facets-multifacet-confirmation-design-record-0.2.3.md` and
   `test-facets-multifacet-precision-contract.R`, 2026-08-15).
 
+#### Review sequencing and irreversible-information priority
+
+- [x] Split the monolithic independent-review gate into a minimum
+  pre-execution fatal-gate audit and an independent post-output evidence review;
+  permit a declared same-author maintainer audit only for the sealed diagnostic,
+  never for evidence promotion, widening, P3, or public claims
+  (`conquest-minimum-diagnostic-authorization-record-0.2.3.md`, 2026-08-15).
+- [x] Freeze the smallest meaningful external P2 diagnostic slice as the paired
+  connected-multibridge RSM/PCM rows on identical data, q=`31;61`, with exactly
+  four ConQuest and four mfrmr fits
+  (`conquest-minimum-diagnostic-authorization-0.2.3.R`, 2026-08-15).
+- [x] Freeze fifteen non-waivable fatal gates covering current runtime semantics,
+  expiry, explicit path, P1/P2 construction, exact scope, empty output boundary,
+  ordinary-test independence, clean tree, execution cap, auditor identity,
+  author-overlap disclosure, no-claim acceptance, and checklist completion
+  (`conquest-minimum-diagnostic-authorization-0.2.3.R`, 2026-08-15).
+- [ ] Bind a current data-free runtime sentinel and completed minimum audit to a
+  separate authorization record; do not launch a model from the construction
+  contract itself.
+- [ ] Complete the independent post-output evidence review before any result is
+  promoted, the P2 design is widened, P3 is authorized, or a public claim is
+  made.
+
 #### P0 -- semantic runtime continuity
 
 - [x] Implement one reusable non-fitting preflight that receives
@@ -398,7 +421,9 @@ wording.
   retain its semantic record before 2026-09-01
   (`conquest-semantic-runtime-preflight-record-0.2.3.md`, 2026-08-15).
 - [ ] Close P0 only after an independent review confirms that all C0 failure
-  controls fail closed and ordinary package tests do not require ConQuest.
+  controls fail closed and ordinary package tests do not require ConQuest. P0
+  closure blocks evidence promotion and widening, but no longer blocks the
+  first sealed diagnostic after every minimum fatal gate passes.
 
 #### P1 -- prospective semantic registry
 
@@ -440,9 +465,10 @@ wording.
   rules before any successor candidate output is opened
   (`conquest-p2-metric-boundary-contract-record-0.2.3.md` and
   `conquest-p3-metric-precision-contract-record-0.2.3.md`, 2026-08-15).
-- [ ] Close P1 only after a review performed without launching ConQuest confirms
-  C1 eligibility, complete denominators, negative-control rejection, and claim
-  boundaries.
+- [ ] Close P1 only after an independent review confirms C1 eligibility,
+  complete denominators, negative-control rejection, and claim boundaries. P1
+  closure remains mandatory for evidence promotion and widening, not for the
+  first non-interpretive sealed diagnostic.
 
 #### P2 -- additive RSM/PCM adversarial envelope
 
@@ -479,9 +505,11 @@ wording.
   ordering/ties, readiness states, and decision consequences
   (`conquest-p2-metric-boundary-contract-0.2.3.R` and its record, 2026-08-15).
 - [ ] Review P2 fixtures, identities, oracles, raw-token policy, complete
-  denominator, and expiry-aware execution cap without launching ConQuest.
-- [ ] Authorize and run only the smallest frozen external P2 slice after P0,
-  P1, and all preceding P2 construction/review items pass.
+  denominator, and expiry-aware execution cap comprehensively after the first
+  slice is classified and before evidence promotion or widening.
+- [ ] Authorize and run only the smallest frozen external P2 slice after the
+  current runtime and minimum fatal-gate audit are bound; P0/P1 independent
+  closure remains required before interpreting or expanding the result.
 - [ ] Diagnose every outcome under the failure taxonomy before authorizing a
   wider deterministic slice or any replication.
 - [ ] Close P2 only when C0--C5 pass for the exact claimed additive envelope, or

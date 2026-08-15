@@ -92,14 +92,19 @@ transfer item-only evidence to a multifacet slope-owner claim.
 
 ## Open gates
 
-P1 is not complete. Before any successor external output is authorized, the
-following remain mandatory:
+P1 is not complete. Before evidence promotion or any execution beyond the first
+sealed P2 diagnostic, the following remain mandatory:
 
 - independently review the bound P2/P3 fixture identities, response schemas,
   exact observed-support A/C coefficient maps, and free dimensions;
 - independently review both metric overlays' raw-token, parameter-class,
   complete-denominator, stop, and dependency-invalidation rules; and
 - obtain the P0 and P1 independent reviews.
+
+The separate minimum-diagnostic authorization contract may permit only the
+exact two-row P2 diagnostic after a fresh runtime sentinel and fifteen fatal
+gates pass. That non-interpretive run does not close P0/P1, authorize P3, widen
+the design, or support a package/public claim.
 
 The standalone base-registry implementation therefore continues to return
 `semantic_registry_ready_fixture_matrices_and_numeric_rules_pending`, with

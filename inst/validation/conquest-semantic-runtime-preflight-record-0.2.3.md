@@ -101,4 +101,8 @@ or run by this preflight.
 P0 is not marked closed. An independent reviewer must still confirm that the C0
 failure registry and negative controls fail closed, that the live record agrees
 with the typed result, and that ordinary package tests do not require ConQuest.
-That review cannot be replaced by the successful live transcript itself.
+That review cannot be replaced by the successful live transcript itself and
+remains mandatory before evidence promotion or wider execution. The separate
+minimum-diagnostic authorization contract permits only the first sealed,
+non-interpretive P2 diagnostic after a fresh sentinel and all fatal gates pass;
+it does not close P0.

@@ -172,7 +172,9 @@ The machine review reports all four contract layers ready while retaining:
 | `ComparisonPassed` | `FALSE` |
 | `ScientificEquivalenceInferred` | `FALSE` |
 
-The next admissible action is an independent offline review of P0, P1, and P2
-identity, fixture, oracle, precision, boundary, denominator, and expiry-aware
-execution-cap evidence. Only a later explicit authorization record may permit
-the smallest frozen P2 external slice.
+The separate minimum-diagnostic authorization contract now freezes a narrower
+pre-execution fatal-gate audit and the exact paired RSM/PCM slice. A fresh
+runtime sentinel and completed maintainer attestation must still be bound in a
+later explicit authorization record before that slice can run. Independent
+P0/P1/P2 review remains mandatory before interpreting the result, widening the
+design, or promoting evidence.

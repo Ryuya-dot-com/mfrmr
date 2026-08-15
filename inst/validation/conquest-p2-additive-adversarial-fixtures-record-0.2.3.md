@@ -110,11 +110,13 @@ all of the following as false:
 - `ComparisonPassed`; and
 - `ScientificEquivalenceInferred`.
 
-Before an external P2 slice is eligible, maintainers must still freeze typed
-extreme/boundary quantities, parameter-class coordinate and decision metrics,
-raw-token rules, complete-denominator adjudication, stop/invalidation rules,
-and the expiry-aware execution cap. P0/P1 independent reviews and the remaining
-P3 independent-review work also stay open.
+The separate P2 metric-boundary contract now freezes typed boundary quantities,
+parameter/decision metrics, raw-token rules, complete-denominator adjudication,
+and stop/invalidation rules without retroactively changing this construction
+layer's false metric flag. The minimum-diagnostic authorization contract also
+freezes an expiry-aware two-row execution cap. A fresh runtime binding and
+minimum audit remain open; P0/P1/P2/P3 independent reviews still block evidence
+promotion and wider execution.
 
 ## Artifacts
 
