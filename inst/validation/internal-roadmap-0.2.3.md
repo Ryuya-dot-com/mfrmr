@@ -447,7 +447,10 @@ wording.
   predeclared adjacent dense pairs up to a fixed node cap, select the lowest
   pair that passes unchanged coordinate/deviance budgets for every numerical
   arm, and require its higher node to pass a continuous-target gate. If no pair
-  passes, stop rather than extend or relax the rule.
+  passes, stop rather than extend or relax the rule. The finite
+  `31;61;121;241` contract and q241 hard ceiling are frozen; its thirteen-row
+  truth-oracle audit remains unopened
+  (`conquest-p2-adaptive-density-contract-record-0.2.3.md`, 2026-08-15).
 - [ ] Generate one disjoint candidate-004 fixture only after the successor
   integration contract is frozen. It must use a new candidate identity and
   seed, the same thirteen pre-fit gates, probability-weighted support

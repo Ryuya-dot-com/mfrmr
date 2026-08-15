@@ -148,6 +148,11 @@ identify whether the opt-in layer ran and retain its test log.
   thirteen truth-oracle rows and the two unequal-workload failures. Candidate
   004 remains held until a bounded design-adaptive density contract passes
   without changing the numeric budgets.
+- `conquest-p2-adaptive-density-contract-0.2.3.R` and
+  `conquest-p2-adaptive-density-contract-record-0.2.3.md`: freezes the bounded
+  `31;61;121;241` ladder and whole-slice lowest-passing-pair rule. q241 is a
+  hard ceiling; missing arms, remaining integration failure, and any proposed
+  threshold change stop rather than expand the search.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
