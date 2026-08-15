@@ -58,6 +58,14 @@ identify whether the opt-in layer ran and retain its test log.
   frozen numerical sentinel before a changed runtime can reopen broader
   prospective execution. Ordinary tests inject a fake runner and never launch
   ConQuest.
+- `conquest-successor-semantic-registry-0.2.3.R` and
+  `conquest-successor-semantic-registry-record-0.2.3.md`: prospective P1
+  registry separating 14 comparison candidates, six fail-closed controls, and
+  three non-overlap/unsupported rows. Each row carries a human-readable model
+  signature, independently reproducible free dimension where applicable,
+  complete denominator, decision consequence, and claim ceiling. Fixture A/C
+  matrices and metric-specific numerical rules remain pending, so the registry
+  authorizes no ConQuest execution or comparison.
 - `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
   parameter, and metric-specific comparison readiness. It defines component
   precedence, the conservative legacy `InferenceReady` mapping, typed

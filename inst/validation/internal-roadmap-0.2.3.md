@@ -402,25 +402,35 @@ wording.
 
 #### P1 -- prospective semantic registry
 
-- [ ] Create a single machine-readable registry covering the retained P2/P3
-  rows and the known non-overlap/unsupported rows.
-- [ ] Give every row a human-readable canonical model signature with all fields
-  listed under `Canonical model signatures`.
-- [ ] Reconstruct and record category maps, A/C matrices, free dimensions,
+- [x] Create a single machine-readable registry covering the retained P2/P3
+  rows and the known non-overlap/unsupported rows
+  (`conquest-successor-semantic-registry-0.2.3.R`, 2026-08-15).
+- [x] Give every row a human-readable canonical model signature with all fields
+  listed under `Canonical model signatures`
+  (`conquest-successor-semantic-registry-0.2.3.R` and its test, 2026-08-15).
+- [x] Reconstruct and record prospective category maps, free dimensions,
   constraints, and population/integration targets independently of exported
-  parameter labels.
-- [ ] Assign each row exactly one comparison stratum; forbid evidence transfer
-  across strata by shared names such as GPCM or slope.
-- [ ] Predeclare eligible estimands, coordinate transforms, numerical units,
-  raw-token precision states, q ladders, and boundary conventions by row.
-- [ ] Predeclare the complete denominator and typed outcome for every expected
+  parameter labels (`conquest-successor-semantic-registry-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Bind the disjoint fixtures and independently reconstruct their exact
+  observed A/C matrices and free dimensions before numerical eligibility.
+- [x] Assign each row exactly one comparison stratum; forbid evidence transfer
+  across strata by shared names such as GPCM or slope
+  (`conquest-successor-semantic-registry-0.2.3.R`, 2026-08-15).
+- [x] Predeclare eligible estimands, coordinate transforms, numerical units,
+  raw-token precision states, q ladders, and boundary conventions by row
+  (`conquest-successor-semantic-registry-0.2.3.R`, 2026-08-15).
+- [x] Predeclare the complete denominator and typed outcome for every expected
   row, including external failure, mfrmr readiness review, structural rejection,
-  and deliberately ineligible controls.
-- [ ] Attach one retained package/release decision to every passing row and
-  remove rows that cannot change a decision.
-- [ ] Include negative controls for category-map mismatch, free-dimension
+  and deliberately ineligible controls
+  (`conquest-successor-semantic-registry-record-0.2.3.md`, 2026-08-15).
+- [x] Attach one retained package/release decision to every passing row and
+  remove rows that cannot change a decision
+  (`conquest-successor-semantic-registry-0.2.3.R`, 2026-08-15).
+- [x] Include negative controls for category-map mismatch, free-dimension
   mismatch, disconnected design, unsupported JML free-score requests, missing
-  outputs, and semantic status-zero failure.
+  outputs, and semantic status-zero failure
+  (`test-conquest-successor-semantic-registry.R`, 2026-08-15).
 - [ ] Freeze metric-specific acceptance, stop, expansion, and invalidation
   rules before any successor candidate output is opened.
 - [ ] Close P1 only after a review performed without launching ConQuest confirms
