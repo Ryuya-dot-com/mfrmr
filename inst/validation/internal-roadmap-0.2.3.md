@@ -749,9 +749,15 @@ wording.
   integration-limited, and unresolved outcomes using the fixed denominator.
 - [ ] Map the evidence to public decisions that are supported, caveated,
   disabled, or deferred; do not claim general software interchangeability.
-- [ ] Define the smallest dependency-based sentinel for changes to likelihood,
+- [x] Define the smallest dependency-based sentinel for changes to likelihood,
   constraints, category handling, integration, parsers, transforms, or the
-  ConQuest runtime.
+  ConQuest runtime. The candidate-004 sentinel now separates versioned
+  historical evidence from current-source applicability, routes semantic
+  changes to raw-artifact recalculation, a new runtime sentinel, a successor
+  candidate, contract-integrity review, or evidence quarantine, and never uses
+  byte equality as a scientific gate
+  (`conquest-p2-candidate-004-dependency-sentinel-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Confirm that ConQuest remains optional and absent from package runtime,
   ordinary tests, source-package requirements, and CRAN checks.
 - [ ] Update the release spine and public support boundary only after the exact

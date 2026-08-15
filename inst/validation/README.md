@@ -222,6 +222,13 @@ identify whether the opt-in layer ran and retain its test log.
   independence, raw-evidence primacy, fifteen required tasks, full
   denominators, explicit nonclaims, and fail-closed no-rerun adjudication. The
   independent review itself remains unperformed.
+- `conquest-p2-candidate-004-dependency-sentinel-0.2.3.R` and its record:
+  classify semantic changes to likelihood, constraints, category handling,
+  integration, parsers, transforms, runtime identity, frozen contracts, and
+  raw evidence. Historical preservation is separated from current-source
+  applicability; consequences are recalculation, a new runtime sentinel, a
+  successor candidate, contract review, or evidence quarantine rather than a
+  byte-level acceptance rule.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
