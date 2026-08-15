@@ -802,9 +802,22 @@ wording.
   qualification remains in G3
   (`conquest-adversarial-simulation-dgp-oracle-contract-record-0.2.3.md`,
   2026-08-15).
-- [ ] Freeze a mechanics-only smoke seed band and output schema, complete the
+- [x] Freeze a mechanics-only smoke seed band and output schema, complete the
   full-Person continuous-oracle qualification, then authorize no more than one
-  disjoint dataset per scenario-family arm.
+  disjoint dataset per scenario-family arm. Seeds `987001:987018` are sealed
+  inside the reserved `987000:987099` smoke namespace. Direct and
+  reconstructed-A category coefficients agree to `4.44089209850063e-16`; the
+  compiled integrand agrees with the original G2 direct path to
+  `1.4210854715202e-14` across 960 probes. All 192 Person integrals converge,
+  with maximum arm-level declared deviance-error envelope
+  `1.75458265678942e-10` below the frozen `1e-8` mechanics threshold. No
+  sampled response, fit, or ConQuest output was generated or opened
+  (`conquest-adversarial-simulation-smoke-authorization-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Generate exactly one sealed smoke dataset per scenario-family arm into
+  the frozen six-table schema. Retain all eighteen arms unconditionally and
+  use the results only for generation, replay, schema, and structural-prefit
+  mechanics; do not estimate operating characteristics or tune any rule.
 - [ ] Freeze and run a disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; do not reuse calibration rows for a
   confirmation claim.

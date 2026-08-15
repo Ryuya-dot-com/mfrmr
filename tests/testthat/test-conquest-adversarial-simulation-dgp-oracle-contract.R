@@ -213,7 +213,7 @@ test_that("record and roadmap advance only to G3", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze a mechanics-only smoke seed band and output schema",
+    "[x] Freeze a mechanics-only smoke seed band and output schema",
     fixed = TRUE
   )
 })

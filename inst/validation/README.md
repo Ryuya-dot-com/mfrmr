@@ -261,6 +261,11 @@ identify whether the opt-in layer ran and retain its test log.
   response primitives, an independently reconstructed-A probability path, and
   a log-centered continuous oracle. No RNG, fit, external execution, or full
   simulation dataset is authorized.
+- `conquest-adversarial-simulation-smoke-authorization-0.2.3.R` and its record:
+  freeze the eighteen mechanics-only smoke seeds, six-table output topology,
+  algebraic probability-path qualification, and full-Person continuous-oracle
+  qualification before any seeded response is generated. Only later bounded
+  smoke generation is authorized; fitting and ConQuest remain closed.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
