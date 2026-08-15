@@ -825,9 +825,19 @@ wording.
   CSV type-inference review incidents remain recorded rather than discarded
   (`conquest-adversarial-simulation-smoke-execution-record-0.2.3.md`,
   2026-08-15).
-- [ ] Freeze the calibration seed band, failure taxonomy, permitted exploratory
+- [x] Freeze the calibration seed band, failure taxonomy, permitted exploratory
   summaries, and runtime/storage cap without generating or opening calibration
-  responses.
+  responses. Calibration now owns 450 identities in disjoint namespace
+  `988000:989999`, begins with a 90-dataset tranche A, retains failures and
+  unconditional companions, permits no result-driven stop/expansion rule, and
+  remains execution-closed
+  (`conquest-adversarial-simulation-calibration-freeze-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Freeze a separate run-once engine-mechanics authorization over the 18
+  retained G3 datasets before opening calibration. The four structural
+  negative controls must remain prefit stops; the fourteen eligible datasets
+  permit at most one q61 attempt per engine (28 attempts total), with a fresh
+  ConQuest semantic sentinel and exact runtime/resource boundary.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

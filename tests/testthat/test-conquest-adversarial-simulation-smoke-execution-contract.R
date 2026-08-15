@@ -180,7 +180,7 @@ test_that("execution source contains no fit, external launch, or hash gate", {
   ))
 })
 
-test_that("execution record closes G3 and roadmap advances only to G4", {
+test_that("execution record closes G3 and later roadmap state stays consistent", {
   ctx <- load_conquest_adversarial_simulation_smoke_execution()
   record <- paste(readLines(file.path(
     ctx$validation,
@@ -200,7 +200,7 @@ test_that("execution record closes G3 and roadmap advances only to G4", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze the calibration seed band, failure taxonomy",
+    roadmap, "[x] Freeze the calibration seed band, failure taxonomy",
     fixed = TRUE
   )
 })
