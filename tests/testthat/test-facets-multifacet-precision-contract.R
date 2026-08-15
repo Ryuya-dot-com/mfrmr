@@ -205,11 +205,15 @@ test_that("FACETS case execution uses and removes a short system work directory"
   env <- facets_mfp_environment()
   original <- env$mfrmr_facets_mfp_run_process
   observed_temp <- NULL
+  observed_temp_parent <- NULL
   assign(
     "mfrmr_facets_mfp_run_process",
     function(..., temp_dir) {
       observed_temp <<- temp_dir
       expect_true(dir.exists(temp_dir))
+      observed_temp_parent <<- normalizePath(
+        dirname(temp_dir), winslash = "/", mustWork = TRUE
+      )
       0L
     },
     envir = env
@@ -227,11 +231,13 @@ test_that("FACETS case execution uses and removes a short system work directory"
 
   expect_identical(status, 0L)
   expect_false(is.null(observed_temp))
+  expect_false(is.null(observed_temp_parent))
   expect_false(dir.exists(observed_temp))
-  expect_true(startsWith(
-    normalizePath(observed_temp, winslash = "/", mustWork = FALSE),
+  expect_identical(
+    observed_temp_parent,
     normalizePath(tempdir(), winslash = "/", mustWork = TRUE)
-  ))
+  )
+  expect_true(startsWith(basename(observed_temp), "mfrmr-facets-work-"))
 })
 
 test_that("external pilot writer emits genuine multifacet FACETS controls", {

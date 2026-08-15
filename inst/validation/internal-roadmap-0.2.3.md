@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-12.
+Status: repository-only maintainer plan, refined 2026-08-15.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -8,6 +8,547 @@ tool identities, and validation operations. `NEWS.md` records completed
 user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
+
+## 2026-08-15 ConQuest-first strategic reset
+
+This section is the controlling overlay for future 0.2.3 sequencing. Where an
+older draft sequence below conflicts with it, this section controls. Historical
+candidate, execution, and calibration records remain immutable evidence; they
+are not rewritten to make the current strategy appear older than it is.
+
+### Strategic decision
+
+Matched ConQuest comparison is the highest-priority external work for the
+remaining 0.2.3 programme, subject to four limits:
+
+1. ConQuest is an independent implementation, not ground truth.
+2. External agreement cannot override structural nonidentification, boundary
+   status, optimizer failure, or a failed internal oracle.
+3. Binary/RSM/PCM MML, item-only free-score GPCM MML, and generalized-item
+   multifacet GPCM are different comparison strata. Evidence cannot move
+   between them by label similarity.
+4. The comparison must answer a retained package or release decision. It must
+   not expand merely because the executable is temporarily available.
+
+The primary question is therefore not whether two files or parameter vectors
+are identical. It is:
+
+> After matching the statistical model, response support, identification,
+> integration target, and reported coordinate map, do independent ConQuest and
+> mfrmr implementations give compatible numerical and user-facing decisions
+> over the declared support envelope, while all failures remain visible?
+
+### Current evidence baseline
+
+| Comparison stratum | Current state | What is established | What remains open |
+| --- | --- | --- | --- |
+| Binary/RSM/PCM complete-crossing MML | Candidate 003 closed at the exact-reported-decimal layer | All 19 cross-engine and 38 q31/q61 integration rows passed the prospectively frozen rules; additive A matrices were exact | Hidden-solution intervals, inference readiness, sparse allocation, endpoint behavior, fit/DFF/rank consequences, and general equivalence |
+| Additive RSM/PCM MML with Person/Rater/Criterion | Narrow complete-crossing core closed | Population, Rater, Criterion, step, and deviance coordinates agree under the matched transform | Connected sparsity, weak links, unequal workload, missingness, and category stress |
+| Item-only GPCM MML | Exact probability and coordinate map established; one native microcase remains review evidence | The free-population mfrmr identification maps one-to-one to ConQuest `scoresfree`; the prior fixed-standard-normal default was correctly demoted to legacy scope | A disjoint prospectively governed candidate, raw-token precision policy, integration ladder, and acceptance rule |
+| Many-facet free-slope GPCM | Model-identity gate open | ConQuest generalized-item scores and mfrmr single-owner complete-predictor slopes are known not to coincide automatically | A proof of common probability/free-dimension identity; otherwise this lane remains a documented non-overlap |
+| ConQuest JML free-score GPCM | Unsupported direct lane | The installed/manual contract does not support JML estimation of item scores | No numerical comparison is admissible unless the product contract changes |
+| Decision-level invariance | Open | Parameter-level core agreement is encouraging | Person/Rater ordering, classifications, fit, DFF, information criteria, and reporting consequences require separate metrics and gates |
+
+Candidate 003 is not rerun. Its run-once authorization was consumed and its
+result is retained as a narrow historical confirmation. A successor may reuse
+its lessons and frozen core tolerances only where the estimand and precision
+contract are unchanged; it must use new data, a new execution identity, and a
+new claim-specific design for every extension.
+
+### Runtime and expiry risk
+
+The current local install is explicitly supplied as
+`/Applications/ConQuest/ConQuest`. A semantic no-fit probe on 2026-08-15
+returned:
+
+- self-reported version `5.47.5 Demonstration Version`;
+- self-reported expiry `1 September 2026`;
+- terminal marker `End of Program`; and
+- process status zero under the x86_64/Rosetta launch route.
+
+This creates an immediate continuity risk. Before the expiry date, the project
+must preserve enough non-proprietary semantic fixtures to validate a future
+replacement executable without making the expiring binary a runtime or release
+dependency. The plan must not respond to the deadline by launching a broad,
+under-specified simulation.
+
+The successor runtime preflight must:
+
+- accept the executable path as an explicit argument; no new workflow may
+  require the `/Applications` path or one machine layout;
+- record the program's own version and expiry text, architecture, invocation
+  route, locale, run date, and exit status;
+- require a terminal success marker and absence of registered semantic error
+  messages;
+- run a data-free `quit;` sentinel before any fit;
+- keep process availability distinct from model-estimation success; and
+- classify an expired, changed, unavailable, or sandbox-incompatible runtime
+  without reclassifying prior scientific evidence.
+
+Executable and artifact hashes may remain optional provenance and accidental-
+replacement alarms. They are not scientific acceptance criteria. A matching
+hash does not prove a matched model or a valid result; a changed hash does not
+prove a changed estimand. Historical SHA-bound candidates remain sealed rather
+than being retroactively edited.
+
+### Evidence hierarchy
+
+Future ConQuest work proceeds through six layers. A later layer cannot repair a
+failed earlier layer.
+
+| Layer | Question | Required evidence | Adversarial failure examples |
+| --- | --- | --- | --- |
+| C0 runtime semantics | Did the intended program execute normally? | Self-reported version, terminal marker, status, error-pattern review, required outputs | Status zero after command rejection; expired demo; Rosetta or settings-write failure |
+| C1 model identity | Are the two programs fitting the same statistical object? | Category map, response family, model terms, A/C matrices, free dimension, constraints, population model, weights, missingness, step/slope ownership | Same label but different retained categories; generalized-item slope versus single-owner slope; different constants or anchors |
+| C2 independent mathematics | Does each implementation satisfy the declared model independently? | Probability oracle, marginal-likelihood oracle, constraint residuals, reduction cases, gradient/stationarity checks | Shared normalizer bug; both programs close because the same incorrect transformation was reused |
+| C3 numerical agreement | Are eligible coordinates/objectives compatible under a prospective rule? | Raw tokens, precision status, coordinate-wise differences, q sensitivity, complete denominators | Correlation hides an affine shift; rounding manufactures agreement; failed rows disappear |
+| C4 decision consequences | Do remaining differences change supported conclusions? | Ordering, classification, information redistribution, fit/DFF status, readiness, reporting decisions | Small parameter differences reverse a weak-link ranking or threshold decision |
+| C5 transport envelope | Does the result survive declared design adversity? | Disjoint deterministic controls and precision-planned replication over retained strata | Complete crossing passes while sparse bridges, rare categories, or workload imbalance fail |
+
+### Canonical model signatures
+
+Every comparison arm must have a human-readable semantic signature before any
+result exists. The minimum fields are:
+
+- response family and ordered category support;
+- Person unit, response row, and observation weight semantics;
+- active facets, level sets, signs, and reference/centering constraints;
+- shared versus facet-specific step structure;
+- slope owner, step owner, slope action, and latent dimension count;
+- population regression formula, covariate coding, variance convention, and
+  Person inclusion rule;
+- integration method, nodes, bounds, and common evaluation target;
+- free dimension and independently reconstructed design matrices;
+- optimizer/stopping controls and accepted termination evidence;
+- extreme-score and other boundary conventions; and
+- exact set of parameters, predictions, and decisions eligible for comparison.
+
+Semantic signatures are reviewed directly. A digest may detect an altered
+manifest, but it cannot replace review of these fields.
+
+### Priority comparison portfolio
+
+#### P0: semantic runtime continuity before 2026-09-01
+
+1. Implement a reusable, non-fitting runtime preflight with an explicit
+   `conquest_exe` argument.
+2. Preserve a small non-proprietary fixture set: command text, input schema,
+   expected model dimensions, expected output schemas, and semantic success/
+   failure transcripts. Do not commit licensed proprietary output merely to
+   make replay convenient.
+3. Add negative controls for an unknown command, missing data file, incomplete
+   output set, and status-zero semantic failure.
+4. Document the replacement-binary rule: a new ConQuest version reruns the
+   no-fit sentinel and the smallest frozen numerical sentinel first. Broader
+   evidence reopens only if that sentinel or a model contract changes.
+
+P0 changes infrastructure only. It does not create a new equivalence claim.
+
+#### P1: freeze the successor comparison specification
+
+Create one machine-readable registry that separates:
+
+- complete-crossing Binary/RSM/PCM core;
+- connected sparse and unequal-workload additive RSM/PCM;
+- category-support and extreme-score controls;
+- item-only GPCM MML; and
+- known non-overlap/unsupported lanes.
+
+For every row, predeclare the eligible estimand, expected coordinates, failure
+denominator, integration ladder, numerical unit, acceptance status, and claim
+that could change. A row with no decision consequence is removed before
+execution.
+
+The specification must include deliberately failing controls. A runner that
+cannot reject a category-map mismatch, free-dimension mismatch, disconnected
+design, unsupported JML free-score request, or missing output is not ready to
+evaluate agreement.
+
+#### P2: additive RSM/PCM adversarial deterministic envelope
+
+The next scientific comparison extends the closed benign core with small,
+truth-known, exactly reconstructable fixtures in this order:
+
+1. connected sparse assignment with more than one independent bridge;
+2. weak single-bridge assignment retained as a sensitivity case;
+3. unequal Rater workload with the same estimand and category support;
+4. planned missing rows versus explicit missing values;
+5. rare boundary categories and an unused intermediate-category negative
+   control;
+6. nonextreme versus extreme Person strata; and
+7. disconnected structural rejection.
+
+Each design is first deterministic and small enough for an independent
+probability and marginal-likelihood reconstruction. Only comparison-eligible
+fits from both programs enter coordinate differences. Nonconvergence,
+nonidentification, unsupported category support, and boundary mismatch remain
+separate observed outcomes in the full denominator.
+
+The principal metrics are not one global correlation. They are:
+
+- maximum and signed coordinate differences by parameter class;
+- marginal deviance on a matched constant basis;
+- q-to-q integration movement within each program;
+- fitted-category probability differences on prespecified rows/cells;
+- Person EAP and posterior-SD differences only where posterior definitions
+  match;
+- Rater/Criterion ordering and practically tied-pair status;
+- readiness and failure-state agreement without allowing external agreement
+  to promote mfrmr readiness; and
+- changes in any retained model-choice or reporting decision.
+
+#### P3: item-only GPCM candidate
+
+The item-only `scoresfree` overlap receives a disjoint candidate only after P0
+and P1 pass. It must include:
+
+- at least one unit-slope PCM reduction and multiple non-unit slope controls;
+- both intercept-only and one prespecified latent-regression covariate design;
+- common item/category support with every transition observed;
+- an integration ladder that distinguishes finite-grid drift from optimizer
+  discrepancy;
+- independent probability and continuous-target likelihood reconstruction;
+- relative-slope, population-scale, transition-threshold, deviance, and fitted-
+  probability coordinates;
+- raw exported tokens and an explicit `reported-resolution-limited` state;
+- a prospectively frozen candidate rule that does not reuse the opened native
+  microcase as its own confirmation; and
+- a permanent exclusion of many-facet owner claims unless C1 proves the exact
+  generalized-item mapping.
+
+TAM item-only GPCM remains a useful third implementation, but it is not a vote.
+ConQuest--mfrmr, TAM--mfrmr, and ConQuest--TAM differences stay separate, and
+none can override a failed independent oracle or missing covariance needed for
+SE transformation.
+
+#### P4: precision-planned replicated confirmation
+
+Replication begins only for P2/P3 cells whose deterministic results leave a
+retained decision uncertain. Before data generation, record:
+
+1. the independent sampling unit;
+2. the target failure or disagreement rate;
+3. the confidence/MCSE precision required to change the decision;
+4. sequential stop, expand, and abort rules;
+5. handling of failed/ineligible fits; and
+6. the maximum claim permitted by a pass.
+
+Do not choose a universal replication count. Bias, RMSE, coverage, ordering,
+convergence, and rare failure rates require different precision calculations.
+No result may be dropped because one program failed to return a comparable
+estimate.
+
+#### P5: release and maintenance handoff
+
+The final handoff must state, separately:
+
+- the exact matched overlap that passed;
+- the versions and platforms actually observed;
+- the designs and parameter classes covered;
+- all ineligible, failed, and negative-control outcomes;
+- which public decisions are supported, caveated, disabled, or deferred;
+- the smallest sentinel that must rerun after likelihood, constraint,
+  category, integration, parser, or ConQuest-version changes; and
+- why ConQuest remains optional and absent from normal package runtime and CRAN
+  checks.
+
+### Adversarial review matrix
+
+Before a comparison is accepted, reviewers must answer each question with
+evidence rather than assurance.
+
+| Threat | Required challenge | Acceptance boundary |
+| --- | --- | --- |
+| External program treated as truth | Independent analytic/reduction oracle | Agreement is evidence only after both implementations pass independently |
+| Same name, different model | Reconstruct probability, free dimension, A/C matrices, constraints | Any unresolved mismatch makes numeric comparison ineligible |
+| Correlation hides bias | Report affine slope/intercept and coordinate maxima without deviance dominating scale | Correlation is descriptive and never a pass rule |
+| Rounding manufactures closeness | Retain raw tokens and reported precision; compare at declared resolution | No hidden digits or undocumented rounding interval are inferred |
+| Integration errors cancel | Within-engine q ladder plus common-target re-evaluation | Cross-engine closeness cannot pass if within-engine movement is unresolved |
+| Easy fixture bias | Sparse, weak-link, workload, category, extreme, and disconnected controls | Complete crossing alone supports only the complete-crossing claim |
+| Failed rows disappear | Fixed complete denominator and typed failure states | Conditional agreement is reported separately from full-envelope success |
+| Optimizer code zero is trusted | Terminal state, history/export consistency, independent objective/stationarity checks | Status zero alone is insufficient |
+| Boundary conventions are mixed | Separate finite, unbounded, adjusted-display, and posterior estimands | Only like-with-like numerical comparisons are eligible |
+| Shared transformation bug | Independently implemented probability and likelihood oracle | The production mapper cannot be its own sole validator |
+| Hashes substitute for science | Mutate semantically important fields while preserving irrelevant bytes and vice versa | Semantic changes control invalidation; hashes are provenance only |
+| Version expiry creates urgency bias | Freeze decisions before execution and cap scope | Deadline cannot authorize an under-specified run |
+| Platform specificity is hidden | Record architecture/Rosetta/locale and use smallest cross-version sentinel | One macOS binary does not establish cross-platform behavior |
+| Parameter agreement lacks user value | Evaluate ordering, probabilities, uncertainty eligibility, readiness, and reporting decisions | No broad user claim follows from coordinate agreement alone |
+
+### Failure taxonomy and response
+
+Every failure receives exactly one primary class, with secondary evidence
+retained:
+
+| Failure class | Response |
+| --- | --- |
+| `runtime_unavailable_or_expired` | Hold external execution; retain prior evidence and run no fallback model under the same label |
+| `semantic_execution_failure` | Reject the arm even if process status is zero |
+| `model_identity_mismatch` | Stop numerical comparison; either correct the specification prospectively or record a non-overlap |
+| `structurally_unidentified` | Fail before optimization; do not use external finiteness as identification evidence |
+| `external_nonconvergence` | Retain the row in the denominator and withhold coordinate comparison |
+| `mfrmr_optimizer_or_readiness_review` | Retain external results descriptively; do not let agreement promote readiness |
+| `boundary_convention_mismatch` | Compare typed statuses or matched display conventions, not raw finite numbers |
+| `reported_resolution_limited` | Report the visible resolution and withhold sub-resolution claims |
+| `integration_unresolved` | Extend or reformulate the integration comparison before interpreting solver differences |
+| `numerical_disagreement` | Reconstruct objectives and transformations independently before assigning an implementation defect |
+| `implementation_defect` | Correct code, add a reduction/regression test, invalidate only affected evidence, and rerun the smallest sufficient sentinel |
+| `unknown` | Fail closed and narrow the claim; do not pool with passed rows |
+
+### Promotion, stop, and invalidation rules
+
+A comparison claim may advance only when:
+
+- C0--C3 all pass for every required row;
+- all expected rows are present, including negative and failed controls;
+- the rule was frozen before candidate output was opened;
+- no internal oracle, structural, boundary, or readiness gate failed;
+- the claimed design envelope is no broader than the tested envelope; and
+- user-facing consequences have been evaluated when the claim mentions
+  interchangeability, ranking, scoring, fit, or reporting.
+
+Stop or narrow immediately when:
+
+- the exact model map is not provable;
+- a negative control becomes numerically eligible;
+- the runtime version/expiry cannot be established semantically;
+- output precision is inadequate for the proposed tolerance;
+- convergence or integration movement exceeds the prospective contract;
+- a rule must be changed after candidate results are visible; or
+- additional replication cannot change the retained decision.
+
+Evidence invalidation is dependency-based rather than file-based. A wording,
+plot, or export-layout change does not reopen numerical ConQuest evidence when
+the fitted object and semantic scale contract are unchanged. A change to the
+likelihood, category retention, constraint map, population model, integration,
+retained-solution rule, external parser, or coordinate transform reruns the
+smallest affected sentinel before any broader study.
+
+### Canonical execution checklist
+
+This is the only mutable progress surface for the ConQuest-first programme.
+The preceding sections define scope and acceptance logic; historical candidate
+records retain their original state. Use `[x]` only when the named evidence is
+present in the repository and reviewable. A started, blocked, skipped, or
+externally successful task remains `[ ]`. Each completion update must add the
+evidence path and date in parentheses; it must not silently weaken the item.
+
+If an acceptance rule changes after candidate output is visible, leave the old
+item and record intact, add a new prospective item/candidate, and explain the
+dependency invalidation. Do not turn a failed check into a pass by changing its
+wording.
+
+#### Locked foundations
+
+- [x] Make matched ConQuest comparison the highest-priority external lane while
+  retaining internal identification, oracle, boundary, and readiness vetoes
+  (`internal-roadmap-0.2.3.md`, 2026-08-15).
+- [x] Separate additive Binary/RSM/PCM, item-only GPCM, many-facet free-slope
+  GPCM, and unsupported JML free-score strata (current evidence baseline,
+  `internal-roadmap-0.2.3.md`, 2026-08-15).
+- [x] Seal Candidate 003 as consumed historical evidence; do not rerun it or
+  enlarge its claim retrospectively
+  (`conquest-six-arm-candidate-003-execution-result-record-0.2.3.md` and
+  `conquest-six-arm-candidate-003-numerical-review-record-0.2.3.md`,
+  2026-08-12).
+- [x] Treat executable/artifact hashes as optional provenance alarms rather
+  than scientific acceptance criteria (`internal-roadmap-0.2.3.md`,
+  2026-08-15).
+- [x] Record the installed runtime's semantic identity: ConQuest 5.47.5
+  Demonstration Version, expiry 2026-09-01, x86_64/Rosetta route, terminal
+  marker, and status zero (Runtime and expiry risk section of
+  `internal-roadmap-0.2.3.md`, 2026-08-15).
+- [x] Keep FACETS outside the executable validation path in this environment;
+  its retained comparison evidence and non-execution contracts must not imply
+  a new local FACETS run
+  (`facets-multifacet-confirmation-design-record-0.2.3.md` and
+  `test-facets-multifacet-precision-contract.R`, 2026-08-15).
+
+#### P0 -- semantic runtime continuity
+
+- [x] Implement one reusable non-fitting preflight that receives
+  `conquest_exe` explicitly and has no machine-specific default that can create
+  scientific evidence accidentally
+  (`conquest-semantic-runtime-preflight-0.2.3.R`, 2026-08-15).
+- [x] Make the preflight send only the data-free `quit;` sentinel before any
+  model-fitting command is eligible
+  (`conquest-semantic-runtime-preflight-0.2.3.R` and its test, 2026-08-15).
+- [x] Capture the program's own version/edition/expiry text, executable
+  architecture, invocation route, locale, run date, exit status, and terminal
+  success marker as typed fields
+  (`conquest-semantic-runtime-preflight-record-0.2.3.md`, 2026-08-15).
+- [x] Maintain a semantic-error registry and fail when a registered error occurs
+  even if the process exits with status zero
+  (`conquest-semantic-runtime-preflight-0.2.3.R` and its test, 2026-08-15).
+- [x] Add deterministic controls for an unavailable executable, an unknown
+  command, a missing data file, an incomplete output set, a missing terminal
+  marker, and a status-zero semantic failure
+  (`test-conquest-semantic-runtime-preflight.R`, 2026-08-15).
+- [x] Prove through tests that runtime availability and model-estimation success
+  are distinct states and that neither can rewrite earlier evidence
+  (`test-conquest-semantic-runtime-preflight.R`, 2026-08-15).
+- [x] Preserve only non-proprietary command/input/output-schema fixtures and
+  success/failure transcripts needed to test a replacement executable
+  (`conquest-semantic-runtime-preflight-0.2.3.R` and its record, 2026-08-15).
+- [x] Document and test the replacement rule: a changed ConQuest runtime must
+  pass the no-fit sentinel and the smallest frozen numerical sentinel before
+  broader external evidence is reopened
+  (`conquest-semantic-runtime-preflight-0.2.3.R`, its test, and its record,
+  2026-08-15).
+- [x] Run the reusable preflight once against the explicit current path and
+  retain its semantic record before 2026-09-01
+  (`conquest-semantic-runtime-preflight-record-0.2.3.md`, 2026-08-15).
+- [ ] Close P0 only after an independent review confirms that all C0 failure
+  controls fail closed and ordinary package tests do not require ConQuest.
+
+#### P1 -- prospective semantic registry
+
+- [ ] Create a single machine-readable registry covering the retained P2/P3
+  rows and the known non-overlap/unsupported rows.
+- [ ] Give every row a human-readable canonical model signature with all fields
+  listed under `Canonical model signatures`.
+- [ ] Reconstruct and record category maps, A/C matrices, free dimensions,
+  constraints, and population/integration targets independently of exported
+  parameter labels.
+- [ ] Assign each row exactly one comparison stratum; forbid evidence transfer
+  across strata by shared names such as GPCM or slope.
+- [ ] Predeclare eligible estimands, coordinate transforms, numerical units,
+  raw-token precision states, q ladders, and boundary conventions by row.
+- [ ] Predeclare the complete denominator and typed outcome for every expected
+  row, including external failure, mfrmr readiness review, structural rejection,
+  and deliberately ineligible controls.
+- [ ] Attach one retained package/release decision to every passing row and
+  remove rows that cannot change a decision.
+- [ ] Include negative controls for category-map mismatch, free-dimension
+  mismatch, disconnected design, unsupported JML free-score requests, missing
+  outputs, and semantic status-zero failure.
+- [ ] Freeze metric-specific acceptance, stop, expansion, and invalidation
+  rules before any successor candidate output is opened.
+- [ ] Close P1 only after a review performed without launching ConQuest confirms
+  C1 eligibility, complete denominators, negative-control rejection, and claim
+  boundaries.
+
+#### P2 -- additive RSM/PCM adversarial envelope
+
+- [ ] Build a small deterministic connected-sparse fixture with more than one
+  independent bridge and a truth-known, exactly reconstructable design.
+- [ ] Add a weak single-bridge sensitivity fixture without treating it as the
+  sole evidence for connected sparsity.
+- [ ] Add an unequal-Rater-workload fixture while holding the estimand and
+  ordered category support fixed.
+- [ ] Add paired planned-missing-row and explicit-missing-value fixtures with a
+  prospectively stated equivalence/non-equivalence expectation.
+- [ ] Add rare boundary-category cases and an unused intermediate-category
+  negative control.
+- [ ] Add nonextreme/extreme Person strata and type every finite, unbounded,
+  adjusted-display, and posterior quantity before comparison.
+- [ ] Add a disconnected-design negative control that must stop before numeric
+  agreement is evaluated.
+- [ ] Implement independent probability and marginal-likelihood oracles for
+  every comparison-eligible deterministic fixture.
+- [ ] Freeze parameter-class coordinate metrics, matched-constant deviance,
+  within-engine q movement, fitted probabilities, eligible EAP/posterior SD,
+  ordering/ties, readiness states, and decision consequences.
+- [ ] Review P2 fixtures, identities, oracles, raw-token policy, complete
+  denominator, and expiry-aware execution cap without launching ConQuest.
+- [ ] Authorize and run only the smallest frozen external P2 slice after P0,
+  P1, and all preceding P2 construction/review items pass.
+- [ ] Diagnose every outcome under the failure taxonomy before authorizing a
+  wider deterministic slice or any replication.
+- [ ] Close P2 only when C0--C5 pass for the exact claimed additive envelope, or
+  record a narrower/failed conclusion without dropping ineligible rows.
+
+#### P3 -- disjoint item-only GPCM candidate
+
+- [x] Retain the existing exact probability/coordinate map between mfrmr's
+  free-population identification and ConQuest `scoresfree` as prerequisite
+  evidence, not candidate confirmation (`conquest-gpcm-overlap-record-0.2.3.md`,
+  2026-08-12).
+- [ ] Define a disjoint, prospectively governed dataset and execution identity;
+  do not reuse the opened native microcase as confirmation.
+- [ ] Include at least one unit-slope PCM reduction and multiple non-unit-slope
+  controls with all item transitions observed.
+- [ ] Include an intercept-only population and one prespecified latent-regression
+  covariate design with matched inclusion and variance conventions.
+- [ ] Prove the continuous-target and finite-integration contracts using
+  independent probability and marginal-likelihood reconstruction.
+- [ ] Freeze a q ladder and distinguish `integration_unresolved` from optimizer
+  or cross-engine disagreement before execution.
+- [ ] Freeze relative-slope, population-scale, transition-threshold, deviance,
+  fitted-probability, raw-token, and reported-resolution rules.
+- [ ] Keep TAM pairwise differences separate as optional third-implementation
+  evidence; never use a two-against-one vote to override an oracle failure.
+- [ ] Exclude many-facet slope-owner claims unless a separate C1 proof establishes
+  identical probabilities, constraints, and free dimensions.
+- [ ] Authorize the external candidate only after P0/P1 pass and the smallest
+  P2 external slice has been classified without an unresolved infrastructure
+  defect.
+- [ ] Diagnose every expected row under the complete denominator and failure
+  taxonomy before any confirmation decision.
+- [ ] Close P3 only for the exact item-only GPCM envelope that passes C0--C5;
+  never generalize by the GPCM name to multifacet free-slope models.
+
+#### P4 -- conditional replicated confirmation
+
+- [ ] Decide from P2/P3 deterministic evidence whether any retained decision is
+  still uncertain; record `replication_not_needed` when none can change.
+- [ ] If replication is needed, predeclare the independent sampling unit,
+  target disagreement/failure rate, confidence or MCSE precision, and maximum
+  claim before generating data.
+- [ ] Freeze metric-specific replication counts or sequential stop/expand/abort
+  rules; do not use one universal replication count.
+- [ ] Keep every generated row in the denominator and report failed/ineligible
+  fits separately from conditional numerical agreement.
+- [ ] Stop when the precision target is met, the decision is resolved, or the
+  maximum scope is reached; expiry pressure cannot expand the plan.
+- [ ] Close P4 with either a precision-qualified confirmation or an explicit
+  unresolved/narrowed decision.
+
+#### P5 -- release and maintenance handoff
+
+- [ ] State the exact matched overlap, observed ConQuest versions/platforms,
+  covered designs, and covered parameter/decision classes.
+- [ ] List all negative-control, ineligible, failed, boundary-limited,
+  integration-limited, and unresolved outcomes using the fixed denominator.
+- [ ] Map the evidence to public decisions that are supported, caveated,
+  disabled, or deferred; do not claim general software interchangeability.
+- [ ] Define the smallest dependency-based sentinel for changes to likelihood,
+  constraints, category handling, integration, parsers, transforms, or the
+  ConQuest runtime.
+- [ ] Confirm that ConQuest remains optional and absent from package runtime,
+  ordinary tests, source-package requirements, and CRAN checks.
+- [ ] Update the release spine and public support boundary only after the exact
+  preceding gates relevant to each claim are complete.
+
+#### Per-run Go/No-Go checklist template
+
+Copy this block into every successor candidate record. All items must be
+checked before external output is opened; otherwise the run is not authorized.
+
+- [ ] The row exists in the frozen registry and changes a named retained
+  decision.
+- [ ] Runtime C0, exact model identity C1, and independent oracle C2 have passed.
+- [ ] Category support, missingness/weights, A/C matrices, free dimensions,
+  constraints, population target, and integration target are explicit.
+- [ ] Eligible coordinates, raw-token precision, boundary conventions, q
+  ladder, tolerance, complete denominator, and failure classes are frozen.
+- [ ] Required negative controls reject correctly.
+- [ ] Input/output locations are isolated, expected output schemas are listed,
+  and semantic failure cannot pass through status zero.
+- [ ] The executable identity and expiry-aware scope cap are recorded.
+- [ ] The smallest sufficient run has been chosen and no already-opened fixture
+  is being reused as its own confirmation.
+- [ ] Reviewer, authorization date, and prospective record identity are present.
+
+Any unchecked item is a No-Go. After output is visible, a failed early layer
+cannot be repaired by later agreement: stop, classify, narrow the claim, and
+create a new prospective candidate only if the retained decision still
+requires one.
+
+This checklist displaces new model families, broad G-theory execution, and
+unfocused high-replication simulation. Internal invariance, readiness, and
+boundary work continues when it is a direct prerequisite for interpreting a
+ConQuest row; it does not become secondary merely because an external program
+is available.
 
 ## Current position
 

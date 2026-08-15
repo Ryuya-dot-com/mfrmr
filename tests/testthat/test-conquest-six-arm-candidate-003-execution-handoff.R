@@ -63,7 +63,7 @@ test_that("candidate-003 ordered invocation and source are frozen", {
   }
 })
 
-test_that("candidate-003 exact handoff is ready before launch", {
+test_that("candidate-003 exact handoff is one-way across launch", {
   ctx <- load_conquest_candidate_003_execution_handoff()
   candidate_root <- file.path(
     ctx$root, ctx$env$mfrmr_cq_c3_candidate_root
@@ -72,21 +72,34 @@ test_that("candidate-003 exact handoff is ready before launch", {
   if (dir.exists(candidate_root) &&
       file.exists(ctx$env$mfrmr_cq_c3eh_executable_path)) {
     review <- ctx$env$mfrmr_cq_c3eh_review(candidate_root, ctx$root)
-    expect_identical(
-      review$status,
-      "candidate_003_ordered_execution_authorized_semantic_gate_required"
-    )
     expect_true(review$executable$PathOK)
     expect_true(review$executable$Executable)
     expect_true(review$executable$IdentityOK)
     expect_true(review$invocation_hash_ok)
-    expect_true(all(review$invocation$PathReady))
-    expect_true(review$reference$numerical_reference_ready)
     expect_false(review$reference$inference_ready)
-    expect_true(review$candidate_execution_authorized)
-    expect_identical(review$authorized_arm_count, 6L)
-    expect_true(review$run_once)
-    expect_true(review$arm_by_arm_semantic_gate_required)
+    if (all(review$invocation$ConsoleAbsent)) {
+      expect_identical(
+        review$status,
+        "candidate_003_ordered_execution_authorized_semantic_gate_required"
+      )
+      expect_true(all(review$invocation$PathReady))
+      expect_true(review$reference$numerical_reference_ready)
+      expect_true(review$candidate_execution_authorized)
+      expect_identical(review$authorized_arm_count, 6L)
+      expect_true(review$run_once)
+      expect_true(review$arm_by_arm_semantic_gate_required)
+    } else {
+      expect_identical(
+        review$status,
+        "candidate_003_execution_handoff_invalid_or_already_opened"
+      )
+      expect_false(all(review$invocation$PathReady))
+      expect_false(review$reference$numerical_reference_ready)
+      expect_false(review$candidate_execution_authorized)
+      expect_identical(review$authorized_arm_count, 0L)
+      expect_false(review$run_once)
+      expect_false(review$arm_by_arm_semantic_gate_required)
+    }
     expect_false(review$existing_output_reuse_authorized)
     expect_false(review$comparison_authorized)
     expect_false(review$scientific_equivalence_inferred)
@@ -179,7 +192,7 @@ test_that("opened output and identity drift invalidate the handoff", {
   )
 })
 
-test_that("candidate-003 execution-handoff record is source-bound", {
+test_that("candidate-003 handoff record retains its historical source binding", {
   ctx <- load_conquest_candidate_003_execution_handoff()
   record_path <- file.path(
     ctx$validation,
@@ -187,26 +200,31 @@ test_that("candidate-003 execution-handoff record is source-bound", {
   )
   expect_true(file.exists(record_path))
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
-  artifacts <- c(
-    file.path(
-      ctx$validation,
-      c(
-        "conquest-six-arm-candidate-003-execution-handoff-0.2.3.R",
-        "conquest-six-arm-candidate-003-reference-preflight-0.2.3.R"
-      )
-    ),
-    file.path(
-      ctx$root, "tests", "testthat",
-      "test-conquest-six-arm-candidate-003-execution-handoff.R"
+  immutable_artifacts <- file.path(
+    ctx$validation,
+    c(
+      "conquest-six-arm-candidate-003-execution-handoff-0.2.3.R",
+      "conquest-six-arm-candidate-003-reference-preflight-0.2.3.R"
     )
   )
   hashes <- vapply(
-    artifacts, digest::digest, character(1L),
+    immutable_artifacts, digest::digest, character(1L),
     algo = "sha256", file = TRUE, serialize = FALSE
   )
   expect_true(all(vapply(
     hashes, grepl, logical(1L), x = record, fixed = TRUE
   )))
+  historical_test_sha256 <-
+    "aa7a95a18df51d4a64a9d1874deaba8e1329a712562a3dea6bff9104bbc70d3c"
+  active_test_path <- file.path(
+    ctx$root, "tests", "testthat",
+    "test-conquest-six-arm-candidate-003-execution-handoff.R"
+  )
+  active_test_sha256 <- digest::digest(
+    active_test_path, algo = "sha256", file = TRUE, serialize = FALSE
+  )
+  expect_match(record, historical_test_sha256, fixed = TRUE)
+  expect_false(identical(active_test_sha256, historical_test_sha256))
   identities <- c(
     ctx$env$mfrmr_cq_c3eh_candidate_id,
     ctx$env$mfrmr_cq_c3eh_source_commit,

@@ -43,7 +43,21 @@ identify whether the opt-in layer ran and retain its test log.
 - `internal-roadmap-0.2.3.md`: repository-only maintainer roadmap containing
   detailed release sequencing, evidence invalidation, local external-tool
   identities, and completion gates that do not belong in user-facing roadmap
-  prose.
+  prose. Its 2026-08-15 controlling overlay makes matched ConQuest work the
+  highest-priority external lane, with semantic runtime continuity, adversarial
+  model-identity checks, decision-level consequences, and precision-planned
+  confirmation ahead of broader simulation or new model families. A canonical
+  P0--P5 checklist is the overlay's sole mutable progress surface and includes
+  an all-checked Go/No-Go template for every successor external run.
+- `conquest-semantic-runtime-preflight-0.2.3.R` and
+  `conquest-semantic-runtime-preflight-record-0.2.3.md`: reusable ConQuest C0
+  boundary requiring an explicit executable path and data-free `quit;`
+  sentinel. It records version/edition/expiry, architecture, invocation,
+  locale, exit and terminal semantics; rejects status-zero semantic failures;
+  keeps runtime and estimation states separate; and requires the smallest
+  frozen numerical sentinel before a changed runtime can reopen broader
+  prospective execution. Ordinary tests inject a fake runner and never launch
+  ConQuest.
 - `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
   parameter, and metric-specific comparison readiness. It defines component
   precedence, the conservative legacy `InferenceReady` mapping, typed
