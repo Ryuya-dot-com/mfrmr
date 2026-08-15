@@ -521,15 +521,26 @@ wording.
   `design_rank_not_evaluated` hold
   (`conquest-p2-candidate-004-numerical-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Disaggregate candidate 004's internal design-rank hold without refitting
+- [x] Disaggregate candidate 004's internal design-rank hold without refitting
   or using ConQuest agreement as a substitute. Audit the additive constrained
   design, nonlinear variance map, observed-pattern score span, retained
   information, fixed-quadrature local state, and global/continuous MML state
   separately. The candidate-004 rank-hold contract is frozen and explicitly
-  forbids local full rank from clearing the global hold; its saved-fit review
-  has not yet run
+  forbids local full rank from clearing the global hold. The saved-fit review
+  passes every local layer: additive ranks are 9/9 for RSM and 13/13 for PCM,
+  observed-pattern score ranks are 10/10 and 14/14, and all four fixed-q local
+  states are full-rank sufficient. Global marginal and continuous-integral
+  identification and weak-information classification remain open, so all four
+  fit-level readiness states remain `review/not_evaluated`
   (`conquest-p2-candidate-004-rank-hold-contract-record-0.2.3.md`,
+  `conquest-p2-candidate-004-rank-hold-observation-record-0.2.3.md`,
   2026-08-15).
+- [ ] Choose the next gate by claim, not by ritual. For promotion of only the
+  bounded exact-reported-decimal ConQuest comparison, request independent
+  review while retaining the non-inference-ready caveat. For an inference-
+  ready or general-identification claim, first freeze and satisfy a global and
+  continuous-integral MML identification argument. Neither path may borrow the
+  other path's evidence.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.
