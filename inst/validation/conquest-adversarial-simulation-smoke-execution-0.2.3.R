@@ -438,6 +438,42 @@ mfrmr_cq_ase_validate_tables <- function(tables) {
     identical(mfrmr_cq_ase_key(absent), mfrmr_cq_ase_key(explicit)) &&
       identical(absent$Response, explicit$Response)
   }, logical(1L)))
+  response_semantics <- all(vapply(
+    manifest$DatasetId, function(dataset_id) {
+      current <- response[response$DatasetId == dataset_id, , drop = FALSE]
+      primary <- current[
+        current$RepresentationId != "explicit_missing", , drop = FALSE
+      ]
+      row <- manifest[manifest$DatasetId == dataset_id, , drop = FALSE]
+      count <- tabulate(primary$Response + 1L, nbins = 4L)
+      nrow(row) == 1L && nrow(primary) == row$ObservedRows &&
+        length(unique(primary$Person)) == row$Persons &&
+        identical(
+          count,
+          as.integer(unlist(row[, paste0("Category", 0:3), drop = FALSE]))
+        ) &&
+        all(primary$Response %in% 0:3) &&
+        all(primary$ResponseObserved) &&
+        all(primary$LatentUniform > 0 & primary$LatentUniform < 1) &&
+        all(primary$ResponseUniform > 0 & primary$ResponseUniform < 1) &&
+        all(is.na(current$Response[!current$ResponseObserved])) &&
+        all(is.na(current$ResponseUniform[!current$ResponseObserved]))
+    }, logical(1L)
+  ))
+  arm_row_counts <-
+    identical(
+      as.integer(table(factor(
+        tables$engine_outcome$DatasetId, levels = manifest$DatasetId
+      ))), rep(2L, 18L)
+    ) && identical(
+      as.integer(table(factor(
+        tables$metric_outcome$DatasetId, levels = manifest$DatasetId
+      ))), rep(12L, 18L)
+    ) && identical(
+      as.integer(table(factor(
+        tables$continuous_oracle$DatasetId, levels = manifest$DatasetId
+      ))), rep(2L, 18L)
+    )
   available && all(columns) && all(keys) &&
     nrow(manifest) == 18L && !anyDuplicated(manifest$DatasetId) &&
     !anyDuplicated(manifest$ArmId) &&
@@ -447,7 +483,8 @@ mfrmr_cq_ase_validate_tables <- function(tables) {
     !any(manifest$PrototypeResponseVectorReused) &&
     !any(manifest$SmokeResultCanTuneDesign) &&
     nrow(structural) == 18L && all(structural$DispositionMatchesExpected) &&
-    paired_equivalent &&
+    setequal(structural$DatasetId, manifest$DatasetId) &&
+    paired_equivalent && response_semantics && arm_row_counts &&
     nrow(tables$engine_outcome) == 36L &&
     !any(tables$engine_outcome$Attempted) &&
     all(tables$engine_outcome$RetainedInUnconditionalDenominator) &&
@@ -551,6 +588,10 @@ mfrmr_cq_ase_review_output <- function(output_dir) {
   output_dir <- normalizePath(
     as.character(output_dir)[1L], winslash = "/", mustWork = TRUE
   )
+  mfrmr_cq_ase_assert(
+    identical(basename(output_dir), mfrmr_cq_ase_output_basename),
+    "The reviewed smoke output directory is not the frozen target."
+  )
   schema <- mfrmr_cq_asg_output_schema_registry()
   expected <- c(paste0(schema$TableId, ".csv"), "smoke_result.rds")
   present <- list.files(output_dir, all.files = FALSE, no.. = TRUE)
@@ -558,13 +599,20 @@ mfrmr_cq_ase_review_output <- function(output_dir) {
   observed <- mfrmr_cq_ase_read_tables(output_dir)
   replay <- mfrmr_cq_ase_generate_all()
   tables_valid <- mfrmr_cq_ase_validate_tables(observed)
+  container <- tryCatch(
+    readRDS(file.path(output_dir, "smoke_result.rds")),
+    error = function(error) NULL
+  )
+  container_valid <- is.list(container) &&
+    mfrmr_cq_ase_validate_tables(container)
   replay_match <- mfrmr_cq_ase_semantic_replay_match(observed, replay)
   manifest <- observed$dataset_manifest
   structural <- observed$structural_disposition
+  complete <- files_complete && tables_valid && container_valid && replay_match
   list(
     specification = mfrmr_cq_ase_specification,
     contract_version = mfrmr_cq_ase_contract,
-    status = if (files_complete && tables_valid && replay_match) {
+    status = if (complete) {
       "ASP_G3_eighteen_smoke_datasets_generated_and_retained"
     } else {
       "ASP_G3_smoke_execution_or_semantic_replay_failed"
@@ -572,6 +620,7 @@ mfrmr_cq_ase_review_output <- function(output_dir) {
     output_dir = output_dir,
     files_complete = files_complete,
     tables_valid = tables_valid,
+    container_valid = container_valid,
     semantic_replay_match = replay_match,
     generated_datasets = nrow(manifest),
     unique_arms = length(unique(manifest$ArmId)),
@@ -596,9 +645,13 @@ mfrmr_cq_ase_review_output <- function(output_dir) {
     ConQuest_execution_attempted = FALSE,
     operating_characteristics_estimated = FALSE,
     result_used_to_tune_design = FALSE,
-    G3_smoke_execution_complete = files_complete && tables_valid && replay_match,
-    G3_complete = files_complete && tables_valid && replay_match,
-    next_gate = "ASP-G4-CALIBRATION-FREEZE",
+    G3_smoke_execution_complete = complete,
+    G3_complete = complete,
+    next_gate = if (complete) {
+      "ASP-G4-CALIBRATION-FREEZE"
+    } else {
+      "ASP-G3-SMOKE-REVIEW-HOLD"
+    },
     public_text_change_authorized = FALSE,
     scientific_equivalence_inferred = FALSE
   )

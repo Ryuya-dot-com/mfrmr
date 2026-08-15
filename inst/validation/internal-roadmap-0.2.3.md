@@ -814,13 +814,23 @@ wording.
   sampled response, fit, or ConQuest output was generated or opened
   (`conquest-adversarial-simulation-smoke-authorization-record-0.2.3.md`,
   2026-08-15).
-- [ ] Generate exactly one sealed smoke dataset per scenario-family arm into
+- [x] Generate exactly one sealed smoke dataset per scenario-family arm into
   the frozen six-table schema. Retain all eighteen arms unconditionally and
   use the results only for generation, replay, schema, and structural-prefit
   mechanics; do not estimate operating characteristics or tune any rule.
-- [ ] Freeze and run a disjoint calibration band solely to estimate failure,
-  variability, runtime, and storage; do not reuse calibration rows for a
-  confirmation claim.
+  Eighteen unique arms and seeds were retained; 7,032 response-representation
+  rows reconcile, all fourteen eligible and four expected-rejection structural
+  dispositions pass, semantic replay passes, and no prototype response vector,
+  fit, or ConQuest output was used. The stale rank-field adapter and lossless
+  CSV type-inference review incidents remain recorded rather than discarded
+  (`conquest-adversarial-simulation-smoke-execution-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Freeze the calibration seed band, failure taxonomy, permitted exploratory
+  summaries, and runtime/storage cap without generating or opening calibration
+  responses.
+- [ ] Run the frozen disjoint calibration band solely to estimate failure,
+  variability, runtime, and storage; retain every row and do not reuse
+  calibration rows for a confirmation claim.
 - [ ] Set metric-specific decision loss, precision/MCSE targets, replication
   counts, untouched seeds, and stop/expand/abort rules before confirmation.
 - [ ] Run and classify P2 RSM/PCM confirmation before considering the separate

@@ -208,7 +208,7 @@ test_that("record and roadmap separate authorization from execution", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Generate exactly one sealed smoke dataset per",
+    roadmap, "[x] Generate exactly one sealed smoke dataset per",
     fixed = TRUE
   )
 })
