@@ -201,6 +201,27 @@ identify whether the opt-in layer ran and retain its test log.
   four-arm q61/q121 bundle with exact wide data, command semantics, output registry,
   run-once journal, and semantic stop rule. Tests prepare only temporary
   unopened bundles and never execute ConQuest.
+- `conquest-p2-candidate-004-execution-observation-0.2.3.R` and its record:
+  retain the completed four-arm execution denominator, including semantic
+  termination and 32/32 required native outputs, without numerical promotion.
+- `conquest-p2-candidate-004-numerical-review-contract-0.2.3.R`, its record,
+  and the corresponding numerical observation: freeze and apply the inherited
+  reported-decimal, matched-deviance, quadrature, probability, ordering,
+  typed-ineligible, and nonpromotion rules. The complete same-author numerical
+  core passes, while independent review and inference readiness remain open.
+- `conquest-p2-candidate-004-rank-hold-contract-0.2.3.R`, its observation, and
+  their records: disaggregate additive, observed-pattern, fixed-quadrature
+  local, global marginal, continuous-integral, and weak-information layers.
+  Local ranks pass without clearing the global identification or readiness
+  holds.
+- `conquest-p2-candidate-004-reviewer-adversarial-controls-record-0.2.3.md`:
+  retains semantic positive and negative reviewer controls without treating
+  serialization or byte identity as scientific evidence.
+- `conquest-p2-candidate-004-independent-review-handoff-0.2.3.R` and its
+  record: select only the bounded RSM/PCM q61/q121 claim and freeze reviewer
+  independence, raw-evidence primacy, fifteen required tasks, full
+  denominators, explicit nonclaims, and fail-closed no-rerun adjudication. The
+  independent review itself remains unperformed.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

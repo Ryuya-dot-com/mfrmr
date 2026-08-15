@@ -542,12 +542,17 @@ wording.
   (`conquest-p2-candidate-004-rank-hold-contract-record-0.2.3.md`,
   `conquest-p2-candidate-004-rank-hold-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Choose the next gate by claim, not by ritual. For promotion of only the
+- [x] Choose the next gate by claim, not by ritual. For promotion of only the
   bounded exact-reported-decimal ConQuest comparison, request independent
   review while retaining the non-inference-ready caveat. For an inference-
   ready or general-identification claim, first freeze and satisfy a global and
   continuous-integral MML identification argument. Neither path may borrow the
-  other path's evidence.
+  other path's evidence. The bounded path is selected and its review handoff is
+  frozen with reviewer non-overlap, raw-artifact primacy, fifteen mandatory
+  tasks, complete denominators, explicit nonclaims, and no-rerun rules. No
+  reviewer is assigned and no review result is implied
+  (`conquest-p2-candidate-004-independent-review-handoff-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.
