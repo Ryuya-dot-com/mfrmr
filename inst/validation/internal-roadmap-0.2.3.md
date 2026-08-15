@@ -461,8 +461,9 @@ wording.
   2026-08-15).
 - [x] Add separate nonextreme/extreme Person fixtures
   (`conquest-p2-additive-adversarial-fixtures-0.2.3.R`, 2026-08-15).
-- [ ] Type every finite, unbounded, adjusted-display, and posterior quantity
-  before an extreme-Person numerical comparison.
+- [x] Type every finite, unbounded, adjusted-display, and posterior quantity
+  before an extreme-Person numerical comparison
+  (`conquest-p2-metric-boundary-contract-record-0.2.3.md`, 2026-08-15).
 - [x] Add a disconnected-design negative control that must stop before numeric
   agreement is evaluated
   (`test-conquest-p2-additive-adversarial-fixtures.R`, 2026-08-15).
@@ -470,9 +471,10 @@ wording.
   likelihood oracles for every deterministic P2 fixture
   (`conquest-p2-additive-adversarial-fixtures-0.2.3.R` and its test,
   2026-08-15).
-- [ ] Freeze parameter-class coordinate metrics, matched-constant deviance,
+- [x] Freeze parameter-class coordinate metrics, matched-constant deviance,
   within-engine q movement, fitted probabilities, eligible EAP/posterior SD,
-  ordering/ties, readiness states, and decision consequences.
+  ordering/ties, readiness states, and decision consequences
+  (`conquest-p2-metric-boundary-contract-0.2.3.R` and its record, 2026-08-15).
 - [ ] Review P2 fixtures, identities, oracles, raw-token policy, complete
   denominator, and expiry-aware execution cap without launching ConQuest.
 - [ ] Authorize and run only the smallest frozen external P2 slice after P0,

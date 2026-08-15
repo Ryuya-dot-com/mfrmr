@@ -193,7 +193,7 @@ test_that("the P2 fixture source cannot launch ConQuest", {
   expect_false(grepl("SHA-256", source, fixed = TRUE))
 })
 
-test_that("the P2 record and checklist preserve every open gate", {
+test_that("the P2 fixture record stays historical while later gates advance", {
   ctx <- load_conquest_p2_additive_fixtures()
   record_path <- file.path(
     ctx$validation,
@@ -218,12 +218,12 @@ test_that("the P2 record and checklist preserve every open gate", {
   )))
   expect_match(
     roadmap,
-    "[ ] Type every finite, unbounded, adjusted-display",
+    "[x] Type every finite, unbounded, adjusted-display",
     fixed = TRUE
   )
   expect_match(
     roadmap,
-    "[ ] Freeze parameter-class coordinate metrics",
+    "[x] Freeze parameter-class coordinate metrics",
     fixed = TRUE
   )
   expect_match(

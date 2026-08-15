@@ -73,7 +73,16 @@ identify whether the opt-in layer ran and retain its test log.
   representations, category and extreme-score stress, and disconnected
   rejection. Independent A/C coefficient maps reproduce direct probabilities,
   and all thirteen fixtures have finite continuous-target likelihood oracles.
-  Metric rules, independent review, and external execution remain pending.
+  This construction layer authorizes no comparison; the separate contract
+  below freezes metric rules while independent review and execution stay open.
+- `conquest-p2-metric-boundary-contract-0.2.3.R` and
+  `conquest-p2-metric-boundary-contract-record-0.2.3.md`: prospective P2
+  boundary-state, metric, denominator, and stop/expansion freeze. It keeps
+  native finite/unbounded, adjusted-display, and posterior quantities distinct;
+  reuses unchanged exact-reported-decimal coordinate/deviance budgets; derives
+  the conditional-probability bound from the independent A matrix; and retains
+  147 metric rows/5,073 atomic outcomes. EAP/SD remain typed ineligible pending
+  posterior-identity proof. Independent review and execution remain pending.
 - `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
   parameter, and metric-specific comparison readiness. It defines component
   precedence, the conservative legacy `InferenceReady` mapping, typed
