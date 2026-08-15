@@ -403,6 +403,15 @@ wording.
   category support, dimensions, common data, and the existing metric/stop
   contracts. Require nonzero covariate score separation, non-collapsed Person
   signal, and nontrivial facet sufficient statistics before authorization.
+- [x] Freeze one no-search PCM-generating replacement seed and thirteen pre-fit
+  gates. Retain its 12/13 result and reject candidate 002 because one
+  Rater-by-Criterion-by-category cell is empty; do not search seeds or fit a
+  model (`conquest-p2-replacement-nondegenerate-fixture-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Give candidate 003 a prospectively defined support-guaranteeing response
+  design rather than seed selection. It must retain probability weighting and
+  pass the same population/facet-signal, graph, shape, and full-cell support
+  gates before any mfrmr fit preflight.
 - [ ] Give the replacement a new candidate identity, empty output root, fresh
   data-free sentinel, and new minimum audit. Do not rerun, repair, salvage, or
   reorder the consumed candidate.
