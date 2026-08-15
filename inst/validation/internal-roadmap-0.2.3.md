@@ -435,7 +435,11 @@ wording.
   Separate the diagnostic starting grid from the governing dense-grid pair,
   justify the choice from integration theory and pre-candidate evidence, retain
   a complete coordinate/deviance denominator, and do not tune the `2e-6` budget
-  from candidate-003 output.
+  from candidate-003 output. The `31;61;121` contract is now frozen with
+  q31--q61 diagnostic, q61--q121 governing at the unchanged P2 budget, and a
+  q121--continuous gate; its thirteen-fixture no-fit truth-oracle audit remains
+  unopened (`conquest-p2-successor-integration-contract-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Generate one disjoint candidate-004 fixture only after the successor
   integration contract is frozen. It must use a new candidate identity and
   seed, the same thirteen pre-fit gates, probability-weighted support

@@ -137,6 +137,12 @@ identify whether the opt-in layer ran and retain its test log.
   design-rank holds, plus complete RSM/PCM q31--q61 movement failures. Candidate
   003 cannot rerun or launch ConQuest; a successor integration contract must
   precede any disjoint candidate.
+- `conquest-p2-successor-integration-contract-0.2.3.R` and
+  `conquest-p2-successor-integration-contract-record-0.2.3.md`: prospectively
+  separates required q31--q61 diagnostics from governing q61--q121 and
+  q121--continuous layers for a future disjoint P2 candidate. It cannot rescue
+  candidate 003, copies no P3 numerical budget, and holds candidate 004 until a
+  thirteen-fixture, no-fit truth-oracle audit passes.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
