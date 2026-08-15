@@ -172,7 +172,7 @@ test_that("execution is opt-in, new-directory-only, and ConQuest-free", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("record and roadmap keep the preflight unopened", {
+test_that("frozen record stays unopened while roadmap records the later run", {
   ctx <- load_conquest_p2_candidate_004_mfrmr_preflight()
   record_path <- file.path(
     ctx$validation,
@@ -187,7 +187,7 @@ test_that("record and roadmap keep the preflight unopened", {
   expect_match(record, "generating truth", fixed = TRUE)
   expect_match(
     roadmap,
-    "mfrmr preflight contract is frozen",
+    "[x] Freeze and run a candidate-004 mfrmr-only preflight",
     fixed = TRUE
   )
 })

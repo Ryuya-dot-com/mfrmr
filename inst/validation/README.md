@@ -186,6 +186,11 @@ identify whether the opt-in layer ran and retain its test log.
   six-fit q31/q61/q121 initial phase, conditional two-fit q241 phase, inherited
   fit gates, whole-slice dense-pair selection, and fitted-coordinate log-
   centered target. Its execution remains unopened and cannot launch ConQuest.
+- `conquest-p2-candidate-004-mfrmr-preflight-observation-0.2.3.R` and
+  `conquest-p2-candidate-004-mfrmr-preflight-observation-record-0.2.3.md`:
+  retains the six structurally/numerically eligible but not inference-ready
+  fits, diagnostic q31 movement, and q61--q121 dense-pair/continuous-target
+  pass. q241 was not run; external execution still requires a new review.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

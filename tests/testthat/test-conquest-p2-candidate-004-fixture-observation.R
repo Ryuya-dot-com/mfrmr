@@ -101,7 +101,7 @@ test_that("record and roadmap keep later work blocked", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze and run a candidate-004 mfrmr-only preflight",
+    "[x] Freeze and run a candidate-004 mfrmr-only preflight",
     fixed = TRUE
   )
 })
