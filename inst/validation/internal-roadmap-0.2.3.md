@@ -436,8 +436,10 @@ wording.
   mismatch, disconnected design, unsupported JML free-score requests, missing
   outputs, and semantic status-zero failure
   (`test-conquest-successor-semantic-registry.R`, 2026-08-15).
-- [ ] Freeze metric-specific acceptance, stop, expansion, and invalidation
-  rules before any successor candidate output is opened.
+- [x] Freeze metric-specific acceptance, stop, expansion, and invalidation
+  rules before any successor candidate output is opened
+  (`conquest-p2-metric-boundary-contract-record-0.2.3.md` and
+  `conquest-p3-metric-precision-contract-record-0.2.3.md`, 2026-08-15).
 - [ ] Close P1 only after a review performed without launching ConQuest confirms
   C1 eligibility, complete denominators, negative-control rejection, and claim
   boundaries.
@@ -504,14 +506,18 @@ wording.
   independent probability and marginal-likelihood reconstruction
   (`conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and its test,
   2026-08-15).
-- [ ] Freeze a q ladder and distinguish `integration_unresolved` from optimizer
-  or cross-engine disagreement before execution.
-- [ ] Freeze relative-slope, population-scale, transition-threshold, deviance,
-  fitted-probability, raw-token, and reported-resolution rules.
-- [ ] Keep TAM pairwise differences separate as optional third-implementation
-  evidence; never use a two-against-one vote to override an oracle failure.
-- [ ] Exclude many-facet slope-owner claims unless a separate C1 proof establishes
-  identical probabilities, constraints, and free dimensions.
+- [x] Freeze a q ladder and distinguish `integration_unresolved` from optimizer
+  or cross-engine disagreement before execution
+  (`conquest-p3-metric-precision-contract-0.2.3.R`, 2026-08-15).
+- [x] Freeze relative-slope, population-scale, transition-threshold, deviance,
+  fitted-probability, raw-token, and reported-resolution rules
+  (`conquest-p3-metric-precision-contract-record-0.2.3.md`, 2026-08-15).
+- [x] Keep TAM pairwise differences separate as optional third-implementation
+  evidence; never use a two-against-one vote to override an oracle failure
+  (`conquest-p3-metric-precision-contract-0.2.3.R`, 2026-08-15).
+- [x] Exclude many-facet slope-owner claims unless a separate C1 proof establishes
+  identical probabilities, constraints, and free dimensions
+  (`conquest-p3-metric-precision-contract-0.2.3.R`, 2026-08-15).
 - [ ] Authorize the external candidate only after P0/P1 pass and the smallest
   P2 external slice has been classified without an unresolved infrastructure
   defect.

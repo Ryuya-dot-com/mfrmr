@@ -291,7 +291,7 @@ test_that("the P3 record closes construction and preserves later gates", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze relative-slope, population-scale, transition-threshold",
+    "[x] Freeze relative-slope, population-scale, transition-threshold",
     fixed = TRUE
   )
   expect_match(

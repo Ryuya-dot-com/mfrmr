@@ -121,13 +121,13 @@ execution state, dependency contract, or registry stratum is altered. They
 also prohibit a ConQuest process call, a machine-specific executable path, and
 SHA-based scientific acceptance in this construction layer.
 
-This record closes only P3 fixture/oracle construction. The next P3 layer must
-freeze raw-token states, relative-slope, population-scale, transition,
-deviance, fitted-probability, q-movement, complete-denominator, and stop/
-invalidation rules. It must distinguish `integration_unresolved` from
-optimizer or cross-engine disagreement before any external output is opened.
-P0/P1 independent review, the smallest classified P2 external slice, and all
-later authorization gates remain open.
+This record closes only P3 fixture/oracle construction. The separate
+`conquest-p3-metric-precision-contract-record-0.2.3.md` now freezes raw-token,
+parameter, probability, q-movement, complete-denominator, and stop/invalidation
+rules without retroactively changing this construction layer's false metric
+flag. It also keeps `integration_unresolved` distinct from optimizer and
+cross-engine disagreement. P0/P1 independent review, the smallest classified
+P2 external slice, and all later authorization gates remain open.
 
 ## Artifacts
 

@@ -232,7 +232,7 @@ test_that("the P1 record and roadmap distinguish completed P2 binding from open 
   )
   expect_match(
     roadmap,
-    "[ ] Freeze metric-specific acceptance",
+    "[x] Freeze metric-specific acceptance",
     fixed = TRUE
   )
   expect_match(

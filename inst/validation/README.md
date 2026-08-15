@@ -64,9 +64,9 @@ identify whether the opt-in layer ran and retain its test log.
   three non-overlap/unsupported rows. Each row carries a human-readable model
   signature, independently reproducible free dimension where applicable,
   complete denominator, decision consequence, and claim ceiling. Fixture A/C
-  maps are now supplied by the separate P2/P3 construction overlays; P3
-  metric-specific numerical rules and independent P0/P1 review remain pending,
-  so the registry authorizes no ConQuest execution or comparison.
+  maps and metric rules are now supplied by the separate P2/P3 overlays;
+  independent P0/P1 review remains pending, so the registry authorizes no
+  ConQuest execution or comparison.
 - `conquest-p2-additive-adversarial-fixtures-0.2.3.R` and
   `conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 48-Person/4-Rater/3-Criterion RSM/PCM fixture suite covering
@@ -90,8 +90,16 @@ identify whether the opt-in layer ran and retain its test log.
   reduction, non-unit relative slopes, and intercept-only/covariate population
   models with all transitions observed. Independent observed-support A/C maps
   reproduce 240 direct probabilities, and q=31/61/121 likelihoods converge to
-  independent whole-line targets. Metric rules, independent review, execution,
-  comparison, and equivalence remain open.
+  independent whole-line targets. This construction layer authorizes nothing;
+  the separate metric contract below reaches independent offline review.
+- `conquest-p3-metric-precision-contract-0.2.3.R` and
+  `conquest-p3-metric-precision-contract-record-0.2.3.md`: prospective P3
+  estimand-specific budgets, decimal-token interval policy, integration-state
+  precedence, 23 metric types, 61 metric rows/861 atomic outcomes, and complete
+  stop/invalidation rules. q31--q61 is diagnostic; q61--q121 and q121 versus
+  continuous targets govern integration eligibility before cross-engine
+  metrics. TAM remains optional separate pairwise evidence with no voting.
+  Independent review and every external execution/comparison claim stay open.
 - `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
   parameter, and metric-specific comparison readiness. It defines component
   precedence, the conservative legacy `InferenceReady` mapping, typed

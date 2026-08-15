@@ -2,13 +2,13 @@
 
 Status: P1 semantic signatures, claim dispositions, complete denominators, and
 negative controls defined; disjoint P2/P3 fixture identities and independent
-A/C coefficient maps bound by downstream overlays; P3 metric-specific numerical
-rules and independent review pending, 2026-08-15.
+A/C coefficient maps plus metric-specific rules bound by downstream overlays;
+independent review pending, 2026-08-15.
 
 This is a prospective, repository-only record. No successor candidate output
 exists, and no comparison or scientific-equivalence claim is authorized. The
-separate P2 overlay now freezes its metric rules; the P3 overlay intentionally
-stops before its metric freeze.
+separate P2 and P3 overlays now freeze their stratum-specific metric rules but
+retain every review and execution gate.
 
 - Specification: `0.2.3-conquest-successor-semantic-registry-v1`
 - Contract: `mfrmr_conquest_successor_semantic_registry_v1`
@@ -97,9 +97,8 @@ following remain mandatory:
 
 - independently review the bound P2/P3 fixture identities, response schemas,
   exact observed-support A/C coefficient maps, and free dimensions;
-- freeze P3 raw-token and reported-resolution handling against its schemas;
-- freeze P3 parameter-class metric rules, complete-denominator adjudication,
-  stop rules, and dependency invalidation before output is opened; and
+- independently review both metric overlays' raw-token, parameter-class,
+  complete-denominator, stop, and dependency-invalidation rules; and
 - obtain the P0 and P1 independent reviews.
 
 The standalone base-registry implementation therefore continues to return
@@ -120,6 +119,8 @@ future independent P1 adjudication must inspect.
 - The P2 additive and P3 item-only fixture records bind their disjoint data,
   observed-support coefficient maps, free dimensions, and independent oracles
   without changing this registry's execution state.
+- The P2 boundary and P3 metric-precision records bind stratum-specific metric,
+  denominator, and stop rules without transferring evidence across strata.
 - This record states the current evidence and the gates that remain open.
 
 Hashes are not acceptance criteria for this registry. Future changes are
