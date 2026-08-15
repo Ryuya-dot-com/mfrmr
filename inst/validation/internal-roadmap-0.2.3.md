@@ -503,7 +503,7 @@ wording.
   only the execution denominator, not numerical agreement
   (`conquest-p2-candidate-004-execution-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Apply the already-frozen exact-reported-decimal, integration-movement,
+- [x] Apply the already-frozen exact-reported-decimal, integration-movement,
   probability, constraint, and ordering rules to all four candidate-004 arms.
   Retain any reported-resolution limit or failed coordinate without rerunning
   the candidate, changing a threshold, or dropping an atomic row. The
@@ -513,7 +513,17 @@ wording.
   ineligible, and separates this two-row numerical core from the wider P2
   design portfolio
   (`conquest-p2-candidate-004-numerical-review-contract-record-0.2.3.md`,
+  2026-08-15). The same-author technical review then passed every complete
+  denominator: 4/4 A matrices, 52/52 raw tokens, 64/64 cross-engine
+  coordinates, 4/4 cross-engine deviances, 64/64 q movements, 4/4 q-deviance
+  movements, 480/480 conditional probabilities, and 18/18 ordering rows.
+  EAP/SD remain typed-ineligible and all mfrmr fits retain the
+  `design_rank_not_evaluated` hold
+  (`conquest-p2-candidate-004-numerical-observation-record-0.2.3.md`,
   2026-08-15).
+- [ ] Resolve candidate 004's internal design-rank hold without refitting or
+  using ConQuest agreement as a substitute. Audit the exact RSM/PCM free-
+  coordinate design and preserve any structural alias or unreviewed state.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.
