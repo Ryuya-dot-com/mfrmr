@@ -251,6 +251,11 @@ identify whether the opt-in layer ran and retain its test log.
   candidate 004; make its dormant independent-review handoff nonblocking;
   freeze failure-mode classes, metric and denominator layers, execution order,
   and the seven exact-design fields that still prevent data generation.
+- `conquest-adversarial-simulation-template-contract-0.2.3.R` and its record:
+  close ASP-G1 with nine deterministic scenario classes across RSM and PCM,
+  explicit paired-missingness and boundary support audits, and a full
+  population-location predictor-rank proof for the disconnected negative
+  control. Prototype responses cannot become simulation data.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

@@ -165,7 +165,7 @@ test_that("record states the nonblocking review and generation firewall", {
   )
   expect_match(
     roadmap,
-    "[ ] Complete the six missing cross-family or disjoint deterministic",
+    "[x] Complete the six missing cross-family or disjoint deterministic",
     fixed = TRUE
   )
 })

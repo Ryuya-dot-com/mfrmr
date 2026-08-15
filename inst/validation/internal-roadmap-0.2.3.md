@@ -778,8 +778,17 @@ wording.
   Calibration cannot enter confirmation, and no universal replication count
   is preselected
   (`conquest-adversarial-simulation-program-record-0.2.3.md`, 2026-08-15).
-- [ ] Complete the six missing cross-family or disjoint deterministic
-  templates and validate all positive and negative structural dispositions.
+- [x] Complete the six missing cross-family or disjoint deterministic
+  template gaps as seven new arms, yielding nine scenario classes x RSM/PCM =
+  eighteen prototype arms. Validate the complete, sparse, weak-bridge,
+  workload, missingness, rare-category, and extreme-Person contracts directly.
+  For the disconnected negative control, require the full population-location
+  plus constrained conditional predictor to have rank 8/9 in RSM and 12/13 in
+  PCM because X is confounded with the two Person--Rater components; do not use
+  the graph label alone. Keep unused-category rejection as a support/boundary
+  claim despite its full algebraic predictor rank
+  (`conquest-adversarial-simulation-template-contract-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Freeze exact DGP values and implement a neutral response generator plus
   probability and continuous-target oracles that do not call either fit path.
 - [ ] Freeze a mechanics-only smoke seed band and output schema, then authorize
