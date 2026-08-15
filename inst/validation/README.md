@@ -266,6 +266,10 @@ identify whether the opt-in layer ran and retain its test log.
   algebraic probability-path qualification, and full-Person continuous-oracle
   qualification before any seeded response is generated. Only later bounded
   smoke generation is authorized; fitting and ConQuest remain closed.
+- `conquest-adversarial-simulation-smoke-execution-0.2.3.R`: precommitted
+  one-time generator and semantic-review harness for the eighteen sealed smoke
+  arms. It restores caller RNG state, writes only the frozen six-table schema,
+  rejects repeated output targets, and contains no fit or external launch.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
