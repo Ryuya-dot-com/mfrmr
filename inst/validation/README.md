@@ -240,6 +240,11 @@ identify whether the opt-in layer ran and retain its test log.
   withheld, ineligible, integration-limited, and unresolved denominators; and
   map supported, caveated, disabled, and deferred public decisions without
   authorizing a public text change.
+- `conquest-p4-replication-necessity-decision-0.2.3.R` and its record: close
+  replicated confirmation as `replication_not_needed` only for the selected
+  candidate-004 fixed-artifact claim. Independent review remains required;
+  cross-data-set rates, recovery, coverage, portability, wider P2, and P3
+  cannot inherit this narrow decision.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

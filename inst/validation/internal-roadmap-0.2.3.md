@@ -727,19 +727,26 @@ wording.
 
 #### P4 -- conditional replicated confirmation
 
-- [ ] Decide from P2/P3 deterministic evidence whether any retained decision is
-  still uncertain; record `replication_not_needed` when none can change.
-- [ ] If replication is needed, predeclare the independent sampling unit,
-  target disagreement/failure rate, confidence or MCSE precision, and maximum
-  claim before generating data.
-- [ ] Freeze metric-specific replication counts or sequential stop/expand/abort
-  rules; do not use one universal replication count.
-- [ ] Keep every generated row in the denominator and report failed/ineligible
-  fits separately from conditional numerical agreement.
-- [ ] Stop when the precision target is met, the decision is resolved, or the
-  maximum scope is reached; expiry pressure cannot expand the plan.
-- [ ] Close P4 with either a precision-qualified confirmation or an explicit
-  unresolved/narrowed decision.
+- [x] Decide from P2/P3 deterministic evidence whether any retained decision is
+  still uncertain; record `replication_not_needed` when none can change. The
+  selected candidate-004 fixed-artifact claim requires independent
+  recalculation but not sampled replication; repeating the same-author pipeline
+  cannot supply independence
+  (`conquest-p4-replication-necessity-decision-record-0.2.3.md`, 2026-08-15).
+- [x] Do not activate a replication design for the selected claim. Independent
+  sampling unit, target disagreement/failure rate, confidence or MCSE
+  precision, and maximum generalized claim remain typed not applicable.
+- [x] Do not freeze replication counts or sequential rules when replication is
+  not needed. Any future generalized claim requires a new prospective,
+  metric-specific design rather than inheriting one universal count.
+- [x] Generate no P4 rows for the selected claim; therefore no failed or
+  ineligible sampled fit can be omitted from a nonexistent denominator.
+- [x] Treat the fixed-artifact decision as already resolved for replication;
+  ConQuest expiry pressure cannot broaden it into a sampling claim.
+- [x] Close P4 for the selected bounded claim as
+  `replication_not_needed`. Cross-data-set disagreement rates, recovery,
+  coverage, portability, wider P2, and P3 remain separate unselected or
+  deterministic-gate-first claims.
 
 #### P5 -- release and maintenance handoff
 
