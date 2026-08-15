@@ -416,7 +416,7 @@ test_that("G4H has no deletion, retry, hash, or top-level execution route", {
   ))
 })
 
-test_that("G4H record stays immutable while the roadmap advances to G4R", {
+test_that("G4H record stays immutable while the roadmap advances through G4R", {
   ctx <- load_conquest_adversarial_simulation_engine_mechanics_harness()
   record <- paste(readLines(file.path(
     ctx$validation,
@@ -446,7 +446,11 @@ test_that("G4H record stays immutable while the roadmap advances to G4R", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Complete G4R post-mechanics calibration review",
+    roadmap, "[x] Complete G4R post-mechanics calibration review",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap, "[ ] Freeze the G4N diagnostic-numeric-eligibility addendum",
     fixed = TRUE
   )
   expect_match(

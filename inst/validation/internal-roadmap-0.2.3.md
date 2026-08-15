@@ -870,12 +870,22 @@ wording.
   was inspected and calibration remains unauthorized
   (`conquest-adversarial-simulation-engine-mechanics-execution-record-0.2.3.md`,
   2026-08-16).
-- [ ] Complete G4R post-mechanics calibration review. Decide prospectively
-  whether calibration remains informative when mfrmr RSM/PCM MML fits are
-  parseable and converged but deterministically retain
-  `design_rank_not_evaluated`; do not convert that state to inference-ready,
-  inspect numerical agreement, or spend the calibration budget merely because
-  the mechanics gate passed.
+- [x] Complete G4R post-mechanics calibration review. All 16 mfrmr mechanics
+  fits were parseable, finite, converged, and dimension-matched but retained
+  `InferenceReady=FALSE`; under the frozen terminal semantics this leaves zero
+  mfrmr complete-numeric outcomes and blocks the mfrmr or joint lanes of six
+  active numeric metrics plus the representation numeric summary. Calibration
+  therefore remains held; ConQuest-only lanes do not repair the main paired
+  denominator, no cross-engine values were opened, and no readiness state was
+  weakened
+  (`conquest-adversarial-simulation-post-mechanics-calibration-review-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Freeze the G4N diagnostic-numeric-eligibility addendum before generating
+  calibration responses. Keep `InferenceReady` and all reason codes unchanged,
+  define a separate finite/converged/parseable/dimension-matched diagnostic
+  lane, map its metric uses explicitly, forbid confirmation/public promotion,
+  and preserve seeds, DGPs, workloads, attempt order, and paired denominators.
+  The addendum alone must not authorize execution.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.
