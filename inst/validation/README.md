@@ -159,6 +159,11 @@ identify whether the opt-in layer ran and retain its test log.
   q121--q241 finite-grid passes and the two persistent unequal-workload
   continuous-reference failures. Further q expansion is closed; the continuous
   oracle itself must be qualified next.
+- `conquest-p2-log-centered-continuous-oracle-0.2.3.R` and
+  `conquest-p2-log-centered-continuous-oracle-record-0.2.3.md`: freezes a
+  mode-centered, split-integral reference with explicit numerical and normal-
+  tail deviance-error bounds. Its thirteen-fixture audit is held until after
+  this contract is committed; consumed candidates cannot be reclassified.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

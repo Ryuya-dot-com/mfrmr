@@ -458,7 +458,11 @@ wording.
   its mode-location, scaling, tail, integration-error, and agreement rules
   before evaluation; compare it with q121, q241, and the legacy adaptive
   integral over all thirteen truth fixtures. A qualified replacement may
-  govern future candidates but cannot reclassify consumed contracts.
+  govern future candidates but cannot reclassify consumed contracts. The
+  `[-12,12]` mode-centered split-integral contract, explicit numerical/tail
+  error bound, q121/q241 agreement gates, and hard tolerances are frozen; its
+  thirteen-fixture audit remains unopened
+  (`conquest-p2-log-centered-continuous-oracle-record-0.2.3.md`, 2026-08-15).
 - [ ] Generate one disjoint candidate-004 fixture only after the successor
   integration contract is frozen. It must use a new candidate identity and
   seed, the same thirteen pre-fit gates, probability-weighted support
