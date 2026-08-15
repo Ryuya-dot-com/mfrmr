@@ -758,8 +758,13 @@ wording.
   byte equality as a scientific gate
   (`conquest-p2-candidate-004-dependency-sentinel-record-0.2.3.md`,
   2026-08-15).
-- [ ] Confirm that ConQuest remains optional and absent from package runtime,
-  ordinary tests, source-package requirements, and CRAN checks.
+- [x] Confirm that ConQuest remains optional and absent from package runtime,
+  ordinary tests, source-package requirements, and CRAN checks. The installed
+  package retains only pure-R handoff/normalization APIs; it contains no
+  executable discovery, launch, fixed machine path, dependency, external
+  validation tree, or external ConQuest test. A normal vignette-bearing source
+  tarball passed `R CMD check --no-manual` without ConQuest
+  (`conquest-optional-package-boundary-audit-record-0.2.3.md`, 2026-08-15).
 - [ ] Update the release spine and public support boundary only after the exact
   preceding gates relevant to each claim are complete.
 

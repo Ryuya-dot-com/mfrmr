@@ -229,6 +229,11 @@ identify whether the opt-in layer ran and retain its test log.
   applicability; consequences are recalculation, a new runtime sentinel, a
   successor candidate, contract review, or evidence quarantine rather than a
   byte-level acceptance rule.
+- `conquest-optional-package-boundary-audit-0.2.3.R` and its record: verify
+  that pure-R ConQuest handoff APIs do not become an executable, path,
+  dependency, ordinary-test, source-package, or CRAN-check requirement. The
+  recorded vignette-bearing source tarball passed `R CMD check --no-manual`
+  without ConQuest.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

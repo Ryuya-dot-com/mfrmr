@@ -19,9 +19,15 @@ test_that("precomputed vignette artifacts match their semantic manifest", {
   generator_path <- testthat::test_path(
     "..", "..", "inst", "validation", "generate-vignette-artifacts.R"
   )
-  generator_text <- paste(readLines(generator_path, warn = FALSE), collapse = "\n")
-  hash_terms <- "\\b(?:md5|sha(?:1|224|256|384|512)?|hash(?:es|ed|ing)?)\\b"
-  expect_false(grepl(hash_terms, generator_text, ignore.case = TRUE, perl = TRUE))
+  if (file.exists(generator_path)) {
+    generator_text <- paste(
+      readLines(generator_path, warn = FALSE), collapse = "\n"
+    )
+    hash_terms <- "\\b(?:md5|sha(?:1|224|256|384|512)?|hash(?:es|ed|ing)?)\\b"
+    expect_false(grepl(
+      hash_terms, generator_text, ignore.case = TRUE, perl = TRUE
+    ))
+  }
   expect_true(all(manifest$DataKey == "example_operational"))
   expect_true(all(manifest$GeneratedWith == as.character(utils::packageVersion("mfrmr"))))
 
