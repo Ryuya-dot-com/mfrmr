@@ -181,6 +181,11 @@ identify whether the opt-in layer ran and retain its test log.
   disjoint candidate's 13/13 gate pass and full-cell coverage. It authorizes
   only a separately frozen mfrmr preflight contract; no fit or external run is
   authorized by the fixture result.
+- `conquest-p2-candidate-004-mfrmr-preflight-0.2.3.R` and
+  `conquest-p2-candidate-004-mfrmr-preflight-record-0.2.3.md`: freezes the
+  six-fit q31/q61/q121 initial phase, conditional two-fit q241 phase, inherited
+  fit gates, whole-slice dense-pair selection, and fitted-coordinate log-
+  centered target. Its execution remains unopened and cannot launch ConQuest.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

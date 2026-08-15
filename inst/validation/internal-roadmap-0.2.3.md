@@ -481,7 +481,12 @@ wording.
   dimensions, convergence/readiness and variance gates, the diagnostic q31
   layer, the bounded q61/q121/q241 whole-slice selection rule, and the
   log-centered continuous target before fitting. A failure consumes candidate
-  004 without changing nodes, thresholds, seed, or data.
+  004 without changing nodes, thresholds, seed, or data. The candidate-004
+  mfrmr preflight contract is frozen: six initial q31/q61/q121 fits, two q241
+  fits only after a complete dense-pair-1 failure, unchanged `2e-6`/`1e-7`
+  movement gates, fitted-coordinate continuous reevaluation, and a q241 hard
+  ceiling. Execution remains unopened
+  (`conquest-p2-candidate-004-mfrmr-preflight-record-0.2.3.md`, 2026-08-15).
 - [ ] Bind a fit-eligible candidate 004 to a new empty external output root, a
   fresh data-free runtime sentinel, a new minimum audit, and a run-once
   ConQuest authorization. None is implied by fixture or internal-fit success.
