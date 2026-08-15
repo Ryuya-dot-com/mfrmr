@@ -173,7 +173,7 @@ test_that("G4E record and internal roadmap retain the live hold", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze the fail-closed G4H engine-mechanics harness",
+    "[x] Freeze the fail-closed G4H engine-mechanics harness",
     fixed = TRUE
   )
 })

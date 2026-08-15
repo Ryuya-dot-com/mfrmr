@@ -847,11 +847,23 @@ wording.
   a same-session data-free sentinel is observed
   (`conquest-adversarial-simulation-engine-mechanics-authorization-record-0.2.3.md`,
   2026-08-16).
-- [ ] Freeze the fail-closed G4H engine-mechanics harness over the exact
+- [x] Freeze the fail-closed G4H engine-mechanics harness over the exact
   38-row/30-attempt plan. It must semantically revalidate the retained source,
   require a new exact output root, run the fresh sentinel before any fit,
   retain every failure/unattempted row, forbid retries and numeric-agreement
-  inspection, and leave calibration authorization false.
+  inspection, and leave calibration authorization false. The dry harness now
+  reconstructs 72 exact pre-execution files, 16 mfrmr and 14 ConQuest q61
+  attempts, 8 semantic bridge rows, and a 239-row possible-artifact boundary;
+  final review reconstructs artifact presence, rejects unregistered files, and
+  binds mfrmr to the normalized working-tree namespace path. No live process
+  or fit was launched
+  (`conquest-adversarial-simulation-engine-mechanics-harness-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Execute the exact G4X mechanics bundle once. A newly observed same-call
+  ConQuest sentinel must pass before attempt 1; then retain all 38 outcomes and
+  continue past ordinary engine/parse/timeout failures. Stop later attempts
+  only for the frozen global resource cap, inspect no numerical agreement, and
+  leave calibration authorization to a separate post-mechanics review.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.
