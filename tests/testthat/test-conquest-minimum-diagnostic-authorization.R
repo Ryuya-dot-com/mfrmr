@@ -280,7 +280,7 @@ test_that("the internal record replaces the monolithic pre-run review gate", {
   )
   expect_match(
     roadmap,
-    "[ ] Bind a current data-free runtime sentinel and completed minimum audit",
+    "[x] Bind a current data-free runtime sentinel and completed minimum audit",
     fixed = TRUE
   )
 })

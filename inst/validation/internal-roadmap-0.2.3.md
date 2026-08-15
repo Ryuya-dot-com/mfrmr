@@ -379,9 +379,16 @@ wording.
   ordinary-test independence, clean tree, execution cap, auditor identity,
   author-overlap disclosure, no-claim acceptance, and checklist completion
   (`conquest-minimum-diagnostic-authorization-0.2.3.R`, 2026-08-15).
-- [ ] Bind a current data-free runtime sentinel and completed minimum audit to a
+- [x] Bind a current data-free runtime sentinel and completed minimum audit to a
   separate authorization record; do not launch a model from the construction
-  contract itself.
+  contract itself
+  (`conquest-minimum-diagnostic-live-authorization-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Implement and dry-test a fail-closed harness that consumes only the live
+  authorization, requires a new empty output directory, uses unique prefixes,
+  and retains every expected output or failure without fitting during tests.
+- [ ] Execute exactly the authorized two-row P2 diagnostic slice before the
+  live authorization expires; do not add q values, rows, reruns, or P3.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

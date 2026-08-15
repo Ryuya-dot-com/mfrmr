@@ -114,13 +114,15 @@ pre-existing output, runtime-dependent ordinary tests, a dirty tree, path
 mismatch, stale/expired runtime evidence, undeclared overlap, or a refused
 no-claim condition each blocks execution.
 
-## Next action
+## Subsequent binding
 
-The next admissible action is not more comprehensive offline documentation. It
-is to bind a fresh data-free sentinel from the explicit current executable,
-verify an empty isolated output directory and clean tree, complete the minimum
-attestation, and create a separate run authorization record. Only then may the
-four ConQuest and four mfrmr diagnostic fits run.
+The separate
+`conquest-minimum-diagnostic-live-authorization-record-0.2.3.md` now binds a
+fresh data-free sentinel, clean-tree/empty-boundary observation, and disclosed
+maintainer attestation. That later layer authorizes only the four ConQuest and
+four mfrmr diagnostic fits; it does not retroactively change this construction
+record's false live-binding fields. The next action is a fail-closed execution
+harness and dry test, not more comprehensive pre-run documentation.
 
 After every expected output is classified, an independent reviewer must inspect
 the native transcripts, A/C orientation, raw-token handling, q states, complete

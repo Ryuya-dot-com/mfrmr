@@ -91,7 +91,13 @@ identify whether the opt-in layer ran and retain its test log.
   q=31/61, four ConQuest fits, four mfrmr fits, and fifteen non-waivable gates.
   A declared same-author audit may authorize only this sealed diagnostic;
   evidence promotion, widening, P3, and public claims still require independent
-  review. The current runtime and attestation remain unbound.
+  review.
+- `conquest-minimum-diagnostic-live-authorization-0.2.3.R` and
+  `conquest-minimum-diagnostic-live-authorization-record-0.2.3.md`: binds the
+  2026-08-15 data-free ConQuest 5.47.5 sentinel and disclosed maintainer audit.
+  All fifteen fatal gates pass, authorizing only the four ConQuest/four mfrmr
+  fits through 2026-08-16. Evidence promotion, widening, P3, and public claims
+  remain false; the binding file cannot execute an engine.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
