@@ -398,7 +398,7 @@ wording.
 - [x] Classify the retained outcome as a fixture population-signal defect, not
   a cross-engine result: Rater/category and Criterion/category margins are
   exactly balanced and the X groups have identical mean Person total scores.
-- [ ] Supersede the deterministic response generator with a prospectively
+- [x] Supersede the deterministic response generator with a prospectively
   frozen nondegenerate-signal fixture while preserving graph connectivity,
   category support, dimensions, common data, and the existing metric/stop
   contracts. Require nonzero covariate score separation, non-collapsed Person
@@ -408,13 +408,22 @@ wording.
   Rater-by-Criterion-by-category cell is empty; do not search seeds or fit a
   model (`conquest-p2-replacement-nondegenerate-fixture-record-0.2.3.md`,
   2026-08-15).
-- [ ] Give candidate 003 a prospectively defined support-guaranteeing response
+- [x] Give candidate 003 a prospectively defined support-guaranteeing response
   design rather than seed selection. It must retain probability weighting and
   pass the same population/facet-signal, graph, shape, and full-cell support
-  gates before any mfrmr fit preflight.
-- [ ] Give the replacement a new candidate identity, empty output root, fresh
-  data-free sentinel, and new minimum audit. Do not rerun, repair, salvage, or
-  reorder the consumed candidate.
+  gates before any mfrmr fit preflight. The frozen realization passes 13/13;
+  because full-support conditioning changes the joint sampling law, it is not
+  parameter-recovery or calibration evidence
+  (`conquest-p2-candidate-003-coverage-conditioned-fixture-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Run a separate mfrmr-only candidate-003 preflight at q=31/61 for RSM and
+  PCM. Retain expected/free dimensions, convergence/readiness states,
+  population-variance behavior, integration movement, and every failure. A
+  failed or boundary-collapsed fit blocks external execution rather than
+  triggering fixture repair or seed search.
+- [ ] Bind candidate 003 to an empty external output root, fresh data-free
+  sentinel, and new minimum audit only after the mfrmr-only preflight passes.
+  Do not rerun, repair, salvage, or reorder either consumed earlier candidate.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

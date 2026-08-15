@@ -132,7 +132,12 @@ test_that("the live record preserves downstream review gates", {
   )
   expect_match(
     roadmap,
-    "[ ] Supersede the deterministic response generator",
+    "[x] Supersede the deterministic response generator",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "[ ] Run a separate mfrmr-only candidate-003 preflight",
     fixed = TRUE
   )
 })

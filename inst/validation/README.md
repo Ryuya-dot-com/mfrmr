@@ -118,6 +118,12 @@ identify whether the opt-in layer ran and retain its test log.
   gates. It repairs the population/facet-signal collapse but is rejected before
   fit because one Rater-by-Criterion-by-category cell is empty. The failed seed
   cannot be searched away; a support-guaranteeing successor design is required.
+- `conquest-p2-candidate-003-coverage-conditioned-fixture-0.2.3.R` and
+  `conquest-p2-candidate-003-coverage-conditioned-fixture-record-0.2.3.md`:
+  freezes a single-seed, probability-weighted block-conditioning successor.
+  It passes all thirteen unchanged pre-fit gates and authorizes only a separate
+  mfrmr internal preflight. The conditional joint sampling law cannot support
+  truth-recovery, calibration, external-execution, or equivalence claims.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
