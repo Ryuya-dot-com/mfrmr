@@ -176,6 +176,11 @@ identify whether the opt-in layer ran and retain its test log.
   denominator, probability-weighted support conditioning, and separate
   candidate-003 lineage gate. Generation remains unopened; fitting and
   external execution are unauthorized.
+- `conquest-p2-candidate-004-fixture-observation-0.2.3.R` and
+  `conquest-p2-candidate-004-fixture-observation-record-0.2.3.md`: retains the
+  disjoint candidate's 13/13 gate pass and full-cell coverage. It authorizes
+  only a separately frozen mfrmr preflight contract; no fit or external run is
+  authorized by the fixture result.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

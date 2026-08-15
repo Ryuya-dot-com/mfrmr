@@ -469,17 +469,22 @@ wording.
   independent cross-software validation
   (`conquest-p2-log-centered-continuous-oracle-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Generate one disjoint candidate-004 fixture under the now-qualified
-  integration reference. It must use a new candidate identity and seed, the
-  same thirteen pre-fit gates, probability-weighted support conditioning, a
-  new mfrmr preflight, an empty external output root, a fresh data-free
-  sentinel, and a new minimum audit. Oracle qualification authorizes fixture
-  generation only, not fitting or external execution. The candidate-004
-  generation contract is frozen with seed `2026081504`, a 10,000 complete-
-  block ceiling, no seed search or response repair, and a separate disjoint-
-  lineage gate; its generation audit remains unopened
-  (`conquest-p2-candidate-004-coverage-conditioned-fixture-record-0.2.3.md`,
+- [x] Generate one disjoint candidate-004 fixture under the now-qualified
+  integration reference. Use a new candidate identity and seed, the same
+  thirteen pre-fit gates, probability-weighted support conditioning, and a
+  separate lineage gate. The seed-`2026081504` realization passes 13/13 and is
+  distinct from candidate 003; all twelve cells accepted their first complete
+  block, which does not remove the conditioning rule
+  (`conquest-p2-candidate-004-fixture-observation-record-0.2.3.md`,
   2026-08-15).
+- [ ] Freeze and run a candidate-004 mfrmr-only preflight. Predeclare expected
+  dimensions, convergence/readiness and variance gates, the diagnostic q31
+  layer, the bounded q61/q121/q241 whole-slice selection rule, and the
+  log-centered continuous target before fitting. A failure consumes candidate
+  004 without changing nodes, thresholds, seed, or data.
+- [ ] Bind a fit-eligible candidate 004 to a new empty external output root, a
+  fresh data-free runtime sentinel, a new minimum audit, and a run-once
+  ConQuest authorization. None is implied by fixture or internal-fit success.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

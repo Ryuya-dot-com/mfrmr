@@ -77,7 +77,7 @@ test_that("candidate 004 generation contract fits and launches nothing", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("the record and roadmap preserve the unopened generation gate", {
+test_that("the frozen record stays unopened while the roadmap records outcome", {
   ctx <- load_conquest_p2_candidate_004_fixture()
   record_path <- file.path(
     ctx$validation,
@@ -93,7 +93,7 @@ test_that("the record and roadmap preserve the unopened generation gate", {
   expect_match(record, "separate lineage gate", fixed = TRUE)
   expect_match(
     roadmap,
-    "generation contract is frozen with seed `2026081504`",
+    "[x] Generate one disjoint candidate-004 fixture",
     fixed = TRUE
   )
 })
