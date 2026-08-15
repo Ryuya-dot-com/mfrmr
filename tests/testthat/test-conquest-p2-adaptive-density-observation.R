@@ -77,7 +77,7 @@ test_that("record and roadmap stop q expansion before oracle qualification", {
   expect_match(record, "reference is wrong", fixed = TRUE)
   expect_match(
     roadmap,
-    "[ ] Qualify a log-centered continuous P2 oracle",
+    "[x] Qualify a log-centered continuous P2 oracle",
     fixed = TRUE
   )
 })

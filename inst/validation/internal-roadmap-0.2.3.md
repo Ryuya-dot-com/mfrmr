@@ -454,20 +454,27 @@ wording.
   the two unequal-workload q241--legacy-continuous comparisons still fail.
   Further nodes and threshold changes remain unauthorized
   (`conquest-p2-adaptive-density-observation-record-0.2.3.md`, 2026-08-15).
-- [ ] Qualify a log-centered continuous P2 oracle before candidate 004. Freeze
+- [x] Qualify a log-centered continuous P2 oracle before candidate 004. Freeze
   its mode-location, scaling, tail, integration-error, and agreement rules
   before evaluation; compare it with q121, q241, and the legacy adaptive
   integral over all thirteen truth fixtures. A qualified replacement may
   govern future candidates but cannot reclassify consumed contracts. The
   `[-12,12]` mode-centered split-integral contract, explicit numerical/tail
-  error bound, q121/q241 agreement gates, and hard tolerances are frozen; its
-  thirteen-fixture audit remains unopened
-  (`conquest-p2-log-centered-continuous-oracle-record-0.2.3.md`, 2026-08-15).
-- [ ] Generate one disjoint candidate-004 fixture only after the successor
-  integration contract is frozen. It must use a new candidate identity and
-  seed, the same thirteen pre-fit gates, probability-weighted support
-  conditioning, a new mfrmr preflight, an empty external output root, a fresh
-  data-free sentinel, and a new minimum audit.
+  error bound, q121/q241 agreement gates, and hard tolerances were frozen
+  before evaluation. All 13 rows pass; maximum q121 and q241 deviance
+  movements are `1.01e-10` and `2.27e-12`, while only the legacy reference
+  retains the two unequal-workload discrepancies. The new oracle governs
+  future P2 candidates without reclassifying consumed contracts. Its reported
+  numerical error is not an interval-arithmetic certificate, and this is not
+  independent cross-software validation
+  (`conquest-p2-log-centered-continuous-oracle-observation-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Generate one disjoint candidate-004 fixture under the now-qualified
+  integration reference. It must use a new candidate identity and seed, the
+  same thirteen pre-fit gates, probability-weighted support conditioning, a
+  new mfrmr preflight, an empty external output root, a fresh data-free
+  sentinel, and a new minimum audit. Oracle qualification authorizes fixture
+  generation only, not fitting or external execution.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

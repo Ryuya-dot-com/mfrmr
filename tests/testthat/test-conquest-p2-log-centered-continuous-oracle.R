@@ -90,7 +90,7 @@ test_that("the qualification contract fits, reads, and launches nothing", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("the record keeps the audit and candidate held", {
+test_that("the frozen record stays pre-audit while the roadmap records outcome", {
   ctx <- load_conquest_p2_log_centered_continuous_oracle()
   record_path <- file.path(
     ctx$validation,
@@ -107,7 +107,7 @@ test_that("the record keeps the audit and candidate held", {
   expect_match(record, "`Candidate004GenerationAuthorized=FALSE`", fixed = TRUE)
   expect_match(
     roadmap,
-    "[ ] Qualify a log-centered continuous P2 oracle",
+    "[x] Qualify a log-centered continuous P2 oracle",
     fixed = TRUE
   )
 })

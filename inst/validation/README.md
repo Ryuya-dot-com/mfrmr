@@ -164,6 +164,12 @@ identify whether the opt-in layer ran and retain its test log.
   mode-centered, split-integral reference with explicit numerical and normal-
   tail deviance-error bounds. Its thirteen-fixture audit is held until after
   this contract is committed; consumed candidates cannot be reclassified.
+- `conquest-p2-log-centered-continuous-oracle-observation-0.2.3.R` and
+  `conquest-p2-log-centered-continuous-oracle-observation-record-0.2.3.md`:
+  retains the 13/13 qualification pass, the q121/q241 agreement, and the two
+  legacy unequal-workload discrepancies. It qualifies the new repository
+  reference and authorizes candidate-004 generation only; fitting, external
+  execution, and evidence promotion remain blocked.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
