@@ -3,13 +3,23 @@
 Status: `ASP_G4_calibration_contract_frozen_execution_closed`, 2026-08-15.
 
 - Specification:
-  `0.2.3-conquest-adversarial-simulation-calibration-freeze-v1`
+  `0.2.3-conquest-adversarial-simulation-calibration-freeze-v2`
 - Contract:
-  `mfrmr_conquest_adversarial_simulation_calibration_freeze_v1`
+  `mfrmr_conquest_adversarial_simulation_calibration_freeze_v2`
 - Completed gate: `ASP-G4-CALIBRATION-FREEZE`
 - Next gate: `ASP-G4E-ENGINE-MECHANICS-SMOKE-AUTHORIZATION`
 
 ## Why calibration does not run next
+
+Before any engine-mechanics or calibration result was generated or opened, an
+adversarial reread found that v1 scheduled only one mfrmr fit for each paired
+planned-absence/explicit-missing dataset. That could not test mfrmr's two
+representation paths against each other. Version 2 prospectively adds the
+explicit-missing mfrmr companion fit. It does not duplicate the ConQuest fit:
+both representations map to the same frozen canonical wide-missing ConQuest
+input, so the one ConQuest outcome is accompanied by an explicit bridge check.
+This correction is result-independent and changes no DGP, seed, numerical
+threshold, or observed result; no such result existed when it was made.
 
 G3 established response generation, semantic replay, table shape, and expected
 prefit disposition for one retained dataset in each of eighteen arms. It did
@@ -21,18 +31,24 @@ G4 therefore inserts a bounded engine-mechanics prerequisite. A later,
 separately authorized run may use the already retained G3 datasets once. The
 four expected structural negative controls remain prefit stops. Each of the
 fourteen eligible datasets has one q61 mfrmr attempt and one q61 ConQuest
-attempt, for a hard cap of 28 attempts and 36 retained dataset-engine outcome
-rows. An ordinary failure in one engine cannot suppress the peer-engine
-attempt; only a global safety/resource abort may do so. These results remain
-mechanics-only and cannot enter calibration or confirmation.
+attempt. The two eligible paired-missingness datasets additionally have one
+q61 explicit-missing mfrmr companion attempt, for a hard cap of 30 attempts and
+38 retained dataset-engine-representation outcome rows. An ordinary failure in
+one engine or representation cannot suppress another scheduled attempt;
+the paired paths retain six outcomes in total, and the two canonical ConQuest
+outcomes each retain their bridge check. Only a global safety/resource abort
+may suppress later work. These results remain mechanics-only and cannot enter
+calibration or confirmation.
 
-Mechanics completion requires all 18 datasets, 36 outcome rows, and 28 attempt
+Mechanics completion requires all 18 datasets, 38 outcome rows, and 30 attempt
 outcomes to remain accounted for; all four negatives must reject with zero fit
-attempts; and no eligible peer attempt may be suppressed. It does not require
-all 28 fits to succeed. It requires at least one semantically complete,
+attempts; and no eligible peer or companion attempt may be suppressed. It does
+not require all 30 fits to succeed. It requires at least one semantically complete,
 parseable q61 result in each of the four engine-by-family cells so that both
-adapters and both model identities have actually been exercised. Fit quality
-or cross-engine numerical proximity is not a mechanics criterion.
+adapters and both model identities have actually been exercised, plus a
+parseable explicit-missing mfrmr outcome and a canonical ConQuest bridge check
+in each family. Fit quality, representation invariance, or cross-engine
+numerical proximity is not a mechanics criterion.
 
 This freeze authorizes neither that engine smoke nor calibration generation.
 
@@ -58,6 +74,10 @@ reused as a confirmation sampling unit. Confirmation seeds remain unfrozen.
 The primary fit is q61 for both engines in every structurally eligible RSM and
 PCM dataset. q121 is a numerical-sensitivity fit only for the prospectively
 selected complete and rare-boundary-category scenarios in both families.
+Every eligible paired-missingness dataset also receives the q61
+explicit-missing mfrmr companion fit; its planned-absence form receives the
+ordinary mfrmr fit, while both forms share one canonical wide-missing ConQuest
+fit and a recorded bridge check rather than a scientifically empty duplicate.
 Expected or unexpected structural rejection stops both engines before fitting
 that dataset and remains in the unconditional ledger.
 
@@ -65,11 +85,12 @@ This gives the following exact maximum workloads:
 
 | stage | new datasets | q61 fits | selective q121 fits | fit attempts | retained outcome rows |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| G3 engine mechanics | 0 (18 retained) | 28 | 0 | 28 | 36 |
-| calibration tranche A | 90 | 140 | 40 | 180 | 220 |
-| full calibration | 450 | 700 | 200 | 900 | 1,100 |
+| G3 engine mechanics | 0 (18 retained) | 30 | 0 | 30 | 38 |
+| calibration tranche A | 90 | 150 | 40 | 190 | 230 |
+| full calibration | 450 | 750 | 200 | 950 | 1,150 |
 
-There is one attempt per dataset-engine-quadrature cell and no automatic retry.
+There is one attempt per scheduled
+dataset-engine-representation-quadrature cell and no automatic retry.
 The model identities remain additive Rater plus Criterion with shared steps for
 RSM and Criterion-specific steps for PCM, each with population regression on
 `X`. Expected free dimensions remain 10 and 14 respectively.
@@ -92,16 +113,29 @@ work and requires explicit unattempted rows; it does not permit deletion or
 silent retry.
 
 Tranche B can reach a separate authorization review only if tranche A retains
-all 90 datasets and all 220 scheduled outcome rows, all 20 negative controls
+all 90 datasets and all 230 scheduled outcome rows, all 20 negative controls
 reject before fitting, no negative-control fit occurs, no generator/schema,
 seed/DGP, systemic-adapter, sentinel, or global-abort defect occurs, and all
-eight engine-family-quadrature workload cells support a resource projection.
+ten paired-missingness datasets retain their 30 scheduled outcomes, all ten
+explicit-missing mfrmr attempts and ten ConQuest bridge checks are accounted
+for without a representation-adapter failure, and all eight
+engine-family-quadrature workload cells support a resource projection.
 The projection method is frozen: within each of those eight cells, the maximum
 retained elapsed seconds and artifact bytes are multiplied by that cell's full
 planned attempt count; the maximum per-dataset generation time and retained
 bytes are separately multiplied by 450; the components are then summed. The
 result must remain within 80% of both full caps. Passing this operational gate
 does not itself authorize tranche B.
+
+A paired bridge check passes only when all four frozen semantic checks pass:
+the observed response relations agree after typed-key sorting; explicit
+missing keys are exactly the frozen-design complement of planned-absence
+keys; expanding either representation against the design gives the same
+typed key/observed-mask/response cell map; and parsing the rendered ConQuest
+input reproduces that map. File bytes are not an acceptance criterion. A
+bridge mismatch is retained as `representation_bridge_mismatch` under the
+primary terminal class `generation_or_schema_failure` and stops that dataset
+before fitting.
 
 ## Failure and summary semantics
 
@@ -119,7 +153,8 @@ distinct. No failed or ineligible row may be dropped.
 Permitted calibration summaries are scenario-class-by-family structural,
 engine, joint-eligibility, truth-error, independent-oracle, bias, RMSE,
 cross-engine, q-sensitivity, and false-ready/false-pass summaries, plus
-engine-family-quadrature runtime and retained-storage summaries. Conditional
+the mfrmr planned-absence-versus-explicit-missing coordinate/deviance summary
+and engine-family-quadrature runtime and retained-storage summaries. Conditional
 numeric summaries require their frozen unconditional companions. Pooled
 results are not a primary analysis.
 
@@ -138,6 +173,8 @@ rule are proven.
 - `PermittedExploratorySummariesFrozen=TRUE`
 - `SequentialAndResourceRulesFrozen=TRUE`
 - `EngineMechanicsPrerequisiteFrozen=TRUE`
+- `PairedMissingnessWorkloadCorrectedBeforeEngineExecution=TRUE`
+- `NoEngineOrCalibrationResultsOpenedBeforeCorrection=TRUE`
 - `EngineMechanicsExecutionAuthorized=FALSE`
 - `CalibrationResponseGenerationAuthorized=FALSE`
 - `CalibrationExecutionAuthorized=FALSE`

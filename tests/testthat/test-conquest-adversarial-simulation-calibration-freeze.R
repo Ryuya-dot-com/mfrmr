@@ -36,7 +36,14 @@ test_that("G4 freezes 450 disjoint calibration identities without opening data",
   )
   expect_true(all(table(seed$ArmId) == 25L))
   expect_identical(sum(seed$PrimaryQ61FitRequired), 350L)
+  expect_identical(sum(seed$Q61FitAttemptCount), 750L)
+  expect_identical(sum(seed$Q61OutcomeRowCount), 950L)
+  expect_identical(
+    sum(seed$PairedRepresentationComparisonRequired), 50L
+  )
   expect_identical(sum(seed$SelectiveQ121FitRequired), 100L)
+  expect_identical(sum(seed$SelectiveQ121FitAttemptCount), 200L)
+  expect_identical(sum(seed$PlannedOutcomeRowCount), 1150L)
   expect_false(any(seed$Generated))
   expect_false(any(seed$ResultOpened))
   expect_true(all(seed$RetainIfGenerated))
@@ -53,14 +60,40 @@ test_that("G4 freezes 450 disjoint calibration identities without opening data",
 test_that("retained G3 data first face a bounded mechanics-only engine gate", {
   env <- load_conquest_adversarial_simulation_calibration_freeze()$env
   mechanics <- env$mfrmr_cq_acf_engine_mechanics_registry()
+  bridge <- env$mfrmr_cq_acf_representation_bridge_registry()
   profile <- env$mfrmr_cq_acf_engine_profile_registry()
 
-  expect_identical(nrow(mechanics), 36L)
-  expect_identical(sum(mechanics$AttemptRequiredAtFutureMechanicsGate), 28L)
-  expect_identical(sum(mechanics$AttemptCap), 28L)
+  expect_identical(nrow(mechanics), 38L)
+  expect_identical(sum(mechanics$AttemptRequiredAtFutureMechanicsGate), 30L)
+  expect_identical(sum(mechanics$AttemptCap), 30L)
   expect_identical(
     sum(mechanics$QuadratureId == "prefit_stop"), 8L
   )
+  expect_identical(
+    sum(mechanics$RepresentationId == "explicit_missing"), 2L
+  )
+  expect_identical(
+    sum(mechanics$ConQuestCanonicalBridgeForBothPairedRepresentations), 2L
+  )
+  paired <- mechanics[
+    mechanics$ScenarioClassId == "ASP-INV-PAIRED-MISSINGNESS", ,
+    drop = FALSE
+  ]
+  expect_identical(nrow(paired), 6L)
+  expect_setequal(
+    paired$RepresentationId[paired$Engine == "mfrmr"],
+    c("planned_absence", "explicit_missing")
+  )
+  expect_true(all(
+    paired$RepresentationId[paired$Engine == "ConQuest"] ==
+      "canonical_wide_missing"
+  ))
+  expect_identical(nrow(bridge), 4L)
+  expect_identical(bridge$CheckOrder, 1:4)
+  expect_true(all(bridge$RequiredForEachPairedDatasetBridgeCheck))
+  expect_false(any(bridge$ByteEqualityRequired))
+  expect_false(any(bridge$NumericAgreementInspected))
+  expect_false(any(bridge$ExecutionAuthorizedByThisContract))
   expect_true(all(
     mechanics$AttemptCap[
       mechanics$StructuralDispositionFromRetainedG3 ==
@@ -114,6 +147,12 @@ test_that("terminal failure taxonomy is ordered, lossless, and engine-independen
     ],
     "required_native_output_incomplete"
   )
+  expect_identical(
+    semantic$PrimaryTerminalCode[
+      semantic$SecondaryCode == "representation_bridge_mismatch"
+    ],
+    "generation_or_schema_failure"
+  )
   expect_true(all(semantic$PreserveMatchedTextAndLineNumbers))
 })
 
@@ -121,7 +160,7 @@ test_that("calibration summaries are exploratory, stratified, and nonconfirmator
   env <- load_conquest_adversarial_simulation_calibration_freeze()$env
   summary <- env$mfrmr_cq_acf_summary_registry()
 
-  expect_identical(nrow(summary), 13L)
+  expect_identical(nrow(summary), 14L)
   expect_true(all(summary$CalibrationExploratorySummaryPermitted))
   expect_true(all(nzchar(summary$PrimaryStrata)))
   expect_false(any(summary$PrimaryPooledSummaryPermitted))
@@ -133,7 +172,8 @@ test_that("calibration summaries are exploratory, stratified, and nonconfirmator
   expect_false(any(summary$MaySupportPublicClaim))
   expect_false("ASP-UNCERTAINTY-COVERAGE" %in% summary$SummaryId)
   expect_true(all(c(
-    "ASP-ELAPSED-RUNTIME", "ASP-RETAINED-STORAGE"
+    "ASP-ELAPSED-RUNTIME", "ASP-RETAINED-STORAGE",
+    "ASP-REPRESENTATION-INVARIANCE"
   ) %in% summary$SummaryId))
 })
 
@@ -145,11 +185,12 @@ test_that("resource caps distinguish outcome rows from actual fit attempts", {
   runtime <- env$mfrmr_cq_acf_runtime_contract()
 
   expect_identical(nrow(tranche_a), 8L)
-  expect_identical(sum(tranche_a$PlannedAttemptCount), 180L)
+  expect_identical(sum(tranche_a$PlannedAttemptCount), 190L)
   expect_identical(nrow(full), 8L)
-  expect_identical(sum(full$PlannedAttemptCount), 900L)
-  expect_identical(budget$TotalFitAttemptCap, c(28L, 180L, 900L))
-  expect_identical(budget$ScheduledOutcomeRowCap, c(36L, 220L, 1100L))
+  expect_identical(sum(full$PlannedAttemptCount), 950L)
+  expect_identical(budget$Q61FitAttemptCap, c(30L, 150L, 750L))
+  expect_identical(budget$TotalFitAttemptCap, c(30L, 190L, 950L))
+  expect_identical(budget$ScheduledOutcomeRowCap, c(38L, 230L, 1150L))
   expect_true(all(budget$PerFitTimeoutSeconds == 600L))
   expect_true(all(budget$CumulativeWallTimeCapSeconds > 0L))
   expect_true(all(budget$RetainedStorageCapBytes > 0))
@@ -179,11 +220,11 @@ test_that("resource projection uses cellwise maxima and shared dataset cost", {
     projection$ProjectionMethod, env$mfrmr_cq_acf_projection_method
   )
   expect_identical(projection$ObservedWorkloadCells, 8L)
-  expect_identical(projection$FullPlannedFitAttempts, 900L)
+  expect_identical(projection$FullPlannedFitAttempts, 950L)
   expect_identical(projection$FullPlannedDatasets, 450L)
-  expect_equal(projection$ProjectedFullElapsedSeconds, 1350)
+  expect_equal(projection$ProjectedFullElapsedSeconds, 1400)
   expect_equal(
-    projection$ProjectedFullStorageBytes, 900 * 1024 + 450 * 2048
+    projection$ProjectedFullStorageBytes, 950 * 1024 + 450 * 2048
   )
   expect_false(projection$NumericAgreementInspected)
 
@@ -205,13 +246,17 @@ test_that("engine mechanics requires accounting and parser coverage, not agreeme
   env <- load_conquest_adversarial_simulation_calibration_freeze()$env
   audit <- list(
     RetainedDatasets = 18L,
-    RetainedOutcomeRows = 36L,
+    RetainedOutcomeRows = 38L,
     ExpectedNegativeRejections = 4L,
     NegativeControlFitAttempts = 0L,
-    EligiblePlannedAttempts = 28L,
-    RetainedAttemptOutcomeRows = 28L,
+    EligiblePlannedAttempts = 30L,
+    RetainedAttemptOutcomeRows = 30L,
     PeerEligibleAttemptsSuppressed = 0L,
     EngineFamilyCellsWithParseableQ61 = 4L,
+    PairedRepresentationOutcomeRows = 6L,
+    ExplicitMissingMfrmrAttemptOutcomes = 2L,
+    ExplicitMissingMfrmrParseableCells = 2L,
+    ConQuestRepresentationBridgeChecks = 2L,
     FreshRuntimeSentinelPassed = TRUE,
     ModelIdentityMismatches = 0L,
     GlobalAbortTriggered = FALSE,
@@ -242,7 +287,7 @@ test_that("tranche expansion can inspect operations but not agreement", {
   full <- budget[budget$Stage == "calibration_full", , drop = FALSE]
   audit <- list(
     GeneratedDatasetsRetained = 90L,
-    RetainedScheduledOutcomeRows = 220L,
+    RetainedScheduledOutcomeRows = 230L,
     NegativeControlDatasets = 20L,
     ExpectedNegativeRejections = 20L,
     NegativeControlFitAttempts = 0L,
@@ -250,6 +295,11 @@ test_that("tranche expansion can inspect operations but not agreement", {
     GeneratorOrSchemaFailures = 0L,
     SeedOrDGPDrift = 0L,
     SystemicAdapterFailures = 0L,
+    PairedRepresentationDatasets = 10L,
+    PairedRepresentationOutcomeRowsRetained = 30L,
+    ExplicitMissingMfrmrFitAttempts = 10L,
+    ConQuestRepresentationBridgeChecks = 10L,
+    RepresentationAdapterFailures = 0L,
     WorkloadCellsObserved = 8L,
     ProjectionMethod = env$mfrmr_cq_acf_projection_method,
     ProjectedFullElapsedSeconds =
@@ -295,6 +345,10 @@ test_that("G4 completes only the freeze and advances to engine authorization", {
   expect_true(review$permitted_exploratory_summaries_frozen)
   expect_true(review$sequential_and_resource_rules_frozen)
   expect_true(review$engine_mechanics_prerequisite_frozen)
+  expect_true(
+    review$paired_missingness_workload_corrected_before_engine_execution
+  )
+  expect_true(review$no_engine_or_calibration_results_opened_before_correction)
   expect_false(review$engine_mechanics_execution_authorized)
   expect_false(review$calibration_response_generation_authorized)
   expect_false(review$calibration_execution_authorized)

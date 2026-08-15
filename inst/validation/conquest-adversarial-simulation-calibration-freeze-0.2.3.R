@@ -6,9 +6,9 @@
 # fits no model, and launches no external process.
 
 mfrmr_cq_acf_specification <-
-  "0.2.3-conquest-adversarial-simulation-calibration-freeze-v1"
+  "0.2.3-conquest-adversarial-simulation-calibration-freeze-v2"
 mfrmr_cq_acf_contract <-
-  "mfrmr_conquest_adversarial_simulation_calibration_freeze_v1"
+  "mfrmr_conquest_adversarial_simulation_calibration_freeze_v2"
 mfrmr_cq_acf_calibration_namespace_start <- 988000L
 mfrmr_cq_acf_calibration_namespace_end <- 989999L
 mfrmr_cq_acf_replicates_per_arm <- 25L
@@ -101,6 +101,11 @@ mfrmr_cq_acf_seed_registry <- function() {
     arm$ExpectedDisposition == "reject_before_numeric_comparison",
     "reject_before_numeric_comparison", "eligible_numeric_comparison"
   )
+  paired <- arm$ScenarioClassId == "ASP-INV-PAIRED-MISSINGNESS"
+  selective <- expected == "eligible_numeric_comparison" &
+    arm$ScenarioClassId %in% c(
+      "ASP-POS-COMPLETE", "ASP-SENS-RARE-BOUNDARY-CATEGORY"
+    )
   out <- data.frame(
     Phase = "exploratory_calibration_only",
     Tranche = ifelse(
@@ -123,11 +128,16 @@ mfrmr_cq_acf_seed_registry <- function() {
     ExpectedStructuralDisposition = expected,
     PrimaryQ61FitRequired =
       expected == "eligible_numeric_comparison",
-    SelectiveQ121FitRequired =
-      expected == "eligible_numeric_comparison" &
-      arm$ScenarioClassId %in% c(
-        "ASP-POS-COMPLETE", "ASP-SENS-RARE-BOUNDARY-CATEGORY"
-      ),
+    PairedRepresentationComparisonRequired =
+      expected == "eligible_numeric_comparison" & paired,
+    Q61FitAttemptCount = ifelse(
+      expected == "eligible_numeric_comparison", 2L + as.integer(paired), 0L
+    ),
+    Q61OutcomeRowCount = 2L + as.integer(paired),
+    SelectiveQ121FitRequired = selective,
+    SelectiveQ121FitAttemptCount = 2L * as.integer(selective),
+    PlannedOutcomeRowCount =
+      2L + as.integer(paired) + 2L * as.integer(selective),
     EvidenceUse = "exploratory_calibration_only_not_confirmation",
     Generated = FALSE,
     ResultOpened = FALSE,
@@ -171,12 +181,28 @@ mfrmr_cq_acf_engine_mechanics_registry <- function() {
   engine <- rep(c("mfrmr", "ConQuest"), times = nrow(smoke))
   eligible <- smoke$ExpectedDisposition[index] !=
     "reject_before_numeric_comparison"
-  data.frame(
+  paired <- smoke$ScenarioClassId[index] == "ASP-INV-PAIRED-MISSINGNESS"
+  out <- data.frame(
+    DatasetOrder = index,
     DatasetId = smoke$DatasetId[index],
     ArmId = smoke$ArmId[index],
     ScenarioClassId = smoke$ScenarioClassId[index],
     Family = smoke$Family[index],
     Engine = engine,
+    RepresentationId = ifelse(
+      !eligible, "not_applicable_structural_rejection",
+      ifelse(
+        paired & engine == "mfrmr", "planned_absence",
+        ifelse(paired, "canonical_wide_missing", "observed_rows_only")
+      )
+    ),
+    RepresentationFitRole = ifelse(
+      !eligible, "prefit_stop",
+      ifelse(
+        paired & engine == "mfrmr", "invariance_primary",
+        ifelse(paired, "external_canonical_bridge", "single_representation")
+      )
+    ),
     QuadratureId = ifelse(eligible, "q61", "prefit_stop"),
     StructuralDispositionFromRetainedG3 = ifelse(
       eligible, "eligible_numeric_comparison",
@@ -190,6 +216,74 @@ mfrmr_cq_acf_engine_mechanics_registry <- function() {
     MayTuneDGPOrThreshold = FALSE,
     MayEnterCalibrationOrConfirmation = FALSE,
     AttemptAuthorizedByThisContract = FALSE,
+    stringsAsFactors = FALSE
+  )
+  companion <- out[
+    paired & engine == "mfrmr" & eligible, , drop = FALSE
+  ]
+  companion$RepresentationId <- "explicit_missing"
+  companion$RepresentationFitRole <- "invariance_companion"
+  out <- rbind(out, companion)
+  out$RepresentationOrder <- match(
+    out$RepresentationId,
+    c(
+      "observed_rows_only", "planned_absence", "explicit_missing",
+      "canonical_wide_missing", "not_applicable_structural_rejection"
+    )
+  )
+  out$EngineOrder <- match(out$Engine, c("mfrmr", "ConQuest"))
+  out <- out[order(
+    out$DatasetOrder, out$EngineOrder, out$RepresentationOrder
+  ), , drop = FALSE]
+  out$ConQuestCanonicalBridgeForBothPairedRepresentations <-
+    out$ScenarioClassId == "ASP-INV-PAIRED-MISSINGNESS" &
+    out$Engine == "ConQuest"
+  out$RepresentationBridgeContractId <- ifelse(
+    out$ScenarioClassId == "ASP-INV-PAIRED-MISSINGNESS",
+    "paired_missingness_semantic_bridge_v1", NA_character_
+  )
+  out$DatasetOrder <- NULL
+  out$RepresentationOrder <- NULL
+  out$EngineOrder <- NULL
+  rownames(out) <- NULL
+  out
+}
+
+mfrmr_cq_acf_representation_bridge_registry <- function() {
+  data.frame(
+    BridgeContractId = "paired_missingness_semantic_bridge_v1",
+    CheckOrder = 1:4,
+    CheckId = c(
+      "observed_response_relation_equivalent",
+      "explicit_missing_is_exact_design_complement",
+      "canonical_cell_map_equivalent",
+      "ConQuest_input_semantic_roundtrip_equivalent"
+    ),
+    RequiredEvidence = c(
+      paste(
+        "after filtering ResponseObserved and sorting the typed key",
+        "Person/Rater/Criterion, both representations have equal Response"
+      ),
+      paste(
+        "explicit-missing keys with ResponseObserved=FALSE equal the frozen",
+        "design keys absent from planned-absence"
+      ),
+      paste(
+        "expanding either representation against the frozen design yields",
+        "the same typed key/observed-mask/response relation"
+      ),
+      paste(
+        "parsing the rendered ConQuest input yields the same canonical",
+        "typed key/observed-mask/response relation"
+      )
+    ),
+    ComparisonLevel = "typed_semantic_relation_after_key_sort",
+    ByteEqualityRequired = FALSE,
+    RequiredForEachPairedDatasetBridgeCheck = TRUE,
+    TerminalCodeOnFailure = "generation_or_schema_failure",
+    SecondaryCodeOnFailure = "representation_bridge_mismatch",
+    NumericAgreementInspected = FALSE,
+    ExecutionAuthorizedByThisContract = FALSE,
     stringsAsFactors = FALSE
   )
 }
@@ -239,7 +333,7 @@ mfrmr_cq_acf_engine_profile_registry <- function() {
   grid$InvocationRoute <- ifelse(
     grid$Engine == "ConQuest", "/usr/bin/arch -x86_64", NA_character_
   )
-  grid$AttemptCapPerDataset <- 1L
+  grid$AttemptCapPerScheduledFitCell <- 1L
   grid$AutomaticRetryPermitted <- FALSE
   grid$ExecutionAuthorizedByThisContract <- FALSE
   grid
@@ -335,14 +429,15 @@ mfrmr_cq_acf_semantic_code_map <- function() {
     "terminal_marker_missing", "runtime_version_missing",
     "architecture_missing", "non_sentinel_input",
     "demonstration_expiry_missing_or_unparsed",
-    "runtime_expired_by_date", "incomplete_output_set"
+    "runtime_expired_by_date", "incomplete_output_set",
+    "representation_bridge_mismatch"
   )
   synthetic_primary <- c(
     rep("runtime_unavailable_or_expired", 3L),
     rep("host_or_process_failure", 3L),
     "terminal_marker_missing", rep("model_identity_mismatch", 3L),
     rep("runtime_unavailable_or_expired", 2L),
-    "required_native_output_incomplete"
+    "required_native_output_incomplete", "generation_or_schema_failure"
   )
   synthetic <- data.frame(
     SecondaryCode = synthetic_code,
@@ -401,7 +496,27 @@ mfrmr_cq_acf_summary_registry <- function() {
     MaySupportPublicClaim = FALSE,
     stringsAsFactors = FALSE
   )
-  out
+  representation <- data.frame(
+    SummaryId = "ASP-REPRESENTATION-INVARIANCE",
+    Perspective = "representation_invariance",
+    Statistic =
+      "mfrmr_planned_absence_vs_explicit_missing_coordinate_and_deviance_difference",
+    PrimaryStrata = "family",
+    CalibrationExploratorySummaryPermitted = TRUE,
+    PrimaryPooledSummaryPermitted = FALSE,
+    ConditionalNumericSummaryRequiresUnconditionalCompanion = TRUE,
+    FailureRowsDroppable = FALSE,
+    MayTuneDGP = FALSE,
+    MaySelectMetricThreshold = FALSE,
+    MaySetConfirmationDecisionRule = FALSE,
+    MayEnterConfirmationDataset = FALSE,
+    MaySupportPublicClaim = FALSE,
+    stringsAsFactors = FALSE
+  )
+  active_rows <- seq_len(nrow(active))
+  resource_rows <- nrow(active) + seq_len(2L)
+  rbind(out[active_rows, , drop = FALSE], representation,
+        out[resource_rows, , drop = FALSE])
 }
 
 mfrmr_cq_acf_workload_registry <- function(replicates = 25L) {
@@ -413,13 +528,20 @@ mfrmr_cq_acf_workload_registry <- function(replicates = 25L) {
   seeds <- mfrmr_cq_acf_seed_registry()
   seeds <- seeds[seeds$Replicate <= replicates, , drop = FALSE]
   primary <- seeds[seeds$PrimaryQ61FitRequired, , drop = FALSE]
+  paired <- primary[
+    primary$PairedRepresentationComparisonRequired, , drop = FALSE
+  ]
   dense <- seeds[seeds$SelectiveQ121FitRequired, , drop = FALSE]
-  rows <- rbind(
-    data.frame(Family = primary$Family, Nodes = 61L),
-    data.frame(Family = dense$Family, Nodes = 121L)
+  q61 <- data.frame(Family = primary$Family, Nodes = 61L)
+  q61 <- q61[rep(seq_len(nrow(q61)), each = 2L), , drop = FALSE]
+  q61$Engine <- rep(c("mfrmr", "ConQuest"), times = nrow(q61) / 2L)
+  q61_companion <- data.frame(
+    Family = paired$Family, Nodes = 61L, Engine = "mfrmr"
   )
-  rows <- rows[rep(seq_len(nrow(rows)), each = 2L), , drop = FALSE]
-  rows$Engine <- rep(c("mfrmr", "ConQuest"), times = nrow(rows) / 2L)
+  q121 <- data.frame(Family = dense$Family, Nodes = 121L)
+  q121 <- q121[rep(seq_len(nrow(q121)), each = 2L), , drop = FALSE]
+  q121$Engine <- rep(c("mfrmr", "ConQuest"), times = nrow(q121) / 2L)
+  rows <- rbind(q61, q61_companion, q121)
   rows$QuadratureId <- paste0("q", rows$Nodes)
   rows$Attempt <- 1L
   out <- stats::aggregate(
@@ -433,7 +555,7 @@ mfrmr_cq_acf_workload_registry <- function(replicates = 25L) {
     match(out$Family, c("RSM", "PCM"))
   ), , drop = FALSE]
   rownames(out) <- NULL
-  out$AttemptCapPerDatasetQuadrature <- 1L
+  out$AttemptCapPerScheduledFitCell <- 1L
   out$AutomaticRetryPermitted <- FALSE
   out
 }
@@ -446,10 +568,10 @@ mfrmr_cq_acf_resource_budget_registry <- function() {
     NewGeneratedDatasetCap = c(0L, 90L, 450L),
     StructurallyEligibleDatasetCap = c(14L, 70L, 350L),
     ExpectedNegativeControlDatasetCount = c(4L, 20L, 100L),
-    PrimaryQ61FitAttemptCap = c(28L, 140L, 700L),
+    Q61FitAttemptCap = c(30L, 150L, 750L),
     SelectiveQ121FitAttemptCap = c(0L, 40L, 200L),
-    TotalFitAttemptCap = c(28L, 180L, 900L),
-    ScheduledOutcomeRowCap = c(36L, 220L, 1100L),
+    TotalFitAttemptCap = c(30L, 190L, 950L),
+    ScheduledOutcomeRowCap = c(38L, 230L, 1150L),
     PerFitTimeoutSeconds = 600L,
     CumulativeWallTimeCapSeconds = c(28800L, 28800L, 129600L),
     RetainedStorageCapBytes = c(2 * gib, 2 * gib, 8 * gib),
@@ -542,12 +664,16 @@ mfrmr_cq_acf_mechanics_completion_registry <- function() {
       "ExpectedNegativeRejections", "NegativeControlFitAttempts",
       "EligiblePlannedAttempts", "RetainedAttemptOutcomeRows",
       "PeerEligibleAttemptsSuppressed", "EngineFamilyCellsWithParseableQ61",
+      "PairedRepresentationOutcomeRows",
+      "ExplicitMissingMfrmrAttemptOutcomes",
+      "ExplicitMissingMfrmrParseableCells",
+      "ConQuestRepresentationBridgeChecks",
       "FreshRuntimeSentinelPassed", "ModelIdentityMismatches",
       "GlobalAbortTriggered", "RowsDropped"
     ),
     RequiredValue = c(
-      "18", "36", "4", "0", "28", "28", "0", "4",
-      "TRUE", "0", "FALSE", "0"
+      "18", "38", "4", "0", "30", "30", "0", "4",
+      "6", "2", "2", "2", "TRUE", "0", "FALSE", "0"
     ),
     MechanicsOnly = TRUE,
     NumericAgreementInspected = FALSE,
@@ -566,7 +692,7 @@ mfrmr_cq_acf_engine_mechanics_decision <- function(audit) {
   criterion <- c(
     retained_datasets = identical(as.integer(audit$RetainedDatasets), 18L),
     retained_outcome_rows = identical(
-      as.integer(audit$RetainedOutcomeRows), 36L
+      as.integer(audit$RetainedOutcomeRows), 38L
     ),
     expected_negative_rejections = identical(
       as.integer(audit$ExpectedNegativeRejections), 4L
@@ -575,16 +701,28 @@ mfrmr_cq_acf_engine_mechanics_decision <- function(audit) {
       as.integer(audit$NegativeControlFitAttempts), 0L
     ),
     eligible_attempt_denominator = identical(
-      as.integer(audit$EligiblePlannedAttempts), 28L
+      as.integer(audit$EligiblePlannedAttempts), 30L
     ),
     attempt_outcomes_retained = identical(
-      as.integer(audit$RetainedAttemptOutcomeRows), 28L
+      as.integer(audit$RetainedAttemptOutcomeRows), 30L
     ),
     peer_engine_independence = identical(
       as.integer(audit$PeerEligibleAttemptsSuppressed), 0L
     ),
     parser_path_coverage = identical(
       as.integer(audit$EngineFamilyCellsWithParseableQ61), 4L
+    ),
+    paired_representation_outcomes = identical(
+      as.integer(audit$PairedRepresentationOutcomeRows), 6L
+    ),
+    explicit_missing_attempts = identical(
+      as.integer(audit$ExplicitMissingMfrmrAttemptOutcomes), 2L
+    ),
+    explicit_missing_parser_coverage = identical(
+      as.integer(audit$ExplicitMissingMfrmrParseableCells), 2L
+    ),
+    ConQuest_representation_bridge = identical(
+      as.integer(audit$ConQuestRepresentationBridgeChecks), 2L
     ),
     runtime_sentinel = isTRUE(audit$FreshRuntimeSentinelPassed),
     model_identity = identical(
@@ -620,6 +758,7 @@ mfrmr_cq_acf_stop_expand_registry <- function() {
       "expected_structural_negative_control",
       "unexpected_structural_rejection",
       "one_engine_fit_or_parse_failure",
+      "representation_bridge_mismatch",
       "per_fit_timeout",
       "global_wall_or_storage_cap_reached",
       "existing_or_nonempty_output_target",
@@ -631,6 +770,7 @@ mfrmr_cq_acf_stop_expand_registry <- function() {
       "retain_dataset_and_stop_both_engines_prefit",
       "retain_dataset_and_stop_both_engines_prefit_then_continue_phase",
       "retain_failure_attempt_peer_engine_and_continue_phase",
+      "retain_all_scheduled_rows_and_stop_that_dataset_before_fitting",
       "retain_timeout_attempt_peer_engine_and_continue_phase",
       "abort_new_work_and_materialize_unattempted_ledger_rows",
       "halt_without_overwrite",
@@ -651,7 +791,11 @@ mfrmr_cq_acf_expansion_decision <- function(audit) {
     "NegativeControlDatasets", "ExpectedNegativeRejections",
     "NegativeControlFitAttempts", "FreshRuntimeSentinelPassed",
     "GeneratorOrSchemaFailures", "SeedOrDGPDrift",
-    "SystemicAdapterFailures", "WorkloadCellsObserved",
+    "SystemicAdapterFailures", "PairedRepresentationDatasets",
+    "PairedRepresentationOutcomeRowsRetained",
+    "ExplicitMissingMfrmrFitAttempts",
+    "ConQuestRepresentationBridgeChecks", "RepresentationAdapterFailures",
+    "WorkloadCellsObserved",
     "ProjectionMethod",
     "ProjectedFullElapsedSeconds", "ProjectedFullStorageBytes",
     "GlobalAbortTriggered", "RowsDropped"
@@ -674,7 +818,7 @@ mfrmr_cq_acf_expansion_decision <- function(audit) {
   criterion <- c(
     retained_datasets = identical(as.integer(audit$GeneratedDatasetsRetained), 90L),
     retained_outcome_rows = identical(
-      as.integer(audit$RetainedScheduledOutcomeRows), 220L
+      as.integer(audit$RetainedScheduledOutcomeRows), 230L
     ),
     negative_control_denominator = identical(
       as.integer(audit$NegativeControlDatasets), 20L
@@ -692,6 +836,21 @@ mfrmr_cq_acf_expansion_decision <- function(audit) {
     frozen_identity = identical(as.integer(audit$SeedOrDGPDrift), 0L),
     adapter_mechanics = identical(
       as.integer(audit$SystemicAdapterFailures), 0L
+    ),
+    paired_representation_denominator = identical(
+      as.integer(audit$PairedRepresentationDatasets), 10L
+    ),
+    paired_representation_outcomes = identical(
+      as.integer(audit$PairedRepresentationOutcomeRowsRetained), 30L
+    ),
+    explicit_missing_mfrmr_attempts = identical(
+      as.integer(audit$ExplicitMissingMfrmrFitAttempts), 10L
+    ),
+    ConQuest_representation_bridge = identical(
+      as.integer(audit$ConQuestRepresentationBridgeChecks), 10L
+    ),
+    representation_adapter = identical(
+      as.integer(audit$RepresentationAdapterFailures), 0L
     ),
     projection_cells_complete = identical(
       as.integer(audit$WorkloadCellsObserved), 8L
@@ -738,6 +897,7 @@ mfrmr_cq_acf_review <- function(
   seed <- mfrmr_cq_acf_seed_registry()
   phase <- mfrmr_cq_acf_phase_separation()
   mechanics <- mfrmr_cq_acf_engine_mechanics_registry()
+  bridge <- mfrmr_cq_acf_representation_bridge_registry()
   profile <- mfrmr_cq_acf_engine_profile_registry()
   runtime <- mfrmr_cq_acf_runtime_contract()
   taxonomy <- mfrmr_cq_acf_failure_taxonomy()
@@ -766,12 +926,23 @@ mfrmr_cq_acf_review <- function(
     identical(sort(unique(seed$Replicate)), 1:25) &&
     sum(seed$Tranche == "A") == 90L && sum(seed$Tranche == "B") == 360L &&
     sum(seed$PrimaryQ61FitRequired) == 350L &&
+    sum(seed$Q61FitAttemptCount) == 750L &&
+    sum(seed$PairedRepresentationComparisonRequired) == 50L &&
     sum(seed$SelectiveQ121FitRequired) == 100L &&
+    sum(seed$SelectiveQ121FitAttemptCount) == 200L &&
+    sum(seed$PlannedOutcomeRowCount) == 1150L &&
     !any(seed$Generated) && !any(seed$ResultOpened) &&
     !any(seed$Seed %in% mfrmr_cq_asg_seed_registry()$Seed) &&
     isTRUE(phase$AssignedSeedDisjoint[phase$Phase == "calibration"]) &&
     is.na(phase$AssignedSeedDisjoint[phase$Phase == "confirmation"]) &&
-    nrow(mechanics) == 36L && sum(mechanics$AttemptCap) == 28L &&
+    nrow(mechanics) == 38L && sum(mechanics$AttemptCap) == 30L &&
+    sum(mechanics$RepresentationId == "explicit_missing") == 2L &&
+    sum(mechanics$ConQuestCanonicalBridgeForBothPairedRepresentations) == 2L &&
+    nrow(bridge) == 4L && identical(bridge$CheckOrder, 1:4) &&
+    all(bridge$RequiredForEachPairedDatasetBridgeCheck) &&
+    !any(bridge$ByteEqualityRequired) &&
+    !any(bridge$NumericAgreementInspected) &&
+    !any(bridge$ExecutionAuthorizedByThisContract) &&
     !any(mechanics$AttemptAuthorizedByThisContract) &&
     nrow(profile) == 8L && !any(profile$AutomaticRetryPermitted) &&
     !any(profile$ExecutionAuthorizedByThisContract) &&
@@ -780,21 +951,21 @@ mfrmr_cq_acf_review <- function(
     nrow(taxonomy) == 18L && !anyDuplicated(taxonomy$TerminalCode) &&
     identical(taxonomy$Precedence, seq_len(nrow(taxonomy))) &&
     all(taxonomy$RowMustBeRetained) && !any(taxonomy$FailureRowDroppable) &&
-    nrow(semantic) == nrow(mfrmr_cq_srp_failure_registry()) + 13L &&
+    nrow(semantic) == nrow(mfrmr_cq_srp_failure_registry()) + 14L &&
     !anyDuplicated(semantic$SecondaryCode) &&
-    nrow(summary) == 13L &&
+    nrow(summary) == 14L &&
     !any(summary$FailureRowsDroppable) &&
     !any(summary$MaySelectMetricThreshold) &&
     !any(summary$MaySetConfirmationDecisionRule) &&
-    nrow(tranche_a) == 8L && sum(tranche_a$PlannedAttemptCount) == 180L &&
-    nrow(full) == 8L && sum(full$PlannedAttemptCount) == 900L &&
-    identical(budget$TotalFitAttemptCap, c(28L, 180L, 900L)) &&
+    nrow(tranche_a) == 8L && sum(tranche_a$PlannedAttemptCount) == 190L &&
+    nrow(full) == 8L && sum(full$PlannedAttemptCount) == 950L &&
+    identical(budget$TotalFitAttemptCap, c(30L, 190L, 950L)) &&
     all(budget$ProjectionMethod == mfrmr_cq_acf_projection_method) &&
     !any(budget$ExecutionAuthorizedByThisContract) &&
-    nrow(mechanics_completion) == 12L &&
+    nrow(mechanics_completion) == 16L &&
     !any(mechanics_completion$NumericAgreementInspected) &&
     !any(mechanics_completion$ExecutionAuthorizedByCriterion) &&
-    nrow(rules) == 9L && !any(rules$MayDropRows) &&
+    nrow(rules) == 10L && !any(rules$MayDropRows) &&
     !any(rules$MayRetryCompletedOrFailedAttempt) &&
     !any(rules$MayChangeSeedDGPOrMetric)
   list(
@@ -826,6 +997,8 @@ mfrmr_cq_acf_review <- function(
     permitted_exploratory_summaries_frozen = frozen,
     sequential_and_resource_rules_frozen = frozen,
     engine_mechanics_prerequisite_frozen = frozen,
+    paired_missingness_workload_corrected_before_engine_execution = frozen,
+    no_engine_or_calibration_results_opened_before_correction = TRUE,
     engine_mechanics_execution_authorized = FALSE,
     calibration_response_generation_authorized = FALSE,
     calibration_execution_authorized = FALSE,
