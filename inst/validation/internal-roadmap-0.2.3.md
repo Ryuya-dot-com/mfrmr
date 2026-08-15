@@ -474,7 +474,12 @@ wording.
   same thirteen pre-fit gates, probability-weighted support conditioning, a
   new mfrmr preflight, an empty external output root, a fresh data-free
   sentinel, and a new minimum audit. Oracle qualification authorizes fixture
-  generation only, not fitting or external execution.
+  generation only, not fitting or external execution. The candidate-004
+  generation contract is frozen with seed `2026081504`, a 10,000 complete-
+  block ceiling, no seed search or response repair, and a separate disjoint-
+  lineage gate; its generation audit remains unopened
+  (`conquest-p2-candidate-004-coverage-conditioned-fixture-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

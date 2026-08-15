@@ -170,6 +170,12 @@ identify whether the opt-in layer ran and retain its test log.
   legacy unequal-workload discrepancies. It qualifies the new repository
   reference and authorizes candidate-004 generation only; fitting, external
   execution, and evidence promotion remain blocked.
+- `conquest-p2-candidate-004-coverage-conditioned-fixture-0.2.3.R` and
+  `conquest-p2-candidate-004-coverage-conditioned-fixture-record-0.2.3.md`:
+  freezes candidate 004's new identity and seed, unchanged thirteen-gate
+  denominator, probability-weighted support conditioning, and separate
+  candidate-003 lineage gate. Generation remains unopened; fitting and
+  external execution are unauthorized.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
