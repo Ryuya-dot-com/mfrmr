@@ -521,9 +521,15 @@ wording.
   `design_rank_not_evaluated` hold
   (`conquest-p2-candidate-004-numerical-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Resolve candidate 004's internal design-rank hold without refitting or
-  using ConQuest agreement as a substitute. Audit the exact RSM/PCM free-
-  coordinate design and preserve any structural alias or unreviewed state.
+- [ ] Disaggregate candidate 004's internal design-rank hold without refitting
+  or using ConQuest agreement as a substitute. Audit the additive constrained
+  design, nonlinear variance map, observed-pattern score span, retained
+  information, fixed-quadrature local state, and global/continuous MML state
+  separately. The candidate-004 rank-hold contract is frozen and explicitly
+  forbids local full rank from clearing the global hold; its saved-fit review
+  has not yet run
+  (`conquest-p2-candidate-004-rank-hold-contract-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.
