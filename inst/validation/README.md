@@ -234,6 +234,12 @@ identify whether the opt-in layer ran and retain its test log.
   dependency, ordinary-test, source-package, or CRAN-check requirement. The
   recorded vignette-bearing source tarball passed `R CMD check --no-manual`
   without ConQuest.
+- `conquest-p5-evidence-disposition-ledger-0.2.3.R` and its record: keep the
+  early six-arm and later P2 minimum-diagnostic candidate lineages distinct;
+  state the exact runtime/design/parameter/decision overlap; retain failed,
+  withheld, ineligible, integration-limited, and unresolved denominators; and
+  map supported, caveated, disabled, and deferred public decisions without
+  authorizing a public text change.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

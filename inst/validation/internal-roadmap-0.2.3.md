@@ -743,12 +743,24 @@ wording.
 
 #### P5 -- release and maintenance handoff
 
-- [ ] State the exact matched overlap, observed ConQuest versions/platforms,
-  covered designs, and covered parameter/decision classes.
-- [ ] List all negative-control, ineligible, failed, boundary-limited,
+- [x] State the exact matched overlap, observed ConQuest versions/platforms,
+  covered designs, and covered parameter/decision classes. The P5 ledger keeps
+  the six-arm and later minimum-diagnostic candidate number lineages distinct
+  and binds every retained overlap to ConQuest 5.47.5 Demo on x86_64/Rosetta
+  (`conquest-p5-evidence-disposition-ledger-record-0.2.3.md`, 2026-08-15).
+- [x] List all negative-control, ineligible, failed, boundary-limited,
   integration-limited, and unresolved outcomes using the fixed denominator.
-- [ ] Map the evidence to public decisions that are supported, caveated,
+  The ledger retains failed and withheld arms, 13 prefit gates, four
+  integration-limited checks in each affected slice, 96+96 typed-ineligible
+  posterior rows, readiness/identification holds, the six-arm Binary oracle/
+  rank gap, two structural negative controls, seven reviewer-control classes,
+  two missing independent reviews, and the unopened 5,073-outcome wider P2
+  denominator.
+- [x] Map the evidence to public decisions that are supported, caveated,
   disabled, or deferred; do not claim general software interchangeability.
+  Only the existing pure-R handoff boundary is supported; all numerical
+  promotion remains caveated, disabled, or deferred, and this internal map
+  authorizes no public text change.
 - [x] Define the smallest dependency-based sentinel for changes to likelihood,
   constraints, category handling, integration, parsers, transforms, or the
   ConQuest runtime. The candidate-004 sentinel now separates versioned
