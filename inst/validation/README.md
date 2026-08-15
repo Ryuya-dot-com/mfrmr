@@ -124,6 +124,12 @@ identify whether the opt-in layer ran and retain its test log.
   It passes all thirteen unchanged pre-fit gates and authorizes only a separate
   mfrmr internal preflight. The conditional joint sampling law cannot support
   truth-recovery, calibration, external-execution, or equivalence claims.
+- `conquest-p2-candidate-003-mfrmr-preflight-0.2.3.R` and
+  `conquest-p2-candidate-003-mfrmr-preflight-record-0.2.3.md`: freezes the
+  run-once, four-fit mfrmr-only gate for candidate 003. Expected dimensions,
+  convergence, an interior variance floor, exact readiness-state handling, and
+  q31--q61 movement are prospective; ConQuest execution and every claim remain
+  unauthorized until a separate post-preflight decision.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
