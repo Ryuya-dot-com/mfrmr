@@ -401,7 +401,7 @@ test_that("G4 record and roadmap preserve the closed execution boundary", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze a separate run-once engine-mechanics authorization",
+    roadmap, "[x] Freeze a separate run-once engine-mechanics authorization",
     fixed = TRUE
   )
 })

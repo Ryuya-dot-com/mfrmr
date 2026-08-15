@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-15.
+Status: repository-only maintainer plan, refined 2026-08-16.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -836,13 +836,22 @@ wording.
   ConQuest wide-missing fit plus an explicit bridge check
   (`conquest-adversarial-simulation-calibration-freeze-record-0.2.3.md`,
   2026-08-15).
-- [ ] Freeze a separate run-once engine-mechanics authorization over the 18
+- [x] Freeze a separate run-once engine-mechanics authorization over the 18
   retained G3 datasets before opening calibration. The four structural
   negative controls must remain prefit stops; the fourteen eligible datasets
   permit one q61 attempt per engine, and the two paired-missingness datasets
   permit one additional explicit-missing mfrmr companion (30 attempts total),
   with a fresh ConQuest semantic sentinel, two canonical-input bridge checks,
-  and exact runtime/resource boundary.
+  and exact runtime/resource boundary. G4E now passes 19/19 prospective gates
+  and authorizes harness preparation only; live execution remains false until
+  a same-session data-free sentinel is observed
+  (`conquest-adversarial-simulation-engine-mechanics-authorization-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Freeze the fail-closed G4H engine-mechanics harness over the exact
+  38-row/30-attempt plan. It must semantically revalidate the retained source,
+  require a new exact output root, run the fresh sentinel before any fit,
+  retain every failure/unattempted row, forbid retries and numeric-agreement
+  inspection, and leave calibration authorization false.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.
