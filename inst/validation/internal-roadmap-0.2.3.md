@@ -490,16 +490,23 @@ wording.
   design-rank holds. No external execution follows automatically
   (`conquest-p2-candidate-004-mfrmr-preflight-observation-record-0.2.3.md`,
   2026-08-15).
-- [ ] Bind a fit-eligible candidate 004 to a new empty external output root, a
+- [x] Bind and execute fit-eligible candidate 004 in a new empty external output root, a
   fresh data-free runtime sentinel, a new minimum audit, and a run-once
   ConQuest authorization. None is implied by fixture or internal-fit success.
   The fresh sentinel passes and the candidate-004 four-arm q61/q121 live
   authorization is frozen through 2026-08-16 with all fifteen fatal gates
   passing. The candidate-004 run-once harness is frozen with both families at
-  q61/q121, thirty-two required native outputs, exact unopened-boundary validation, and a
-  semantic failure stop; the real output bundle remains unopened and no
-  external fit has run (`conquest-p2-candidate-004-harness-record-0.2.3.md`,
+  q61/q121, thirty-two required native outputs, exact unopened-boundary
+  validation, and a semantic failure stop. All four authorized arms were run
+  once: each returned status zero, reached the terminal marker, raised no
+  registered semantic error, and produced 8/8 native outputs. This completes
+  only the execution denominator, not numerical agreement
+  (`conquest-p2-candidate-004-execution-observation-record-0.2.3.md`,
   2026-08-15).
+- [ ] Apply the already-frozen exact-reported-decimal, integration-movement,
+  probability, constraint, and ordering rules to all four candidate-004 arms.
+  Retain any reported-resolution limit or failed coordinate without rerunning
+  the candidate, changing a threshold, or dropping an atomic row.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.
