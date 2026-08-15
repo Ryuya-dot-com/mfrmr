@@ -242,9 +242,15 @@ identify whether the opt-in layer ran and retain its test log.
   authorizing a public text change.
 - `conquest-p4-replication-necessity-decision-0.2.3.R` and its record: close
   replicated confirmation as `replication_not_needed` only for the selected
-  candidate-004 fixed-artifact claim. Independent review remains required;
-  cross-data-set rates, recovery, coverage, portability, wider P2, and P3
-  cannot inherit this narrow decision.
+  candidate-004 fixed-artifact claim. Independent review remains required only
+  if promotion of that bounded record is reopened; cross-data-set rates,
+  recovery, coverage, portability, wider P2, and P3 cannot inherit this narrow
+  decision.
+- `conquest-adversarial-simulation-program-0.2.3.R` and its record: select a
+  distinct population-level RSM/PCM simulation workstream without mutating
+  candidate 004; make its dormant independent-review handoff nonblocking;
+  freeze failure-mode classes, metric and denominator layers, execution order,
+  and the seven exact-design fields that still prevent data generation.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

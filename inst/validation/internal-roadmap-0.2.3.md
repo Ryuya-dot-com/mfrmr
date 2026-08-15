@@ -553,9 +553,14 @@ wording.
   reviewer is assigned and no review result is implied
   (`conquest-p2-candidate-004-independent-review-handoff-record-0.2.3.md`,
   2026-08-15).
-- [ ] Complete the independent post-output evidence review before any result is
-  promoted, the P2 design is widened, P3 is authorized, or a public claim is
-  made.
+- [x] Reassess the independent post-output review by expected information gain.
+  Candidate 004 now remains retained without an active promotion target, and
+  its dormant review handoff is not reported complete or cancelled. It no
+  longer blocks a distinct truth-known adversarial simulation, P2 design work,
+  or later P3 consideration. External review remains an optional design
+  challenge or final-evidence audit, not a substitute for an independent
+  mathematical oracle
+  (`conquest-adversarial-simulation-program-record-0.2.3.md`, 2026-08-15).
 
 #### P0 -- semantic runtime continuity
 
@@ -591,10 +596,12 @@ wording.
 - [x] Run the reusable preflight once against the explicit current path and
   retain its semantic record before 2026-09-01
   (`conquest-semantic-runtime-preflight-record-0.2.3.md`, 2026-08-15).
-- [ ] Close P0 only after an independent review confirms that all C0 failure
-  controls fail closed and ordinary package tests do not require ConQuest. P0
-  closure blocks evidence promotion and widening, but no longer blocks the
-  first sealed diagnostic after every minimum fatal gate passes.
+- [ ] Close P0 only after executable evidence confirms that all C0 failure
+  controls fail closed and ordinary package tests do not require ConQuest.
+  Reviewer identity is not a closure criterion; a later external audit may
+  challenge the retained evidence. P0 closure blocks interpretation and
+  widening, but not prospective design work or the first sealed diagnostic
+  after every minimum fatal gate passes.
 
 #### P1 -- prospective semantic registry
 
@@ -636,10 +643,11 @@ wording.
   rules before any successor candidate output is opened
   (`conquest-p2-metric-boundary-contract-record-0.2.3.md` and
   `conquest-p3-metric-precision-contract-record-0.2.3.md`, 2026-08-15).
-- [ ] Close P1 only after an independent review confirms C1 eligibility,
-  complete denominators, negative-control rejection, and claim boundaries. P1
-  closure remains mandatory for evidence promotion and widening, not for the
-  first non-interpretive sealed diagnostic.
+- [ ] Close P1 only after executable contract checks confirm C1 eligibility,
+  complete denominators, negative-control rejection, and claim boundaries.
+  Reviewer identity is optional and cannot replace those checks. P1 closure
+  remains mandatory for interpretation and widening, not for prospective
+  design work or the first non-interpretive sealed diagnostic.
 
 #### P2 -- additive RSM/PCM adversarial envelope
 
@@ -679,8 +687,8 @@ wording.
   denominator, and expiry-aware execution cap comprehensively after the first
   slice is classified and before evidence promotion or widening.
 - [ ] Authorize and run only the smallest frozen external P2 slice after the
-  current runtime and minimum fatal-gate audit are bound; P0/P1 independent
-  closure remains required before interpreting or expanding the result.
+  current runtime and minimum fatal-gate audit are bound; machine-verifiable
+  P0/P1 closure remains required before interpreting or expanding the result.
 - [ ] Diagnose every outcome under the failure taxonomy before authorizing a
   wider deterministic slice or any replication.
 - [ ] Close P2 only when C0--C5 pass for the exact claimed additive envelope, or
@@ -747,6 +755,43 @@ wording.
   `replication_not_needed`. Cross-data-set disagreement rates, recovery,
   coverage, portability, wider P2, and P3 remain separate unselected or
   deterministic-gate-first claims.
+
+#### P4S -- successor adversarial simulation program
+
+- [x] Select a new population-level question instead of retroactively widening
+  candidate 004. Candidate-004 data and thresholds cannot accept the successor
+  claim, and its independent-review handoff is nonblocking and dormant.
+- [x] Freeze nine failure-mode scenario classes across the intended RSM/PCM
+  envelope: complete crossing, connected sparse multiple bridges, weak single
+  bridge, unequal Rater workload, paired missingness, rare boundary categories,
+  extreme Persons, unused-category rejection, and disconnected-design
+  rejection.
+- [x] Make one independently generated scenario-by-family dataset the sampling
+  unit. Retain every generated dataset in an unconditional outcome ledger and
+  require unconditional execution/eligibility companions for conditional
+  numerical summaries.
+- [x] Separate structural disposition, both engine outcomes, truth and oracle
+  errors, bias/RMSE, common-coordinate disagreement, quadrature sensitivity,
+  and false-ready/false-pass decisions. Defer uncertainty coverage until its
+  covariance estimand and interval rule are proven.
+- [x] Require disjoint smoke, calibration, and untouched confirmation data.
+  Calibration cannot enter confirmation, and no universal replication count
+  is preselected
+  (`conquest-adversarial-simulation-program-record-0.2.3.md`, 2026-08-15).
+- [ ] Complete the six missing cross-family or disjoint deterministic
+  templates and validate all positive and negative structural dispositions.
+- [ ] Freeze exact DGP values and implement a neutral response generator plus
+  probability and continuous-target oracles that do not call either fit path.
+- [ ] Freeze a mechanics-only smoke seed band and output schema, then authorize
+  no more than one disjoint dataset per scenario-family arm.
+- [ ] Freeze and run a disjoint calibration band solely to estimate failure,
+  variability, runtime, and storage; do not reuse calibration rows for a
+  confirmation claim.
+- [ ] Set metric-specific decision loss, precision/MCSE targets, replication
+  counts, untouched seeds, and stop/expand/abort rules before confirmation.
+- [ ] Run and classify P2 RSM/PCM confirmation before considering the separate
+  P3 item-only GPCM stratum. Many-facet free-slope GPCM remains excluded until
+  a separate model-identity proof passes.
 
 #### P5 -- release and maintenance handoff
 

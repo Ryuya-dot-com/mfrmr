@@ -107,7 +107,7 @@ test_that("live authorization cannot launch, fit, or substitute hashes", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("record and roadmap retain downstream review gates", {
+test_that("record retains authorization while the roadmap supersedes its gate", {
   ctx <- load_conquest_p2_candidate_004_live_authorization()
   record_path <- file.path(
     ctx$validation,
@@ -127,7 +127,12 @@ test_that("record and roadmap retain downstream review gates", {
   )
   expect_match(
     roadmap,
-    "[ ] Complete the independent post-output evidence review",
+    "[x] Reassess the independent post-output review by expected information gain",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "its dormant review handoff is not reported complete or cancelled",
     fixed = TRUE
   )
 })
