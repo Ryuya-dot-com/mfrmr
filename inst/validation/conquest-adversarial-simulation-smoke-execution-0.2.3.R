@@ -536,10 +536,11 @@ mfrmr_cq_ase_semantic_replay_match <- function(observed, replay) {
     "ResponseObserved", "ProfileId", "RecoveryEligible"
   )
   numeric_columns <- c("LatentValue", "LatentUniform", "ResponseUniform")
-  identical(
+  isTRUE(all.equal(
     observed_response[, key_columns, drop = FALSE],
-    replay_response[, key_columns, drop = FALSE]
-  ) && isTRUE(all.equal(
+    replay_response[, key_columns, drop = FALSE],
+    tolerance = 0, check.attributes = FALSE
+  )) && isTRUE(all.equal(
     observed_response[, numeric_columns, drop = FALSE],
     replay_response[, numeric_columns, drop = FALSE],
     tolerance = 1e-14, check.attributes = FALSE

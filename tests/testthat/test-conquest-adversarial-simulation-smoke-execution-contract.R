@@ -95,6 +95,15 @@ test_that("structural adapter uses the frozen full-location rank fields", {
   expect_true(all(disposition$DispositionMatchesExpected))
 })
 
+test_that("semantic replay tolerates lossless CSV numeric type inference", {
+  env <- load_conquest_adversarial_simulation_smoke_execution()$env
+  replay <- env$mfrmr_cq_ase_generate_all()
+  observed <- replay
+  observed$response_data$X <- as.integer(observed$response_data$X)
+
+  expect_true(env$mfrmr_cq_ase_semantic_replay_match(observed, replay))
+})
+
 test_that("execution source contains no fit, external launch, or hash gate", {
   ctx <- load_conquest_adversarial_simulation_smoke_execution()
   source <- paste(readLines(ctx$paths[7L], warn = FALSE), collapse = "\n")
