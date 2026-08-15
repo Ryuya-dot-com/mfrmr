@@ -191,6 +191,11 @@ identify whether the opt-in layer ran and retain its test log.
   retains the six structurally/numerically eligible but not inference-ready
   fits, diagnostic q31 movement, and q61--q121 dense-pair/continuous-target
   pass. q241 was not run; external execution still requires a new review.
+- `conquest-p2-candidate-004-live-authorization-0.2.3.R` and
+  `conquest-p2-candidate-004-live-authorization-record-0.2.3.md`: binds a fresh
+  data-free ConQuest sentinel and disclosed same-author fifteen-gate audit to
+  exactly two q121 external fits. It permits no new mfrmr fit, evidence
+  promotion, wider execution, P3 work, or public claim.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
