@@ -189,17 +189,17 @@ mfrmr_cq_ase_structural_disposition <- function(
       "unused_category_negative_control_failed"
     }
   } else if (scenario == "ASP-NEG-DISCONNECTED-DESIGN") {
-    observed <- if (rank$Rank < rank$Dimension) {
+    observed <- if (rank$RankAt1e10 < rank$Dimension) {
       "reject_before_numeric_comparison"
     } else {
       "unexpected_full_rank"
     }
-    reason <- if (rank$Rank < rank$Dimension) {
+    reason <- if (rank$RankAt1e10 < rank$Dimension) {
       "full_population_location_predictor_rank_deficient"
     } else {
       "disconnected_negative_control_rank_failure_absent"
     }
-  } else if (rank$Rank < rank$Dimension) {
+  } else if (rank$RankAt1e10 < rank$Dimension) {
     observed <- "unexpected_rank_rejection"
     reason <- "positive_or_sensitivity_arm_rank_deficient"
   } else if (any(count == 0L)) {
@@ -218,7 +218,7 @@ mfrmr_cq_ase_structural_disposition <- function(
     ObservedDisposition = observed,
     DispositionReason = reason,
     PredictorDimension = rank$Dimension,
-    PredictorRank = rank$Rank,
+    PredictorRank = rank$RankAt1e10,
     SupportBoundaryStatus = paste0(
       "category_counts=", paste(count, collapse = ";")
     ),

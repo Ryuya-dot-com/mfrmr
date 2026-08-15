@@ -77,6 +77,24 @@ test_that("execution cannot start without explicit authorization", {
   expect_false(dir.exists(target))
 })
 
+test_that("structural adapter uses the frozen full-location rank fields", {
+  env <- load_conquest_adversarial_simulation_smoke_execution()$env
+  allocation <- env$mfrmr_cq_asg_seed_registry()
+  disposition <- lapply(seq_len(nrow(allocation)), function(index) {
+    current <- allocation[index, , drop = FALSE]
+    template <- env$mfrmr_cq_ast_template(current$ArmId)
+    env$mfrmr_cq_ase_structural_disposition(
+      template, template$Data, current
+    )
+  })
+  disposition <- do.call(rbind, disposition)
+
+  expect_identical(nrow(disposition), 18L)
+  expect_true(all(disposition$PredictorDimension %in% c(9L, 13L)))
+  expect_true(all(disposition$PredictorRank %in% c(8L, 9L, 12L, 13L)))
+  expect_true(all(disposition$DispositionMatchesExpected))
+})
+
 test_that("execution source contains no fit, external launch, or hash gate", {
   ctx <- load_conquest_adversarial_simulation_smoke_execution()
   source <- paste(readLines(ctx$paths[7L], warn = FALSE), collapse = "\n")
