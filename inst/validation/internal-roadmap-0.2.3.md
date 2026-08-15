@@ -384,9 +384,10 @@ wording.
   contract itself
   (`conquest-minimum-diagnostic-live-authorization-record-0.2.3.md`,
   2026-08-15).
-- [ ] Implement and dry-test a fail-closed harness that consumes only the live
+- [x] Implement and dry-test a fail-closed harness that consumes only the live
   authorization, requires a new empty output directory, uses unique prefixes,
-  and retains every expected output or failure without fitting during tests.
+  and retains every expected output or failure without fitting during tests
+  (`conquest-minimum-diagnostic-harness-0.2.3.R`, 2026-08-15).
 - [ ] Execute exactly the authorized two-row P2 diagnostic slice before the
   live authorization expires; do not add q values, rows, reruns, or P3.
 - [ ] Complete the independent post-output evidence review before any result is
