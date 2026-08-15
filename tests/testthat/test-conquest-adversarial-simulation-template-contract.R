@@ -187,7 +187,7 @@ test_that("record and roadmap identify G2 as the next closed execution gate", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze exact DGP values and implement a neutral response",
+    roadmap, "[x] Freeze four exact DGP profiles and implement code-path-separated neutral",
     fixed = TRUE
   )
 })

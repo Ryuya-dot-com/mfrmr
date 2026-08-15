@@ -256,6 +256,11 @@ identify whether the opt-in layer ran and retain its test log.
   explicit paired-missingness and boundary support audits, and a full
   population-location predictor-rank proof for the disconnected negative
   control. Prototype responses cannot become simulation data.
+- `conquest-adversarial-simulation-dgp-oracle-contract-0.2.3.R` and its record:
+  close ASP-G2 with four exact DGP profiles, caller-supplied-uniform latent and
+  response primitives, an independently reconstructed-A probability path, and
+  a log-centered continuous oracle. No RNG, fit, external execution, or full
+  simulation dataset is authorized.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

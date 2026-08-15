@@ -789,10 +789,22 @@ wording.
   claim despite its full algebraic predictor rank
   (`conquest-adversarial-simulation-template-contract-record-0.2.3.md`,
   2026-08-15).
-- [ ] Freeze exact DGP values and implement a neutral response generator plus
-  probability and continuous-target oracles that do not call either fit path.
-- [ ] Freeze a mechanics-only smoke seed band and output schema, then authorize
-  no more than one disjoint dataset per scenario-family arm.
+- [x] Freeze four exact DGP profiles and implement code-path-separated neutral
+  primitives. Caller-supplied open-interval uniforms feed base-normal latent
+  transforms and a direct cumulative-step inverse-CDF response generator; a
+  reconstructed-A probability oracle and log-centered continuous oracle remain
+  outside the generation path and call neither fit engine. Across 672
+  probability cases the maximum path difference is `4.4408920985e-16`; a
+  one-Person-per-arm complete/rare RSM/PCM sentinel has zero observed
+  continuous log-likelihood difference and maximum declared deviance error
+  envelope `5.52333797532e-13`, below the frozen `1e-8` mechanics threshold.
+  The quadrature component is an estimate, not a proof. Full-arm continuous
+  qualification remains in G3
+  (`conquest-adversarial-simulation-dgp-oracle-contract-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Freeze a mechanics-only smoke seed band and output schema, complete the
+  full-Person continuous-oracle qualification, then authorize no more than one
+  disjoint dataset per scenario-family arm.
 - [ ] Freeze and run a disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; do not reuse calibration rows for a
   confirmation claim.
