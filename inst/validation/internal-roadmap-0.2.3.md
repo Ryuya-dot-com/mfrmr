@@ -506,7 +506,14 @@ wording.
 - [ ] Apply the already-frozen exact-reported-decimal, integration-movement,
   probability, constraint, and ordering rules to all four candidate-004 arms.
   Retain any reported-resolution limit or failed coordinate without rerunning
-  the candidate, changing a threshold, or dropping an atomic row.
+  the candidate, changing a threshold, or dropping an atomic row. The
+  candidate-004 numerical-review contract is now frozen before its full metric
+  computation: it retains both q61 and q121 cross-engine rows, reconstructs all
+  sum-zero coordinates, requires four semantic A matrices, types EAP/SD as
+  ineligible, and separates this two-row numerical core from the wider P2
+  design portfolio
+  (`conquest-p2-candidate-004-numerical-review-contract-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.
