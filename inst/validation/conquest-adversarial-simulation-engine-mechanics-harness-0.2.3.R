@@ -835,6 +835,22 @@ mfrmr_cq_ameh_same_frame <- function(observed, expected) {
   ))
 }
 
+mfrmr_cq_ameh_normalize_artifact_inventory <- function(inventory) {
+  required <- c(
+    "ArtifactDirectory", "ExpectedArtifactKinds", "PresentArtifactKinds",
+    "UnexpectedArtifactKinds"
+  )
+  mfrmr_cq_ameh_assert(
+    is.data.frame(inventory) && all(required %in% names(inventory)),
+    "The artifact inventory lacks its semantic character columns."
+  )
+  out <- inventory
+  for (column in required) out[[column]] <- as.character(out[[column]])
+  optional <- c("PresentArtifactKinds", "UnexpectedArtifactKinds")
+  for (column in optional) out[[column]][is.na(out[[column]])] <- ""
+  out
+}
+
 mfrmr_cq_ameh_validate_prepared <- function(output_dir) {
   mfrmr_cq_ameh_require_contracts()
   root <- normalizePath(output_dir, winslash = "/", mustWork = TRUE)
@@ -1931,7 +1947,8 @@ mfrmr_cq_ameh_review_execution <- function(output_dir) {
     root, plan, outcome, expected_registry
   )
   inventory_reconstructed <- mfrmr_cq_ameh_same_frame(
-    inventory, reconstructed_inventory
+    mfrmr_cq_ameh_normalize_artifact_inventory(inventory),
+    mfrmr_cq_ameh_normalize_artifact_inventory(reconstructed_inventory)
   )
   boundary <- mfrmr_cq_ameh_output_boundary(root, plan, expected_registry)
   sentinel_consistent <- identical(

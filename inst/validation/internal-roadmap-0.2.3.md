@@ -859,11 +859,23 @@ wording.
   or fit was launched
   (`conquest-adversarial-simulation-engine-mechanics-harness-record-0.2.3.md`,
   2026-08-16).
-- [ ] Execute the exact G4X mechanics bundle once. A newly observed same-call
-  ConQuest sentinel must pass before attempt 1; then retain all 38 outcomes and
-  continue past ordinary engine/parse/timeout failures. Stop later attempts
-  only for the frozen global resource cap, inspect no numerical agreement, and
-  leave calibration authorization to a separate post-mechanics review.
+- [x] Execute the exact G4X mechanics bundle once. A newly observed same-call
+  ConQuest 5.47.5 Demo sentinel passed before attempt 1; all 38 outcomes and
+  30/30 attempts were retained without retry, suppression, identity mismatch,
+  row loss, or global abort. All 30 results were parseable and all 16 mechanics
+  criteria pass after losslessly normalizing one all-empty CSV artifact-list
+  column; the original outputs were neither rewritten nor rerun. All 16 mfrmr
+  fits converged but remain inference-review holds because nonlinear MML design
+  rank is not yet a complete readiness classification. No numerical agreement
+  was inspected and calibration remains unauthorized
+  (`conquest-adversarial-simulation-engine-mechanics-execution-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Complete G4R post-mechanics calibration review. Decide prospectively
+  whether calibration remains informative when mfrmr RSM/PCM MML fits are
+  parseable and converged but deterministically retain
+  `design_rank_not_evaluated`; do not convert that state to inference-ready,
+  inspect numerical agreement, or spend the calibration budget merely because
+  the mechanics gate passed.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

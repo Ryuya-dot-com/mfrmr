@@ -286,6 +286,25 @@ test_that("mfrmr execution binds to the 0.2.3 working-tree namespace", {
   )
 })
 
+test_that("all-empty artifact columns survive CSV type inference semantically", {
+  ctx <- load_conquest_adversarial_simulation_engine_mechanics_harness()
+  env <- ctx$env
+  inventory <- env$mfrmr_cq_ameh_artifact_inventory_template()
+  path <- withr::local_tempfile(fileext = ".csv")
+  utils::write.csv(inventory, path, row.names = FALSE, na = "")
+  observed <- utils::read.csv(
+    path, stringsAsFactors = FALSE, check.names = FALSE, na.strings = ""
+  )
+
+  expect_type(observed$PresentArtifactKinds, "logical")
+  expect_type(observed$UnexpectedArtifactKinds, "logical")
+  expect_false(env$mfrmr_cq_ameh_same_frame(observed, inventory))
+  expect_true(env$mfrmr_cq_ameh_same_frame(
+    env$mfrmr_cq_ameh_normalize_artifact_inventory(observed),
+    env$mfrmr_cq_ameh_normalize_artifact_inventory(inventory)
+  ))
+})
+
 test_that("dry preparation is opt-in, semantic, exact, and execution-free", {
   ctx <- load_conquest_adversarial_simulation_engine_mechanics_harness()
   env <- ctx$env
@@ -397,7 +416,7 @@ test_that("G4H has no deletion, retry, hash, or top-level execution route", {
   ))
 })
 
-test_that("G4H record and roadmap keep live execution pending", {
+test_that("G4H record stays immutable while the roadmap advances to G4R", {
   ctx <- load_conquest_adversarial_simulation_engine_mechanics_harness()
   record <- paste(readLines(file.path(
     ctx$validation,
@@ -405,6 +424,13 @@ test_that("G4H record and roadmap keep live execution pending", {
   ), warn = FALSE), collapse = "\n")
   roadmap <- paste(readLines(file.path(
     ctx$validation, "internal-roadmap-0.2.3.md"
+  ), warn = FALSE), collapse = "\n")
+  execution_record <- paste(readLines(file.path(
+    ctx$validation,
+    paste0(
+      "conquest-adversarial-simulation-engine-mechanics-",
+      "execution-record-0.2.3.md"
+    )
   ), warn = FALSE), collapse = "\n")
 
   expect_match(record, ctx$env$mfrmr_cq_ameh_specification, fixed = TRUE)
@@ -416,7 +442,20 @@ test_that("G4H record and roadmap keep live execution pending", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Execute the exact G4X mechanics bundle once",
+    roadmap, "[x] Execute the exact G4X mechanics bundle once",
     fixed = TRUE
   )
+  expect_match(
+    roadmap, "[ ] Complete G4R post-mechanics calibration review",
+    fixed = TRUE
+  )
+  expect_match(
+    execution_record,
+    "ASP_G4X_engine_mechanics_complete_calibration_review_required",
+    fixed = TRUE
+  )
+  expect_match(execution_record, "`FitAttemptCount=30`", fixed = TRUE)
+  expect_match(execution_record, "`MechanicsGateMet=TRUE`", fixed = TRUE)
+  expect_match(execution_record, "`CalibrationAuthorized=FALSE`", fixed = TRUE)
+  expect_match(execution_record, "`RerunAuthorized=FALSE`", fixed = TRUE)
 })
