@@ -260,7 +260,12 @@ test_that("internal documentation keeps execution and promotion separate", {
   )
   expect_match(
     roadmap,
-    "[ ] Execute exactly the authorized two-row P2 diagnostic slice",
+    "[x] Launch exactly the authorized two-row P2 diagnostic candidate",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "[ ] Supersede the deterministic response generator",
     fixed = TRUE
   )
 })

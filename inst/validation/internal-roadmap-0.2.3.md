@@ -388,8 +388,24 @@ wording.
   authorization, requires a new empty output directory, uses unique prefixes,
   and retains every expected output or failure without fitting during tests
   (`conquest-minimum-diagnostic-harness-0.2.3.R`, 2026-08-15).
-- [ ] Execute exactly the authorized two-row P2 diagnostic slice before the
-  live authorization expires; do not add q values, rows, reruns, or P3.
+- [x] Launch exactly the authorized two-row P2 diagnostic candidate before the
+  live authorization expires. The run-once harness retained four
+  expected-dimension mfrmr fits, then stopped after the ConQuest RSM/q31 arm
+  aborted at a negative latent-variance estimate; the other three ConQuest
+  arms were not launched
+  (`conquest-minimum-diagnostic-execution-observation-record-0.2.3.md`,
+  2026-08-15).
+- [x] Classify the retained outcome as a fixture population-signal defect, not
+  a cross-engine result: Rater/category and Criterion/category margins are
+  exactly balanced and the X groups have identical mean Person total scores.
+- [ ] Supersede the deterministic response generator with a prospectively
+  frozen nondegenerate-signal fixture while preserving graph connectivity,
+  category support, dimensions, common data, and the existing metric/stop
+  contracts. Require nonzero covariate score separation, non-collapsed Person
+  signal, and nontrivial facet sufficient statistics before authorization.
+- [ ] Give the replacement a new candidate identity, empty output root, fresh
+  data-free sentinel, and new minimum audit. Do not rerun, repair, salvage, or
+  reorder the consumed candidate.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

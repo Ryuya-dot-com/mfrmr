@@ -105,6 +105,13 @@ identify whether the opt-in layer ran and retain its test log.
   additional candidate path, retains fit/runtime/output failures, and keeps
   every evidence-promotion and public-claim authority false. Ordinary tests
   exercise only the preparation and semantic gates; they launch no model.
+- `conquest-minimum-diagnostic-execution-observation-0.2.3.R` and
+  `conquest-minimum-diagnostic-execution-observation-record-0.2.3.md`: retains
+  the first run-once outcome: four expected-dimension mfrmr fits, followed by
+  a ConQuest RSM/q31 negative-variance estimation abort and three unattempted
+  native arms. Engine-independent counts expose an exactly balanced,
+  covariate-unseparated fixture signal, so the current candidate cannot rerun
+  and the fixture contract must be superseded before new authorization.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

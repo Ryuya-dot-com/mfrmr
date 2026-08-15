@@ -127,7 +127,12 @@ test_that("the live record preserves downstream review gates", {
   )
   expect_match(
     roadmap,
-    "[ ] Execute exactly the authorized two-row P2 diagnostic slice",
+    "[x] Launch exactly the authorized two-row P2 diagnostic candidate",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "[ ] Supersede the deterministic response generator",
     fixed = TRUE
   )
 })
