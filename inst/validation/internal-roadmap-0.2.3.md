@@ -442,15 +442,23 @@ wording.
   rejected the fixed q121 ceiling because both unequal-workload rows failed
   q61--q121 and q121--continuous limits; thresholds remain unchanged
   (`conquest-p2-successor-integration-observation-record-0.2.3.md`, 2026-08-15).
-- [ ] Freeze a bounded design-adaptive density ladder before candidate 004.
+- [x] Freeze and test a bounded design-adaptive density ladder before candidate
+  004.
   Require q31--q61 as a complete-denominator diagnostic, search only the
   predeclared adjacent dense pairs up to a fixed node cap, select the lowest
   pair that passes unchanged coordinate/deviance budgets for every numerical
   arm, and require its higher node to pass a continuous-target gate. If no pair
   passes, stop rather than extend or relax the rule. The finite
   `31;61;121;241` contract and q241 hard ceiling are frozen; its thirteen-row
-  truth-oracle audit remains unopened
-  (`conquest-p2-adaptive-density-contract-record-0.2.3.md`, 2026-08-15).
+  truth-oracle audit reached the ceiling: all 13 q121--q241 movements pass, but
+  the two unequal-workload q241--legacy-continuous comparisons still fail.
+  Further nodes and threshold changes remain unauthorized
+  (`conquest-p2-adaptive-density-observation-record-0.2.3.md`, 2026-08-15).
+- [ ] Qualify a log-centered continuous P2 oracle before candidate 004. Freeze
+  its mode-location, scaling, tail, integration-error, and agreement rules
+  before evaluation; compare it with q121, q241, and the legacy adaptive
+  integral over all thirteen truth fixtures. A qualified replacement may
+  govern future candidates but cannot reclassify consumed contracts.
 - [ ] Generate one disjoint candidate-004 fixture only after the successor
   integration contract is frozen. It must use a new candidate identity and
   seed, the same thirteen pre-fit gates, probability-weighted support

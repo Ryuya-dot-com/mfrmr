@@ -152,7 +152,13 @@ identify whether the opt-in layer ran and retain its test log.
   `conquest-p2-adaptive-density-contract-record-0.2.3.md`: freezes the bounded
   `31;61;121;241` ladder and whole-slice lowest-passing-pair rule. q241 is a
   hard ceiling; missing arms, remaining integration failure, and any proposed
-  threshold change stop rather than expand the search.
+  threshold change stop rather than expand the search. Its no-fit audit reached
+  that ceiling and stopped on the legacy continuous-reference gate.
+- `conquest-p2-adaptive-density-observation-0.2.3.R` and
+  `conquest-p2-adaptive-density-observation-record-0.2.3.md`: retains 13/13
+  q121--q241 finite-grid passes and the two persistent unequal-workload
+  continuous-reference failures. Further q expansion is closed; the continuous
+  oracle itself must be qualified next.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

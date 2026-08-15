@@ -79,7 +79,7 @@ test_that("record and roadmap require adaptive density before candidate 004", {
   expect_match(record, "`FixedThresholdChangeAuthorized=FALSE`", fixed = TRUE)
   expect_match(
     roadmap,
-    "[ ] Freeze a bounded design-adaptive density ladder",
+    "[x] Freeze and test a bounded design-adaptive density ladder",
     fixed = TRUE
   )
 })

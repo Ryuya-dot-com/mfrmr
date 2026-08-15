@@ -121,7 +121,7 @@ test_that("the adaptive contract fits and launches nothing", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("the record holds the truth audit and candidate", {
+test_that("the record retains the consumed failed audit and candidate hold", {
   ctx <- load_conquest_p2_adaptive_density_contract()
   record_path <- file.path(
     ctx$validation,
@@ -134,11 +134,12 @@ test_that("the record holds the truth audit and candidate", {
 
   expect_match(record, ctx$env$mfrmr_cq_p2ad_specification, fixed = TRUE)
   expect_match(record, "Hard ceiling: q=241", fixed = TRUE)
-  expect_match(record, "`TruthOracleAuditOpened=FALSE`", fixed = TRUE)
+  expect_match(record, "`TruthOracleAuditOpened=TRUE`", fixed = TRUE)
+  expect_match(record, "`TruthOracleAuditPassed=FALSE`", fixed = TRUE)
   expect_match(record, "`FurtherNodeExpansionAuthorized=FALSE`", fixed = TRUE)
   expect_match(
     roadmap,
-    "[ ] Freeze a bounded design-adaptive density ladder",
+    "[x] Freeze and test a bounded design-adaptive density ladder",
     fixed = TRUE
   )
 })

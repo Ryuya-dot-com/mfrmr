@@ -1,7 +1,8 @@
 # ConQuest P2 bounded adaptive-density contract for mfrmr 0.2.3
 
-Status: `bounded_adaptive_density_contract_frozen_truth_oracles_unopened`,
-2026-08-15.
+Status: contract frozen before audit; the audit subsequently reached q241 with
+all finite-grid movements passing but rejected the legacy continuous reference
+on both unequal-workload rows. See the observation record, 2026-08-15.
 
 - Specification: `0.2.3-conquest-p2-bounded-adaptive-density-contract-v1`
 - Contract: `mfrmr_conquest_p2_bounded_adaptive_density_contract_v1`
@@ -35,7 +36,9 @@ coordinate movement for every fitted arm.
 
 ## Current decision
 
-- `TruthOracleAuditOpened=FALSE`
+- `TruthOracleAuditOpened=TRUE`
+- `TruthOracleAuditConsumed=TRUE`
+- `TruthOracleAuditPassed=FALSE`
 - `Candidate003Reclassified=FALSE`
 - `Candidate004GenerationAuthorized=FALSE`
 - `Candidate004FitAuthorized=FALSE`
@@ -44,3 +47,7 @@ coordinate movement for every fitted arm.
 - `ExternalExecutionAuthorized=FALSE`
 - `EvidencePromotionAuthorized=FALSE`
 - `ScientificEquivalenceInferred=FALSE`
+
+Observed values and the stop decision are retained in
+`conquest-p2-adaptive-density-observation-record-0.2.3.md`. q241 remains the
+hard ceiling and the numeric budgets remain unchanged.
