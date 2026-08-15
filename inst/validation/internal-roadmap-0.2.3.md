@@ -416,14 +416,31 @@ wording.
   parameter-recovery or calibration evidence
   (`conquest-p2-candidate-003-coverage-conditioned-fixture-record-0.2.3.md`,
   2026-08-15).
-- [ ] Run a separate mfrmr-only candidate-003 preflight at q=31/61 for RSM and
+- [x] Run a separate mfrmr-only candidate-003 preflight at q=31/61 for RSM and
   PCM. Retain expected/free dimensions, convergence/readiness states,
   population-variance behavior, integration movement, and every failure. A
   failed or boundary-collapsed fit blocks external execution rather than
-  triggering fixture repair or seed search.
-- [ ] Bind candidate 003 to an empty external output root, fresh data-free
-  sentinel, and new minimum audit only after the mfrmr-only preflight passes.
-  Do not rerun, repair, salvage, or reorder either consumed earlier candidate.
+  triggering fixture repair or seed search. All four fit-level gates passed,
+  but both q31--q61 pairs exceeded the frozen `2e-6` coordinate and deviance
+  limits, so the preflight is consumed and external execution is blocked
+  (`conquest-p2-candidate-003-mfrmr-preflight-observation-record-0.2.3.md`,
+  2026-08-15).
+- [x] Close candidate 003 before external binding: do not create its ConQuest
+  output root, refresh its runtime sentinel, change its threshold, rerun its
+  mfrmr preflight, or search a replacement seed. Retain the four
+  `design_rank_not_evaluated` holds without relabelling them inference-ready
+  (`conquest-p2-candidate-003-mfrmr-preflight-observation-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Freeze a successor integration ladder before generating candidate 004.
+  Separate the diagnostic starting grid from the governing dense-grid pair,
+  justify the choice from integration theory and pre-candidate evidence, retain
+  a complete coordinate/deviance denominator, and do not tune the `2e-6` budget
+  from candidate-003 output.
+- [ ] Generate one disjoint candidate-004 fixture only after the successor
+  integration contract is frozen. It must use a new candidate identity and
+  seed, the same thirteen pre-fit gates, probability-weighted support
+  conditioning, a new mfrmr preflight, an empty external output root, a fresh
+  data-free sentinel, and a new minimum audit.
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

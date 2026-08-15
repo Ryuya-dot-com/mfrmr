@@ -137,7 +137,7 @@ test_that("the live record preserves downstream review gates", {
   )
   expect_match(
     roadmap,
-    "[ ] Run a separate mfrmr-only candidate-003 preflight",
+    "[x] Run a separate mfrmr-only candidate-003 preflight",
     fixed = TRUE
   )
 })

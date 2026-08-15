@@ -184,7 +184,7 @@ test_that("execution is opt-in, new-directory-only, and ConQuest-free", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("the record keeps execution and claim authority closed", {
+test_that("the record keeps the consumed failure and claim authority closed", {
   ctx <- load_conquest_p2_candidate_003_mfrmr_preflight()
   record_path <- file.path(
     ctx$validation,
@@ -196,6 +196,7 @@ test_that("the record keeps execution and claim authority closed", {
   expect_match(record, ctx$env$mfrmr_cq_p2c3p_contract, fixed = TRUE)
   expect_match(record, "population variance of at least 0.05", fixed = TRUE)
   expect_match(record, "`2e-6`", fixed = TRUE)
-  expect_match(record, "`MfrmrPreflightExecutionOpened=FALSE`", fixed = TRUE)
+  expect_match(record, "`MfrmrPreflightExecutionOpened=TRUE`", fixed = TRUE)
+  expect_match(record, "`MfrmrPreflightExecutionConsumed=TRUE`", fixed = TRUE)
   expect_match(record, "`ExternalExecutionAuthorized=FALSE`", fixed = TRUE)
 })

@@ -1,6 +1,8 @@
 # ConQuest P2 candidate-003 mfrmr preflight contract for mfrmr 0.2.3
 
-Status: `mfrmr_preflight_contract_frozen_execution_unopened`, 2026-08-15.
+Status: contract frozen before execution; the one allowed run was subsequently
+consumed and failed both q31--q61 integration gates. See the separate
+observation record, 2026-08-15.
 
 - Specification: `0.2.3-conquest-p2-candidate-003-mfrmr-preflight-v1`
 - Contract: `mfrmr_conquest_p2_candidate_003_mfrmr_preflight_v1`
@@ -48,9 +50,14 @@ Even a complete pass sets only
 
 ## Current decision
 
-- `MfrmrPreflightExecutionOpened=FALSE`
+- `MfrmrPreflightExecutionOpened=TRUE`
+- `MfrmrPreflightExecutionConsumed=TRUE`
 - `EligibleForNewExternalAuthorizationReview=FALSE`
 - `ExternalExecutionAuthorized=FALSE`
 - `EvidencePromotionAuthorized=FALSE`
 - `TruthRecoveryAuthorized=FALSE`
 - `ScientificEquivalenceInferred=FALSE`
+
+Observed values and the failure decision are retained in
+`conquest-p2-candidate-003-mfrmr-preflight-observation-record-0.2.3.md`. This
+contract's thresholds are unchanged.

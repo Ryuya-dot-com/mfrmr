@@ -150,7 +150,7 @@ test_that("the internal record retains rejection and the next design gate", {
   )
   expect_match(
     roadmap,
-    "[ ] Run a separate mfrmr-only candidate-003 preflight",
+    "[x] Run a separate mfrmr-only candidate-003 preflight",
     fixed = TRUE
   )
 })

@@ -146,7 +146,7 @@ test_that("the internal record fixes the narrow claim and next gate", {
   )
   expect_match(
     roadmap,
-    "[ ] Run a separate mfrmr-only candidate-003 preflight",
+    "[x] Run a separate mfrmr-only candidate-003 preflight",
     fixed = TRUE
   )
 })

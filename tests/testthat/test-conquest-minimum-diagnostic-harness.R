@@ -270,7 +270,7 @@ test_that("internal documentation keeps execution and promotion separate", {
   )
   expect_match(
     roadmap,
-    "[ ] Run a separate mfrmr-only candidate-003 preflight",
+    "[x] Run a separate mfrmr-only candidate-003 preflight",
     fixed = TRUE
   )
 })

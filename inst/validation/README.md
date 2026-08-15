@@ -129,7 +129,14 @@ identify whether the opt-in layer ran and retain its test log.
   run-once, four-fit mfrmr-only gate for candidate 003. Expected dimensions,
   convergence, an interior variance floor, exact readiness-state handling, and
   q31--q61 movement are prospective; ConQuest execution and every claim remain
-  unauthorized until a separate post-preflight decision.
+  unauthorized. The single run was consumed and failed its two integration
+  gates; the observation contract below retains that result.
+- `conquest-p2-candidate-003-mfrmr-preflight-observation-0.2.3.R` and
+  `conquest-p2-candidate-003-mfrmr-preflight-observation-record-0.2.3.md`:
+  retains four expected-dimension, interior-variance fits and four explicit
+  design-rank holds, plus complete RSM/PCM q31--q61 movement failures. Candidate
+  003 cannot rerun or launch ConQuest; a successor integration contract must
+  precede any disjoint candidate.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
