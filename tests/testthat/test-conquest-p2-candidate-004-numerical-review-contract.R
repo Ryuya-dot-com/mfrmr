@@ -101,6 +101,22 @@ test_that("complete numerical-core denominators cannot drop rows", {
   expect_false(any(denominator$FullP2DesignPortfolio))
 })
 
+test_that("fixture identity is semantic across numeric storage modes", {
+  env <- load_conquest_p2_candidate_004_numerical_review_contract()$env
+  canonical <- env$mfrmr_cq_p2c4_fixture()$Data
+  serialized <- canonical
+  serialized$X <- as.integer(serialized$X)
+
+  expect_false(identical(serialized, canonical))
+  expect_true(env$mfrmr_cq_p2c4nr_semantic_fixture_equal(
+    serialized, canonical, "Response"
+  ))
+  serialized$Response[1L] <- serialized$Response[1L] + 1L
+  expect_false(env$mfrmr_cq_p2c4nr_semantic_fixture_equal(
+    serialized, canonical, "Response"
+  ))
+})
+
 test_that("table extraction reconstructs constraints but not hidden precision", {
   env <- load_conquest_p2_candidate_004_numerical_review_contract()$env
   parameters <- data.frame(

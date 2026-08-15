@@ -499,6 +499,17 @@ mfrmr_cq_p2c4nr_semantic_fixture_equal <- function(actual, canonical, score) {
   actual <- order_rows(actual)
   expected <- order_rows(expected)
   rownames(actual) <- rownames(expected) <- NULL
+  character_columns <- c("Person", "Rater", "Criterion")
+  numeric_columns <- setdiff(names(expected), character_columns)
+  for (column in character_columns) {
+    actual[[column]] <- as.character(actual[[column]])
+    expected[[column]] <- as.character(expected[[column]])
+  }
+  for (column in numeric_columns) {
+    actual[[column]] <- suppressWarnings(as.numeric(actual[[column]]))
+    expected[[column]] <- suppressWarnings(as.numeric(expected[[column]]))
+  }
+  if (anyNA(actual) || anyNA(expected)) return(FALSE)
   identical(actual, expected)
 }
 
