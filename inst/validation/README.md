@@ -66,6 +66,14 @@ identify whether the opt-in layer ran and retain its test log.
   complete denominator, decision consequence, and claim ceiling. Fixture A/C
   matrices and metric-specific numerical rules remain pending, so the registry
   authorizes no ConQuest execution or comparison.
+- `conquest-p2-additive-adversarial-fixtures-0.2.3.R` and
+  `conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`: disjoint,
+  deterministic 48-Person/4-Rater/3-Criterion RSM/PCM fixture suite covering
+  multibridge and weak-link connectivity, workload imbalance, two missingness
+  representations, category and extreme-score stress, and disconnected
+  rejection. Independent A/C coefficient maps reproduce direct probabilities,
+  and all thirteen fixtures have finite continuous-target likelihood oracles.
+  Metric rules, independent review, and external execution remain pending.
 - `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
   parameter, and metric-specific comparison readiness. It defines component
   precedence, the conservative legacy `InferenceReady` mapping, typed

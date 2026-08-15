@@ -412,8 +412,12 @@ wording.
   constraints, and population/integration targets independently of exported
   parameter labels (`conquest-successor-semantic-registry-record-0.2.3.md`,
   2026-08-15).
-- [ ] Bind the disjoint fixtures and independently reconstruct their exact
-  observed A/C matrices and free dimensions before numerical eligibility.
+- [x] Bind the disjoint P2 additive fixtures and independently reconstruct their
+  exact observed A/C coefficient maps and free dimensions before numerical
+  eligibility (`conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`,
+  2026-08-15).
+- [ ] Bind the disjoint P3 item-only fixtures and independently reconstruct
+  their exact observed A/C matrices and free dimensions.
 - [x] Assign each row exactly one comparison stratum; forbid evidence transfer
   across strata by shared names such as GPCM or slope
   (`conquest-successor-semantic-registry-0.2.3.R`, 2026-08-15).
@@ -439,22 +443,33 @@ wording.
 
 #### P2 -- additive RSM/PCM adversarial envelope
 
-- [ ] Build a small deterministic connected-sparse fixture with more than one
-  independent bridge and a truth-known, exactly reconstructable design.
-- [ ] Add a weak single-bridge sensitivity fixture without treating it as the
-  sole evidence for connected sparsity.
-- [ ] Add an unequal-Rater-workload fixture while holding the estimand and
-  ordered category support fixed.
-- [ ] Add paired planned-missing-row and explicit-missing-value fixtures with a
-  prospectively stated equivalence/non-equivalence expectation.
-- [ ] Add rare boundary-category cases and an unused intermediate-category
-  negative control.
-- [ ] Add nonextreme/extreme Person strata and type every finite, unbounded,
-  adjusted-display, and posterior quantity before comparison.
-- [ ] Add a disconnected-design negative control that must stop before numeric
-  agreement is evaluated.
-- [ ] Implement independent probability and marginal-likelihood oracles for
-  every comparison-eligible deterministic fixture.
+- [x] Build a small deterministic connected-sparse fixture with more than one
+  independent bridge and a truth-known, exactly reconstructable design
+  (`conquest-p2-additive-adversarial-fixtures-0.2.3.R`, 2026-08-15).
+- [x] Add a weak single-bridge sensitivity fixture without treating it as the
+  sole evidence for connected sparsity
+  (`conquest-p2-additive-adversarial-fixtures-0.2.3.R`, 2026-08-15).
+- [x] Add an unequal-Rater-workload fixture while holding the estimand and
+  ordered category support fixed
+  (`conquest-p2-additive-adversarial-fixtures-0.2.3.R`, 2026-08-15).
+- [x] Add paired planned-missing-row and explicit-missing-value fixtures with a
+  prospectively stated equality expectation for their retained response rows
+  and continuous target
+  (`conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`, 2026-08-15).
+- [x] Add rare boundary-category cases and an unused intermediate-category
+  negative control (`conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`,
+  2026-08-15).
+- [x] Add separate nonextreme/extreme Person fixtures
+  (`conquest-p2-additive-adversarial-fixtures-0.2.3.R`, 2026-08-15).
+- [ ] Type every finite, unbounded, adjusted-display, and posterior quantity
+  before an extreme-Person numerical comparison.
+- [x] Add a disconnected-design negative control that must stop before numeric
+  agreement is evaluated
+  (`test-conquest-p2-additive-adversarial-fixtures.R`, 2026-08-15).
+- [x] Implement independent probability and continuous-target marginal-
+  likelihood oracles for every deterministic P2 fixture
+  (`conquest-p2-additive-adversarial-fixtures-0.2.3.R` and its test,
+  2026-08-15).
 - [ ] Freeze parameter-class coordinate metrics, matched-constant deviance,
   within-engine q movement, fitted probabilities, eligible EAP/posterior SD,
   ordering/ties, readiness states, and decision consequences.

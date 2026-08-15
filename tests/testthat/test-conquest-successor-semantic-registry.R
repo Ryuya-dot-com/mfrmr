@@ -191,7 +191,7 @@ test_that("the semantic registry is offline and contains no local engine path", 
                      fixed = TRUE))
 })
 
-test_that("the P1 record and roadmap preserve pending gates", {
+test_that("the P1 record and roadmap distinguish completed P2 binding from open gates", {
   ctx <- load_conquest_successor_semantic_registry()
   record_path <- file.path(
     ctx$validation,
@@ -222,7 +222,12 @@ test_that("the P1 record and roadmap preserve pending gates", {
   )
   expect_match(
     roadmap,
-    "[ ] Bind the disjoint fixtures and independently reconstruct",
+    "[x] Bind the disjoint P2 additive fixtures and independently reconstruct",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "[ ] Bind the disjoint P3 item-only fixtures and independently reconstruct",
     fixed = TRUE
   )
   expect_match(
