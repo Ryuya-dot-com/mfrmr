@@ -217,7 +217,7 @@ test_that("the P1 record and roadmap distinguish completed P2 binding from open 
   )))
   expect_match(
     record,
-    "fixture identities, independent A/C matrices",
+    "disjoint P2/P3 fixture identities and independent",
     fixed = TRUE
   )
   expect_match(
@@ -227,7 +227,7 @@ test_that("the P1 record and roadmap distinguish completed P2 binding from open 
   )
   expect_match(
     roadmap,
-    "[ ] Bind the disjoint P3 item-only fixtures and independently reconstruct",
+    "[x] Bind the disjoint P3 item-only fixtures and independently reconstruct",
     fixed = TRUE
   )
   expect_match(

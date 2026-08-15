@@ -1,12 +1,14 @@
 # ConQuest successor semantic registry record for mfrmr 0.2.3
 
 Status: P1 semantic signatures, claim dispositions, complete denominators, and
-negative controls defined; fixture identities, independent A/C matrices,
-metric-specific numerical rules, and independent review pending, 2026-08-15.
+negative controls defined; disjoint P2/P3 fixture identities and independent
+A/C coefficient maps bound by downstream overlays; P3 metric-specific numerical
+rules and independent review pending, 2026-08-15.
 
-This is a prospective, repository-only record. No ConQuest process was
-launched, no candidate output exists, no tolerance was selected, and no
-comparison or scientific-equivalence claim is authorized.
+This is a prospective, repository-only record. No successor candidate output
+exists, and no comparison or scientific-equivalence claim is authorized. The
+separate P2 overlay now freezes its metric rules; the P3 overlay intentionally
+stops before its metric freeze.
 
 - Specification: `0.2.3-conquest-successor-semantic-registry-v1`
 - Contract: `mfrmr_conquest_successor_semantic_registry_v1`
@@ -93,17 +95,19 @@ transfer item-only evidence to a multifacet slope-owner claim.
 P1 is not complete. Before any successor external output is authorized, the
 following remain mandatory:
 
-- bind disjoint deterministic fixture data and response schemas;
-- reconstruct and review exact fixture A/C matrices and free dimensions;
-- freeze raw-token and reported-resolution handling against those schemas;
-- freeze parameter-class metric rules, complete-denominator adjudication, stop
-  rules, and dependency invalidation before output is opened; and
+- independently review the bound P2/P3 fixture identities, response schemas,
+  exact observed-support A/C coefficient maps, and free dimensions;
+- freeze P3 raw-token and reported-resolution handling against its schemas;
+- freeze P3 parameter-class metric rules, complete-denominator adjudication,
+  stop rules, and dependency invalidation before output is opened; and
 - obtain the P0 and P1 independent reviews.
 
-The implementation therefore returns
+The standalone base-registry implementation therefore continues to return
 `semantic_registry_ready_fixture_matrices_and_numeric_rules_pending`, with
 `P1_ready=FALSE`, `ExternalExecutionAuthorized=FALSE`, and
-`ScientificEquivalenceInferred=FALSE`.
+`ScientificEquivalenceInferred=FALSE`. Downstream construction overlays do not
+mutate those base-registry gate fields; they supply review evidence that a
+future independent P1 adjudication must inspect.
 
 ## Artifacts
 
@@ -113,6 +117,9 @@ The implementation therefore returns
 - `test-conquest-successor-semantic-registry.R` checks the partition,
   dimensions, mutation-resistant negative controls, GPCM non-transfer, and
   absence of execution or a machine-specific ConQuest path.
+- The P2 additive and P3 item-only fixture records bind their disjoint data,
+  observed-support coefficient maps, free dimensions, and independent oracles
+  without changing this registry's execution state.
 - This record states the current evidence and the gates that remain open.
 
 Hashes are not acceptance criteria for this registry. Future changes are

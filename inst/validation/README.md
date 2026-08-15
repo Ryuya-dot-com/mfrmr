@@ -64,8 +64,9 @@ identify whether the opt-in layer ran and retain its test log.
   three non-overlap/unsupported rows. Each row carries a human-readable model
   signature, independently reproducible free dimension where applicable,
   complete denominator, decision consequence, and claim ceiling. Fixture A/C
-  matrices and metric-specific numerical rules remain pending, so the registry
-  authorizes no ConQuest execution or comparison.
+  maps are now supplied by the separate P2/P3 construction overlays; P3
+  metric-specific numerical rules and independent P0/P1 review remain pending,
+  so the registry authorizes no ConQuest execution or comparison.
 - `conquest-p2-additive-adversarial-fixtures-0.2.3.R` and
   `conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 48-Person/4-Rater/3-Criterion RSM/PCM fixture suite covering
@@ -83,6 +84,14 @@ identify whether the opt-in layer ran and retain its test log.
   the conditional-probability bound from the independent A matrix; and retains
   147 metric rows/5,073 atomic outcomes. EAP/SD remain typed ineligible pending
   posterior-identity proof. Independent review and execution remain pending.
+- `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
+  `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
+  deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope
+  reduction, non-unit relative slopes, and intercept-only/covariate population
+  models with all transitions observed. Independent observed-support A/C maps
+  reproduce 240 direct probabilities, and q=31/61/121 likelihoods converge to
+  independent whole-line targets. Metric rules, independent review, execution,
+  comparison, and equivalence remain open.
 - `readiness-contract-0.2.3.md`: frozen internal WP0 contract separating fit,
   parameter, and metric-specific comparison readiness. It defines component
   precedence, the conservative legacy `InferenceReady` mapping, typed

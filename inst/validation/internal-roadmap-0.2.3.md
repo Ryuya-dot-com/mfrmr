@@ -416,8 +416,9 @@ wording.
   exact observed A/C coefficient maps and free dimensions before numerical
   eligibility (`conquest-p2-additive-adversarial-fixtures-record-0.2.3.md`,
   2026-08-15).
-- [ ] Bind the disjoint P3 item-only fixtures and independently reconstruct
-  their exact observed A/C matrices and free dimensions.
+- [x] Bind the disjoint P3 item-only fixtures and independently reconstruct
+  their exact observed-support A/C coefficient maps and free dimensions
+  (`conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`, 2026-08-15).
 - [x] Assign each row exactly one comparison stratum; forbid evidence transfer
   across strata by shared names such as GPCM or slope
   (`conquest-successor-semantic-registry-0.2.3.R`, 2026-08-15).
@@ -490,14 +491,19 @@ wording.
   free-population identification and ConQuest `scoresfree` as prerequisite
   evidence, not candidate confirmation (`conquest-gpcm-overlap-record-0.2.3.md`,
   2026-08-12).
-- [ ] Define a disjoint, prospectively governed dataset and execution identity;
-  do not reuse the opened native microcase as confirmation.
-- [ ] Include at least one unit-slope PCM reduction and multiple non-unit-slope
-  controls with all item transitions observed.
-- [ ] Include an intercept-only population and one prespecified latent-regression
-  covariate design with matched inclusion and variance conventions.
-- [ ] Prove the continuous-target and finite-integration contracts using
-  independent probability and marginal-likelihood reconstruction.
+- [x] Define a disjoint, prospectively governed dataset and execution identity;
+  do not reuse the opened native microcase as confirmation
+  (`conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`, 2026-08-15).
+- [x] Include at least one unit-slope PCM reduction and multiple non-unit-slope
+  controls with all item transitions observed
+  (`conquest-p3-item-only-adversarial-fixtures-0.2.3.R`, 2026-08-15).
+- [x] Include an intercept-only population and one prespecified latent-regression
+  covariate design with matched inclusion and variance conventions
+  (`conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`, 2026-08-15).
+- [x] Prove the continuous-target and finite-integration contracts using
+  independent probability and marginal-likelihood reconstruction
+  (`conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and its test,
+  2026-08-15).
 - [ ] Freeze a q ladder and distinguish `integration_unresolved` from optimizer
   or cross-engine disagreement before execution.
 - [ ] Freeze relative-slope, population-scale, transition-threshold, deviance,

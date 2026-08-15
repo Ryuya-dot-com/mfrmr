@@ -114,7 +114,7 @@ Before an external P2 slice is eligible, maintainers must still freeze typed
 extreme/boundary quantities, parameter-class coordinate and decision metrics,
 raw-token rules, complete-denominator adjudication, stop/invalidation rules,
 and the expiry-aware execution cap. P0/P1 independent reviews and the remaining
-P3 fixture/matrix work also stay open.
+P3 metric-freeze/review work also stay open.
 
 ## Artifacts
 
