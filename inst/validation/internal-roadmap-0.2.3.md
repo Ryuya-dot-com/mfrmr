@@ -493,10 +493,13 @@ wording.
 - [ ] Bind a fit-eligible candidate 004 to a new empty external output root, a
   fresh data-free runtime sentinel, a new minimum audit, and a run-once
   ConQuest authorization. None is implied by fixture or internal-fit success.
-  The fresh sentinel passes and the candidate-004 two-arm q121 live
+  The fresh sentinel passes and the candidate-004 four-arm q61/q121 live
   authorization is frozen through 2026-08-16 with all fifteen fatal gates
-  passing; the output bundle remains unopened and no external fit has run
-  (`conquest-p2-candidate-004-live-authorization-record-0.2.3.md`, 2026-08-15).
+  passing. The candidate-004 run-once harness is frozen with both families at
+  q61/q121, thirty-two required native outputs, exact unopened-boundary validation, and a
+  semantic failure stop; the real output bundle remains unopened and no
+  external fit has run (`conquest-p2-candidate-004-harness-record-0.2.3.md`,
+  2026-08-15).
 - [ ] Complete the independent post-output evidence review before any result is
   promoted, the P2 design is widened, P3 is authorized, or a public claim is
   made.

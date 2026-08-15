@@ -1,7 +1,7 @@
 # Repository-only live authorization for the candidate-004 ConQuest slice.
 #
 # It binds a fresh data-free runtime sentinel and disclosed same-author minimum
-# audit to exactly two q121 ConQuest fits. It launches nothing and authorizes no
+# audit to exactly four q61/q121 ConQuest fits. It launches nothing and authorizes no
 # evidence promotion, wider execution, P3 work, or public claim.
 
 mfrmr_cq_p2c4a_specification <-
@@ -9,7 +9,7 @@ mfrmr_cq_p2c4a_specification <-
 mfrmr_cq_p2c4a_contract <-
   "mfrmr_conquest_p2_candidate_004_live_authorization_v1"
 mfrmr_cq_p2c4a_execution_identity <-
-  "mfrmr-0.2.3-conquest-p2-minimum-diagnostic-004-external-001"
+  "mfrmr-0.2.3-conquest-p2-dense-pair-004-external-001"
 mfrmr_cq_p2c4a_observation_date <- as.Date("2026-08-15")
 mfrmr_cq_p2c4a_run_not_after <- as.Date("2026-08-16")
 mfrmr_cq_p2c4a_executable_path <- "/Applications/ConQuest/ConQuest"
@@ -71,13 +71,15 @@ mfrmr_cq_p2c4a_runtime_observation <- function() {
 }
 
 mfrmr_cq_p2c4a_slice_registry <- function() {
+  family <- rep(c("RSM", "PCM"), each = 2L)
+  nodes <- rep(c(61L, 121L), times = 2L)
   data.frame(
     ExecutionIdentity = mfrmr_cq_p2c4a_execution_identity,
-    Sequence = 1:2,
+    Sequence = seq_along(nodes),
     CandidateId = mfrmr_cq_p2c4p_candidate_id,
-    Family = c("RSM", "PCM"),
-    Nodes = 121L,
-    ExpectedFreeDimension = c(10L, 14L),
+    Family = family,
+    Nodes = nodes,
+    ExpectedFreeDimension = rep(c(10L, 14L), each = 2L),
     ExpectedNativeOutputCount = 8L,
     ConQuestFitCap = 1L,
     NewMfrmrFitCap = 0L,
@@ -100,7 +102,7 @@ mfrmr_cq_p2c4a_fatal_gate_registry <- function() {
       "CANDIDATE_004_FIXTURE_QUALIFIED",
       "CANDIDATE_004_MFRMR_PREFLIGHT_CONSUMED_PASS",
       "Q121_DENSE_AND_CONTINUOUS_TARGET_SELECTED",
-      "EXACT_TWO_ARM_Q121_SLICE",
+      "EXACT_FOUR_ARM_Q61_Q121_SLICE",
       "CANDIDATE_OUTPUT_BOUNDARY_EMPTY",
       "RETAINED_MFRMR_PREFLIGHT_ARTIFACTS_READY",
       "ORDINARY_TESTS_EXTERNAL_RUNTIME_FREE",
@@ -179,11 +181,11 @@ mfrmr_cq_p2c4a_review <- function(
   q121_selected <- isTRUE(preflight$dense_pair_1_selected) &&
     !isTRUE(preflight$q241_attempted) &&
     identical(preflight$stage_selection$selected_upper_nodes, 121L)
-  exact_slice <- nrow(slice) == 2L &&
-    identical(slice$Family, c("RSM", "PCM")) &&
-    identical(slice$Nodes, c(121L, 121L)) &&
-    identical(slice$ExpectedFreeDimension, c(10L, 14L)) &&
-    sum(slice$ConQuestFitCap) == 2L &&
+  exact_slice <- nrow(slice) == 4L &&
+    identical(slice$Family, c("RSM", "RSM", "PCM", "PCM")) &&
+    identical(slice$Nodes, c(61L, 121L, 61L, 121L)) &&
+    identical(slice$ExpectedFreeDimension, c(10L, 10L, 14L, 14L)) &&
+    sum(slice$ConQuestFitCap) == 4L &&
     sum(slice$NewMfrmrFitCap) == 0L &&
     all(slice$SharedCandidateData)
   output_empty <- identical(
@@ -200,7 +202,7 @@ mfrmr_cq_p2c4a_review <- function(
     q121_selected, exact_slice, output_empty,
     isTRUE(preflight_artifacts_ready),
     isTRUE(ordinary_tests_external_runtime_free), isTRUE(worktree_clean),
-    sum(slice$ConQuestFitCap) == 2L && sum(slice$NewMfrmrFitCap) == 0L,
+    sum(slice$ConQuestFitCap) == 4L && sum(slice$NewMfrmrFitCap) == 0L,
     nzchar(attestation$AuditorId) && isTRUE(attestation$AuthorOverlapDeclared),
     isTRUE(attestation$NoInterpretiveClaimAccepted),
     isTRUE(attestation$FatalGateChecklistCompleted)
@@ -217,7 +219,7 @@ mfrmr_cq_p2c4a_review <- function(
     contract_version = mfrmr_cq_p2c4a_contract,
     execution_identity = mfrmr_cq_p2c4a_execution_identity,
     status = if (authorized) {
-      "candidate_004_two_arm_q121_live_authorization_active"
+      "candidate_004_four_arm_q61_q121_live_authorization_active"
     } else {
       "candidate_004_external_authorization_blocked"
     },

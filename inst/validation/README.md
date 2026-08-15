@@ -194,8 +194,13 @@ identify whether the opt-in layer ran and retain its test log.
 - `conquest-p2-candidate-004-live-authorization-0.2.3.R` and
   `conquest-p2-candidate-004-live-authorization-record-0.2.3.md`: binds a fresh
   data-free ConQuest sentinel and disclosed same-author fifteen-gate audit to
-  exactly two q121 external fits. It permits no new mfrmr fit, evidence
+  exactly four q61/q121 external fits. It permits no new mfrmr fit, evidence
   promotion, wider execution, P3 work, or public claim.
+- `conquest-p2-candidate-004-harness-0.2.3.R` and
+  `conquest-p2-candidate-004-harness-record-0.2.3.md`: freezes a fail-closed
+  four-arm q61/q121 bundle with exact wide data, command semantics, output registry,
+  run-once journal, and semantic stop rule. Tests prepare only temporary
+  unopened bundles and never execute ConQuest.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

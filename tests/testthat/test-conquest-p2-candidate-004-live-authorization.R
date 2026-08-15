@@ -43,14 +43,14 @@ test_that("fresh data-free runtime evidence remains semantic-only", {
   expect_false(summary$ScientificComparisonAuthorized)
 })
 
-test_that("authorization freezes exactly two q121 ConQuest arms", {
+test_that("authorization freezes exactly four q61/q121 ConQuest arms", {
   ctx <- load_conquest_p2_candidate_004_live_authorization()
   slice <- ctx$env$mfrmr_cq_p2c4a_slice_registry()
 
-  expect_identical(slice$Family, c("RSM", "PCM"))
-  expect_identical(slice$Nodes, c(121L, 121L))
-  expect_identical(slice$ExpectedFreeDimension, c(10L, 14L))
-  expect_identical(sum(slice$ConQuestFitCap), 2L)
+  expect_identical(slice$Family, c("RSM", "RSM", "PCM", "PCM"))
+  expect_identical(slice$Nodes, c(61L, 121L, 61L, 121L))
+  expect_identical(slice$ExpectedFreeDimension, c(10L, 10L, 14L, 14L))
+  expect_identical(sum(slice$ConQuestFitCap), 4L)
   expect_identical(sum(slice$NewMfrmrFitCap), 0L)
   expect_true(all(slice$SharedCandidateData))
   expect_false(any(slice$EvidencePromotionAuthorized))
@@ -66,7 +66,7 @@ test_that("all fatal gates activate only the narrow live window", {
   stale <- env$mfrmr_cq_p2c4a_review(root, as.Date("2026-08-17"))
 
   expect_identical(
-    active$status, "candidate_004_two_arm_q121_live_authorization_active"
+    active$status, "candidate_004_four_arm_q61_q121_live_authorization_active"
   )
   expect_identical(nrow(active$gates), 15L)
   expect_true(all(active$gates$Passed))
