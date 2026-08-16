@@ -287,7 +287,7 @@ test_that("G4M consumed sentinel failure remains zero-generation evidence", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze a successor G4M specification, target, and authority",
+    "[x] Freeze a successor G4M specification, target, and authority",
     fixed = TRUE
   )
 })

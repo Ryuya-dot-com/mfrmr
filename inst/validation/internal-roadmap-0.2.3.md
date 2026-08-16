@@ -1000,12 +1000,17 @@ wording.
   success before authority issue; a caller label, path, or hash is insufficient
   (`conquest-adversarial-simulation-launch-tier-contract-record-0.2.3.md`,
   2026-08-16).
-- [ ] Freeze a successor G4M specification, target, and authority. Require the
+- [x] Freeze a successor G4M specification, target, and authority. The G4O v2
+  adapter binds the new
+  `conquest-adversarial-simulation-calibration-tranche-a-20260816-v2` target
+  and issuer to the user's 2026-08-16 unsandboxed-run approval. Require the
   future live R process to obtain a PID- and route-bound data-free pre-issue
   token outside the restricted sandbox, then retain the post-consumption fresh
   sentinel. Use a new absent target and explicit new user approval; never replay
   or retrofit the consumed v1 target. Prior output and expiry pressure do not
-  authorize retry.
+  authorize retry
+  (`conquest-adversarial-simulation-successor-live-execution-record-0.2.3.md`,
+  2026-08-16). This freeze itself launched no external process.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

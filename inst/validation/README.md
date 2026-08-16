@@ -278,6 +278,12 @@ identify whether the opt-in layer ran and retain its test log.
   successful same-process semantic pre-issue token before consuming run-once
   authority; its paths are explicit arguments, while caller labels, path
   presence, and hashes cannot substitute for the probe.
+- `conquest-adversarial-simulation-successor-live-execution-0.2.3.R` and its
+  record: freeze the G4O v2 target and authority around the user's new
+  unsandboxed-run approval. The future live R process must pass and retain a
+  PID- and route-bound data-free pre-issue probe before authority issue, then
+  retain the original post-consumption sentinel. The adapter reuses the frozen
+  tranche-A harness and does not reopen or rewrite the consumed v1 target.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

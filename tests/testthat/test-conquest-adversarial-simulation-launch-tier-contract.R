@@ -195,7 +195,7 @@ test_that("launch-tier work remains internal and nonexecuting", {
   )
   expect_match(
     roadmap,
-    "[ ] Freeze a successor G4M specification, target, and authority",
+    "[x] Freeze a successor G4M specification, target, and authority",
     fixed = TRUE
   )
 
