@@ -917,10 +917,19 @@ wording.
     false; only the plan-materializer capability advances
     (`conquest-adversarial-simulation-calibration-harness-plan-record-0.2.3.md`,
     2026-08-16).
-  - [ ] G4C-P2: implement deterministic generation and bridges without
-    generating tranche-A responses. Bind each sealed seed to the existing DGP,
-    preserve caller RNG state, produce typed primary/explicit representations,
-    and require all four semantic bridge checks for each paired dataset.
+  - [x] G4C-P2: implement deterministic generation and bridges without
+    generating tranche-A responses. Each request is now bound to the complete
+    frozen registry row and a separate one-time, target-bound authority that
+    P2 does not issue. Sentinel booleans alone are rejected; the later P3
+    same-process controller must validate a fresh token before this provider
+    is reachable. The provider reuses the G3 DGP and restores caller RNG state.
+    All four checks are anchored to the frozen
+    typed design; a retained-G3, non-generative replay passes 8/8 checks, while
+    value, complement, duplicate-key, unregistered-representation,
+    observed-mask, and typed-map mutations fail. Byte equality and numeric
+    agreement remain outside this gate
+    (`conquest-adversarial-simulation-calibration-harness-generation-record-0.2.3.md`,
+    2026-08-16).
   - [ ] G4C-P3: implement q61/q121 engine adapters, artifact registration,
     timeout/global-abort control, and independent peer continuation.
   - [ ] G4C-P4: implement G4N application, conditional/unconditional metric
