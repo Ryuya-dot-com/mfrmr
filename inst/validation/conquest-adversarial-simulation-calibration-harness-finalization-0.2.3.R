@@ -13,6 +13,10 @@ mfrmr_cq_ach_run_authorization_contract <- paste0(
   "mfrmr_conquest_adversarial_simulation_tranche_a_",
   "run_once_live_authorization_v1"
 )
+mfrmr_cq_ach_required_authorization_issuer_contract <- paste0(
+  "mfrmr_conquest_adversarial_simulation_tranche_a_",
+  "live_authorization_freeze_v1"
+)
 
 mfrmr_cq_ach_p4_require_contracts <- function() {
   target <- environment(mfrmr_cq_ach_p4_require_contracts)
@@ -647,9 +651,10 @@ mfrmr_cq_ach_metric_summary <- function(
 
 mfrmr_cq_ach_authorization_schema <- function() {
   data.frame(
-    FieldOrder = 1:27,
+    FieldOrder = 1:28,
     Field = c(
-      "AuthorizationContract", "HarnessContract", "AuthorizationIdentity",
+      "AuthorizationContract", "AuthorizationIssuerContract",
+      "HarnessContract", "AuthorizationIdentity",
       "ProcessId", "OutputDir", "ExecutablePath", "AuthorizationDate",
       "RunNotAfter", "DatasetCount", "ScheduledOutcomeRows", "AttemptCount",
       "Q61AttemptCount", "Q121AttemptCount", "GenerationAuthorized",
@@ -661,7 +666,9 @@ mfrmr_cq_ach_authorization_schema <- function() {
       "AuthorizationIssuedByP4"
     ),
     P4RequiredValue = c(
-      mfrmr_cq_ach_run_authorization_contract, mfrmr_cq_ach_contract,
+      mfrmr_cq_ach_run_authorization_contract,
+      mfrmr_cq_ach_required_authorization_issuer_contract,
+      mfrmr_cq_ach_contract,
       "tranche_A::datasets=90::outcomes=230::attempts=190::q61=150::q121=40",
       "current_process", "exact_absent_target", mfrmr_cq_acf_conquest_path,
       "2026-08-16_through_2026-08-31", "2026-08-31", "90", "230", "190",
@@ -697,6 +704,9 @@ mfrmr_cq_ach_consume_authorization <- function(
   valid <- identical(
     authorization$AuthorizationContract,
     mfrmr_cq_ach_run_authorization_contract
+  ) && identical(
+    authorization$AuthorizationIssuerContract,
+    mfrmr_cq_ach_required_authorization_issuer_contract
   ) && identical(authorization$HarnessContract, mfrmr_cq_ach_contract) &&
     identical(
       authorization$AuthorizationIdentity,
@@ -1020,7 +1030,7 @@ mfrmr_cq_ach_dry_run_review <- function(
               c(90L, 90L, 90L, 90L, rep(180L, 4L), 90L, 40L,
                 190L, 10L, 190L, 1511L)) &&
     all(summary$FailureRowsRetained) && !any(summary$ThresholdApplied) &&
-    nrow(authorization_schema) == 27L &&
+    nrow(authorization_schema) == 28L &&
     !any(authorization_schema$Field == "AuthorizationIssuedByP4" &
            authorization_schema$P4RequiredValue != "FALSE") &&
     identical(

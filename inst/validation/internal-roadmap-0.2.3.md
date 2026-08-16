@@ -951,10 +951,23 @@ wording.
     not claim a retained review was performed
     (`conquest-adversarial-simulation-calibration-harness-finalization-record-0.2.3.md`,
     2026-08-16).
-- [ ] Freeze a separate target-bound G4L run-once live authorization. Recheck
+- [x] Freeze a separate target-bound G4L run-once live authorization. Recheck
   the absent output boundary, clean source tree, exact ConQuest path and date
   window, full 90-dataset/230-outcome/190-attempt scope, and post-consumption
-  same-process sentinel. Harness completeness alone must not imply authority.
+  same-process sentinel. All 32 nonwaivable issue-readiness gates pass and the
+  P4 consumer now requires the exact G4L issuer contract. Harness completeness
+  alone does not imply authority: the issuer remains opt-in and this review did
+  not issue or consume a positive record, run a sentinel, generate a response,
+  or attempt a fit. Positive issue is additionally bound to the canonical
+  `validation-results` target and one fail-closed Git worktree-status check;
+  caller-supplied clean-tree state is not sufficient
+  (`conquest-adversarial-simulation-tranche-a-live-authorization-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Open one G4M same-process execution session. Recheck all G4L gates, issue
+  and immediately consume the exact mutable authority, obtain the fresh
+  data-free ConQuest sentinel, then generate and execute only the frozen
+  90-dataset/230-outcome/190-attempt tranche. No preparation or execution may
+  occur in ordinary tests or follow merely from this checklist state.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

@@ -62,6 +62,8 @@ synthetic_p4_authorization <- function(ctx, target) {
   authorization <- new.env(parent = emptyenv())
   values <- list(
     AuthorizationContract = ctx$env$mfrmr_cq_ach_run_authorization_contract,
+    AuthorizationIssuerContract =
+      ctx$env$mfrmr_cq_ach_required_authorization_issuer_contract,
     HarnessContract = ctx$env$mfrmr_cq_ach_contract,
     AuthorizationIdentity = paste0(
       "tranche_A::datasets=90::outcomes=230::attempts=190::",
@@ -395,6 +397,16 @@ test_that("P4 consumes but never issues the separate live authorization", {
     "stale, widened, consumed"
   )
   expect_false(mutated$Consumed)
+
+  wrong_issuer <- synthetic_p4_authorization(ctx, target)
+  wrong_issuer$AuthorizationIssuerContract <- "self_reported_or_wrong_issuer"
+  expect_error(
+    ctx$env$mfrmr_cq_ach_consume_authorization(
+      wrong_issuer, target, authorize = TRUE
+    ),
+    "stale, widened, consumed"
+  )
+  expect_false(wrong_issuer$Consumed)
 
   consumed <- ctx$env$mfrmr_cq_ach_consume_authorization(
     authorization, target, authorize = TRUE

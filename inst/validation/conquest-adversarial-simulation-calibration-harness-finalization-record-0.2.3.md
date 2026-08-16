@@ -71,7 +71,7 @@ current process, exact absent output target, exact ConQuest path, 2026-08-16
 through 2026-08-31 window, 90 datasets, 230 outcomes, 190 attempts, 150 q61
 attempts, and 40 q121 attempts. It consumes the record before a sentinel or
 generation authority can be derived. A widened, stale, opened, reused, already
-consumed, or P4-self-issued record fails before mutation.
+consumed, P4-self-issued, or non-G4L-issuer record fails before mutation.
 
 P4 defines the narrow bridge from a consumed run record plus a valid fresh
 same-process sentinel to P2's one-dataset generation authority. This makes the
