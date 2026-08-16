@@ -11,11 +11,10 @@ with a documented bounded `GPCM` extension. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
 
-For GPCM, *bounded* means deliberately bounded model and workflow scope; it
-does not mean finite parameter box constraints. The JML route is an
-unpenalized identified joint likelihood. Certified recession or extreme-person
-non-attainment is reported through typed primary results, while a finite
-optimizer iterate remains a numerical trace rather than a finite JML maximum.
+For GPCM, *bounded* refers to the documented model and workflow scope; it does
+not mean finite parameter box constraints. Unsupported combinations and
+inference states are reported explicitly rather than silently treated as
+ordinary estimates.
 
 The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
 reproducibility, network review, and reporting support. It is not a general
@@ -131,7 +130,7 @@ one Person's conditional pattern is not equivalent to replicating a complete
 Person response pattern after marginalization. It also does not change the
 response family or model dependence among repeated ratings. Non-unit
 observation-weight fits are excluded from the common MML information-criterion
-panel in 0.2.3. [FACETS has separate `Bn` binomial-trial
+panel. [FACETS has separate `Bn` binomial-trial
 and `P` Poisson response models](https://www.winsteps.com/facetman64/models.htm);
 those are not reproduced by mfrmr's binary ordered-score route.
 
@@ -696,7 +695,8 @@ Within that scope, comparison targets include the population regression
 slope, residual variance, centered item estimates, and case-level EAP
 estimates.
 
-The handoff is:
+The handoff is explicit: mfrmr prepares the analysis files, the user runs
+ConQuest separately, and mfrmr then normalizes the requested exports.
 
 ```r
 # fit_lr must satisfy the documented overlap conditions.
@@ -705,9 +705,8 @@ bundle <- build_conquest_overlap_bundle(
   output_dir = "conquest-overlap"
 )
 
-# Run the generated .cqc file in ConQuest separately, then normalize
-# its four comparison CSV files. Retain the fifth, *_history.csv,
-# for the separate objective/free-dimension verification.
+# Run the generated .cqc file in ConQuest separately, then normalize its
+# parameter, regression, covariance, and case-EAP CSV files.
 conquest_tables <- normalize_conquest_overlap_exports(
   bundle,
   parameter_file = "conquest-overlap/conquest_overlap_conquest_parameters.csv",
@@ -716,7 +715,7 @@ conquest_tables <- normalize_conquest_overlap_exports(
   case_file = "conquest-overlap/conquest_overlap_conquest_cases_eap.csv",
   conquest_version = "5.47.5",
   conquest_edition = "demo/free",
-  run_date = "2026-07-23"
+  run_date = Sys.Date()
 )
 
 conquest_review <- review_conquest_overlap(
@@ -730,49 +729,23 @@ conquest_review$attention_items
 
 `mfrmr` does not execute or control ConQuest, and it does not parse arbitrary
 raw ConQuest reports. The user runs ConQuest separately; mfrmr can normalize
-the four native comparison CSV exports requested by its generated command.
-The additional matrixout-history CSV is retained for release verification. The
-comparison reports differences and does not declare software equivalence from
-a fixed tolerance.
+the native comparison CSV exports requested by its generated command. The
+review reports coordinate-level differences; it does not declare general
+software equivalence from a single dataset or tolerance.
 
 The generated ConQuest command uses the fitted mfrmr quadrature-point count;
 the bundle records both values. Record the actual ConQuest version, edition,
 and run date during normalization so the external comparison remains
 reproducible.
 
-A public
-[aggregate comparison record](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/validation/conquest-mml-overlap-0.2.2.md)
-of a matched 31-node check with ConQuest 5.47.5 is available in the source
-repository. The record is excluded from
-the installed CRAN package and supports only the overlap case stated above;
-identifier-bearing response and case-level files are not included in the
-package.
-
 This public bundle route does not cover multidimensional models, arbitrary
 imported design matrices, bounded `GPCM` latent regression, JML latent
 regression, or the full ConQuest plausible-values workflow. Separately, the
-source validation record establishes an exact item-only probability and
-coordinate map between default bounded-GPCM MML and ConQuest `scoresfree`:
-`mfrmr` estimates an intercept and population SD while fixing the geometric
-mean of relative slopes to one; ConQuest fixes latent mean/variance and frees
-all absolute Taux. This result does not extend automatically to a multifacet
-ConQuest generalized-item design.
-
-The 0.2.3 source validation also keeps algorithm identity separate from estimand
-identity. ConQuest candidate 003 uses fixed-grid quadrature with EM updates;
-the matched TAM route is in the same broad MML/EM family but is not documented
-as the identical implementation. Default mfrmr instead evaluates the matched
-marginal likelihood with transformed Gauss--Hermite quadrature and an
-analytic-gradient direct optimizer. This independence is intentional: common
-coordinates, likelihood, deviance, integration sensitivity, and convergence
-must agree within a prespecified claim, but copying another program's optimizer
-is not itself a validity requirement. immer CML, CCML, and JML remain different
-objectives. The bound free-coordinate Pearson correlations on the benign
-complete-crossing fixture exceed `0.999999999995`; they are descriptive only
-and do not establish DFF, fit, Person/Rater rank, sparse-design, or scientific
-decision invariance. The same validation verifies that the production MML path sums
-log probabilities and uses shifted log-sum-exp rather than an underflow-prone
-`log(prod(probability))` calculation.
+item-only bounded-GPCM parameterization can be compared only after the response
+kernel, slope grouping, threshold coordinates, latent-scale identification,
+retained rows, and category map have been matched. A result in that restricted
+overlap does not extend automatically to a multifacet ConQuest generalized-item
+design.
 
 The ConQuest overlap bundle is also a controlled analysis bundle. Its long and
 wide response files contain person identifiers and responses; the person-data
@@ -804,76 +777,21 @@ gpcm_capability_matrix()
 vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
 
-Free-slope GPCM fits are currently review-only at the parameter boundary gate.
-`summary(fit)$settings_overview`, `print(fit)`, and draw-free fitted-model plots
-state the estimator family, statistical-penalty status, finite-box status, and
-extreme-person policy rather than asking users to infer them from an optimizer
-name. In particular, L-BFGS-B does not imply that mfrmr supplied finite bounds.
-For MML, the default
-`gpcm_mml_identification = "free_population"` estimates an intercept-only
-population distribution and retains the conventional common-discrimination
-degree of freedom. `fit$slopes$OptimizerEstimate` remains the
-geometric-mean-one relative slope; the corresponding fixed-latent-SD value is
-stored in `FixedLatentSDOptimizerEstimate`. Use
-`gpcm_mml_identification = "fixed_standard_normal"` only to reproduce the
-legacy likelihood that fixed both latent variance and slope geometric mean.
-The sealed v3/v4 score-calibration artifacts belong to that earlier
-fixed-standard-normal package payload. They remain immutable compatibility-
-lineage evidence and are not replayed as validation of the new free-population
-default. The current numerical score-rule work is deliberately bounded: the sealed v4
-calibration-only boundary completion passed its fixed score and transformation
-rules once and was independently validated without refitting. A no-execution
-seal now freezes that bounded rule for a future disjoint confirmation design.
-That design was executed once, without retry, after its dry-run runner,
-separate authorization, and runner-independent validator passed 74 no-fit
-checks. All 96/888/24/688 numerical rows pass their frozen score and Jacobian
-comparisons, but two of six fits reached the iteration limit and are blocked.
-The runner omitted fit readiness from its final aggregation and reported a
-false-positive candidate pass. The prospectively sealed validator also has a
-names-attribute false negative, but its independent fit gate still rejects the
-result. A no-fit retrospective review therefore records confirmation as
-rejected. The public fit remains review-only; retry, general tolerance,
-boundary proof, inference, and promotion are unauthorized.
-This work checks implementation mathematics; it does not promote free-slope
-fits, freeze a general tolerance, or substitute for a new disjoint confirmation
-family.
-For JML, a certified fixed-additive slope path is recorded as
-`unbounded_low`, `unbounded_high`, or `unbounded_both`; failure to certify that
-narrow path does not establish a finite joint Person--step--slope maximum. A
-second bounded check allows additive coordinates and an ordered pair of log
-slopes to move together. A competitive path from this check is a stronger
-warning, but the slope remains `not_evaluated` and has no primary value because
-the non-concave GPCM likelihood has not been resolved globally. A negative
-result is limited to the checked path family and also does not establish a
-finite maximum. For MML, neither conditional JML result is reused as marginal-
-likelihood evidence. A separate instrument now searches sufficient constant
-sum-zero slope paths at every node of the declared finite quadrature rule and
-reconstructs compatible Person-pattern boundary likelihoods. That instrument
-is not a continuous-integral or joint-coordinate proof and has no readiness
-effect; a positive or negative result still leaves free MML slopes
-`not_evaluated`. In one retrospective 40-dataset owner panel, its
-none-certified state was unchanged at 31, 61, and 91 quadrature points, but the
-panel contained no positive certified case. That result establishes neither a
-finite maximum nor the sensitivity of the sufficient test; it also freezes no
-quadrature tolerance or default. A separately predeclared deterministic
-challenge then found that the five-node positive construction was no longer
-certified at 31, 61, or 91 points for either slope owner: expanding extreme
-nodes make the current individual-response all-node condition too restrictive.
-MML slope readiness remains blocked while a broader Person-marginal path
-condition is developed. An internal analytic prototype can reconstruct that
-path's value, derivatives, surviving-node boundary, and leading tail term, but
-it does not yet prove the complete half-line and has no effect on fitted
-objects. Separately, an exact continuous-normal microcase now proves a full
-half-line result for two zero-threshold binary items: the `(1, 0)` marginal
-strictly increases under slopes `exp(t)` and `exp(-t)` toward an unattained
-one-quarter limit, while `(1, 1)` strictly decreases. This establishes that
-the Person-marginal boundary mechanism is not merely a finite-quadrature
-artifact, but it does not certify any general fitted GPCM. Inspect
-`fit$slopes$ParameterStatus` and
-`PrimaryEstimate` before the
-finite optimizer traces in `Estimate`. Approximate covariance values can be
-retained under `Optimizer*SE` and `Optimizer*CI`, but ordinary slope SE/CI
-fields remain unavailable until estimator-specific parameter readiness passes.
+Free-slope GPCM fits can be estimation-converged while parameter-level
+inference remains review-only. Read `print(fit)`, `summary(fit)$decision`, and
+the slope table's `ParameterStatus` and `PrimaryEstimate` before interpreting
+the finite optimizer trace in `OptimizerEstimate`. `Optimizer*SE` and
+`Optimizer*CI` are diagnostic quantities; ordinary slope SEs and confidence
+intervals remain unavailable until the parameter-specific readiness checks
+pass. The GPCM scope vignette explains each status and the appropriate next
+action.
+
+For MML, the default `gpcm_mml_identification = "free_population"` estimates
+an intercept-only population distribution while relative slopes satisfy a
+geometric-mean-one constraint. The corresponding fixed-latent-SD optimizer
+coordinate is retained in `FixedLatentSDOptimizerEstimate`. Use
+`gpcm_mml_identification = "fixed_standard_normal"` only when a deliberately
+matched legacy or external comparison requires that identification.
 
 The bounded GPCM is an **aligned single-owner relative-slope GPCM**:
 
@@ -898,9 +816,15 @@ for every criterion; `slope_facet = "Rater"` estimates one for every rater.
 The other facets retain additive location effects but no slope block. Those
 effects are still inside the complete adjacent-category predictor multiplied
 by the selected slope; the current kernel is not a loading-only model with
-unscaled facet intercepts. mfrmr
-0.2.3 cannot estimate criterion and rater slopes simultaneously, and the
-geometric mean of the selected slopes is fixed to one for identification.
+unscaled facet intercepts. Criterion and rater slopes cannot be estimated
+simultaneously in this model.
+
+For unpenalized JML, all-minimum or all-maximum Person patterns can have an
+unbounded primary ability estimate. A finite adjusted display, when supplied,
+is kept separate from the likelihood-based primary status. The same principle
+applies to any GPCM slope whose boundary status has not been resolved: a finite
+optimizer iterate is not automatically a finite maximum suitable for ordinary
+inference.
 
 PCM and bounded GPCM can be reviewed on the same data with
 `compare_mfrm(fit_pcm, fit_gpcm)`, `build_weighting_review(fit_pcm, fit_gpcm)`,
@@ -924,19 +848,11 @@ choice$model_roles[, c(
 )]
 ```
 
-The coordinate columns count values reported in the fitted step and slope
-tables. The free-parameter columns apply the sum-zero step constraints and,
-for bounded GPCM, the geometric-mean-one slope constraint. This prevents a
-12-row step table from being misreported as 12 independent step parameters.
-
-`build_weighting_review()` now returns a `comparison_contract` that prevents
-JML and MML evidence from being blended. Comparable MML fits receive the
-`same_basis_mml_information_criteria` tier. JML fits receive a descriptive
-reweighting tier, or an optimizer-trace-only tier when inference readiness is
-not established; their unpenalized log-likelihood difference never becomes an
-automatic PCM-versus-GPCM choice. The contract also records that FACETS can
-serve as a direct comparator for the PCM/JML side only, not for the fitted
-free-slope GPCM side.
+The coordinate columns count reported values; the free-parameter columns also
+apply the fitted constraints. `build_weighting_review()` keeps JML and MML
+evidence separate. Comparable, inference-ready MML fits can contribute
+information criteria, whereas an unpenalized JML likelihood difference is not
+turned into an automatic PCM-versus-GPCM choice.
 
 Cross-software slope values are not automatically matched estimands. FACETS
 does not jointly fit Muraki's free-slope polytomous GPCM. [FACETS' reported
@@ -946,20 +862,12 @@ into the other estimates; it must not be treated as a free-GPCM slope estimate
 from `mfrmr`. TAM can estimate GPCM
 slopes through its 2PL/GPCM MML route, but its many-facet fitting route does
 not estimate those slopes. The current `immer` estimation routes provide PCM-
-design and hierarchical-rater references rather than a matched free-GPCM
-fit. Consequently, FACETS and `immer` are used for equal-discrimination
-reductions or deliberately different-model sensitivity checks. A TAM GPCM
-comparison is numeric only after the response kernel, slope grouping,
-threshold parameterization, latent-scale identification, retained rows, and
-category map have all been matched.
-
-Even in the exact item-only overlap, TAM's marginal slope and intercept SEs
-cannot be transformed exactly into mfrmr's relative-slope/free-scale
-coordinates without their joint covariance. TAM 4.3-25 exposes neither that
-matrix nor a `vcov()` method. The repository audit therefore withholds a
-cross-engine SE comparison instead of silently assuming zero covariance; this
-is an information boundary, not evidence that either engine's SE is correct or
-incorrect.
+design and hierarchical-rater references rather than a matched free-GPCM fit.
+Consequently, FACETS and `immer` are appropriate only for documented
+equal-discrimination overlaps or deliberately different-model sensitivity
+checks. A TAM GPCM comparison is numerical only after the response kernel,
+slope grouping, threshold parameterization, latent-scale identification,
+retained rows, category map, and covariance information have been matched.
 
 For strict MML diagnostics, keep the two evidence bases distinct:
 
