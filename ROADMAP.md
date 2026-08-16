@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-13.
+Status: public roadmap, updated 2026-08-16.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -39,6 +39,36 @@ The project develops in this order:
 | 0.2.5 | Add explicit multiple-scale routing and mixed response structures without silent pooling. |
 | 0.3.0 | Consolidate APIs, object schemas, compatibility policy, examples, performance evidence, and contributor workflows. |
 | 1.0.0 | Declare a deliberately bounded, validated core stable. |
+
+### Distribution and scope discipline
+
+The broad repository validation portfolio is not the installed product.
+Research harnesses, external-program runners, candidate authorization records,
+and experimental G-theory simulation machinery remain repository-only. They
+are excluded from source-package builds and ordinary package tests. The public
+runtime has no cryptographic-hash dependency, and file hashes are not a
+statistical acceptance criterion. Optional hashes in historical validation
+records are provenance alarms only; semantic model identity, independent
+mathematics, numerical behavior, and decision consequences remain the actual
+evidence layers.
+
+Version 0.2.3 will not expand merely because a validation branch or prototype
+exists. Its release-critical path is limited to:
+
+1. the ordinary fit, diagnose, summary, print, plot, and export workflow;
+2. honest boundary and readiness behavior for the already documented RSM,
+   PCM, and bounded-GPCM routes, including extreme Persons and facet levels;
+3. the smallest prospectively governed ConQuest/TAM comparisons needed to
+   state the supported numerical envelope; and
+4. a clean source package and candidate check whose user-facing caveats match
+   the evidence.
+
+Multivariate G-theory, broad simulation, unrestricted GPCM, new model
+families, and exact solver imitation remain research or later-release work.
+FACETS evidence may document a matched historical or locally available lane,
+but FACETS availability is not a package dependency or a release-wide blocker;
+when a matched current comparison cannot be run, the corresponding
+interchangeability claim remains unmade.
 
 ## 0.2.3: numerical trust and external validation
 

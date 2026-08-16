@@ -5260,7 +5260,7 @@ export_mfrm_bundle <- function(fit,
       )
     }
     # Bundle the user's original input data when supplied so the
-    # replay script and its hash record point to a co-located file.
+    # replay script and its manifest record point to a co-located file.
     # Falls back to the legacy `your_data.csv` placeholder when the
     # user did not pass `data` to `export_mfrm_bundle()`.
     replay_data_file <- "your_data.csv"

@@ -9,6 +9,75 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-08-16 distribution-first de-escalation
+
+This section is the controlling scope overlay for the rest of 0.2.3. It does
+not discard the broad claim portfolio or its historical evidence. It prevents
+that portfolio from becoming the installed product or an ever-growing release
+critical path.
+
+### Current maturity, separated by layer
+
+| Layer | Current position | 0.2.3 consequence |
+| --- | --- | --- |
+| Published RSM/PCM workflow | Mature 0.2.2 baseline with substantial 0.2.3 contract and regression strengthening | Preserve and recheck; do not redesign |
+| Bounded GPCM implementation | Likelihood, identification, reduction cases, boundary vocabulary, quadrature sensitivity, and item-only external maps exist | Keep caveated until extreme-case, readiness, and user-facing method contracts close |
+| External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Set decision-specific rules, then run only the smallest untouched confirmation that can change a public claim |
+| DFF, fit, and ranking consequences | APIs exist, but cross-engine and adverse-design decision invariance is not closed | Validate selected release-critical decisions; do not infer them from parameter correlation |
+| G-theory/D-study expansion | Univariate public baseline exists; crossed/nested/multivariate reconstruction is repository research | No new 0.2.3 public claim or large execution |
+| Release candidate | No 0.2.3 candidate or candidate-linked full check exists | Not release-ready |
+
+### Distribution boundary
+
+- The installed runtime must not depend on SHA, cryptographic digests, external
+  executables, candidate authorization machinery, or repository validation
+  records. Hashes may remain in sealed historical evidence as optional
+  provenance alarms, never as scientific acceptance criteria.
+- `inst/validation`, external-engine tests, G-theory research execution tests,
+  and generated build scratch are excluded from the source package. Repository
+  tests may remain exhaustive; the tarball keeps focused tests for public
+  behavior.
+- A semantic object occasionally named a `digest` is not a cryptographic file
+  digest. Public names must not imply byte identity where only a compact report
+  summary is meant.
+- The 0.2.3 namespace is effectively frozen. Relative to 0.2.2, the only new
+  export currently retained is `gpcm_mml_quadrature_sensitivity()`. Any further
+  export requires a direct release-critical user need and a simpler existing
+  route must be considered first.
+
+### Release-critical sequence
+
+1. Audit the built source package, ordinary dependencies, examples, and
+   first-use workflows. Remove repository-only machinery from the tarball
+   rather than adding runtime switches to hide it.
+2. Close the bounded-GPCM user contract: extreme Person/facet behavior,
+   convergence versus inference readiness, Hessian/interval eligibility, and
+   consistent summary/print/plot diagnostics. Do not make a finite adjusted
+   JML value look like the maximizer of an unattained likelihood.
+3. Translate the opened ConQuest calibration into metric-specific decision
+   loss and precision rules. Investigate the extreme-Person PCM outlier before
+   choosing any threshold. Correlation is descriptive and cannot replace
+   coordinate, objective, fit, DFF, or ranking checks.
+4. Run only the smallest untouched RSM/PCM confirmation required by those
+   rules. Consider item-only GPCM confirmation only after the additive lane is
+   classified. Do not authorize a broad simulation by default.
+5. Freeze one candidate and run the normal package/check/documentation/public-
+   claim handoff. A currently unavailable FACETS executable leaves the exact
+   current-version FACETS comparison claim unsupported; it does not block
+   unrelated RSM/PCM/GPCM claims or make FACETS a package dependency.
+
+### Stop rules against local optimization
+
+- No additional authorization, hash, lineage, resume, or shard framework is
+  added for 0.2.3 unless an actual retained run cannot be made safe with the
+  existing runner.
+- No multivariate G-theory production work, 3,000-fit/12,000-fit G-theory run,
+  or broad cross-product simulation is release-critical.
+- No exact reproduction of a proprietary solver is required when the matched
+  estimand and decision are stable within a prospectively justified rule.
+- A claim that cannot be supported in time is narrowed or deferred. The
+  release is not held open to make every historical research branch pass.
+
 ## 2026-08-15 ConQuest-first strategic reset
 
 This section is the controlling overlay for future 0.2.3 sequencing. Where an

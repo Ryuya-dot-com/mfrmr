@@ -4,6 +4,15 @@ This is the unreleased development line after CRAN publication of 0.2.2.
 CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
 0.2.3 and must not be attributed retroactively to 0.2.2.
 
+* Tightened the source-package boundary after a distribution-surface audit.
+  Repository-only validation and G-theory execution tests, generated build
+  scratch, external-program runners, and candidate authorization machinery are
+  excluded from the tarball. The installed runtime has no cryptographic-hash
+  dependency, and historical file hashes remain provenance-only rather than
+  statistical acceptance criteria. The 0.2.3 release path is now explicitly
+  limited to ordinary workflow integrity, the bounded-GPCM user contract, the
+  smallest decision-relevant external confirmation, and candidate checks.
+
 * Made `print(fit)` and `summary(fit)` decision-first: both now lead with a
   plain-language interpretation status, whether formal inference is supported,
   the readiness evidence that prevents interpretation, and the highest-priority

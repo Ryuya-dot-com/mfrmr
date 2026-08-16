@@ -1,4 +1,5 @@
 ^data-raw$
+^build$
 (^|/)\.DS_Store$
 ^\.git$
 ^\.check-
@@ -57,9 +58,12 @@
 ^tests/testthat/test-gpcm-score-v(3|4)-.*[.]R$
 ^tests/testthat/test-immer-conditional-estimand-eligibility[.]R$
 ^tests/testthat/test-mml-engine-parity-pilot[.]R$
+^tests/testthat/test-maxit-ceiling-contract[.]R$
 ^tests/testthat/test-numerical-stationarity-pilot[.]R$
 ^tests/testthat/test-pcm-gpcm-.*[.]R$
 ^tests/testthat/test-rater-anchor-.*[.]R$
 ^tests/testthat/test-release-readiness-protocol[.]R$
 ^tests/testthat/test-tam-.*[.]R$
 ^tests/testthat/helper-repository-validation[.]R$
+^tests/testthat/helper-gtheory-tiers[.]R$
+^tests/testthat/test-gtheory-.*[.]R$

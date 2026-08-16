@@ -129,6 +129,10 @@ test_that("public workflow artifacts do not expose build-machine paths", {
       "..", "..", "vignettes", "mfrmr-workflow.Rmd"
     )
   }
+  skip_if_not(
+    file.exists(workflow_file),
+    "Built vignette and source vignette are unavailable in this check mode."
+  )
   expect_true(file.exists(workflow_file))
   html <- paste(readLines(workflow_file, warn = FALSE), collapse = "\n")
   expect_false(grepl(

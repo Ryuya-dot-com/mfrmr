@@ -5491,8 +5491,9 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
 
   # `prob_map` was historically a `list()` keyed by "ctx||rater" which
   # gave O(N) average-case lookup against tens of thousands of keys.
-  # Swap to an `environment` (hash-backed for character keys) so the
-  # per-pair loop below is O(N_pairs) rather than O(N_pairs * N_keys).
+  # Swap to a keyed `environment` so the per-pair loop below is O(N_pairs)
+  # rather than O(N_pairs * N_keys). This base R lookup strategy is unrelated
+  # to cryptographic or file hashing.
   prob_map <- new.env(parent = emptyenv(), hash = TRUE)
   prob_map_size <- 0L
   if (!is.null(res)) {
