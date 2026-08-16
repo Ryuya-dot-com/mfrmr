@@ -963,6 +963,17 @@ wording.
   caller-supplied clean-tree state is not sufficient
   (`conquest-adversarial-simulation-tranche-a-live-authorization-record-0.2.3.md`,
   2026-08-16).
+- [x] Freeze and adversarially test the G4M same-process runner before
+  consuming the one-run authority. Use an exact `.incomplete` staging root so
+  the data-free sentinel can run while generation remains bound to the absent
+  final target; then permit one rename only after all 90 generated datasets,
+  ledgers, and 190 attempt inputs are prepared. Correct the P4 authority-file
+  reader, register the detailed numeric-evidence ledger, and expand both
+  engines onto complete sum-zero RSM/PCM coordinate identities before any
+  scalar reduction. The dry review passes all 32 G4L gates, but this checkpoint
+  issued no authority, generated no response, and attempted no fit
+  (`conquest-adversarial-simulation-tranche-a-live-execution-preflight-record-0.2.3.md`,
+  2026-08-16).
 - [ ] Open one G4M same-process execution session. Recheck all G4L gates, issue
   and immediately consume the exact mutable authority, obtain the fresh
   data-free ConQuest sentinel, then generate and execute only the frozen

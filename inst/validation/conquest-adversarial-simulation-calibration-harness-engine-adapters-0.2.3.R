@@ -574,7 +574,8 @@ mfrmr_cq_ach_allowed_path_registry <- function(
   root <- c(
     paste0(mfrmr_cq_ach_schema_registry()$TableId, ".csv"),
     "response_layout.csv", "expected_artifact_registry.csv",
-    "authority_snapshot.csv", "runtime_sentinel.cqc"
+    "authority_snapshot.csv", "numeric_observation_detail.csv",
+    "runtime_sentinel.cqc"
   )
   out <- data.frame(
     RelativePath = sort(unique(c(root, input, artifacts$RelativePath))),
@@ -587,7 +588,7 @@ mfrmr_cq_ach_allowed_path_registry <- function(
   )
   out$UnexpectedFilePermitted <- FALSE
   mfrmr_cq_ach_assert(
-    nrow(out) == 1909L && !anyDuplicated(out$RelativePath) &&
+    nrow(out) == 1910L && !anyDuplicated(out$RelativePath) &&
       !any(out$UnexpectedFilePermitted),
     "The P3 allowed-path registry drifted."
   )
@@ -821,19 +822,38 @@ mfrmr_cq_ach_validate_fresh_sentinel_token <- function(
 }
 
 mfrmr_cq_ach_fresh_sentinel <- function(
-    root, executable_path, run_date, timeout = 30L, authorize = FALSE) {
+    staging_root, calibration_output_dir, executable_path, run_date,
+    timeout = 30L, authorize = FALSE) {
   mfrmr_cq_ach_assert(
     identical(authorize, TRUE) && identical(as.integer(timeout), 30L),
     "The P3 fresh sentinel is execution-held or has a widened timeout."
   )
+  staging_root <- normalizePath(
+    staging_root, winslash = "/", mustWork = TRUE
+  )
+  target <- normalizePath(
+    calibration_output_dir, winslash = "/", mustWork = FALSE
+  )
+  mfrmr_cq_ach_assert(
+    identical(staging_root, paste0(target, ".incomplete")) &&
+      !file.exists(target) &&
+      identical(
+        readLines(file.path(staging_root, "runtime_sentinel.cqc"), warn = FALSE),
+        "quit;"
+      ),
+    paste(
+      "The fresh sentinel requires the exact incomplete staging root,",
+      "absent final target, and data-free quit command."
+    )
+  )
   assessment <- mfrmr_cq_ameh_fresh_sentinel(
-    root = root,
+    root = staging_root,
     executable_path = executable_path,
     run_date = run_date,
     timeout = timeout
   )
   mfrmr_cq_ach_sentinel_token_from_assessment(
-    assessment, root, executable_path, run_date
+    assessment, target, executable_path, run_date
   )
 }
 
@@ -973,7 +993,7 @@ mfrmr_cq_ach_p3_review <- function(
     length(commands) == 190L &&
     sum(lengths(commands) > 0L) == 90L &&
     nrow(artifacts$registry) == 1511L &&
-    nrow(artifacts$allowed_path_registry) == 1909L &&
+    nrow(artifacts$allowed_path_registry) == 1910L &&
     !isTRUE(artifacts$output_boundary_inspected) &&
     is.na(artifacts$unexpected_file_guard_passed) &&
     nrow(policy) == 7L && !any(policy$PeerFailureMaySuppressAttempt) &&

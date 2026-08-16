@@ -74,7 +74,8 @@ The prospective execution namespace registers 1,511 result artifacts:
 - one fresh-sentinel console.
 
 Together with 380 typed attempt-input files and 18 root controls/ledgers, the
-allowed-path registry contains 1,909 unique paths. Any file outside that set
+allowed-path registry contains 1,910 unique paths, including the retained
+numeric-observation detail ledger required by G4M. Any file outside that set
 fails the boundary audit. Presence and non-emptiness are tracked semantically;
 file-byte or hash equality is neither inspected nor accepted as scientific
 evidence. Outcome-specific success-versus-failure artifact completeness remains

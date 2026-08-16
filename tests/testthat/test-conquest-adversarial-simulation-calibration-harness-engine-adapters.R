@@ -149,7 +149,7 @@ test_that("P3 registers every output and rejects unexpected files", {
   inventory <- ctx$env$mfrmr_cq_ach_artifact_inventory(plan = plan)
 
   expect_identical(nrow(inventory$registry), 1511L)
-  expect_identical(nrow(inventory$allowed_path_registry), 1909L)
+  expect_identical(nrow(inventory$allowed_path_registry), 1910L)
   expect_identical(anyDuplicated(inventory$registry$RelativePath), 0L)
   expect_identical(
     sum(inventory$registry$Engine == "mfrmr"), 700L
@@ -361,7 +361,8 @@ test_that("P3 execution routes exist but remain unopened", {
   )
   expect_error(
     ctx$env$mfrmr_cq_ach_fresh_sentinel(
-      "missing", "/Applications/ConQuest/ConQuest", as.Date("2026-08-16")
+      "missing", ctx$calibration_output,
+      "/Applications/ConQuest/ConQuest", as.Date("2026-08-16")
     ),
     "execution-held"
   )

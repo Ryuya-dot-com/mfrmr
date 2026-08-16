@@ -91,6 +91,12 @@ Artifact presence, non-emptiness, typed identities, semantic bridges, and
 ledger reconstruction are checked. The use of file-byte or hash equality is neither
 inspected nor accepted as scientific evidence.
 
+The G4M pre-execution audit corrected the concrete implementation of this
+contract before any live authority was consumed: `authority_snapshot.csv` is a
+separately registered control file, not one of the 14 schema tables, and the
+reviewer now reads it explicitly before checking consumption. No retained
+tranche-A review had occurred when the defect was found.
+
 ## Adversarial checks
 
 Tests reject unattempted finalization without a real global abort, unknown

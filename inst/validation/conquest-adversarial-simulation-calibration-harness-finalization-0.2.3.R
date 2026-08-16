@@ -944,8 +944,16 @@ mfrmr_cq_ach_review_execution <- function(output_dir) {
     ) && all(observed_accounting$NumericCoverageComplete) &&
     !any(tables$metric_summary$PrimaryPooledSummaryPermitted) &&
     !any(tables$metric_summary$ThresholdApplied)
-  authority <- tables$authority_snapshot
-  authorization_consumed <- nrow(authority) == 1L &&
+  authority_path <- file.path(root, "authority_snapshot.csv")
+  authority <- if (file.exists(authority_path)) {
+    utils::read.csv(
+      authority_path, stringsAsFactors = FALSE, check.names = FALSE,
+      na.strings = ""
+    )
+  } else {
+    NULL
+  }
+  authorization_consumed <- is.data.frame(authority) && nrow(authority) == 1L &&
     isTRUE(authority$Consumed) && !is.na(authority$ConsumedAt) &&
     !isTRUE(authority$ConfirmationOrPublicUsePermitted) &&
     !isTRUE(authority$AuthorizationIssuedByP4)
