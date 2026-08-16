@@ -333,6 +333,31 @@ test_that("P4 keeps conditional metrics beside frozen unconditional units", {
   ]
   expect_identical(rmse$PrimaryEstimate, 1)
   expect_identical(rmse$Mean, 0)
+  retained <- summarized[
+    summarized$RecordType == "observation", , drop = FALSE
+  ]
+  expect_identical(nrow(retained), nrow(observation))
+  reconstructed <- ctx$env$mfrmr_cq_ach_metric_summary(
+    plan, outcome, eligibility,
+    data.frame(
+      SummaryId = retained$SummaryId,
+      UnitId = retained$UnitId,
+      Stratum = retained$Stratum,
+      Value = retained$ObservationValue,
+      stringsAsFactors = FALSE
+    )
+  )
+  expect_true(ctx$env$mfrmr_cq_ach_p4_same_frame(
+    summarized, reconstructed, names(reconstructed)
+  ))
+  tampered <- summarized
+  tampered$PrimaryEstimate[
+    tampered$SummaryId == "ASP-PARAMETER-RMSE" &
+      tampered$RecordType == "stratum"
+  ] <- 0
+  expect_false(ctx$env$mfrmr_cq_ach_p4_same_frame(
+    tampered, reconstructed, names(reconstructed)
+  ))
 
   bad <- observation[1L, , drop = FALSE]
   bad$UnitId <- "unregistered_or_ineligible_unit"

@@ -528,6 +528,8 @@ mfrmr_cq_ach_metric_summary <- function(
       SummaryId = summary_id,
       RecordType = "accounting",
       Stratum = NA_character_,
+      UnitId = NA_character_,
+      ObservationValue = NA_real_,
       UseClass = registry$UseClass[index],
       EligibilityRequirement = registry$EligibilityRequirement[index],
       PrimaryStatistic = summary_registry$Statistic[
@@ -579,6 +581,17 @@ mfrmr_cq_ach_metric_summary <- function(
       stringsAsFactors = FALSE
     )
     if (!computed) return(accounting)
+    observation_rows <- lapply(seq_len(nrow(observation)), function(row_index) {
+      current <- observation[row_index, , drop = FALSE]
+      row <- accounting
+      row$RecordType <- "observation"
+      row$Stratum <- current$Stratum
+      row$UnitId <- current$UnitId
+      row$ObservationValue <- current$Value
+      row$NumericObservationCount <- 1L
+      row$StratumNumericUnitCount <- 1L
+      row
+    })
     split_observation <- split(observation, observation$Stratum)
     stratum <- lapply(names(split_observation), function(stratum_id) {
       current <- split_observation[[stratum_id]]
@@ -611,13 +624,15 @@ mfrmr_cq_ach_metric_summary <- function(
       }
       row
     })
-    do.call(rbind, c(list(accounting), stratum))
+    do.call(rbind, c(list(accounting), observation_rows, stratum))
   })
   out <- do.call(rbind, rows)
   rownames(out) <- NULL
   mfrmr_cq_ach_assert(
     sum(out$RecordType == "accounting") == 14L &&
       !any(out$RecordType == "accounting" & out$NumericSummaryComputed) &&
+      sum(out$RecordType == "observation") == nrow(numeric_observations) &&
+      !any(out$RecordType == "observation" & out$NumericSummaryComputed) &&
       !any(out$PrimaryPooledSummaryPermitted) &&
       all(out$FailureRowsRetained) &&
       !any(out$ThresholdApplied) && !any(out$ConfirmationUsePermitted) &&
@@ -893,28 +908,30 @@ mfrmr_cq_ach_review_execution <- function(output_dir) {
       eligibility, reapplied$diagnostic_eligibility,
       names(reapplied$diagnostic_eligibility)
     )
-  denominator_reference <- mfrmr_cq_ach_metric_summary(
-    plan, outcome, eligibility,
-    artifact_registry = expected_registry
+  retained_observation <- tables$metric_summary[
+    tables$metric_summary$RecordType == "observation", , drop = FALSE
+  ]
+  retained_observation <- data.frame(
+    SummaryId = retained_observation$SummaryId,
+    UnitId = retained_observation$UnitId,
+    Stratum = retained_observation$Stratum,
+    Value = as.numeric(retained_observation$ObservationValue),
+    stringsAsFactors = FALSE
   )
-  metric_fields <- c(
-    "SummaryId", "RecordType", "UseClass", "EligibilityRequirement",
-    "PrimaryStatistic",
-    "UnconditionalDenominator", "ConditionalDiagnosticDenominator",
-    "NonNumericOrFailureCount", "DiagnosticEligibilityAccountingAvailable",
-    "DiagnosticEligibleCount", "DiagnosticIneligibleCount",
-    "DiagnosticEligibilityUnknownCount", "FailureRowsRetained",
-    "PrimaryPooledSummaryPermitted", "ThresholdApplied",
-    "ConfirmationUsePermitted", "EvidencePromotionPermitted",
-    "PublicClaimPermitted", "ScientificEquivalenceInferred",
-    "ByteEqualityInspected"
+  metric_recomputed <- tryCatch(
+    mfrmr_cq_ach_metric_summary(
+      plan, outcome, eligibility, retained_observation,
+      artifact_registry = expected_registry
+    ),
+    error = function(error) NULL
   )
   observed_accounting <- tables$metric_summary[
     tables$metric_summary$RecordType == "accounting", , drop = FALSE
   ]
-  metric_contract_complete <- mfrmr_cq_ach_p4_same_frame(
-    observed_accounting, denominator_reference, metric_fields
-  ) && all(observed_accounting$NumericCoverageComplete) &&
+  metric_contract_complete <- !is.null(metric_recomputed) &&
+    mfrmr_cq_ach_p4_same_frame(
+      tables$metric_summary, metric_recomputed, names(metric_recomputed)
+    ) && all(observed_accounting$NumericCoverageComplete) &&
     !any(tables$metric_summary$PrimaryPooledSummaryPermitted) &&
     !any(tables$metric_summary$ThresholdApplied)
   authority <- tables$authority_snapshot

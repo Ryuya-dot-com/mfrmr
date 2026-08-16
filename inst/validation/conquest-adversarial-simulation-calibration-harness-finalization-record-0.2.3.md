@@ -58,9 +58,11 @@ must be finite, registered, unique at the summary/unit level, and complete over
 the eligible unit set before an aggregate is marked computed. The 14 accounting
 rows never carry a pooled primary estimate; numeric estimates are emitted only
 as explicit stratum rows, preserving the frozen prohibition on a primary pooled
-summary. RMSE is computed as a root mean square rather than a mean error. No
-threshold is selected; no calibration statistic may enter confirmation or
-support a public claim.
+summary. Every registered unit value is retained as a separate observation row
+in the same metric ledger, and the retained reviewer reconstructs the complete
+ledger from those rows instead of trusting stored aggregates. RMSE is computed
+as a root mean square rather than a mean error. No threshold is selected; no
+calibration statistic may enter confirmation or support a public claim.
 
 ## Run-once authority boundary
 
