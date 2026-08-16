@@ -1234,13 +1234,12 @@ is available.
   and an `MD5` manifest to its distributed source, so the submitted compressed
   digest and CRAN-distributed compressed digest are distinct identities even
   though the audited package payload agrees.
-- The `development/0.2.3` branch now carries package identity 0.2.3. This is
-  an unreleased development target, not a release candidate: candidate freeze,
-  confirmation, and submission remain prohibited until the M3-M5 evidence and
-  identity gates pass.
-- `DESCRIPTION` records lifecycle `development` and public baseline 0.2.2;
-  `DESCRIPTION` and `CITATION.cff` intentionally carry no release date until
-  an explicit candidate freeze.
+- The `development/0.2.3` branch now carries the dated local 0.2.3 candidate.
+  Its exact distribution source passed the full local `R CMD check --as-cran`
+  and all fourteen current aggregate release gates on 2026-08-16. This does
+  not imply a tag, push, CRAN submission, or remote cross-platform result.
+- `DESCRIPTION` records lifecycle `candidate`, release date 2026-08-16, and
+  public baseline 0.2.2; `CITATION.cff` records the same candidate date.
 - If CRAN later asks for a 0.2.2 correction, that work branches from the
   published/tagged source and must not absorb unfinished 0.2.3 implementation.
 
