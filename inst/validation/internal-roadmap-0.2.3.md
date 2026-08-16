@@ -930,8 +930,17 @@ wording.
     agreement remain outside this gate
     (`conquest-adversarial-simulation-calibration-harness-generation-record-0.2.3.md`,
     2026-08-16).
-  - [ ] G4C-P3: implement q61/q121 engine adapters, artifact registration,
-    timeout/global-abort control, and independent peer continuation.
+  - [x] G4C-P3: implement q61/q121 engine adapters, artifact registration,
+    timeout/global-abort control, and independent peer continuation. The exact
+    190-attempt adapter plan now has 100 mfrmr and 90 ConQuest routes across
+    150 q61 and 40 q121 attempts. A process/target/runtime/seed-bound sentinel
+    token guards generation and each attempt; 1,511 result artifacts and 1,909
+    total allowed paths are registered. Ordinary failure and single-fit timeout
+    cannot suppress a peer, whereas total/q-specific attempt, wall-time, or
+    storage caps stop later attempts for retained P4 finalization. No response
+    or fit was generated or attempted
+    (`conquest-adversarial-simulation-calibration-harness-engine-adapters-record-0.2.3.md`,
+    2026-08-16).
   - [ ] G4C-P4: implement G4N application, conditional/unconditional metric
     summaries, complete finalization, authorization consumption, and retained
     execution review; then freeze the integrated dry-run harness.

@@ -19,7 +19,11 @@ load_conquest_adversarial_simulation_calibration_harness <- function() {
       "eligibility-addendum-0.2.3.R"
     ),
     "conquest-adversarial-simulation-tranche-a-authorization-review-0.2.3.R",
-    "conquest-adversarial-simulation-calibration-harness-0.2.3.R"
+    "conquest-adversarial-simulation-calibration-harness-0.2.3.R",
+    paste0(
+      "conquest-adversarial-simulation-calibration-harness-engine-",
+      "adapters-0.2.3.R"
+    )
   ))
   skip_if_not(all(file.exists(paths)), "ConQuest ASP G4C files are excluded.")
   pkgload::load_all(root, quiet = TRUE)
@@ -508,7 +512,7 @@ test_that("P2 bridge rejects value mask key and typed-map mutations", {
 
 test_that("G4C P2 adds only generation and bridge capabilities", {
   ctx <- load_conquest_adversarial_simulation_calibration_harness()
-  review <- ctx$env$mfrmr_cq_ach_dry_run_review(
+  review <- ctx$env$mfrmr_cq_ach_p2_review(
     ctx$g4x_output, ctx$calibration_output, ctx$smoke_output
   )
 
@@ -607,7 +611,11 @@ test_that("G4C P1 and P2 records keep the integrated harness checklist open", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] G4C-P3: implement q61/q121 engine adapters",
+    roadmap, "[x] G4C-P3: implement q61/q121 engine adapters",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap, "[ ] G4C-P4: implement G4N application",
     fixed = TRUE
   )
 })

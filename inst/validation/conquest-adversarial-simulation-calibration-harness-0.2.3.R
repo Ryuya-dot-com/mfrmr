@@ -896,7 +896,7 @@ mfrmr_cq_ach_p1_review <- function(g4x_output_dir, calibration_output_dir) {
   )
 }
 
-mfrmr_cq_ach_dry_run_review <- function(
+mfrmr_cq_ach_p2_review <- function(
     g4x_output_dir, calibration_output_dir,
     smoke_output_dir = file.path(
       dirname(g4x_output_dir), mfrmr_cq_ase_output_basename
@@ -910,6 +910,7 @@ mfrmr_cq_ach_dry_run_review <- function(
   journal <- mfrmr_cq_ach_attempt_journal_template(plan)
   outcome <- mfrmr_cq_ach_outcome_template(plan)
   capability <- mfrmr_cq_ataa_harness_capability_registry()
+  p2_available <- capability$CapabilityOrder %in% 1:8
   rng <- mfrmr_cq_ach_rng_contract()
   bridge <- mfrmr_cq_ach_retained_bridge_replay(smoke_output_dir)
   complete <- all(audit$Passed) && nrow(schema) == 14L &&
@@ -917,8 +918,9 @@ mfrmr_cq_ach_dry_run_review <- function(
     nrow(outcome) == 230L && all(generation$RowRetained) &&
     !any(generation$GenerationStarted) && !any(generation$Generated) &&
     !any(journal$Started) && !any(outcome$Attempted) &&
-    identical(sum(capability$ProviderAvailable), 8L) &&
-    identical(sum(!capability$ProviderAvailable), 10L) &&
+    all(capability$ProviderAvailable[p2_available]) &&
+    identical(sum(p2_available), 8L) &&
+    identical(sum(!p2_available), 10L) &&
     isTRUE(rng$CallerRNGStateRestored) &&
     isTRUE(rng$FrozenTrancheSeedRequired) &&
     !isTRUE(rng$PositiveAuthorityIssuedByP2) &&
@@ -955,8 +957,8 @@ mfrmr_cq_ach_dry_run_review <- function(
     retained_bridge_replay = bridge,
     generation_authority_schema = mfrmr_cq_ach_generation_authority_schema(),
     upstream_and_harness_capabilities_available =
-      sum(capability$ProviderAvailable),
-    harness_capabilities_still_missing = sum(!capability$ProviderAvailable),
+      sum(p2_available),
+    harness_capabilities_still_missing = sum(!p2_available),
     exact_outcome_ledger_materialization_ready = complete,
     deterministic_generation_implemented = TRUE,
     semantic_bridge_implemented = TRUE,
