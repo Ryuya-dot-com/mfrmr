@@ -891,12 +891,24 @@ wording.
   forbidden
   (`conquest-adversarial-simulation-diagnostic-numeric-eligibility-addendum-record-0.2.3.md`,
   2026-08-16).
-- [ ] Complete the G4A tranche-A authorization review. Bind G4N to the frozen
-  calibration identity; recheck unchanged seeds, DGPs, workloads, attempt
-  order, paired denominators, caps, failure retention, absent output, fresh
-  same-process sentinel, and run-once/no-retry behavior. G4A must explicitly
-  assess expected information gain versus runtime and interpretive cost before
-  it may authorize response generation or execution.
+- [x] Complete the G4A tranche-A authorization review. The 90-dataset,
+  190-attempt, 230-outcome tranche retains material information value now that
+  G4N makes its diagnostic denominators reachable; five replicates per arm are
+  explicitly insufficient for thresholds or confirmation. G4X resource
+  scaling is comfortably below the caps but remains preliminary because q121,
+  generation cost, and scenario runtime tails are unobserved. Only five of 18
+  required capabilities exist, so response generation and execution remain
+  held while bounded harness implementation is authorized
+  (`conquest-adversarial-simulation-tranche-a-authorization-review-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Freeze the G4C tranche-A calibration harness without generating a
+  response. Materialize the exact 230-row/190-attempt ledger before execution;
+  implement deterministic generation, q61/q121 engine adapters, semantic
+  bridges, G4N application, registered artifacts, independent failure
+  continuation, global-abort finalization, conditional/unconditional metric
+  summaries, and a retained execution reviewer. Keep dry-run as the default;
+  live execution must require a later target-bound authorization and fresh
+  same-process sentinel.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.
