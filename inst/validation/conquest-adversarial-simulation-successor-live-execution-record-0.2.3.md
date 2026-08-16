@@ -49,6 +49,14 @@ runtime, and storage only. It cannot set a threshold, support confirmation,
 promote evidence, establish scientific equivalence, or authorize a public
 claim.
 
+The retained reviewer compares nonnumeric fields exactly. For double-valued
+CSV round trips it uses a scale-aware bound of
+`64 * .Machine$double.eps * max(1, abs(left), abs(right))`. This is an artifact
+reconstruction rule, not a scientific agreement threshold. It accepts only the
+floating-point reaggregation drift observed in the same retained byte ledger;
+it does not round parameter estimates, alter metric values, or authorize a
+substantive comparison.
+
 ## Frozen state
 
 - `NewSuccessorSpecificationFrozen=TRUE`

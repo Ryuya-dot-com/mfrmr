@@ -1011,9 +1011,17 @@ wording.
   authorize retry
   (`conquest-adversarial-simulation-successor-live-execution-record-0.2.3.md`,
   2026-08-16). This freeze itself launched no external process.
-- [ ] Run the frozen disjoint calibration band solely to estimate failure,
+- [x] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
-  calibration rows for a confirmation claim.
+  calibration rows for a confirmation claim. The unsandboxed G4O v2 process
+  passed both semantic sentinels and retained all 90 datasets, 230 outcomes,
+  and 190 attempts with no global abort or retry. All 90 ConQuest fits were
+  parseable and all 100 mfrmr fits converged, while mfrmr inference readiness
+  remained held by design-rank/input review. The retained 71,271-row detail
+  reconstructs exactly apart from bounded CSV floating-point round trip; no
+  threshold, confirmation, equivalence, or public claim was selected
+  (`conquest-adversarial-simulation-successor-live-execution-result-record-0.2.3.md`,
+  2026-08-16).
 - [ ] Set metric-specific decision loss, precision/MCSE targets, replication
   counts, untouched seeds, and stop/expand/abort rules before confirmation.
 - [ ] Run and classify P2 RSM/PCM confirmation before considering the separate

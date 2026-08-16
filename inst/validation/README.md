@@ -284,6 +284,12 @@ identify whether the opt-in layer ran and retain its test log.
   PID- and route-bound data-free pre-issue probe before authority issue, then
   retain the original post-consumption sentinel. The adapter reuses the frozen
   tranche-A harness and does not reopen or rewrite the consumed v1 target.
+- `conquest-adversarial-simulation-successor-live-execution-result-record-0.2.3.md`:
+  retained unsandboxed G4O outcome. Both semantic sentinels pass; all 90
+  datasets, 230 outcomes, and 190 attempts are retained without retry. The
+  record separates converged-but-not-inference-ready mfrmr fits, exploratory
+  numerical observations, and scale-aware CSV reconstruction from any future
+  decision threshold or confirmation claim.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

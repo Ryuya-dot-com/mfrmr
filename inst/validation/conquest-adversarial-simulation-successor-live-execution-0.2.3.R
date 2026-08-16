@@ -29,6 +29,85 @@ mfrmr_cq_ag4o_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
 }
 
+mfrmr_cq_ag4o_same_frame <- function(observed, expected, fields = NULL) {
+  if (!is.data.frame(observed) || !is.data.frame(expected) ||
+      nrow(observed) != nrow(expected)) return(FALSE)
+  if (is.null(fields)) {
+    if (!setequal(names(observed), names(expected))) return(FALSE)
+    fields <- names(expected)
+  }
+  if (!all(fields %in% names(observed)) ||
+      !all(fields %in% names(expected))) return(FALSE)
+  same_numeric <- function(left, right) {
+    left <- as.numeric(left)
+    right <- as.numeric(right)
+    if (length(left) != length(right) ||
+        !identical(is.na(left), is.na(right)) ||
+        !identical(is.nan(left), is.nan(right)) ||
+        !identical(is.infinite(left), is.infinite(right))) return(FALSE)
+    finite <- is.finite(left) & is.finite(right)
+    if (any(!finite & !is.na(left)) &&
+        !identical(left[!finite & !is.na(left)],
+                   right[!finite & !is.na(right)])) return(FALSE)
+    tolerance <- 64 * .Machine$double.eps * pmax(
+      1, abs(left[finite]), abs(right[finite])
+    )
+    all(abs(left[finite] - right[finite]) <= tolerance)
+  }
+  normalize <- function(value) {
+    value <- as.character(value)
+    value[is.na(value)] <- "<NA>"
+    value
+  }
+  all(vapply(fields, function(field) {
+    left <- observed[[field]]
+    right <- expected[[field]]
+    if (is.double(left) && is.double(right)) {
+      same_numeric(left, right)
+    } else {
+      identical(normalize(left), normalize(right))
+    }
+  }, logical(1L)))
+}
+
+mfrmr_cq_ag4o_validate_g4m_contracts <- function() {
+  target <- environment(mfrmr_cq_ag4o_validate_g4m_contracts)
+  required <- c(
+    "mfrmr_cq_atla_issue", "mfrmr_cq_atla_review",
+    "mfrmr_cq_ach_consume_authorization", "mfrmr_cq_ach_fresh_sentinel",
+    "mfrmr_cq_ach_dataset_generation_authority",
+    "mfrmr_cq_ach_generate_dataset", "mfrmr_cq_ach_adapter_plan",
+    "mfrmr_cq_ach_generation_journal_template",
+    "mfrmr_cq_ach_attempt_journal_template", "mfrmr_cq_ach_outcome_template",
+    "mfrmr_cq_ach_representation_bridge_audit",
+    "mfrmr_cq_ach_expected_artifact_registry",
+    "mfrmr_cq_ach_artifact_inventory", "mfrmr_cq_ach_resource_state",
+    "mfrmr_cq_ach_resource_controller", "mfrmr_cq_ach_execute",
+    "mfrmr_cq_ach_readiness_evidence",
+    "mfrmr_cq_ach_apply_diagnostic_eligibility",
+    "mfrmr_cq_ach_finalize_outcomes", "mfrmr_cq_ach_metric_summary",
+    "mfrmr_cq_ach_review_execution", "mfrmr_cq_ado_truth",
+    "mfrmr_cq_ado_direct_probability", "mfrmr_cq_ado_person_integral",
+    "mfrmr_cq_ameh_response_layout", "mfrmr_cq_ameh_write_csv",
+    "mfrmr_cq_ameh_retained_bytes"
+  )
+  available <- vapply(
+    required, exists, logical(1L), envir = target,
+    mode = "function", inherits = TRUE
+  )
+  identity <- exists(
+    "mfrmr_cq_atla_contract", envir = target, inherits = TRUE
+  ) && identical(
+    get("mfrmr_cq_atla_contract", envir = target, inherits = TRUE),
+    mfrmr_cq_ag4o_authorization_contract
+  )
+  mfrmr_cq_ag4o_assert(
+    all(available) && identity,
+    "Source the complete G4O authority and G4C-P4 contracts before review."
+  )
+  invisible(TRUE)
+}
+
 mfrmr_cq_ag4o_bind_contract <- function(target) {
   mfrmr_cq_ag4o_assert(
     is.environment(target), "G4O requires one explicit source environment."
@@ -41,7 +120,11 @@ mfrmr_cq_ag4o_bind_contract <- function(target) {
     mfrmr_cq_ach_required_authorization_issuer_contract =
       mfrmr_cq_ag4o_authorization_contract,
     mfrmr_cq_ag4m_specification = mfrmr_cq_ag4o_specification,
-    mfrmr_cq_ag4m_contract = mfrmr_cq_ag4o_contract
+    mfrmr_cq_ag4m_contract = mfrmr_cq_ag4o_contract,
+    mfrmr_cq_ach_p4_same_frame = mfrmr_cq_ag4o_same_frame,
+    mfrmr_cq_ag4m_same_detail = mfrmr_cq_ag4o_same_frame,
+    mfrmr_cq_ag4m_require_contracts =
+      mfrmr_cq_ag4o_validate_g4m_contracts
   )
   for (name in names(bindings)) {
     assign(name, bindings[[name]], envir = target)

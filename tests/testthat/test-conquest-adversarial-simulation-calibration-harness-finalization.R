@@ -507,7 +507,7 @@ test_that("P4 source and records stay execution-free and internal", {
   )
   expect_match(
     roadmap,
-    "[ ] Run the frozen disjoint calibration band",
+    "[x] Run the frozen disjoint calibration band",
     fixed = TRUE
   )
 })

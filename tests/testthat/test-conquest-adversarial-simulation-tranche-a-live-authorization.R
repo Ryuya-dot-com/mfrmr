@@ -282,7 +282,7 @@ test_that("G4L record advances only the internal execution checklist", {
   )
   expect_match(
     roadmap,
-    "[ ] Run the frozen disjoint calibration band",
+    "[x] Run the frozen disjoint calibration band",
     fixed = TRUE
   )
 })
