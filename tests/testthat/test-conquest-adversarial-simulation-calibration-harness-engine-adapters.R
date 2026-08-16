@@ -383,7 +383,7 @@ test_that("P3 execution routes exist but remain unopened", {
 
 test_that("P3 advances exactly five capabilities and remains execution-free", {
   ctx <- load_conquest_adversarial_simulation_calibration_p3()
-  review <- ctx$env$mfrmr_cq_ach_dry_run_review(
+  review <- ctx$env$mfrmr_cq_ach_p3_review(
     ctx$g4x_output, ctx$calibration_output, ctx$smoke_output
   )
   capability <- ctx$env$mfrmr_cq_ataa_harness_capability_registry()
@@ -443,12 +443,12 @@ test_that("P3 record advances only the internal checklist", {
   )
   expect_match(
     roadmap,
-    "[ ] G4C-P4: implement G4N application",
+    "[x] G4C-P4: implement G4N application",
     fixed = TRUE
   )
   expect_match(
     roadmap,
-    "[ ] Freeze the G4C tranche-A calibration harness",
+    "[x] Freeze the G4C tranche-A calibration harness",
     fixed = TRUE
   )
 })

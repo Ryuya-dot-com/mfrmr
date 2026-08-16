@@ -901,7 +901,7 @@ wording.
   held while bounded harness implementation is authorized
   (`conquest-adversarial-simulation-tranche-a-authorization-review-record-0.2.3.md`,
   2026-08-16).
-- [ ] Freeze the G4C tranche-A calibration harness without generating a
+- [x] Freeze the G4C tranche-A calibration harness without generating a
   response. Materialize the exact 230-row/190-attempt ledger before execution;
   implement deterministic generation, q61/q121 engine adapters, semantic
   bridges, G4N application, registered artifacts, independent failure
@@ -941,9 +941,20 @@ wording.
     or fit was generated or attempted
     (`conquest-adversarial-simulation-calibration-harness-engine-adapters-record-0.2.3.md`,
     2026-08-16).
-  - [ ] G4C-P4: implement G4N application, conditional/unconditional metric
+  - [x] G4C-P4: implement G4N application, conditional/unconditional metric
     summaries, complete finalization, authorization consumption, and retained
-    execution review; then freeze the integrated dry-run harness.
+    execution review. All 18 capability providers now exist, all 230 outcome
+    rows remain mandatory, G4N cannot relabel terminal or inference-readiness
+    states, and conditional numeric summaries preserve their unconditional
+    denominators. The integrated dry-run harness is frozen, but P4 issues no
+    live authority, generates no tranche-A response, attempts no fit, and does
+    not claim a retained review was performed
+    (`conquest-adversarial-simulation-calibration-harness-finalization-record-0.2.3.md`,
+    2026-08-16).
+- [ ] Freeze a separate target-bound G4L run-once live authorization. Recheck
+  the absent output boundary, clean source tree, exact ConQuest path and date
+  window, full 90-dataset/230-outcome/190-attempt scope, and post-consumption
+  same-process sentinel. Harness completeness alone must not imply authority.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

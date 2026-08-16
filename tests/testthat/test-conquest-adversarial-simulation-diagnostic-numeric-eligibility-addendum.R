@@ -433,7 +433,7 @@ test_that("G4N record and internal roadmap require a separate G4A gate", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze the G4C tranche-A calibration harness",
+    roadmap, "[x] Freeze the G4C tranche-A calibration harness",
     fixed = TRUE
   )
 })

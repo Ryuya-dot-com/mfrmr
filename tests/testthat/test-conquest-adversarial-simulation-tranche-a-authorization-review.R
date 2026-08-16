@@ -249,7 +249,7 @@ test_that("G4A cannot generate responses, fit models, or launch ConQuest", {
   expect_false(grepl("SHA-256|SHA256|md5|digest::", source, ignore.case = TRUE))
 })
 
-test_that("G4A record and internal roadmap point to the G4C harness freeze", {
+test_that("G4A record remains historical after the G4C harness freeze", {
   ctx <- load_conquest_adversarial_simulation_tranche_a_authorization_review()
   record <- paste(readLines(file.path(
     ctx$validation,
@@ -267,7 +267,7 @@ test_that("G4A record and internal roadmap point to the G4C harness freeze", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze the G4C tranche-A calibration harness",
+    roadmap, "[x] Freeze the G4C tranche-A calibration harness",
     fixed = TRUE
   )
 })

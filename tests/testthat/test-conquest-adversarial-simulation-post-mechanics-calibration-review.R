@@ -187,7 +187,7 @@ test_that("G4R record and internal roadmap retain the calibration hold", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze the G4C tranche-A calibration harness",
+    roadmap, "[x] Freeze the G4C tranche-A calibration harness",
     fixed = TRUE
   )
 })

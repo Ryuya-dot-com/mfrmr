@@ -367,6 +367,9 @@ mfrmr_cq_ach_attempt_journal_template <- function(
   out$ParseableResult <- FALSE
   out$ObservedFreeDimension <- NA_integer_
   out$ModelIdentityMatch <- FALSE
+  out$RegisteredFailureCount <- NA_integer_
+  out$ExitStatus <- NA_integer_
+  out$TerminalMarkerObserved <- NA
   out$DiagnosticNumericEligible <- FALSE
   out$InferenceReady <- NA
   out$AutomaticRetryPermitted <- FALSE
@@ -857,12 +860,12 @@ mfrmr_cq_ach_p1_review <- function(g4x_output_dir, calibration_output_dir) {
     all(capability$ProviderAvailable[p1_available]) &&
     identical(sum(p1_available), 6L) &&
     identical(sum(!p1_available), 12L) &&
-    identical(
-      g4a$status,
+    g4a$status %in% c(
       paste0(
         "ASP_G4A_scientific_value_retained_execution_hold_",
         "harness_freeze_required"
-      )
+      ),
+      "ASP_G4A_harness_ready_separate_live_authorization_required"
     )
   list(
     specification = mfrmr_cq_ach_p1_specification,
@@ -928,12 +931,12 @@ mfrmr_cq_ach_p2_review <- function(
     identical(bridge$bridge_check_count, 8L) &&
     all(bridge$bridge$Passed) &&
     !isTRUE(bridge$response_generation_performed) &&
-    identical(
-      g4a$status,
+    g4a$status %in% c(
       paste0(
         "ASP_G4A_scientific_value_retained_execution_hold_",
         "harness_freeze_required"
-      )
+      ),
+      "ASP_G4A_harness_ready_separate_live_authorization_required"
     )
   list(
     specification = mfrmr_cq_ach_specification,

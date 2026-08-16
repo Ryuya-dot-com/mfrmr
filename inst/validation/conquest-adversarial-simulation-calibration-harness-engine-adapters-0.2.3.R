@@ -646,6 +646,7 @@ mfrmr_cq_ach_resource_state <- function() {
     WallTimeCapSeconds = budget$CumulativeWallTimeCapSeconds,
     StorageCapBytes = budget$RetainedStorageCapBytes,
     GlobalAbortTriggered = FALSE,
+    GlobalAbortReason = NA_character_,
     AutomaticRetryPermitted = FALSE,
     NumericAgreementInspected = FALSE,
     stringsAsFactors = FALSE
@@ -935,7 +936,7 @@ mfrmr_cq_ach_execute <- function(
   )
 }
 
-mfrmr_cq_ach_dry_run_review <- function(
+mfrmr_cq_ach_p3_review <- function(
     g4x_output_dir, calibration_output_dir,
     smoke_output_dir = file.path(
       dirname(g4x_output_dir), mfrmr_cq_ase_output_basename
@@ -959,6 +960,7 @@ mfrmr_cq_ach_dry_run_review <- function(
   resource <- mfrmr_cq_ach_resource_state()
   policy <- mfrmr_cq_ach_execution_policy()
   capability <- mfrmr_cq_ataa_harness_capability_registry()
+  p3_available <- capability$CapabilityOrder %in% c(1:11, 13:14)
   complete <- identical(
     p2$status,
     paste0(
@@ -977,14 +979,15 @@ mfrmr_cq_ach_dry_run_review <- function(
     nrow(policy) == 7L && !any(policy$PeerFailureMaySuppressAttempt) &&
     !any(policy$AutomaticRetryPermitted) &&
     identical(as.integer(resource$TotalFitAttemptCap), 190L) &&
-    identical(sum(capability$ProviderAvailable), 13L) &&
-    identical(sum(!capability$ProviderAvailable), 5L) &&
-    identical(
-      g4a$status,
+    all(capability$ProviderAvailable[p3_available]) &&
+    identical(sum(p3_available), 13L) &&
+    identical(sum(!p3_available), 5L) &&
+    g4a$status %in% c(
       paste0(
         "ASP_G4A_scientific_value_retained_execution_hold_",
         "harness_freeze_required"
-      )
+      ),
+      "ASP_G4A_harness_ready_separate_live_authorization_required"
     )
   list(
     specification = mfrmr_cq_ach_p3_specification,
@@ -1005,8 +1008,8 @@ mfrmr_cq_ach_dry_run_review <- function(
     resource_state = resource,
     execution_policy = policy,
     upstream_and_harness_capabilities_available =
-      sum(capability$ProviderAvailable),
-    harness_capabilities_still_missing = sum(!capability$ProviderAvailable),
+      sum(p3_available),
+    harness_capabilities_still_missing = sum(!p3_available),
     q61_q121_mfrmr_adapter_implemented = TRUE,
     q61_q121_ConQuest_adapter_and_parser_implemented = TRUE,
     same_process_sentinel_controller_implemented = TRUE,

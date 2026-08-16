@@ -565,7 +565,7 @@ test_that("G4C P2 has no unguarded random, fit, write, or engine path", {
   ))
 })
 
-test_that("G4C P1 and P2 records keep the integrated harness checklist open", {
+test_that("G4C P1 and P2 records remain historical after P4 closure", {
   ctx <- load_conquest_adversarial_simulation_calibration_harness()
   p1_record <- paste(readLines(file.path(
     ctx$validation,
@@ -599,7 +599,7 @@ test_that("G4C P1 and P2 records keep the integrated harness checklist open", {
   )
   expect_match(p2_record, "Byte equality is false", fixed = TRUE)
   expect_match(
-    roadmap, "[ ] Freeze the G4C tranche-A calibration harness",
+    roadmap, "[x] Freeze the G4C tranche-A calibration harness",
     fixed = TRUE
   )
   expect_match(
@@ -615,7 +615,7 @@ test_that("G4C P1 and P2 records keep the integrated harness checklist open", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] G4C-P4: implement G4N application",
+    roadmap, "[x] G4C-P4: implement G4N application",
     fixed = TRUE
   )
 })
