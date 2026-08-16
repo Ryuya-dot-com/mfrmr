@@ -450,7 +450,7 @@ test_that("G4H record stays immutable while the roadmap advances through G4R", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze the G4N diagnostic-numeric-eligibility addendum",
+    roadmap, "[x] Freeze the G4N diagnostic-numeric-eligibility addendum",
     fixed = TRUE
   )
   expect_match(

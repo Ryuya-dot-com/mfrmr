@@ -73,7 +73,9 @@ mfrmr_cq_amcr_readiness_audit <- function(output_dir) {
     required <- c(
       "Model", "Converged", "FitReadiness", "InferenceReady",
       "InputState", "EstimabilityState", "CategoryState", "BoundaryState",
-      "NumericalState", "ReadinessReasonCodes", "ConvergenceStatus"
+      "NumericalState", "ReadinessReasonCodes", "ICQuadraturePoints",
+      "MMLEngineRequested", "MMLEngineUsed", "ConvergenceCode",
+      "ConvergenceStatus", "ConvergenceSeverity", "ReviewableWarning"
     )
     summary_path <- file.path(root, summary_registry$RelativePath[index])
     header <- utils::read.csv(
@@ -87,8 +89,11 @@ mfrmr_cq_amcr_readiness_audit <- function(output_dir) {
     column_class <- rep("NULL", ncol(header))
     names(column_class) <- names(header)
     column_class[required] <- ifelse(
-      required %in% c("Converged", "InferenceReady"),
-      "logical", "character"
+      required %in% c("Converged", "InferenceReady", "ReviewableWarning"),
+      "logical", ifelse(
+        required %in% c("ICQuadraturePoints", "ConvergenceCode"),
+        "integer", "character"
+      )
     )
     summary <- utils::read.csv(
       summary_path, stringsAsFactors = FALSE, check.names = FALSE,
@@ -102,6 +107,7 @@ mfrmr_cq_amcr_readiness_audit <- function(output_dir) {
       AttemptOrder = order,
       DatasetId = journal$DatasetId,
       Family = journal$Family,
+      Model = as.character(summary$Model[1L]),
       RepresentationId = journal$RepresentationId,
       TerminalCode = journal$TerminalCode,
       ParseableResult = journal$ParseableResult,
@@ -118,6 +124,12 @@ mfrmr_cq_amcr_readiness_audit <- function(output_dir) {
       BoundaryState = as.character(summary$BoundaryState[1L]),
       NumericalState = as.character(summary$NumericalState[1L]),
       ReadinessReasonCodes = as.character(summary$ReadinessReasonCodes[1L]),
+      ICQuadraturePoints = as.integer(summary$ICQuadraturePoints[1L]),
+      MMLEngineRequested = as.character(summary$MMLEngineRequested[1L]),
+      MMLEngineUsed = as.character(summary$MMLEngineUsed[1L]),
+      ConvergenceCode = as.integer(summary$ConvergenceCode[1L]),
+      ConvergenceSeverity = as.character(summary$ConvergenceSeverity[1L]),
+      ReviewableWarning = as.logical(summary$ReviewableWarning[1L]),
       NumericEstimateFieldMaterialized = FALSE,
       CrossEngineDifferenceComputed = FALSE,
       stringsAsFactors = FALSE
@@ -140,7 +152,13 @@ mfrmr_cq_amcr_readiness_audit <- function(output_dir) {
             "optimizer_nonconvergence_or_readiness_hold") &&
       all(out$ParseableResult) && all(out$ModelIdentityMatch) &&
       all(out$ExpectedFreeDimension == out$ObservedFreeDimension) &&
-      all(out$Converged) && all(out$ConvergenceStatus == "converged") &&
+      all(out$Model == out$Family) && all(out$ICQuadraturePoints == 61L) &&
+      all(out$MMLEngineRequested == "direct") &&
+      all(out$MMLEngineUsed == "direct") &&
+      all(out$Converged) && all(out$ConvergenceCode == 0L) &&
+      all(out$ConvergenceStatus == "converged") &&
+      all(out$ConvergenceSeverity == "pass") &&
+      !any(out$ReviewableWarning) &&
       all(out$FitReadiness == "review") && !any(out$InferenceReady) &&
       all(out$EstimabilityState == "not_evaluated") &&
       all(out$CategoryState == "adequate") &&

@@ -45,6 +45,13 @@ test_that("G4R reconstructs categorical readiness without numeric agreement", {
     readiness$ExpectedFreeDimension == readiness$ObservedFreeDimension
   ))
   expect_true(all(readiness$Converged))
+  expect_true(all(readiness$Model == readiness$Family))
+  expect_true(all(readiness$ICQuadraturePoints == 61L))
+  expect_true(all(readiness$MMLEngineRequested == "direct"))
+  expect_true(all(readiness$MMLEngineUsed == "direct"))
+  expect_true(all(readiness$ConvergenceCode == 0L))
+  expect_true(all(readiness$ConvergenceSeverity == "pass"))
+  expect_false(any(readiness$ReviewableWarning))
   expect_false(any(readiness$InferenceReady))
   expect_true(all(readiness$EstimabilityState == "not_evaluated"))
   expect_false(any(readiness$NumericEstimateFieldMaterialized))
@@ -172,7 +179,11 @@ test_that("G4R record and internal roadmap retain the calibration hold", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Freeze the G4N diagnostic-numeric-eligibility addendum",
+    roadmap, "[x] Freeze the G4N diagnostic-numeric-eligibility addendum",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap, "[ ] Complete the G4A tranche-A authorization review",
     fixed = TRUE
   )
 })

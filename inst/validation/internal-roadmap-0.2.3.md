@@ -880,12 +880,23 @@ wording.
   weakened
   (`conquest-adversarial-simulation-post-mechanics-calibration-review-record-0.2.3.md`,
   2026-08-16).
-- [ ] Freeze the G4N diagnostic-numeric-eligibility addendum before generating
-  calibration responses. Keep `InferenceReady` and all reason codes unchanged,
-  define a separate finite/converged/parseable/dimension-matched diagnostic
-  lane, map its metric uses explicitly, forbid confirmation/public promotion,
-  and preserve seeds, DGPs, workloads, attempt order, and paired denominators.
-  The addendum alone must not authorize execution.
+- [x] Freeze the G4N diagnostic-numeric-eligibility addendum before generating
+  calibration responses. The narrow mfrmr rank-hold route requires converged,
+  finite/parseable, dimension- and identity-matched results with exact known
+  readiness reasons; `InferenceReady`, terminal codes, and failure rows remain
+  unchanged. All 16 mfrmr and 14 ConQuest G4X outcomes are categorically
+  reachable without reading numerical values. Seven conditional numerical
+  summaries now have explicit engine/pair/q/representation gates and
+  unconditional companions, while confirmation and public promotion remain
+  forbidden
+  (`conquest-adversarial-simulation-diagnostic-numeric-eligibility-addendum-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Complete the G4A tranche-A authorization review. Bind G4N to the frozen
+  calibration identity; recheck unchanged seeds, DGPs, workloads, attempt
+  order, paired denominators, caps, failure retention, absent output, fresh
+  same-process sentinel, and run-once/no-retry behavior. G4A must explicitly
+  assess expected information gain versus runtime and interpretive cost before
+  it may authorize response generation or execution.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.
