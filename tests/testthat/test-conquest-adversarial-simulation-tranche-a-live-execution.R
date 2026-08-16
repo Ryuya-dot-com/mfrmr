@@ -25,7 +25,11 @@ load_conquest_adversarial_simulation_tranche_a_live_execution <- function() {
 
 test_that("G4M dry review has no execution side effect", {
   ctx <- load_conquest_adversarial_simulation_tranche_a_live_execution()
-  skip_if(dir.exists(ctx$calibration_output), "G4M retained output exists.")
+  skip_if(
+    dir.exists(ctx$calibration_output) ||
+      dir.exists(paste0(ctx$calibration_output, ".incomplete")),
+    "G4M final or consumed incomplete output exists."
+  )
   before <- file.exists(ctx$calibration_output)
   review <- ctx$env$mfrmr_cq_ag4m_dry_run_review(
     ctx$g4x_output, ctx$calibration_output, ctx$smoke_output,
@@ -73,6 +77,19 @@ test_that("G4M scalar reductions retain detail and forbid promotion", {
     registry$Measure[registry$SummaryId == "ASP-PARAMETER-RMSE"],
     "full_coordinate_root_mean_square_error"
   )
+
+  failure <- ctx$env$mfrmr_cq_ag4m_sentinel_failure_summary(
+    simpleError("synthetic sentinel failure")
+  )
+  expect_identical(nrow(failure), 1L)
+  expect_identical(
+    failure$Status,
+    "ASP_G4M_consumed_authority_fresh_sentinel_failed_no_generation"
+  )
+  expect_true(failure$GlobalAbortTriggered)
+  expect_identical(failure$FitAttempts, 0L)
+  expect_false(failure$NumericAgreementInspected)
+  expect_false(failure$PublicClaimAuthorized)
 })
 
 test_that("G4M expands ConQuest free coordinates onto frozen full scales", {
@@ -189,6 +206,14 @@ test_that("G4M source has assignments only at top level", {
     is.call(value) && identical(value[[1L]], as.name("<-"))
   }, logical(1L))
   source <- paste(readLines(ctx$path, warn = FALSE), collapse = "\n")
+  execute_body <- paste(deparse(body(ctx$env$mfrmr_cq_ag4m_execute)),
+                        collapse = "\n")
+  authority_snapshot_position <- regexpr(
+    "mfrmr_cq_ag4m_authority_snapshot", execute_body, fixed = TRUE
+  )[[1L]]
+  sentinel_position <- regexpr(
+    "mfrmr_cq_ach_fresh_sentinel", execute_body, fixed = TRUE
+  )[[1L]]
 
   expect_true(all(top_level_assignment))
   expect_false(grepl("unlink\\s*\\(", source, perl = TRUE))
@@ -198,6 +223,11 @@ test_that("G4M source has assignments only at top level", {
     "(ConfirmationUsePermitted|PublicClaimPermitted)\\s*=\\s*TRUE",
     source, perl = TRUE
   ))
+  expect_gt(authority_snapshot_position, 0L)
+  expect_gt(sentinel_position, authority_snapshot_position)
+  expect_match(
+    execute_body, "mfrmr_cq_ag4m_sentinel_failure_summary", fixed = TRUE
+  )
 })
 
 test_that("G4M preflight advances only the internal checklist", {
@@ -223,6 +253,34 @@ test_that("G4M preflight advances only the internal checklist", {
     fixed = TRUE
   )
   expect_match(
-    roadmap, "[ ] Open one G4M same-process execution session", fixed = TRUE
+    roadmap, "[x] Open one G4M same-process execution session", fixed = TRUE
+  )
+})
+
+test_that("G4M consumed sentinel failure remains zero-generation evidence", {
+  ctx <- load_conquest_adversarial_simulation_tranche_a_live_execution()
+  record <- paste(readLines(file.path(
+    ctx$root, "inst", "validation",
+    paste0(
+      "conquest-adversarial-simulation-tranche-a-live-execution-",
+      "attempt-record-0.2.3.md"
+    )
+  ), warn = FALSE), collapse = "\n")
+  roadmap <- paste(readLines(file.path(
+    ctx$root, "inst", "validation", "internal-roadmap-0.2.3.md"
+  ), warn = FALSE), collapse = "\n")
+
+  expect_match(
+    record,
+    "ASP_G4M_consumed_authority_fresh_sentinel_failed_no_generation",
+    fixed = TRUE
+  )
+  expect_match(record, "`AuthorizationConsumed=TRUE`", fixed = TRUE)
+  expect_match(record, "`TrancheAResponsesGenerated=FALSE`", fixed = TRUE)
+  expect_match(record, "`FitAttempts=0`", fixed = TRUE)
+  expect_match(record, "`NumericAgreementInspected=FALSE`", fixed = TRUE)
+  expect_match(record, "`RerunAuthorized=FALSE`", fixed = TRUE)
+  expect_match(
+    roadmap, "[ ] Issue no successor G4M attempt", fixed = TRUE
   )
 })

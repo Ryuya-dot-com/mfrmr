@@ -791,6 +791,37 @@ mfrmr_cq_ag4m_execution_summary <- function(
   )
 }
 
+mfrmr_cq_ag4m_sentinel_failure_summary <- function(error) {
+  message <- if (inherits(error, "condition")) {
+    conditionMessage(error)
+  } else {
+    as.character(error)[1L]
+  }
+  data.frame(
+    Specification = mfrmr_cq_ag4m_specification,
+    ContractVersion = mfrmr_cq_ag4m_contract,
+    Status = "ASP_G4M_consumed_authority_fresh_sentinel_failed_no_generation",
+    RetainedDatasets = 0L,
+    RetainedOutcomeRows = 0L,
+    RetainedAttemptRows = 0L,
+    FitAttempts = 0L,
+    Q61FitAttempts = 0L,
+    Q121FitAttempts = 0L,
+    ConQuestFitAttempts = 0L,
+    MfrmrFitAttempts = 0L,
+    GlobalAbortTriggered = TRUE,
+    GlobalAbortReason = paste0("fresh_runtime_sentinel_failure:", message),
+    RetainedReviewComplete = FALSE,
+    NumericAgreementInspected = FALSE,
+    ThresholdSelected = FALSE,
+    ConfirmationUseAuthorized = FALSE,
+    EvidencePromotionAuthorized = FALSE,
+    PublicClaimAuthorized = FALSE,
+    ScientificEquivalenceInferred = FALSE,
+    stringsAsFactors = FALSE
+  )
+}
+
 mfrmr_cq_ag4m_write_csv <- function(value, path) {
   mfrmr_cq_ameh_write_csv(value, path)
 }
@@ -1135,10 +1166,23 @@ mfrmr_cq_ag4m_execute <- function(
     dir.create(staging, recursive = TRUE, showWarnings = FALSE),
     "G4M could not create its exact incomplete staging root."
   )
+  mfrmr_cq_ag4m_write_csv(
+    mfrmr_cq_ag4m_authority_snapshot(authorization),
+    file.path(staging, "authority_snapshot.csv")
+  )
   writeLines("quit;", file.path(staging, "runtime_sentinel.cqc"), useBytes = TRUE)
-  sentinel <- mfrmr_cq_ach_fresh_sentinel(
-    staging, target, mfrmr_cq_acf_conquest_path, run_date,
-    timeout = 30L, authorize = TRUE
+  sentinel <- tryCatch(
+    mfrmr_cq_ach_fresh_sentinel(
+      staging, target, mfrmr_cq_acf_conquest_path, run_date,
+      timeout = 30L, authorize = TRUE
+    ),
+    error = function(error) {
+      mfrmr_cq_ag4m_write_csv(
+        mfrmr_cq_ag4m_sentinel_failure_summary(error),
+        file.path(staging, "execution_summary.csv")
+      )
+      stop(error)
+    }
   )
   generated <- mfrmr_cq_ag4m_generation(
     authorization, sentinel, target

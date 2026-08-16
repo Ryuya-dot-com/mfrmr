@@ -974,11 +974,27 @@ wording.
   issued no authority, generated no response, and attempted no fit
   (`conquest-adversarial-simulation-tranche-a-live-execution-preflight-record-0.2.3.md`,
   2026-08-16).
-- [ ] Open one G4M same-process execution session. Recheck all G4L gates, issue
-  and immediately consume the exact mutable authority, obtain the fresh
-  data-free ConQuest sentinel, then generate and execute only the frozen
-  90-dataset/230-outcome/190-attempt tranche. No preparation or execution may
-  occur in ordinary tests or follow merely from this checklist state.
+- [x] Open one G4M same-process execution session. The approved 2026-08-16
+  attempt rechecked G4L, issued and consumed the exact mutable authority, then
+  failed closed at the mandatory data-free ConQuest sentinel. The x86-64
+  process under Rosetta terminated with `EXC_BAD_ACCESS`/`SIGSEGV 11` in the
+  recurring `CRegistry::WriteInt` startup path. The final target remains absent;
+  the `.incomplete` root retains only the six-byte `quit;` command and empty
+  console. Responses generated, fit attempts, and numeric comparisons are all
+  zero. This completed checkbox records that the authorized session was
+  consumed, not that the calibration ran or the runtime passed
+  (`conquest-adversarial-simulation-tranche-a-live-execution-attempt-record-0.2.3.md`,
+  2026-08-16).
+- [x] Harden prospective sentinel-failure retention after the consumed G4M
+  attempt. Write the consumed authority snapshot before the external launch
+  and, on a sentinel error, retain a zero-dataset/zero-fit execution summary
+  without converting the failure into rerun authority. Do not retrofit those
+  files into the already consumed incomplete bundle.
+- [ ] Issue no successor G4M attempt until the recurring data-free ConQuest
+  registry-write startup failure is isolated outside the frozen calibration
+  target, a new absent target and prospective authority are frozen, and the
+  user explicitly approves a new run. Prior successful output and expiry
+  pressure do not authorize retry.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

@@ -120,3 +120,11 @@ or digest equality is not used as a scientific acceptance criterion.
 The next step is one clean-tree same-process execution. After output becomes
 visible, the run is consumed even if an ordinary fit fails or the retained
 review holds; no repair or result-driven rerun is implied.
+
+## Subsequent outcome
+
+The approved attempt was opened later on 2026-08-16 and failed closed at the
+fresh data-free ConQuest sentinel before generation or fitting. See
+`conquest-adversarial-simulation-tranche-a-live-execution-attempt-record-0.2.3.md`.
+This preflight record remains the prospective state at commit `6e81463`; it is
+not evidence that the later sentinel passed.

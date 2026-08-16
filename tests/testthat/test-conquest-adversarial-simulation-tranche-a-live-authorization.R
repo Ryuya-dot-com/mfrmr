@@ -65,19 +65,33 @@ g4l_review <- function(
 test_that("G4L freezes 32 nonwaivable gates without issuing authority", {
   ctx <- load_conquest_adversarial_simulation_tranche_a_live_authorization()
   review <- g4l_review(ctx)
+  target_opened <- dir.exists(ctx$calibration_output) ||
+    dir.exists(paste0(ctx$calibration_output, ".incomplete"))
 
-  expect_identical(
-    review$status,
-    "ASP_G4L_run_once_live_authorization_ready_for_same_process_issue"
-  )
   expect_identical(nrow(review$gates), 32L)
   expect_identical(review$gates$GateOrder, 1:32)
-  expect_true(all(review$gates$Passed))
   expect_false(any(review$gates$CanBeWaivedForExpiryPressure))
   expect_false(any(review$gates$FailureMayTuneSeedDGPMetricOrThreshold))
   expect_false(any(review$gates$FileHashMaySatisfyGate))
-  expect_true(review$all_thirty_two_fatal_gates_passed)
-  expect_true(review$authorization_issue_ready)
+  if (target_opened) {
+    expect_identical(review$status, "ASP_G4L_live_authorization_issue_blocked")
+    expect_false(review$all_thirty_two_fatal_gates_passed)
+    expect_false(review$authorization_issue_ready)
+    boundary_gate <- if (dir.exists(ctx$calibration_output)) {
+      "CALIBRATION_OUTPUT_TARGET_ABSENT"
+    } else {
+      "INCOMPLETE_OUTPUT_SIBLING_ABSENT"
+    }
+    expect_false(review$gates$Passed[review$gates$GateId == boundary_gate])
+  } else {
+    expect_identical(
+      review$status,
+      "ASP_G4L_run_once_live_authorization_ready_for_same_process_issue"
+    )
+    expect_true(all(review$gates$Passed))
+    expect_true(review$all_thirty_two_fatal_gates_passed)
+    expect_true(review$authorization_issue_ready)
+  }
   expect_false(review$positive_authorization_issued)
   expect_false(review$authorization_consumed)
   expect_false(review$fresh_runtime_sentinel_observed)
