@@ -13,6 +13,13 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   limited to ordinary workflow integrity, the bounded-GPCM user contract, the
   smallest decision-relevant external confirmation, and candidate checks.
 
+* Scoped the theorem-oriented conditional-JML GPCM boundary chain to JML
+  fits. Ordinary MML fits retain their marginal slope, observed-support, and
+  readiness audits without carrying eleven mechanically inapplicable JML
+  records. Five-category extreme-pattern coverage now also fixes the public
+  distinction between a finite prior-regularized EAP and a fit that supports
+  formal inference: a blocked source fit remains non-interpretable.
+
 * Made `print(fit)` and `summary(fit)` decision-first: both now lead with a
   plain-language interpretation status, whether formal inference is supported,
   the readiness evidence that prevents interpretation, and the highest-priority

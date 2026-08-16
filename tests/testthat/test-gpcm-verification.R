@@ -480,7 +480,26 @@ test_that("five-category all-maximum persons and raters retain distinct contract
     mml_person$ReasonCodes,
     "mml_extreme_response_prior_regularized"
   )
+  research_only_jml_audits <- c(
+    "gpcm_fixed_objective_classification",
+    "gpcm_asymptotically_affine_transport",
+    "gpcm_boundary_compactification",
+    "gpcm_rate_hierarchy",
+    "gpcm_lexicographic_limit",
+    "gpcm_parameter_path_reachability",
+    "gpcm_optimizer_sequence_diagnostic",
+    "gpcm_parameter_sequence_flag",
+    "gpcm_global_existence",
+    "gpcm_exponential_balance",
+    "gpcm_terminal_gradient_stability"
+  )
+  expect_length(
+    intersect(names(mml$config$boundary_audit), research_only_jml_audits),
+    0L
+  )
   mml_summary <- summary(mml, include_person = TRUE)
   expect_identical(mml_summary$facet_support_boundaries$Level, "R1")
   expect_equal(nrow(mml_summary$facet_recession_review), 0L)
+  expect_identical(mml_summary$decision$FitReadiness, "blocked")
+  expect_identical(mml_summary$decision$FormalInference, "No")
 })

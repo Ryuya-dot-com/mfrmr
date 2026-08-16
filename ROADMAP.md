@@ -63,6 +63,11 @@ exists. Its release-critical path is limited to:
 4. a clean source package and candidate check whose user-facing caveats match
    the evidence.
 
+The theorem-oriented conditional-JML GPCM boundary chain is retained only on
+the JML GPCM route. MML uses its marginal boundary and common readiness
+contracts; a finite prior-regularized EAP for an extreme response pattern does
+not override a blocked source-fit decision.
+
 Multivariate G-theory, broad simulation, unrestricted GPCM, new model
 families, and exact solver imitation remain research or later-release work.
 FACETS evidence may document a matched historical or locally available lane,

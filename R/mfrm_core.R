@@ -4270,84 +4270,85 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   )
   phase_finish("gpcm_joint_boundary_audit", phase_started, "GPCM joint additive-slope boundary directions")
 
-  boundary_audit$gpcm_fixed_objective_classification <-
-    mfrmr_classify_jml_gpcm_fixed_objective_boundary(
-      config = config,
-      slope_audit = boundary_audit$gpcm_slope_boundary,
-      joint_audit = boundary_audit$gpcm_joint_boundary
-    )
-  boundary_audit$gpcm_asymptotically_affine_transport <-
-    audit_mfrm_jml_gpcm_asymptotically_affine_transport(
-      config = config,
-      slope_audit = boundary_audit$gpcm_slope_boundary,
-      joint_audit = boundary_audit$gpcm_joint_boundary,
-      boundary_classification =
-        boundary_audit$gpcm_fixed_objective_classification
-    )
-  boundary_audit$gpcm_boundary_compactification <-
-    audit_mfrm_jml_gpcm_boundary_compactification(
-      config = config,
-      sizes = sizes,
-      boundary_classification =
-        boundary_audit$gpcm_fixed_objective_classification,
-      affine_transport =
-        boundary_audit$gpcm_asymptotically_affine_transport
-    )
-  boundary_audit$gpcm_rate_hierarchy <-
-    audit_mfrm_jml_gpcm_rate_hierarchy_scope(
-      config = config,
-      sizes = sizes,
-      compactification =
-        boundary_audit$gpcm_boundary_compactification
-    )
-  boundary_audit$gpcm_lexicographic_limit <-
-    audit_mfrm_jml_gpcm_lexicographic_limit_scope(
-      config = config,
-      sizes = sizes,
-      rate_hierarchy = boundary_audit$gpcm_rate_hierarchy
-    )
-  boundary_audit$gpcm_parameter_path_reachability <-
-    audit_mfrm_jml_gpcm_parameter_path_scope(
-      prep = prep,
-      idx = idx,
-      config = config,
-      sizes = sizes,
-      lexicographic_limit = boundary_audit$gpcm_lexicographic_limit
-    )
-  boundary_audit$gpcm_optimizer_sequence_diagnostic <-
-    audit_mfrm_jml_gpcm_optimizer_sequence_scope(
-      config = config,
-      sizes = sizes,
-      stages = opt$optimizer_polish$Stages %||% data.frame(),
-      parameter_sequence = optimizer_stage_parameters,
-      parameter_path = boundary_audit$gpcm_parameter_path_reachability
-    )
-  boundary_audit$gpcm_parameter_sequence_flag <-
-    audit_mfrm_jml_gpcm_parameter_sequence_flag_scope(
-      config = config,
-      sizes = sizes,
-      n_observations = length(idx$score_k),
-      n_categories = config$n_cat,
-      compactification = boundary_audit$gpcm_boundary_compactification,
-      sequence_diagnostic =
-        boundary_audit$gpcm_optimizer_sequence_diagnostic
-    )
-  boundary_audit$gpcm_global_existence <-
-    audit_mfrm_jml_gpcm_global_existence(
-      config = config,
-      person_boundary = boundary_audit,
-      joint_additive = boundary_audit$joint_additive,
-      parameter_sequence_flag =
-        boundary_audit$gpcm_parameter_sequence_flag,
-      slope_boundary = boundary_audit$gpcm_slope_boundary,
-      joint_slope_boundary = boundary_audit$gpcm_joint_boundary,
-      retained_log_likelihood = -as.numeric(opt$value)
-    )
-  canonical_zero_utility_center_certified <- if (
-    identical(config$model, "GPCM") && identical(config$method, "JML") &&
-      as.integer(config$gpcm_spec$n_params %||% 0L) > 0L
-  ) {
-    tryCatch({
+  # These theorem-oriented diagnostics describe unpenalized conditional JML
+  # geometry. They do not contribute to the public MML readiness decision, so
+  # keep them out of ordinary marginal fits instead of attaching a long chain
+  # of mechanically "not applicable" records.
+  if (identical(method, "JML") && identical(model, "GPCM")) {
+    boundary_audit$gpcm_fixed_objective_classification <-
+      mfrmr_classify_jml_gpcm_fixed_objective_boundary(
+        config = config,
+        slope_audit = boundary_audit$gpcm_slope_boundary,
+        joint_audit = boundary_audit$gpcm_joint_boundary
+      )
+    boundary_audit$gpcm_asymptotically_affine_transport <-
+      audit_mfrm_jml_gpcm_asymptotically_affine_transport(
+        config = config,
+        slope_audit = boundary_audit$gpcm_slope_boundary,
+        joint_audit = boundary_audit$gpcm_joint_boundary,
+        boundary_classification =
+          boundary_audit$gpcm_fixed_objective_classification
+      )
+    boundary_audit$gpcm_boundary_compactification <-
+      audit_mfrm_jml_gpcm_boundary_compactification(
+        config = config,
+        sizes = sizes,
+        boundary_classification =
+          boundary_audit$gpcm_fixed_objective_classification,
+        affine_transport =
+          boundary_audit$gpcm_asymptotically_affine_transport
+      )
+    boundary_audit$gpcm_rate_hierarchy <-
+      audit_mfrm_jml_gpcm_rate_hierarchy_scope(
+        config = config,
+        sizes = sizes,
+        compactification =
+          boundary_audit$gpcm_boundary_compactification
+      )
+    boundary_audit$gpcm_lexicographic_limit <-
+      audit_mfrm_jml_gpcm_lexicographic_limit_scope(
+        config = config,
+        sizes = sizes,
+        rate_hierarchy = boundary_audit$gpcm_rate_hierarchy
+      )
+    boundary_audit$gpcm_parameter_path_reachability <-
+      audit_mfrm_jml_gpcm_parameter_path_scope(
+        prep = prep,
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        lexicographic_limit = boundary_audit$gpcm_lexicographic_limit
+      )
+    boundary_audit$gpcm_optimizer_sequence_diagnostic <-
+      audit_mfrm_jml_gpcm_optimizer_sequence_scope(
+        config = config,
+        sizes = sizes,
+        stages = opt$optimizer_polish$Stages %||% data.frame(),
+        parameter_sequence = optimizer_stage_parameters,
+        parameter_path = boundary_audit$gpcm_parameter_path_reachability
+      )
+    boundary_audit$gpcm_parameter_sequence_flag <-
+      audit_mfrm_jml_gpcm_parameter_sequence_flag_scope(
+        config = config,
+        sizes = sizes,
+        n_observations = length(idx$score_k),
+        n_categories = config$n_cat,
+        compactification = boundary_audit$gpcm_boundary_compactification,
+        sequence_diagnostic =
+          boundary_audit$gpcm_optimizer_sequence_diagnostic
+      )
+    boundary_audit$gpcm_global_existence <-
+      audit_mfrm_jml_gpcm_global_existence(
+        config = config,
+        person_boundary = boundary_audit,
+        joint_additive = boundary_audit$joint_additive,
+        parameter_sequence_flag =
+          boundary_audit$gpcm_parameter_sequence_flag,
+        slope_boundary = boundary_audit$gpcm_slope_boundary,
+        joint_slope_boundary = boundary_audit$gpcm_joint_boundary,
+        retained_log_likelihood = -as.numeric(opt$value)
+      )
+    canonical_zero_utility_center_certified <- tryCatch({
       zero_kernel <- mfrmr_gpcm_response_kernel_design(
         prep = prep,
         idx = idx,
@@ -4359,29 +4360,27 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
       length(offset) == zero_kernel$transition_rows &&
         all(is.finite(offset)) && all(offset == 0)
     }, error = function(e) FALSE)
-  } else {
-    FALSE
+    boundary_audit$gpcm_exponential_balance <-
+      audit_mfrm_jml_gpcm_exponential_balance_scope(
+        config = config,
+        sizes = sizes,
+        parameter_sequence_flag =
+          boundary_audit$gpcm_parameter_sequence_flag,
+        global_existence = boundary_audit$gpcm_global_existence,
+        canonical_zero_utility_center_certified =
+          canonical_zero_utility_center_certified
+      )
+    boundary_audit$gpcm_terminal_gradient_stability <-
+      audit_mfrm_jml_gpcm_terminal_gradient(
+        idx = idx,
+        config = config,
+        sizes = sizes,
+        par = opt$par,
+        opt = opt,
+        boundary_classification =
+          boundary_audit$gpcm_fixed_objective_classification
+      )
   }
-  boundary_audit$gpcm_exponential_balance <-
-    audit_mfrm_jml_gpcm_exponential_balance_scope(
-      config = config,
-      sizes = sizes,
-      parameter_sequence_flag =
-        boundary_audit$gpcm_parameter_sequence_flag,
-      global_existence = boundary_audit$gpcm_global_existence,
-      canonical_zero_utility_center_certified =
-        canonical_zero_utility_center_certified
-    )
-  boundary_audit$gpcm_terminal_gradient_stability <-
-    audit_mfrm_jml_gpcm_terminal_gradient(
-      idx = idx,
-      config = config,
-      sizes = sizes,
-      par = opt$par,
-      opt = opt,
-      boundary_classification =
-        boundary_audit$gpcm_fixed_objective_classification
-    )
 
   phase_started <- phase_clock()
   person_tbl <- apply_mfrm_person_boundary(person_tbl, boundary_audit)
