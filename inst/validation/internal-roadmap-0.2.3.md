@@ -909,6 +909,23 @@ wording.
   summaries, and a retained execution reviewer. Keep dry-run as the default;
   live execution must require a later target-bound authorization and fresh
   same-process sentinel.
+  - [x] G4C-P1: freeze the exact plan, schema, and empty ledgers. The plan now
+    materializes all 230 outcome rows and 190 attempt slots, including 90 exact
+    cross-engine pairs, 40 q-sensitivity pairs, 10 representation pairs, and
+    40 retained expected-rejection rows before any response exists. Result-
+    driven ordering, peer suppression, retry, generation, and execution remain
+    false; only the plan-materializer capability advances
+    (`conquest-adversarial-simulation-calibration-harness-plan-record-0.2.3.md`,
+    2026-08-16).
+  - [ ] G4C-P2: implement deterministic generation and bridges without
+    generating tranche-A responses. Bind each sealed seed to the existing DGP,
+    preserve caller RNG state, produce typed primary/explicit representations,
+    and require all four semantic bridge checks for each paired dataset.
+  - [ ] G4C-P3: implement q61/q121 engine adapters, artifact registration,
+    timeout/global-abort control, and independent peer continuation.
+  - [ ] G4C-P4: implement G4N application, conditional/unconditional metric
+    summaries, complete finalization, authorization consumption, and retained
+    execution review; then freeze the integrated dry-run harness.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.
