@@ -136,7 +136,8 @@ evidence for changing the current optimizer threshold.
 ## Evidence integrity
 
 The authoritative bundle is outside the package source tree at
-`mfrmr/jml-phase-profile-20260805-v5`. It was written through an incomplete
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-phase-profile-20260805-v5`.
+It was written through an incomplete
 staging directory and promoted only after route completion, timing, paired
 data, false-ready, artifact, and all 12 structural-classification equivalence
 checks passed.

@@ -15,7 +15,7 @@ confirmation evidence and freezes no numerical release criterion.
 | Key packages | lpSolve 5.6.23; digest 0.6.39; psych 2.6.5 |
 | Profile | `smoke`, one deterministic seed per mandatory smoke corner |
 | Manifest hash | `1157044b089f9b2c261f9feceb6bf25c16aa71435307afed635aef30c05c4994` |
-| Output directory | workspace `mfrmr/gpcm-stress-covering-smoke-20260805-v1` |
+| Output directory | workspace `mfrmr/archive/artifacts/validation-bundles-0.2.3/gpcm-stress-covering-smoke-20260805-v1` |
 
 Retained aggregate artifacts:
 

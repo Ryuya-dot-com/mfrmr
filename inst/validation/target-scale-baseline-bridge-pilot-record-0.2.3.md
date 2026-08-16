@@ -99,7 +99,8 @@ to infer an overlap trend. The v2 bridge rows all share truth SHA-256
 ## Evidence integrity
 
 The authoritative bundle is outside the package source tree at
-`mfrmr/target-baseline-bridge-20260805-v2`. Its completion marker validates in
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/target-baseline-bridge-20260805-v2`.
+Its completion marker validates in
 a fresh session and binds 11 artifacts by relative path, byte size, and hash.
 
 | Field | SHA-256 |

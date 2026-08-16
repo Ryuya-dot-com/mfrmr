@@ -23,7 +23,8 @@ balanced-sparse, and random-sparse RSM/GPCM routes and runs three fresh-process
 repetitions per route. Every child has an independent finite parent deadline.
 
 The authoritative final-source bundle is
-`mfrmr/jml-recession-native-policy-20260807-v4`. It is bound to source tarball
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-recession-native-policy-20260807-v4`.
+It is bound to source tarball
 SHA-256 `7ceb2848958f2f70084e987342eb3e58e6a38b2b41964ceb0d385ea276d92624`.
 All 18 fits complete safely, no parent deadline fires, and all six route cells
 are stable. The 51 native target calls all receive a ten-second input and use
@@ -33,7 +34,8 @@ verifier recomputes every recorded artifact hash and the completion-marker
 inventory.
 
 The first attempted comparison bundle is retained as
-`jml-recession-native-policy-20260807-v1-rejected` without a completion marker.
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-recession-native-policy-20260807-v1-rejected`
+without a completion marker.
 It incorrectly compared Draft.61 wrapper transport inputs of two seconds with
 the candidate's effective ten-second policy. The corrected comparison treats
 the intercepted input as transport metadata and checks the frozen candidate

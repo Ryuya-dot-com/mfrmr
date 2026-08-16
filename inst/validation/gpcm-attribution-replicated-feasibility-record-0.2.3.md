@@ -19,7 +19,7 @@ or authorization to release.
 | Other key packages | `digest` 0.6.39; `psych` 2.6.5 |
 | Tier and controls | feasibility; 10 arms; 2 replicates; 4 routes; `maxit = 120`; MML `quad_points = 7`; overall residual PCA enabled |
 | Manifest hash | `07989badd83624129d3182c3a1bd118def23ad7159265047ffea6cedc475213c` |
-| Output directory | workspace `mfrmr/gpcm-attribution-replicated-feasibility-20260805-v4` |
+| Output directory | workspace `mfrmr/archive/artifacts/validation-bundles-0.2.3/gpcm-attribution-replicated-feasibility-20260805-v4` |
 
 Retained aggregate artifacts:
 

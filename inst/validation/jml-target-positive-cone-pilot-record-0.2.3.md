@@ -183,7 +183,7 @@ replay contract is resolved or explicitly bounded.
 ## Evidence identity
 
 The authoritative external bundle is
-`mfrmr/jml-target-positive-cones-20260806-v1`.
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-target-positive-cones-20260806-v1`.
 
 | Artifact | SHA-256 or identity |
 | --- | --- |

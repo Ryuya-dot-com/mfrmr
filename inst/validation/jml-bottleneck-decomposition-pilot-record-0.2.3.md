@@ -130,7 +130,8 @@ count rule.
 ## Evidence integrity
 
 The authoritative bundle is outside the package source tree at
-`mfrmr/jml-bottleneck-profile-20260805-v3`. Its completion marker validates 12
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-bottleneck-profile-20260805-v3`.
+Its completion marker validates 12
 artifacts in a fresh session. v1 is superseded because its elapsed/evaluation
 field name was too strong and it lacked the wider BFGS controls. v2 contains
 the final controls but is superseded because its Rater axis label incorrectly

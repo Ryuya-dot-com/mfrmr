@@ -126,7 +126,7 @@ claim.
 ## Evidence identity
 
 The authoritative external bundle is
-`mfrmr/jml-recession-fit-policy-20260806-v1`.
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-recession-fit-policy-20260806-v1`.
 
 | Artifact or identity | SHA-256 |
 | --- | --- |

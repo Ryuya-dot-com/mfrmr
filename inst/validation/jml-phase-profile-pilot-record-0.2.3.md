@@ -122,7 +122,8 @@ separate numerical-readiness task.
 ## Evidence integrity
 
 The authoritative bundle is outside the package source tree at
-`mfrmr/jml-phase-profile-20260805-v3`. Its runner refuses an existing output
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-phase-profile-20260805-v3`.
+Its runner refuses an existing output
 directory, writes through an incomplete staging directory, and promotes the
 bundle only after route, timing-contract, paired-data, false-ready, and
 artifact checks pass.

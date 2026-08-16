@@ -90,7 +90,8 @@ bridge and does not supersede v8 as the historical Draft.53 performance record.
 ## Fixed 19-route component result
 
 The final component bundle is
-`mfrmr/jml-recession-component-20260806-v1`. It uses the unchanged seven-cell,
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-recession-component-20260806-v1`.
+It uses the unchanged seven-cell,
 19-route PCM manifest, fixed data and seeds, 60-iteration ceiling, seven MML
 quadrature points, and `1e-9` relative tolerance. Namespace wrappers are
 installed only around the fit call, record nested inclusive/exclusive elapsed

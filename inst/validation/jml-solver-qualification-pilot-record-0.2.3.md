@@ -176,7 +176,7 @@ model-solver cell and no frozen memory envelope.
 ## Evidence identity
 
 The authoritative bundle is
-`mfrmr/jml-solver-qualification-20260806-v1`.
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-solver-qualification-20260806-v1`.
 
 | Artifact | SHA-256 or identity |
 | --- | --- |

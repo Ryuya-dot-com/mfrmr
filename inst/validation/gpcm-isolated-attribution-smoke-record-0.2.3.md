@@ -17,7 +17,7 @@ a frozen numerical criterion.
 | Fit controls | `maxit = 60`; MML `quad_points = 7` |
 | Full smoke-manifest hash | `3c5114b2657866f8874fa4ffd5fb82324b620e5c88e6540ba4d51c9e03e63b86` |
 | Full pilot-manifest hash | `be1cfd7fb96df97ea6b24dbf142faaaadc021e3eb60ed62a3d27e7ccb652d60f` |
-| Output directory | workspace `mfrmr/gpcm-attribution-smoke-20260805-v4` |
+| Output directory | workspace `mfrmr/archive/artifacts/validation-bundles-0.2.3/gpcm-attribution-smoke-20260805-v4` |
 
 Retained aggregate artifacts:
 

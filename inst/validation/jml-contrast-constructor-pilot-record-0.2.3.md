@@ -120,10 +120,10 @@ favorable timing result alone cannot authorize such a change.
 ## Evidence identity
 
 Final constructor bundle:
-`mfrmr/jml-contrast-constructor-20260806-v3`
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-contrast-constructor-20260806-v3`
 
 Final fixed-route component bundle:
-`mfrmr/jml-recession-component-20260806-d55-v1`
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-recession-component-20260806-d55-v1`
 
 | Field | SHA-256 |
 | --- | --- |

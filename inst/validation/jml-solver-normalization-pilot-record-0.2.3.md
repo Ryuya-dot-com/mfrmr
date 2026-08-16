@@ -137,7 +137,7 @@ positive cones, residual-PCA computability, and ADEMP recovery/coverage.
 ## Evidence identity
 
 The authoritative external bundle is
-`mfrmr/jml-solver-normalization-20260806-v1`.
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-solver-normalization-20260806-v1`.
 
 | Artifact | SHA-256 or identity |
 | --- | --- |

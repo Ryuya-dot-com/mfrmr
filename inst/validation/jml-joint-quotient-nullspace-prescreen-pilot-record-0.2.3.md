@@ -171,7 +171,8 @@ optimizer-dispatch grid remains necessary for numerical readiness.
 ## Evidence integrity
 
 The authoritative bundle is outside the package source tree at
-`mfrmr/jml-phase-profile-20260805-v8`. It was promoted from an incomplete
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-phase-profile-20260805-v8`.
+It was promoted from an incomplete
 staging directory only after all 19 route, paired-data, structural-equivalence,
 false-ready, joint-work, quotient, nullspace-rank, and artifact contracts
 passed. Its completion marker independently matches all 13 pre-marker

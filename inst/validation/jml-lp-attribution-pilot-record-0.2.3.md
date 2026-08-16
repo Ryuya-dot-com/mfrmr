@@ -142,7 +142,8 @@ stable enough to report as a rule.
 ## Evidence identity
 
 The authoritative promoted bundle is
-`mfrmr/jml-lp-attribution-20260806-v3`. The earlier v1 bundle is retained as a
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-lp-attribution-20260806-v3`.
+The earlier v1 bundle is retained beside it as a
 PCM-only intermediate. v2 adds cross-model controls but is superseded because
 its execution identity contains solver versions rather than the runtime-content
 hashes added in v3.

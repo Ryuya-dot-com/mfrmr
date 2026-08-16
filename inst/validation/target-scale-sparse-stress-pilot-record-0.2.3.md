@@ -116,7 +116,8 @@ disconnected GPCM cell's much larger optimizer trace is likewise ineligible.
 ## Evidence integrity
 
 The authoritative bundle is outside the package source tree at
-`mfrmr/target-scale-stress-20260805-v3`. The first execution is retained as a
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/target-scale-stress-20260805-v3`.
+The first execution is retained beside it as a
 superseded evidence-integrity diagnostic because its completion marker did not
 embed the hashed artifact inventory. The second embedded and verified the
 inventory during the run, but its validator did not load hash support when

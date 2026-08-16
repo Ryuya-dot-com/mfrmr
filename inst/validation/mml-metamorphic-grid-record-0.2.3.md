@@ -92,7 +92,8 @@ intermediate pre-overwrite-guard bundle.
 ## Evidence identity
 
 The authoritative bundle is stored outside the package source tree at
-`mfrmr/mml-metamorphic-grid-20260805-v3`. Its identities are:
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/mml-metamorphic-grid-20260805-v3`.
+Its identities are:
 
 | Field | SHA-256 |
 | --- | --- |

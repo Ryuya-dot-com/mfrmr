@@ -165,8 +165,10 @@ silently promoted.
 ## Evidence integrity
 
 The authoritative phase bundle is outside the package source tree at
-`mfrmr/jml-phase-profile-20260805-v6`. The authoritative attribution bundle is
-at `mfrmr/jml-joint-cone-attribution-20260805-v1`. Both were promoted from
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-phase-profile-20260805-v6`.
+The authoritative attribution bundle is at
+`mfrmr/archive/artifacts/validation-bundles-0.2.3/jml-joint-cone-attribution-20260805-v1`.
+Both were promoted from
 incomplete staging directories only after their completion invariants passed.
 The attribution marker independently matches all 11 pre-marker artifacts and
 all three route contracts.
