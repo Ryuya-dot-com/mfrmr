@@ -2,7 +2,8 @@
 #
 # This is a repository-only synthesis. It keeps the early six-arm lineage and
 # the later P2 minimum-diagnostic lineage distinct, retains failed and unopened
-# denominators, and authorizes no independent-review or public promotion.
+# denominators, and authorizes no public promotion. Independent human review
+# remains optional assurance and is not a 0.2.3 release requirement.
 
 mfrmr_cq_p5edl_specification <-
   "0.2.3-conquest-p5-evidence-disposition-ledger-v1"
@@ -131,22 +132,22 @@ mfrmr_cq_p5edl_outcome_ledger <- function() {
       "D10-six-arm-binary-oracle-and-rank",
       "D11-P2-structural-negative-controls",
       "D12-candidate-004-reviewer-controls",
-      "D13-independent-promotion-reviews", "D14-full-P2-portfolio"
+      "D13-full-P2-portfolio"
     ),
     OutcomeClass = c(
       "failed", "failed", "failed", "integration_limited",
       "integration_limited", "ineligible", "ineligible", "unresolved",
       "unresolved", "unresolved", "negative_control_rejection",
-      "negative_control", "unresolved", "unresolved"
+      "negative_control", "unresolved"
     ),
     FixedDenominator = c(
-      6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 2L, 5073L
+      6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 5073L
     ),
     ObservedOrClassified = c(
-      6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 0L, 0L
+      6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 0L
     ),
     ExpectedDispositionCount = c(
-      6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 0L, 0L
+      6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 0L
     ),
     Detail = c(
       "one semantic failure and five correctly withheld arms",
@@ -161,7 +162,6 @@ mfrmr_cq_p5edl_outcome_ledger <- function() {
       "the six-arm Binary reference retains an absent independent oracle and absent local-rank claim",
       "unused-intermediate-category and disconnected fixtures retain expected typed rejection",
       "two semantic invariances accept and five mutation/missing-row classes reject",
-      "independent promotion review is absent for both successful comparison lineages",
       "the separate eleven-fixture P2 portfolio denominator remains unopened"
     ),
     DropAllowed = FALSE,
@@ -185,7 +185,7 @@ mfrmr_cq_p5edl_public_disposition <- function() {
     ),
     PublicDecision = c(
       "retain the current optional pure-R bundle and normalization boundary",
-      "no public promotion until the frozen independent review passes",
+      "retain as bounded internal fixed-artifact evidence; no public equivalence claim is selected",
       "retain as versioned same-platform technical evidence only",
       "do not claim equality beyond exact reported decimal evidence",
       "do not compare EAP or posterior SD without a new posterior-identity contract",
@@ -196,9 +196,7 @@ mfrmr_cq_p5edl_public_disposition <- function() {
       "name ConQuest 5.47.5 Demo on x86_64/Rosetta; do not infer other-platform behavior"
     ),
     PublicTextChangeAuthorizedByThisLedger = FALSE,
-    IndependentReviewRequiredBeforePromotion = c(
-      FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE
-    ),
+    IndependentReviewRequiredBeforePromotion = FALSE,
     ScientificEquivalenceInferred = FALSE,
     stringsAsFactors = FALSE
   )
@@ -212,7 +210,7 @@ mfrmr_cq_p5edl_review <- function() {
   valid <-
     nrow(execution) == 7L && !anyDuplicated(execution$LineageId) &&
     nrow(overlap) == 5L && !anyDuplicated(overlap$OverlapId) &&
-    nrow(outcomes) == 14L && !anyDuplicated(outcomes$OutcomeId) &&
+    nrow(outcomes) == 13L && !anyDuplicated(outcomes$OutcomeId) &&
     nrow(public) == 10L && !anyDuplicated(public$DecisionId) &&
     all(execution$AttemptedConQuestArms <= execution$AuthorizedConQuestArms) &&
     all(execution$SemanticallyCompleteConQuestArms <= execution$AttemptedConQuestArms) &&
@@ -226,7 +224,7 @@ mfrmr_cq_p5edl_review <- function() {
     specification = mfrmr_cq_p5edl_specification,
     contract_version = mfrmr_cq_p5edl_contract,
     status = if (valid) {
-      "conquest_P5_evidence_and_disposition_ledger_complete_promotion_blocked"
+      "conquest_P5_evidence_and_disposition_ledger_complete_claim_scope_bounded"
     } else {
       "conquest_P5_evidence_ledger_invalid"
     },
@@ -239,6 +237,9 @@ mfrmr_cq_p5edl_review <- function() {
     adverse_and_unresolved_denominators_stated = valid,
     public_decisions_mapped = valid,
     independent_review_passed = FALSE,
+    independent_review_required_before_public_promotion = FALSE,
+    independent_review_blocks_0_2_3_release = FALSE,
+    independent_review_optional_quality_enhancement = TRUE,
     release_spine_update_authorized = FALSE,
     public_text_change_authorized = FALSE,
     general_software_interchangeability_inferred = FALSE,

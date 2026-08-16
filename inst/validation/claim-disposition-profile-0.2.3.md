@@ -1,8 +1,9 @@
 # 0.2.3 claim-disposition profile
 
-Status: repository-only portfolio overlay, refreshed 2026-08-12. This profile reduces
-the release programme to the evidence needed for retained 0.2.3 claims. It is
-not a new statistical gate and does not itself promote evidence. The bound
+Status: repository-only historical portfolio snapshot, superseded for current
+0.2.3 release sequencing by the 2026-08-16 distribution-first section of the
+internal roadmap. This profile records how the earlier research programme was
+partitioned. It is not a current release gate and does not itself promote evidence. The bound
 checklist now records the separately audited candidate-003 ConQuest
 Binary/RSM/PCM exact-reported-decimal passes; it still authorizes no broad
 scientific-equivalence claim, simulation, sparse/GPCM extension, or release.
@@ -20,24 +21,26 @@ semantic identifier. A checklist addition, deletion, reorder, or item rename
 requires a deliberate profile revision; it must not inherit a disposition by
 position.
 
-`mfrmr_release_readiness_review()` now verifies both recorded SHA-256 values,
+`mfrmr_release_readiness_review()` verifies both recorded SHA-256 values,
 the exact row/order/item mapping, the 53/32/21 class counts, class-specific
 scope contracts, the nine conditional fallback codes, and allowed evidence
-states. It derives the current scope decision from the checklist rather than
-trusting the prose counts below. Profile integrity is a release-review gate;
-the number of open spine rows is a current portfolio decision, not evidence
-that the integrity audit itself failed.
+states so that this historical snapshot cannot silently change. It reports
+`CurrentReleaseGate=FALSE`. The SHA values protect only this repository record;
+they are not installed-package dependencies, scientific criteria, or current
+candidate requirements. The number of open rows is descriptive history, not a
+0.2.3 release decision.
 
 ## Disposition result
 
-| Portfolio class | Rows | Effect when incomplete |
+| Historical portfolio class | Rows | Original effect; current interpretation |
 | --- | ---: | --- |
-| `release_spine` | 53 | 0.2.3 release is NO-GO until the retained supported-core scope passes. |
-| `claim_conditional` | 32 | Only the named claim is NO-GO; the recorded fail-closed fallback must be enforced on every affected public surface. |
+| `release_spine` | 53 | Originally marked release-critical; now a historical research inventory with no direct release effect. |
+| `claim_conditional` | 32 | The named claim remains unavailable unless its evidence closes; implemented fallbacks and narrowed claims control the public surface. |
 | `deferred` | 21 | No 0.2.3 release effect; the work remains a later-version prototype, infrastructure record, or external research reference. |
 
-The mapping reduces an undifferentiated 106-row programme to a 53-row release
-spine. It does not assert that those 53 rows currently pass. The current
+The mapping reduced an undifferentiated 106-row programme to a 53-row historical
+spine. It does not assert that those 53 rows currently pass or must pass for
+the current bounded release. The current
 checklist snapshot contains 25 `not_run`, 21 `review`, and seven `ok` spine
 rows. In addition to the deterministic v3 readiness-contract schema,
 exact-model reductions, estimator-vocabulary contract, and tracked-repository
@@ -71,14 +74,14 @@ reference row to `review` without changing the release decision.
    `blocker_if_failed` wording inside an execution-specific contract can still
    govern execution of that deferred study, but it cannot block a bounded
    0.2.3 release.
-5. No favorable aggregate can replace a failing spine cell. Conversely, an
-   unresolved deferred or disabled conditional row cannot be used to keep the
-   whole release programme open indefinitely.
+5. No favorable aggregate can promote a claim whose required cell fails.
+   Conversely, no open row in this superseded portfolio can keep the bounded
+   release open merely because it once appeared in the historical spine.
 
-## Release spine
+## Historical release spine
 
-The 53 mandatory rows retain only the current public model and release
-contract:
+The 53 rows below document the earlier programme. They are no longer a single
+mandatory current-release contract:
 
 - exact candidate, seed/data partition, and external input identity;
 - canonical numerical checks, exact reductions, optimizer ceiling, and

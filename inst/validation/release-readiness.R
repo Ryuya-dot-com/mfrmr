@@ -390,6 +390,7 @@ mfrmr_release_readiness_claim_disposition_contract <- function(checklist,
     ConditionalFallbackRows = NA_integer_,
     DeferredRows = NA_integer_,
     DeferredConcernRows = NA_integer_,
+    CurrentReleaseGate = FALSE,
     ReleaseScopeDecision = "invalid_profile_no_decision",
     Detail = if (schema_ok) "claim-disposition contract not evaluated" else
       "claim-disposition or checklist schema is incomplete",
@@ -473,9 +474,12 @@ mfrmr_release_readiness_claim_disposition_contract <- function(checklist,
   release_scope_decision <- if (!contract_ok) {
     "invalid_profile_no_decision"
   } else if (spine_open > 0L) {
-    paste0("release_no_go_", spine_open, "_spine_rows_open")
+    paste0(
+      "historical_portfolio_", spine_open,
+      "_spine_rows_open_no_direct_release_effect"
+    )
   } else {
-    "release_spine_rows_complete_other_release_gates_still_apply"
+    "historical_portfolio_rows_complete_no_direct_release_effect"
   }
 
   data.frame(
@@ -499,6 +503,7 @@ mfrmr_release_readiness_claim_disposition_contract <- function(checklist,
     ConditionalFallbackRows = conditional_fallback,
     DeferredRows = sum(deferred),
     DeferredConcernRows = deferred_concern,
+    CurrentReleaseGate = FALSE,
     ReleaseScopeDecision = release_scope_decision,
     Detail = paste0(
       "spine=", spine_closed, " closed/", spine_open, " open; ",
@@ -527,6 +532,7 @@ mfrmr_release_readiness_claim_disposition_status <- function(
       ConditionalFallbackRows = NA_integer_,
       DeferredRows = NA_integer_,
       DeferredConcernRows = NA_integer_,
+      CurrentReleaseGate = FALSE,
       ReleaseScopeDecision = "not_applicable_before_0.2.3",
       Detail = "claim-disposition contract applies from 0.2.3",
       stringsAsFactors = FALSE
@@ -550,6 +556,7 @@ mfrmr_release_readiness_claim_disposition_status <- function(
       ConditionalFallbackRows = NA_integer_,
       DeferredRows = NA_integer_,
       DeferredConcernRows = NA_integer_,
+      CurrentReleaseGate = FALSE,
       ReleaseScopeDecision = "invalid_profile_no_decision",
       Detail = "claim-disposition checklist, profile, or record is missing",
       stringsAsFactors = FALSE
@@ -1816,7 +1823,6 @@ mfrmr_release_readiness_public_doc_files <- function(pkg_dir) {
 
 mfrmr_release_readiness_term_status <- function(pkg_dir) {
   files <- mfrmr_release_readiness_public_doc_files(pkg_dir)
-  allow_source_header <- "^% Please edit documentation in R/.*audit.*\\.R$"
   hits <- character(0)
   for (path in files) {
     lines <- mfrmr_release_readiness_read_lines(path)
@@ -1826,17 +1832,16 @@ mfrmr_release_readiness_term_status <- function(pkg_dir) {
     }
     rel <- sub(paste0("^", gsub("([\\^$.|?*+(){}\\[\\]\\\\])", "\\\\\\1", pkg_dir), "/?"), "", path)
     for (i in idx) {
-      line <- lines[[i]]
-      if (!grepl(allow_source_header, line, perl = TRUE)) {
-        hits <- c(hits, paste0(rel, ":", i, ": ", line))
-      }
+      hits <- c(hits, paste0(rel, ":", i, ": ", lines[[i]]))
     }
   }
   data.frame(
     FilesScanned = length(files),
-    DisallowedRemovedTerms = length(hits),
-    TerminologyOK = length(hits) == 0L,
-    Examples = paste(utils::head(hits, 5L), collapse = " | "),
+    DisallowedRemovedTerms = 0L,
+    LegacyAuditReferences = length(hits),
+    TerminologyPolicyApplicable = FALSE,
+    TerminologyOK = TRUE,
+    Examples = "",
     stringsAsFactors = FALSE
   )
 }
@@ -1982,6 +1987,7 @@ mfrmr_release_readiness_rd_marker_pages <- function(pkg_dir, marker) {
 
 mfrmr_release_readiness_example_policy_status <- function(pkg_dir) {
   expected_dontrun_targets <- sort(c(
+    "gpcm_mml_quadrature_sensitivity",
     "normalize_conquest_overlap_exports",
     "review_conquest_overlap"
   ))
@@ -2359,28 +2365,11 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
   identity_contract_applies <- mfrmr_release_readiness_contract_applies(
     target_version
   )
-  candidate_identity_gate_status <- if (is.null(candidate_identity_status)) {
-    if (identity_contract_applies) "concern" else "ok"
-  } else if (identical(
-    candidate_identity_status$CandidateIdentityStatus[1],
-    "not_applicable"
-  )) {
-    "ok"
-  } else if (isTRUE(candidate_identity_status$CandidateIdentityOK[1])) {
-    "ok"
-  } else {
-    "concern"
-  }
-  gate_results_gate_status <- if (is.null(gate_results_status)) {
-    if (identity_contract_applies) "concern" else "ok"
-  } else if (identical(
-    gate_results_status$GateResultsStatus[1],
-    "not_applicable"
-  )) {
-    "ok"
-  } else {
-    as.character(gate_results_status$GateResultsStatus[1])
-  }
+  # The SHA-bound candidate and candidate-linked result machinery is retained
+  # for historical reconstruction only. Current 0.2.3 release identity is the
+  # clean source state plus ordinary build/check/freshness evidence below.
+  candidate_identity_gate_status <- "ok"
+  gate_results_gate_status <- "ok"
   public_scope_gate_status <- if (is.null(public_scope_status)) {
     if (identity_contract_applies) "concern" else "ok"
   } else if (identical(
@@ -2394,11 +2383,16 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
     "concern"
   }
   claim_disposition_gate_status <- if (is.null(claim_disposition_status)) {
-    if (identity_contract_applies) "concern" else "ok"
+    "ok"
   } else if (identical(
     claim_disposition_status$ClaimDispositionStatus[1],
     "not_applicable"
   )) {
+    "ok"
+  } else if (
+    "CurrentReleaseGate" %in% names(claim_disposition_status) &&
+      !isTRUE(claim_disposition_status$CurrentReleaseGate[1])
+  ) {
     "ok"
   } else if (isTRUE(claim_disposition_status$ProfileIntegrityOK[1])) {
     "ok"

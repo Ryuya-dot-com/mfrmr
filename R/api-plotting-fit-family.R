@@ -636,7 +636,8 @@ compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
     keep <- intersect(
       c(
         "Facet", "Level", "Estimate", "SE", "SE_Method", "PrecisionTier",
-        "SupportsFormalInference", "SEUse", "CIBasis", "CIUse"
+        "SupportsFormalInference", "SEUse", "CIBasis", "CIUse",
+        "CIEligible", "CILabel", "CI_Method"
       ),
       names(measures)
     )
@@ -692,6 +693,14 @@ compute_se_for_plot <- function(x, ci_level = 0.95, diagnostics = NULL) {
     )
     se_tbl$CI_Level <- ci_level
     se_tbl$SE_Method <- "Observation-table information"
+    se_tbl$PrecisionTier <- "exploratory"
+    se_tbl$SupportsFormalInference <- FALSE
+    se_tbl$SEUse <- "screening_only"
+    se_tbl$CIBasis <-
+      "Normal interval from exploratory observation-table SE"
+    se_tbl$CIUse <- "screening_only"
+    se_tbl$CIEligible <- FALSE
+    se_tbl$CILabel <- "Approximate interval; screening only"
     se_tbl$Measure_Source <- "fit + observation-table information"
     as.data.frame(se_tbl, stringsAsFactors = FALSE)
   }, error = function(e) NULL)
@@ -971,7 +980,8 @@ build_wright_map_data <- function(x,
       c(
         "Facet", "Level", "SE",
         "CI_Level", "SE_Method", "PrecisionTier", "SupportsFormalInference",
-        "SEUse", "CIBasis", "CIUse", "Measure_Source"
+        "SEUse", "CIBasis", "CIUse", "CIEligible", "CILabel",
+        "Measure_Source"
       ),
       names(se_tbl)
     ), drop = FALSE]
@@ -3476,7 +3486,14 @@ plot.mfrm_fit <- function(x,
   }
   if (isTRUE(show_ci) && !is.null(se_tbl_ci) && is.data.frame(se_tbl_ci) &&
       nrow(se_tbl_ci) > 0 && all(c("Facet", "Level", "SE") %in% names(se_tbl_ci))) {
-    se_join <- se_tbl_ci[, intersect(c("Facet", "Level", "SE"), names(se_tbl_ci)), drop = FALSE]
+    se_join <- se_tbl_ci[, intersect(
+      c(
+        "Facet", "Level", "SE", "SE_Method", "PrecisionTier",
+        "SupportsFormalInference", "SEUse", "CIBasis", "CIUse",
+        "CIEligible", "CILabel", "Measure_Source"
+      ),
+      names(se_tbl_ci)
+    ), drop = FALSE]
     se_join$Level <- as.character(se_join$Level)
     facet_tbl$Level <- as.character(facet_tbl$Level)
     facet_tbl <- merge(facet_tbl, se_join, by = c("Facet", "Level"), all.x = TRUE, sort = FALSE)

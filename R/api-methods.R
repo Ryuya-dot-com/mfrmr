@@ -9099,6 +9099,11 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       } else {
         NA_integer_
       },
+      CIEligible = if ("CIEligible" %in% names(slope_tbl)) {
+        sum(as.logical(slope_tbl$CIEligible), na.rm = TRUE)
+      } else {
+        NA_integer_
+      },
       ComparisonEligible = if ("ComparisonEligibility" %in% names(slope_tbl)) {
         sum(as.character(slope_tbl$ComparisonEligibility) == "eligible", na.rm = TRUE)
       } else {

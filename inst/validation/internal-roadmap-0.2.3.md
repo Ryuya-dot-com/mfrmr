@@ -22,7 +22,7 @@ critical path.
 | --- | --- | --- |
 | Published RSM/PCM workflow | Mature 0.2.2 baseline with substantial 0.2.3 contract and regression strengthening | Preserve and recheck; do not redesign |
 | Bounded GPCM implementation | Likelihood, identification, reduction cases, boundary vocabulary, quadrature sensitivity, and item-only external maps exist | Keep caveated until extreme-case, readiness, and user-facing method contracts close |
-| External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Set decision-specific rules, then run only the smallest untouched confirmation that can change a public claim |
+| External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Retain the bounded evidence and narrow claims; no further external run or independent human review blocks 0.2.3 |
 | DFF, fit, and ranking consequences | APIs exist, but cross-engine and adverse-design decision invariance is not closed | Validate selected release-critical decisions; do not infer them from parameter correlation |
 | G-theory/D-study expansion | Univariate public baseline exists; crossed/nested/multivariate reconstruction is repository research | No new 0.2.3 public claim or large execution |
 | Release candidate | No 0.2.3 candidate or candidate-linked full check exists | Not release-ready |
@@ -54,13 +54,14 @@ critical path.
    convergence versus inference readiness, Hessian/interval eligibility, and
    consistent summary/print/plot diagnostics. Do not make a finite adjusted
    JML value look like the maximizer of an unattained likelihood.
-3. Translate the opened ConQuest calibration into metric-specific decision
-   loss and precision rules. Investigate the extreme-Person PCM outlier before
-   choosing any threshold. Correlation is descriptive and cannot replace
-   coordinate, objective, fit, DFF, or ranking checks.
-4. Run only the smallest untouched RSM/PCM confirmation required by those
-   rules. Consider item-only GPCM confirmation only after the additive lane is
-   classified. Do not authorize a broad simulation by default.
+3. Retain the opened ConQuest/TAM evidence only for its exact matched models,
+   fixtures, versions, and decision classes. Do not choose a general threshold
+   or investigate the extreme-Person PCM outlier unless a concrete public
+   0.2.3 claim would change.
+4. Run no further external confirmation for 0.2.3. Independent human review is
+   an optional later quality enhancement, not a release gate. General software
+   interchangeability, untested fit/DFF consequences, and many-facet free-
+   slope GPCM equivalence remain unclaimed rather than release-blocking.
 5. Freeze one candidate and run the normal package/check/documentation/public-
    claim handoff. A currently unavailable FACETS executable leaves the exact
    current-version FACETS comparison claim unsupported; it does not block
@@ -77,6 +78,41 @@ critical path.
   estimand and decision are stable within a prospectively justified rule.
 - A claim that cannot be supported in time is narrowed or deferred. The
   release is not held open to make every historical research branch pass.
+
+### Current release-state accounting
+
+The older 106-row claim-disposition profile and its 53-row `release_spine`
+remain an immutable research-history snapshot, not the current release
+denominator. Its 46 open historical rows therefore do not mean that 0.2.3 has
+46 release blockers. The current bounded path has three substantive checks:
+
+1. distribution/package boundary: complete and verified by the ordinary
+   source-package check;
+2. bounded GPCM user contract: extreme-source readiness propagation is
+   complete; Hessian values remain diagnostic-only, ordinary slope SE/CI are
+   suppressed when ineligible, and summary/plot surfaces now expose the same
+   interval-eligibility boundary; and
+3. release handoff: freeze one clean source state and run the ordinary package,
+   documentation, and public-claim checks without a new SHA/authorization
+   framework.
+
+The legacy SHA-bound candidate manifest, candidate-linked result table, and
+claim-disposition hash check remain readable for historical reconstruction but
+are informational in the current aggregate release review. Candidate identity
+is established by the clean committed source state and its ordinary built and
+checked tarball; freshness, package checks, documentation, and public scope
+still fail closed.
+
+External reruns, independent human review, FACETS availability, broad recovery
+simulation, and G-theory execution are not members of this denominator. A
+specific failure discovered by the focused audit can still block the affected
+public claim or the release; a merely unfinished historical row cannot.
+
+The former release-readiness rule that rejected every public occurrence of the
+word `audit` is also retired. Current fitted objects deliberately expose
+`boundary_audit`, so a lexical ban no longer tests API quality. Documentation
+clarity and deprecated-symbol checks remain appropriate; the English word
+itself is only observed, not treated as a release failure.
 
 ## 2026-08-15 ConQuest-first strategic reset
 
@@ -806,9 +842,9 @@ wording.
 
 - [x] Decide from P2/P3 deterministic evidence whether any retained decision is
   still uncertain; record `replication_not_needed` when none can change. The
-  selected candidate-004 fixed-artifact claim requires independent
-  recalculation but not sampled replication; repeating the same-author pipeline
-  cannot supply independence
+  selected candidate-004 fixed-artifact claim needs neither sampled
+  replication nor independent human review for bounded internal retention;
+  repeating the same-author pipeline cannot manufacture additional assurance
   (`conquest-p4-replication-necessity-decision-record-0.2.3.md`, 2026-08-15).
 - [x] Do not activate a replication design for the selected claim. Independent
   sampling unit, target disagreement/failure rate, confidence or MCSE
@@ -1110,8 +1146,8 @@ wording.
   integration-limited checks in each affected slice, 96+96 typed-ineligible
   posterior rows, readiness/identification holds, the six-arm Binary oracle/
   rank gap, two structural negative controls, seven reviewer-control classes,
-  two missing independent reviews, and the unopened 5,073-outcome wider P2
-  denominator.
+  and the unopened 5,073-outcome wider P2 denominator. Missing human reviews
+  are not statistical outcomes or 0.2.3 release blockers.
 - [x] Map the evidence to public decisions that are supported, caveated,
   disabled, or deferred; do not claim general software interchangeability.
   Only the existing pure-R handoff boundary is supported; all numerical

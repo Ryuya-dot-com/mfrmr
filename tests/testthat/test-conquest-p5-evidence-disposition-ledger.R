@@ -69,15 +69,15 @@ test_that("adverse and unresolved outcomes keep fixed denominators", {
   env <- load_conquest_p5_evidence_disposition_ledger()$env
   outcomes <- env$mfrmr_cq_p5edl_outcome_ledger()
 
-  expect_identical(nrow(outcomes), 14L)
+  expect_identical(nrow(outcomes), 13L)
   expect_identical(anyDuplicated(outcomes$OutcomeId), 0L)
   expect_identical(
     outcomes$FixedDenominator,
-    c(6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 2L, 5073L)
+    c(6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 5073L)
   )
   expect_identical(
     outcomes$ObservedOrClassified,
-    c(6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 0L, 0L)
+    c(6L, 4L, 13L, 4L, 4L, 96L, 96L, 4L, 4L, 2L, 2L, 7L, 0L)
   )
   expect_true(all(c(
     "failed", "negative_control_rejection", "integration_limited",
@@ -104,21 +104,25 @@ test_that("public map supports only the pure-R handoff boundary", {
     "P1-pure-R-handoff"
   )
   expect_false(any(public$PublicTextChangeAuthorizedByThisLedger))
+  expect_false(any(public$IndependentReviewRequiredBeforePromotion))
   expect_false(any(public$ScientificEquivalenceInferred))
 })
 
-test_that("review closes synthesis but not promotion", {
+test_that("review closes synthesis without making human review a release gate", {
   env <- load_conquest_p5_evidence_disposition_ledger()$env
   review <- env$mfrmr_cq_p5edl_review()
 
   expect_identical(
     review$status,
-    "conquest_P5_evidence_and_disposition_ledger_complete_promotion_blocked"
+    "conquest_P5_evidence_and_disposition_ledger_complete_claim_scope_bounded"
   )
   expect_true(review$exact_overlap_stated)
   expect_true(review$adverse_and_unresolved_denominators_stated)
   expect_true(review$public_decisions_mapped)
   expect_false(review$independent_review_passed)
+  expect_false(review$independent_review_required_before_public_promotion)
+  expect_false(review$independent_review_blocks_0_2_3_release)
+  expect_true(review$independent_review_optional_quality_enhancement)
   expect_false(review$release_spine_update_authorized)
   expect_false(review$public_text_change_authorized)
   expect_false(review$general_software_interchangeability_inferred)

@@ -103,6 +103,7 @@ test_that("GPCM summaries expose slope overview and diagnostics are now availabl
   expect_true(isTRUE(s$slope_overview$OptimizerPositive[1]))
   expect_equal(s$slope_overview$OptimizerGeometricMean[1], 1, tolerance = 1e-6)
   expect_identical(s$slope_overview$SEEligible[1], 0L)
+  expect_identical(s$slope_overview$CIEligible[1], 0L)
   expect_identical(s$slope_overview$ComparisonEligible[1], 0L)
   dx <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "overall")
   pca <- analyze_residual_pca(dx, mode = "overall")

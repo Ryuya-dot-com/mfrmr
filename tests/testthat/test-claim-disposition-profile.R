@@ -1,4 +1,4 @@
-test_that("claim disposition is one hash-bound fail-closed scope surface", {
+test_that("claim disposition preserves a nonblocking historical portfolio", {
   skip_if_not_installed("digest")
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   protocol <- file.path(root, "inst", "validation", "release-readiness.R")
@@ -34,9 +34,10 @@ test_that("claim disposition is one hash-bound fail-closed scope surface", {
   expect_identical(status$ConditionalFallbackRows, 31L)
   expect_identical(status$DeferredRows, 21L)
   expect_identical(status$DeferredConcernRows, 9L)
+  expect_false(status$CurrentReleaseGate)
   expect_identical(
     status$ReleaseScopeDecision,
-    "release_no_go_46_spine_rows_open"
+    "historical_portfolio_46_spine_rows_open_no_direct_release_effect"
   )
 })
 
@@ -70,6 +71,7 @@ test_that("claim disposition rejects reorder and fallback mutation", {
     reorder_status$ReleaseScopeDecision,
     "invalid_profile_no_decision"
   )
+  expect_false(reorder_status$CurrentReleaseGate)
 
   bad_fallback <- profile
   row <- which(bad_fallback$PortfolioClass == "claim_conditional")[1L]

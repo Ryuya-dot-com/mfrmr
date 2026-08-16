@@ -58,7 +58,7 @@ test_that("replication design fields stay typed not applicable", {
   expect_true(all(design$ProspectiveFreezeRequiredIfFutureClaimSelected))
 })
 
-test_that("P4 closes narrowly without replacing independent review", {
+test_that("P4 closes without making human review a release gate", {
   env <- load_conquest_p4_replication_necessity_decision()$env
   review <- env$mfrmr_cq_p4rnd_review()
 
@@ -67,7 +67,10 @@ test_that("P4 closes narrowly without replacing independent review", {
     "P4_closed_replication_not_needed_for_selected_bounded_claim"
   )
   expect_false(review$selected_claim_replication_needed)
-  expect_true(review$independent_review_still_required)
+  expect_false(review$independent_review_still_required)
+  expect_false(review$independent_review_required_before_public_promotion)
+  expect_false(review$independent_review_blocks_0_2_3_release)
+  expect_true(review$independent_review_optional_quality_enhancement)
   expect_false(review$independent_review_is_sampling_replication)
   expect_false(review$new_data_generated)
   expect_false(review$new_fit_attempted)
@@ -100,7 +103,12 @@ test_that("record and roadmap close only the selected P4 path", {
 
   expect_match(record, ctx$env$mfrmr_cq_p4rnd_specification, fixed = TRUE)
   expect_match(record, "`SelectedClaimReplicationNeeded=FALSE`", fixed = TRUE)
-  expect_match(record, "`IndependentReviewStillRequired=TRUE`", fixed = TRUE)
+  expect_match(record, "`IndependentReviewStillRequired=FALSE`", fixed = TRUE)
+  expect_match(
+    record,
+    "`IndependentReviewBlocks0.2.3Release=FALSE`",
+    fixed = TRUE
+  )
   expect_match(
     roadmap,
     "[x] Decide from P2/P3 deterministic evidence",

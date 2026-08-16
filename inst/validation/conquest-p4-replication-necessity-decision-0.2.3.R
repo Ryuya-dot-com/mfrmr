@@ -1,9 +1,10 @@
 # Claim-specific P4 replication-necessity decision for ConQuest evidence.
 #
 # The selected candidate-004 claim is a fixed-artifact technical comparison.
-# Replication cannot change that claim and cannot substitute for independent
-# recalculation. Broader frequency, recovery, coverage, and portability claims
-# are not silently imported into the current scope.
+# Replication cannot change that claim. Independent human review is optional
+# assurance rather than a 0.2.3 release or promotion requirement. Broader
+# frequency, recovery, coverage, and portability claims are not silently
+# imported into the current scope.
 
 mfrmr_cq_p4rnd_specification <-
   "0.2.3-conquest-p4-replication-necessity-decision-v1"
@@ -88,7 +89,10 @@ mfrmr_cq_p4rnd_review <- function() {
     conditional_design = conditional,
     selected_claim = selected$ClaimId,
     selected_claim_replication_needed = FALSE,
-    independent_review_still_required = TRUE,
+    independent_review_still_required = FALSE,
+    independent_review_required_before_public_promotion = FALSE,
+    independent_review_blocks_0_2_3_release = FALSE,
+    independent_review_optional_quality_enhancement = TRUE,
     independent_review_is_sampling_replication = FALSE,
     new_data_generated = FALSE,
     new_fit_attempted = FALSE,

@@ -1,12 +1,13 @@
 # ConQuest P5 evidence and disposition ledger for mfrmr 0.2.3
 
 Status:
-`conquest_P5_evidence_and_disposition_ledger_complete_promotion_blocked`,
+`conquest_P5_evidence_and_disposition_ledger_complete_claim_scope_bounded`,
 2026-08-15.
 
 - Specification: `0.2.3-conquest-p5-evidence-disposition-ledger-v1`
 - Contract: `mfrmr_conquest_p5_evidence_disposition_ledger_v1`
-- Independent promotion review: not passed
+- Independent human review: optional later quality enhancement; not a 0.2.3
+  release or public-promotion requirement
 
 ## Runtime scope
 
@@ -41,15 +42,16 @@ RSM/criterion-step PCM MML with one numeric population covariate at q31/q61.
 Its classes are population intercept, population slope, population variance,
 item/facet/step coordinates, matched-constant deviance, and within-engine
 quadrature movement. Its 57/57 pass is retained as bounded, versioned,
-same-platform technical evidence; independent promotion was not established.
+same-platform technical evidence; no broader promotion claim is selected.
 
 P2 candidate 004 covers a 48-Person, 288-row connected-multibridge design with
 four Raters, three Criteria, four categories, and one numeric covariate. RSM
 and PCM use identical observed data at q61/q121. Its classes are population,
 Rater, Criterion, shared or Criterion-specific step coordinates,
 matched-constant deviance, quadrature movement, the complete 480-cell q121
-conditional-probability grid, and 18 facet-ordering decisions. The
-same-author numerical core passed; independent review is pending.
+conditional-probability grid, and 18 facet-ordering decisions. The same-author
+numerical core passed. Human review may be useful later but is not required to
+retain this bounded result or release 0.2.3.
 
 Neither overlap includes GPCM, DFF, infit/outfit, missingness, unused
 categories, extreme-score conventions, disconnected designs, general sparse
@@ -71,7 +73,6 @@ allocation, posterior equivalence, uncertainty coverage, or truth recovery.
 | Six-arm Binary oracle/local rank | 2 evidence layers | both unresolved |
 | P2 structural negative controls | 2 fixtures | unused-category and disconnected controls retain expected typed rejection |
 | Candidate-004 reviewer controls | 7 classes | two invariances accept; five mutation/missing-row classes reject |
-| Independent promotion review | 2 successful comparison lineages | neither completed |
 | Full P2 portfolio | 5,073 planned atomic outcomes | unopened; candidate 004 does not substitute for this denominator |
 
 No row is dropped because it failed, was ineligible, was not launched, reached
@@ -88,12 +89,13 @@ a boundary, or remains unresolved.
 - **Disabled:** hidden-solution equality, EAP/SD equivalence, inference
   readiness through external agreement, GPCM/DFF/fit-statistic inheritance,
   and general software interchangeability.
-- **Deferred:** candidate-004 public promotion until independent review; wider
-  P2/P3 execution until a retained decision and its own gates justify it.
+- **Deferred:** no public candidate-004 equivalence claim is selected; wider
+  P2/P3 execution remains deferred until a retained decision justifies it.
 
-This ledger authorizes no root README or NEWS edit. Independent review is a
-necessary but not sufficient condition for any later public wording; the exact
-release-spine/public-scope gate must still be updated separately.
+This ledger authorizes no root README or NEWS equivalence claim. Independent
+human review is optional assurance, not a necessary release or promotion gate;
+any later wording must instead remain within the exact matched evidence and
+the release-spine/public-scope decision.
 
 ## Current decision
 
@@ -101,6 +103,9 @@ release-spine/public-scope gate must still be updated separately.
 - `AdverseAndUnresolvedDenominatorsStated=TRUE`
 - `PublicDecisionsMapped=TRUE`
 - `IndependentReviewPassed=FALSE`
+- `IndependentReviewRequiredBeforePublicPromotion=FALSE`
+- `IndependentReviewBlocks0.2.3Release=FALSE`
+- `IndependentReviewOptionalQualityEnhancement=TRUE`
 - `ReleaseSpineUpdateAuthorized=FALSE`
 - `PublicTextChangeAuthorized=FALSE`
 - `GeneralSoftwareInterchangeabilityInferred=FALSE`

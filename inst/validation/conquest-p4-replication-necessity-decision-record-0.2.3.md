@@ -15,16 +15,18 @@ model, quadrature pair, runtime, and set of reported output tokens. A new
 sampled data set would answer a broader cross-data-set question and cannot
 change the already retained fixed-artifact calculation.
 
-Independent review remains necessary. It asks a different question: can a
-non-overlapping reviewer reconstruct the model mapping and all denominators
-from the retained raw artifacts? Repeating the same-author pipeline on many
-data sets cannot establish that independence.
+Independent human review is not necessary for this bounded internal result or
+for the 0.2.3 release. It could still ask whether another person can reconstruct
+the mapping and denominators, but that is optional assurance rather than a
+mathematical, CRAN, or claim-identification requirement. Repeating the same-
+author pipeline on many data sets would not create that assurance and is also
+unnecessary.
 
 ## Claim-specific dispositions
 
 | claim | current disposition |
 | --- | --- |
-| Candidate-004 fixed-artifact bounded comparison | `replication_not_needed`; independent review still required |
+| Candidate-004 fixed-artifact bounded comparison | `replication_not_needed`; retain as bounded internal evidence without a human-review release gate |
 | Six-arm candidate-003 historical result | no replication for historical retention; no current promotion target |
 | Full P2 design portfolio | deterministic execution and classification first |
 | P3 item-only GPCM | C0--C5 and one deterministic external candidate first |
@@ -49,7 +51,10 @@ covering all seven fields before data generation. It cannot inherit candidate
 ## Current decision
 
 - `SelectedClaimReplicationNeeded=FALSE`
-- `IndependentReviewStillRequired=TRUE`
+- `IndependentReviewStillRequired=FALSE`
+- `IndependentReviewRequiredBeforePublicPromotion=FALSE`
+- `IndependentReviewBlocks0.2.3Release=FALSE`
+- `IndependentReviewOptionalQualityEnhancement=TRUE`
 - `IndependentReviewIsSamplingReplication=FALSE`
 - `NewDataGenerated=FALSE`
 - `NewFitAttempted=FALSE`

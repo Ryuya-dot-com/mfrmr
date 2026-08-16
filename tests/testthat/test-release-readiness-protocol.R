@@ -1616,7 +1616,11 @@ release_readiness_gate_fixture <- function(env, check_status,
   if (is.null(example_policy_status)) {
     example_policy_status <- data.frame(
       DontrunSourceTargets = paste(
-        c("normalize_conquest_overlap_exports", "review_conquest_overlap"),
+        c(
+          "gpcm_mml_quadrature_sensitivity",
+          "normalize_conquest_overlap_exports",
+          "review_conquest_overlap"
+        ),
         collapse = ", "
       ),
       ExamplesIfSourceTargets = "launch_mfrmr_viewer",
@@ -2602,7 +2606,14 @@ test_that("release-readiness protocol enforces semantic example guards", {
   expect_true(status$GeneratedRdAvailable)
   expect_identical(
     status$DontrunSourceTargets,
-    "normalize_conquest_overlap_exports, review_conquest_overlap"
+    paste(
+      c(
+        "gpcm_mml_quadrature_sensitivity",
+        "normalize_conquest_overlap_exports",
+        "review_conquest_overlap"
+      ),
+      collapse = ", "
+    )
   )
   expect_identical(status$ExamplesIfSourceTargets, "launch_mfrmr_viewer")
   expect_gt(status$DonttestRdPages, 0L)
@@ -2719,9 +2730,10 @@ test_that("release-readiness protocol reviews the source tree shape", {
       "ok"
     )
     expect_true(review$claim_disposition_status$ProfileIntegrityOK[1])
+    expect_false(review$claim_disposition_status$CurrentReleaseGate[1])
     expect_identical(
       review$claim_disposition_status$ReleaseScopeDecision[1],
-      "release_no_go_46_spine_rows_open"
+      "historical_portfolio_46_spine_rows_open_no_direct_release_effect"
     )
   } else {
     expect_identical(
@@ -2758,6 +2770,18 @@ test_that("release-readiness protocol reviews the source tree shape", {
   expect_identical(
     review$gate_summary$Status[
       review$gate_summary$Gate == "claim_disposition"
+    ],
+    "ok"
+  )
+  expect_identical(
+    review$gate_summary$Status[
+      review$gate_summary$Gate == "candidate_identity"
+    ],
+    "ok"
+  )
+  expect_identical(
+    review$gate_summary$Status[
+      review$gate_summary$Gate == "gate_results"
     ],
     "ok"
   )

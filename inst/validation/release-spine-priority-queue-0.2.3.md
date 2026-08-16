@@ -1,11 +1,17 @@
 # 0.2.3 release-spine priority queue
 
-Status: repository-only dependency ordering, updated 2026-08-12. The queue covers all
-53 `release_spine` rows from `claim-disposition-profile-0.2.3.csv` exactly
-once. It changes no acceptance rule and does not authorize simulation,
-external execution, confirmation, candidate freeze, or release.
+Status: superseded repository-only dependency ordering, updated 2026-08-16.
+The queue preserves the earlier ordering of all 53 historical `release_spine`
+rows. The 2026-08-16 distribution-first section of
+`internal-roadmap-0.2.3.md` now controls release work. This queue authorizes no
+simulation, external execution, confirmation, candidate freeze, or release.
 
-## Portfolio decision
+## Historical portfolio decision
+
+This is not the current 0.2.3 work queue. In particular, open FACETS,
+large-simulation, SHA-bound candidate, and broad external-comparison rows do
+not block the bounded distribution-first release. They remain useful research
+questions only when a specific retained claim depends on them.
 
 Checklist order is an inventory order, not an efficient execution order. The
 release spine is therefore arranged into five dependency waves. A later wave

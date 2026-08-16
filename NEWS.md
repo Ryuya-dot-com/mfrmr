@@ -11,7 +11,8 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   dependency, and historical file hashes remain provenance-only rather than
   statistical acceptance criteria. The 0.2.3 release path is now explicitly
   limited to ordinary workflow integrity, the bounded-GPCM user contract, the
-  smallest decision-relevant external confirmation, and candidate checks.
+  already bounded external evidence, and ordinary candidate checks; no further
+  external run or independent human review is a release requirement.
 
 * Scoped the theorem-oriented conditional-JML GPCM boundary chain to JML
   fits. Ordinary MML fits retain their marginal slope, observed-support, and
@@ -23,6 +24,14 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   fit's prior-regularized extreme EAP remains available exactly in the fit but
   is disclosed and omitted from the Wright-map scale instead of collapsing
   the diagnostic display.
+
+* Aligned GPCM uncertainty labels across fitted objects, summaries, and plots.
+  Local observed-information Hessians and `Optimizer*` uncertainty remain
+  diagnostic evidence; ordinary slope `SE`/`CI` stay unavailable unless the
+  parameter is eligible. `summary(fit)$slope_overview` now reports both SE and
+  CI eligibility, while observation-table intervals requested in Wright or
+  facet plots are explicitly labelled `screening_only` and
+  `CIEligible = FALSE` rather than appearing as formal intervals.
 
 * Made `print(fit)` and `summary(fit)` decision-first: both now lead with a
   plain-language interpretation status, whether formal inference is supported,

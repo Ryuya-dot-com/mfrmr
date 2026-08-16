@@ -88,6 +88,9 @@ test_that("GPCM print / summary do not error", {
   )
   expect_false(.gpcm_fit$readiness$fit$InferenceReady)
   expect_true(all(!.gpcm_fit$slopes$SEEligible))
+  expect_true(all(!.gpcm_fit$slopes$CIEligible))
+  expect_identical(fit_summary$slope_overview$SEEligible, 0L)
+  expect_identical(fit_summary$slope_overview$CIEligible, 0L)
 
   console <- utils::capture.output(print(fit_summary))
   expect_true(any(grepl("GPCM-MML inference evidence", console, fixed = TRUE)))
@@ -263,6 +266,24 @@ test_that("GPCM CCC / pathway / Wright plots return mfrm_plot_data", {
     p <- plot(.gpcm_fit, type = type, draw = FALSE)
     expect_s3_class(p, "mfrm_plot_data")
   }
+})
+
+test_that("GPCM Wright intervals remain visibly screening-only", {
+  p <- suppressWarnings(plot(
+    .gpcm_fit, type = "wright", show_ci = TRUE, draw = FALSE
+  ))
+  locations <- as.data.frame(p$data$locations, stringsAsFactors = FALSE)
+  facet_rows <- locations$PlotType == "Facet level" &
+    is.finite(locations$CI_Lower) & is.finite(locations$CI_Upper)
+
+  expect_true(any(facet_rows))
+  expect_identical(p$data$interpretation_status, "review_only")
+  expect_true(all(!locations$SupportsFormalInference[facet_rows]))
+  expect_true(all(!locations$CIEligible[facet_rows]))
+  expect_true(all(locations$CIUse[facet_rows] == "screening_only"))
+  expect_true(all(grepl(
+    "screening only", locations$CILabel[facet_rows], fixed = TRUE
+  )))
 })
 
 test_that("GPCM capability matrix is consistent with the helper", {
