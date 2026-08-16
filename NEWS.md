@@ -18,7 +18,11 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   readiness audits without carrying eleven mechanically inapplicable JML
   records. Five-category extreme-pattern coverage now also fixes the public
   distinction between a finite prior-regularized EAP and a fit that supports
-  formal inference: a blocked source fit remains non-interpretable.
+  formal inference: a blocked source fit remains non-interpretable. Person
+  rows now carry the source-fit readiness and intended estimate use. A blocked
+  fit's prior-regularized extreme EAP remains available exactly in the fit but
+  is disclosed and omitted from the Wright-map scale instead of collapsing
+  the diagnostic display.
 
 * Made `print(fit)` and `summary(fit)` decision-first: both now lead with a
   plain-language interpretation status, whether formal inference is supported,

@@ -73,7 +73,9 @@ population model is active
 \item \code{population_coding}: categorical covariate levels and contrast provenance
 when a population model uses model-matrix coding
 \item \code{facet_overview}: per-facet estimate distribution summary
-\item \code{person_overview}: person-measure distribution summary
+\item \code{person_overview}: person-measure distribution summary with the actual
+aggregation denominator, blocked extreme-EAP exclusion count, and estimate
+use
 \item \code{targeting}: person-versus-non-person facet targeting overview
 (Wright-map-style mean/SD comparison)
 \item \code{step_overview}: threshold/step diagnostics by PCM/GPCM \code{StepFacet}
@@ -161,7 +163,10 @@ cannot override input, estimability, category, or boundary review.
 support, boundary-constant levels, single-level facets, and retained
 preparation notes behind the readiness rows.
 \item \code{facet_overview}: per-facet spread and range of estimates.
-\item \code{person_overview}: distribution of person measures.
+\item \code{person_overview}: distribution of person measures. For a blocked source
+fit, a prior-regularized extreme MML EAP is retained in \code{person_high} /
+\code{person_low} but excluded from this aggregate and \code{targeting}; the table
+records its distribution denominator, exclusion count, and estimate use.
 \item \code{step_overview}: threshold spread and monotonicity checks, reported by
 \code{StepFacet} ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 \item \code{settings_overview}: estimation settings that affect interpretation.

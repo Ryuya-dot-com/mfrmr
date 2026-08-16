@@ -8218,7 +8218,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   support, boundary-constant levels, single-level facets, and retained
 #'   preparation notes behind the readiness rows.
 #' - `facet_overview`: per-facet spread and range of estimates.
-#' - `person_overview`: distribution of person measures.
+#' - `person_overview`: distribution of person measures. For a blocked source
+#'   fit, a prior-regularized extreme MML EAP is retained in `person_high` /
+#'   `person_low` but excluded from this aggregate and `targeting`; the table
+#'   records its distribution denominator, exclusion count, and estimate use.
 #' - `step_overview`: threshold spread and monotonicity checks, reported by
 #'   `StepFacet` ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 #' - `settings_overview`: estimation settings that affect interpretation.
@@ -8276,7 +8279,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `population_coding`: categorical covariate levels and contrast provenance
 #'   when a population model uses model-matrix coding
 #' - `facet_overview`: per-facet estimate distribution summary
-#' - `person_overview`: person-measure distribution summary
+#' - `person_overview`: person-measure distribution summary with the actual
+#'   aggregation denominator, blocked extreme-EAP exclusion count, and estimate
+#'   use
 #' - `targeting`: person-versus-non-person facet targeting overview
 #'   (Wright-map-style mean/SD comparison)
 #' - `step_overview`: threshold/step diagnostics by PCM/GPCM `StepFacet`
@@ -8881,20 +8886,70 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       dplyr::arrange(.data$Facet)
   }
 
+  person_distribution_excluded <- rep(FALSE, nrow(person_tbl))
+  if (nrow(person_tbl) > 0L &&
+      all(c("SourceFitReadiness", "ReasonCodes") %in% names(person_tbl))) {
+    person_distribution_excluded <-
+      as.character(person_tbl$SourceFitReadiness) == "blocked" &
+      grepl(
+        "(^|;)mml_extreme_response_prior_regularized($|;)",
+        as.character(person_tbl$ReasonCodes)
+      )
+  }
+  person_distribution_tbl <- person_tbl[
+    !person_distribution_excluded, , drop = FALSE
+  ]
+  person_distribution_excluded_n <- sum(person_distribution_excluded)
+
   person_overview <- tibble::tibble()
   if (nrow(person_tbl) > 0 && "Estimate" %in% names(person_tbl)) {
+    distribution_estimates <- as.numeric(person_distribution_tbl$Estimate)
+    distribution_estimates <- distribution_estimates[
+      is.finite(distribution_estimates)
+    ]
+    distribution_value <- function(fun) {
+      if (length(distribution_estimates) == 0L) return(NA_real_)
+      fun(distribution_estimates)
+    }
+    distribution_use <- if (person_distribution_excluded_n > 0L) {
+      "review_only_blocked_extreme_eap_excluded"
+    } else if (
+      "SourceInferenceReady" %in% names(person_tbl) &&
+        all(person_tbl$SourceInferenceReady %in% TRUE)
+    ) {
+      "source_fit_ready"
+    } else {
+      "review_only_source_fit_not_ready"
+    }
     person_overview <- tibble::tibble(
       Persons = nrow(person_tbl),
-      Mean = mean(person_tbl$Estimate, na.rm = TRUE),
-      SD = stats::sd(person_tbl$Estimate, na.rm = TRUE),
-      Median = stats::median(person_tbl$Estimate, na.rm = TRUE),
-      Min = min(person_tbl$Estimate, na.rm = TRUE),
-      Max = max(person_tbl$Estimate, na.rm = TRUE),
-      Span = max(person_tbl$Estimate, na.rm = TRUE) - min(person_tbl$Estimate, na.rm = TRUE)
+      DistributionN = length(distribution_estimates),
+      ReviewExcludedExtremeEAPs = person_distribution_excluded_n,
+      EstimateUse = distribution_use,
+      Mean = distribution_value(mean),
+      SD = if (length(distribution_estimates) > 1L) {
+        stats::sd(distribution_estimates)
+      } else {
+        NA_real_
+      },
+      Median = distribution_value(stats::median),
+      Min = distribution_value(min),
+      Max = distribution_value(max),
+      Span = if (length(distribution_estimates) > 0L) {
+        max(distribution_estimates) - min(distribution_estimates)
+      } else {
+        NA_real_
+      }
     )
 
     if ("SD" %in% names(person_tbl)) {
-      person_overview$MeanPosteriorSD <- mean(person_tbl$SD, na.rm = TRUE)
+      posterior_sd <- as.numeric(person_distribution_tbl$SD)
+      posterior_sd <- posterior_sd[is.finite(posterior_sd)]
+      person_overview$MeanPosteriorSD <- if (length(posterior_sd) > 0L) {
+        mean(posterior_sd)
+      } else {
+        NA_real_
+      }
     }
   }
 
@@ -9225,6 +9280,17 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
     } else {
       notes <- c(notes, "Optimization did not converge; interpret parameter estimates cautiously.")
     }
+  }
+  if (person_distribution_excluded_n > 0L) {
+    notes <- c(
+      notes,
+      paste0(
+        "Person distribution and targeting summaries omit ",
+        person_distribution_excluded_n,
+        " prior-regularized extreme EAP(s) from the blocked source fit; ",
+        "the exact review-only values remain in the highest/lowest Person tables."
+      )
+    )
   }
   if (identical(as.character(overview$Method[1] %||% NA_character_), "MML")) {
     engine_requested <- as.character(overview$MMLEngineRequested[1] %||% NA_character_)

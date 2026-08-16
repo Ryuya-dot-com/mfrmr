@@ -213,6 +213,11 @@ and interpretability are separate: when a numerical, data, design, or
 stability gate requires review, the coordinates remain available for
 diagnosis, but the call warns and marks the returned subtitle and drawn
 title \verb{REVIEW ONLY}.
+A prior-regularized extreme MML EAP remains in \code{fit$facets$person}. If its
+source fit is blocked, however, it is omitted from the Wright-map scale so
+that a finite but non-interpretable trace cannot collapse the display. The
+exact excluded rows and reason remain in \code{data$person_exclusions}, and the
+omission is stated in \code{data$retention_note}.
 
 \code{type = "wright"} shows persons, facet levels, and step thresholds on
 a shared logit scale. Estimates are plotted as fitted, so the sign

@@ -4398,6 +4398,9 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     slope_table = slope_tbl
   )
   slope_tbl <- apply_mfrm_slope_readiness(slope_tbl, readiness_record)
+  person_tbl <- apply_mfrm_person_source_readiness(
+    person_tbl, readiness_record
+  )
   phase_finish("readiness_assembly", phase_started, "slope eligibility and fit readiness")
 
   phase_started <- phase_clock()
@@ -9858,7 +9861,8 @@ mfrm_diagnostics <- function(res,
           "ParameterStatus", "BoundaryDirection", "ResponseExtreme",
           "OptimizerEstimate", "DisplayEstimate", "DisplayAdjustment",
           "PrimaryEstimateBasis", "OptimizerEstimateUse", "ReasonCodes",
-          "ReadinessContractVersion"
+          "ReadinessContractVersion", "SourceFitReadiness",
+          "SourceInferenceReady", "EstimateUse"
         ))
       ),
     facet_tbl |>

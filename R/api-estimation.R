@@ -852,7 +852,11 @@
 #'   fields, terminal-gradient readiness, requested/selected-stage tolerance
 #'   settings, and the actual L-BFGS-B `OptimizerFactr` / `OptimizerPgtol`
 #'   controls when applicable
-#' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
+#' - `facets$person`: person estimates (`Estimate`; plus `SD` for MML), with
+#'   `SourceFitReadiness`, `SourceInferenceReady`, and `EstimateUse` separating
+#'   a defined Person summary from the source fit's permission to interpret it.
+#'   In particular, a finite prior-regularized MML EAP does not become
+#'   reportable when the source fit is blocked.
 #' - `facets$others`: facet-level estimates for each facet
 #' - `steps`: estimated threshold/step parameters as a one-row-per-step
 #'   `tibble` with `Estimate`. Bare fits keep this table as point estimates.

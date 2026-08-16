@@ -861,16 +861,60 @@ build_wright_map_data <- function(x,
   }
   wright_style <- match_wright_style(wright_style, renderer = renderer)
   person_tbl <- tibble::as_tibble(x$facets$person)
+  source_fit_state <- if (
+    "SourceFitReadiness" %in% names(person_tbl) && nrow(person_tbl) > 0L
+  ) {
+    as.character(person_tbl$SourceFitReadiness[1L])
+  } else {
+    fit_readiness <- as.data.frame(
+      mfrmr_get_readiness_record(x)$fit %||% data.frame(),
+      stringsAsFactors = FALSE
+    )
+    if (nrow(fit_readiness) == 1L &&
+        "FitReadiness" %in% names(fit_readiness)) {
+      as.character(fit_readiness$FitReadiness[1L])
+    } else {
+      "legacy_unknown"
+    }
+  }
+  prior_regularized_extreme <- if ("ReasonCodes" %in% names(person_tbl)) {
+    grepl(
+      "(^|;)mml_extreme_response_prior_regularized($|;)",
+      as.character(person_tbl$ReasonCodes)
+    )
+  } else {
+    rep(FALSE, nrow(person_tbl))
+  }
+  blocked_extreme <- identical(source_fit_state, "blocked") &
+    prior_regularized_extreme
+  person_exclusions <- person_tbl[blocked_extreme, , drop = FALSE]
+  if (nrow(person_exclusions) > 0L) {
+    person_exclusions$PlotExclusionReason <-
+      "prior_regularized_extreme_eap_from_blocked_source_fit"
+  }
   typed_extreme <- if ("ParameterStatus" %in% names(person_tbl)) {
     as.character(person_tbl$ParameterStatus) %in%
       c("unbounded_low", "unbounded_high")
   } else {
     rep(FALSE, nrow(person_tbl))
   }
-  keep_person <- is.finite(person_tbl$Estimate) |
+  keep_person <- !blocked_extreme & (is.finite(person_tbl$Estimate) |
     (identical(wright_style, "facets_style") & typed_extreme)
+  )
   person_tbl <- person_tbl[keep_person, , drop = FALSE]
-  if (nrow(person_tbl) == 0) stop("Person estimates are not available for Wright map.")
+  if (nrow(person_tbl) == 0L) {
+    if (nrow(person_exclusions) > 0L) {
+      stop(
+        paste(
+          "A Wright map is unavailable because every Person estimate is a",
+          "prior-regularized extreme EAP from a blocked source fit.",
+          "Inspect `summary(fit)$decision` and refit before plotting."
+        ),
+        call. = FALSE
+      )
+    }
+    stop("Person estimates are not available for Wright map.")
+  }
 
   facet_tbl <- tibble::as_tibble(x$facets$others)
   if (!all(c("Facet", "Level", "Estimate") %in% names(facet_tbl))) {
@@ -1045,6 +1089,18 @@ build_wright_map_data <- function(x,
   } else {
     ""
   }
+  if (nrow(person_exclusions) > 0L) {
+    person_note <- paste0(
+      nrow(person_exclusions),
+      " prior-regularized extreme Person EAP(s) from the blocked source fit ",
+      "were omitted from the plotted scale; exact values remain in ",
+      "`fit$facets$person` and `person_exclusions`."
+    )
+    retention_note <- paste(
+      c(retention_note[nzchar(retention_note)], person_note),
+      collapse = " "
+    )
+  }
 
   group_levels <- unique(point_tbl$Group)
   point_tbl <- point_tbl |>
@@ -1156,6 +1212,7 @@ build_wright_map_data <- function(x,
 
   person_stats <- tibble::tibble(
     N = nrow(person_tbl),
+    ReviewExcludedN = nrow(person_exclusions),
     FiniteN = length(finite_person_estimates),
     BoundaryExcludedN = nrow(person_tbl) - length(finite_person_estimates),
     Mean = finite_person_center,
@@ -1196,6 +1253,7 @@ build_wright_map_data <- function(x,
       "mfrmr native Wright-map layout"
     },
     person = person_tbl,
+    person_exclusions = person_exclusions,
     person_hist = hist_data,
     person_stats = person_stats,
     locations = point_tbl,
@@ -2585,6 +2643,11 @@ draw_facet_plot <- function(facet_tbl,
 #' stability gate requires review, the coordinates remain available for
 #' diagnosis, but the call warns and marks the returned subtitle and drawn
 #' title `REVIEW ONLY`.
+#' A prior-regularized extreme MML EAP remains in `fit$facets$person`. If its
+#' source fit is blocked, however, it is omitted from the Wright-map scale so
+#' that a finite but non-interpretable trace cannot collapse the display. The
+#' exact excluded rows and reason remain in `data$person_exclusions`, and the
+#' omission is stated in `data$retention_note`.
 #'
 #' `type = "wright"` shows persons, facet levels, and step thresholds on
 #' a shared logit scale. Estimates are plotted as fitted, so the sign

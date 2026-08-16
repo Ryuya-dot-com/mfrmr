@@ -66,7 +66,9 @@ exists. Its release-critical path is limited to:
 The theorem-oriented conditional-JML GPCM boundary chain is retained only on
 the JML GPCM route. MML uses its marginal boundary and common readiness
 contracts; a finite prior-regularized EAP for an extreme response pattern does
-not override a blocked source-fit decision.
+not override a blocked source-fit decision. Person rows carry that source-fit
+decision directly, and Wright maps retain the exact blocked extreme trace in
+their exclusion table without using it to determine the displayed scale.
 
 Multivariate G-theory, broad simulation, unrestricted GPCM, new model
 families, and exact solver imitation remain research or later-release work.

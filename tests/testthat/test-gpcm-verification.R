@@ -480,6 +480,12 @@ test_that("five-category all-maximum persons and raters retain distinct contract
     mml_person$ReasonCodes,
     "mml_extreme_response_prior_regularized"
   )
+  expect_identical(mml_person$SourceFitReadiness, "blocked")
+  expect_false(mml_person$SourceInferenceReady)
+  expect_identical(
+    mml_person$EstimateUse,
+    "review_only_blocked_source_fit"
+  )
   research_only_jml_audits <- c(
     "gpcm_fixed_objective_classification",
     "gpcm_asymptotically_affine_transport",
@@ -502,4 +508,42 @@ test_that("five-category all-maximum persons and raters retain distinct contract
   expect_equal(nrow(mml_summary$facet_recession_review), 0L)
   expect_identical(mml_summary$decision$FitReadiness, "blocked")
   expect_identical(mml_summary$decision$FormalInference, "No")
+  expect_identical(mml_summary$person_overview$Persons, 20L)
+  expect_identical(mml_summary$person_overview$DistributionN, 19L)
+  expect_identical(
+    mml_summary$person_overview$ReviewExcludedExtremeEAPs,
+    1L
+  )
+  expect_identical(
+    mml_summary$person_overview$EstimateUse,
+    "review_only_blocked_extreme_eap_excluded"
+  )
+  expect_lt(
+    abs(mml_summary$person_overview$Mean),
+    abs(mml_person$PrimaryEstimate)
+  )
+  expect_true(any(grepl(
+    "Person distribution and targeting summaries omit 1",
+    mml_summary$key_warnings,
+    fixed = TRUE
+  )))
+  mml_plot <- suppressWarnings(plot(
+    mml, type = "wright", draw = FALSE
+  ))
+  expect_false("P01" %in% mml_plot$data$person$Person)
+  expect_identical(mml_plot$data$person_exclusions$Person, "P01")
+  expect_identical(
+    mml_plot$data$person_exclusions$PlotExclusionReason,
+    "prior_regularized_extreme_eap_from_blocked_source_fit"
+  )
+  expect_identical(mml_plot$data$person_stats$ReviewExcludedN, 1L)
+  expect_lt(
+    max(abs(mml_plot$data$y_range)),
+    abs(mml_person$PrimaryEstimate)
+  )
+  expect_match(
+    mml_plot$data$retention_note,
+    "omitted from the plotted scale",
+    fixed = TRUE
+  )
 })

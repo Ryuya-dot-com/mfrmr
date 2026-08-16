@@ -510,6 +510,50 @@ apply_mfrm_slope_readiness <- function(slope_table, readiness_record) {
   slope_table
 }
 
+apply_mfrm_person_source_readiness <- function(person_table, readiness_record) {
+  person_table <- tibble::as_tibble(person_table)
+  if (nrow(person_table) == 0L) return(person_table)
+
+  fit_readiness <- as.data.frame(
+    readiness_record$fit %||% data.frame(), stringsAsFactors = FALSE
+  )
+  current_record <- nrow(fit_readiness) == 1L &&
+    all(c("FitReadiness", "InferenceReady") %in% names(fit_readiness))
+  fit_state <- if (current_record) {
+    as.character(fit_readiness$FitReadiness[1L])
+  } else {
+    "legacy_unknown"
+  }
+  inference_ready <- current_record &&
+    isTRUE(fit_readiness$InferenceReady[1L])
+
+  parameter_status <- if ("ParameterStatus" %in% names(person_table)) {
+    as.character(person_table$ParameterStatus)
+  } else {
+    rep("legacy_unknown", nrow(person_table))
+  }
+  boundary_only <- parameter_status %in% c(
+    "unbounded_low", "unbounded_high", "unbounded_both"
+  )
+
+  person_table$SourceFitReadiness <- rep(fit_state, nrow(person_table))
+  person_table$SourceInferenceReady <- rep(
+    inference_ready, nrow(person_table)
+  )
+  person_table$EstimateUse <- ifelse(
+    boundary_only,
+    "boundary_only",
+    if (inference_ready) {
+      "source_fit_ready"
+    } else if (identical(fit_state, "blocked")) {
+      "review_only_blocked_source_fit"
+    } else {
+      "review_only_source_fit_not_ready"
+    }
+  )
+  person_table
+}
+
 mfrmr_readiness_additive_candidate_unpropagated <- function(
     additive_audit, person_status = data.frame(), joint = FALSE) {
   state <- as.character(additive_audit$state %||% "")

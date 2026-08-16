@@ -316,7 +316,11 @@ and convergence; it also includes user-facing \code{Method}, engine-facing
 fields, terminal-gradient readiness, requested/selected-stage tolerance
 settings, and the actual L-BFGS-B \code{OptimizerFactr} / \code{OptimizerPgtol}
 controls when applicable
-\item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML)
+\item \code{facets$person}: person estimates (\code{Estimate}; plus \code{SD} for MML), with
+\code{SourceFitReadiness}, \code{SourceInferenceReady}, and \code{EstimateUse} separating
+a defined Person summary from the source fit's permission to interpret it.
+In particular, a finite prior-regularized MML EAP does not become
+reportable when the source fit is blocked.
 \item \code{facets$others}: facet-level estimates for each facet
 \item \code{steps}: estimated threshold/step parameters as a one-row-per-step
 \code{tibble} with \code{Estimate}. Bare fits keep this table as point estimates.
