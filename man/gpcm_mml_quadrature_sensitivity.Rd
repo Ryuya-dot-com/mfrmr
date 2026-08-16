@@ -13,57 +13,59 @@ gpcm_mml_quadrature_sensitivity(
 )
 }
 \arguments{
-\item{fit}{A GPCM MML \code{mfrm_fit} returned by \code{fit_mfrm()}.}
+\item{fit}{A GPCM MML \code{mfrm_fit} returned by \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{data}{The original response data frame used to create \code{fit}.
-Prepared response rows are compared semantically after refitting; row order
-may differ, but changed observations fail closed.}
+\item{data}{The original response data.frame used to create \code{fit}. Prepared
+response rows are compared semantically after refitting; row order may
+differ, but changed observations fail closed.}
 
 \item{quad_points}{At least two distinct positive integers, including the
 quadrature count stored on \code{fit}. A common choice is \code{c(31, 41)}.}
 
-\item{theta_range}{Two finite values defining the common ability grid used for
-fitted category-probability comparison.}
+\item{theta_range}{Two finite values defining the common ability grid used
+for fitted category-probability comparison.}
 
 \item{theta_points}{Number of common-grid ability points; at least 21.}
 }
 \value{
 An object of class \code{mfrm_quadrature_sensitivity} containing:
 \itemize{
-\item \code{summary}: comparison rows relative to the original fit;
-\item \code{runs}: likelihood, gradient, curvature, population-scale, and
-readiness details;
+\item \code{summary}: one comparison row per quadrature grid relative to the original
+fit;
+\item \code{runs}: likelihood, gradient, curvature, population-scale, and readiness
+details for each fit;
 \item \code{slopes}: relative-slope estimates and raw diagnostic SEs;
-\item \code{conditions}: warnings and messages emitted by explicit refits;
+\item \code{conditions}: warnings and messages emitted by the explicit refits;
 \item \code{fits}: the reference and refitted \code{mfrm_fit} objects;
-\item \code{settings} and \code{notes}: the comparison contract and its
-interpretation boundary.
+\item \code{settings} and \code{notes}: the fixed comparison contract and interpretation
+boundary.
 }
+
+The object supports \code{print()}, \code{summary()}, \code{as.data.frame()}, and the
+existing \code{apa_table()} list route (for example \code{apa_table(out)}).
 }
 \description{
-Refit one bounded GPCM-MML model to the same supplied response data at two or
-more Gauss--Hermite quadrature counts. The original fit is reused at its own
-quadrature count; other fits reuse its stored model, identification, anchor,
-optimizer, and population settings.
+Refit one bounded GPCM-MML model to the same supplied response data at two
+or more Gauss--Hermite quadrature counts. The original fit is reused at its
+own quadrature count; all other fits reuse its stored model, identification,
+anchor, optimizer, and population settings.
 }
 \details{
-This is an explicit refit diagnostic: neither \code{summary.mfrm_fit()} nor
-\code{diagnose_mfrm()} invokes it automatically. It reports continuous changes
-rather than classifying a fit as quadrature-stable or unstable. It does not set
-a practical cutoff, promote slope standard errors, or override fit readiness.
+This is an explicit refit diagnostic: neither \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}} nor
+\code{\link[=diagnose_mfrm]{diagnose_mfrm()}} invokes it automatically. It reports continuous changes
+rather than classifying a fit as quadrature-stable or unstable. In
+particular, it does not set a practical cutoff, promote slope standard
+errors, or override the fit-readiness record.
 
 The probability comparison evaluates every observed combination of
 non-Person facet levels on the same theta grid. It therefore exercises the
 complete-predictor GPCM slope action, including additive Rater and Criterion
-locations. This first version fails closed for fitted facet interactions and
-user-supplied latent-regression population models.
+locations. The first version fails closed for fitted facet interactions
+rather than approximating their contribution.
 
 Raw slope and population-SD standard errors are computed from each local
-observed-information Hessian for diagnostic comparison only. Public
-parameter-level \code{SEEligible} values remain unchanged.
-
-The result supports \code{print()}, \code{summary()}, \code{as.data.frame()},
-and the existing \code{apa_table()} list route.
+observed-information Hessian for diagnostic comparison only. The public
+parameter-level \code{SEEligible} state remains unchanged.
 }
 \examples{
 \dontrun{
@@ -82,7 +84,5 @@ apa_table(sensitivity)
 }
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}},
-\code{\link[=diagnose_mfrm]{diagnose_mfrm()}},
-\code{\link[=apa_table]{apa_table()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=apa_table]{apa_table()}}
 }

@@ -70,6 +70,10 @@ before this release. No existing exported function has been removed.
 * FACETS table import retains the reported numeric text and displayed decimal
   precision so rounded output is not silently treated as hidden full-precision
   data.
+* The Infit-versus-measure pathway now has a regression-tested default: Infit
+  is on the horizontal axis and the fitted measure remains on the vertical
+  axis. GPCM category curves retain estimated step-facet slopes and now state
+  explicitly that additive facet effects and interactions are fixed at zero.
 
 ## Reporting and reproducibility
 
@@ -81,6 +85,10 @@ before this release. No existing exported function has been removed.
   estimate-use vocabulary. Added fields may affect code that assumes an exact
   number of rows or columns in a summary component; selecting fields by name is
   recommended.
+* APA output is described as an APA/JARS-informed drafting aid rather than a
+  compliance certificate. The reporting guide now lists study-level fields
+  that the fitted model cannot supply, and weighted-method prose distinguishes
+  row-level likelihood weighting from replicated Person response patterns.
 * External programs are not required to install or use mfrmr. Comparisons with
   FACETS, ConQuest, TAM, or immer remain model- and estimator-specific and are
   not general interchangeability claims.

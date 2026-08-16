@@ -4417,6 +4417,12 @@ table8_barchart_export <- function(fit,
 #' - `fixed`: fixed-width report text (when `include_fixed = TRUE`)
 #' - `settings`: applied options
 #'
+#' Curve coordinates retain estimated step parameters and, for `GPCM`, the
+#' estimated slope for each step-facet group. They are reference-profile
+#' curves: additive facet main effects and fitted interactions are fixed at
+#' zero. `CurveBasis` and `PredictorOffset` record this condition explicitly;
+#' the output is not an arbitrary observed-cell conditional curve.
+#'
 #' @seealso [category_structure_report()], [rating_scale_table()], [plot.mfrm_fit()]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
@@ -4519,7 +4525,7 @@ table8_curves_export <- function(fit,
             "CurveGroup", "Theta", "Category", "Probability",
             "ExpectedScore", "ScoreVariance", "Information",
             "CategoryInformation", "CategoryInformationShare",
-            "Slope", "Model"
+            "Slope", "Model", "CurveBasis", "PredictorOffset"
           ),
         stringsAsFactors = FALSE
       )
@@ -4529,6 +4535,12 @@ table8_curves_export <- function(fit,
       theta_range = theta_range,
       theta_points = theta_points,
       digits = digits,
+      curve_basis = curve_spec$curve_basis,
+      predictor_offset = curve_spec$predictor_offset,
+      curve_basis_description = paste(
+        "Estimated step and, for GPCM, slope parameters are retained;",
+        "additive facet main effects and fitted interactions are fixed at zero."
+      ),
       include_fixed = isTRUE(include_fixed),
       fixed_max_rows = max(25L, as.integer(fixed_max_rows)),
       scales = as.data.frame(

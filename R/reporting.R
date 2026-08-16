@@ -1686,7 +1686,18 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
   }
 
   if (!is.null(config$weight_col) && nzchar(config$weight_col)) {
-    weight_sentence <- "Observation weights were applied as frequency counts."
+    weight_sentence <- paste0(
+      "Positive observation weights from `", as.character(config$weight_col[1]),
+      "` multiplied row-level ordered-category log-likelihood contributions.",
+      if (identical(method, "MML")) {
+        paste0(
+          " The Person distribution was integrated once per Person; the row weights ",
+          "were not interpreted as replicated independent Person response patterns."
+        )
+      } else {
+        ""
+      }
+    )
     method_estimation_sentences <- c(method_estimation_sentences, weight_sentence)
     method_sentences <- c(method_sentences, weight_sentence)
   }

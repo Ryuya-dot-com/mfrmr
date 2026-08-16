@@ -331,6 +331,8 @@ build_step_curve_spec <- function(x) {
     categories = categories,
     rating_min = rating_min,
     n_cat = n_cat,
+    curve_basis = "zero_additive_facet_profile",
+    predictor_offset = 0,
     groups = groups,
     step_points = step_points
   )
@@ -561,6 +563,15 @@ build_curve_tables <- function(curve_spec, theta_grid) {
   exp_tables <- list()
   idx_prob <- 1L
   idx_exp <- 1L
+  curve_basis <- as.character(
+    curve_spec$curve_basis %||% "zero_additive_facet_profile"
+  )[1]
+  predictor_offset <- suppressWarnings(as.numeric(
+    curve_spec$predictor_offset %||% 0
+  )[1])
+  if (!is.finite(predictor_offset)) {
+    stop("Category curves require a finite predictor offset.")
+  }
   for (g in names(curve_spec$groups)) {
     grp <- curve_spec$groups[[g]]
     slope_val <- if (identical(curve_spec$model, "GPCM")) {
@@ -573,14 +584,14 @@ build_curve_tables <- function(curve_spec, theta_grid) {
     }
     probs <- if (identical(curve_spec$model, "GPCM")) {
       category_prob_gpcm(
-        eta = theta_grid,
+        eta = theta_grid + predictor_offset,
         step_cum_mat = matrix(grp$step_cum, nrow = 1L),
         criterion_idx = rep(1L, length(theta_grid)),
         slopes = slope_val,
         slope_idx = rep(1L, length(theta_grid))
       )
     } else {
-      category_prob_rsm(theta_grid, grp$step_cum)
+      category_prob_rsm(theta_grid + predictor_offset, grp$step_cum)
     }
     k_vals <- as.numeric(curve_spec$categories)
     expected <- as.numeric(probs %*% matrix(k_vals, ncol = 1))
@@ -594,7 +605,9 @@ build_curve_tables <- function(curve_spec, theta_grid) {
       Information = information,
       Slope = slope_val,
       Model = curve_spec$model,
-      CurveGroup = grp$name
+      CurveGroup = grp$name,
+      CurveBasis = curve_basis,
+      PredictorOffset = predictor_offset
     )
     idx_exp <- idx_exp + 1L
     for (k in seq_len(ncol(probs))) {
@@ -611,7 +624,9 @@ build_curve_tables <- function(curve_spec, theta_grid) {
         Slope = slope_val,
         Model = curve_spec$model,
         Category = as.character(curve_spec$categories[k]),
-        CurveGroup = grp$name
+        CurveGroup = grp$name,
+        CurveBasis = curve_basis,
+        PredictorOffset = predictor_offset
       )
       idx_prob <- idx_prob + 1L
     }
@@ -2285,7 +2300,16 @@ build_ccc_data <- function(x, theta_range = c(-6, 6), theta_points = 241L) {
   prob_df <- build_curve_tables(curve_spec, theta_grid)$probabilities
   list(
     title = "Category Characteristic Curves",
-    probabilities = prob_df
+    probabilities = prob_df,
+    curve_basis = data.frame(
+      CurveBasis = curve_spec$curve_basis,
+      PredictorOffset = curve_spec$predictor_offset,
+      Description = paste(
+        "Estimated step and, for GPCM, slope parameters are retained;",
+        "additive facet main effects and fitted interactions are fixed at zero."
+      ),
+      stringsAsFactors = FALSE
+    )
   )
 }
 
@@ -2694,7 +2718,11 @@ draw_facet_plot <- function(facet_tbl,
 #' `fit_status`, and `curve_fit_status`, so R users can rebuild the pathway
 #' map in ggplot2, plotly, or a report pipeline while keeping the same
 #' underfit/overfit labels used by [fit_measures_table()]. `type = "ccc"` shows
-#' category response probabilities. `type = "ccc_surface"` or
+#' category response probabilities. For `GPCM`, these curves retain the
+#' estimated step-facet slope; all curve families are reference-profile curves
+#' with additive facet main effects and fitted interactions fixed at zero.
+#' The draw-free `curve_basis`, `CurveBasis`, and `PredictorOffset` fields make
+#' that conditioning explicit. `type = "ccc_surface"` or
 #' `type = "category_surface"` returns 3D-ready category-probability surface
 #' data for external rendering; it deliberately does not add a
 #' plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The

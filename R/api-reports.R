@@ -4162,6 +4162,13 @@ category_structure_report <- function(fit,
 #' over-interpreting boundaries outside the requested theta range or with
 #' multiple crossings.
 #'
+#' These are reference-profile curves. Estimated step parameters and, for
+#' `GPCM`, each step-facet group's estimated slope are retained, while additive
+#' facet main effects and fitted interactions are fixed at zero. The
+#' `CurveBasis` and `PredictorOffset` columns, and the corresponding entries in
+#' `settings`, make that conditioning explicit. Thus the curves do not
+#' represent an arbitrary observed Person-by-facet cell.
+#'
 #' @section Interpreting output:
 #' Use this report to inspect:
 #' - where each category has highest probability across theta
@@ -4818,8 +4825,10 @@ plot_bias_interaction <- function(x,
 #' - `report_text`: manuscript-draft narrative covering Method (model
 #'   specification, estimation, convergence) and Results (global fit,
 #'   facet separation/reliability, misfit triage, category diagnostics,
-#'   residual-PCA screening, bias screening).  Written in third-person past tense
-#'   following APA 7th edition conventions, but still intended for human review.
+#'   residual-PCA screening, bias screening), organized as an APA-oriented,
+#'   third-person Method/Results draft. It is
+#'   intended for human review and is not a claim of complete APA 7 or JARS
+#'   compliance.
 #' - `table_figure_notes`: reusable draft note blocks for table/figure appendices.
 #' - `table_figure_captions`: draft caption candidates aligned to generated outputs.
 #' - active latent-regression fits add a population-model section and Table 5
@@ -4847,7 +4856,7 @@ plot_bias_interaction <- function(x,
 #'
 #' @return
 #' An object of class `mfrm_apa_outputs` with:
-#' - `report_text`: APA-style Method/Results draft prose
+#' - `report_text`: APA-oriented Method/Results draft prose
 #' - `decision`: plain-language source-fit interpretation, formal-inference,
 #'   reason, and next-action guidance
 #' - `fit_readiness`, `fit_readiness_components`, and
@@ -9591,7 +9600,7 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
   )
 }
 
-#' Build APA-style table output using base R structures
+#' Build an APA-oriented table handoff using base R structures
 #'
 #' @param x A data.frame, `mfrm_fit`, `summary()` output supported by
 #'   [build_summary_table_bundle()], an `mfrm_summary_table_bundle`, diagnostics
@@ -9599,7 +9608,7 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' @param which Optional table selector when `x` has multiple tables.
 #' @param diagnostics Optional diagnostics from [diagnose_mfrm()] (used when
 #'   `x` is `mfrm_fit` and `which` targets diagnostics tables).
-#' @param digits Number of rounding digits for numeric columns.
+#' @param digits Uniform number of rounding digits for numeric columns.
 #' @param caption Optional caption text.
 #' @param note Optional note text.
 #' @param bias_results Optional output from [estimate_bias()] used when
@@ -9612,7 +9621,11 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #'
 #' @details
 #' This helper avoids styling dependencies and returns a reproducible base
-#' `data.frame` plus metadata.
+#' `data.frame` plus manuscript-oriented metadata. It does not claim complete
+#' APA 7 or JARS compliance: `digits` applies the same rounding rule to every
+#' numeric column, so statistic-specific formatting (for example, exact
+#' *p*-value, confidence-interval, and effect-size conventions) and the target
+#' journal's final typography still require human review.
 #'
 #' Supported `which` values:
 #' - For `mfrm_fit`: `"summary"`, `"person"`, `"facets"`, `"steps"`

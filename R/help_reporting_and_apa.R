@@ -118,6 +118,29 @@
 #' text, inspect `mfrm_report(res, style = "apa")$first_screen`,
 #' `$claim_readiness`, `$report_gaps`, and `$template_index`.
 #'
+#' @section Standards basis and boundary:
+#' The manuscript helpers are APA-oriented drafting aids informed by the
+#' *Publication Manual of the American Psychological Association* (7th ed.)
+#' and the quantitative Journal Article Reporting Standards (JARS-Quant;
+#' Appelbaum et al., 2018). The MFRM-specific prompts also draw on the model and
+#' diagnostic sources returned by `reporting_checklist(...,
+#' include_references = TRUE)`, including Eckes, Myford and Wolfe, Linacre,
+#' Wright and Masters, and Muraki for bounded `GPCM`.
+#'
+#' The package only knows the fitted measurement objects and context supplied
+#' by the analyst. It therefore cannot certify research-level JARS completeness
+#' for hypotheses and their confirmatory/exploratory status, recruitment and
+#' participant characteristics, ethics, sample-size rationale, missing-data
+#' mechanism and exclusions, multiplicity or deviations from plan, or complete
+#' data/code availability statements. Those study-level fields, effect-size and
+#' uncertainty choices, statistic-specific rounding, and journal typography
+#' must be reviewed and completed outside the generated template.
+#'
+#' Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E., Nezu, A. M., and
+#' Rao, S. M. (2018). Journal article reporting standards for quantitative
+#' research in psychology. *American Psychologist, 73*(1), 3-25.
+#' \doi{10.1037/amp0000191}
+#'
 #' @section Which helper answers which task:
 #' \describe{
 #'   \item{[reporting_checklist()]}{Turns current analysis objects into a

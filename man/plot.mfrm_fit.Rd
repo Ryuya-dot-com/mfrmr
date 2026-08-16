@@ -254,7 +254,11 @@ includes \code{pathway_long}, \code{pathway_annotations}, \code{fit_measures},
 \code{fit_status}, and \code{curve_fit_status}, so R users can rebuild the pathway
 map in ggplot2, plotly, or a report pipeline while keeping the same
 underfit/overfit labels used by \code{\link[=fit_measures_table]{fit_measures_table()}}. \code{type = "ccc"} shows
-category response probabilities. \code{type = "ccc_surface"} or
+category response probabilities. For \code{GPCM}, these curves retain the
+estimated step-facet slope; all curve families are reference-profile curves
+with additive facet main effects and fitted interactions fixed at zero.
+The draw-free \code{curve_basis}, \code{CurveBasis}, and \code{PredictorOffset} fields make
+that conditioning explicit. \code{type = "ccc_surface"} or
 \code{type = "category_surface"} returns 3D-ready category-probability surface
 data for external rendering; it deliberately does not add a
 plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The

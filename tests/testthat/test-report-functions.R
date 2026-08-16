@@ -334,6 +334,8 @@ test_that("category_curves_report returns a bundle", {
                     names(cc$cumulative_probabilities)))
   expect_true(any(cc$cumulative_probabilities$Direction == "at_or_below"))
   expect_true(any(cc$cumulative_probabilities$Direction == "at_or_above"))
+  expect_true(all(c("CurveBasis", "PredictorOffset") %in% names(cc$probabilities)))
+  expect_identical(cc$settings$curve_basis, "zero_additive_facet_profile")
 })
 
 test_that("standalone residual and subset writers create files", {

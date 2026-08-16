@@ -254,6 +254,35 @@ test_that("category-curve reports conserve probabilities, moments, and informati
   expect_curve_moment_identities(make_consistency_gpcm_fit(), theta_points = 9)
 })
 
+test_that("GPCM category curves retain slope and disclose their reference profile", {
+  fit <- make_consistency_gpcm_fit()
+  curves <- category_curves_report(fit, theta_points = 9, digits = 12)
+  .mfrmr_muffle_expected_warnings({
+    ccc <- plot(fit, type = "ccc", draw = FALSE, theta_points = 9)
+  }, "^Review-only display:")
+
+  slope_lookup <- stats::setNames(
+    as.numeric(fit$slopes$Estimate),
+    as.character(fit$slopes$SlopeFacet)
+  )
+  reported_slope <- stats::setNames(
+    as.numeric(curves$probabilities$Slope),
+    as.character(curves$probabilities$CurveGroup)
+  )
+  groups <- intersect(names(slope_lookup), names(reported_slope))
+
+  expect_gt(length(groups), 0L)
+  expect_equal(unname(reported_slope[groups]), unname(slope_lookup[groups]))
+  expect_true(all(curves$probabilities$CurveBasis == "zero_additive_facet_profile"))
+  expect_true(all(curves$probabilities$PredictorOffset == 0))
+  expect_identical(curves$settings$curve_basis, "zero_additive_facet_profile")
+  expect_equal(curves$settings$predictor_offset, 0)
+  expect_identical(
+    ccc$data$curve_basis$CurveBasis,
+    "zero_additive_facet_profile"
+  )
+})
+
 test_that("draw-free category plots expose the same curve data as reports", {
   expect_plot_curves_match_report(make_toy_fit(maxit = 12, model = "RSM"))
   expect_plot_curves_match_report(make_consistency_pcm_fit(), theta_points = 9)

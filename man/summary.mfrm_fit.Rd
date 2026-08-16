@@ -84,8 +84,8 @@ ladder, or for the common RSM ladder
 trace summary for \code{GPCM} discriminations
 \item \code{inference_evidence}: for \code{GPCM} MML, a compact separation of optimizer
 stationarity, retained-point local rank, observed-information curvature,
-slope-boundary screening, and the final readiness decision. Supportive local
-evidence does not override an inconclusive boundary audit
+slope-boundary screening, and the final readiness decision. Supportive
+local evidence does not override an inconclusive boundary audit
 \item \code{interaction_overview}: model-estimated facet-interaction summary
 when the fit was specified with \code{facet_interactions}
 \item \code{settings_overview}: estimation-settings overview that pins the

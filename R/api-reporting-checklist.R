@@ -1055,15 +1055,21 @@ reporting_checklist <- function(fit,
   references <- if (isTRUE(include_references)) {
     data.frame(
       Citation = c(
+        "American Psychological Association (2020)",
+        "Appelbaum et al. (2018)",
         "Eckes (2005)",
         "Koizumi et al. (2019)",
+        "Muraki (1992, 1993)",
         "Myford & Wolfe (2003, 2004)",
         "Linacre (1989, 2002)",
         "Wright & Masters (1982)"
       ),
       Topic = c(
+        "APA 7 manuscript and statistical-reporting conventions",
+        "APA JARS-Quant reporting framework",
         "Rater effects in MFRM",
         "Validity / MFRM task reporting",
+        "Generalized partial-credit model and information functions",
         "Bias and interaction analysis",
         "MFRM and rating scale guidance",
         "Rating scale analysis"

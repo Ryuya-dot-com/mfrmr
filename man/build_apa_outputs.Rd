@@ -26,7 +26,7 @@ build_apa_outputs(
 \value{
 An object of class \code{mfrm_apa_outputs} with:
 \itemize{
-\item \code{report_text}: APA-style Method/Results draft prose
+\item \code{report_text}: APA-oriented Method/Results draft prose
 \item \code{decision}: plain-language source-fit interpretation, formal-inference,
 reason, and next-action guidance
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
@@ -80,8 +80,10 @@ explicitly labelled screening/review-only rather than automatic ranking
 \item \code{report_text}: manuscript-draft narrative covering Method (model
 specification, estimation, convergence) and Results (global fit,
 facet separation/reliability, misfit triage, category diagnostics,
-residual-PCA screening, bias screening).  Written in third-person past tense
-following APA 7th edition conventions, but still intended for human review.
+residual-PCA screening, bias screening), organized as an APA-oriented,
+third-person Method/Results draft. It is
+intended for human review and is not a claim of complete APA 7 or JARS
+compliance.
 \item \code{table_figure_notes}: reusable draft note blocks for table/figure appendices.
 \item \code{table_figure_captions}: draft caption candidates aligned to generated outputs.
 \item active latent-regression fits add a population-model section and Table 5

@@ -30,6 +30,12 @@ test_that("reporting_checklist returns a bundle with checklist coverage tables",
   expect_true(is.data.frame(chk$software_scope))
   expect_true(is.data.frame(chk$facets_positioning))
   expect_true(is.data.frame(chk$visual_scope))
+  expect_true(all(c(
+    "American Psychological Association (2020)",
+    "Appelbaum et al. (2018)",
+    "Muraki (1992, 1993)"
+  ) %in% chk$references$Citation))
+  expect_true(any(chk$references$Topic == "APA JARS-Quant reporting framework"))
   expect_true(all(c("Topic", "Position", "RecommendedWording", "PrimaryRoute") %in%
                     names(chk$facets_positioning)))
   expect_true(any(chk$facets_positioning$Topic == "Reporting source of truth"))

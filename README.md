@@ -819,6 +819,13 @@ by the selected slope; the current kernel is not a loading-only model with
 unscaled facet intercepts. Criterion and rater slopes cannot be estimated
 simultaneously in this model.
 
+`plot(fit_gpcm, type = "ccc")` and `category_curves_report(fit_gpcm)` retain
+the estimated slope for each step-facet level. These are reference-profile
+curves, however: additive facet main effects and fitted interactions are fixed
+at zero. Inspect `CurveBasis`, `PredictorOffset`, and `settings$curve_basis`
+before interpreting a curve as if it represented a particular observed
+Person-by-facet cell.
+
 For unpenalized JML, all-minimum or all-maximum Person patterns can have an
 unbounded primary ability estimate. A finite adjusted display, when supplied,
 is kept separate from the likelihood-based primary status. The same principle
