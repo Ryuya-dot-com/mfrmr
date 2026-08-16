@@ -976,13 +976,14 @@ wording.
   2026-08-16).
 - [x] Open one G4M same-process execution session. The approved 2026-08-16
   attempt rechecked G4L, issued and consumed the exact mutable authority, then
-  failed closed at the mandatory data-free ConQuest sentinel. The x86-64
-  process under Rosetta terminated with `EXC_BAD_ACCESS`/`SIGSEGV 11` in the
-  recurring `CRegistry::WriteInt` startup path. The final target remains absent;
-  the `.incomplete` root retains only the six-byte `quit;` command and empty
+  failed closed at the mandatory data-free ConQuest sentinel while running in
+  the restricted Codex filesystem sandbox. The x86-64 process under Rosetta
+  terminated with `EXC_BAD_ACCESS`/`SIGSEGV 11` in the recurring
+  `CRegistry::WriteInt` startup path. The final target remains absent; the
+  `.incomplete` root retains only the six-byte `quit;` command and empty
   console. Responses generated, fit attempts, and numeric comparisons are all
   zero. This completed checkbox records that the authorized session was
-  consumed, not that the calibration ran or the runtime passed
+  consumed, not that the calibration ran or ConQuest was generally unusable
   (`conquest-adversarial-simulation-tranche-a-live-execution-attempt-record-0.2.3.md`,
   2026-08-16).
 - [x] Harden prospective sentinel-failure retention after the consumed G4M
@@ -990,11 +991,21 @@ wording.
   and, on a sentinel error, retain a zero-dataset/zero-fit execution summary
   without converting the failure into rerun authority. Do not retrofit those
   files into the already consumed incomplete bundle.
-- [ ] Issue no successor G4M attempt until the recurring data-free ConQuest
-  registry-write startup failure is isolated outside the frozen calibration
-  target, a new absent target and prospective authority are frozen, and the
-  user explicitly approves a new run. Prior successful output and expiry
-  pressure do not authorize retry.
+- [x] Isolate the consumed G4M sentinel failure as an execution-tier defect.
+  The exact ConQuest path completes `quit;` outside the filesystem sandbox
+  under both TTY and noninteractive file stdin, so the restricted route—not
+  ConQuest availability or stdin mode—is the controlling operational defect.
+  Retain the registry-write stack as a crash locus without claiming its precise
+  mechanism. Freeze a successor rule that requires same-process semantic
+  success before authority issue; a caller label, path, or hash is insufficient
+  (`conquest-adversarial-simulation-launch-tier-contract-record-0.2.3.md`,
+  2026-08-16).
+- [ ] Freeze a successor G4M specification, target, and authority. Require the
+  future live R process to obtain a PID- and route-bound data-free pre-issue
+  token outside the restricted sandbox, then retain the post-consumption fresh
+  sentinel. Use a new absent target and explicit new user approval; never replay
+  or retrofit the consumed v1 target. Prior output and expiry pressure do not
+  authorize retry.
 - [ ] Run the frozen disjoint calibration band solely to estimate failure,
   variability, runtime, and storage; retain every row and do not reuse
   calibration rows for a confirmation claim.

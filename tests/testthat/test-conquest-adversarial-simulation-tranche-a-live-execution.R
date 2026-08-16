@@ -281,6 +281,13 @@ test_that("G4M consumed sentinel failure remains zero-generation evidence", {
   expect_match(record, "`NumericAgreementInspected=FALSE`", fixed = TRUE)
   expect_match(record, "`RerunAuthorized=FALSE`", fixed = TRUE)
   expect_match(
-    roadmap, "[ ] Issue no successor G4M attempt", fixed = TRUE
+    roadmap,
+    "[x] Isolate the consumed G4M sentinel failure as an execution-tier defect",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "[ ] Freeze a successor G4M specification, target, and authority",
+    fixed = TRUE
   )
 })

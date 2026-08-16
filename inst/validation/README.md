@@ -271,6 +271,13 @@ identify whether the opt-in layer ran and retain its test log.
   sealed smoke arms. All arms are retained in the frozen six-table schema;
   semantic replay and expected structural dispositions pass with zero fit or
   external execution.
+- `conquest-adversarial-simulation-launch-tier-contract-0.2.3.R` and its
+  record: adjudicate the consumed G4M sentinel against paired unsandboxed
+  data-free controls. The installed ConQuest path is usable through both TTY
+  and file stdin outside the restricted route. A future successor must bind a
+  successful same-process semantic pre-issue token before consuming run-once
+  authority; its paths are explicit arguments, while caller labels, path
+  presence, and hashes cannot substitute for the probe.
 - `conquest-p3-item-only-adversarial-fixtures-0.2.3.R` and
   `conquest-p3-item-only-adversarial-fixtures-record-0.2.3.md`: disjoint,
   deterministic 96-Person/4-Item PCM/GPCM suite covering a unit-slope

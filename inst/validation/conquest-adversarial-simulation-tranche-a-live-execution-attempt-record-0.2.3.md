@@ -87,6 +87,27 @@ is the ninth observed instance. A separate older report reaches model
 estimation and has a different stack, demonstrating that these failure classes
 must not be pooled.
 
+## Subsequent execution-tier adjudication
+
+The startup crash did not reproduce outside the restricted filesystem sandbox.
+Using the same `/Applications/ConQuest/ConQuest` path and
+`/usr/bin/arch -x86_64` launcher, a data-free interactive `quit;` control and a
+separate noninteractive file-stdin `quit;` control both reported ConQuest
+5.47.5 Demonstration Version, printed `End of Program`, and exited zero. The
+latter control matches the failed sentinel's input mode, so neither TTY access
+nor file standard input explains the G4M failure.
+
+The corrected classification is therefore
+`runtime_available_unsandboxed_restricted_route_ineligible`. The crash stack
+identifies a registry/settings-write locus but does not prove its precise
+operating-system mechanism. In particular, the observed failure must not be
+described as a general ConQuest startup or product failure. See
+`conquest-adversarial-simulation-launch-tier-contract-record-0.2.3.md`.
+
+This correction changes the diagnosis, not the run-once state. The later
+controls cannot be inserted retroactively before authority consumption, and
+they do not authorize a rerun or any statistical comparison.
+
 ## Scientific and operational disposition
 
 - `UserRunOnceApprovalReceived=TRUE`
@@ -109,9 +130,10 @@ must not be pooled.
 - `ScientificEquivalenceInferred=FALSE`
 - `RerunAuthorized=FALSE`
 
-The next admissible work is a data-free investigation of the recurring
-startup registry failure outside the frozen calibration target. A successor
-attempt would require a new prospective authority contract, an absent new
-target, a clean committed source, and explicit new user approval. Neither the
-approaching demonstration expiry nor prior successful retained output waives
-those requirements.
+The data-free route investigation is complete. A successor attempt would
+require a new prospective authority contract, an absent new target, a clean
+committed source, explicit new user approval, and a successful same-process
+pre-issue semantic probe outside the restricted route before authority is
+issued or consumed. A second fresh sentinel remains mandatory after
+consumption. Neither the approaching demonstration expiry nor prior successful
+retained output waives those requirements.
