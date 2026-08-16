@@ -25,7 +25,7 @@ critical path.
 | External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Retain the bounded evidence and narrow claims; no further external run or independent human review blocks 0.2.3 |
 | DFF, fit, and ranking consequences | APIs exist, but cross-engine and adverse-design decision invariance is not closed | Validate selected release-critical decisions; do not infer them from parameter correlation |
 | G-theory/D-study expansion | Univariate public baseline exists; crossed/nested/multivariate reconstruction is repository research | No new 0.2.3 public claim or large execution |
-| Release candidate | No 0.2.3 candidate or candidate-linked full check exists | Not release-ready |
+| Release candidate | The dated distribution-first candidate passed the exact-source local `R CMD check --as-cran` and aggregate release review | Retain as a candidate; remote cross-platform/submission actions remain separate |
 
 ### Distribution boundary
 
@@ -87,7 +87,8 @@ denominator. Its 46 open historical rows therefore do not mean that 0.2.3 has
 46 release blockers. The current bounded path has three substantive checks:
 
 1. distribution/package boundary: complete and verified by the ordinary
-   source-package check;
+   source-package check, including retention of R's generated
+   `build/vignette.rds` index while repository build scratch stays excluded;
 2. bounded GPCM user contract: extreme-source readiness propagation is
    complete; Hessian values remain diagnostic-only, ordinary slope SE/CI are
    suppressed when ineligible, and summary/plot surfaces now expose the same
@@ -102,6 +103,19 @@ are informational in the current aggregate release review. Candidate identity
 is established by the clean committed source state and its ordinary built and
 checked tarball; freshness, package checks, documentation, and public scope
 still fail closed.
+
+The first full-manual local preflight of this distribution-first source on
+2026-08-16 found one packaging NOTE: `.Rbuildignore` excluded R's generated
+`build/vignette.rds`. Removing that overbroad pattern restored the standard
+prebuilt vignette index. The corrected source then passed `R CMD check
+--as-cran` with zero errors, warnings, or notes, including `--run-donttest`,
+tests, vignette rebuilding, and PDF/HTML manuals. Candidate metadata was then
+prepared and that ordinary check was repeated against the exact dated source.
+The candidate repeat also passed with zero errors, warnings, or notes. Its
+parsed CRAN workload was 171 seconds, freshness checks all passed, and the
+aggregate release review returned `ok` for all fourteen current gates. This is
+local candidate readiness, not a tag, push, CRAN submission, or claim of
+remote cross-platform results.
 
 External reruns, independent human review, FACETS availability, broad recovery
 simulation, and G-theory execution are not members of this denominator. A

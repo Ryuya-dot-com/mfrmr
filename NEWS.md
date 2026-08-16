@@ -9,7 +9,9 @@ CRAN 0.2.2 remains the immutable public baseline; the changes below belong to
   scratch, external-program runners, and candidate authorization machinery are
   excluded from the tarball. The installed runtime has no cryptographic-hash
   dependency, and historical file hashes remain provenance-only rather than
-  statistical acceptance criteria. The 0.2.3 release path is now explicitly
+  statistical acceptance criteria. R's generated `build/vignette.rds` remains
+  in the source tarball so CRAN can verify the prebuilt vignette index. The
+  0.2.3 release path is now explicitly
   limited to ordinary workflow integrity, the bounded-GPCM user contract, the
   already bounded external evidence, and ordinary candidate checks; no further
   external run or independent human review is a release requirement.
