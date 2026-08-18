@@ -179,10 +179,31 @@ test_that("refit conditions are retained without error suppression", {
 })
 
 test_that("the public diagnostic has no machine-identity dependency", {
-  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
-  source <- paste(
-    readLines(file.path(root, "R", "api-quadrature-sensitivity.R")),
-    collapse = "\n"
+  namespace <- asNamespace("mfrmr")
+  targets <- c(
+    "gpcm_mml_quadrature_sensitivity",
+    grep("^mfrmr_gqs_", ls(namespace, all.names = TRUE), value = TRUE),
+    "as.data.frame.mfrm_quadrature_sensitivity",
+    "summary.mfrm_quadrature_sensitivity",
+    "print.mfrm_quadrature_sensitivity",
+    "print.summary.mfrm_quadrature_sensitivity"
   )
-  expect_false(grepl("sha-?256|md5|digest::", source, ignore.case = TRUE))
+  targets <- unique(targets)
+  expect_true(all(vapply(
+    targets,
+    exists,
+    logical(1),
+    envir = namespace,
+    inherits = FALSE
+  )))
+  runtime_text <- paste(vapply(
+    targets,
+    function(name) paste(deparse(get(name, envir = namespace)), collapse = "\n"),
+    character(1)
+  ), collapse = "\n")
+  expect_false(grepl(
+    "sha-?256|md5|digest::",
+    runtime_text,
+    ignore.case = TRUE
+  ))
 })

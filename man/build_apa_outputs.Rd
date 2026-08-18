@@ -133,6 +133,8 @@ package-native bias helper that provides a table component.
 \donttest{
 # Minimal APA-output example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 30
 )

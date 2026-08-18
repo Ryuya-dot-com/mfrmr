@@ -164,6 +164,10 @@ test_that("distribution stress has no machine-identity gate", {
     "..", "..", "inst", "validation",
     "gpcm-latent-distribution-stress-contract-0.2.3.md"
   )
+  skip_if_not(file.exists(runner),
+              "repository-internal validation artifacts are excluded")
+  skip_if_not(file.exists(contract),
+              "repository-internal validation artifacts are excluded")
   text <- paste(
     c(readLines(runner, warn = FALSE), readLines(contract, warn = FALSE)),
     collapse = "\n"

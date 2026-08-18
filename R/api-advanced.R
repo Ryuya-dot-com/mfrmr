@@ -3600,8 +3600,9 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' # criterion identities from one synthetic calibration design.
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+#' # Two balanced 12-Person waves retain every Rater and Criterion.
+#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", quad_points = 7, maxit = 30)
 #' res <- anchor_to_baseline(d2, fit1, "Person",
@@ -3820,8 +3821,9 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+#' # Two balanced 12-Person waves retain every Rater and Criterion.
+#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", quad_points = 7, maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -5013,8 +5015,9 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+#' # Two balanced 12-Person waves retain every Rater and Criterion.
+#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", quad_points = 7, maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -6260,6 +6263,8 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
+#' # A balanced slice retains every Rater and Criterion while running quickly.
+#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", model = "RSM", quad_points = 5)
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")

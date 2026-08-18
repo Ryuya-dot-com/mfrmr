@@ -742,7 +742,10 @@
 #' @return A `ggplot2` plot object.
 #' @examples
 #' \donttest{
-#' fit <- fit_mfrm(load_mfrmr_data("example_core"), "Person",
+#' toy <- load_mfrmr_data("example_core")
+#' # A balanced slice retains every Rater and Criterion while running quickly.
+#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
+#' fit <- fit_mfrm(toy, "Person",
 #'                 c("Rater", "Criterion"), "Score", maxit = 30)
 #' as_ggplot(fit, type = "wright")
 #' as_ggplot(fit, type = "fit_pathway", include_person = TRUE)
