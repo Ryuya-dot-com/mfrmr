@@ -50,6 +50,10 @@ before this release. No existing exported function has been removed.
 * `print()` and `summary()` for fitted models now begin with a plain-language
   interpretation status, the availability of formal inference, the main reason
   for any hold, and a suggested next action.
+* Formal-inference reporting now distinguishes a successful fit gate from the
+  separate precision contract. A fit-only summary does not claim formal
+  inference until matching diagnostics support the standard-error,
+  confidence-interval, and reliability basis.
 * GPCM uncertainty labels are consistent across fitted objects, summaries, and
   plots. Intervals calculated for observation-table Wright or facet displays
   are labelled `screening_only` and are not described as confidence intervals.
@@ -74,6 +78,11 @@ before this release. No existing exported function has been removed.
   is on the horizontal axis and the fitted measure remains on the vertical
   axis. GPCM category curves retain estimated step-facet slopes and now state
   explicitly that additive facet effects and interactions are fixed at zero.
+  Multiple GPCM curve groups are shown in separate panels with category
+  legends instead of as unlabelled overlaid traces.
+* Native Wright maps label every retained facet level using displaced text and
+  leader lines. Step thresholds are displayed as a vertical ladder with the
+  score transition and fitted logit in each label.
 
 ## Reporting and reproducibility
 

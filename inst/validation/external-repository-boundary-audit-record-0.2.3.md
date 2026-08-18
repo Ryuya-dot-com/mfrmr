@@ -42,11 +42,10 @@ The one allowed path fixture is the deliberately fictitious negative case in
 `test-bundle-summary-privacy.R`; it verifies console/output path suppression
 and is not evidence or a real local identity.
 
-The canonical path/family/role/file-hash manifest has SHA-256
-`694f3c86de48b075454708757297898514de923511bbf59341249cd3f4f34a0b`.
-Paths use bytewise radix order so locale cannot change the identity. The
-manifest is reconstructed in memory so a newly tracked or changed external
-artifact cannot inherit an earlier hash.
+The audit recomputes a canonical path/family/role/file-hash manifest in memory.
+Paths use bytewise radix order so locale cannot change the identity, and a newly
+tracked or changed external artifact cannot inherit an earlier hash. The mutable
+repository-wide manifest hash is deliberately not frozen into this record.
 
 ## Audit rules
 
@@ -72,15 +71,14 @@ closed when the inventory is unavailable. It then checks:
 The scanner reports only finding types and repository-relative paths. It never
 copies a matched value into its result or test output.
 
-## Source binding and tests
+## Source binding
 
 | Artifact | SHA-256 |
 | --- | --- |
 | `external-repository-boundary-audit-0.2.3.R` | `ca4a9ae6556bc6e1ff7c8d612f65a8f1d329ac2851872aace8381a0ef0cd199e` |
-| `test-external-repository-boundary-audit.R` | `545dfc06e0693e6de9eb3dd90fa6c112e268e45f7d279dec999e8a7ee7bcb6d6` |
 | sanitized portfolio/ConQuest audit | `2fdaa8f70add2f2da5122f2e68f879d27711fab18e1231931249254e7b0b7358` |
 
-Twenty-six expectations passed. The negative fixture combines a mock
+Twenty-five expectations passed. The negative fixture combines a mock
 executable, identifier-bearing case extension, local absolute path, activation-key
 filename, and assigned key value. The audit returns only the corresponding
 finding classes and paths and never exposes the value.

@@ -78,12 +78,12 @@ test_that("precomputed workflow artifacts represent the canonical successful fit
   expect_true(isTRUE(fit_overview$InferenceReady))
   expect_identical(fit_overview$ConvergenceSeverity, "pass")
   expect_identical(fit_decision$Interpretation,
-                   "Ready for the configured inference")
-  expect_identical(fit_decision$FormalInference, "Yes")
+                   "Fit gates passed; formal precision review required")
+  expect_identical(fit_decision$FormalInference, "No")
   expect_identical(fit_decision$FitReadiness, "ready")
   expect_identical(fit_decision$Why,
-                   "All stored fit-readiness components passed.")
-  expect_match(fit_decision$NextAction, "profile = \"facets\"", fixed = TRUE)
+                   "Formal precision support has not been evaluated.")
+  expect_match(fit_decision$NextAction, "diagnose_mfrm()", fixed = TRUE)
   expect_true(all(c(
     "OptimizerInitialMethod", "OptimizerMethod", "OptimizerPolished",
     "RequestedReltol", "EffectiveReltol", "OptimizerFactr",

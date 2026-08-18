@@ -3062,9 +3062,11 @@ plot_information <- function(x,
 #' @param top_n Maximum number of facet/step locations retained by the native
 #'   renderer for a compact display. Step transitions are always retained and
 #'   omitted facet locations are reported in `retention`; use `Inf` for the
-#'   complete final map. Native text labels remain collision-aware even when
-#'   all coordinates are retained. The FACETS-style payload retains and labels
-#'   every fitted location, grouping coincident labels when needed.
+#'   complete final map. Every retained native location is labelled using
+#'   collision-aware displaced text and leader lines; step transitions are
+#'   shown as one vertical ladder with fitted logits in their labels. The
+#'   FACETS-style payload retains and labels every fitted location, grouping
+#'   coincident labels when needed.
 #' @param show_ci Logical or `NULL`. `NULL` (the default) draws available
 #'   uncertainty intervals for the native renderer and omits them from the
 #'   FACETS-style renderer. Explicit `TRUE` with `renderer = "facets"` creates

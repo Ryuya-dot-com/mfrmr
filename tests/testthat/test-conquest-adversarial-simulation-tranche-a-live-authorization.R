@@ -34,7 +34,7 @@ load_conquest_adversarial_simulation_tranche_a_live_authorization <- function() 
     )
   ))
   skip_if_not(all(file.exists(paths)), "ConQuest ASP G4L files excluded.")
-  pkgload::load_all(root, quiet = TRUE)
+  .mfrmr_test_ensure_source_namespace(root)
   env <- new.env(parent = globalenv())
   for (path in paths) sys.source(path, envir = env)
   list(

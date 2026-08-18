@@ -1987,7 +1987,6 @@ mfrmr_release_readiness_rd_marker_pages <- function(pkg_dir, marker) {
 
 mfrmr_release_readiness_example_policy_status <- function(pkg_dir) {
   expected_dontrun_targets <- sort(c(
-    "gpcm_mml_quadrature_sensitivity",
     "normalize_conquest_overlap_exports",
     "review_conquest_overlap"
   ))

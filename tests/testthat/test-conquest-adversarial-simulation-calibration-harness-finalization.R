@@ -30,7 +30,7 @@ load_conquest_adversarial_simulation_calibration_p4 <- function() {
     )
   ))
   skip_if_not(all(file.exists(paths)), "ConQuest ASP G4C-P4 files excluded.")
-  pkgload::load_all(root, quiet = TRUE)
+  .mfrmr_test_ensure_source_namespace(root)
   env <- new.env(parent = globalenv())
   for (path in paths) sys.source(path, envir = env)
   list(

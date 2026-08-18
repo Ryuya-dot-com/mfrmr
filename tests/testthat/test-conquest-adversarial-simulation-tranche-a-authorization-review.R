@@ -22,7 +22,7 @@ load_conquest_adversarial_simulation_tranche_a_authorization_review <-
       "conquest-adversarial-simulation-tranche-a-authorization-review-0.2.3.R"
     ))
     skip_if_not(all(file.exists(paths)), "ConQuest ASP G4A files are excluded.")
-    pkgload::load_all(root, quiet = TRUE)
+    .mfrmr_test_ensure_source_namespace(root)
     env <- new.env(parent = globalenv())
     for (path in paths) sys.source(path, envir = env)
     g4x_output <- file.path(

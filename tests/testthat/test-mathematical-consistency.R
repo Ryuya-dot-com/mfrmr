@@ -281,6 +281,15 @@ test_that("GPCM category curves retain slope and disclose their reference profil
     ccc$data$curve_basis$CurveBasis,
     "zero_additive_facet_profile"
   )
+  expect_setequal(
+    ccc$data$legend$label,
+    paste("Category", unique(as.character(ccc$data$probabilities$Category)))
+  )
+  expect_match(
+    ccc$data$subtitle,
+    "reference profile fixes additive facet effects and fitted interactions at zero",
+    fixed = TRUE
+  )
 })
 
 test_that("draw-free category plots expose the same curve data as reports", {

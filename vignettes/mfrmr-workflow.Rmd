@@ -200,10 +200,14 @@ plot(
 Read `$decision` before the parameter tables. The same five fields are used
 for RSM, PCM, and bounded GPCM: interpretation status, formal-inference status,
 fit readiness, the reason, and the highest-priority next action. This block
-does not add a new acceptance test. It translates the stored readiness record.
-When `FormalInference` is `"No"`, diagnostic work may continue to investigate
-the stated reason, but estimates and plots remain review-only and must not be
-reported as formal results.
+does not add a new acceptance test. It combines the stored readiness record
+with any supplied precision evidence. A fit-only summary returns
+`FormalInference = "No"` until a matching `diagnose_mfrm()` result is supplied;
+`InferenceReady = TRUE` alone is not evidence for formal SE/CI or reliability.
+Use `summary(fit_toy, diagnostics = diag_toy)$decision` or
+`summary(diag_toy)$decision` for the precision-aware decision. When
+`FormalInference` is `"No"`, diagnostic work may continue to investigate the
+stated reason, but estimates and plots must not be reported as formal results.
 
 Optimizer code zero is only one numerical signal. `fit_mfrm()` also checks the
 terminal gradient; when the initial direct or hybrid solution stops with a

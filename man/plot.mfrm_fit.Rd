@@ -194,9 +194,12 @@ Wright map, pathway map, and category characteristic curves. The
 compact native default records any omitted facet locations in
 \code{data$retention} and annotates the subtitle and drawn figure; use
 \code{top_n = Inf} to retain every fitted location in the final Wright map.
-Native text labels remain collision-aware, so a retained point may be
-unlabeled; its exact level and estimate remain available in the returned
-plot data. When the fit records boundary-separated facet levels and no
+Every retained native location is labelled. Collision-aware \code{LabelX} /
+\code{LabelY} coordinates and leader lines displace text without moving the
+fitted point; \code{label_points} retains both point and text coordinates for
+custom renderers. Step transitions share one vertical ladder and their
+labels include the fitted threshold logit. When the fit records
+boundary-separated facet levels and no
 display range was supplied, the native and FACETS-style maps use the same
 robust automatic range and place those levels at ruler ends. Exact fitted
 values and intervals remain in \code{OriginalEstimate}, \code{CI_Lower}, and
@@ -254,9 +257,12 @@ includes \code{pathway_long}, \code{pathway_annotations}, \code{fit_measures},
 \code{fit_status}, and \code{curve_fit_status}, so R users can rebuild the pathway
 map in ggplot2, plotly, or a report pipeline while keeping the same
 underfit/overfit labels used by \code{\link[=fit_measures_table]{fit_measures_table()}}. \code{type = "ccc"} shows
-category response probabilities. For \code{GPCM}, these curves retain the
+category response probabilities. Multiple curve groups are faceted rather
+than overplotted by the native renderer, and category-specific legends use
+the same colours across panels. For \code{GPCM}, these curves retain the
 estimated step-facet slope; all curve families are reference-profile curves
-with additive facet main effects and fitted interactions fixed at zero.
+with additive facet main effects and fitted interactions fixed at zero; the
+native footer and ggplot subtitle disclose that conditioning.
 The draw-free \code{curve_basis}, \code{CurveBasis}, and \code{PredictorOffset} fields make
 that conditioning explicit. \code{type = "ccc_surface"} or
 \code{type = "category_surface"} returns 3D-ready category-probability surface

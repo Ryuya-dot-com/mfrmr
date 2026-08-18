@@ -68,7 +68,7 @@ observed-information Hessian for diagnostic comparison only. The public
 parameter-level \code{SEEligible} state remains unchanged.
 }
 \examples{
-\dontrun{
+\donttest{
 data <- load_mfrmr_data("example_core")
 fit <- fit_mfrm(
   data, "Person", c("Rater", "Criterion"), "Score",

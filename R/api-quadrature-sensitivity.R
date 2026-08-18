@@ -537,7 +537,7 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [apa_table()]
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' data <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   data, "Person", c("Rater", "Criterion"), "Score",

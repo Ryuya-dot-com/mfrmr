@@ -88,6 +88,19 @@ test_that("native top_n compacts facets but retains every step transition", {
     ,
     drop = FALSE
   ]
+  full_location_keys <- paste(full$data$locations$Group, full$data$locations$Label)
+  full_label_keys <- paste(full$data$label_points$Group, full$data$label_points$Label)
+  expect_setequal(full_label_keys, full_location_keys)
+  expect_true(all(c(
+    "LabelX", "LabelY", "LabelSide", "LabelText", "LabelDisplaced"
+  ) %in% names(full$data$label_points)))
+  full_step_labels <- full$data$label_points[
+    full$data$label_points$PlotType == "Step threshold",
+    ,
+    drop = FALSE
+  ]
+  expect_equal(full_steps$X, full_steps$XBase)
+  expect_true(all(grepl("\\([+-][0-9]", full_step_labels$LabelText)))
   compact_steps <- compact$data$locations[
     compact$data$locations$PlotType == "Step threshold",
     ,

@@ -1040,6 +1040,39 @@ test_that("APA precision cannot override blocked fit readiness", {
   )
 })
 
+test_that("APA formal-inference decision requires precision support after fit gates pass", {
+  data <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(
+    data,
+    "Person",
+    c("Rater", "Criterion"),
+    "Score",
+    method = "JML",
+    model = "RSM",
+    maxit = 60
+  ))
+  diagnostics <- suppressWarnings(diagnose_mfrm(
+    fit,
+    residual_pca = "none"
+  ))
+  apa <- build_apa_outputs(fit, diagnostics = diagnostics)
+
+  expect_true(fit$readiness$fit$InferenceReady[[1]])
+  expect_false(apa$contract$precision$supports_formal_inference)
+  expect_identical(apa$contract$precision$tier, "exploratory")
+  expect_identical(apa$decision$FormalInference[[1]], "No")
+  expect_match(
+    apa$decision$Why[[1]],
+    "precision contract does not support formal inference",
+    fixed = TRUE
+  )
+  expect_match(
+    apa$decision$NextAction[[1]],
+    "keep the draft exploratory",
+    fixed = TRUE
+  )
+})
+
 test_that("build_apa_outputs with bias produces extended text", {
   apa <- build_apa_outputs(.fit, diagnostics = .diag, bias = .bias)
   expect_true(nchar(apa$report_text) > 100)

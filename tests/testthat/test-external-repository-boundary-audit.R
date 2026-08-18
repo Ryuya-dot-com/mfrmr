@@ -50,13 +50,10 @@ test_that("external repository evidence respects privacy and license boundary", 
   bound_paths <- c(
     file.path(validation,
               "external-repository-boundary-audit-0.2.3.R"),
-    file.path(root, "tests", "testthat",
-              "test-external-repository-boundary-audit.R"),
     file.path(validation,
               "portfolio-purpose-and-conquest-audit-0.2.3.md")
   )
   bound_hashes <- vapply(bound_paths, env$mfrmr_erba_sha256, character(1))
-  expect_match(record, audit$Summary$ManifestSHA256, fixed = TRUE)
   expect_true(all(vapply(
     bound_hashes, grepl, logical(1), x = record, fixed = TRUE
   )))

@@ -57,7 +57,8 @@ An object of class \code{summary.mfrm_fit} with:
 \item \code{status}: concise front-door status block for quick review
 \item \code{decision}: plain-language interpretation, formal-inference status,
 reason, and highest-priority next action derived from the stored readiness
-contract
+contract plus supplied precision evidence; fit readiness alone never
+yields \code{FormalInference = "Yes"}
 \item \code{readiness}: the stored fit-level state plus numerical, data, design,
 stability, diagnostic, and reporting workflow states
 \item \code{data_review}: structured connectivity and facet-support evidence used by
@@ -159,6 +160,10 @@ Design, Stability, Diagnostics, and Reporting workflow states.
 \code{InferenceReady} is a conservative compatibility scalar and is \code{TRUE}
 only when the stored \code{FitReadiness} is \code{ready}; numerical convergence
 cannot override input, estimability, category, or boundary review.
+\item \code{decision}: separates that fit gate from formal precision support. A
+fit-only summary returns \code{FormalInference = "No"} until a matching
+\code{mfrm_diagnostics} object is supplied through \verb{diagnostics =}; use
+\code{summary(diagnostics)$decision} for the equivalent precision-aware view.
 \item \code{data_review}: overall multi-facet connectivity, facet-level score
 support, boundary-constant levels, single-level facets, and retained
 preparation notes behind the readiness rows.
@@ -224,6 +229,9 @@ s$overview[, c(
 )]
 s$readiness
 # `InferenceReady = TRUE` means all five stored fit components passed.
+# It does not, by itself, support formal SE/CI or reliability.
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+summary(fit, diagnostics = diag)$decision
 # Design, Stability, Diagnostics, and Reporting remain purpose-specific
 # workflow reviews rather than alternative fit-readiness derivations.
 # If Numerical is not a pass, inspect the retained polish stages; increasing

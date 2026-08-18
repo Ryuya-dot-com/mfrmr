@@ -7158,7 +7158,7 @@ summary.mfrm_diagnostics <- function(object,
     isTRUE(fit_readiness_tbl$InferenceReady[1])
   source_fit_label <- switch(
     source_fit_state,
-    ready = "ready; formal inference permitted by the fit gate",
+    ready = "ready; fit gates passed, with formal precision evaluated separately",
     ready_with_exclusions = "ready with exclusions; review parameter eligibility",
     review = "review required; formal inference is not ready",
     blocked = "blocked; formal inference is not ready",
@@ -7502,7 +7502,15 @@ summary.mfrm_diagnostics <- function(object,
   next_actions <- clean_summary_lines(next_actions, max_n = 4L)
   decision <- mfrm_fit_decision_summary(
     fit_readiness_tbl,
-    next_action = next_actions[1L] %||% NA_character_
+    next_action = next_actions[1L] %||% NA_character_,
+    supports_formal_inference = if (nrow(precision_profile_tbl) > 0L) {
+      isTRUE(precision_profile_tbl$SupportsFormalInference[1L])
+    } else {
+      NA
+    },
+    precision_tier = as.character(
+      precision_profile_tbl$PrecisionTier[1L] %||% NA_character_
+    )
   )
 
   overall_status <- dplyr::case_when(
@@ -8214,6 +8222,10 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   `InferenceReady` is a conservative compatibility scalar and is `TRUE`
 #'   only when the stored `FitReadiness` is `ready`; numerical convergence
 #'   cannot override input, estimability, category, or boundary review.
+#' - `decision`: separates that fit gate from formal precision support. A
+#'   fit-only summary returns `FormalInference = "No"` until a matching
+#'   `mfrm_diagnostics` object is supplied through `diagnostics =`; use
+#'   `summary(diagnostics)$decision` for the equivalent precision-aware view.
 #' - `data_review`: overall multi-facet connectivity, facet-level score
 #'   support, boundary-constant levels, single-level facets, and retained
 #'   preparation notes behind the readiness rows.
@@ -8263,7 +8275,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `status`: concise front-door status block for quick review
 #' - `decision`: plain-language interpretation, formal-inference status,
 #'   reason, and highest-priority next action derived from the stored readiness
-#'   contract
+#'   contract plus supplied precision evidence; fit readiness alone never
+#'   yields `FormalInference = "Yes"`
 #' - `readiness`: the stored fit-level state plus numerical, data, design,
 #'   stability, diagnostic, and reporting workflow states
 #' - `data_review`: structured connectivity and facet-support evidence used by
@@ -8342,6 +8355,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' )]
 #' s$readiness
 #' # `InferenceReady = TRUE` means all five stored fit components passed.
+#' # It does not, by itself, support formal SE/CI or reliability.
+#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' summary(fit, diagnostics = diag)$decision
 #' # Design, Stability, Diagnostics, and Reporting remain purpose-specific
 #' # workflow reviews rather than alternative fit-readiness derivations.
 #' # If Numerical is not a pass, inspect the retained polish stages; increasing
@@ -10091,6 +10107,38 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
     digits = out$digits %||% 3L,
     top_n = max(5L, nrow(out$facet_extremes %||% data.frame()))
   )
+  decision_diagnostics <- if (inherits(diagnostics, "mfrm_diagnostics")) {
+    diagnostics
+  } else if (inherits(results$diagnostics, "mfrm_diagnostics")) {
+    results$diagnostics
+  } else {
+    NULL
+  }
+  precision_profile <- as.data.frame(
+    decision_diagnostics$precision_profile %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(precision_profile) > 0L) {
+    out$decision <- mfrm_fit_decision_summary(
+      mfrmr_get_readiness_record(fit)$fit,
+      next_action = out$next_actions[1L] %||% NA_character_,
+      supports_formal_inference = isTRUE(
+        precision_profile$SupportsFormalInference[1L]
+      ),
+      precision_tier = as.character(
+        precision_profile$PrecisionTier[1L] %||% NA_character_
+      )
+    )
+  } else if (isTRUE(mfrm_inference_ready(fit))) {
+    out$next_actions <- clean_summary_lines(c(
+      paste(
+        "Run `diagnose_mfrm()` and pass its result as `diagnostics =` to",
+        "evaluate formal precision support; fit readiness alone is not a",
+        "formal-inference decision."
+      ),
+      out$next_actions
+    ), max_n = 6L)
+  }
   out$decision$NextAction <- out$next_actions[1L] %||% NA_character_
   class(out) <- "summary.mfrm_fit"
   out
@@ -10136,7 +10184,10 @@ make_summary_block <- function(...) {
   )
 }
 
-mfrm_fit_decision_summary <- function(readiness, next_action = NA_character_) {
+mfrm_fit_decision_summary <- function(readiness,
+                                      next_action = NA_character_,
+                                      supports_formal_inference = NA,
+                                      precision_tier = NA_character_) {
   readiness <- as.data.frame(readiness %||% data.frame(), stringsAsFactors = FALSE)
   required <- c(
     "InputState", "EstimabilityState", "CategoryState", "BoundaryState",
@@ -10155,9 +10206,21 @@ mfrm_fit_decision_summary <- function(readiness, next_action = NA_character_) {
 
   value <- function(field) as.character(readiness[[field]][1L])
   fit_state <- value("FitReadiness")
+  precision_known <- length(supports_formal_inference) == 1L &&
+    !is.na(supports_formal_inference)
+  precision_supported <- precision_known && isTRUE(supports_formal_inference)
+  fit_gate_ready <- isTRUE(readiness$InferenceReady[1L])
+  formal_supported <- fit_gate_ready && precision_supported
+  precision_tier <- as.character(precision_tier)[1L]
   interpretation <- switch(
     fit_state,
-    ready = "Ready for the configured inference",
+    ready = if (formal_supported) {
+      "Ready for formal inference"
+    } else if (precision_known) {
+      "Fit gates passed; formal inference is not supported"
+    } else {
+      "Fit gates passed; formal precision review required"
+    },
     ready_with_exclusions = "Usable only with the recorded exclusions",
     review = "Review before reporting or inference",
     blocked = "Do not interpret this fit",
@@ -10191,6 +10254,17 @@ mfrm_fit_decision_summary <- function(readiness, next_action = NA_character_) {
       "Numerical convergence requires review",
     if (value("NumericalState") %in% c("failed", "not_run"))
       "Numerical convergence failed",
+    if (fit_gate_ready && !precision_known)
+      "Formal precision support has not been evaluated",
+    if (fit_gate_ready && precision_known && !precision_supported)
+      paste0(
+        "The precision contract does not support formal inference",
+        if (!is.na(precision_tier) && nzchar(precision_tier)) {
+          paste0(" (tier: ", precision_tier, ")")
+        } else {
+          ""
+        }
+      ),
     if (fit_state == "legacy_unknown")
       "The stored readiness contract is not current"
   )
@@ -10206,7 +10280,7 @@ mfrm_fit_decision_summary <- function(readiness, next_action = NA_character_) {
   }
   data.frame(
     Interpretation = interpretation,
-    FormalInference = if (isTRUE(readiness$InferenceReady[1L])) "Yes" else "No",
+    FormalInference = if (formal_supported) "Yes" else "No",
     FitReadiness = fit_state,
     Why = reasons,
     NextAction = as.character(next_action)[1L],

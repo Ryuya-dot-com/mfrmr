@@ -282,13 +282,26 @@ fit_summary$step_overview
 ```
 
 Read `fit_summary$decision` first. It translates the stored readiness contract
-into four practical questions: may this fit be interpreted, is formal
-inference supported, what evidence prevents it, and what should be done next.
-It is a presentation of existing evidence, not a new statistical test or an
-automatic model-selection rule. `FormalInference = "No"` means that estimates
-and plots may be inspected only for the stated review purpose; it does not
-mean that changing optimizer settings until the answer becomes `"Yes"` is
-appropriate. Follow `NextAction` and retain the original reason in reports.
+into four practical questions: did the fit gates pass, has formal precision
+support been evaluated, what evidence prevents formal use, and what should be
+done next. A fit-only summary deliberately returns
+`FormalInference = "No"` even when `InferenceReady = TRUE`, because convergence
+and estimability do not by themselves validate standard errors, confidence
+intervals, or reliability. Evaluate that separate contract with diagnostics:
+
+```r
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+summary(fit, diagnostics = diag)$decision
+# Equivalent precision-aware decision:
+summary(diag)$decision
+```
+
+The decision is a presentation of existing evidence, not a new statistical
+test or an automatic model-selection rule. `FormalInference = "No"` still
+permits explicitly labelled diagnostic inspection, but not formal SE/CI,
+reliability, or significance claims. It does not mean that changing optimizer
+settings until the answer becomes `"Yes"` is appropriate. Follow `NextAction`
+and retain the original reason in reports.
 
 Then review convergence and estimation settings. When optimizer code zero is
 reached before the common terminal-gradient check passes, `fit_mfrm()` makes a
@@ -421,9 +434,12 @@ orientation in the figure caption.
 Set `draw = FALSE` to obtain the fitted coordinates for a custom `ggplot2`,
 Quarto, or accessibility-aware figure.
 
-`top_n = Inf` retains every fitted coordinate. The native text layer remains
-collision-aware, so a dense map may leave some retained points unlabeled;
-the returned plot data and retention table remain the complete record.
+`top_n = Inf` retains and labels every fitted coordinate. The native text layer
+keeps the fitted points fixed, moves only colliding labels, and connects them
+with leader lines; `label_points` records both coordinates. Step thresholds
+share a vertical ladder and are labelled with both the score transition and
+the fitted logit. For genuinely dense maps, use the finite `top_n` compact view
+or a larger output device rather than silently omitting interior labels.
 
 When the fit review diagnoses boundary-separated facet levels and no explicit
 `wright_range` is supplied, the native and FACETS-style renderers use the same
@@ -822,9 +838,11 @@ simultaneously in this model.
 `plot(fit_gpcm, type = "ccc")` and `category_curves_report(fit_gpcm)` retain
 the estimated slope for each step-facet level. These are reference-profile
 curves, however: additive facet main effects and fitted interactions are fixed
-at zero. Inspect `CurveBasis`, `PredictorOffset`, and `settings$curve_basis`
-before interpreting a curve as if it represented a particular observed
-Person-by-facet cell.
+at zero. The native plot facets multiple curve groups instead of overlaying
+unlabelled traces, and both native and ggplot displays state the reference
+profile condition. Inspect `CurveBasis`, `PredictorOffset`, and
+`settings$curve_basis` before interpreting a curve as if it represented a
+particular observed Person-by-facet cell.
 
 For unpenalized JML, all-minimum or all-maximum Person patterns can have an
 unbounded primary ability estimate. A finite adjusted display, when supplied,

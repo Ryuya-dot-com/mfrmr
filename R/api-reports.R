@@ -4857,8 +4857,9 @@ plot_bias_interaction <- function(x,
 #' @return
 #' An object of class `mfrm_apa_outputs` with:
 #' - `report_text`: APA-oriented Method/Results draft prose
-#' - `decision`: plain-language source-fit interpretation, formal-inference,
-#'   reason, and next-action guidance
+#' - `decision`: plain-language source-fit interpretation plus the separate
+#'   precision-contract decision; `FormalInference` is `"Yes"` only when both
+#'   the fit gate and `contract$precision$supports_formal_inference` pass
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: exact source-fit readiness provenance
 #' - `table_figure_notes`: consolidated draft notes for tables/visuals
@@ -4950,9 +4951,20 @@ build_apa_outputs <- function(fit,
   apa_next_action <- if (
     nrow(fit_readiness) == 1L &&
       "InferenceReady" %in% names(fit_readiness) &&
-      isTRUE(fit_readiness$InferenceReady[1L])
+      isTRUE(fit_readiness$InferenceReady[1L]) &&
+      isTRUE(contract$precision$supports_formal_inference)
   ) {
     "Review `summary(apa)$content_checks` before inserting draft text into a manuscript."
+  } else if (
+    nrow(fit_readiness) == 1L &&
+      "InferenceReady" %in% names(fit_readiness) &&
+      isTRUE(fit_readiness$InferenceReady[1L])
+  ) {
+    paste(
+      "The fit gates passed, but the precision contract does not support",
+      "formal inference; keep the draft exploratory and review",
+      "`precision_review_report()` before substantive use."
+    )
   } else {
     "Resolve the source fit-readiness decision before using the APA draft for substantive inference."
   }
@@ -4963,7 +4975,10 @@ build_apa_outputs <- function(fit,
       class = c("mfrm_apa_text", "character")
     ),
     decision = mfrm_fit_decision_summary(
-      fit_readiness, next_action = apa_next_action
+      fit_readiness,
+      next_action = apa_next_action,
+      supports_formal_inference = contract$precision$supports_formal_inference,
+      precision_tier = contract$precision$tier
     ),
     fit_readiness = fit_readiness,
     fit_readiness_components = as.data.frame(
@@ -5383,7 +5398,9 @@ summary.mfrm_apa_outputs <- function(object, top_n = 3, preview_chars = 160, ...
     decision = as.data.frame(
       object$decision %||% mfrm_fit_decision_summary(
         object$fit_readiness %||% data.frame(),
-        next_action = "Resolve fit readiness, then review the APA content checks."
+        next_action = "Resolve fit readiness, then review the APA content checks.",
+        supports_formal_inference = object$contract$precision$supports_formal_inference %||% NA,
+        precision_tier = object$contract$precision$tier %||% NA_character_
       ),
       stringsAsFactors = FALSE
     ),

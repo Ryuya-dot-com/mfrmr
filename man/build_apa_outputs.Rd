@@ -27,8 +27,9 @@ build_apa_outputs(
 An object of class \code{mfrm_apa_outputs} with:
 \itemize{
 \item \code{report_text}: APA-oriented Method/Results draft prose
-\item \code{decision}: plain-language source-fit interpretation, formal-inference,
-reason, and next-action guidance
+\item \code{decision}: plain-language source-fit interpretation plus the separate
+precision-contract decision; \code{FormalInference} is \code{"Yes"} only when both
+the fit gate and \code{contract$precision$supports_formal_inference} pass
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: exact source-fit readiness provenance
 \item \code{table_figure_notes}: consolidated draft notes for tables/visuals

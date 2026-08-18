@@ -5,7 +5,7 @@ load_conquest_adversarial_simulation_tranche_a_live_execution <- function() {
     "conquest-adversarial-simulation-tranche-a-live-execution-0.2.3.R"
   )
   skip_if_not(file.exists(path), "ConQuest ASP G4M file excluded.")
-  pkgload::load_all(root, quiet = TRUE)
+  .mfrmr_test_ensure_source_namespace(root)
   env <- new.env(parent = globalenv())
   sys.source(path, envir = env)
   env$mfrmr_cq_ag4m_source_contracts(root, env)

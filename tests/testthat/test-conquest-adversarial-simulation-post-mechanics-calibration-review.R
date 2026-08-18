@@ -16,7 +16,7 @@ load_conquest_adversarial_simulation_post_mechanics_review <- function() {
     "conquest-adversarial-simulation-post-mechanics-calibration-review-0.2.3.R"
   ))
   skip_if_not(all(file.exists(paths)), "ConQuest ASP G4R files are excluded.")
-  pkgload::load_all(root, quiet = TRUE)
+  .mfrmr_test_ensure_source_namespace(root)
   env <- new.env(parent = globalenv())
   for (path in paths) sys.source(path, envir = env)
   output <- file.path(

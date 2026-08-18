@@ -1617,7 +1617,6 @@ release_readiness_gate_fixture <- function(env, check_status,
     example_policy_status <- data.frame(
       DontrunSourceTargets = paste(
         c(
-          "gpcm_mml_quadrature_sensitivity",
           "normalize_conquest_overlap_exports",
           "review_conquest_overlap"
         ),
@@ -2608,7 +2607,6 @@ test_that("release-readiness protocol enforces semantic example guards", {
     status$DontrunSourceTargets,
     paste(
       c(
-        "gpcm_mml_quadrature_sensitivity",
         "normalize_conquest_overlap_exports",
         "review_conquest_overlap"
       ),

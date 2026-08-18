@@ -10,7 +10,7 @@ load_external_mml_algorithm_correlation_audit <- function() {
     skip_if_not_installed(package)
   }
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
-  pkgload::load_all(root, quiet = TRUE)
+  .mfrmr_test_ensure_source_namespace(root)
   validation <- file.path(root, "inst", "validation")
   required <- c(
     "conquest-prospective-tolerance-contract-0.2.3.R",
@@ -167,14 +167,12 @@ test_that("external MML audit record is source-bound", {
   )
   expect_true(file.exists(record_path))
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  # Bind the executable audit contract, not the mutable test harness that
+  # exercises it. This avoids a self-referential hash maintenance cycle.
   artifacts <- c(
     file.path(
       ctx$validation,
       "external-mml-algorithm-correlation-audit-0.2.3.R"
-    ),
-    file.path(
-      ctx$root, "tests", "testthat",
-      "test-external-mml-algorithm-correlation-audit.R"
     )
   )
   hashes <- vapply(

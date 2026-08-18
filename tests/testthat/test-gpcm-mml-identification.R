@@ -130,38 +130,52 @@ test_that("default GPCM MML estimates the common population scale", {
     tolerance = 1e-8
   )
   fit_console <- capture.output(print(fit))
+  fit_console_text <- gsub(
+    "[[:space:]]+",
+    " ",
+    paste(fit_console, collapse = " ")
+  )
   expect_true(any(grepl(
     "Scale: estimated_population_scale",
-    fit_console,
+    fit_console_text,
     fixed = TRUE
   )))
   expect_true(any(grepl(
     "Discrimination: geometric_mean_one_relative_discrimination",
-    fit_console,
+    fit_console_text,
     fixed = TRUE
   )))
   expect_true(any(grepl(
     "GPCM estimator: marginal_maximum_likelihood",
-    fit_console,
+    fit_console_text,
     fixed = TRUE
   )))
   expect_true(any(grepl(
     "Statistical penalty: none | Finite parameter box: no",
-    fit_console,
+    fit_console_text,
     fixed = TRUE
   )))
   kernel_console_line <- paste0(
     "GPCM kernel: aligned_single_owner_relative_slope_gpcm | ",
     "Slope action: complete_adjacent_predictor"
   )
-  expect_true(any(grepl(kernel_console_line, fit_console, fixed = TRUE)))
+  expect_true(any(grepl(kernel_console_line, fit_console_text, fixed = TRUE)))
   summary_console <- capture.output(print(summary_fit))
+  summary_console_text <- gsub(
+    "[[:space:]]+",
+    " ",
+    paste(summary_console, collapse = " ")
+  )
   expect_true(any(grepl(
     "GPCM estimator: marginal_maximum_likelihood",
-    summary_console,
+    summary_console_text,
     fixed = TRUE
   )))
-  expect_true(any(grepl(kernel_console_line, summary_console, fixed = TRUE)))
+  expect_true(any(grepl(
+    kernel_console_line,
+    summary_console_text,
+    fixed = TRUE
+  )))
   for (plot_type in c("wright", "pathway", "ccc")) {
     plot_payload <- suppressWarnings(plot(fit, type = plot_type, draw = FALSE))
     expect_s3_class(plot_payload, "mfrm_plot_data")
