@@ -25,7 +25,7 @@ critical path.
 | External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Retain the bounded evidence and narrow claims; no further external run or independent human review blocks 0.2.3 |
 | DFF, fit, and ranking consequences | APIs exist, but cross-engine and adverse-design decision invariance is not closed | Validate selected release-critical decisions; do not infer them from parameter correlation |
 | G-theory/D-study expansion | Univariate public baseline exists; crossed/nested/multivariate reconstruction is repository research | No new 0.2.3 public claim or large execution |
-| Release candidate | The dated distribution-first candidate passed the exact-source local `R CMD check --as-cran` and aggregate release review | Retain as a candidate; remote cross-platform/submission actions remain separate |
+| Release candidate | The 2026-08-16 distribution-first candidate passed its exact-source local check, but later visualization/reporting hardening superseded that source state | Treat the 2026-08-18 exact-tarball preflight as current local evidence; package-check environmental NOTEs remain review items and remote cross-platform/submission actions remain separate |
 
 ### Distribution boundary
 
@@ -95,7 +95,9 @@ denominator. Its 46 open historical rows therefore do not mean that 0.2.3 has
    interval-eligibility boundary; and
 3. release handoff: freeze one clean source state and run the ordinary package,
    documentation, and public-claim checks without a new SHA/authorization
-   framework.
+   framework. The post-visualization source has passed this local preflight,
+   but it is not yet the final submission candidate while explained
+   environment-specific package-check NOTEs remain under review.
 
 The legacy SHA-bound candidate manifest, candidate-linked result table, and
 claim-disposition hash check remain readable for historical reconstruction but
@@ -104,7 +106,7 @@ is established by the clean committed source state and its ordinary built and
 checked tarball; freshness, package checks, documentation, and public scope
 still fail closed.
 
-The first full-manual local preflight of this distribution-first source on
+The first full-manual local preflight of the distribution-first source on
 2026-08-16 found one packaging NOTE: `.Rbuildignore` excluded R's generated
 `build/vignette.rds`. Removing that overbroad pattern restored the standard
 prebuilt vignette index. The corrected source then passed `R CMD check
@@ -113,9 +115,23 @@ tests, vignette rebuilding, and PDF/HTML manuals. Candidate metadata was then
 prepared and that ordinary check was repeated against the exact dated source.
 The candidate repeat also passed with zero errors, warnings, or notes. Its
 parsed CRAN workload was 171 seconds, freshness checks all passed, and the
-aggregate release review returned `ok` for all fourteen current gates. This is
-local candidate readiness, not a tag, push, CRAN submission, or claim of
-remote cross-platform results.
+aggregate release review returned `ok` for all fourteen then-current gates.
+That candidate is historical local evidence: later Wright-map, CCC, reporting,
+example-policy, and validation-contract changes superseded its source state.
+
+On 2026-08-18, the exact post-hardening tarball again passed installation,
+static checks, ordinary and `donttest` examples, the complete package tests,
+vignette rebuilding, and PDF/HTML manual checks with zero errors and zero
+warnings. Two local-environment NOTEs remained: `diagnose_mfrm` used about two
+CPU seconds but 37.5 elapsed seconds during one timing run, and Apple's tools
+left an `xcrun_db` cache in the temporary directory. Remote CRAN incoming
+lookups were unavailable in the restricted execution environment. An isolated
+replay of the complete documented `diagnose_mfrm` example against the checked
+installation took 2.20 elapsed seconds (2.18 CPU seconds), so no reproducible
+performance regression was observed. The current aggregate review is
+therefore `review` (thirteen gates `ok`, `package_check` under review), not a
+new 14/14 release claim. No statistical, API, example, test, vignette, or
+manual failure was observed.
 
 External reruns, independent human review, FACETS availability, broad recovery
 simulation, and G-theory execution are not members of this denominator. A
@@ -1234,10 +1250,12 @@ is available.
   and an `MD5` manifest to its distributed source, so the submitted compressed
   digest and CRAN-distributed compressed digest are distinct identities even
   though the audited package payload agrees.
-- The `development/0.2.3` branch now carries the dated local 0.2.3 candidate.
-  Its exact distribution source passed the full local `R CMD check --as-cran`
-  and all fourteen current aggregate release gates on 2026-08-16. This does
-  not imply a tag, push, CRAN submission, or remote cross-platform result.
+- The `development/0.2.3` branch contains the post-candidate visualization and
+  reporting hardening. The earlier dated candidate passed all fourteen local
+  gates on 2026-08-16 but is superseded. The 2026-08-18 exact-tarball preflight
+  passed with zero errors and warnings; two explained local-environment NOTEs
+  leave the aggregate decision at thirteen `ok` gates plus one `review`. This
+  does not imply a tag, push, CRAN submission, or remote cross-platform result.
 - `DESCRIPTION` records lifecycle `candidate`, release date 2026-08-16, and
   public baseline 0.2.2; `CITATION.cff` records the same candidate date.
 - If CRAN later asks for a 0.2.2 correction, that work branches from the
