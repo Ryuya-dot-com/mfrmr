@@ -2237,6 +2237,7 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
     return(data.frame(
       Workflow = path,
       WorkflowAvailable = FALSE,
+      DevelopmentBranchPushTrigger = FALSE,
       MatrixIncludesMainOS = FALSE,
       MatrixIncludesRDevelOldrelRelease = FALSE,
       PackageCheckStepPresent = FALSE,
@@ -2251,6 +2252,7 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
   contains <- function(pattern) {
     any(grepl(pattern, lines, fixed = TRUE))
   }
+  development_branch_trigger <- contains("development/**")
   matrix_os <- all(vapply(
     c("ubuntu-latest", "macos-latest", "windows-latest"),
     contains,
@@ -2271,14 +2273,15 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
   data.frame(
     Workflow = path,
     WorkflowAvailable = TRUE,
+    DevelopmentBranchPushTrigger = development_branch_trigger,
     MatrixIncludesMainOS = matrix_os,
     MatrixIncludesRDevelOldrelRelease = matrix_r,
     PackageCheckStepPresent = package_check,
     WarningsAreFailures = warning_policy,
     CheckArtifactsUploaded = artifact_upload,
     ReadinessGatePresent = readiness_gate,
-    CIWorkflowOK = isTRUE(matrix_os && matrix_r && package_check && warning_policy &&
-      artifact_upload && readiness_gate),
+    CIWorkflowOK = isTRUE(development_branch_trigger && matrix_os && matrix_r &&
+      package_check && warning_policy && artifact_upload && readiness_gate),
     stringsAsFactors = FALSE
   )
 }
@@ -2579,6 +2582,8 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
       ),
       paste0(
         "workflow=", ci_workflow_status$WorkflowAvailable[1],
+        "; development_push=",
+        ci_workflow_status$DevelopmentBranchPushTrigger[1],
         "; check_step=", ci_workflow_status$PackageCheckStepPresent[1],
         "; warnings_fail=", ci_workflow_status$WarningsAreFailures[1],
         "; artifacts=", ci_workflow_status$CheckArtifactsUploaded[1],

@@ -1654,6 +1654,7 @@ release_readiness_gate_fixture <- function(env, check_status,
     ),
     ci_workflow_status = data.frame(
       WorkflowAvailable = TRUE,
+      DevelopmentBranchPushTrigger = TRUE,
       PackageCheckStepPresent = TRUE,
       WarningsAreFailures = TRUE,
       CheckArtifactsUploaded = TRUE,
@@ -2474,6 +2475,9 @@ test_that("release-readiness protocol checks CI workflow contract", {
   workflow <- file.path(root, ".github", "workflows", "R-CMD-check.yaml")
   writeLines(c(
     "name: R-CMD-check",
+    "on:",
+    "  push:",
+    "    branches: [main, 'development/**']",
     "matrix:",
     "  config:",
     "    - {os: macos-latest, r: 'release'}",
@@ -2493,6 +2497,7 @@ test_that("release-readiness protocol checks CI workflow contract", {
 
   status <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
   expect_true(status$WorkflowAvailable)
+  expect_true(status$DevelopmentBranchPushTrigger)
   expect_true(status$MatrixIncludesMainOS)
   expect_true(status$MatrixIncludesRDevelOldrelRelease)
   expect_true(status$PackageCheckStepPresent)
@@ -2500,6 +2505,12 @@ test_that("release-readiness protocol checks CI workflow contract", {
   expect_true(status$CheckArtifactsUploaded)
   expect_true(status$ReadinessGatePresent)
   expect_true(status$CIWorkflowOK)
+
+  lines <- readLines(workflow, warn = FALSE)
+  writeLines(sub("development/\\*\\*", "feature/**", lines), workflow)
+  missing_trigger <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_false(missing_trigger$DevelopmentBranchPushTrigger)
+  expect_false(missing_trigger$CIWorkflowOK)
 })
 
 test_that("release-readiness protocol checks source-truth alignment", {
