@@ -25,7 +25,7 @@ critical path.
 | External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Retain the bounded evidence and narrow claims; no further external run or independent human review blocks 0.2.3 |
 | DFF, fit, and ranking consequences | APIs exist, but cross-engine and adverse-design decision invariance is not closed | Validate selected release-critical decisions; do not infer them from parameter correlation |
 | G-theory/D-study expansion | Univariate public baseline exists; crossed/nested/multivariate reconstruction is repository research | No new 0.2.3 public claim or large execution |
-| Release candidate | The 2026-08-16 distribution-first candidate passed its exact-source local check, but later visualization/reporting hardening superseded that source state; committed source `e737e9b` subsequently passed the five-job GitHub Actions package matrix | Treat the 2026-08-18 exact-tarball preflight and cross-platform run `32137294307` as current package evidence; local environmental NOTEs, remote CRAN incoming, Win-builder, and submission remain separate |
+| Release candidate | Committed source `f839df9` passed the exact-source local `--as-cran --run-donttest` check and the five-job GitHub Actions package matrix after the help/example audit | Treat the 2026-08-20 exact-tarball preflight and cross-platform run `32334840726` as current package evidence; Win-builder, tagging, and submission remain separate |
 
 ### Distribution boundary
 
@@ -67,7 +67,7 @@ critical path.
    current-version FACETS comparison claim unsupported; it does not block
    unrelated RSM/PCM/GPCM claims or make FACETS a package dependency. The
    ordinary five-job GitHub Actions matrix is complete for committed source
-   `e737e9b`; remote CRAN incoming, Win-builder, and submission are not implied.
+   `f839df9`; Win-builder, tagging, and submission are not implied.
 
 ### Stop rules against local optimization
 
@@ -97,10 +97,8 @@ denominator. Its 46 open historical rows therefore do not mean that 0.2.3 has
    interval-eligibility boundary; and
 3. release handoff: freeze one clean source state and run the ordinary package,
    documentation, and public-claim checks without a new SHA/authorization
-   framework. The post-visualization source has passed this local preflight
-   and the ordinary GitHub Actions matrix, but it is not yet a tagged or
-   submitted release candidate. Explained environment-specific local
-   package-check NOTEs remain under review.
+   framework. Source `f839df9` has passed the exact local preflight and the
+   ordinary GitHub Actions matrix, but it is not yet tagged or submitted.
 
 The legacy SHA-bound candidate manifest, candidate-linked result table, and
 claim-disposition hash check remain readable for historical reconstruction but
@@ -154,6 +152,22 @@ workload was 533 seconds against the unchanged 600-second bound. This closes
 the normal cross-platform package matrix for that source state. It does not
 establish remote CRAN incoming results, Win-builder results, CRAN acceptance,
 external-software equivalence, or broader GPCM/G-theory claims.
+
+The subsequent help/example audit removed internal research-process wording
+from public help, repaired the pkgdown reference index, strengthened the
+first-use route, and made small quadrature-sensitivity differences visible in
+the reporting example without changing estimation code. Exact committed source
+`f839df9` then passed local `R CMD check --as-cran --run-donttest` with zero
+errors, warnings, or notes; remote incoming feasibility, package tests,
+vignette rebuilding, and PDF/HTML manuals all completed. The current
+distribution-first aggregate returned `ok` for all fourteen gates. GitHub
+Actions run `32334840726` also passed all five jobs for the same source. Its
+R-devel package-controlled workload was 450 seconds and its full
+`NOT_CRAN=true` Ubuntu workload was 573 seconds against the unchanged
+600-second bound; the full test path reported 15,485 passes, 42 expected
+warnings, 43 skips, and zero failures. This closes the ordinary local and
+cross-platform package handoff for that source, not Win-builder, tagging,
+submission, external-software equivalence, or broader GPCM/G-theory claims.
 
 External reruns, independent human review, FACETS availability, broad recovery
 simulation, and G-theory execution are not members of this denominator. A
