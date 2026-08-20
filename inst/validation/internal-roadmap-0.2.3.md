@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-16.
+Status: repository-only maintainer plan, refined 2026-08-18.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -25,7 +25,7 @@ critical path.
 | External numerical evidence | Benign ConQuest core is closed narrowly; the disjoint adversarial calibration has run and is descriptive only; TAM/immer have bounded matched or eligibility evidence | Retain the bounded evidence and narrow claims; no further external run or independent human review blocks 0.2.3 |
 | DFF, fit, and ranking consequences | APIs exist, but cross-engine and adverse-design decision invariance is not closed | Validate selected release-critical decisions; do not infer them from parameter correlation |
 | G-theory/D-study expansion | Univariate public baseline exists; crossed/nested/multivariate reconstruction is repository research | No new 0.2.3 public claim or large execution |
-| Release candidate | The 2026-08-16 distribution-first candidate passed its exact-source local check, but later visualization/reporting hardening superseded that source state | Treat the 2026-08-18 exact-tarball preflight as current local evidence; package-check environmental NOTEs remain review items and remote cross-platform/submission actions remain separate |
+| Release candidate | The 2026-08-16 distribution-first candidate passed its exact-source local check, but later visualization/reporting hardening superseded that source state; committed source `e737e9b` subsequently passed the five-job GitHub Actions package matrix | Treat the 2026-08-18 exact-tarball preflight and cross-platform run `32137294307` as current package evidence; local environmental NOTEs, remote CRAN incoming, Win-builder, and submission remain separate |
 
 ### Distribution boundary
 
@@ -65,7 +65,9 @@ critical path.
 5. Freeze one candidate and run the normal package/check/documentation/public-
    claim handoff. A currently unavailable FACETS executable leaves the exact
    current-version FACETS comparison claim unsupported; it does not block
-   unrelated RSM/PCM/GPCM claims or make FACETS a package dependency.
+   unrelated RSM/PCM/GPCM claims or make FACETS a package dependency. The
+   ordinary five-job GitHub Actions matrix is complete for committed source
+   `e737e9b`; remote CRAN incoming, Win-builder, and submission are not implied.
 
 ### Stop rules against local optimization
 
@@ -95,9 +97,10 @@ denominator. Its 46 open historical rows therefore do not mean that 0.2.3 has
    interval-eligibility boundary; and
 3. release handoff: freeze one clean source state and run the ordinary package,
    documentation, and public-claim checks without a new SHA/authorization
-   framework. The post-visualization source has passed this local preflight,
-   but it is not yet the final submission candidate while explained
-   environment-specific package-check NOTEs remain under review.
+   framework. The post-visualization source has passed this local preflight
+   and the ordinary GitHub Actions matrix, but it is not yet a tagged or
+   submitted release candidate. Explained environment-specific local
+   package-check NOTEs remain under review.
 
 The legacy SHA-bound candidate manifest, candidate-linked result table, and
 claim-disposition hash check remain readable for historical reconstruction but
@@ -132,6 +135,25 @@ performance regression was observed. The current aggregate review is
 therefore `review` (thirteen gates `ok`, `package_check` under review), not a
 new 14/14 release claim. No statistical, API, example, test, vignette, or
 manual failure was observed.
+
+The first remote run after enabling `development/**` branch pushes
+(`32112908147`) was deliberately treated as diagnostic rather than as a pass.
+Three jobs passed. R-devel completed `R CMD check` with `Status: OK` but the
+repository workload review measured 605 seconds against the unchanged
+600-second bound, and the full Ubuntu release job exposed two tests that
+incorrectly assumed repository-only validation files were present in the
+built tarball. The response was to bound duplicated executable examples and
+make the tests respect the source-package boundary; the timing threshold was
+not relaxed and no likelihood, estimator, diagnostic rule, or public claim was
+changed.
+
+Corrected run `32137294307` then passed all five jobs for committed source
+`e737e9b`: Windows release, macOS release, Ubuntu oldrel-1, Ubuntu devel, and
+Ubuntu release with the full `NOT_CRAN=true` test path. The R-devel CRAN
+workload was 533 seconds against the unchanged 600-second bound. This closes
+the normal cross-platform package matrix for that source state. It does not
+establish remote CRAN incoming results, Win-builder results, CRAN acceptance,
+external-software equivalence, or broader GPCM/G-theory claims.
 
 External reruns, independent human review, FACETS availability, broad recovery
 simulation, and G-theory execution are not members of this denominator. A

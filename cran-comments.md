@@ -29,6 +29,14 @@ The check included ordinary examples, `--run-donttest`, package tests,
 vignette rebuilding, and PDF and HTML manual checks. External proprietary
 software is not required to install, check, or use the package.
 
+GitHub Actions run 32137294307 passed on all five configured jobs for committed
+source e737e9b: Windows release, macOS release, Ubuntu oldrel-1, Ubuntu devel,
+and Ubuntu release with the full `NOT_CRAN=true` test path. The R-devel CRAN
+workload was 533 seconds against the unchanged 600-second gate. This matrix
+checks the package across those environments; it is not evidence for external-
+software equivalence.
+
 The local execution environment could not perform remote CRAN incoming
-lookups. Those lookups and the remote platform matrix remain required before
-submission; the two local NOTEs are not recorded as a 14/14 release pass.
+lookups. Those lookups, Win-builder, and submission remain separate actions;
+the cross-platform result does not erase or reclassify the two explained local
+environmental NOTEs.
