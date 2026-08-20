@@ -5,34 +5,22 @@ unchanged.
 
 The release strengthens numerical diagnostics, fail-closed inference
 readiness, extreme-score handling, and the bounded generalized partial-credit
-workflow. It does not claim unrestricted GPCM, general cross-software
-equivalence, native multidimensional estimation, or new production
-G-theory/D-study extensions.
+workflow.
 
-## R CMD check
+## Test environments
 
-Local environment:
+- Local: macOS Tahoe 26.5.2, arm64, R 4.6.1 (2026-06-24),
+  `R CMD check --as-cran --run-donttest`
+- Win-builder: R-oldrelease 4.5.3 (2026-03-11 ucrt)
+- Win-builder: R-release 4.6.1 (2026-06-24 ucrt)
+- Win-builder: R-devel (2026-08-17 r90424 ucrt)
 
-- macOS Tahoe 26.5.2, arm64
-- R 4.6.1 (2026-06-24)
-- `R CMD check --as-cran --run-donttest`
+## R CMD check results
 
-The exact source at commit `f839df9` completed with 0 errors, 0 warnings, and
-0 notes. CRAN incoming feasibility, ordinary and `donttest` examples, package
-tests, vignette rebuilding, and PDF and HTML manual checks all completed. The
-release-readiness review classified all 14 current distribution-first gates as
-`ok`; its package-controlled CRAN workload was 134 seconds against the
-unchanged 600-second gate.
+The exact source tarball submitted to Win-builder completed with 0 errors,
+0 warnings, and 0 notes on all four environments listed above. The local check
+also ran the `donttest` examples. Package tests, vignette rebuilding, and PDF
+and HTML manual checks completed successfully.
 
 External proprietary software is not required to install, check, or use the
 package.
-
-GitHub Actions run 32334840726 passed on all five configured jobs for the same
-commit `f839df9`: Windows release, macOS release, Ubuntu oldrel-1, Ubuntu devel,
-and Ubuntu release with the full `NOT_CRAN=true` test path. The R-devel CRAN
-workload was 450 seconds and the full Ubuntu workload was 573 seconds, both
-against the unchanged 600-second gate. This matrix checks the package across
-those environments; it is not evidence for external-software equivalence.
-
-Win-builder and submission remain separate actions. Local and cross-platform
-package checks do not establish external-software equivalence.
