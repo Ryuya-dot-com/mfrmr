@@ -285,16 +285,10 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 
 \examples{
 \donttest{
-# Minimal diagnostic example without residual PCA.
+# Diagnostic example without residual PCA.
 toy <- load_mfrmr_data("example_operational")
-fit_quick <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
-)
-diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "both",
-                            residual_pca = "none")
-summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
-
+# Seven quadrature points keep this example short; use the prespecified
+# final grid and a denser sensitivity grid for substantive analysis.
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "RSM", quad_points = 7, maxit = 30

@@ -230,6 +230,10 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "planner-schema contract",
     "second-wave visual layer",
     "package-test coverage",
+    "repository theorem-only",
+    "internal analytic prototype",
+    "retrospective 40-dataset owner panel",
+    "predeclared deterministic challenge",
     "roadmap_only",
     "schema-only future branch",
     "future-branch active planning scaffold"
@@ -252,6 +256,10 @@ test_that("CRAN-facing documentation excludes development-process language", {
       if (length(idx) > 0L) {
         hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
       }
+    }
+    idx <- grep("\\bP[0-9]+[a-z]\\b", lines, perl = TRUE)
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
     }
   }
   expect_identical(hits, character(0))

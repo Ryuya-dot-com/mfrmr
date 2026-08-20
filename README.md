@@ -79,12 +79,23 @@ remotes::install_github(
 )
 ```
 
-Load the package and list its installed guides:
+Load the package, inspect the six-step beginner route, and list the installed
+guides:
 
 ```r
 library(mfrmr)
+mfrmr_output_guide("beginner")[, c(
+  "Question", "MainFunction", "NextStep"
+)]
 browseVignettes("mfrmr")
 ```
+
+For the shortest end-to-end explanation, open
+`help("mfrmr_workflow_methods", package = "mfrmr")` or
+`vignette("mfrmr-workflow", package = "mfrmr")`. Use
+`help("mfrmr_visual_diagnostics", package = "mfrmr")` when choosing a figure
+and `help("mfrmr_reporting_and_apa", package = "mfrmr")` when moving from a
+reviewed fit to tables and manuscript-draft output.
 
 ## Data format
 

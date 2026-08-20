@@ -538,18 +538,19 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [apa_table()]
 #' @examples
 #' \donttest{
-#' data <- load_mfrmr_data("example_core")
+#' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
-#'   data, "Person", c("Rater", "Criterion"), "Score",
+#'   toy, "Person", c("Rater", "Criterion"), "Score",
 #'   method = "MML", model = "GPCM",
 #'   step_facet = "Criterion", slope_facet = "Criterion",
 #'   quad_points = 31
 #' )
 #' sensitivity <- gpcm_mml_quadrature_sensitivity(
-#'   fit, data, quad_points = c(31, 41)
+#'   fit, toy, quad_points = c(31, 41)
 #' )
 #' summary(sensitivity)
-#' apa_table(sensitivity)
+#' # Preserve small numerical differences when preparing the sensitivity table.
+#' apa_table(sensitivity, digits = 5)
 #' }
 #' @export
 gpcm_mml_quadrature_sensitivity <- function(

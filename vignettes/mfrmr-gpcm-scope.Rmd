@@ -340,33 +340,14 @@ family is recorded as a candidate, but `ParameterStatus` remains
 path result does not determine the global maximum of the non-concave GPCM
 likelihood. Failure to find such a path is equally limited to that family.
 Under MML, Persons are integrated out, so neither conditional JML result is
-reused as marginal-likelihood evidence. The MML branch instead records a
-separate sufficient-path check for the declared finite quadrature objective:
-positive-loading responses must maximize unscaled utility at every node and
-negative-loading responses must minimize it. Compatible paths receive an
-independently reconstructed Person-pattern boundary likelihood. This is not a
-continuous-integral or joint-coordinate proof and has no readiness effect;
-both certified and none-certified outcomes leave free MML slopes
-`not_evaluated`. A retrospective 40-dataset owner panel returned the same
-none-certified state at 31, 61, and 91 quadrature points for every dataset and
-reproduced its earlier likelihoods exactly. Because the panel contained no
-positive certified case and had already been inspected, it does not establish
-positive-path sensitivity, a finite maximum, a quadrature tolerance, or a
-default. In a separately predeclared deterministic challenge, the known
-five-node positive construction was no longer certified at 31, 61, or 91
-points for either slope owner. As the quadrature grid grows, its extreme nodes
-move outward and the individual-response all-node condition becomes too
-restrictive for those controls. MML slope readiness remains blocked pending a
-broader Person-marginal path condition. An internal analytic prototype
-reconstructs the wider path's value, derivatives, surviving-node boundary, and
-leading tail term, but it does not prove the complete half-line and cannot
-change a fitted object's status. A separate exact continuous-normal microcase
-does prove a complete half-line result for two zero-threshold binary items:
-the `(1, 0)` marginal strictly increases under slopes `exp(t)` and `exp(-t)`
-toward an unattained probability of one quarter, whereas `(1, 1)` strictly
-decreases. This proves that the wider Person-marginal boundary mechanism can
-survive continuous integration; it does not generalize the certificate to a
-fitted multifacet GPCM.
+reused as marginal-likelihood evidence. The MML branch records a separate
+sufficient-path check for the fitted finite-quadrature objective, but that
+check is not a complete analysis of the continuous marginal likelihood.
+Whether it finds a path or not, free MML slopes remain `not_evaluated` until
+the applicable parameter-level readiness conditions are established. Use
+[gpcm_mml_quadrature_sensitivity()] to inspect movement across quadrature
+grids; grid stability is numerical evidence, not proof that a finite global
+maximum exists or that slope uncertainty is inferentially eligible.
 
 The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
 local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for
