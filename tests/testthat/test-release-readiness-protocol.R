@@ -2513,6 +2513,82 @@ test_that("release-readiness protocol checks CI workflow contract", {
   expect_false(missing_trigger$CIWorkflowOK)
 })
 
+test_that("release-readiness follows local reusable CI workflows", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  workflow_dir <- file.path(root, ".github", "workflows")
+  dir.create(workflow_dir, recursive = TRUE)
+  workflow <- file.path(workflow_dir, "R-CMD-check.yaml")
+  cell <- file.path(workflow_dir, "R-CMD-check-cell.yaml")
+  writeLines(c(
+    "name: R-CMD-check",
+    "on:",
+    "  push:",
+    "    branches: [main, 'development/**']",
+    "jobs:",
+    "  macos-release:",
+    "    uses: ./.github/workflows/R-CMD-check-cell.yaml",
+    "    with:",
+    "      os: macos-latest",
+    "      r: release",
+    "  remaining-platforms:",
+    "    needs: macos-release",
+    "    matrix:",
+    "      - {os: windows-latest, r: release}",
+    "      - {os: ubuntu-latest, r: devel}",
+    "      - {os: ubuntu-latest, r: oldrel-1}",
+    "    uses: ./.github/workflows/R-CMD-check-cell.yaml"
+  ), workflow)
+  writeLines(c(
+    "on: workflow_call",
+    "jobs:",
+    "  check:",
+    "    steps:",
+    "      - uses: r-lib/actions/check-r-package@v2",
+    "        with:",
+    "          error-on: '\"warning\"'",
+    "      - name: Upload check results",
+    "        uses: actions/upload-artifact@v4",
+    "        with:",
+    "          path: check",
+    "      - name: Repository validation review",
+    "        run: mfrmr_release_readiness_review(pkg_dir = \".\")"
+  ), cell)
+
+  status <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_true(status$PackageCheckStepPresent)
+  expect_true(status$WarningsAreFailures)
+  expect_true(status$CheckArtifactsUploaded)
+  expect_true(status$ReadinessGatePresent)
+  expect_true(status$CIWorkflowOK)
+
+  unlink(cell)
+  missing <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_false(missing$PackageCheckStepPresent)
+  expect_false(missing$CIWorkflowOK)
+
+  outside <- file.path(root, "outside.yaml")
+  writeLines(c(
+    "r-lib/actions/check-r-package@v2",
+    "error-on: warning",
+    "actions/upload-artifact@v4 check",
+    "Repository validation review mfrmr_release_readiness_review"
+  ), outside)
+  lines <- readLines(workflow, warn = FALSE)
+  lines <- sub(
+    "./.github/workflows/R-CMD-check-cell.yaml",
+    "./.github/workflows/../../outside.yaml",
+    lines,
+    fixed = TRUE
+  )
+  writeLines(lines, workflow)
+  traversal <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_false(traversal$CIWorkflowOK)
+})
+
 test_that("release-readiness protocol checks source-truth alignment", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())

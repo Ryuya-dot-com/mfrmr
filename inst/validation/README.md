@@ -40,6 +40,58 @@ identify whether the opt-in layer ran and retain its test log.
 
 ## Primary files
 
+- `fixed-calibration-g0-contract-0.2.4.R` and
+  `fixed-calibration-g0-contract-record-0.2.4.md`: establish the 0.2.4
+  fixed-calibration release with a machine-readable claim ledger, complete
+  fitted-object scorer field/behavior inventory, and provisional six-lane
+  support matrix. They bind the CRAN 0.2.3 source payload to the local baseline
+  and authorize bounded G1 work, but no public API or lane promotion.
+- `fixed-calibration-g1-schema-0.2.4.R` and
+  `fixed-calibration-g1-schema-record-0.2.4.md`: freeze the minimum RSM/PCM MML
+  artifact field ownership, expanded coordinate and typed-anchor shapes,
+  immutable lifecycle, structured refusal taxonomy, semantic identity, and
+  prohibited training/Person state before any constructor is exported.
+- `fixed-calibration-g1-lifecycle-record-0.2.4.md`: records the unexported
+  RSM/PCM draft, validation, freeze, supersession/retirement, print/summary,
+  canonical RDS, and artifact-only scoring slice; its privacy, mutation,
+  anchor, interaction, numerical-oracle, and lossless round-trip evidence; and
+  the explicit boundary that still prevents public promotion.
+- `fixed-calibration-g1-scoring-worker-0.2.4.R`: isolated artifact-plus-new-
+  responses worker used to prove fit-free RSM/PCM scoring after a clean source-
+  package install without training data, preparation globals, or RNG state.
+- `fixed-calibration-g2-anchor-contract-0.2.4.R` and
+  `fixed-calibration-g2-anchor-record-0.2.4.md`: freeze the strict typed direct,
+  group, shared-step, and owned-step namespaces; the order-invariant conflict
+  rules; and the per-ladder free-dimension/rank contract. The record binds
+  unanchored reduction, full-fix probability reconstruction, partial-anchor
+  likelihood identity, gradient/Jacobian, missing-category, score-map reversal,
+  and wrong-owner evidence while keeping slope/population lanes and the public
+  API closed.
+- `fixed-calibration-g3-scoring-contract-0.2.4.R` and
+  `fixed-calibration-g3-scoring-record-0.2.4.md`: close the internal RSM/PCM
+  pure-scoring policy with explicit missing-response omission, event-identified
+  repeats, zero-valid Person suppression, row/Person dispositions,
+  endpoint/sparse/quadrature-edge review, and complete conditional-score
+  identities while keeping public and optional lanes closed.
+- `fixed-calibration-g4-evidence-contract-0.2.4.R`,
+  `fixed-calibration-g4-confirmation-worker-0.2.4.R`, and
+  `fixed-calibration-g4-evidence-record-0.2.4.md`: prospectively freeze the
+  disjoint RSM/PCM confirmation identities, complete adversarial denominator,
+  numerical and resource rules, and five-cell OS/R matrix, then support a
+  vanilla-process artifact-only replay. The record closes CORE-05 for the exact
+  fixed-basis local core, records material alternative-prior sensitivity as a
+  review/non-claim, and leaves CORE-06 and G4 open for the CI platform cells.
+- `fixed-calibration-g4-macos-installed-runner-0.2.4.R` and
+  `fixed-calibration-g4-macos-record-0.2.4.md`: enforce and record an isolated
+  source-tarball installation exercised in native arm64 macOS/R release
+  vanilla processes. This closes the native macOS preflight, but deliberately
+  leaves the prospectively required hosted macOS workflow cell and the four
+  distinct Windows/Linux/R-version cells open.
+- `.github/workflows/R-CMD-check.yaml` and
+  `.github/workflows/R-CMD-check-cell.yaml`: run hosted macOS/R release as a
+  prerequisite, then release the four remaining cells in parallel through one
+  shared R CMD check, release-readiness, and G4 procedure. Workflow wiring is
+  tested repository evidence, but does not count as a platform pass.
 - `internal-roadmap-0.2.3.md`: repository-only maintainer roadmap containing
   detailed release sequencing, evidence invalidation, local external-tool
   identities, and completion gates that do not belong in user-facing roadmap

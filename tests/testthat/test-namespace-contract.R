@@ -382,7 +382,13 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(as.data.frame,mfrm_quadrature_sensitivity)",
     "S3method(print,mfrm_quadrature_sensitivity)",
     "S3method(print,summary.mfrm_quadrature_sensitivity)",
-    "S3method(summary,mfrm_quadrature_sensitivity)"
+    "S3method(summary,mfrm_quadrature_sensitivity)",
+    # 0.2.4 internal fixed-calibration lifecycle class. The constructor and
+    # lifecycle functions remain unexported; only generic dispatch is
+    # registered so internal objects never print as raw lists.
+    "S3method(print,mfrm_calibration)",
+    "S3method(print,summary.mfrm_calibration)",
+    "S3method(summary,mfrm_calibration)"
   )
   expect_setequal(s3, expected_s3)
 })

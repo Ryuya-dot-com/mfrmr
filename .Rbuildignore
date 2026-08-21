@@ -66,3 +66,8 @@
 ^tests/testthat/helper-repository-validation[.]R$
 ^tests/testthat/helper-gtheory-tiers[.]R$
 ^tests/testthat/test-gtheory-.*[.]R$
+^tests/testthat/test-fixed-calibration-g0-contract[.]R$
+^tests/testthat/test-fixed-calibration-g1-schema[.]R$
+^tests/testthat/test-fixed-calibration-g2-anchors[.]R$
+^tests/testthat/test-fixed-calibration-g3-scoring[.]R$
+^tests/testthat/test-fixed-calibration-g4-evidence[.]R$

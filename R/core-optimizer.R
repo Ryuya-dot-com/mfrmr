@@ -100,7 +100,7 @@ mfrm_grad_mml_complete_data_core <- function(params,
       grad_step_centered <- grad_step_centered + colSums(step_resid)
     }
 
-    grad_step_free <- project_sum_zero_gradient(grad_step_centered)
+    grad_step_free <- project_typed_step_gradient(grad_step_centered, config)
   } else {
     k_cat <- ncol(logprob_bundle$prob_list[[1]])
     n_steps <- k_cat - 1L
@@ -132,7 +132,7 @@ mfrm_grad_mml_complete_data_core <- function(params,
       grad_step_mat[rs_ids, ] <- grad_step_mat[rs_ids, ] + rs_step
     }
 
-    grad_step_free <- project_step_matrix_gradient(grad_step_mat)
+    grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
   }
 
   grad_facet_free <- unlist(lapply(config$facet_names, function(f) {

@@ -1,0 +1,90 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        description: Runner image for the required platform cell.
+        required: true
+        type: string
+      r:
+        description: R version selector understood by setup-r.
+        required: true
+        type: string
+      full:
+        description: Whether to enable the full NOT_CRAN validation layer.
+        required: false
+        default: false
+        type: boolean
+      http-user-agent:
+        description: Optional setup-r HTTP user agent override.
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  check:
+    runs-on: ${{ inputs.os }}
+    name: ${{ inputs.os }} (${{ inputs.r }})
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      NOT_CRAN: ${{ inputs.full && 'true' || 'false' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ inputs.r }}
+          http-user-agent: ${{ inputs.http-user-agent }}
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # Invalidate compiled-package caches after the runner TBB ABI change.
+          cache-version: "2"
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          error-on: '"warning"'
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      - name: Upload check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: r-cmd-check-${{ inputs.os }}-${{ inputs.r }}
+          path: |
+            check
+            *.Rcheck
+          if-no-files-found: ignore
+
+      - name: Repository validation review
+        run: |
+          source("inst/validation/release-readiness.R")
+          readiness <- mfrmr_release_readiness_review(pkg_dir = ".")
+          print(summary(readiness))
+          if (any(readiness$gate_summary$Status == "concern", na.rm = TRUE)) {
+            stop("Repository validation review has concern rows.", call. = FALSE)
+          }
+        shell: Rscript {0}
+
+      - name: Fixed-calibration G4 platform evidence
+        run: |
+          pkgload::load_all(".", quiet = TRUE)
+          result <- testthat::test_file(
+            "tests/testthat/test-fixed-calibration-g4-evidence.R",
+            reporter = "summary"
+          )
+          counts <- as.data.frame(result)
+          if (sum(counts$failed) > 0L || sum(counts$error) > 0L ||
+              sum(counts$warning) > 0L || sum(counts$skipped) > 0L) {
+            stop("The fixed-calibration G4 platform evidence is incomplete.",
+                 call. = FALSE)
+          }
+        shell: Rscript {0}

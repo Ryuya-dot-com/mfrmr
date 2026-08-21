@@ -613,6 +613,204 @@ initial_sum_zero_free <- function(x) {
   if (length(x) <= 1L) numeric(0) else x[seq_len(length(x) - 1L)]
 }
 
+build_step_constraint <- function(n_steps,
+                                  anchors = NULL,
+                                  target = 0,
+                                  scope = "shared") {
+  n_steps <- as.integer(n_steps %||% 0L)
+  if (length(n_steps) != 1L || is.na(n_steps) || n_steps < 0L) {
+    stop("`n_steps` must be one non-negative integer.", call. = FALSE)
+  }
+  target <- as.numeric(target %||% NA_real_)
+  if (length(target) != 1L || !is.finite(target)) {
+    stop("Step-constraint target must be one finite number.", call. = FALSE)
+  }
+  anchor_values <- rep(NA_real_, n_steps)
+  names(anchor_values) <- as.character(seq_len(n_steps))
+  if (!is.null(anchors) && length(anchors) > 0L) {
+    if (is.null(names(anchors)) || anyNA(names(anchors)) ||
+        any(!nzchar(names(anchors))) || anyDuplicated(names(anchors))) {
+      stop("Step anchors must have unique transition-index names.", call. = FALSE)
+    }
+    anchor_index <- suppressWarnings(as.integer(names(anchors)))
+    if (anyNA(anchor_index) || any(anchor_index < 1L | anchor_index > n_steps) ||
+        any(as.character(anchor_index) != names(anchors))) {
+      stop("Step-anchor names must be canonical transition indices in range.",
+           call. = FALSE)
+    }
+    anchor_numeric <- as.numeric(anchors)
+    if (any(!is.finite(anchor_numeric))) {
+      stop("Step-anchor values must be finite.", call. = FALSE)
+    }
+    anchor_values[anchor_index] <- anchor_numeric
+  }
+
+  free_index <- which(is.na(anchor_values))
+  if (length(free_index) == 0L &&
+      !isTRUE(all.equal(sum(anchor_values), target, tolerance = 1e-12))) {
+    stop(
+      "Fully anchored step coordinates are incompatible with the declared sum constraint.",
+      call. = FALSE
+    )
+  }
+  reference_index <- if (length(free_index) > 0L) {
+    free_index[length(free_index)]
+  } else {
+    NA_integer_
+  }
+  list(
+    scope = as.character(scope %||% "shared")[1],
+    n_steps = n_steps,
+    anchors = anchor_values,
+    target = target,
+    free_index = as.integer(free_index),
+    reference_index = as.integer(reference_index),
+    n_params = as.integer(max(length(free_index) - 1L, 0L)),
+    identification = "within_ladder_sum_to_target_with_fixed_anchors"
+  )
+}
+
+mfrmr_default_step_specs <- function(config) {
+  n_steps <- max(as.integer(config$n_cat %||% 0L) - 1L, 0L)
+  scopes <- if (identical(config$model, "RSM")) {
+    "shared"
+  } else {
+    step_facet <- as.character(config$step_facet %||% NA_character_)
+    if (length(step_facet) != 1L || is.na(step_facet) ||
+        !step_facet %in% as.character(config$facet_names %||% character(0))) {
+      stop("PCM model requires `step_facet` to name a declared facet.",
+           call. = FALSE)
+    }
+    as.character(config$facet_levels[[step_facet]] %||% character(0))
+  }
+  specs <- lapply(scopes, function(scope) {
+    build_step_constraint(n_steps = n_steps, scope = scope)
+  })
+  names(specs) <- scopes
+  specs
+}
+
+mfrmr_step_specs <- function(config) {
+  specs <- config$step_specs %||% mfrmr_default_step_specs(config)
+  if (!is.list(specs)) {
+    stop("Internal step-constraint specification must be a list.", call. = FALSE)
+  }
+  expected_scopes <- if (identical(config$model, "RSM")) {
+    "shared"
+  } else {
+    as.character(config$facet_levels[[config$step_facet]] %||% character(0))
+  }
+  if (!identical(names(specs), expected_scopes)) {
+    stop("Step-constraint scopes do not match the declared model ownership.",
+         call. = FALSE)
+  }
+  n_steps <- max(as.integer(config$n_cat %||% 0L) - 1L, 0L)
+  valid <- vapply(seq_along(specs), function(i) {
+    spec <- specs[[i]]
+    is.list(spec) && identical(as.integer(spec$n_steps), n_steps) &&
+      identical(as.character(spec$scope), expected_scopes[i]) &&
+      length(spec$anchors) == n_steps &&
+      identical(as.integer(spec$free_index), unname(which(is.na(spec$anchors)))) &&
+      identical(
+        as.integer(spec$n_params),
+        as.integer(max(length(spec$free_index) - 1L, 0L))
+      )
+  }, logical(1))
+  if (!all(valid)) {
+    stop("Step-constraint specification is inconsistent with the model.",
+         call. = FALSE)
+  }
+  specs
+}
+
+expand_step_constraint <- function(free, spec) {
+  out <- as.numeric(spec$anchors)
+  free_index <- as.integer(spec$free_index)
+  n_params <- as.integer(spec$n_params)
+  free <- as.numeric(free %||% numeric(0))
+  if (length(free) != n_params) {
+    stop("Step parameter vector has length ", length(free),
+         " but the typed step constraint requires ", n_params, ".",
+         call. = FALSE)
+  }
+  if (length(free_index) == 0L) return(out)
+  anchor_sum <- sum(out, na.rm = TRUE)
+  if (length(free_index) == 1L) {
+    out[free_index] <- spec$target - anchor_sum
+    return(out)
+  }
+  estimated_index <- free_index[-length(free_index)]
+  reference_index <- free_index[length(free_index)]
+  out[estimated_index] <- free
+  out[reference_index] <- spec$target - anchor_sum - sum(free)
+  out
+}
+
+project_step_constraint_gradient <- function(grad_expanded, spec) {
+  grad_expanded <- as.numeric(grad_expanded %||% numeric(0))
+  if (length(grad_expanded) != as.integer(spec$n_steps)) {
+    stop("Expanded step gradient does not match the typed step constraint.",
+         call. = FALSE)
+  }
+  free_index <- as.integer(spec$free_index)
+  if (length(free_index) <= 1L) return(numeric(0))
+  reference_index <- free_index[length(free_index)]
+  grad_expanded[free_index[-length(free_index)]] -
+    grad_expanded[reference_index]
+}
+
+initial_step_constraint_free <- function(x, spec) {
+  x <- as.numeric(x %||% numeric(0))
+  if (length(x) != as.integer(spec$n_steps)) {
+    stop("Initial expanded steps do not match the typed step constraint.",
+         call. = FALSE)
+  }
+  free_index <- as.integer(spec$free_index)
+  if (length(free_index) <= 1L) numeric(0) else {
+    x[free_index[-length(free_index)]]
+  }
+}
+
+expand_step_constraints <- function(free, specs) {
+  free <- as.numeric(free %||% numeric(0))
+  expected <- sum(vapply(specs, function(spec) {
+    as.integer(spec$n_params)
+  }, integer(1)))
+  if (length(free) != expected) {
+    stop("Step parameter vector has length ", length(free),
+         " but the typed step constraints require ", expected, ".",
+         call. = FALSE)
+  }
+  rows <- vector("list", length(specs))
+  cursor <- 0L
+  for (i in seq_along(specs)) {
+    n <- as.integer(specs[[i]]$n_params)
+    segment <- if (n == 0L) numeric(0) else free[cursor + seq_len(n)]
+    rows[[i]] <- expand_step_constraint(segment, specs[[i]])
+    cursor <- cursor + n
+  }
+  if (length(rows) == 0L) return(matrix(numeric(0), nrow = 0L, ncol = 0L))
+  out <- do.call(rbind, rows)
+  rownames(out) <- names(specs)
+  out
+}
+
+project_typed_step_gradient <- function(grad_step, config) {
+  specs <- mfrmr_step_specs(config)
+  grad_step <- if (identical(config$model, "RSM")) {
+    matrix(as.numeric(grad_step), nrow = 1L)
+  } else {
+    as.matrix(grad_step)
+  }
+  if (!identical(dim(grad_step), c(length(specs), specs[[1]]$n_steps))) {
+    stop("Expanded step gradient shape does not match model step ownership.",
+         call. = FALSE)
+  }
+  unlist(lapply(seq_along(specs), function(i) {
+    project_step_constraint_gradient(grad_step[i, ], specs[[i]])
+  }), use.names = FALSE)
+}
+
 expand_step_matrix <- function(free, n_levels, n_steps) {
   n_levels <- as.integer(n_levels %||% 0L)
   n_steps <- as.integer(n_steps %||% 0L)
@@ -1212,6 +1410,76 @@ constraint_grad_project <- function(grad_expanded, spec) {
   grad_free
 }
 
+collapse_facet_with_constraints <- function(expanded, spec,
+                                            tolerance = 1e-12) {
+  expanded <- as.numeric(expanded %||% numeric(0))
+  if (length(expanded) != length(spec$levels) || any(!is.finite(expanded))) {
+    stop("Expanded facet coordinates do not match the constraint specification.",
+         call. = FALSE)
+  }
+  fixed <- which(is.finite(spec$anchors))
+  if (length(fixed) > 0L &&
+      any(abs(expanded[fixed] - spec$anchors[fixed]) > tolerance)) {
+    stop("Expanded facet coordinates violate a fixed anchor.", call. = FALSE)
+  }
+  free <- numeric(0)
+  free_index <- which(is.na(spec$anchors))
+  groups <- as.character(spec$groups)
+  for (group_id in unique(stats::na.omit(groups[free_index]))) {
+    if (!nzchar(group_id)) next
+    members <- which(groups == group_id)
+    target <- spec$group_values[[group_id]] * length(members)
+    if (abs(sum(expanded[members]) - target) > tolerance) {
+      stop("Expanded facet coordinates violate a group-mean constraint.",
+           call. = FALSE)
+    }
+    free_members <- members[is.na(spec$anchors[members])]
+    if (length(free_members) > 1L) {
+      free <- c(free, expanded[free_members[-length(free_members)]])
+    }
+  }
+  ungrouped <- free_index[is.na(groups[free_index]) | !nzchar(groups[free_index])]
+  if (length(ungrouped) > 0L) {
+    if (isTRUE(spec$centered)) {
+      if (abs(sum(expanded[ungrouped])) > tolerance) {
+        stop("Expanded facet coordinates violate the active sum constraint.",
+             call. = FALSE)
+      }
+      if (length(ungrouped) > 1L) {
+        free <- c(free, expanded[ungrouped[-length(ungrouped)]])
+      }
+    } else {
+      free <- c(free, expanded[ungrouped])
+    }
+  }
+  if (length(free) != as.integer(spec$n_params)) {
+    stop("Internal facet collapse dimension mismatch.", call. = FALSE)
+  }
+  free
+}
+
+collapse_step_constraint <- function(expanded, spec, tolerance = 1e-12) {
+  expanded <- as.numeric(expanded %||% numeric(0))
+  if (length(expanded) != as.integer(spec$n_steps) ||
+      any(!is.finite(expanded))) {
+    stop("Expanded step coordinates do not match the typed constraint.",
+         call. = FALSE)
+  }
+  fixed <- which(is.finite(spec$anchors))
+  if (length(fixed) > 0L &&
+      any(abs(expanded[fixed] - spec$anchors[fixed]) > tolerance)) {
+    stop("Expanded step coordinates violate a fixed anchor.", call. = FALSE)
+  }
+  if (abs(sum(expanded) - spec$target) > tolerance) {
+    stop("Expanded step coordinates violate the declared sum constraint.",
+         call. = FALSE)
+  }
+  free_index <- as.integer(spec$free_index)
+  if (length(free_index) <= 1L) numeric(0) else {
+    expanded[free_index[-length(free_index)]]
+  }
+}
+
 build_param_sizes <- function(config) {
   n_steps <- max(config$n_cat - 1, 0)
   sizes <- list(
@@ -1226,17 +1494,17 @@ build_param_sizes <- function(config) {
   if (interaction_n > 0L) {
     sizes$interactions <- interaction_n
   }
-  if (config$model == "RSM") {
-    sizes$steps <- sum_zero_param_count(n_steps)
-  } else {
+  if (config$model != "RSM") {
     if (is.null(config$step_facet) || !config$step_facet %in% config$facet_names) {
       stop("PCM model requires 'step_facet' to name one of the facet columns: ",
            paste(config$facet_names, collapse = ", "), ". ",
            "Supply step_facet = '<name>'.", call. = FALSE)
     }
-    sizes$steps <- length(config$facet_levels[[config$step_facet]]) *
-      sum_zero_param_count(n_steps)
   }
+  step_specs <- mfrmr_step_specs(config)
+  sizes$steps <- sum(vapply(step_specs, function(spec) {
+    as.integer(spec$n_params)
+  }, integer(1)))
   if (identical(config$model, "GPCM")) {
     gpcm_spec <- config$gpcm_spec %||% list()
     sizes$log_slopes <- as.integer(gpcm_spec$n_params %||% 0L)
@@ -1304,19 +1572,16 @@ expand_params <- function(par, sizes, config) {
     specs = config$interaction_specs %||% list()
   )
 
+  step_specs <- mfrmr_step_specs(config)
   if (config$model == "RSM") {
-    steps <- expand_sum_zero_vector(parts$steps, config$n_cat - 1L)
+    steps <- expand_step_constraint(parts$steps, step_specs[[1]])
     steps_mat <- NULL
   } else {
     n_levels <- length(config$facet_levels[[config$step_facet]])
     if (n_levels == 0 || config$n_cat <= 1) {
       steps_mat <- matrix(0, nrow = n_levels, ncol = max(config$n_cat - 1, 0))
     } else {
-      steps_mat <- expand_step_matrix(
-        free = parts$steps,
-        n_levels = n_levels,
-        n_steps = config$n_cat - 1L
-      )
+      steps_mat <- expand_step_constraints(parts$steps, step_specs)
     }
     steps <- NULL
   }
@@ -1355,6 +1620,57 @@ expand_params <- function(par, sizes, config) {
     slopes = slopes,
     population = population
   )
+}
+
+collapse_expanded_params <- function(params, config) {
+  blocks <- list()
+  if (identical(config$method, "JML")) {
+    blocks$theta <- collapse_facet_with_constraints(
+      params$theta, config$theta_spec
+    )
+  } else {
+    blocks$theta <- numeric(0)
+  }
+  for (facet in config$facet_names) {
+    blocks[[facet]] <- collapse_facet_with_constraints(
+      params$facets[[facet]], config$facet_specs[[facet]]
+    )
+  }
+  if (facet_interactions_active(config)) {
+    blocks$interactions <- unlist(lapply(
+      names(config$interaction_specs), function(name) {
+        spec <- config$interaction_specs[[name]]
+        matrix_value <- params$interactions[[name]]
+        if (spec$n_a <= 1L || spec$n_b <= 1L) return(numeric(0))
+        as.vector(matrix_value[
+          seq_len(spec$n_a - 1L), seq_len(spec$n_b - 1L), drop = FALSE
+        ])
+      }
+    ), use.names = FALSE)
+  }
+  step_specs <- mfrmr_step_specs(config)
+  blocks$steps <- if (identical(config$model, "RSM")) {
+    collapse_step_constraint(params$steps, step_specs[[1]])
+  } else {
+    unlist(lapply(seq_along(step_specs), function(i) {
+      collapse_step_constraint(params$steps_mat[i, ], step_specs[[i]])
+    }), use.names = FALSE)
+  }
+  if (identical(config$model, "GPCM")) {
+    n <- as.integer(config$gpcm_spec$n_params %||% 0L)
+    blocks$log_slopes <- if (n > 0L) params$log_slopes[seq_len(n)] else numeric(0)
+  }
+  if (identical(config$method, "MML") && isTRUE(config$population_spec$active)) {
+    blocks$beta <- as.numeric(params$population$coefficients)
+    blocks$log_sigma2 <- as.numeric(params$population$log_sigma2)
+  }
+  sizes <- build_param_sizes(config)
+  out <- unlist(blocks[names(sizes)], use.names = FALSE)
+  if (length(out) != sum(unlist(sizes, use.names = FALSE))) {
+    stop("Internal expanded-parameter collapse dimension mismatch.",
+         call. = FALSE)
+  }
+  out
 }
 
 
@@ -1856,7 +2172,7 @@ mfrm_grad_jml_core <- function(params, eta, idx, config, sizes,
 
     # Map to the identified step parameters: last centered step is
     # constrained to minus the sum of the preceding free steps.
-    grad_step_free <- project_sum_zero_gradient(grad_step_centered)
+    grad_step_free <- project_typed_step_gradient(grad_step_centered, config)
     grad_log_slope_free <- numeric(0)
 
   } else if (identical(config$model, "GPCM")) {
@@ -1907,7 +2223,7 @@ mfrm_grad_jml_core <- function(params, eta, idx, config, sizes,
     rs_step <- rowsum(step_resid, idx$step_idx)
     rs_ids <- as.integer(rownames(rs_step))
     grad_step_mat[rs_ids, ] <- rs_step
-    grad_step_free <- project_step_matrix_gradient(grad_step_mat)
+    grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
 
     obs_linear <- linear_part[cbind(seq_len(n), score_k + 1L)]
     expected_linear <- rowSums(probs * linear_part)
@@ -1963,7 +2279,7 @@ mfrm_grad_jml_core <- function(params, eta, idx, config, sizes,
     rs_ids <- as.integer(rownames(rs_step))
     grad_step_mat[rs_ids, ] <- rs_step
 
-    grad_step_free <- project_step_matrix_gradient(grad_step_mat)
+    grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
     grad_log_slope_free <- numeric(0)
   }
 
@@ -2112,7 +2428,7 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       grad_step_centered <- grad_step_centered + colSums(step_resid)
     }
 
-    grad_step_free <- project_sum_zero_gradient(grad_step_centered)
+    grad_step_free <- project_typed_step_gradient(grad_step_centered, config)
     grad_log_slope_free <- numeric(0)
 
   } else if (identical(config$model, "GPCM")) {
@@ -2170,7 +2486,7 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       grad_log_slope_exp[slope_ids] <- grad_log_slope_exp[slope_ids] + as.vector(rs_slope)
     }
 
-    grad_step_free <- project_step_matrix_gradient(grad_step_mat)
+    grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
     grad_log_slope_free <- project_sum_zero_gradient(grad_log_slope_exp)
   } else {
     k_cat <- ncol(logprob_bundle$prob_list[[1]])
@@ -2216,7 +2532,7 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
       grad_step_mat[rs_ids, ] <- grad_step_mat[rs_ids, ] + rs_step
     }
 
-    grad_step_free <- project_step_matrix_gradient(grad_step_mat)
+    grad_step_free <- project_typed_step_gradient(grad_step_mat, config)
     grad_log_slope_free <- numeric(0)
   }
 
@@ -2646,6 +2962,7 @@ build_estimation_config <- function(prep,
   config$dummy_facets <- dummy_facets
   config$anchor_summary <- constraint_specs$anchor_summary
   config$anchor_review <- constraint_specs$anchor_review
+  config$step_specs <- mfrmr_default_step_specs(config)
   config$source_columns <- prep$source_columns
   config$population_spec <- compact_population_spec(population, prep$levels$Person)
   config$gpcm_spec <- if (identical(model, "GPCM")) {
@@ -2673,7 +2990,10 @@ build_initial_param_vector <- function(config, sizes) {
   }
 
   facet_starts <- unlist(lapply(config$facet_names, function(f) rep(0, sizes[[f]])))
-  step_init_free <- initial_sum_zero_free(step_init)
+  step_specs <- mfrmr_step_specs(config)
+  step_init_free <- unlist(lapply(step_specs, function(spec) {
+    initial_step_constraint_free(center_sum_zero(step_init), spec)
+  }), use.names = FALSE)
   base <- c(
     rep(0, sizes$theta),
     facet_starts,
@@ -2682,11 +3002,7 @@ build_initial_param_vector <- function(config, sizes) {
     } else {
       numeric(0)
     },
-    if (config$model == "RSM") {
-      step_init_free
-    } else {
-      rep(step_init_free, length(config$facet_levels[[config$step_facet]]))
-    },
+    step_init_free,
     if (identical(config$model, "GPCM")) {
       rep(0, sizes$log_slopes %||% 0L)
     } else {

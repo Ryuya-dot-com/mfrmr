@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-16.
+Status: public roadmap, updated 2026-08-22.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -8,8 +8,11 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
 
 ## Current position
 
-- mfrmr 0.2.2 is the current CRAN release, published on 2026-07-27.
-- Development is focused on 0.2.3.
+- mfrmr 0.2.3 is the current CRAN source release, published 2026-08-21. G0
+  binds the exact source payload independently of lagging binary and secondary
+  distribution channels.
+- Development is focused on the deliberately bounded 0.2.4 fixed-calibration
+  release described below.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.
@@ -34,7 +37,7 @@ The project develops in this order:
 | Version | Public goal |
 | --- | --- |
 | 0.2.2 | Published stabilization and contract baseline. |
-| 0.2.3 | Establish the numerical and empirical operating envelope of the existing models. |
+| 0.2.3 | Published numerical and empirical operating-envelope release for the existing models. |
 | 0.2.4 | Add typed fixed calibration, threshold/step anchors, and operational scoring for one observed scale. |
 | 0.2.5 | Add explicit multiple-scale routing and mixed response structures without silent pooling. |
 | 0.3.0 | Consolidate APIs, object schemas, compatibility policy, examples, performance evidence, and contributor workflows. |
@@ -52,16 +55,25 @@ records are provenance alarms only; semantic model identity, independent
 mathematics, numerical behavior, and decision consequences remain the actual
 evidence layers.
 
-Version 0.2.3 will not expand merely because a validation branch or prototype
-exists. Its release-critical path is limited to:
+The detailed 0.2.3 section below is retained as the evidence and decision
+record for the published release. Its remaining research gates and statements
+of a historical "next" step are not automatically 0.2.4 commitments. A task
+moves into 0.2.4 only when it is necessary for one of the explicit 0.2.4
+claims, not merely because a validation branch or prototype exists.
 
-1. the ordinary fit, diagnose, summary, print, plot, and export workflow;
-2. honest boundary and readiness behavior for the already documented RSM,
-   PCM, and bounded-GPCM routes, including extreme Persons and facet levels;
-3. the smallest prospectively governed ConQuest/TAM comparisons needed to
-   state the supported numerical envelope; and
-4. a clean source package and candidate check whose user-facing caveats match
-   the evidence.
+The 0.2.4 release-critical path is limited to:
+
+1. an explicit single-scale calibration schema and lifecycle;
+2. exact, typed element/group and threshold/step anchor semantics;
+3. application of an eligible frozen calibration to new response data without
+   refitting or silently changing its scale; and
+4. independent mathematical, adversarial, round-trip, compatibility, and
+   package-release evidence for each promoted support lane.
+
+Unfinished 0.2.3 comparator, G-theory, broad simulation, and GPCM-boundary
+research do not block 0.2.4 unless the 0.2.4 support matrix names the affected
+model/estimator lane. Conversely, 0.2.3 functionality is not promoted to
+operational-calibration support merely because it remains callable.
 
 The theorem-oriented conditional-JML GPCM boundary chain is retained only on
 the JML GPCM route. MML uses its marginal boundary and common readiness
@@ -77,11 +89,13 @@ but FACETS availability is not a package dependency or a release-wide blocker;
 when a matched current comparison cannot be run, the corresponding
 interchangeability claim remains unmade.
 
-## 0.2.3: numerical trust and external validation
+## 0.2.3: published numerical trust and external validation record
 
-0.2.3 is primarily a validation release, not a new-model-family release. It
-will strengthen evidence for the RSM, PCM, bounded GPCM, JML, and MML surfaces
-published in 0.2.2.
+0.2.3 was primarily a validation release, not a new-model-family release. It
+strengthened evidence for the RSM, PCM, bounded GPCM, JML, and MML surfaces
+published in 0.2.2. The detailed lineage below is historical release evidence;
+open research continuations remain uncommitted unless the 0.2.4 section adopts
+them explicitly.
 
 The bounded-GPCM route is specifically an aligned single-owner model: one
 selected facet owns both relative slopes and step profiles, with one slope per
@@ -1611,15 +1625,541 @@ high-stakes decision. Those require separate domain evidence.
 
 ## 0.2.4: fixed calibration and operational scoring
 
-The next feature release will target a typed, versioned calibration object for
-one observed scale. It is expected to include:
+### Release question and current gap
 
-- element, group, and threshold/step anchors with explicit conflict checks;
-- saved-calibration provenance and integrity checks;
-- scoring of new data with explicit behavior for unknown levels, missing
-  categories, disconnected cases, and out-of-range scores; and
-- round-trip and compatibility tests that distinguish a fitted object from a
-  validated frozen calibration.
+0.2.4 asks one narrow question: can a reviewed calibration for one observed
+ordinal scale be frozen, transferred, and applied to new responses without
+silently changing the response model, parameter coordinates, scale, or scoring
+prior?
+
+The existence of a callable scoring path is not sufficient evidence. The
+current `predict_mfrm_units()` consumes a full `mfrm_fit`; that object mixes
+calibration parameters with training-data, optimizer, and diagnostic state.
+`make_anchor_table()` exports rounded facet estimates rather than a complete
+calibration, and `anchor_to_baseline()` performs a new anchored fit rather than
+pure application. These are useful predecessor routes, but none is the typed,
+portable, frozen operational contract promised for 0.2.4.
+
+The release must therefore distinguish five operations that must never be
+silently substituted for one another:
+
+1. fitting a source model;
+2. extracting a draft calibration from that fit;
+3. validating and freezing an eligible calibration;
+4. fitting a new model with declared anchors; and
+5. scoring new Persons conditionally on a frozen calibration.
+
+### 0.2.4 release control board
+
+Overall status: **G0 through G3 complete; G4 local CORE-05 and native installed
+macOS preflight complete, with all five CORE-06 workflow cells pending**.
+The 0.2.3 baseline is bound to
+the CRAN source artifact,
+the internal core artifact passes freeze--persist--load--score evidence, its
+typed direct/group/shared-step/owned-step constraints share one parameter-
+count, expansion, gradient, category-support, and rank contract, and its pure
+RSM/PCM scorer now returns explicit row/Person dispositions and scoring-basis
+identities. No optional lane or public 0.2.4 API is promoted by those facts.
+
+Checkboxes track repository evidence, not confidence or effort. `[x]` means
+that the stated decision or exit condition is present and reviewable in the
+current repository. `[ ]` means open. A parent gate may be checked only after
+all required child items pass and the retained evidence is linked from the
+claim ledger. A prototype, callable function, historical artifact, skipped
+test, or prose assertion cannot close a box.
+
+Governance decisions already fixed for 0.2.4:
+
+- [x] **GOV-01 — Release sequencing fact:** bind CRAN source release 0.2.3 as
+  the predecessor and 0.2.4 as the active development target; treat lagging
+  binary, GitHub, and R-universe channels as separate distribution facts.
+- [x] **GOV-02 — North-star claim:** freeze, persist, load, and apply one
+  reviewed single-scale calibration without silent semantic change.
+- [x] **GOV-03 — Operation boundary:** keep source fitting, draft extraction,
+  validation/freezing, anchored refitting, and operational scoring distinct.
+- [x] **GOV-04 — Core/optional split:** require one bounded core lane and
+  qualify estimated-population, JML, and bounded-GPCM lanes independently.
+- [x] **GOV-05 — Evidence rule:** prefer falsifiable claims, independent
+  mathematics, negative/metamorphic tests, and disjoint confirmation over
+  aggregate pass counts.
+- [x] **GOV-06 — Fallback rule:** shrink or relabel scope before weakening an
+  acceptance gate.
+- [x] **GOV-07 — Claim ledger:** create the repository ledger that binds every
+  requirement ID below to its falsifier, evidence path, decision consequence,
+  status, and fallback.
+
+Core release gates; all are required before 0.2.4 may use the operational-
+calibration claim:
+
+- [x] **CORE-01 — Calibration sufficiency:** a validated minimal artifact can
+  reconstruct the supported model and scoring basis without source fit or
+  training data.
+- [x] **CORE-02 — Lossless lifecycle:** draft, validation, freeze, save, load,
+  refusal, supersession, and provenance behavior pass the schema contract.
+- [x] **CORE-03 — Typed anchors:** direct, group, shared-step, and owned-step
+  coordinates pass conflict, identification, and reduction gates.
+- [x] **CORE-04 — Pure scoring:** new-Person scoring is fail-closed, reason-
+  coded, conditional on the declared frozen basis, and performs no refit.
+- [x] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
+  metamorphic tests, and disjoint confirmation pass frozen rules.
+- [ ] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
+  chunk-order, locale, encoding, platform, R-version, and bounded performance
+  checks pass.
+- [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
+  NEWS, capability matrix, runtime wording, package metadata, and source
+  package all state the same supported envelope.
+- [ ] **CORE-08 — Final release decision:** every preceding core gate is
+  closed, no no-go condition remains, and optional-lane failures have been
+  removed from or labelled accurately in the public claim.
+
+Optional promotion gates do not block the smaller core release. Each remains
+unchecked until its own evidence closes; an unchecked box must appear as
+`caveated`, `experimental`, `blocked`, or unavailable in the public matrix.
+
+- [ ] **OPT-01 — Estimated-population/latent-regression MML.**
+- [ ] **OPT-02 — Bounded GPCM MML.**
+- [ ] **OPT-03 — JML with an explicit post-hoc scoring prior.**
+- [ ] **OPT-04 — Bounded GPCM JML with both boundary and scoring-prior gates.**
+
+### Minimum public scope and promotion lanes
+
+The minimum release lane is a one-scale RSM/PCM MML calibration under the
+current documented unconditional fixed-standard-normal scoring basis. It
+includes a typed calibration artifact, strict direct/group and step-anchor
+handling, and posterior scoring of new or partially observed Persons using
+only known non-Person levels. This is the smallest lane that demonstrates the
+complete freeze--persist--load--score contract.
+
+Existing fitted-object support for latent-regression MML, JML, and bounded
+GPCM must remain regression-tested, but callability does not automatically
+promote those routes to the 0.2.4 operational claim. They are independent
+promotion lanes:
+
+| Candidate lane | Additional question that must be closed |
+| --- | --- |
+| Estimated-population/latent-regression MML | Are the intercept/variance, covariate schema where applicable, factor levels, contrasts, missing-data policy, conditional population parameters, and population-transport caveat fully frozen? |
+| JML | Is the scoring-time prior explicit and reviewable, given that the source fit did not estimate a population distribution, and are boundary Persons excluded from the calibration payload? |
+| Bounded GPCM MML | Are slope owner, step owner, slope centering, population scale, score map, and probability-level reconstruction preserved exactly? |
+| Bounded GPCM JML | Do both the GPCM boundary/readiness contract and the explicit post-hoc scoring-prior contract pass independently? |
+
+Each table row receives its own status: `validated`, `caveated`,
+`experimental`, or `blocked`. A failed optional lane narrows 0.2.4; it does not
+weaken the core gate or force unrelated research into the release. Public
+documentation and runtime messages must use the same matrix.
+
+This release remains limited to one response family, one category map, one
+observed score scale, and one latent dimension per calibration. It does not
+add new facet levels during scoring, online updating, automatic equating,
+multiple-scale routing, mixed response families, or a new estimator.
+
+### Calibration object contract
+
+The object schema must be specified before its constructor or persistence API.
+Package version and calibration-schema version are separate fields. At
+minimum, the artifact records:
+
+- model and estimator identity, source package version, schema version, and
+  lifecycle status;
+- facet names, order, roles, complete level dictionaries, signs/orientation,
+  interactions, and identification constraints;
+- original-to-internal score map, category support, RSM/PCM step structure,
+  and, where eligible, bounded-GPCM step/slope ownership and relative slopes;
+- full-precision fixed parameter values in named coordinates, including
+  population and quadrature/scoring-basis fields when they are part of the
+  promoted lane;
+- direct, group, and threshold/step anchor declarations in separate typed
+  namespaces;
+- source-fit readiness and parameter-class eligibility, creation provenance,
+  validation results, and the reasons for every caveat or block; and
+- a minimal semantic identity sufficient to detect model, scale, map, and
+  parameter mismatches before scoring.
+
+A canonical calibration must not depend on the original fit object, source
+data, ambient options, global variables, or an attached package namespace to
+recover omitted semantics. Training response rows, Person identifiers, and
+Person estimates are excluded by default; a calibration is not a disguised
+fit serialization or a data export.
+
+Numeric parameters are stored at full machine precision. A rounded table made
+for people, including the current default output of `make_anchor_table()`, is
+never the canonical round-trip representation. Optional hashes may detect
+accidental change, but they are provenance alarms rather than evidence that a
+calibration is statistically valid, authentic, or safe.
+
+Construction may yield a typed `draft` for inspection when the source fit is
+not eligible. Only an object whose declared lane has passed validation can
+become `validated` and enter the operational scorer. There is no `force =
+TRUE` shortcut that relabels a failed or unknown source fit. Retirement or
+supersession creates a new lifecycle record; it does not mutate historical
+provenance.
+
+The first persistence contract needs one canonical lossless route. Saving and
+loading must revalidate schema and semantics. Unknown/newer schema versions,
+missing required fields, duplicate coordinate names, non-finite required
+values, altered category maps, and incompatible model identities fail closed.
+Any future migration must be an explicit version-to-version function with
+before/after validation; best-effort list repair is not compatibility.
+
+### Anchor semantics and identification
+
+0.2.4 extends the current facet-element and group-anchor surface to typed
+threshold/step anchors. The schema must distinguish at least facet elements,
+group constraints, shared RSM steps, facet-owned PCM/GPCM steps, relative
+slopes, and population coordinates. A shared label such as `"2"` must never
+be enough to infer which parameter class is anchored.
+
+Conflict behavior is strict and order-invariant:
+
+- repeated identical declarations may be deduplicated with a recorded note;
+- duplicate declarations with different values are errors, not "last row
+  wins" warnings;
+- direct, group, centering, reference-level, positivity, slope, and step
+  constraints are checked together before optimization;
+- missing facets/levels/steps, invalid category transitions, incompatible
+  signs, and anchor values in the wrong coordinate system are errors; and
+- an anchor may repair a stated identification deficiency only when the
+  resulting constrained design is demonstrably full rank. It must not hide a
+  disconnected scale or create an unsupported cross-subset comparison.
+
+Reduction fixtures must show that an empty typed anchor specification reduces
+to the existing unanchored model, fully fixed coordinates reproduce the
+frozen probabilities, and partial anchoring leaves exactly the intended free
+dimension. Threshold/step tests must cover RSM shared steps, PCM owner-specific
+steps, unused and missing categories, reversed score maps, and incompatible
+step ownership. GPCM tests, if that lane is promoted, additionally cover
+slope/step ownership and geometric-mean-one identification.
+
+### Operational scoring contract
+
+Operational scoring is a pure application step. It must not call an optimizer,
+update calibration coordinates, infer a new facet effect, borrow a same-named
+level from another facet, or substitute a default scoring prior. Any allowed
+change to the population/scoring basis creates a newly identified derived
+artifact or an explicitly different analysis route.
+
+Safe defaults are fail-closed:
+
+- an unknown non-Person level, unknown score value, invalid weight, ambiguous
+  column mapping, or incompatible scale/model identity stops the call;
+- missing responses may be omitted only under an explicit policy and every
+  omission is counted and reason-coded; no Person with zero valid responses is
+  assigned a score;
+- incomplete planned administrations may be scored, but exact duplicate
+  events are rejected unless an event identifier or an explicit repeat/weight
+  contract distinguishes them;
+- no unknown level receives an implicit zero effect, nearest match, pooled
+  effect, or estimate from the scoring batch; and
+- row-level and Person-level dispositions are returned even when the batch as
+  a whole succeeds.
+
+Connectivity has a different meaning after freezing and must not be copied
+mechanically from calibration fitting. A new scoring batch need not connect
+its known fixed facet levels to one another through new Persons; the frozen
+calibration supplies that common scale. A row is nevertheless unscorable when
+any required fixed parameter is absent, and a batch may not be used to claim
+linking between two calibration identities.
+
+All-endpoint response patterns may have finite EAP summaries under a proper
+declared prior. They must be labelled as endpoint/posterior results and must
+not be described as finite JML maxima. Posterior mass at the quadrature edge,
+very sparse response patterns, and material prior sensitivity require an
+explicit review status. Posterior SD and intervals condition on the frozen
+point calibration unless a separately validated parameter-uncertainty route
+is used; they must not be labelled as including calibration uncertainty.
+
+The returned object must bind every score to calibration identity and schema,
+scoring-prior basis, score map, software version, row disposition, Person
+disposition, and relevant sensitivity/readiness state. Results must be
+invariant, within a prespecified numerical budget, to row order, batch order,
+chunking, harmless factor ordering, save/load, and equivalent explicit column
+mapping.
+
+### Evidence plan and independence rules
+
+The evidence hierarchy is claim-based. A unit test proves code behavior, not
+statistical validity; agreement with the existing fitted-object scorer proves
+regression compatibility, not independent correctness; and a successful RDS
+read proves serialization, not semantic compatibility.
+
+| Claim | Primary adversarial failure | Required evidence before promotion |
+| --- | --- | --- |
+| The artifact is frozen and sufficient | Scoring still reads the source fit, source data, options, or omitted defaults | Score in a fresh process from the artifact alone; dependency and mutation tests; minimal-payload audit |
+| Save/load preserves the calibration | Values survive while names, signs, score maps, or constraints drift | Semantic round-trip equality plus probability/posterior equality; corrupt, partial, reordered, and newer-schema negative fixtures |
+| Anchors mean what their labels claim | Step, slope, element, and group coordinates collide or overconstrain the model | Independent constraint/rank oracle; analytic reduction fixtures; order-invariant conflict mutation tests |
+| Scores are on the frozen scale | Orientation, category mapping, prior, or GPCM ownership changes while outputs remain plausible | Hand-enumerated small-model probability and posterior oracles; sign/reversal metamorphic tests; fit-to-artifact parity as secondary evidence |
+| Operational input handling is safe | Invalid rows are silently dropped or unknown levels receive plausible defaults | Exhaustive reason-coded negative fixtures, mixed-validity batches, duplicates, missingness, endpoints, sparse patterns, and unknown namespaces |
+| The result is reproducible and portable | Current machine/session behavior is mistaken for a stable contract | Fresh-session replay; Linux/macOS/Windows and R-devel/release/oldrel checks; locale, encoding, factor-order, and chunk/order tests |
+| "Integrity" is not overstated | A matching hash is treated as authenticity or validity | Semantic validation remains authoritative; documentation and mutation tests show the limited role of optional hashes |
+
+Independent mathematical oracles must not call the production probability,
+parameter-expansion, constraint, or scoring helpers they evaluate. Numerical
+tolerances and denominators are frozen before confirmatory fixtures are
+opened. Calibration fixtures, implementation tests, and confirmation fixtures
+use disjoint identities. If a failed result changes a rule or implementation,
+the change is documented and a new disjoint confirmation is required; failed
+cells are retained rather than pooled away.
+
+External-program agreement is optional for a lane whose posterior and
+probability calculations have an independent exact oracle. If an external
+comparison is used, model, estimator, parameterization, response map, prior,
+quadrature, anchor coordinates, and reported precision must match before a
+tolerance is interpreted. External software is never an installed dependency
+or ground truth.
+
+Performance evidence is bounded to the new application workflow. Before
+performance tuning, the project will set a maximum artifact size and scoring-
+time/memory budgets for representative small, medium, and operationally
+plausible batches. Performance work must not weaken validation, retain
+training data, or introduce a mandatory heavy dependency.
+
+### Metacognitive review loop
+
+Every promotion review must answer the following before looking at a pooled
+pass rate:
+
+1. What observation would falsify this exact claim, and was that observation
+   made possible by the fixture?
+2. Is the supposed oracle independent, or does it reuse the same coordinate,
+   probability, serialization, or scoring mistake as production code?
+3. Which semantic fact is being inferred only from a familiar name, class, or
+   finite value?
+4. Could a wrong result still look plausible to an analyst, and does a
+   negative or metamorphic test force that failure to become visible?
+5. What user decision would change if the claim passed, and is the evidence
+   strong enough for that consequence rather than merely for code coverage?
+6. If the claim fails, which scope is removed or relabelled without changing
+   the rule after seeing the result?
+
+The answers belong in a claim ledger with the claim, support lane, falsifier,
+independent evidence, decision consequence, current status, and fallback. A
+missing falsifier or an oracle that shares the implementation keeps the row
+open even when all ordinary tests are green.
+
+For every newly proposed 0.2.4 task, copy and answer this intake checklist. It
+is a per-task template, not a global box that can be checked once:
+
+- [ ] Which CORE or OPT requirement does this task close?
+- [ ] What exact user-visible claim or failure mode changes if it succeeds?
+- [ ] What result would falsify the claim?
+- [ ] Is the evidence independent of the implementation being tested?
+- [ ] Is it required for 0.2.4, optional for one lane, or properly deferred?
+- [ ] Does it accidentally introduce multiple-scale, new-estimator, online-
+  calibration, or other 0.2.5+/research scope?
+- [ ] What is removed, blocked, or relabelled if it fails?
+
+If those questions do not map the task to an open release gate, the task does
+not enter the 0.2.4 critical path.
+
+### Long-horizon decision hierarchy
+
+When local priorities conflict, 0.2.4 uses this order:
+
+1. statistical meaning and user-decision safety;
+2. semantic completeness, privacy minimization, and fail-closed behavior;
+3. reproducibility, provenance, and compatibility;
+4. API clarity and migration cost; and
+5. convenience, breadth, and performance.
+
+A lower item cannot be traded for a higher one without changing the public
+claim. In particular, faster scoring cannot justify silent row loss, broader
+model coverage cannot justify a shared weak gate, and future extensibility
+cannot justify prematurely implementing 0.2.5 abstractions.
+
+The version-to-version handoff is also explicit:
+
+- [ ] **H-024-01:** ship one-scale semantics directly; do not disguise a
+  dormant multi-scale implementation as future-proofing.
+- [ ] **H-024-02:** retain explicit calibration and schema identities so a
+  later migration can detect, rather than guess, 0.2.4 meaning.
+- [ ] **H-025-01 (future, non-blocking):** add `ScaleId` and observation-model
+  routing through an explicit schema migration in 0.2.5, not by overloading a
+  0.2.4 field.
+- [ ] **H-030-01 (future, non-blocking):** use actual 0.2.4/0.2.5 adoption,
+  migration, performance, and bug evidence before consolidating schemas and
+  deprecation policy in 0.3.0.
+- [ ] **H-100-01 (future, non-blocking):** promote only the multi-release,
+  independently reviewed support envelope—not every historically callable
+  route—to the 1.0 stable core.
+
+### Ordered implementation and release checklist
+
+Work proceeds in the following order. Later stages may prototype behind
+unexported interfaces, but their public claim cannot move ahead of an open
+earlier gate. Stage-parent boxes remain open until their exit-gate box and all
+required children are checked.
+
+- [x] **G0 — Post-0.2.3 baseline and threat inventory**
+  - [x] Bind published 0.2.3 fitted-object scoring, anchor review, source-fit
+    readiness, score compression, and RSM/PCM/GPCM probability reconstruction.
+    The bound source artifact is CRAN `mfrmr_0.2.3.tar.gz`, published
+    2026-08-21; its exact content identity is retained in the repository-only
+    release evidence.
+  - [x] Inventory every field the current scorer reads from `mfrm_fit`,
+    including latent-regression contrasts and scoring defaults.
+  - [x] Create GOV-07 and assign every inventoried semantic field to a schema
+    owner and CORE/OPT requirement.
+  - [x] Freeze provisional public status and evidence budget for each optional
+    lane; do not infer support from the current namespace.
+  - [x] **G0 exit:** every required semantic field has an owner, every public
+    lane has a provisional status, and unresolved facts are explicit.
+  - Evidence: repository-only baseline contract, claim ledger, payload record,
+    and regression tests.
+- [x] **G1 — Schema, lifecycle, and persistence vertical slice**
+  - [x] Specify the object schema, lifecycle transitions, and structured
+    validation/refusal taxonomy before exporting a constructor.
+  - [x] Implement draft extraction, validation, freezing, print/summary, and
+    one canonical lossless persistence route for the core lane.
+  - [x] Exclude training rows, Person identifiers, and Person estimates from
+    the canonical payload and test that exclusion.
+  - [x] Demonstrate artifact-only scoring in a fresh process with source fit,
+    source data, ambient options, and globals unavailable.
+  - [x] Reject corrupt, partial, duplicate-coordinate, altered-map, and newer-
+    schema fixtures without best-effort repair.
+  - [x] **G1 exit:** CORE-01 and CORE-02 pass semantic/numerical round-trip
+    oracles and every mandatory mutation test.
+  - Evidence: repository-only schema/lifecycle records, the internal fixed-
+    calibration implementation, isolated fresh-process worker, and lifecycle
+    regression/mutation tests.
+- [x] **G2 — Anchor and identification closure**
+  - [x] Freeze distinct namespaces and coordinate maps for direct, group,
+    shared-step, owned-step, slope, and population parameters.
+  - [x] Replace ambiguous duplicate/precedence behavior in the strict typed
+    route with order-invariant conflict handling.
+  - [x] Implement shared and owner-specific threshold/step anchors only after
+    their coordinate and rank contracts are reviewable.
+  - [x] Run unanchored reduction, fully fixed probability reconstruction,
+    intended-free-dimension, reversal, missing/unused-category, and wrong-owner
+    fixtures.
+  - [x] **G2 exit:** CORE-03 passes every core anchor reduction, conflict
+    mutation, and estimability gate.
+  - Evidence: repository-only typed-anchor contract/record, the common internal
+    constraint/gradient/rank machinery, and adversarial reduction/mutation
+    tests. Relative-slope and population namespaces are reserved but
+    unavailable; GPCM operational calibration and estimated-population
+    calibration remain optional lanes. No public 0.2.4 API is authorized by
+    this internal gate.
+- [x] **G3 — Operational scoring closure**
+  - [x] Apply the frozen artifact to new Persons without estimating or changing
+    calibration coordinates or silently selecting a prior.
+  - [x] Implement the unknown-level, score-map, weight, missingness, duplicate,
+    partial-administration, and zero-valid-response policy matrix.
+  - [x] Return row and Person dispositions plus calibration, schema, prior,
+    endpoint, quadrature, sensitivity, and readiness identities.
+  - [x] Distinguish finite endpoint EAP results from finite JML maxima and label
+    intervals as conditional on the fixed point calibration.
+  - [x] Preserve fitted-object scoring as a separate analysis route and use its
+    parity only as secondary regression evidence.
+  - [x] **G3 exit:** CORE-04 passes the independent posterior oracle, policy
+    matrix, and wording-consistency tests.
+  - Evidence: repository-only operational-scoring contract/record, the
+    artifact-coordinate RSM/PCM scorer, explicit missing/repeat/endpoint/sparse
+    dispositions, a direct hand-enumerated posterior oracle, and fitted-object
+    parity as secondary evidence. The functions and optional lanes remain
+    unexported/unpromoted.
+- [ ] **G4 — Independent and operational evidence**
+  - [x] Freeze numerical rules, denominators, resource budgets, and disjoint
+    confirmation identities before opening confirmation results.
+  - [x] Run independent probability/posterior and constraint/rank oracles that
+    share no evaluated production helpers.
+  - [x] Run corruption, sign/reversal, category-map, namespace, order/chunk,
+    locale, encoding, fresh-session, and prior-sensitivity adversarial tests.
+  - [x] Run the complete G4 denominator from an isolated source-tarball install
+    on native arm64 macOS with R release.
+  - [x] Wire hosted macOS release as the prerequisite job that must succeed
+    before the four remaining platform/R jobs are released in parallel.
+  - [ ] Run the prospectively required hosted macOS release workflow cell
+    first; do not substitute the native preflight after seeing its result.
+  - [ ] Then run Windows release and Linux devel/release/oldrel checks for the
+    public core contract.
+  - [x] Measure artifact size and scoring time/memory against the frozen small,
+    medium, and operationally plausible budgets.
+  - [x] Retain failed cells and require a new disjoint confirmation whenever a
+    result changes code or rules.
+  - [ ] **G4 exit:** CORE-05 and CORE-06 pass without pooling away failures or
+    relying on historical/skipped evidence.
+  - Local evidence: the repository-only prospective contract froze two
+    disjoint RSM/PCM fixtures, six numerical rules, nineteen adversarial cells,
+    five platform cells, and three resource scales before confirmation. The
+    independent posterior differences were at most `2.23e-15`; explicit step
+    Jacobians matched exactly. Eighteen adversarial cells passed and the
+    alternative-prior cell retained its predeclared material-review result
+    (`max |EAP shift| = 0.570`), so prior robustness remains a non-claim. The
+    120/6,000/30,000-row resource observations passed their frozen local
+    ceilings. CORE-05 is complete for the exact fixed-N(0,1) core, but workflow
+    wiring is not execution evidence. A subsequent isolated source-tarball
+    install passed the complete denominator under native arm64 macOS and R
+    4.6.1 release, closing the local preflight. Because the frozen matrix names
+    workflow evidence, that result does not post hoc close `macos-latest`.
+    The workflow now enforces hosted macOS as the prerequisite, but wiring is
+    not execution evidence. Hosted macOS is the first required unrun cell;
+    Windows release and Linux devel/release/oldrel results then remain before
+    CORE-06 or G4 can close.
+- [ ] **G5 — Optional-lane qualification**
+  - [ ] Adjudicate OPT-01 estimated-population/latent-regression MML.
+  - [ ] Adjudicate OPT-02 bounded GPCM MML.
+  - [ ] Adjudicate OPT-03 JML scoring-prior support.
+  - [ ] Adjudicate OPT-04 bounded GPCM JML only after its two parent gates.
+  - [ ] Project each result into the public support matrix as `validated`,
+    `caveated`, `experimental`, `blocked`, or unavailable.
+  - [ ] **G5 exit:** every optional lane has an evidence-backed disposition;
+    none inherits the core pass or blocks a deliberately smaller release.
+- [ ] **G6 — Release-candidate hardening**
+  - [ ] Add one fresh-session end-to-end operational vignette using synthetic
+    data and the installed public API only.
+  - [ ] Add schema compatibility and explicit migration/refusal fixtures.
+  - [ ] Reconcile code, help, README, vignette, NEWS, capability matrix,
+    runtime messages, package metadata, and website against one centrally
+    tested support matrix.
+  - [ ] Check source-package contents, examples, ordinary tests, vignettes,
+    reverse dependencies where available, and the cross-platform R CMD check
+    matrix.
+  - [ ] Confirm no release-critical row depends solely on a slow, skipped,
+    historical, local-only, or repository-absent artifact.
+  - [ ] Re-run the no-go audit and explicitly remove or relabel every failed
+    optional claim.
+  - [ ] **G6 exit:** CORE-07 passes and CORE-08 is decided from the complete
+    claim ledger rather than from schedule or version pressure.
+
+### No-go conditions and scope fallback
+
+0.2.4 is not releasable under its operational-calibration claim if any of the
+following remains true for the core lane:
+
+- scoring requires the original `mfrm_fit`, training rows, Person estimates,
+  an optimizer, or an undocumented ambient default;
+- a save/load cycle changes named coordinates, probabilities, posterior
+  summaries, dispositions, or readiness beyond a frozen numerical budget;
+- unknown schema fields, parameter namespaces, facet levels, score values, or
+  anchor conflicts are silently accepted or resolved by row order;
+- the source fit can be promoted despite an ineligible readiness/parameter
+  class, or a user override can erase that provenance;
+- an endpoint or prior-dominated posterior is reported as an ordinary finite
+  JML estimate, or conditional intervals are described as including
+  calibration uncertainty;
+- the operational example works only because it shares objects, factor state,
+  or options with the calibration session; or
+- public documentation claims a wider model/estimator/anchor matrix than the
+  executable validation evidence.
+
+When a no-go condition cannot be closed, optional scope shrinks before
+evidence does. An OPT lane may be deferred, blocked, or relabelled without
+blocking the core. Direct/group and threshold/step anchoring are part of the
+current CORE-03 claim; if that gate cannot close, 0.2.4 either waits or is
+explicitly re-chartered in this roadmap before a release candidate is built.
+Re-chartering changes the public goal and resets the affected confirmation
+gate; it is not a post-result shortcut. The project must not retain the word
+`operational`, weaken a rule after viewing confirmation results, or convert a
+caveat into a passing status merely to preserve the version number.
+
+### Explicit non-claims
+
+Even a fully passing 0.2.4 release will not establish construct validity,
+fairness, population transportability, cut-score validity, security or
+authenticity of artifact files, suitability for high-stakes deployment, or
+equivalence with FACETS, ConQuest, TAM, or another package. It will establish
+only that the declared single-scale calibration can be represented,
+validated, persisted, and applied under the documented model, prior,
+uncertainty, and input-policy envelope.
 
 ## 0.2.5: multiple observed scales
 
@@ -1677,3 +2217,7 @@ behavior, recovery evidence, documentation, and compatibility contract agree.
    the same support boundary.
 6. Slow validation remains reproducible without becoming a required runtime
    dependency or routine CRAN workload.
+7. A calibration artifact must be semantically sufficient without carrying
+   source responses or silently consulting the source fit.
+8. Operational application never silently refits, substitutes a parameter or
+   prior, drops an invalid case, or promotes a non-ready source.

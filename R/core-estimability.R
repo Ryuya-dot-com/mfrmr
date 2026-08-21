@@ -216,14 +216,12 @@ mfrmr_interaction_jacobian_sparse <- function(spec) {
 
 mfrmr_step_jacobian_sparse <- function(config, sizes) {
   n_steps <- max(as.integer(config$n_cat %||% 0L) - 1L, 0L)
-  n_free_per_scope <- sum_zero_param_count(n_steps)
-  n_scope <- if (identical(config$model, "RSM")) {
-    1L
-  } else {
-    length(config$facet_levels[[config$step_facet]] %||% character(0))
-  }
+  specs <- mfrmr_step_specs(config)
+  n_scope <- length(specs)
   n_rows <- n_scope * n_steps
-  n_cols <- n_scope * n_free_per_scope
+  n_cols <- sum(vapply(specs, function(spec) {
+    as.integer(spec$n_params)
+  }, integer(1)))
   if (n_cols == 0L) {
     return(list(
       jacobian = mfrmr_empty_sparse_matrix(n_rows, 0L),
@@ -243,9 +241,17 @@ mfrmr_step_jacobian_sparse <- function(config, sizes) {
   }
   for (scope in seq_len(n_scope)) {
     row_offset <- (scope - 1L) * n_steps
-    for (transition in seq_len(n_free_per_scope)) {
+    free_index <- as.integer(specs[[scope]]$free_index)
+    if (length(free_index) <= 1L) next
+    reference_transition <- free_index[length(free_index)]
+    estimated_transitions <- free_index[-length(free_index)]
+    for (transition in estimated_transitions) {
       col_cursor <- col_cursor + 1L
-      row_i <- c(row_i, row_offset + transition, row_offset + n_steps)
+      row_i <- c(
+        row_i,
+        row_offset + transition,
+        row_offset + reference_transition
+      )
       col_j <- c(col_j, col_cursor, col_cursor)
       values <- c(values, 1, -1)
       map_rows[[col_cursor]] <- mfrmr_estimability_map(
@@ -259,8 +265,12 @@ mfrmr_step_jacobian_sparse <- function(config, sizes) {
           config$step_facet
         },
         Level = scope_levels[scope],
-        ReferenceLevel = paste0("transition", n_steps),
-        Constraint = "within_ladder_sum_zero",
+        ReferenceLevel = paste0("transition", reference_transition),
+        Constraint = if (any(is.finite(specs[[scope]]$anchors))) {
+          "within_ladder_sum_zero_with_fixed_anchors"
+        } else {
+          "within_ladder_sum_zero"
+        },
         OptimizerIndex = NA_integer_
       )
     }

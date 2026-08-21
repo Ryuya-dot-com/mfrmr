@@ -2248,7 +2248,46 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
       stringsAsFactors = FALSE
     ))
   }
-  lines <- mfrmr_release_readiness_read_lines(path)
+  workflow_root <- dirname(dirname(dirname(normalizePath(
+    path, winslash = "/", mustWork = TRUE
+  ))))
+  workflow_directory <- normalizePath(
+    file.path(workflow_root, ".github", "workflows"),
+    winslash = "/",
+    mustWork = TRUE
+  )
+  read_workflow_graph <- function(current_path, seen = character()) {
+    normalized <- normalizePath(current_path, winslash = "/", mustWork = TRUE)
+    if (normalized %in% seen) {
+      return(character())
+    }
+    current_lines <- mfrmr_release_readiness_read_lines(normalized)
+    uses <- trimws(sub(
+      "^[[:space:]]*uses:[[:space:]]*", "", current_lines[
+        grepl("^[[:space:]]*uses:[[:space:]]*", current_lines)
+      ]
+    ))
+    uses <- sub("[[:space:]]+#.*$", "", uses)
+    uses <- gsub("^['\"]|['\"]$", "", uses)
+    local_calls <- uses[startsWith(uses, "./.github/workflows/")]
+    if (!length(local_calls)) {
+      return(current_lines)
+    }
+    called_lines <- unlist(lapply(local_calls, function(call) {
+      target <- file.path(workflow_root, substring(call, 3L))
+      if (!file.exists(target)) {
+        return(character())
+      }
+      target <- normalizePath(target, winslash = "/", mustWork = TRUE)
+      if (!startsWith(target, paste0(workflow_directory, "/")) ||
+          isTRUE(file.info(target)$isdir)) {
+        return(character())
+      }
+      read_workflow_graph(target, seen = c(seen, normalized))
+    }), use.names = FALSE)
+    c(current_lines, called_lines)
+  }
+  lines <- read_workflow_graph(path)
   contains <- function(pattern) {
     any(grepl(pattern, lines, fixed = TRUE))
   }
