@@ -115,16 +115,28 @@ zero-skip results in all five workflow cells.
 
 ## Verification and decision
 
-`test-fixed-calibration-g4-evidence.R` passed 114 expectations in 11 tests with
+`test-fixed-calibration-g4-evidence.R` passed 119 expectations in 11 tests with
 zero failures, errors, warnings, or skips. The test file is excluded from the
 source package and is now explicitly invoked by the shared
 `.github/workflows/R-CMD-check-cell.yaml` called from
 `.github/workflows/R-CMD-check.yaml`. The orchestrator makes macOS release a
 prerequisite for the other four jobs. Merely editing that dependency is not CI
 evidence. The subsequent isolated installed-payload macOS execution passed the
-same 11 tests and 114 expectations with zero failures, errors, warnings, or
-skips. GitHub-hosted macOS remains the first required unrun workflow cell; all
-five prospectively frozen OS/R workflow cells remain pending.
+same 11 tests and 119 expectations with zero failures, errors, warnings, or
+skips. GitHub-hosted macOS remains the first required unresolved workflow cell;
+all five prospectively frozen OS/R workflow cells still lack passing evidence.
+
+The first hosted macOS attempt is retained as Actions run `32530223829` at
+commit `d307031a5a4fea79ebf8c810eba2c691169c067d`. Its R CMD check and repository
+release-readiness steps passed, but the G4 step stopped before opening any test
+cell because `pkgload::load_all()` requested the non-project development helper
+`decor`. The four dependent jobs were skipped as designed. The correction
+loads the already installed `check/mfrmr.Rcheck/mfrmr` payload and passes that
+same installed-library requirement to the vanilla child. No production code,
+fixture, identity, numerical rule, denominator, or decision threshold changed,
+so this is a retained harness bootstrap failure rather than a failed numerical
+confirmation. A new hosted run is required; the failed attempt is not pass
+evidence.
 
 After the semantic-components change, a source-tarball
 `R CMD check --no-manual --ignore-vignettes` completed with `Status: OK` under
@@ -141,6 +153,8 @@ repository-index messages did not alter the check status.
 - `MacOSFirstWorkflowWiringComplete=TRUE`
 - `MacOSReleaseWorkflowComplete=FALSE`
 - `RemainingRequiredWorkflowCells=5`
+- `HostedMacOSAttempt1Retained=TRUE`
+- `HostedMacOSAttempt1DenominatorOpened=FALSE`
 - `PriorRobustnessClaim=FALSE`
 - `PublicAPIAuthorized=FALSE`
 - `OptionalLaneAuthorized=FALSE`

@@ -2091,9 +2091,13 @@ required children are checked.
     4.6.1 release, closing the local preflight. Because the frozen matrix names
     workflow evidence, that result does not post hoc close `macos-latest`.
     The workflow now enforces hosted macOS as the prerequisite, but wiring is
-    not execution evidence. Hosted macOS is the first required unrun cell;
-    Windows release and Linux devel/release/oldrel results then remain before
-    CORE-06 or G4 can close.
+    not execution evidence. The first hosted attempt passed R CMD check and
+    release-readiness, then stopped in the G4 bootstrap before opening the
+    denominator because `pkgload::load_all()` requested an undeclared
+    development helper. That attempt and the four designed downstream skips
+    are retained. Hosted macOS is the first unresolved cell and must rerun with
+    the installed check payload; Windows release and Linux devel/release/oldrel
+    results then remain before CORE-06 or G4 can close.
 - [ ] **G5 — Optional-lane qualification**
   - [ ] Adjudicate OPT-01 estimated-population/latent-regression MML.
   - [ ] Adjudicate OPT-02 bounded GPCM MML.

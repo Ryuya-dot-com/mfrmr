@@ -91,7 +91,9 @@ identify whether the opt-in layer ran and retain its test log.
   `.github/workflows/R-CMD-check-cell.yaml`: run hosted macOS/R release as a
   prerequisite, then release the four remaining cells in parallel through one
   shared R CMD check, release-readiness, and G4 procedure. Workflow wiring is
-  tested repository evidence, but does not count as a platform pass.
+  tested repository evidence, but does not count as a platform pass. The G4
+  procedure loads the package installed by R CMD check and propagates that
+  installed-library boundary to its vanilla child process.
 - `internal-roadmap-0.2.3.md`: repository-only maintainer roadmap containing
   detailed release sequencing, evidence invalidation, local external-tool
   identities, and completion gates that do not belong in user-facing roadmap

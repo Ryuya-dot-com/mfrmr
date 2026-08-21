@@ -655,6 +655,9 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(cell, "r-lib/actions/check-r-package@v2", fixed = TRUE)
   expect_match(cell, "Repository validation review", fixed = TRUE)
   expect_match(cell, "Fixed-calibration G4 platform evidence", fixed = TRUE)
+  expect_false(grepl("pkgload::load_all", cell, fixed = TRUE))
+  expect_match(cell, "MFRMR_G4_INSTALLED_LIBRARY", fixed = TRUE)
+  expect_match(cell, "find.package(\"mfrmr\")", fixed = TRUE)
   expect_match(cell, "sum(counts$skipped) > 0L", fixed = TRUE)
 
   protocol <- new.env(parent = globalenv())
@@ -703,6 +706,12 @@ test_that("record and roadmap close CORE-05 but keep CORE-06 and G4 open", {
   )
   expect_match(
     macos_record, "`RemainingRequiredWorkflowCells=5`", fixed = TRUE
+  )
+  expect_match(
+    macos_record, "`HostedMacOSAttempt1Retained=TRUE`", fixed = TRUE
+  )
+  expect_match(
+    macos_record, "`HostedMacOSAttempt1DenominatorOpened=FALSE`", fixed = TRUE
   )
   expect_match(roadmap, "- [x] **CORE-05 — Independent evidence:**",
                fixed = TRUE)

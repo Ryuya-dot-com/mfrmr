@@ -14,7 +14,7 @@ Status: `macos_release_native_installed_preflight_pass`, 2026-08-22.
 - Session locale: `C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8`
 - Allocation profiling available: `TRUE`
 - G4 tests: `11`
-- Expectations: `114`
+- Expectations: `119`
 - Failures/errors/warnings/skips: `0/0/0/0`
 
 ## Execution boundary
@@ -32,6 +32,20 @@ fresh-process, and small/medium/30,000-row resource denominator passed. The
 material alternative-prior review result remains a deliberate non-robustness
 finding; it was neither discarded nor converted into a pass claim.
 
+## Retained hosted attempt
+
+GitHub Actions run `32530223829` at commit
+`d307031a5a4fea79ebf8c810eba2c691169c067d` is retained as the first hosted
+macOS attempt. R CMD check and repository release-readiness passed. The G4 step
+then stopped before entering the test file because `pkgload::load_all()`
+requested the non-project development helper `decor`; the four jobs dependent
+on macOS were skipped. This is a workflow bootstrap failure, not numerical or
+operational confirmation evidence. The replacement loader uses the package
+already installed under `check/mfrmr.Rcheck`, and propagates that installed
+library to the vanilla child process. It changes no production code, fixture,
+identity, numerical rule, denominator, or decision threshold. The failed
+attempt remains visible and a fresh hosted run is required.
+
 ## Scope and consequence
 
 This closes the native installed-payload preflight. It is stronger than the
@@ -46,6 +60,8 @@ oldrel-1.
 - `MacOSReleaseNativePreflightComplete=TRUE`
 - `MacOSReleaseWorkflowComplete=FALSE`
 - `RemainingRequiredWorkflowCells=5`
+- `HostedMacOSAttempt1Retained=TRUE`
+- `HostedMacOSAttempt1DenominatorOpened=FALSE`
 - `CORE06Complete=FALSE`
 - `G4ExitComplete=FALSE`
 - `PublicAPIAuthorized=FALSE`
