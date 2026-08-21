@@ -626,6 +626,9 @@ test_that("macOS release gates the four remaining workflow cells", {
 
   workflow <- paste(readLines(workflow_path, warn = FALSE), collapse = "\n")
   cell <- paste(readLines(cell_path, warn = FALSE), collapse = "\n")
+  worker <- paste(readLines(file.path(
+    ctx$validation, "fixed-calibration-g4-confirmation-worker-0.2.4.R"
+  ), warn = FALSE), collapse = "\n")
   expect_match(workflow, "permissions:\n  contents: read", fixed = TRUE)
   expect_match(workflow, "  macos-release:", fixed = TRUE)
   expect_match(
@@ -659,6 +662,8 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(cell, "MFRMR_G4_INSTALLED_LIBRARY", fixed = TRUE)
   expect_match(cell, "find.package(\"mfrmr\")", fixed = TRUE)
   expect_match(cell, "sum(counts$skipped) > 0L", fixed = TRUE)
+  expect_match(worker, "winslash = \"/\"", fixed = TRUE)
+  expect_match(worker, "tolower(loaded_library_path)", fixed = TRUE)
 
   protocol <- new.env(parent = globalenv())
   source(

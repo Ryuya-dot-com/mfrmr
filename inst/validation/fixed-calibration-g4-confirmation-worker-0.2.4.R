@@ -18,7 +18,9 @@ if (file.exists(output_file)) {
 
 installed_library <- Sys.getenv("MFRMR_G4_INSTALLED_LIBRARY", unset = "")
 if (nzchar(installed_library)) {
-  installed_library <- normalizePath(installed_library, mustWork = TRUE)
+  installed_library <- normalizePath(
+    installed_library, winslash = "/", mustWork = TRUE
+  )
   .libPaths(c(installed_library, .libPaths()))
   suppressPackageStartupMessages(library(mfrmr))
   load_mode <- "installed_library"
@@ -26,9 +28,17 @@ if (nzchar(installed_library)) {
   suppressPackageStartupMessages(pkgload::load_all(package_root, quiet = TRUE))
   load_mode <- "source_tree"
 }
-loaded_package_path <- normalizePath(find.package("mfrmr"), mustWork = TRUE)
+loaded_package_path <- normalizePath(
+  find.package("mfrmr"), winslash = "/", mustWork = TRUE
+)
+loaded_library_path <- dirname(loaded_package_path)
+installed_library_matches <- if (.Platform$OS.type == "windows") {
+  identical(tolower(loaded_library_path), tolower(installed_library))
+} else {
+  identical(loaded_library_path, installed_library)
+}
 if (identical(load_mode, "installed_library") &&
-    !identical(dirname(loaded_package_path), installed_library)) {
+    !installed_library_matches) {
   stop("The worker did not load mfrmr from the isolated library.", call. = FALSE)
 }
 if (!identical(Sys.setlocale("LC_COLLATE", collate_locale), collate_locale)) {
