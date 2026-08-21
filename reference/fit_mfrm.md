@@ -48,7 +48,8 @@ fit_mfrm(
   facet_prior_sd = NULL,
   shrink_person = FALSE,
   attach_diagnostics = FALSE,
-  checkpoint = NULL
+  checkpoint = NULL,
+  gpcm_mml_identification = c("free_population", "fixed_standard_normal")
 )
 ```
 
@@ -77,7 +78,11 @@ fit_mfrm(
   `rating_max` are supplied and the observed scores are a contiguous
   subset of that range (for example a 1-5 scale with only 2-5 observed),
   the supplied full range is retained so zero-count boundary categories
-  remain part of the fitted score support.
+  remain visible in the data-support review. A zero-count boundary
+  category is retained as review evidence. With `keep_original = TRUE`,
+  however, an unobserved internal category in a polytomous fitted ladder
+  creates an unsupported adjacent-step contrast and fitting stops before
+  optimization with a structured category-support error.
 
 - rating_min:
 
@@ -146,10 +151,16 @@ fit_mfrm(
 
 - slope_facet:
 
-  Slope facet for the bounded `GPCM` branch. mfrmr requires
-  `slope_facet == step_facet` and uses a positive-slope identification
-  convention on the log scale with geometric mean discrimination fixed
-  to 1.
+  Slope facet for the bounded `GPCM` branch. mfrmr estimates one
+  positive slope for every level of this designated facet. Thus
+  `slope_facet = "Criterion"` gives criterion-specific slopes, whereas
+  `slope_facet = "Rater"` gives rater-specific slopes. The current route
+  accepts exactly one slope-owning facet, requires
+  `slope_facet == step_facet`, and cannot estimate criterion and rater
+  slope blocks simultaneously. Slopes are identified on the log scale
+  with their geometric mean fixed to 1, so the table reports relative
+  discrimination across the selected facet's levels rather than
+  unrelated absolute weights.
 
 - facet_interactions:
 
@@ -221,14 +232,18 @@ fit_mfrm(
 
   |  |  |
   |----|----|
-  | `7` | lightweight exploratory run; helpers such as [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md) and [`reference_case_benchmark()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_benchmark.md) use this value. |
-  | `15` | intermediate analysis when runtime matters. |
-  | `31` | package default and a starting point for final analysis. |
+  | `7` | lightweight screening run; information-criterion deltas, weights, preferences, and LRT are disabled. Helpers such as [`predict_mfrm_population()`](https://ryuya-dot-com.github.io/mfrmr/reference/predict_mfrm_population.md) and [`reference_case_benchmark()`](https://ryuya-dot-com.github.io/mfrmr/reference/reference_case_benchmark.md) use this value. |
+  | `15` | intermediate review run when runtime matters; automatic model ranking remains disabled. |
+  | `31` | package default and the starting grid for model comparison. |
   | `61+` | sensitivity analysis for narrow score distributions or demanding numerical comparisons. |
 
   Quadrature adequacy depends on the fitted distribution and score
   support. When substantive conclusions are sensitive, compare results
-  under a denser rule and report the setting used.
+  under a denser rule and report the setting used. Raw AIC/BIC/SABIC
+  remain visible below 31 points for diagnosis, but
+  [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+  fails closed rather than turning a screening/review grid into
+  automatic selection.
 
 - maxit:
 
@@ -271,9 +286,10 @@ fit_mfrm(
   `"hybrid"` uses EM as a warm start before the direct optimizer.
   Unsupported combinations currently fall back to `"direct"` and record
   that fallback in `fit$summary`. Direct, hybrid, and EM engines all
-  require the common terminal-gradient gate for `InferenceReady`; EM
-  relative log-likelihood convergence alone does not establish numerical
-  readiness.
+  require the common terminal-gradient gate for the Numerical component
+  of fit readiness; EM relative log-likelihood convergence alone does
+  not establish numerical readiness. `InferenceReady` is `TRUE` only
+  when every stored fit-readiness component passes.
 
 - population_formula:
 
@@ -327,8 +343,8 @@ fit_mfrm(
 
   Logical. When `TRUE` and `facet_shrinkage` is active, the same
   empirical-Bayes shrinkage is applied to `fit$facets$person`. Default
-  `FALSE`, since MML already integrates over an N(0, 1) prior on theta;
-  the option mainly benefits JML.
+  `FALSE`, since MML already integrates over a normal population
+  distribution for theta; the option mainly benefits JML.
 
 - attach_diagnostics:
 
@@ -360,17 +376,44 @@ fit_mfrm(
   engine ignores it. Use this to make long MML EM fits crash-resilient
   on shared compute environments.
 
+- gpcm_mml_identification:
+
+  Scale-identification convention for `model = "GPCM"` with
+  `method = "MML"`. `"free_population"` (the default) estimates an
+  intercept-only person distribution \\N(\beta_0,\sigma^2)\\ when
+  `population_formula` is omitted, while retaining geometric-mean-one
+  relative slopes. This restores the common discrimination degree of
+  freedom used by a conventional fixed-latent- variance GPCM; in the
+  documented item-only overlap it is a one-to-one reparameterization of
+  ConQuest `scoresfree` GPCM. An explicitly supplied
+  `population_formula` is retained under this convention.
+  `"fixed_standard_normal"` is the legacy restricted branch: it requires
+  `population_formula = NULL`, fixes the person distribution to
+  \\N(0,1)\\, and also fixes the slope geometric mean to one. The latter
+  is then a substantive relative-discrimination restriction rather than
+  an identification requirement. This argument does not change JML,
+  whose geometric-mean-one slope constraint is required to identify its
+  freely estimated person coordinates.
+
 ## Value
 
 An object of class `mfrm_fit` (named list) with:
 
-- `summary`: one-row model summary (`LogLik`, `AIC`, `BIC`,
-  convergence), including user-facing `Method`, engine-facing
-  `MethodUsed`, MML-engine fields, terminal-gradient readiness,
-  requested/selected-stage tolerance settings, and the actual L-BFGS-B
-  `OptimizerFactr` / `OptimizerPgtol` controls when applicable
+- `summary`: one-row model summary including `LogLik`, `Deviance`,
+  canonical free dimension `Npar`, response-row/weight/Person counts,
+  the versioned information-criterion contract, Person-based MML
+  `AIC`/`BIC`/`SABIC`, explicitly descriptive legacy fields when the
+  common panel is ineligible, and convergence; it also includes
+  user-facing `Method`, engine-facing `MethodUsed`, MML-engine fields,
+  terminal-gradient readiness, requested/selected-stage tolerance
+  settings, and the actual L-BFGS-B `OptimizerFactr` / `OptimizerPgtol`
+  controls when applicable
 
-- `facets$person`: person estimates (`Estimate`; plus `SD` for MML)
+- `facets$person`: person estimates (`Estimate`; plus `SD` for MML),
+  with `SourceFitReadiness`, `SourceInferenceReady`, and `EstimateUse`
+  separating a defined Person summary from the source fit's permission
+  to interpret it. In particular, a finite prior-regularized MML EAP
+  does not become reportable when the source fit is blocked.
 
 - `facets$others`: facet-level estimates for each facet
 
@@ -388,29 +431,61 @@ An object of class `mfrm_fit` (named list) with:
   and
   [`category_structure_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/category_structure_report.md).
 
-- `slopes`: estimated discrimination parameters for `GPCM` fits as a
-  one-row-per-slope-element `tibble` with `LogEstimate` and `Estimate`.
-  Bare fits keep this table as point estimates. For MML bounded-`GPCM`
-  fits,
+- `slopes`: discrimination parameters for `GPCM` fits as a
+  one-row-per-slope-element `tibble`. `LogEstimate` and `Estimate`
+  retain the finite optimizer values for compatibility and numerical
+  diagnosis; `OptimizerLogEstimate` / `OptimizerEstimate` name that role
+  explicitly. Read `ParameterStatus`, `PrimaryLogEstimate`,
+  `PrimaryEstimate`, `SEEligible`, `CIEligible`, and `ReasonCodes`
+  before interpretation. A certified JML slope-only path receives a
+  typed extended-real primary boundary. `config$boundary_audit` retains
+  the supporting fixed-objective, joint-path, and terminal-gradient
+  records. A certified path can establish that a finite JML maximum is
+  unattained for the evaluated case. The converse is deliberately not
+  used: failure to find a path in the evaluated families, or retention
+  of a finite optimizer point, does not establish existence of a finite
+  global maximum for the non-concave GPCM likelihood. These technical
+  records do not promote readiness, uncertainty, MML, or cross-software
+  claims. `config$boundary_audit$gpcm_terminal_gradient_stability`
+  reconstructs the same fixed JML objective and analytic terminal
+  gradient, checks stored optimizer/polish summaries and deterministic
+  central-difference probes, and reports gradient norms by
+  free-parameter block. Positive boundary certificates take precedence
+  over a finite-point zero or small gradient; otherwise a coherent small
+  gradient is retained-point first-order evidence only. The
+  implementation threshold is not a frozen scientific criterion and the
+  audit does not certify a finite global maximum, boundary absence,
+  uncertainty, external comparability, or readiness. The conditional JML
+  boundary checks are not reused for MML.
   [`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
-  exposes log-slope SEs plus positive-scale delta-method SEs and
-  confidence limits in `diagnostics$parameter_uncertainty$slopes`; when
-  `attach_diagnostics = TRUE`, those columns are attached to
-  `fit$slopes` when the Hessian is available. The identification
-  convention pins the geometric mean of slopes at 1.
+  may retain observed-information and delta-method values in
+  `Optimizer*SE` / `Optimizer*CI` columns, but ordinary `SE` / `CI`
+  columns remain unavailable while parameter readiness is not
+  established. The identification convention pins the geometric mean of
+  finite optimizer slopes at 1.
+
+- `readiness`: the versioned fit record, five component rows, and
+  current parameter-level rows. The current parameter slice includes
+  GPCM slopes; other non-Person parameter classes remain scheduled for
+  later propagation.
 
 - `interactions`: model-estimated facet interaction effects and metadata
   when `facet_interactions` is supplied
 
-- `population`: population-model metadata. Ordinary fits keep an
-  inactive record (`active = FALSE`, `posterior_basis = "legacy_mml"`).
-  Active latent-regression fits store the fitted design matrix,
-  regression coefficients, residual variance, omission review, the
-  complete-case estimation table (`person_table`), and the
-  observed-person-aligned replay/export provenance table retained before
-  complete-case omission (`person_table_replay`), plus stored
-  categorical `xlevels` / `contrasts` for model-matrix replay and
-  scoring, together with `posterior_basis = "population_model"`.
+- `population`: population-model metadata. Ordinary RSM/PCM and JML fits
+  keep an inactive record (`active = FALSE`,
+  `posterior_basis = "legacy_mml"`). Default bounded-GPCM MML and active
+  latent-regression fits store the fitted design matrix, regression
+  coefficients, residual variance, omission review, the complete-case
+  estimation table (`person_table`), and the observed-person-aligned
+  replay/export provenance table retained before complete-case omission
+  (`person_table_replay`), plus stored categorical `xlevels` /
+  `contrasts` for model-matrix replay and scoring, together with
+  `posterior_basis = "population_model"`. `estimation_converged` records
+  optimizer convergence and `inference_ready` records the separate
+  formal readiness decision. The older `population$converged` field is
+  retained as a compatibility alias of `inference_ready`; its basis is
+  recorded in `population$converged_basis`.
 
 - `data_review`: pre-fit Data, Design, Stability, and Reporting
   readiness evidence propagated into summaries and plot-interpretation
@@ -472,7 +547,48 @@ multiplied by a positive slope for the designated slope-facet level:
 
 The current implementation requires `slope_facet == step_facet` and
 identifies slopes by a sum-to-zero constraint on log slopes, so their
-geometric mean is 1.
+geometric mean is 1. A selected facet owns a vector rather than one
+common number: if there are \\G\\ levels, the fit returns \\G\\ positive
+slopes with \\G-1\\ free log-slope contrasts. Every other facet remains
+additive inside \\\eta\\ and receives no separate slope. Selecting a
+rater facet is therefore a different restricted model from selecting a
+criterion or task facet. The placement of the slope is part of the model
+identity: it multiplies the complete adjacent-category predictor,
+including the person coordinate, all additive facet locations and fitted
+facet interactions inside \\\eta\\, and the owned step. It is not a
+loading-only formulation in which the slope multiplies ability while
+rater severity and other intercept terms remain unscaled. Such a
+formulation, including TAM multifacet `GPCM.design` constructions with
+separate linear intercept and slope designs, is a different model unless
+an algebraic reduction establishes equivalence. This is an aligned
+single-owner many-facet GPCM: exactly one facet owns both the slope and
+step blocks. It is not the broader Uto–Ueno generalized MFRM, whose task
+and rater slopes enter multiplicatively and whose step owner must be
+stated separately. Setting every current slope to one recovers the
+package's equal-discrimination PCM kernel; it does not establish support
+for the omitted second slope block, multidimensional traits, or
+response-style parameters. Under the default
+`gpcm_mml_identification = "free_population"` branch, the population
+standard deviation carries the common discrimination scale while the
+geometric-mean-one slopes describe relative discrimination.
+Equivalently, on a standardized latent variable the absolute slopes are
+\\\sigma\alpha_g\\. Under
+`gpcm_mml_identification = "fixed_standard_normal"`, both the population
+standard deviation and slope geometric mean are fixed to one; that
+legacy branch is a narrower relative-discrimination model. Under JML,
+the geometric-mean-one constraint is required to resolve the
+ability/slope scale because person coordinates are estimated jointly.
+
+Here and elsewhere in the package, "bounded GPCM" means that the
+documented model/workflow scope is deliberately narrow. It does not mean
+box-constrained estimation. The JML branch maximizes the identified
+joint log-likelihood without a statistical penalty or finite bounds on
+person, location, step, or slope coordinates. Numerical line-search
+rejection of non-representable slope proposals is not regularization.
+When a recession direction is certified, the finite optimizer iterate
+remains a numerical trace and the primary result uses the appropriate
+extended-real or typed boundary status; it is not relabelled as a finite
+maximizer of the original JML objective.
 
 With only two ordered categories (\\K = 1\\), the `RSM`/`PCM` branch
 reduces to the usual binary Rasch logit for the single category
@@ -519,9 +635,26 @@ Minimum required columns are:
 
 - observed score (`score`)
 
-Scores are treated as ordered categories. Non-numeric score labels are
-dropped with a warning after coercion, whereas fractional numeric scores
-are rejected with an error instead of being silently truncated.
+Scores are treated as ordered categories. Although the fitted category
+probabilities form a multinomial probability vector, category order is
+part of the likelihood: unordered nominal/multinomial-logit responses
+are not supported. Poisson, negative-binomial, and grouped
+binomial-trial counts are also not response families in `fit_mfrm()`.
+Integer counts supplied as `score` are interpreted only as ordered
+category codes. Non-numeric score labels are dropped with a warning
+after coercion, whereas fractional numeric scores are rejected with an
+error instead of being silently truncated.
+
+A positive numeric `weight` may encode a replication/likelihood weight
+for an ordered-rating row when weighting that conditional contribution
+is the intended estimand. It is not a general collapsed-person
+frequency-table interface: under MML, powering responses inside one
+Person's conditional pattern is not the same as replicating a complete
+Person pattern after marginalization. A weight also does not turn the
+score into a count outcome or model dependence among repeated ratings.
+Non-positive finite weights are excluded during preparation, and
+non-unit observation-weight fits are not eligible for the common MML
+information-criterion panel in version 0.2.3.
 
 The fitted many-facet ordered-response model assumes conditional
 independence of observations given the person and facet parameters
@@ -538,9 +671,15 @@ If your observed categories do not start at 0, set
 `rating_min`/`rating_max` explicitly to avoid unintended recoding
 assumptions. For example, if the intended instrument is a 1-5 scale but
 the current sample only uses 2-5, set `rating_min = 1, rating_max = 5`
-to retain the zero-count category 1 in the score support. If these
-bounds are omitted, the observed score range is used and the provenance
-is stored in `fit$prep` and `summary(fit)$settings_overview`. Set
+to retain the zero-count category 1 in the data-support review. That
+boundary absence is a review condition for the separate element-boundary
+contract, not by itself an unsupported free step contrast. By contrast,
+retaining an unobserved internal category in a polytomous fitted ladder
+creates an adjacent-step recession direction, so `fit_mfrm()` stops
+before optimization rather than reporting finite step estimates for that
+ladder. If these bounds are omitted, the observed score range is used
+and the provenance is stored in `fit$prep` and
+`summary(fit)$settings_overview`. Set
 `options(mfrmr.show_inferred_rating_range = TRUE)` when you want an
 interactive reminder whenever a bound is inferred. Data-preparation
 events such as row drops, ID trimming, duplicate person-by-facet cells,
@@ -559,12 +698,14 @@ addition to supplying the full `rating_min` / `rating_max` range.
 ## Fixed effects assumption (facets have no prior)
 
 `fit_mfrm()` follows the Linacre (1989) many-facet Rasch specification:
-person ability is integrated out under a `N(0, 1)` prior (or under the
-`N(X\beta, \sigma^2)` latent-regression population model when
-`population_formula` is supplied), but every facet parameter (`Rater`,
-`Criterion`, `Task`, ...) is estimated as a fixed effect identified by a
-sum-to-zero constraint. There is no hierarchical prior, no shrinkage,
-and no variance component for the facets.
+person ability is integrated out under a `N(0, 1)` distribution (or
+under the `N(X\beta, \sigma^2)` population model when
+`population_formula` is supplied). Bounded GPCM MML instead activates an
+intercept-only `N(\beta_0, \sigma^2)` population model by default so its
+common discrimination scale is estimable. Every facet parameter
+(`Rater`, `Criterion`, `Task`, ...) is estimated as a fixed effect
+identified by a sum-to-zero constraint. There is no hierarchical prior,
+no shrinkage, and no variance component for the facets.
 
 Practical implication: when a facet has very few observed levels (for
 example 3 raters) or some of its levels have very few ratings (for
@@ -729,8 +870,12 @@ Supported model/estimation combinations:
 
 Latent-regression status:
 
-- `population_formula = NULL` keeps the standard unconditional `MML` /
-  `JML` behavior.
+- `population_formula = NULL` keeps the standard unconditional behavior
+  for RSM/PCM and JML. For bounded GPCM MML, the default
+  `gpcm_mml_identification = "free_population"` constructs an
+  intercept-only population model internally; use
+  `"fixed_standard_normal"` only to reproduce the legacy restricted
+  likelihood.
 
 - Supplying `population_formula` activates latent regression for
   `method = "MML"` only.
@@ -835,6 +980,65 @@ Facet sign orientation:
 - all other facets are treated as `-1` This affects interpretation of
   reported facet measures.
 
+## Estimator-specific estimability preflight
+
+Before optimization, mfrmr builds a sparse adjacent-category-logit
+design in the same constrained free coordinates used by the optimizer.
+The check includes Person coordinates for JML, integrates them out for
+MML, and includes facet anchors, group constraints, signs, supported
+two-way interactions, and RSM/PCM step coordinates.
+
+An exactly rank-deficient design stops with a structured
+`mfrmr_estimability_error`; its `estimability` field records rank,
+nullity, parameter blocks, tolerance checks, and a bounded
+null-direction explanation. Optimization is not run. A full-rank MML
+fixed-effect design whose corresponding free-Person JML design is rank
+deficient returns a fit with an `mfrmr_estimability_warning`: its
+cross-panel contrasts rely on the common latent-population assumption
+and remain review-only.
+
+Inspect `fit$data_review$estimability`. RSM and PCM use the full linear
+free-coordinate check. For bounded GPCM and an active latent-regression
+residual variance, the additive block is audited before fitting. A
+retained vector also records the analytic free-to-expanded
+log/natural-scale transformation Jacobians and a central-difference
+check in `fit$data_review$estimability$nonlinear_transformation`. This
+verifies the parameterization only; it is not a response-likelihood
+Jacobian or a structural-identification result. A stationary retained
+solution of modest free dimension also receives a local
+observed-information Hessian and a recorded eigenvalue-tolerance ladder
+in `fit$data_review$estimability$fitted_information`. Nonstationary or
+larger fits retain an explicit not-evaluated status. This
+fitted-information layer is diagnostic only: it does not yet classify
+weak information, make the nonlinear preflight complete, or turn full
+additive rank into a full-model estimability claim. Eligible nonlinear
+MML fits also receive bounded observed-pattern and all-response-pattern
+score checks. The latter operates on each Person's retained observation
+design under unit row weights and records probability-normalization,
+zero-expected-score, expected-information, and selected
+numerical-derivative summaries. Missing rows are not imputed; nonunit
+weights and excessive pattern grids retain explicit not-evaluated
+states. Mathematically identical Person observation designs are
+evaluated once and reconstructed by exact multiplicity; active
+latent-regression covariate rows are part of this identity. Only
+conceptual and evaluated workload summaries are retained. These
+retained-point diagnostics do not by themselves establish global
+structural identification, weak-information status, or readiness.
+
+`fit$data_review$estimability$nonlinear_local_estimability` interprets
+only the first-order local rank that these maps support. For JML GPCM,
+full column rank of the complete conditional adjacent-logit Jacobian is
+a sufficient retained-point local certificate. For fixed-quadrature MML
+with unit row weights and finite parameters, the Person-specific
+observed- pattern score vectors are part of the positive finite
+response-pattern support. If those vectors span every optimizer free
+coordinate, the full expected score information is positive definite;
+exhaustive enumeration is unnecessary for this sufficient direction. A
+rank-deficient observed subset is inconclusive and is classified only
+when the all-pattern enumeration is available. The record explicitly
+leaves continuous-integral and global identification, boundary status,
+weak information, and inference readiness unclassified.
+
 ## Choosing maxit without result-driven tuning
 
 Treat `maxit` as a predeclared computational budget, not as a value to
@@ -845,10 +1049,10 @@ tune until preferred estimates appear.
     fit results. The default `maxit = 400` is the package starting point
     for an analysis.
 
-2.  Use estimates substantively only when `Converged` and
-    `InferenceReady` are both `TRUE` and the Numerical row of
-    `summary(fit)$readiness` is `pass`. Optimizer code zero alone is
-    insufficient.
+2.  Use estimates substantively only when `FitReadiness == "ready"` and
+    `InferenceReady` is `TRUE`. Also inspect purpose-specific Design,
+    Stability, Diagnostics, and Reporting workflow rows. Optimizer code
+    zero alone is insufficient.
 
 3.  If `ConvergenceStatus == "iteration_limit"`, keep that fit
     review-only. Refit the same data, model, method, anchors, optimizer,
@@ -885,9 +1089,11 @@ For MML runs, `quad_points` is the main accuracy/speed trade-off. The
 `@param quad_points` tier table is the authoritative reference; in
 short:
 
-- `quad_points = 7` is a lightweight setting for quick iteration.
+- `quad_points = 7` is a lightweight screening setting; do not use its
+  IC values for automatic model selection.
 
-- `quad_points = 15` is an intermediate option when runtime matters.
+- `quad_points = 15` is an intermediate review option when runtime
+  matters; automatic IC ranking remains disabled.
 
 - `quad_points = 31` is the package default and a suitable starting
   point for a final analysis; always review convergence and, when
@@ -971,6 +1177,35 @@ A typical first-pass read is:
     to confirm which helper families are currently supported, caveated,
     blocked, or deferred.
 
+## Information-criterion contract
+
+For an eligible fixed-facet `MML` fit, let `D = -2 * LogLik`, let `k` be
+`Npar` (the retained free optimization-vector dimension after
+constraints), and let `N_person` be the number of unique prepared
+Persons. The canonical panel is `AIC = D + 2 * k`,
+`BIC = D + log(N_person) * k`, and
+`SABIC = D + log((N_person + 2) / 24) * k`.
+
+`ResponseRows`, `WeightedResponseTotal`, `Persons`, and `ICSampleSize`
+are separate fields. The compatibility field `N` retains its earlier
+response-row or summed-observation-weight meaning and is not the 0.2.3
+BIC sample size. Explicit all-unit weights remain eligible; every
+non-unit observation-weight fit, JML fit, and object without the current
+contract identity is excluded from the common MML panel. Its canonical
+`AIC`/`BIC`/`SABIC` fields are `NA`, while any retained raw values are
+explicitly named `LegacyAIC` and `LegacyBIC`. At 22 or fewer Persons,
+SABIC is displayed only as sensitivity evidence and
+`SABICSelectable = FALSE`.
+
+Integration adequacy is recorded separately from formula eligibility.
+`ICIntegrationTier` is `"coarse_screening"` below 15 points,
+`"intermediate_review"` at 15–30, `"standard_start"` at 31–60, and
+`"dense_sensitivity"` at 61 or more. Raw canonical criteria remain
+visible in every eligible MML tier, but `ICSelectable = FALSE` below 31
+points; automatic deltas, criterion weights, preferences, and LRT are
+suppressed. A close or consequential q\>=31 comparison should still be
+reevaluated on a denser common grid.
+
 ## References
 
 The ordered-category many-facet formulation follows Linacre (1989), with
@@ -979,6 +1214,10 @@ the `RSM` and `PCM` branches grounded in Andrich (1978) and Masters
 formulation of Muraki (1992) under a package-specific positive log-slope
 identification convention. The `MML` route follows the quadrature-based
 marginal-likelihood framework of Bock and Aitkin (1981).
+
+- Akaike, H. (1974). *A new look at the statistical model
+  identification*. IEEE Transactions on Automatic Control, 19(6),
+  716-723.
 
 - Andrich, D. (1978). *A rating formulation for ordered response
   categories*. Psychometrika, 43(4), 561-573.
@@ -1003,9 +1242,19 @@ marginal-likelihood framework of Bock and Aitkin (1981).
 - Muraki, E. (1992). *A generalized partial credit model: Application of
   an EM algorithm*. Applied Psychological Measurement, 16(2), 159-176.
 
+- Uto, M., & Ueno, M. (2020). *A generalized many-facet Rasch model and
+  its Bayesian estimation using Hamiltonian Monte Carlo*.
+  Behaviormetrika, 47, 469-496.
+
 - Robitzsch, A., & Steinfeld, J. (2018). *Item response models for human
   ratings: Overview, estimation methods, and implementation in R*.
   Psychological Test and Assessment Modeling, 60(1), 101-139.
+
+- Schwarz, G. (1978). *Estimating the dimension of a model*. Annals of
+  Statistics, 6(2), 461-464.
+
+- Sclove, S. L. (1987). *Application of model-selection criteria to some
+  problems in multivariate analysis*. Psychometrika, 52(3), 333-343.
 
 ## See also
 
@@ -1030,13 +1279,13 @@ fit_quick <- fit_mfrm(
   reltol = 1e-11
 )
 fit_quick$summary[, c(
-  "Model", "Method", "N", "Converged", "InferenceReady",
-  "ConvergenceSeverity"
+  "Model", "Method", "N", "Converged", "FitReadiness",
+  "InferenceReady", "ConvergenceSeverity"
 )]
-#> # A tibble: 1 × 6
-#>   Model Method     N Converged InferenceReady ConvergenceSeverity
-#>   <chr> <chr>  <int> <lgl>     <lgl>          <chr>              
-#> 1 RSM   MML      282 TRUE      TRUE           pass               
+#> # A tibble: 1 × 7
+#>   Model Method     N Converged FitReadiness InferenceReady ConvergenceSeverity
+#>   <chr> <chr>  <dbl> <lgl>     <chr>        <lgl>          <chr>              
+#> 1 RSM   MML      282 TRUE      ready        TRUE           pass               
 
 # \donttest{
 # Full run with the package default MML estimator. This route integrates
@@ -1053,32 +1302,34 @@ fit <- fit_mfrm(
   quad_points = 31
 )
 fit$summary
-#> # A tibble: 1 × 52
-#>   Model Method MethodUsed     N Persons Facets FacetInteractions
-#>   <chr> <chr>  <chr>      <int>   <int>  <int>             <int>
-#> 1 RSM   MML    MML          282      48      2                 0
-#> # ℹ 45 more variables: InteractionParameters <int>, InteractionCells <int>,
-#> #   InteractionSparseCells <int>, Categories <dbl>, LogLik <dbl>, AIC <dbl>,
-#> #   BIC <dbl>, Converged <lgl>, InferenceReady <lgl>, Iterations <int>,
-#> #   IterationsBasis <chr>, MMLEngineRequested <chr>, MMLEngineUsed <chr>,
-#> #   MMLEngineDetail <chr>, EMIterations <int>, EMConverged <lgl>,
-#> #   EMRelativeChange <dbl>, OptimizerMethod <chr>,
-#> #   OptimizerInitialMethod <chr>, OptimizerPolished <lgl>, …
+#> # A tibble: 1 × 87
+#>   Model Method MethodUsed ICContractVersion      N ResponseRows
+#>   <chr> <chr>  <chr>      <chr>              <dbl>        <int>
+#> 1 RSM   MML    MML        mfrmr_ic_person_v2   282          282
+#> # ℹ 81 more variables: WeightedResponseTotal <dbl>, Persons <int>, Npar <int>,
+#> #   Facets <int>, FacetInteractions <int>, InteractionParameters <int>,
+#> #   InteractionCells <int>, InteractionSparseCells <int>, Categories <dbl>,
+#> #   LogLik <dbl>, Deviance <dbl>, WeightPolicy <chr>, ICEligible <lgl>,
+#> #   ICSelectable <lgl>, ICStatus <chr>, ICSampleSize <dbl>,
+#> #   ICSampleSizeBasis <chr>, AIC <dbl>, BIC <dbl>, SABIC <dbl>,
+#> #   SABICSelectable <lgl>, AICFormula <chr>, BICFormula <chr>, …
 s_fit <- summary(fit)
-s_fit$overview[, c("Model", "Method", "Converged", "InferenceReady",
-                   "ConvergenceSeverity")]
-#> # A tibble: 1 × 5
-#>   Model Method Converged InferenceReady ConvergenceSeverity
-#>   <chr> <chr>  <lgl>     <lgl>          <chr>              
-#> 1 RSM   MML    TRUE      TRUE           pass               
-# `InferenceReady = FALSE` is a numerical stop signal. A TRUE value only
-# clears the package's optimizer review; model specification, design,
-# identification, and inferential assumptions still require review.
+s_fit$overview[, c("Model", "Method", "Converged", "FitReadiness",
+                   "InferenceReady", "ConvergenceSeverity")]
+#> # A tibble: 1 × 6
+#>   Model Method Converged FitReadiness InferenceReady ConvergenceSeverity
+#>   <chr> <chr>  <lgl>     <chr>        <lgl>          <chr>              
+#> 1 RSM   MML    TRUE      ready        TRUE           pass               
+# `InferenceReady = FALSE` is a conservative fit-level stop signal. The
+# stored component states identify whether input, estimability, category,
+# boundary, or numerical review caused it.
 s_fit$person_overview
-#> # A tibble: 1 × 8
-#>   Persons   Mean    SD Median   Min   Max  Span MeanPosteriorSD
-#>     <int>  <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl>           <dbl>
-#> 1      48 -0.155 0.824 -0.208 -1.72  1.51  3.23           0.476
+#> # A tibble: 1 × 11
+#>   Persons DistributionN ReviewExcludedExtremeE…¹ EstimateUse   Mean    SD Median
+#>     <int>         <int>                    <int> <chr>        <dbl> <dbl>  <dbl>
+#> 1      48            48                        0 source_fit… -0.155 0.824 -0.208
+#> # ℹ abbreviated name: ¹​ReviewExcludedExtremeEAPs
+#> # ℹ 4 more variables: Min <dbl>, Max <dbl>, Span <dbl>, MeanPosteriorSD <dbl>
 # Compare the person distribution with the facet and step locations. The
 # scale identification does not create universal targeting thresholds.
 s_fit$targeting
@@ -1093,22 +1344,22 @@ p_fit <- plot(fit, draw = FALSE)
 p_fit$name
 #> [1] "wright_map"
 head(p_fit$data$locations)
-#> # A tibble: 6 × 30
-#>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower
-#>   <fct> <chr> <chr>       <dbl> <dbl>    <dbl> <chr>     <chr>             <dbl>
-#> 1 Rater R01   Facet l…   -0.606 0.181     0.95 Observat… fit + observa…  -0.960 
-#> 2 Rater R02   Facet l…   -0.382 0.166     0.95 Observat… fit + observa…  -0.707 
-#> 3 Rater R04   Facet l…    0.180 0.185     0.95 Observat… fit + observa…  -0.183 
-#> 4 Rater R05   Facet l…    0.184 0.199     0.95 Observat… fit + observa…  -0.207 
-#> 5 Rater R03   Facet l…    0.212 0.179     0.95 Observat… fit + observa…  -0.138 
-#> 6 Rater R06   Facet l…    0.412 0.219     0.95 Observat… fit + observa…  -0.0168
-#> # ℹ 21 more variables: CI_Upper <dbl>, Step <chr>, StepIndex <int>,
-#> #   BoundarySeparated <lgl>, XBase <dbl>, X <dbl>, OriginalEstimate <dbl>,
-#> #   BelowRange <lgl>, AboveRange <lgl>, DisplayEstimate <dbl>,
-#> #   DisplayLabel <chr>, OriginalCI_Lower <dbl>, OriginalCI_Upper <dbl>,
-#> #   DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, CIClippedLower <lgl>,
-#> #   CIClippedUpper <lgl>, CIClipped <lgl>, BoundaryEnd <chr>,
-#> #   CISuppressed <lgl>, CIDisplayStatus <chr>
+#> # A tibble: 6 × 37
+#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
+#> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
+#> #   StepIndex <int>, BoundarySeparated <lgl>, XBase <dbl>, X <dbl>,
+#> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
+#> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
+#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
 # The bare plot route is the native Wright map and includes available
 # facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
 # Wright/pathway/category overview.
@@ -1145,13 +1396,14 @@ fit_pop <- fit_mfrm(
   person_data = person_tbl
 )
 summary(fit_pop)$population_overview
-#> # A tibble: 1 × 11
-#>   PopulationModel PosteriorBasis   Formula        PersonRows DesignColumns
-#>   <lgl>           <chr>            <chr>               <int>         <int>
-#> 1 TRUE            population_model ~Grade + Group         48             3
-#> # ℹ 6 more variables: CodingVariables <chr>, ContrastVariables <chr>,
-#> #   Policy <chr>, ResidualVariance <dbl>, OmittedPersons <int>,
-#> #   OmittedRows <int>
+#> # A tibble: 1 × 16
+#>   PopulationModel PosteriorBasis   Source  IdentificationRole Formula PersonRows
+#>   <lgl>           <chr>            <chr>   <chr>              <chr>        <int>
+#> 1 TRUE            population_model user_s… not_applicable     ~Grade…         48
+#> # ℹ 10 more variables: DesignColumns <int>, CodingVariables <chr>,
+#> #   ContrastVariables <chr>, Policy <chr>, EstimationConverged <lgl>,
+#> #   InferenceReady <lgl>, LegacyConvergedBasis <chr>, ResidualVariance <dbl>,
+#> #   OmittedPersons <int>, OmittedRows <int>
 summary(fit_pop)$population_coding
 #> # A tibble: 1 × 6
 #>   Variable LevelCount Levels Contrast        EncodedColumns CodingNote          

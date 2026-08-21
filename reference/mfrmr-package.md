@@ -381,18 +381,21 @@ Data interface:
 
 - If the intended scale has unused boundary categories, such as a 1-5
   scale with only 2-5 observed, set `rating_min = 1, rating_max = 5` so
-  the zero-count boundary category remains in the fitted support. If
-  unused intermediate categories should also remain in the original
-  scale, set `keep_original = TRUE`.
+  the zero-count boundary category remains explicit in the data-support
+  review. A missing boundary remains review evidence for the separate
+  element- boundary contract. If unused intermediate categories should
+  remain in the original scale, set `keep_original = TRUE`; a retained
+  zero-count internal category in a polytomous fitted ladder creates an
+  unsupported adjacent- step contrast, and
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  returns a structured pre-optimization error.
 
 - `summary(describe_mfrm_data(...))` reports retained zero-count
   categories in `Notes`, printed `Caveats`, and `$caveats`;
   `summary(fit)` carries full structured rows into printed `Caveats` and
   `$caveats`, with `Key warnings` as a short triage subset.
   Summary-table exports route those rows through
-  `score_category_caveats` or `analysis_caveats`. Treat adjacent
-  thresholds as weakly identified when an intermediate category is
-  unobserved.
+  `score_category_caveats` or `analysis_caveats`.
 
 - Optional columns such as `Subset`, `Weight`, and `Group` support
   linking, weighted analysis, and fairness-focused follow-up workflows.
@@ -571,7 +574,25 @@ the designated slope-facet level \\g\\:
 The current implementation requires `slope_facet == step_facet` and
 identifies slopes on the log scale with geometric mean 1. This makes
 bounded `GPCM` a slope-aware sensitivity/extension route, not a
-replacement for the equal-weighting `RSM`/`PCM` interpretation.
+replacement for the equal-weighting `RSM`/`PCM` interpretation. It is an
+aligned single-owner many-facet GPCM rather than the broader Uto–Ueno
+generalized MFRM: it does not jointly estimate multiplicative task and
+rater slope blocks or allow a distinct step owner. Unit slopes reduce to
+the equal-discrimination PCM kernel. Under default MML, an
+intercept-only person distribution \\N(\beta_0,\sigma^2)\\ is estimated.
+The geometric-mean-one slopes are relative discriminations and
+\\\sigma\alpha_g\\ are their equivalent fixed-latent-standard-deviation
+values, so the conventional common discrimination degree of freedom is
+retained. The legacy `gpcm_mml_identification = "fixed_standard_normal"`
+mode fixes both \\\sigma=1\\ and the slope geometric mean to one and is
+therefore a narrower relative-discrimination model. Under JML,
+geometric-mean-one is required to resolve the scale of jointly estimated
+person coordinates. "Bounded" refers to this deliberately limited
+model/workflow scope, not to finite optimizer box constraints. The GPCM
+JML objective is unpenalized. Certified extreme-person or facet
+recession is reported through typed primary boundary results; a finite
+optimizer iterate is retained only as a numerical trace and is not a
+finite JML maximum.
 
 **Ordered-response scope**
 
@@ -582,7 +603,15 @@ means `mfrmr` supports ordered binary and ordered polytomous data under
 `RSM` and `PCM`, plus a narrow bounded `GPCM` branch with one designated
 `slope_facet` that currently must equal `step_facet`. Unordered
 nominal/multinomial response models are outside the documented model
-scope.
+scope, as are Poisson, negative-binomial, and grouped binomial-trial
+count-response families. A positive observation `weight` weights the
+conditional ordered-rating contribution; it is not a general
+collapsed-person frequency table and does not change the response family
+or model dependence among replicated ratings. Under MML, powering
+conditional responses within one Person is not the same as replicating a
+complete Person pattern after marginalization. Consequently, integer
+count values supplied as scores are modeled as ordered category codes,
+not as counts from a Poisson or related distribution.
 
 ## Estimation methods
 
@@ -695,7 +724,7 @@ mean-square chi-square ratio to an approximate standard normal deviate:
 2/(9\\\mathit{df}))} {\sqrt{2/(9\\\mathit{df})}}\$\$
 
 Values near 0 indicate expected fit. The conventional
-\\\|\mathrm{ZSTD}\| \> 2\\ and \\\|\mathrm{ZSTD}\| \> 3\\ cutoffs are
+\\\|\mathrm{ZSTD}\| \ge 2\\ and \\\|\mathrm{ZSTD}\| \ge 3\\ cutoffs are
 heuristic two- and three-standard-deviation reference bands (Wright &
 Linacre, 1994; see also Wilson & Hilferty, 1931), not calibrated 5\\
 tests. Parameter estimation, sparse cells, the selected df convention,
@@ -1096,9 +1125,19 @@ summary(diag)
 #>   Method: MML | Precision tier: Model-based precision
 #>   Diagnostic mode: Legacy and strict marginal
 #>   Strict marginal fit: Available
+#>   Fair average: Available in diagnostics
+#> 
+#> Decision
+#>  - Interpretation: Ready for formal inference
+#>  - Formal inference: Yes (fit readiness: ready)
+#>  - Why: All stored fit-readiness components passed.
+#>  - Next: Inspect `diagnostic_basis` before comparing legacy residual evidence
+#>    with strict marginal evidence.
 #> 
 #> Status
 #>  - Overall status: Follow-up needed
+#>  - Source fit readiness: ready; fit gates passed, with formal precision
+#>    evaluated separately
 #>  - Diagnostic path: Legacy and strict marginal
 #>  - Strict marginal fit: Available
 #>  - Precision tier: Model-based precision

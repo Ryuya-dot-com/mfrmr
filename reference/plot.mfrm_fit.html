@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot fitted MFRM results with base R</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-plotting-fit-family.R" class="external-link"><code>R/api-plotting-fit-family.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-plotting-fit-family.R" class="external-link"><code>R/api-plotting-fit-family.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_fit.Rd</code></div>
     </div>
 
@@ -297,7 +297,9 @@ FACETS-style frequency column. <code>NULL</code> chooses a compact value automat
 single <code>type</code>), or an <code>mfrm_plot_bundle</code> when
 <code>type = "bundle"</code> / <code>"all"</code> / <code>"default"</code>. Each returned fit plot
 includes domain-specific readiness and an interpretation status in its
-data payload.</p>
+data payload. It also includes a one-row <code>scale_contract</code> table recording
+the fitted coordinate basis, population SD when applicable,
+discrimination basis, and bounded-GPCM MML identification convention.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -310,9 +312,12 @@ Wright map, pathway map, and category characteristic curves. The
 compact native default records any omitted facet locations in
 <code>data$retention</code> and annotates the subtitle and drawn figure; use
 <code>top_n = Inf</code> to retain every fitted location in the final Wright map.
-Native text labels remain collision-aware, so a retained point may be
-unlabeled; its exact level and estimate remain available in the returned
-plot data. When the fit records boundary-separated facet levels and no
+Every retained native location is labelled. Collision-aware <code>LabelX</code> /
+<code>LabelY</code> coordinates and leader lines displace text without moving the
+fitted point; <code>label_points</code> retains both point and text coordinates for
+custom renderers. Step transitions share one vertical ladder and their
+labels include the fitted threshold logit. When the fit records
+boundary-separated facet levels and no
 display range was supplied, the native and FACETS-style maps use the same
 robust automatic range and place those levels at ruler ends. Exact fitted
 values and intervals remain in <code>OriginalEstimate</code>, <code>CI_Lower</code>, and
@@ -327,7 +332,12 @@ immediately.</p>
 and interpretability are separate: when a numerical, data, design, or
 stability gate requires review, the coordinates remain available for
 diagnosis, but the call warns and marks the returned subtitle and drawn
-title <code>REVIEW ONLY</code>.</p>
+title <code>REVIEW ONLY</code>.
+A prior-regularized extreme MML EAP remains in <code>fit$facets$person</code>. If its
+source fit is blocked, however, it is omitted from the Wright-map scale so
+that a finite but non-interpretable trace cannot collapse the display. The
+exact excluded rows and reason remain in <code>data$person_exclusions</code>, and the
+omission is stated in <code>data$retention_note</code>.</p>
 <p><code>type = "wright"</code> shows persons, facet levels, and step thresholds on
 a shared logit scale. Estimates are plotted as fitted, so the sign
 convention follows the fit: higher person values indicate higher
@@ -361,7 +371,14 @@ includes <code>pathway_long</code>, <code>pathway_annotations</code>, <code>fit_
 <code>fit_status</code>, and <code>curve_fit_status</code>, so R users can rebuild the pathway
 map in ggplot2, plotly, or a report pipeline while keeping the same
 underfit/overfit labels used by <code><a href="fit_measures_table.html">fit_measures_table()</a></code>. <code>type = "ccc"</code> shows
-category response probabilities. <code>type = "ccc_surface"</code> or
+category response probabilities. Multiple curve groups are faceted rather
+than overplotted by the native renderer, and category-specific legends use
+the same colours across panels. For <code>GPCM</code>, these curves retain the
+estimated step-facet slope; all curve families are reference-profile curves
+with additive facet main effects and fitted interactions fixed at zero; the
+native footer and ggplot subtitle disclose that conditioning.
+The draw-free <code>curve_basis</code>, <code>CurveBasis</code>, and <code>PredictorOffset</code> fields make
+that conditioning explicit. <code>type = "ccc_surface"</code> or
 <code>type = "category_surface"</code> returns 3D-ready category-probability surface
 data for external rendering; it deliberately does not add a
 plotly/rgl dependency or replace the 2D CCC/pathway reporting figures. The
@@ -413,22 +430,22 @@ three-plot overview when preparing a FACETS-style summary.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">wright</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">wright</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">locations</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 30</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet l…   -<span style="color: #BB0000;">0.597</span> 0.180     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.950</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet l…   -<span style="color: #BB0000;">0.334</span> 0.165     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.657</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R05   Facet l…    0.135 0.198     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.253</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R04   Facet l…    0.169 0.184     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.192</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet l…    0.259 0.178     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.090</span><span style="color: #BB0000; text-decoration: underline;">1</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet l…    0.368 0.217     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.057</span><span style="color: #BB0000; text-decoration: underline;">0</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 21 more variables: CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;, StepIndex &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;, OriginalEstimate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;, DisplayEstimate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;, OriginalCI_Upper &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, CIClippedLower &lt;lgl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIClippedUpper &lt;lgl&gt;, CIClipped &lt;lgl&gt;, BoundaryEnd &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CISuppressed &lt;lgl&gt;, CIDisplayStatus &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 37</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.597</span> 0.180     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.334</span> 0.165     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R05   Facet level    0.135 0.198     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R04   Facet level    0.169 0.184     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.259 0.178     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.368 0.217     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   StepIndex &lt;int&gt;, BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalEstimate &lt;dbl&gt;, BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayEstimate &lt;dbl&gt;, DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalCI_Upper &lt;dbl&gt;, DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, …</span></span>
 <span class="r-in"><span><span class="co"># Look for: persons clustered against the facet / step rows on the</span></span></span>
 <span class="r-in"><span><span class="co">#   shared logit axis. Large gaps between the person density and</span></span></span>
 <span class="r-in"><span><span class="co">#   the step / facet rails indicate weak targeting; ceiling /</span></span></span>
@@ -455,20 +472,27 @@ three-plot overview when preparing a FACETS-style summary.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 -5.85   0.9904413      1.009582   0.009536874 0.009536874        9.093770e-05</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5 -5.80   0.9899549      1.010071   0.010021004 0.010021004        1.004038e-04</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 -5.75   0.9894439      1.010585   0.010529453 0.010529453        1.108498e-04</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CategoryInformationShare Slope Model Category CurveGroup CategoryIndex</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0.008218156     1   RSM        1     Common             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0.008635851     1   RSM        1     Common             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0.009074579     1   RSM        1     Common             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0.009535378     1   RSM        1     Common             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0.010019337     1   RSM        1     Common             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0.010527594     1   RSM        1     Common             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   CategoryScore SurfaceX SurfaceY  SurfaceZ</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             1    -6.00        1 0.9917645</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2             1    -5.95        1 0.9913450</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3             1    -5.90        1 0.9909043</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4             1    -5.85        1 0.9904413</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5             1    -5.80        1 0.9899549</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6             1    -5.75        1 0.9894439</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   CategoryInformationShare Slope Model Category CurveGroup</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1              0.008218156     1   RSM        1     Common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2              0.008635851     1   RSM        1     Common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3              0.009074579     1   RSM        1     Common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4              0.009535378     1   RSM        1     Common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              0.010019337     1   RSM        1     Common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6              0.010527594     1   RSM        1     Common</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    CurveBasis PredictorOffset CategoryIndex CategoryScore</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 zero_additive_facet_profile               0             1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 zero_additive_facet_profile               0             1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 zero_additive_facet_profile               0             1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 zero_additive_facet_profile               0             1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 zero_additive_facet_profile               0             1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 zero_additive_facet_profile               0             1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   SurfaceX SurfaceY  SurfaceZ</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    -6.00        1 0.9917645</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    -5.95        1 0.9913450</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    -5.90        1 0.9909043</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    -5.85        1 0.9904413</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    -5.80        1 0.9899549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    -5.75        1 0.9894439</span>
 <span class="r-in"><span><span class="va">surface</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">category_support</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Category CategoryIndex CategoryScore ObservedCount ZeroObserved</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        1             1             1            62        FALSE</span>

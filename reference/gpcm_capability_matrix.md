@@ -83,14 +83,14 @@ gpcm_capability_matrix()
 #> mfrmr bounded-GPCM workflow availability
 #> 
 #>                 Status Routes
-#>              supported      3
-#>  supported_with_caveat     14
+#>              supported      2
+#>  supported_with_caveat     15
 #>                blocked      1
 #>               deferred      1
 #> 
 #> Route preview
 #>                                            Area                Status
-#>                      Core fitting and summaries             supported
+#>                      Core fitting and summaries supported_with_caveat
 #>  Exploratory diagnostics and residual follow-up supported_with_caveat
 #>       Fixed-calibration scoring and information             supported
 #>                   Core curve and category views             supported
@@ -107,11 +107,10 @@ gpcm_capability_matrix("supported")
 #> mfrmr bounded-GPCM workflow availability
 #> 
 #>     Status Routes
-#>  supported      3
+#>  supported      2
 #> 
 #> Route preview
 #>                                       Area    Status
-#>                 Core fitting and summaries supported
 #>  Fixed-calibration scoring and information supported
 #>              Core curve and category views supported
 #> 

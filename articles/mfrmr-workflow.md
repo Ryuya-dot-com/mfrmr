@@ -17,9 +17,10 @@ For a plot-first companion guide, see the separate
 For a faster preliminary run without changing the final analysis target:
 
 - test code mechanics on a small deterministic subset or, for an MML
-  workflow, a temporary `quad_points = 7` grid; restore the prespecified
-  final MML grid (31 points by default) and check quadrature sensitivity
-  before reporting
+  workflow, a temporary `quad_points = 7` grid; that grid is
+  screening-only and cannot support automatic IC ranking or LRT. Restore
+  the prespecified final MML grid (31 points by default) and check a
+  denser common grid when a comparison is close or consequential
 - choose `method = "JML"` only when its person-parameter treatment is
   methodologically appropriate, not merely as a faster substitute for
   MML
@@ -188,33 +189,42 @@ facets_summary_toy <- summary(
 )
 res_toy <- facets_summary_toy$results
 
+fit_summary_toy$decision
+#>                                       Interpretation FormalInference
+#> 1 Fit gates passed; formal precision review required              No
+#>   FitReadiness                                              Why
+#> 1        ready Formal precision support has not been evaluated.
+#>                                                                                                                                                   NextAction
+#> 1 Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision.
 fit_summary_toy$overview
-#> # A tibble: 1 × 52
-#>   Model Method MethodUsed     N Persons Facets FacetInteractions
-#>   <chr> <chr>  <chr>      <int>   <int>  <int>             <int>
-#> 1 RSM   MML    MML          282      48      2                 0
-#> # ℹ 45 more variables: InteractionParameters <int>, InteractionCells <int>,
-#> #   InteractionSparseCells <int>, Categories <dbl>, LogLik <dbl>, AIC <dbl>,
-#> #   BIC <dbl>, Converged <lgl>, InferenceReady <lgl>, Iterations <int>,
-#> #   IterationsBasis <chr>, MMLEngineRequested <chr>, MMLEngineUsed <chr>,
-#> #   MMLEngineDetail <chr>, EMIterations <int>, EMConverged <lgl>,
-#> #   EMRelativeChange <dbl>, OptimizerMethod <chr>,
-#> #   OptimizerInitialMethod <chr>, OptimizerPolished <lgl>, …
+#> # A tibble: 1 × 87
+#>   Model Method MethodUsed ICContractVersion      N ResponseRows
+#>   <chr> <chr>  <chr>      <chr>              <dbl>        <int>
+#> 1 RSM   MML    MML        mfrmr_ic_person_v2   282          282
+#> # ℹ 81 more variables: WeightedResponseTotal <dbl>, Persons <int>, Npar <int>,
+#> #   Facets <int>, FacetInteractions <int>, InteractionParameters <int>,
+#> #   InteractionCells <int>, InteractionSparseCells <int>, Categories <dbl>,
+#> #   LogLik <dbl>, Deviance <dbl>, WeightPolicy <chr>, ICEligible <lgl>,
+#> #   ICSelectable <lgl>, ICStatus <chr>, ICSampleSize <dbl>,
+#> #   ICSampleSizeBasis <chr>, AIC <dbl>, BIC <dbl>, SABIC <dbl>,
+#> #   SABICSelectable <lgl>, AICFormula <chr>, BICFormula <chr>, …
 fit_summary_toy$readiness
 #>        Domain                                        Status
-#> 1   Numerical                                          pass
-#> 2        Data                                          pass
-#> 3      Design                                   pass_linked
-#> 4   Stability                                          pass
-#> 5 Diagnostics                                  not_assessed
-#> 6   Reporting ready_for_diagnostics_and_reporting_follow_up
+#> 1         Fit                                         ready
+#> 2   Numerical                                          pass
+#> 3        Data                                          pass
+#> 4      Design                                   pass_linked
+#> 5   Stability                                          pass
+#> 6 Diagnostics                                  not_assessed
+#> 7   Reporting ready_for_diagnostics_and_reporting_follow_up
 #>                                                                                                                              Detail
-#> 1                                                                                            Optimizer returned convergence code 0.
-#> 2                                                                                No preparation warning or review row was retained.
-#> 3 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 4                                                                         No boundary-constant non-person facet level was detected.
-#> 5                                                             Diagnostics have not yet been incorporated into this fit-only status.
-#> 6                                                             Reporting status is the strictest applicable upstream workflow state.
+#> 1                                                                                       All stored fit-readiness components passed.
+#> 2                                                                                            Optimizer returned convergence code 0.
+#> 3                                                                                No preparation warning or review row was retained.
+#> 4 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 5                                                                         No boundary-constant non-person facet level was detected.
+#> 6                                                             Diagnostics have not yet been incorporated into this fit-only status.
+#> 7                                                             Reporting status is the strictest applicable upstream workflow state.
 fit_summary_toy$data_review
 #> $status
 #>      Domain                Status
@@ -333,19 +343,1308 @@ fit_summary_toy$data_review
 #> [1] Stage             Condition         Severity          Count            
 #> [5] Affected          Message           RecommendedAction
 #> <0 rows> (or 0-length row.names)
+#> 
+#> $estimability
+#> $estimability$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $estimability$method
+#> [1] "MML"
+#> 
+#> $estimability$model
+#> [1] "RSM"
+#> 
+#> $estimability$readiness
+#>   ReadinessContractVersion ReadinessScope EstimabilityState ReasonCodes
+#> 1 mfrmr-readiness-0.2.3-v3            fit        identified            
+#>   Complete AuditedFreeDimension OptimizerFreeDimension Rank Nullity
+#> 1     TRUE                    9                      9    9       0
+#>   PopulationAssumptionLinked
+#> 1                      FALSE
+#> 
+#> $estimability$complete
+#> [1] TRUE
+#> 
+#> $estimability$nonlinear_blocks
+#> character(0)
+#> 
+#> $estimability$design
+#> $estimability$design$role
+#> [1] "adjacent_category_logit_constrained_free_coordinate_design"
+#> 
+#> $estimability$design$observation_rows
+#> [1] 282
+#> 
+#> $estimability$design$transition_rows
+#> [1] 846
+#> 
+#> $estimability$design$transitions
+#> [1] 3
+#> 
+#> $estimability$design$free_dimension
+#> [1] 9
+#> 
+#> $estimability$design$nonzero_entries
+#> [1] 3558
+#> 
+#> $estimability$design$rank
+#> [1] 9
+#> 
+#> $estimability$design$nullity
+#> [1] 0
+#> 
+#> $estimability$design$state
+#> [1] "identified"
+#> 
+#> $estimability$design$tolerance_sensitive
+#> [1] FALSE
+#> 
+#> $estimability$design$tolerance_ranks
+#>   Tolerance Rank Nullity
+#> 1     1e-12    9       0
+#> 2     1e-10    9       0
+#> 3     1e-08    9       0
+#> 
+#> $estimability$design$column_norm_min
+#> [1] 15.68439
+#> 
+#> $estimability$design$column_norm_max
+#> [1] 23.74868
+#> 
+#> $estimability$design$smallest_singular_value
+#> [1] 0.7060421
+#> 
+#> $estimability$design$condition_index
+#> [1] 2.350635
+#> 
+#> 
+#> $estimability$parameter_blocks
+#>       Block FreeCoordinates
+#> 1 Criterion               2
+#> 2     Rater               5
+#> 3     steps               2
+#> 
+#> $estimability$parameter_map
+#>       Block               Coordinate               Facet    Level
+#> 1     Rater                Rater:R01               Rater      R01
+#> 2     Rater                Rater:R02               Rater      R02
+#> 3     Rater                Rater:R03               Rater      R03
+#> 4     Rater                Rater:R04               Rater      R04
+#> 5     Rater                Rater:R05               Rater      R05
+#> 6 Criterion        Criterion:Content           Criterion  Content
+#> 7 Criterion       Criterion:Language           Criterion Language
+#> 8     steps steps:shared:transition1 shared_rating_scale   shared
+#> 9     steps steps:shared:transition2 shared_rating_scale   shared
+#>   ReferenceLevel             Constraint OptimizerIndex
+#> 1            R06               sum_zero              1
+#> 2            R06               sum_zero              2
+#> 3            R06               sum_zero              3
+#> 4            R06               sum_zero              4
+#> 5            R06               sum_zero              5
+#> 6   Organization               sum_zero              6
+#> 7   Organization               sum_zero              7
+#> 8    transition3 within_ladder_sum_zero              8
+#> 9    transition3 within_ladder_sum_zero              9
+#> 
+#> $estimability$zero_coordinates
+#> character(0)
+#> 
+#> $estimability$null_directions
+#> data frame with 0 columns and 0 rows
+#> 
+#> $estimability$null_blocks
+#> [1] Block       Appearances
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $estimability$observed_components
+#> [1] 1
+#> 
+#> $estimability$counterfactual_jml
+#> $estimability$counterfactual_jml$Role
+#> [1] "same fixed-effect structure with free JML Person coordinates"
+#> 
+#> $estimability$counterfactual_jml$Rank
+#> [1] 57
+#> 
+#> $estimability$counterfactual_jml$Nullity
+#> [1] 0
+#> 
+#> $estimability$counterfactual_jml$State
+#> [1] "identified"
+#> 
+#> $estimability$counterfactual_jml$FreeDimension
+#> [1] 57
+#> 
+#> $estimability$counterfactual_jml$ToleranceRanks
+#>   Tolerance Rank Nullity
+#> 1     1e-12   57       0
+#> 2     1e-10   57       0
+#> 3     1e-08   57       0
+#> 
+#> 
+#> $estimability$population_assumption_linked
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_transformation
+#> $estimability$nonlinear_transformation$status
+#> [1] "not_required"
+#> 
+#> $estimability$nonlinear_transformation$attempted
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_transformation$nonlinear_blocks
+#> character(0)
+#> 
+#> $estimability$nonlinear_transformation$parameterization_only
+#> [1] TRUE
+#> 
+#> $estimability$nonlinear_transformation$likelihood_jacobian_evaluated
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_transformation$structural_identification_classified
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_transformation$readiness_effect
+#> [1] "none_parameterization_audit_only"
+#> 
+#> 
+#> $estimability$gpcm_response_kernel
+#> $estimability$gpcm_response_kernel$role
+#> [1] "retained_gpcm_adjacent_category_logit_response_kernel_jacobian"
+#> 
+#> $estimability$gpcm_response_kernel$status
+#> [1] "not_applicable_model"
+#> 
+#> $estimability$gpcm_response_kernel$attempted
+#> [1] FALSE
+#> 
+#> $estimability$gpcm_response_kernel$conditional_response_kernel_jacobian_evaluated
+#> [1] FALSE
+#> 
+#> $estimability$gpcm_response_kernel$marginal_person_pattern_jacobian_evaluated
+#> [1] FALSE
+#> 
+#> $estimability$gpcm_response_kernel$structural_identification_classified
+#> [1] FALSE
+#> 
+#> $estimability$gpcm_response_kernel$readiness_effect
+#> [1] "none_pending_property_and_marginal_model_audits"
+#> 
+#> 
+#> $estimability$mml_observed_pattern_score
+#> $estimability$mml_observed_pattern_score$role
+#> [1] "observed_person_log_marginal_pattern_score_jacobian"
+#> 
+#> $estimability$mml_observed_pattern_score$status
+#> [1] "not_required_linear_preflight_scope"
+#> 
+#> $estimability$mml_observed_pattern_score$attempted
+#> [1] FALSE
+#> 
+#> $estimability$mml_observed_pattern_score$observed_patterns_only
+#> [1] TRUE
+#> 
+#> $estimability$mml_observed_pattern_score$all_possible_response_patterns_evaluated
+#> [1] FALSE
+#> 
+#> $estimability$mml_observed_pattern_score$structural_identification_classified
+#> [1] FALSE
+#> 
+#> $estimability$mml_observed_pattern_score$weak_information_classified
+#> [1] FALSE
+#> 
+#> $estimability$mml_observed_pattern_score$readiness_effect
+#> [1] "none_observed_patterns_diagnostic_only"
+#> 
+#> 
+#> $estimability$mml_all_pattern_information
+#> $estimability$mml_all_pattern_information$role
+#> [1] "all_response_patterns_expected_marginal_score_information"
+#> 
+#> $estimability$mml_all_pattern_information$status
+#> [1] "not_required_linear_preflight_scope"
+#> 
+#> $estimability$mml_all_pattern_information$attempted
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$observed_patterns_only
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$all_possible_response_patterns_evaluated
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$expected_information_evaluated
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$retained_observation_designs
+#> [1] TRUE
+#> 
+#> $estimability$mml_all_pattern_information$missing_rows_imputed
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$structural_identification_classified
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$weak_information_classified
+#> [1] FALSE
+#> 
+#> $estimability$mml_all_pattern_information$readiness_effect
+#> [1] "none_all_patterns_local_diagnostic_only"
+#> 
+#> 
+#> $estimability$nonlinear_local_estimability
+#> $estimability$nonlinear_local_estimability$contract_version
+#> [1] "mfrmr-nonlinear-local-estimability-0.2.3-v1"
+#> 
+#> $estimability$nonlinear_local_estimability$method
+#> [1] "MML"
+#> 
+#> $estimability$nonlinear_local_estimability$model
+#> [1] "RSM"
+#> 
+#> $estimability$nonlinear_local_estimability$nonlinear_blocks
+#> character(0)
+#> 
+#> $estimability$nonlinear_local_estimability$state
+#> [1] "not_required"
+#> 
+#> $estimability$nonlinear_local_estimability$evidence_basis
+#> [1] "linear_preflight_complete"
+#> 
+#> $estimability$nonlinear_local_estimability$probability_model_scope
+#> [1] "implemented_fixed_quadrature_marginal_model"
+#> 
+#> $estimability$nonlinear_local_estimability$local_rank
+#> [1] NA
+#> 
+#> $estimability$nonlinear_local_estimability$local_nullity
+#> [1] NA
+#> 
+#> $estimability$nonlinear_local_estimability$free_dimension
+#> [1] NA
+#> 
+#> $estimability$nonlinear_local_estimability$tolerance_sensitive
+#> [1] NA
+#> 
+#> $estimability$nonlinear_local_estimability$parameter_map_complete
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$local_first_order_classified
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$local_full_rank_sufficient
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$local_first_order_rank_deficient
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$local_nonidentifiability_established
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$global_identification_classified
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$continuous_integral_identification_classified
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$weak_information_classified
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$boundary_classified
+#> [1] FALSE
+#> 
+#> $estimability$nonlinear_local_estimability$numerical_derivative_status
+#> [1] "not_evaluated"
+#> 
+#> $estimability$nonlinear_local_estimability$quadrature_points
+#> [1] NA
+#> 
+#> $estimability$nonlinear_local_estimability$reason_codes
+#> [1] "nonlinear_coordinates_not_present"
+#> 
+#> $estimability$nonlinear_local_estimability$readiness_effect
+#> [1] "none_local_property_only"
+#> 
+#> $estimability$nonlinear_local_estimability$detail
+#> [1] "No nonlinear local first-order classification was required for this fit."
+#> 
+#> 
+#> $estimability$fitted_information
+#> $estimability$fitted_information$status
+#> [1] "pending_weak_information_calibration"
+#> 
+#> $estimability$fitted_information$attempted
+#> [1] FALSE
+#> 
+#> $estimability$fitted_information$nonlinear_blocks
+#> character(0)
+#> 
+#> $estimability$fitted_information$weak_information_classified
+#> [1] FALSE
+#> 
+#> $estimability$fitted_information$readiness_effect
+#> [1] "none_pending_pilot_calibrated_rule"
+#> 
+#> 
+#> 
+#> $category_support
+#> $category_support$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $category_support$model
+#> [1] "RSM"
+#> 
+#> $category_support$method
+#> [1] "MML"
+#> 
+#> $category_support$scale_scope
+#> [1] "single_observed_scale"
+#> 
+#> $category_support$step_facet
+#> [1] NA
+#> 
+#> $category_support$rating_range_source
+#> [1] "observed"
+#> 
+#> $category_support$score_map
+#>   OriginalScore InternalScore
+#> 1             1             1
+#> 2             2             2
+#> 3             3             3
+#> 4             4             4
+#> 
+#> $category_support$declared_categories
+#> [1] 1 2 3 4
+#> 
+#> $category_support$observed_global
+#> [1] 1 2 3 4
+#> 
+#> $category_support$retained_categories
+#> [1] 1 2 3 4
+#> 
+#> $category_support$readiness
+#>   ReadinessContractVersion ReadinessScope CategoryState ReasonCodes Complete
+#> 1 mfrmr-readiness-0.2.3-v3            fit      adequate                 TRUE
+#>   StepScopes UnsupportedStepCoordinates UnsupportedCategoryContrasts
+#> 1          1                          0                            0
+#>   WeakStepScopes WeakLocalScopes
+#> 1              0               0
+#> 
+#> $category_support$support_table
+#>              ScaleScope           StepScope DeclaredCategories ObservedGlobal
+#> 1 single_observed_scale shared_rating_scale            1;2;3;4        1;2;3;4
+#>   ObservedWithinScope RetainedForFit FreeStepCount FixedStepCount
+#> 1             1;2;3;4        1;2;3;4             2              0
+#>   DerivedStepCount UnsupportedFreeStepCount UnsupportedCategory UnsupportedStep
+#> 1                1                        0                                    
+#>   ZeroType MinimumObservedCategoryCount MaximumCategoryFraction
+#> 1                                    46               0.3404255
+#>   MaximumWeightedCategoryFraction NormalizedCategoryEntropy
+#> 1                       0.3404255                 0.9746307
+#>   WeightedNormalizedCategoryEntropy InformationState ReasonCode
+#> 1                         0.9746307         adequate           
+#> 
+#> $category_support$category_table
+#>              ScaleScope           StepScope Category BoundaryCategory
+#> 1 single_observed_scale shared_rating_scale        1             TRUE
+#> 2 single_observed_scale shared_rating_scale        2            FALSE
+#> 3 single_observed_scale shared_rating_scale        3            FALSE
+#> 4 single_observed_scale shared_rating_scale        4             TRUE
+#>   GlobalCount GlobalWeightedN WithinScopeCount WithinScopeWeightedN
+#> 1          62              62               62                   62
+#> 2          96              96               96                   96
+#> 3          78              78               78                   78
+#> 4          46              46               46                   46
+#>   ObservedGlobalRaw ObservedWithinScopeRaw ObservedGlobal ObservedWithinScope
+#> 1              TRUE                   TRUE           TRUE                TRUE
+#> 2              TRUE                   TRUE           TRUE                TRUE
+#> 3              TRUE                   TRUE           TRUE                TRUE
+#> 4              TRUE                   TRUE           TRUE                TRUE
+#>   RetainedForFit ZeroType SingletonObserved
+#> 1           TRUE     none             FALSE
+#> 2           TRUE     none             FALSE
+#> 3           TRUE     none             FALSE
+#> 4           TRUE     none             FALSE
+#> 
+#> $category_support$step_status
+#>   ReadinessScope            ScaleScope           StepScope ParameterClass
+#> 1      parameter single_observed_scale shared_rating_scale           step
+#> 2      parameter single_observed_scale shared_rating_scale           step
+#> 3      parameter single_observed_scale shared_rating_scale           step
+#>                  Coordinate  Step Transition LowerCategory UpperCategory
+#> 1 shared_rating_scale:Step1 Step1          1             1             2
+#> 2 shared_rating_scale:Step2 Step2          2             2             3
+#> 3 shared_rating_scale:Step3 Step3          3             3             4
+#>   RetainedForFit Fixed               ConstraintRole OptimizerIndex LowerCount
+#> 1           TRUE FALSE    free_coordinate_component              8         62
+#> 2           TRUE FALSE    free_coordinate_component              9        158
+#> 3           TRUE FALSE sum_zero_reference_component             NA        236
+#>   UpperCount LowerWeightedN UpperWeightedN CrossingSupport
+#> 1        220             62            220            TRUE
+#> 2        124            158            124            TRUE
+#> 3         46            236             46            TRUE
+#>   FreeCoordinateAffected ParameterStatus ReasonCodes
+#> 1                  FALSE       estimable            
+#> 2                  FALSE       estimable            
+#> 3                  FALSE       estimable            
+#> 
+#> $category_support$unsupported_contrasts
+#>  [1] ReadinessScope  ScaleScope      StepScope       ParameterClass 
+#>  [5] Category        Direction       PlusStep        MinusStep      
+#>  [9] FreeCoordinates ParameterStatus ReasonCodes    
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $category_support$local_support
+#>              ScaleScope     Facet        Level Observations ObservedCategories
+#> 1 single_observed_scale     Rater          R01           47            1;2;3;4
+#> 2 single_observed_scale     Rater          R02           56            1;2;3;4
+#> 3 single_observed_scale     Rater          R03           50            1;2;3;4
+#> 4 single_observed_scale     Rater          R04           47            1;2;3;4
+#> 5 single_observed_scale     Rater          R05           44            1;2;3;4
+#> 6 single_observed_scale     Rater          R06           38            1;2;3;4
+#> 7 single_observed_scale Criterion      Content           94            1;2;3;4
+#> 8 single_observed_scale Criterion     Language           94            1;2;3;4
+#> 9 single_observed_scale Criterion Organization           94            1;2;3;4
+#>   MissingCategories ObservedPositiveWeightCategories BoundaryCategoryMissing
+#> 1                                            1;2;3;4                   FALSE
+#> 2                                            1;2;3;4                   FALSE
+#> 3                                            1;2;3;4                   FALSE
+#> 4                                            1;2;3;4                   FALSE
+#> 5                                            1;2;3;4                   FALSE
+#> 6                                            1;2;3;4                   FALSE
+#> 7                                            1;2;3;4                   FALSE
+#> 8                                            1;2;3;4                   FALSE
+#> 9                                            1;2;3;4                   FALSE
+#>   MinimumObservedCategoryCount MinimumPositiveWeightedN MaximumCategoryFraction
+#> 1                            4                        4               0.3829787
+#> 2                            6                        6               0.3928571
+#> 3                            9                        9               0.3200000
+#> 4                            5                        5               0.3404255
+#> 5                            4                        4               0.3181818
+#> 6                            4                        4               0.4473684
+#> 7                           11                       11               0.3617021
+#> 8                           15                       15               0.3085106
+#> 9                           15                       15               0.3617021
+#>   MaximumWeightedCategoryFraction NormalizedCategoryEntropy
+#> 1                       0.3829787                 0.9218118
+#> 2                       0.3928571                 0.9364779
+#> 3                       0.3200000                 0.9830677
+#> 4                       0.3404255                 0.9482289
+#> 5                       0.3181818                 0.9397794
+#> 6                       0.4473684                 0.8855946
+#> 7                       0.3617021                 0.9289301
+#> 8                       0.3085106                 0.9811369
+#> 9                       0.3617021                 0.9661287
+#>   WeightedNormalizedCategoryEntropy InformationState ReasonCode
+#> 1                         0.9218118         adequate           
+#> 2                         0.9364779         adequate           
+#> 3                         0.9830677         adequate           
+#> 4                         0.9482289         adequate           
+#> 5                         0.9397794         adequate           
+#> 6                         0.8855946         adequate           
+#> 7                         0.9289301         adequate           
+#> 8                         0.9811369         adequate           
+#> 9                         0.9661287         adequate           
+#> 
+#> $category_support$unsupported_step_coordinates
+#> character(0)
+#> 
+#> $category_support$complete
+#> [1] TRUE
+#> 
+#> $category_support$exact_support_rule
+#> [1] "A free step contrast is unsupported when an internal category has zero positive-weight observations within its fitted ladder scope; the recession direction increases the step below that category and decreases the step above it while leaving other category exponents unchanged."
+#> 
+#> $category_support$weak_information_rule
+#> [1] "Empty boundary categories, categories absent only in a non-step local facet scope, singleton observed cells, and singleton transition sides are review evidence only; concentration thresholds remain pending pilot calibration."
+#> 
+#> 
+#> $boundary
+#> $boundary$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $boundary$method
+#> [1] "MML"
+#> 
+#> $boundary$model
+#> [1] "RSM"
+#> 
+#> $boundary$scope
+#> [1] "Person"
+#> 
+#> $boundary$complete
+#> [1] TRUE
+#> 
+#> $boundary$readiness
+#>   ReadinessContractVersion ReadinessScope BoundaryState ReasonCodes Complete
+#> 1 mfrmr-readiness-0.2.3-v3            fit        finite                 TRUE
+#>   AuditedParameterClass UnboundedLowN UnboundedHighN FixedExtremeN
+#> 1                Person             0              0             0
+#>   PriorRegularizedExtremeN ConstraintCoupledExtremeN
+#> 1                        0                         0
+#> 
+#> $boundary$parameter_status
+#>    ReadinessContractVersion ReadinessScope     ParameterId ParameterClass
+#> 1  mfrmr-readiness-0.2.3-v3      parameter Person:P001:EAP         Person
+#> 2  mfrmr-readiness-0.2.3-v3      parameter Person:P002:EAP         Person
+#> 3  mfrmr-readiness-0.2.3-v3      parameter Person:P003:EAP         Person
+#> 4  mfrmr-readiness-0.2.3-v3      parameter Person:P004:EAP         Person
+#> 5  mfrmr-readiness-0.2.3-v3      parameter Person:P005:EAP         Person
+#> 6  mfrmr-readiness-0.2.3-v3      parameter Person:P006:EAP         Person
+#> 7  mfrmr-readiness-0.2.3-v3      parameter Person:P007:EAP         Person
+#> 8  mfrmr-readiness-0.2.3-v3      parameter Person:P008:EAP         Person
+#> 9  mfrmr-readiness-0.2.3-v3      parameter Person:P009:EAP         Person
+#> 10 mfrmr-readiness-0.2.3-v3      parameter Person:P010:EAP         Person
+#> 11 mfrmr-readiness-0.2.3-v3      parameter Person:P011:EAP         Person
+#> 12 mfrmr-readiness-0.2.3-v3      parameter Person:P012:EAP         Person
+#> 13 mfrmr-readiness-0.2.3-v3      parameter Person:P013:EAP         Person
+#> 14 mfrmr-readiness-0.2.3-v3      parameter Person:P014:EAP         Person
+#> 15 mfrmr-readiness-0.2.3-v3      parameter Person:P015:EAP         Person
+#> 16 mfrmr-readiness-0.2.3-v3      parameter Person:P016:EAP         Person
+#> 17 mfrmr-readiness-0.2.3-v3      parameter Person:P017:EAP         Person
+#> 18 mfrmr-readiness-0.2.3-v3      parameter Person:P018:EAP         Person
+#> 19 mfrmr-readiness-0.2.3-v3      parameter Person:P019:EAP         Person
+#> 20 mfrmr-readiness-0.2.3-v3      parameter Person:P020:EAP         Person
+#> 21 mfrmr-readiness-0.2.3-v3      parameter Person:P021:EAP         Person
+#> 22 mfrmr-readiness-0.2.3-v3      parameter Person:P022:EAP         Person
+#> 23 mfrmr-readiness-0.2.3-v3      parameter Person:P023:EAP         Person
+#> 24 mfrmr-readiness-0.2.3-v3      parameter Person:P024:EAP         Person
+#> 25 mfrmr-readiness-0.2.3-v3      parameter Person:P025:EAP         Person
+#> 26 mfrmr-readiness-0.2.3-v3      parameter Person:P026:EAP         Person
+#> 27 mfrmr-readiness-0.2.3-v3      parameter Person:P027:EAP         Person
+#> 28 mfrmr-readiness-0.2.3-v3      parameter Person:P028:EAP         Person
+#> 29 mfrmr-readiness-0.2.3-v3      parameter Person:P029:EAP         Person
+#> 30 mfrmr-readiness-0.2.3-v3      parameter Person:P030:EAP         Person
+#> 31 mfrmr-readiness-0.2.3-v3      parameter Person:P031:EAP         Person
+#> 32 mfrmr-readiness-0.2.3-v3      parameter Person:P032:EAP         Person
+#> 33 mfrmr-readiness-0.2.3-v3      parameter Person:P033:EAP         Person
+#> 34 mfrmr-readiness-0.2.3-v3      parameter Person:P034:EAP         Person
+#> 35 mfrmr-readiness-0.2.3-v3      parameter Person:P035:EAP         Person
+#> 36 mfrmr-readiness-0.2.3-v3      parameter Person:P036:EAP         Person
+#> 37 mfrmr-readiness-0.2.3-v3      parameter Person:P037:EAP         Person
+#> 38 mfrmr-readiness-0.2.3-v3      parameter Person:P038:EAP         Person
+#> 39 mfrmr-readiness-0.2.3-v3      parameter Person:P039:EAP         Person
+#> 40 mfrmr-readiness-0.2.3-v3      parameter Person:P040:EAP         Person
+#> 41 mfrmr-readiness-0.2.3-v3      parameter Person:P041:EAP         Person
+#> 42 mfrmr-readiness-0.2.3-v3      parameter Person:P042:EAP         Person
+#> 43 mfrmr-readiness-0.2.3-v3      parameter Person:P043:EAP         Person
+#> 44 mfrmr-readiness-0.2.3-v3      parameter Person:P044:EAP         Person
+#> 45 mfrmr-readiness-0.2.3-v3      parameter Person:P045:EAP         Person
+#> 46 mfrmr-readiness-0.2.3-v3      parameter Person:P046:EAP         Person
+#> 47 mfrmr-readiness-0.2.3-v3      parameter Person:P047:EAP         Person
+#> 48 mfrmr-readiness-0.2.3-v3      parameter Person:P048:EAP         Person
+#>     Facet Level PrimaryEstimate OptimizerEstimate DisplayEstimate
+#> 1  Person  P001     0.284295875                NA     0.284295875
+#> 2  Person  P002     0.661180036                NA     0.661180036
+#> 3  Person  P003     0.021777727                NA     0.021777727
+#> 4  Person  P004     0.224107846                NA     0.224107846
+#> 5  Person  P005    -0.174960652                NA    -0.174960652
+#> 6  Person  P006     0.676810034                NA     0.676810034
+#> 7  Person  P007    -0.963039373                NA    -0.963039373
+#> 8  Person  P008    -0.369228192                NA    -0.369228192
+#> 9  Person  P009    -0.563507085                NA    -0.563507085
+#> 10 Person  P010    -0.174960652                NA    -0.174960652
+#> 11 Person  P011    -0.218630795                NA    -0.218630795
+#> 12 Person  P012    -0.439367429                NA    -0.439367429
+#> 13 Person  P013     0.766044458                NA     0.766044458
+#> 14 Person  P014    -1.341859510                NA    -1.341859510
+#> 15 Person  P015     1.487872643                NA     1.487872643
+#> 16 Person  P016    -1.341859510                NA    -1.341859510
+#> 17 Person  P017    -0.646956804                NA    -0.646956804
+#> 18 Person  P018    -0.439367429                NA    -0.439367429
+#> 19 Person  P019     0.556111633                NA     0.556111633
+#> 20 Person  P020    -0.208437027                NA    -0.208437027
+#> 21 Person  P021     0.380868909                NA     0.380868909
+#> 22 Person  P022    -0.008356172                NA    -0.008356172
+#> 23 Person  P023    -1.118804631                NA    -1.118804631
+#> 24 Person  P024     0.122958029                NA     0.122958029
+#> 25 Person  P025     0.772733413                NA     0.772733413
+#> 26 Person  P026    -0.208437027                NA    -0.208437027
+#> 27 Person  P027     0.977228902                NA     0.977228902
+#> 28 Person  P028    -0.209239501                NA    -0.209239501
+#> 29 Person  P029    -1.406187688                NA    -1.406187688
+#> 30 Person  P030     1.181343488                NA     1.181343488
+#> 31 Person  P031     0.369651193                NA     0.369651193
+#> 32 Person  P032    -1.717525607                NA    -1.717525607
+#> 33 Person  P033    -1.406187688                NA    -1.406187688
+#> 34 Person  P034     0.563881515                NA     0.563881515
+#> 35 Person  P035     0.369651193                NA     0.369651193
+#> 36 Person  P036     1.273451208                NA     1.273451208
+#> 37 Person  P037    -1.326931162                NA    -1.326931162
+#> 38 Person  P038     0.269099425                NA     0.269099425
+#> 39 Person  P039    -0.362602895                NA    -0.362602895
+#> 40 Person  P040    -1.326931162                NA    -1.326931162
+#> 41 Person  P041    -1.046074508                NA    -1.046074508
+#> 42 Person  P042    -0.337165623                NA    -0.337165623
+#> 43 Person  P043    -0.461941796                NA    -0.461941796
+#> 44 Person  P044    -0.674136017                NA    -0.674136017
+#> 45 Person  P045     1.514611537                NA     1.514611537
+#> 46 Person  P046    -0.461941796                NA    -0.461941796
+#> 47 Person  P047    -1.129183696                NA    -1.129183696
+#> 48 Person  P048     0.149302429                NA     0.149302429
+#>    DisplayAdjustment ParameterStatus BoundaryDirection ResponseExtreme
+#> 1               none       estimable              none            none
+#> 2               none       estimable              none            none
+#> 3               none       estimable              none            none
+#> 4               none       estimable              none            none
+#> 5               none       estimable              none            none
+#> 6               none       estimable              none            none
+#> 7               none       estimable              none            none
+#> 8               none       estimable              none            none
+#> 9               none       estimable              none            none
+#> 10              none       estimable              none            none
+#> 11              none       estimable              none            none
+#> 12              none       estimable              none            none
+#> 13              none       estimable              none            none
+#> 14              none       estimable              none            none
+#> 15              none       estimable              none            none
+#> 16              none       estimable              none            none
+#> 17              none       estimable              none            none
+#> 18              none       estimable              none            none
+#> 19              none       estimable              none            none
+#> 20              none       estimable              none            none
+#> 21              none       estimable              none            none
+#> 22              none       estimable              none            none
+#> 23              none       estimable              none            none
+#> 24              none       estimable              none            none
+#> 25              none       estimable              none            none
+#> 26              none       estimable              none            none
+#> 27              none       estimable              none            none
+#> 28              none       estimable              none            none
+#> 29              none       estimable              none            none
+#> 30              none       estimable              none            none
+#> 31              none       estimable              none            none
+#> 32              none       estimable              none            none
+#> 33              none       estimable              none            none
+#> 34              none       estimable              none            none
+#> 35              none       estimable              none            none
+#> 36              none       estimable              none            none
+#> 37              none       estimable              none            none
+#> 38              none       estimable              none            none
+#> 39              none       estimable              none            none
+#> 40              none       estimable              none            none
+#> 41              none       estimable              none            none
+#> 42              none       estimable              none            none
+#> 43              none       estimable              none            none
+#> 44              none       estimable              none            none
+#> 45              none       estimable              none            none
+#> 46              none       estimable              none            none
+#> 47              none       estimable              none            none
+#> 48              none       estimable              none            none
+#>    ResponseRows WeightedResponseTotal PrimaryEstimateBasis OptimizerEstimateUse
+#> 1             5                     5        posterior_eap       not_applicable
+#> 2             6                     6        posterior_eap       not_applicable
+#> 3             6                     6        posterior_eap       not_applicable
+#> 4             6                     6        posterior_eap       not_applicable
+#> 5             6                     6        posterior_eap       not_applicable
+#> 6             5                     5        posterior_eap       not_applicable
+#> 7             6                     6        posterior_eap       not_applicable
+#> 8             6                     6        posterior_eap       not_applicable
+#> 9             6                     6        posterior_eap       not_applicable
+#> 10            6                     6        posterior_eap       not_applicable
+#> 11            5                     5        posterior_eap       not_applicable
+#> 12            6                     6        posterior_eap       not_applicable
+#> 13            6                     6        posterior_eap       not_applicable
+#> 14            6                     6        posterior_eap       not_applicable
+#> 15            6                     6        posterior_eap       not_applicable
+#> 16            6                     6        posterior_eap       not_applicable
+#> 17            6                     6        posterior_eap       not_applicable
+#> 18            6                     6        posterior_eap       not_applicable
+#> 19            6                     6        posterior_eap       not_applicable
+#> 20            6                     6        posterior_eap       not_applicable
+#> 21            6                     6        posterior_eap       not_applicable
+#> 22            6                     6        posterior_eap       not_applicable
+#> 23            6                     6        posterior_eap       not_applicable
+#> 24            5                     5        posterior_eap       not_applicable
+#> 25            6                     6        posterior_eap       not_applicable
+#> 26            6                     6        posterior_eap       not_applicable
+#> 27            6                     6        posterior_eap       not_applicable
+#> 28            5                     5        posterior_eap       not_applicable
+#> 29            6                     6        posterior_eap       not_applicable
+#> 30            6                     6        posterior_eap       not_applicable
+#> 31            6                     6        posterior_eap       not_applicable
+#> 32            6                     6        posterior_eap       not_applicable
+#> 33            6                     6        posterior_eap       not_applicable
+#> 34            6                     6        posterior_eap       not_applicable
+#> 35            6                     6        posterior_eap       not_applicable
+#> 36            6                     6        posterior_eap       not_applicable
+#> 37            6                     6        posterior_eap       not_applicable
+#> 38            6                     6        posterior_eap       not_applicable
+#> 39            5                     5        posterior_eap       not_applicable
+#> 40            6                     6        posterior_eap       not_applicable
+#> 41            6                     6        posterior_eap       not_applicable
+#> 42            6                     6        posterior_eap       not_applicable
+#> 43            6                     6        posterior_eap       not_applicable
+#> 44            6                     6        posterior_eap       not_applicable
+#> 45            6                     6        posterior_eap       not_applicable
+#> 46            6                     6        posterior_eap       not_applicable
+#> 47            6                     6        posterior_eap       not_applicable
+#> 48            6                     6        posterior_eap       not_applicable
+#>    ReasonCodes                                    AuditProvenance
+#> 1              person_sufficient_score_and_constraint_jacobian_v1
+#> 2              person_sufficient_score_and_constraint_jacobian_v1
+#> 3              person_sufficient_score_and_constraint_jacobian_v1
+#> 4              person_sufficient_score_and_constraint_jacobian_v1
+#> 5              person_sufficient_score_and_constraint_jacobian_v1
+#> 6              person_sufficient_score_and_constraint_jacobian_v1
+#> 7              person_sufficient_score_and_constraint_jacobian_v1
+#> 8              person_sufficient_score_and_constraint_jacobian_v1
+#> 9              person_sufficient_score_and_constraint_jacobian_v1
+#> 10             person_sufficient_score_and_constraint_jacobian_v1
+#> 11             person_sufficient_score_and_constraint_jacobian_v1
+#> 12             person_sufficient_score_and_constraint_jacobian_v1
+#> 13             person_sufficient_score_and_constraint_jacobian_v1
+#> 14             person_sufficient_score_and_constraint_jacobian_v1
+#> 15             person_sufficient_score_and_constraint_jacobian_v1
+#> 16             person_sufficient_score_and_constraint_jacobian_v1
+#> 17             person_sufficient_score_and_constraint_jacobian_v1
+#> 18             person_sufficient_score_and_constraint_jacobian_v1
+#> 19             person_sufficient_score_and_constraint_jacobian_v1
+#> 20             person_sufficient_score_and_constraint_jacobian_v1
+#> 21             person_sufficient_score_and_constraint_jacobian_v1
+#> 22             person_sufficient_score_and_constraint_jacobian_v1
+#> 23             person_sufficient_score_and_constraint_jacobian_v1
+#> 24             person_sufficient_score_and_constraint_jacobian_v1
+#> 25             person_sufficient_score_and_constraint_jacobian_v1
+#> 26             person_sufficient_score_and_constraint_jacobian_v1
+#> 27             person_sufficient_score_and_constraint_jacobian_v1
+#> 28             person_sufficient_score_and_constraint_jacobian_v1
+#> 29             person_sufficient_score_and_constraint_jacobian_v1
+#> 30             person_sufficient_score_and_constraint_jacobian_v1
+#> 31             person_sufficient_score_and_constraint_jacobian_v1
+#> 32             person_sufficient_score_and_constraint_jacobian_v1
+#> 33             person_sufficient_score_and_constraint_jacobian_v1
+#> 34             person_sufficient_score_and_constraint_jacobian_v1
+#> 35             person_sufficient_score_and_constraint_jacobian_v1
+#> 36             person_sufficient_score_and_constraint_jacobian_v1
+#> 37             person_sufficient_score_and_constraint_jacobian_v1
+#> 38             person_sufficient_score_and_constraint_jacobian_v1
+#> 39             person_sufficient_score_and_constraint_jacobian_v1
+#> 40             person_sufficient_score_and_constraint_jacobian_v1
+#> 41             person_sufficient_score_and_constraint_jacobian_v1
+#> 42             person_sufficient_score_and_constraint_jacobian_v1
+#> 43             person_sufficient_score_and_constraint_jacobian_v1
+#> 44             person_sufficient_score_and_constraint_jacobian_v1
+#> 45             person_sufficient_score_and_constraint_jacobian_v1
+#> 46             person_sufficient_score_and_constraint_jacobian_v1
+#> 47             person_sufficient_score_and_constraint_jacobian_v1
+#> 48             person_sufficient_score_and_constraint_jacobian_v1
+#> 
+#> $boundary$limitations
+#> [1] "This audit classifies Person response boundaries only. Non-Person facets and interactions require a separate constrained recession-direction audit."
+#> 
+#> $boundary$structural_additive
+#> $boundary$structural_additive$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $boundary$structural_additive$method
+#> [1] "MML"
+#> 
+#> $boundary$structural_additive$model
+#> [1] "RSM"
+#> 
+#> $boundary$structural_additive$scope
+#> [1] "JML structural additive coordinates with Person fixed"
+#> 
+#> $boundary$structural_additive$state
+#> [1] "not_applicable_mml"
+#> 
+#> $boundary$structural_additive$complete
+#> [1] TRUE
+#> 
+#> $boundary$structural_additive$target_status
+#>  [1] ParameterId       ParameterClass    Facet             Level            
+#>  [5] OptimizerEstimate PositiveRecession NegativeRecession CandidateStatus  
+#>  [9] EvaluationState   ReasonCodes      
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$structural_additive$certificates
+#>  [1] ParameterId            RequestedDirection     SolverStatus          
+#>  [4] TargetCapacity         TargetChange           MinimumContrastMargin 
+#>  [7] PositiveContrastMargin StrictContrastRows     DirectionL1           
+#> [10] Certified             
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$structural_additive$cone_certificate
+#>  [1] ParameterId            RequestedDirection     SolverStatus          
+#>  [4] TargetCapacity         TargetChange           MinimumContrastMargin 
+#>  [7] PositiveContrastMargin StrictContrastRows     DirectionL1           
+#> [10] Certified             
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$structural_additive$cone_direction_loadings
+#> [1] ParameterId        RequestedDirection OptimizerIndex     Coordinate        
+#> [5] Loading           
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$structural_additive$direction_loadings
+#> [1] ParameterId        RequestedDirection OptimizerIndex     Coordinate        
+#> [5] Loading           
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$structural_additive$dimensions
+#> data frame with 0 columns and 0 rows
+#> 
+#> $boundary$structural_additive$prescreen
+#> $boundary$structural_additive$prescreen$contract_version
+#> [1] "mfrmr-jml-global-cone-prescreen-v1"
+#> 
+#> $boundary$structural_additive$prescreen$requested
+#> [1] TRUE
+#> 
+#> $boundary$structural_additive$prescreen$scope
+#> [1] "structural_fixed_person"
+#> 
+#> $boundary$structural_additive$prescreen$state
+#> [1] "not_applicable_mml"
+#> 
+#> $boundary$structural_additive$prescreen$evaluated
+#> [1] FALSE
+#> 
+#> $boundary$structural_additive$prescreen$cone_certified
+#> [1] NA
+#> 
+#> $boundary$structural_additive$prescreen$target_enumeration_skipped
+#> [1] FALSE
+#> 
+#> $boundary$structural_additive$prescreen$cone_lp_calls
+#> [1] 0
+#> 
+#> $boundary$structural_additive$prescreen$relevance_lp_calls
+#> [1] 0
+#> 
+#> $boundary$structural_additive$prescreen$target_directions_evaluated
+#> [1] 0
+#> 
+#> $boundary$structural_additive$prescreen$target_lp_calls
+#> [1] 0
+#> 
+#> $boundary$structural_additive$prescreen$total_lp_calls
+#> [1] 0
+#> 
+#> $boundary$structural_additive$prescreen$objective_tolerance
+#> [1] 1e-10
+#> 
+#> $boundary$structural_additive$prescreen$certificate_tolerance
+#> [1] 1e-07
+#> 
+#> 
+#> $boundary$structural_additive$relevance_screen
+#> $boundary$structural_additive$relevance_screen$contract_version
+#> [1] "mfrmr-jml-known-person-quotient-prescreen-v1"
+#> 
+#> $boundary$structural_additive$relevance_screen$requested
+#> [1] FALSE
+#> 
+#> $boundary$structural_additive$relevance_screen$state
+#> [1] "not_applicable_mml"
+#> 
+#> $boundary$structural_additive$relevance_screen$evaluated
+#> [1] FALSE
+#> 
+#> $boundary$structural_additive$relevance_screen$mapping_valid
+#> [1] NA
+#> 
+#> $boundary$structural_additive$relevance_screen$profiled_persons
+#> [1] 0
+#> 
+#> $boundary$structural_additive$relevance_screen$removed_observations
+#> [1] 0
+#> 
+#> $boundary$structural_additive$relevance_screen$removed_contrast_rows
+#> [1] 0
+#> 
+#> $boundary$structural_additive$relevance_screen$removed_coordinates
+#> [1] 0
+#> 
+#> $boundary$structural_additive$relevance_screen$boundary_rays_valid
+#> [1] NA
+#> 
+#> $boundary$structural_additive$relevance_screen$quotient_cone_evaluated
+#> [1] FALSE
+#> 
+#> $boundary$structural_additive$relevance_screen$quotient_cone_certified
+#> [1] NA
+#> 
+#> $boundary$structural_additive$relevance_screen$quotient_cone_lp_calls
+#> [1] 0
+#> 
+#> $boundary$structural_additive$relevance_screen$quotient_cone_capacity
+#> [1] NA
+#> 
+#> $boundary$structural_additive$relevance_screen$nullspace_screen
+#> list()
+#> 
+#> $boundary$structural_additive$relevance_screen$selected_target_exclusion_certified
+#> [1] FALSE
+#> 
+#> $boundary$structural_additive$relevance_screen$detail
+#> [1] ""
+#> 
+#> 
+#> $boundary$structural_additive$detail
+#> [1] "Additive fixed-effect recession certification is scoped to JML."
+#> 
+#> $boundary$structural_additive$limitations
+#> [1] "This bounded audit certifies additive structural recession directions with Person coordinates fixed. GPCM log-slope recession and public- table propagation are not part of this implementation slice; joint Person movement is evaluated by the companion additive audit."
+#> 
+#> 
+#> $boundary$joint_additive
+#> $boundary$joint_additive$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $boundary$joint_additive$method
+#> [1] "MML"
+#> 
+#> $boundary$joint_additive$model
+#> [1] "RSM"
+#> 
+#> $boundary$joint_additive$scope
+#> [1] "JML joint Person-structural additive coordinates"
+#> 
+#> $boundary$joint_additive$state
+#> [1] "not_applicable_mml"
+#> 
+#> $boundary$joint_additive$complete
+#> [1] TRUE
+#> 
+#> $boundary$joint_additive$target_status
+#>  [1] ParameterId       ParameterClass    Facet             Level            
+#>  [5] OptimizerEstimate PositiveRecession NegativeRecession CandidateStatus  
+#>  [9] EvaluationState   ReasonCodes      
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$joint_additive$certificates
+#>  [1] ParameterId            RequestedDirection     SolverStatus          
+#>  [4] TargetCapacity         TargetChange           MinimumContrastMargin 
+#>  [7] PositiveContrastMargin StrictContrastRows     DirectionL1           
+#> [10] Certified             
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$joint_additive$cone_certificate
+#>  [1] ParameterId            RequestedDirection     SolverStatus          
+#>  [4] TargetCapacity         TargetChange           MinimumContrastMargin 
+#>  [7] PositiveContrastMargin StrictContrastRows     DirectionL1           
+#> [10] Certified             
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$joint_additive$cone_direction_loadings
+#> [1] ParameterId        RequestedDirection OptimizerIndex     Coordinate        
+#> [5] Loading           
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$joint_additive$direction_loadings
+#> [1] ParameterId        RequestedDirection OptimizerIndex     Coordinate        
+#> [5] Loading           
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$joint_additive$dimensions
+#> data frame with 0 columns and 0 rows
+#> 
+#> $boundary$joint_additive$prescreen
+#> $boundary$joint_additive$prescreen$contract_version
+#> [1] "mfrmr-jml-global-cone-prescreen-v1"
+#> 
+#> $boundary$joint_additive$prescreen$requested
+#> [1] TRUE
+#> 
+#> $boundary$joint_additive$prescreen$scope
+#> [1] "joint_person_structural"
+#> 
+#> $boundary$joint_additive$prescreen$state
+#> [1] "not_applicable_mml"
+#> 
+#> $boundary$joint_additive$prescreen$evaluated
+#> [1] FALSE
+#> 
+#> $boundary$joint_additive$prescreen$cone_certified
+#> [1] NA
+#> 
+#> $boundary$joint_additive$prescreen$target_enumeration_skipped
+#> [1] FALSE
+#> 
+#> $boundary$joint_additive$prescreen$cone_lp_calls
+#> [1] 0
+#> 
+#> $boundary$joint_additive$prescreen$relevance_lp_calls
+#> [1] 0
+#> 
+#> $boundary$joint_additive$prescreen$target_directions_evaluated
+#> [1] 0
+#> 
+#> $boundary$joint_additive$prescreen$target_lp_calls
+#> [1] 0
+#> 
+#> $boundary$joint_additive$prescreen$total_lp_calls
+#> [1] 0
+#> 
+#> $boundary$joint_additive$prescreen$objective_tolerance
+#> [1] 1e-10
+#> 
+#> $boundary$joint_additive$prescreen$certificate_tolerance
+#> [1] 1e-07
+#> 
+#> 
+#> $boundary$joint_additive$relevance_screen
+#> $boundary$joint_additive$relevance_screen$contract_version
+#> [1] "mfrmr-jml-known-person-quotient-prescreen-v1"
+#> 
+#> $boundary$joint_additive$relevance_screen$requested
+#> [1] FALSE
+#> 
+#> $boundary$joint_additive$relevance_screen$state
+#> [1] "not_applicable_mml"
+#> 
+#> $boundary$joint_additive$relevance_screen$evaluated
+#> [1] FALSE
+#> 
+#> $boundary$joint_additive$relevance_screen$mapping_valid
+#> [1] NA
+#> 
+#> $boundary$joint_additive$relevance_screen$profiled_persons
+#> [1] 0
+#> 
+#> $boundary$joint_additive$relevance_screen$removed_observations
+#> [1] 0
+#> 
+#> $boundary$joint_additive$relevance_screen$removed_contrast_rows
+#> [1] 0
+#> 
+#> $boundary$joint_additive$relevance_screen$removed_coordinates
+#> [1] 0
+#> 
+#> $boundary$joint_additive$relevance_screen$boundary_rays_valid
+#> [1] NA
+#> 
+#> $boundary$joint_additive$relevance_screen$quotient_cone_evaluated
+#> [1] FALSE
+#> 
+#> $boundary$joint_additive$relevance_screen$quotient_cone_certified
+#> [1] NA
+#> 
+#> $boundary$joint_additive$relevance_screen$quotient_cone_lp_calls
+#> [1] 0
+#> 
+#> $boundary$joint_additive$relevance_screen$quotient_cone_capacity
+#> [1] NA
+#> 
+#> $boundary$joint_additive$relevance_screen$nullspace_screen
+#> list()
+#> 
+#> $boundary$joint_additive$relevance_screen$selected_target_exclusion_certified
+#> [1] FALSE
+#> 
+#> $boundary$joint_additive$relevance_screen$detail
+#> [1] ""
+#> 
+#> 
+#> $boundary$joint_additive$detail
+#> [1] "Additive fixed-effect recession certification is scoped to JML."
+#> 
+#> $boundary$joint_additive$limitations
+#> [1] "This bounded audit certifies joint additive recession directions for structural targets and unresolved constraint-coupled extreme Person targets. Ordinary free extreme Persons remain governed by the sufficient-score audit. GPCM log-slope recession and public- table propagation are not part of this implementation slice."
+#> 
+#> 
+#> $boundary$gpcm_slope_boundary
+#> $boundary$gpcm_slope_boundary$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $boundary$gpcm_slope_boundary$method
+#> [1] "MML"
+#> 
+#> $boundary$gpcm_slope_boundary$model
+#> [1] "RSM"
+#> 
+#> $boundary$gpcm_slope_boundary$scope
+#> [1] "MML GPCM constant log-slope rays with retained additive coordinates and the declared finite quadrature rule fixed"
+#> 
+#> $boundary$gpcm_slope_boundary$state
+#> [1] "not_applicable_model"
+#> 
+#> $boundary$gpcm_slope_boundary$complete
+#> [1] TRUE
+#> 
+#> $boundary$gpcm_slope_boundary$scope_complete
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_slope_boundary$structural_identification_complete
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_slope_boundary$fixed_quadrature_certificate
+#> [1] TRUE
+#> 
+#> $boundary$gpcm_slope_boundary$continuous_integral_certificate
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_slope_boundary$readiness_effect
+#> [1] "none_instrumentation_only"
+#> 
+#> $boundary$gpcm_slope_boundary$target_status
+#>  [1] ParameterId            ParameterClass         Facet                 
+#>  [4] Level                  OptimizerLogEstimate   OptimizerSlopeEstimate
+#>  [7] PositiveBoundaryPath   NegativeBoundaryPath   CandidateStatus       
+#> [10] EvaluationState        ReasonCodes           
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_slope_boundary$group_support
+#>  [1] SlopeFacet            Level                 SlopeIndex           
+#>  [4] LogSlopeEstimate      SlopeEstimate         EffectiveObservations
+#>  [7] EffectiveWeight       QuadratureNodes       MaxCompatible        
+#> [10] MinCompatible         MaxSupportMargin      MinSupportMargin     
+#> [13] StrictMaxRows         StrictMinRows        
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_slope_boundary$certificates
+#>  [1] PairId                PositiveLevel         NegativeLevel        
+#>  [4] PositiveIndex         NegativeIndex         MaxSupportMargin     
+#>  [7] MinSupportMargin      StrictRows            DirectionSum         
+#> [10] CurrentLogLikelihood  BoundaryLogLikelihood BoundaryImprovement  
+#> [13] Certified            
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_slope_boundary$direction_loadings
+#> [1] PairId         CoordinateType OptimizerIndex Coordinate     Level         
+#> [6] Loading       
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_slope_boundary$dimensions
+#> data frame with 0 columns and 0 rows
+#> 
+#> $boundary$gpcm_slope_boundary$retained_log_likelihood
+#> [1] NA
+#> 
+#> $boundary$gpcm_slope_boundary$optimizer_log_likelihood
+#> [1] NA
+#> 
+#> $boundary$gpcm_slope_boundary$likelihood_difference
+#> [1] NA
+#> 
+#> $boundary$gpcm_slope_boundary$detail
+#> [1] "The marginal log-slope boundary audit applies only to GPCM."
+#> 
+#> $boundary$gpcm_slope_boundary$limitations
+#> [1] "The certificate is sufficient only for the implemented finite-node quadrature objective while all additive, step, interaction, and population coordinates remain fixed. It is not a continuous-normal integral proof. A none-certified result does not establish finite GPCM slopes, a global finite maximum, structural identification, standard errors, confidence intervals, or comparison eligibility."
+#> 
+#> 
+#> $boundary$gpcm_joint_boundary
+#> $boundary$gpcm_joint_boundary$contract_version
+#> [1] "mfrmr-readiness-0.2.3-v3"
+#> 
+#> $boundary$gpcm_joint_boundary$method
+#> [1] "MML"
+#> 
+#> $boundary$gpcm_joint_boundary$model
+#> [1] "RSM"
+#> 
+#> $boundary$gpcm_joint_boundary$scope
+#> [1] "JML GPCM joint linear-additive paths with canonical constant sum-zero log-slope rate vectors"
+#> 
+#> $boundary$gpcm_joint_boundary$state
+#> [1] "not_applicable_model"
+#> 
+#> $boundary$gpcm_joint_boundary$complete
+#> [1] TRUE
+#> 
+#> $boundary$gpcm_joint_boundary$scope_complete
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_joint_boundary$structural_identification_complete
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_joint_boundary$target_status
+#> [1] ParameterId               ParameterClass           
+#> [3] Facet                     Level                    
+#> [5] PositiveBoundaryCandidate NegativeBoundaryCandidate
+#> [7] CandidateStatus           EvaluationState          
+#> [9] ReasonCodes              
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_joint_boundary$certificates
+#>  [1] PairId                     PositiveLevel             
+#>  [3] NegativeLevel              PositiveIndex             
+#>  [5] NegativeIndex              SolverStatus              
+#>  [7] MarginCapacity             PositiveMinimumMargin     
+#>  [9] NeutralMinimumMargin       NegativeLeadingCoefficient
+#> [11] AdditiveDirectionL1        CurrentLogLikelihood      
+#> [13] BoundaryLogLikelihood      BoundaryImprovement       
+#> [15] AnalyticTailCertified      CompetitiveBoundary       
+#> [17] Certified                  EvaluationState           
+#> [19] ReasonCodes               
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_joint_boundary$direction_loadings
+#> [1] PairId         CoordinateType OptimizerIndex Coordinate     Level         
+#> [6] Loading       
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_joint_boundary$rate_certificates
+#>  [1] RateId                     PositiveLevels            
+#>  [3] ZeroLevels                 LeadingNegativeLevels     
+#>  [5] DeeperNegativeLevels       ExpandedRates             
+#>  [7] SolverStatus               MarginCapacity            
+#>  [9] PositiveMinimumMargin      ZeroMinimumMargin         
+#> [11] LeadingNegativeCoefficient AdditiveDirectionL1       
+#> [13] CurrentLogLikelihood       BoundaryLogLikelihood     
+#> [15] BoundaryImprovement        AnalyticTailCertified     
+#> [17] CompetitiveBoundary        Certified                 
+#> [19] EvaluationState            ReasonCodes               
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_joint_boundary$rate_direction_loadings
+#> [1] PairId         CoordinateType OptimizerIndex Coordinate     Level         
+#> [6] Loading       
+#> <0 rows> (or 0-length row.names)
+#> 
+#> $boundary$gpcm_joint_boundary$rate_scope_state
+#> [1] "not_evaluated"
+#> 
+#> $boundary$gpcm_joint_boundary$rate_scope_complete
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_joint_boundary$positive_certificate_present
+#> [1] FALSE
+#> 
+#> $boundary$gpcm_joint_boundary$dimensions
+#> data frame with 0 columns and 0 rows
+#> 
+#> $boundary$gpcm_joint_boundary$retained_log_likelihood
+#> [1] NA
+#> 
+#> $boundary$gpcm_joint_boundary$optimizer_log_likelihood
+#> [1] NA
+#> 
+#> $boundary$gpcm_joint_boundary$likelihood_difference
+#> [1] NA
+#> 
+#> $boundary$gpcm_joint_boundary$detail
+#> [1] "The joint nonlinear slope-path audit applies only to GPCM."
+#> 
+#> $boundary$gpcm_joint_boundary$limitations
+#> [1] "The finite candidate family covers constant expanded log-slope rates through positive, zero, leading-negative, and deeper-negative groups; the existing +1/-1 pair paths are exact special cases. It does not cover curved paths or paths without a limiting rate vector. A positive competitive path is a boundary candidate, not a proof of global behavior for the non-concave GPCM likelihood. A completed negative result does not establish a finite maximum or nonlinear structural identification. MML requires a separate argument."
 summary(diag_toy)$overview
-#> # A tibble: 1 × 10
+#> # A tibble: 1 × 11
 #>   Observations Persons Facets Categories Subsets ResidualPCA DiagnosticMode
 #>          <int>   <int>  <int>      <int>   <int> <chr>       <chr>         
 #> 1          282      48      2          4       1 none        both          
-#> # ℹ 3 more variables: Method <chr>, PrecisionTier <chr>, MarginalFit <chr>
+#> # ℹ 4 more variables: Method <chr>, PrecisionTier <chr>, MarginalFit <chr>,
+#> #   FairAverage <chr>
 facets_summary_toy
 #> Many-Facet Measurement Model Summary
 #>   Model: RSM | Method: MML | N: 282 | Persons: 48 | Facets: 2 | Categories: 4
+#> 
+#> Decision
+#>  - Interpretation: Ready for formal inference
+#>  - Formal inference: Yes (fit readiness: ready)
+#>  - Why: All stored fit-readiness components passed.
+#>  - Next: Create the required native Wright map first; run the first available
+#>    command in `$required_visual$Route`.
 #>   MML engine: direct (requested: direct)
+#>   LogLik: -347.240 | Canonical MML AIC: 712.480 | Person-BIC: 729.320 | Sclove
+#>   SABIC: 701.085
 #> 
 #> Workflow profile: facets
-#>   FACETS-style organization; not evidence that FACETS was run and not a claim of numerical equivalence.
+#>   FACETS-style organization; not evidence that FACETS was run and not a claim
+#>   of numerical equivalence.
 #> 
 #> Visual workflow (in order)
 #>  Priority                   Visual Required Available
@@ -359,13 +1658,15 @@ facets_summary_toy
 #>   Plot commands are stored in `$required_visual$Route`.
 #> 
 #> Status
-#>  - Overall status: Fit completed, but data, design, stability, or diagnostics require review
+#>  - Overall status: Fit completed, but data, design, stability, or diagnostics
+#>    require review
 #>  - Convergence: converged (severity: pass, maximum absolute gradient: 1.58e-05)
 #>  - Estimation path: RSM / direct
 #>  - Reporting readiness: Review diagnostic findings before reporting
 #> 
 #> Workflow readiness
 #>       Domain                              Status
+#>          Fit                               ready
 #>    Numerical                                pass
 #>         Data                                pass
 #>       Design                         pass_linked
@@ -399,8 +1700,10 @@ facets_summary_toy
 #>      Rater      6            0      0.399      -0.606       0.412 1.018
 #> 
 #> Person measure distribution (aggregate; no identifiers)
-#>  Persons   Mean    SD Median    Min   Max  Span MeanPosteriorSD
-#>       48 -0.155 0.824 -0.208 -1.718 1.515 3.232           0.476
+#>  Persons DistributionN ReviewExcludedExtremeEAPs      EstimateUse   Mean    SD
+#>       48            48                         0 source_fit_ready -0.155 0.824
+#>  Median    Min   Max  Span MeanPosteriorSD
+#>  -0.208 -1.718 1.515 3.232           0.476
 #> 
 #> Step parameter summary
 #>  Steps    Min  Max  Span Monotonic
@@ -509,6 +1812,22 @@ plot(
 
 ![](mfrmr-workflow_files/figure-html/toy-setup-3.png)
 
+Read `$decision` before the parameter tables. The same five fields are
+used for RSM, PCM, and bounded GPCM: interpretation status,
+formal-inference status, fit readiness, the reason, and the
+highest-priority next action. This block does not add a new acceptance
+test. It combines the stored readiness record with any supplied
+precision evidence. A fit-only summary returns `FormalInference = "No"`
+until a matching
+[`diagnose_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/diagnose_mfrm.md)
+result is supplied; `InferenceReady = TRUE` alone is not evidence for
+formal SE/CI or reliability. Use
+`summary(fit_toy, diagnostics = diag_toy)$decision` or
+`summary(diag_toy)$decision` for the precision-aware decision. When
+`FormalInference` is `"No"`, diagnostic work may continue to investigate
+the stated reason, but estimates and plots must not be reported as
+formal results.
+
 Optimizer code zero is only one numerical signal.
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
 also checks the terminal gradient; when the initial direct or hybrid
@@ -525,16 +1844,18 @@ states otherwise. If a run reaches
 `ConvergenceStatus = "iteration_limit"`, keep it review-only and repeat
 the same data, model, method, anchors, optimizer, tolerance, and
 quadrature rule with the next ceiling in a prespecified sequence.
-Interpret only a run with `Converged = TRUE`, `InferenceReady = TRUE`,
-and `Numerical = pass`. If two separately ready runs differ materially,
-investigate numerical stability instead of selecting the preferred
-result. Report the requested ceiling, actual evaluations, convergence
-reason, and terminal gradient.
+Interpret only a run with `FitReadiness = ready`,
+`InferenceReady = TRUE`, and `Numerical = pass`. If two separately ready
+runs differ materially, investigate numerical stability instead of
+selecting the preferred result. Report the requested ceiling, actual
+evaluations, convergence reason, and terminal gradient.
 
-`InferenceReady` describes this numerical gate only: Data, Design,
-Stability, Diagnostics, and Reporting remain separate rows in
-`fit_summary_toy$readiness`. For example, a disconnected design remains
-a reporting hold even if its optimizer converges. Conversely,
+`InferenceReady` is a conservative fit-level first screen: Input,
+Estimability, Category, Boundary, and Numerical components must all
+pass. Design, Stability, Diagnostics, and Reporting remain
+purpose-specific workflow rows in `fit_summary_toy$readiness`. For
+example, a diagnostic or reporting review can remain even when the
+stored fit record is ready. Conversely,
 `ready_for_diagnostics_and_reporting_follow_up` means that fitting
 completed and diagnostic review is the next stage; it is neither an
 optimization failure nor a claim that the analysis is already
@@ -637,34 +1958,31 @@ export_toy <- export_mfrm_results(
   overwrite = TRUE,
   acknowledge_sensitive = TRUE
 )
-head(export_toy$written_files)
-#>                 Component Format
-#> 1        summary_overview    csv
-#> 2          summary_status    csv
-#> 3 summary_component_index    csv
-#> 4     summary_table_index    csv
-#> 5        summary_plot_map    csv
-#> 6          summary_triage    csv
-#>                                                                              Path
-#> 1        /tmp/Rtmpb18VEP/mfrmr-workflow-export/mfrmr_results_summary_overview.csv
-#> 2          /tmp/Rtmpb18VEP/mfrmr-workflow-export/mfrmr_results_summary_status.csv
-#> 3 /tmp/Rtmpb18VEP/mfrmr-workflow-export/mfrmr_results_summary_component_index.csv
-#> 4     /tmp/Rtmpb18VEP/mfrmr-workflow-export/mfrmr_results_summary_table_index.csv
-#> 5        /tmp/Rtmpb18VEP/mfrmr-workflow-export/mfrmr_results_summary_plot_map.csv
-#> 6          /tmp/Rtmpb18VEP/mfrmr-workflow-export/mfrmr_results_summary_triage.csv
-#>   Note          DataHandling
-#> 1      review_before_sharing
-#> 2      review_before_sharing
-#> 3      review_before_sharing
-#> 4      review_before_sharing
-#> 5      review_before_sharing
-#> 6      review_before_sharing
+export_preview <- head(export_toy$written_files)
+export_preview$Path <- basename(export_preview$Path)
+export_preview
+#>                          Component Format
+#> 1                 summary_overview    csv
+#> 2                 summary_decision    csv
+#> 3                   summary_status    csv
+#> 4            summary_fit_readiness    csv
+#> 5 summary_fit_readiness_components    csv
+#> 6 summary_fit_readiness_parameters    csv
+#>                                                 Path Note          DataHandling
+#> 1                 mfrmr_results_summary_overview.csv      review_before_sharing
+#> 2                 mfrmr_results_summary_decision.csv      review_before_sharing
+#> 3                   mfrmr_results_summary_status.csv      review_before_sharing
+#> 4            mfrmr_results_summary_fit_readiness.csv      review_before_sharing
+#> 5 mfrmr_results_summary_fit_readiness_components.csv      review_before_sharing
+#> 6 mfrmr_results_summary_fit_readiness_parameters.csv      review_before_sharing
 ```
 
 The acknowledgement suppresses the warning only; it does not redact
 person identifiers, person-level results, local paths, or the complete
-RDS object. Review every exported file under the study’s data-handling
-policy before sharing.
+RDS object. The preview above deliberately shows path basenames only;
+the returned export object retains the actual local paths needed by the
+current analysis session. Review every exported file under the study’s
+data-handling policy before sharing.
 
 ## Diagnostics and Reporting
 
@@ -743,6 +2061,10 @@ fit <- fit_mfrm(
   model = "RSM",
   quad_points = 7
 )
+#> Warning: Category support is retained but requires review: at least one fitted
+#> or local scope contains an empty or singleton category/transition cell. The fit
+#> may be inspected, but category-information strength has not been certified;
+#> inspect `fit$data_review$category_support` before inference.
 
 diag <- diagnose_mfrm(
   fit,
@@ -754,33 +2076,50 @@ diag <- diagnose_mfrm(
 summary(fit, profile = "fit", detail = "brief")
 #> Many-Facet Measurement Model Summary
 #>   Model: RSM | Method: MML | N: 1842 | Persons: 307 | Facets: 2 | Categories: 4
+#> 
+#> Decision
+#>  - Interpretation: Review before reporting or inference
+#>  - Formal inference: No (fit readiness: review)
+#>  - Why: One or more categories provide weak information.
+#>  - Next: After reviewing convergence, run `review <- summary(fit, profile =
+#>    "facets", detail = "brief")` for the comprehensive FACETS-organized result
+#>    surface.
 #>   MML engine: direct (requested: direct)
+#>   LogLik: -2102.731 | Canonical MML AIC: 4247.462 | Person-BIC: 4325.726 |
+#>   Sclove SABIC: 4259.123
+#>   Integration selection guard: criteria are displayed for screening/review
+#>   only; automatic deltas, weights, preferences, and LRT are disabled at q=7
+#>   (tier: coarse_screening; status: screening_only). Use q >= 31 as the
+#>   comparison starting grid and check a denser common grid when the decision is
+#>   close.
 #> 
 #> Visual workflow (in order)
-#>  Priority                   Visual Required Available
-#>         1 mfrmr Wright map with SE     TRUE      TRUE
-#>         2  FACETS-style Wright map    FALSE      TRUE
-#>         3            Infit pathway    FALSE     FALSE
-#>                 InterpretationStatus InterpretationReady
-#>  ready_for_diagnostic_interpretation                TRUE
-#>  ready_for_diagnostic_interpretation                TRUE
-#>                        not_available               FALSE
+#>  Priority                   Visual Required Available InterpretationStatus
+#>         1 mfrmr Wright map with SE     TRUE      TRUE          review_only
+#>         2  FACETS-style Wright map    FALSE      TRUE          review_only
+#>         3            Infit pathway    FALSE     FALSE        not_available
+#>  InterpretationReady
+#>                FALSE
+#>                FALSE
+#>                FALSE
 #>   Plot commands are stored in `$required_visual$Route`.
 #> 
 #> Status
-#>  - Overall status: Fit completed; review diagnostics before reporting
+#>  - Overall status: Fit completed, but data, design, stability, or diagnostics
+#>    require review
 #>  - Convergence: converged (severity: pass, maximum absolute gradient: 7.44e-05)
 #>  - Estimation path: RSM / direct
-#>  - Reporting readiness: Fit completed; diagnostics and reporting review can proceed
+#>  - Reporting readiness: Resolve stored readiness reviews before reporting
 #> 
 #> Workflow readiness
-#>       Domain                                        Status
-#>    Numerical                                          pass
-#>         Data                                          pass
-#>       Design                                   pass_linked
-#>    Stability                                          pass
-#>  Diagnostics                                  not_assessed
-#>    Reporting ready_for_diagnostics_and_reporting_follow_up
+#>       Domain                  Status
+#>          Fit                  review
+#>    Numerical                    pass
+#>         Data                    pass
+#>       Design             pass_linked
+#>    Stability                    pass
+#>  Diagnostics            not_assessed
+#>    Reporting review_before_reporting
 #> 
 #> Key warnings
 #>  - No population model was requested; MML used an unconditional normal person
@@ -802,8 +2141,12 @@ summary(fit, profile = "fit", detail = "brief")
 #>      Rater     18            0      0.667      -0.948       1.622 2.569
 #> 
 #> Person measure distribution (aggregate; no identifiers)
-#>  Persons  Mean    SD Median    Min   Max  Span MeanPosteriorSD
-#>      307 0.414 0.812  0.436 -1.451 2.385 3.835           0.482
+#>  Persons DistributionN ReviewExcludedExtremeEAPs
+#>      307           307                         0
+#>                       EstimateUse  Mean    SD Median    Min   Max  Span
+#>  review_only_source_fit_not_ready 0.414 0.812  0.436 -1.451 2.385 3.835
+#>  MeanPosteriorSD
+#>            0.482
 #> 
 #> Step parameter summary
 #>  Steps    Min   Max  Span Monotonic
@@ -835,9 +2178,18 @@ summary(diag)
 #>   Method: MML | Precision tier: Model-based precision
 #>   Diagnostic mode: Legacy and strict marginal
 #>   Strict marginal fit: Available
+#>   Fair average: Available in diagnostics
+#> 
+#> Decision
+#>  - Interpretation: Review before reporting or inference
+#>  - Formal inference: No (fit readiness: review)
+#>  - Why: One or more categories provide weak information.
+#>  - Next: Inspect `summary(fit)$readiness` and resolve the source-fit gate
+#>    before interpreting diagnostic magnitudes substantively.
 #> 
 #> Status
 #>  - Overall status: Follow-up needed
+#>  - Source fit readiness: review required; formal inference is not ready
 #>  - Diagnostic path: Legacy and strict marginal
 #>  - Strict marginal fit: Available
 #>  - Precision tier: Model-based precision
@@ -845,21 +2197,21 @@ summary(diag)
 #>    continuity and follow-up.
 #> 
 #> Key warnings
+#>  - The source fit is review and is not inference-ready; all diagnostic outputs
+#>    remain review-only.
+#>  - Precision review flagged 1 review/warn checks.
 #>  - Unexpected responses flagged: 100.
 #>  - Flagged displacement levels: 40.
 #>  - MnSq screening flagged 130 element(s) outside the configured 0.5-1.5 band.
-#>  - Person-level fit warnings: 130 row(s); identifiers suppressed. Use
-#>    `include_person = TRUE` only under appropriate privacy controls.
-#>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
+#>  - Inspect `summary(fit)$readiness` and resolve the source-fit gate before
+#>    interpreting diagnostic magnitudes substantively.
 #>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with
 #>    strict marginal evidence.
 #>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =
 #>    diag)` for first-order strict marginal follow-up.
 #>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.
-#>  - Use `unexpected_response_table()` / `plot_unexpected()` and
-#>    `displacement_table()` / `plot_displacement()` for case-level follow-up.
 #> 
 #> Overall fit
 #>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit DF_Infit_FACETS
@@ -920,46 +2272,63 @@ res <- s$results
 s
 #> Many-Facet Measurement Model Summary
 #>   Model: RSM | Method: MML | N: 1842 | Persons: 307 | Facets: 2 | Categories: 4
+#> 
+#> Decision
+#>  - Interpretation: Review before reporting or inference
+#>  - Formal inference: No (fit readiness: review)
+#>  - Why: One or more categories provide weak information.
+#>  - Next: Create the required native Wright map first; run the first available
+#>    command in `$required_visual$Route`.
 #>   MML engine: direct (requested: direct)
+#>   LogLik: -2102.731 | Canonical MML AIC: 4247.462 | Person-BIC: 4325.726 |
+#>   Sclove SABIC: 4259.123
+#>   Integration selection guard: criteria are displayed for screening/review
+#>   only; automatic deltas, weights, preferences, and LRT are disabled at q=7
+#>   (tier: coarse_screening; status: screening_only). Use q >= 31 as the
+#>   comparison starting grid and check a denser common grid when the decision is
+#>   close.
 #> 
 #> Workflow profile: facets
-#>   FACETS-style organization; not evidence that FACETS was run and not a claim of numerical equivalence.
+#>   FACETS-style organization; not evidence that FACETS was run and not a claim
+#>   of numerical equivalence.
 #> 
 #> Visual workflow (in order)
-#>  Priority                   Visual Required Available
-#>         1 mfrmr Wright map with SE     TRUE      TRUE
-#>         2  FACETS-style Wright map    FALSE      TRUE
-#>         3            Infit pathway    FALSE      TRUE
-#>                 InterpretationStatus InterpretationReady
-#>  ready_for_diagnostic_interpretation                TRUE
-#>  ready_for_diagnostic_interpretation                TRUE
-#>  ready_for_diagnostic_interpretation                TRUE
+#>  Priority                   Visual Required Available InterpretationStatus
+#>         1 mfrmr Wright map with SE     TRUE      TRUE          review_only
+#>         2  FACETS-style Wright map    FALSE      TRUE          review_only
+#>         3            Infit pathway    FALSE      TRUE          review_only
+#>  InterpretationReady
+#>                FALSE
+#>                FALSE
+#>                FALSE
 #>   Plot commands are stored in `$required_visual$Route`.
 #> 
 #> Status
-#>  - Overall status: Fit completed, but data, design, stability, or diagnostics require review
+#>  - Overall status: Fit completed, but data, design, stability, or diagnostics
+#>    require review
 #>  - Convergence: converged (severity: pass, maximum absolute gradient: 7.44e-05)
 #>  - Estimation path: RSM / direct
-#>  - Reporting readiness: Review diagnostic findings before reporting
+#>  - Reporting readiness: Resolve stored readiness reviews before reporting
 #> 
 #> Workflow readiness
-#>       Domain                              Status
-#>    Numerical                                pass
-#>         Data                                pass
-#>       Design                         pass_linked
-#>    Stability                                pass
-#>  Diagnostics                              review
-#>    Reporting review_diagnostics_before_reporting
+#>       Domain                  Status
+#>          Fit                  review
+#>    Numerical                    pass
+#>         Data                    pass
+#>       Design             pass_linked
+#>    Stability                    pass
+#>  Diagnostics                  review
+#>    Reporting review_before_reporting
 #> 
 #> Key warnings
 #>  - No population model was requested; MML used an unconditional normal person
 #>    distribution.
+#>  - The source fit is review and is not inference-ready; all diagnostic outputs
+#>    remain review-only.
+#>  - Precision review flagged 1 review/warn checks.
 #>  - Unexpected responses flagged: 100.
 #>  - Flagged displacement levels: 40.
 #>  - MnSq screening flagged 130 element(s) outside the configured 0.5-1.5 band.
-#>  - Person-level fit warnings: 130 row(s); identifiers suppressed. Use
-#>    `include_person = TRUE` only under appropriate privacy controls.
-#>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
 #>  - Create the required native Wright map first; run the first available command
@@ -977,8 +2346,12 @@ s
 #>      Rater     18            0      0.667      -0.948       1.622 2.569
 #> 
 #> Person measure distribution (aggregate; no identifiers)
-#>  Persons  Mean    SD Median    Min   Max  Span MeanPosteriorSD
-#>      307 0.414 0.812  0.436 -1.451 2.385 3.835           0.482
+#>  Persons DistributionN ReviewExcludedExtremeEAPs
+#>      307           307                         0
+#>                       EstimateUse  Mean    SD Median    Min   Max  Span
+#>  review_only_source_fit_not_ready 0.414 0.812  0.436 -1.451 2.385 3.835
+#>  MeanPosteriorSD
+#>            0.482
 #> 
 #> Step parameter summary
 #>  Steps    Min   Max  Span Monotonic
@@ -1034,11 +2407,24 @@ s
 #>            Residual PCA is not computed by the summary workflow; request it explicitly with diagnose_mfrm().
 #>  Anchor drift/linking requires an explicit multi-fit or multi-wave design and is not inferred automatically.
 #> 
+#> Section availability requiring attention
+#>              Section Status
+#>        fit_readiness review
+#>  plot_interpretation review
+#>  reporting_readiness review
+#>                                                                                                                                                                                                                               Detail
+#>                                                                                                                                                             Fit status: review. Stored readiness reasons: weak_category_information.
+#>  Plot status: review_only. Review-only display: Fit=review, Numerical=pass, Data=pass, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation.
+#>                                                                                                                     Reporting status: review_before_reporting. Reporting status is the strictest applicable upstream workflow state.
+#> 
 #> Structured result access
 #>  - `$analysis`: compact triage, table index, and plot map.
 #>  - `$results$tables`: full structured tables (not printed here).
 #>  - Re-run `summary(fit, profile = "facets", detail = "full")` only when more fit-level detail is needed.
 plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
+#> Warning: Review-only display: Fit=review, Numerical=pass, Data=pass,
+#> Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and
+#> `fit$data_review` before substantive or cross-subset interpretation.
 ```
 
 ![](mfrmr-workflow_files/figure-html/fit-full-1.png)
@@ -1050,6 +2436,9 @@ plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 plot(res, type = "wright", renderer = "facets",
      category_labels = rubric_labels, show_ci = FALSE,
      preset = "publication")
+#> Warning: Review-only display: Fit=review, Numerical=pass, Data=pass,
+#> Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and
+#> `fit$data_review` before substantive or cross-subset interpretation.
 ```
 
 ![](mfrmr-workflow_files/figure-html/fit-full-2.png)
@@ -1067,6 +2456,9 @@ plot(
   facet_labels = "flagged",
   preset = "publication"
 )
+#> Warning: Review-only display: Fit=review, Numerical=pass, Data=pass,
+#> Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and
+#> `fit$data_review` before substantive or cross-subset interpretation.
 ```
 
 ![](mfrmr-workflow_files/figure-html/fit-full-3.png)
@@ -1100,9 +2492,18 @@ summary(diag_pca)
 #>   Method: MML | Precision tier: Model-based precision
 #>   Diagnostic mode: Legacy and strict marginal
 #>   Strict marginal fit: Available
+#>   Fair average: Available in diagnostics
+#> 
+#> Decision
+#>  - Interpretation: Review before reporting or inference
+#>  - Formal inference: No (fit readiness: review)
+#>  - Why: One or more categories provide weak information.
+#>  - Next: Inspect `summary(fit)$readiness` and resolve the source-fit gate
+#>    before interpreting diagnostic magnitudes substantively.
 #> 
 #> Status
 #>  - Overall status: Follow-up needed
+#>  - Source fit readiness: review required; formal inference is not ready
 #>  - Diagnostic path: Legacy and strict marginal
 #>  - Strict marginal fit: Available
 #>  - Precision tier: Model-based precision
@@ -1110,21 +2511,21 @@ summary(diag_pca)
 #>    continuity and follow-up.
 #> 
 #> Key warnings
+#>  - The source fit is review and is not inference-ready; all diagnostic outputs
+#>    remain review-only.
+#>  - Precision review flagged 1 review/warn checks.
 #>  - Unexpected responses flagged: 100.
 #>  - Flagged displacement levels: 40.
 #>  - MnSq screening flagged 130 element(s) outside the configured 0.5-1.5 band.
-#>  - Person-level fit warnings: 130 row(s); identifiers suppressed. Use
-#>    `include_person = TRUE` only under appropriate privacy controls.
-#>  - Strict marginal fit flagged 4 group-level summaries.
 #> 
 #> Next actions
+#>  - Inspect `summary(fit)$readiness` and resolve the source-fit gate before
+#>    interpreting diagnostic magnitudes substantively.
 #>  - Inspect `diagnostic_basis` before comparing legacy residual evidence with
 #>    strict marginal evidence.
 #>  - Review `top_marginal_cells` and `rating_scale_table(..., diagnostics =
 #>    diag)` for first-order strict marginal follow-up.
 #>  - Review `top_marginal_pairs` for pairwise local-dependence follow-up.
-#>  - Use `unexpected_response_table()` / `plot_unexpected()` and
-#>    `displacement_table()` / `plot_displacement()` for case-level follow-up.
 #> 
 #> Overall fit
 #>  Infit Outfit InfitZSTD OutfitZSTD DF_Infit DF_Outfit

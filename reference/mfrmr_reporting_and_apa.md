@@ -122,7 +122,10 @@ Use
 [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
 to build the candidate-model table and inspect `ICComparable`,
 `ComparisonBasis`, and any nesting warnings before reading information
-criteria. Then use
+criteria. Automatic ranking requires the current contract and a shared
+q\>=31 grid; q\<31 retains raw screening/review criteria only, and a
+close decision still needs a prespecified denser common-grid check. Then
+use
 [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
 to attach the comparison to explicit model roles, downstream-route
 boundaries, wording templates, and optional
@@ -187,6 +190,32 @@ rules, proof of validity, or a substitute for peer-review judgment.
 Before copying text, inspect
 `mfrm_report(res, style = "apa")$first_screen`, `$claim_readiness`,
 `$report_gaps`, and `$template_index`.
+
+## Standards basis and boundary
+
+The manuscript helpers are APA-oriented drafting aids informed by the
+*Publication Manual of the American Psychological Association* (7th ed.)
+and the quantitative Journal Article Reporting Standards (JARS-Quant;
+Appelbaum et al., 2018). The MFRM-specific prompts also draw on the
+model and diagnostic sources returned by
+`reporting_checklist(..., include_references = TRUE)`, including Eckes,
+Myford and Wolfe, Linacre, Wright and Masters, and Muraki for bounded
+`GPCM`.
+
+The package only knows the fitted measurement objects and context
+supplied by the analyst. It therefore cannot certify research-level JARS
+completeness for hypotheses and their confirmatory/exploratory status,
+recruitment and participant characteristics, ethics, sample-size
+rationale, missing-data mechanism and exclusions, multiplicity or
+deviations from plan, or complete data/code availability statements.
+Those study-level fields, effect-size and uncertainty choices,
+statistic-specific rounding, and journal typography must be reviewed and
+completed outside the generated template.
+
+Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E., Nezu, A. M.,
+and Rao, S. M. (2018). Journal article reporting standards for
+quantitative research in psychology. *American Psychologist, 73*(1),
+3-25. [doi:10.1037/amp0000191](https://doi.org/10.1037/amp0000191)
 
 ## Which helper answers which task
 
@@ -397,6 +426,8 @@ every file under the study's data-handling policy before any handoff.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(
   toy,
   person = "Person",

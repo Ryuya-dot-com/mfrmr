@@ -413,7 +413,7 @@ implementation of one published many-facet Rasch simulation design.
 ``` r
 # \donttest{
 sig_eval <- suppressWarnings(evaluate_mfrm_signal_detection(
-  design = list(person = 8, rater = 2, criterion = 2, assignment = 1),
+  design = list(person = 8, rater = 2, criterion = 2, assignment = 2),
   reps = 1,
   maxit = 30,
   bias_max_iter = 1,
@@ -424,6 +424,6 @@ s_sig$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
 #>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       1            1              1             0          0.859
+#> 1       1            1              1             0          0.924
 # }
 ```

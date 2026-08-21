@@ -86,6 +86,6 @@ path <- tempfile(fileext = ".csv")
 out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
 out$written_files
 #>       Component Format                                 Path
-#> 1 residual_file    csv /tmp/RtmpIbcapd/file2e7f6c8cdfe8.csv
+#> 1 residual_file    csv /tmp/RtmpJHlGr0/file2f3350773bb9.csv
 # }
 ```

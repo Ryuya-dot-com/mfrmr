@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review fit standardization against FACETS-style ZSTD conventions</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>facets_fit_review.Rd</code></div>
     </div>
 
@@ -121,7 +121,8 @@ the same row-level status taxonomy as <code>fit_measures_table()$df_sensitivity<
 the |ZSTD| flag or materially changes ZSTD interpretation</p></li>
 <li><p><code>df_sensitivity_summary</code>: counts by df-sensitivity status</p></li>
 <li><p><code>external_table_quality</code>: completeness and duplicate-key review for the
-supplied FACETS fit table</p></li>
+supplied FACETS fit table, including reported-token and displayed-ZSTD
+boundary counts</p></li>
 <li><p><code>external_comparison</code>: optional external FACETS-vs-mfrmr comparison</p></li>
 <li><p><code>df_conversion_guide</code>: formulas, column map, and comparison decisions for
 FACETS-style df/ZSTD review</p></li>
@@ -175,8 +176,12 @@ fit differences. Both notes are repeated in the returned <code>guidance</code> t
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   4                         52               0            0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalDuplicateKeyRows ExternalCompleteMnSqRows ExternalCompleteZSTDRows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                         0                        0                        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalCompleteDFRows ExternalMatched ExternalNeedsReview ExternalComparison</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                       0               0                   0       Not supplied</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalCompleteDFRows ExternalReportedTokenRows ExternalNumericOnlyRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                       0                         0                       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalZSTDBoundaryRows ExternalMatched ExternalNeedsReview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         0               0                   0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  ExternalComparison</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Not supplied</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Fit-standardization rows requiring review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Facet        Level Infit Outfit MaxAbsZDiff FlagChanged</span>
@@ -189,16 +194,17 @@ fit differences. Both notes are repeated in the returned <code>guidance</code> t
 <span class="r-out co"><span class="r-pr">#&gt;</span>    flag status is unchanged.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     Setting                      Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                     Purpose Fit standardization review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    External FACETS supplied                      FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               DF comparison    Engine and FACETS-style</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              MnSq tolerance                       0.01</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     External ZSTD tolerance                       0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                DF tolerance                        0.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           DF/ZSTD tolerance                       0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Large ZSTD-shift threshold                        0.5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          DF-ratio tolerance                       0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Setting                          Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         Purpose     Fit standardization review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        External FACETS supplied                          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   DF comparison        Engine and FACETS-style</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  MnSq tolerance                           0.01</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         External ZSTD tolerance                           0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    DF tolerance                            0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               DF/ZSTD tolerance                           0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Large ZSTD-shift threshold                            0.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              DF-ratio tolerance                           0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  external_zstd_threshold_policy display_equality_indeterminate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Engine-vs-FACETS-style df/ZSTD differences need review for 56 element(s).</span>

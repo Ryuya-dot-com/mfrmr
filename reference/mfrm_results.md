@@ -165,7 +165,14 @@ Start with `summary(res)`. The most useful fields are:
 - `overview`: input mode, model, method, table count, and plot-route
   count
 
+- `decision`: plain-language interpretation, formal-inference, reason,
+  and next-action text derived from the source-fit readiness record
+
 - `readiness`: separate analysis and plot-interpretation gates
+
+- `fit_readiness`, `fit_readiness_components`, and
+  `fit_readiness_parameters`: the exact source-fit readiness record
+  retained separately from the workflow-level `readiness` table
 
 - `triage`: first-screen signals ordered by unavailable/review/info/ok
 
@@ -284,60 +291,65 @@ fit_bundle <- plot(res, type = "fit", draw = FALSE)
 sx <- summary(res)
 sx$overview
 #>   InputMode Model Method   N Persons Facets Categories Components Tables
-#> 1  mfrm_fit   RSM    JML 128       8      2          4         10     98
+#> 1  mfrm_fit   RSM    JML 128       8      2          4         10    109
 #>   PlotRoutes NotAvailable NotComputed
 #> 1          7            0           0
 sx$readiness
 #>        Domain                                Status
-#> 1   Numerical                                  pass
-#> 2        Data                                  pass
-#> 3      Design                           pass_linked
-#> 4   Stability                                  pass
-#> 5 Diagnostics                          not_assessed
-#> 6   Reporting exploratory_fit_ready_for_diagnostics
-#> 7        Plot   ready_for_diagnostic_interpretation
-#>                                                                                                                                                        Detail
-#> 1                                                                                                                      Optimizer returned convergence code 0.
-#> 2                                                                                                          No preparation warning or review row was retained.
-#> 3                           The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 4                                                                                                   No boundary-constant non-person facet level was detected.
-#> 5                                                                                       Diagnostics have not yet been incorporated into this fit-only status.
-#> 6                                                                                       Reporting status is the strictest applicable upstream workflow state.
-#> 7 Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.
+#> 1         Fit                                 ready
+#> 2   Numerical                                  pass
+#> 3        Data                                  pass
+#> 4      Design                           pass_linked
+#> 5   Stability                                  pass
+#> 6 Diagnostics                          not_assessed
+#> 7   Reporting exploratory_fit_ready_for_diagnostics
+#> 8        Plot   ready_for_diagnostic_interpretation
+#>                                                                                                                                                                        Detail
+#> 1                                                                                                                                 All stored fit-readiness components passed.
+#> 2                                                                                                                                      Optimizer returned convergence code 0.
+#> 3                                                                                                                          No preparation warning or review row was retained.
+#> 4                                           The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 5                                                                                                                   No boundary-constant non-person facet level was detected.
+#> 6                                                                                                       Diagnostics have not yet been incorporated into this fit-only status.
+#> 7                                                                                                       Reporting status is the strictest applicable upstream workflow state.
+#> 8 Stored fit readiness plus numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.
 sx$triage
 #>                      Area Severity                                 Signal
-#> 4             Diagnostics   review            diagnostic_warnings_present
-#> 9  Precision / separation   review             precision_review_available
-#> 10              Reporting   review reporting_checklist_available_but_held
-#> 1             Data review       ok                    data_readiness_pass
-#> 2   Design / connectivity       ok                          design_linked
-#> 7    Diagnostic dashboard       ok                      qc_plot_available
-#> 5    Section availability       ok           requested_sections_available
-#> 3               Stability       ok               stability_readiness_pass
-#> 8                  Tables       ok                       tables_collected
-#> 6              Wright map       ok          required_wright_map_available
+#> 5             Diagnostics   review            diagnostic_warnings_present
+#> 10 Precision / separation   review             precision_review_available
+#> 11              Reporting   review reporting_checklist_available_but_held
+#> 2             Data review       ok                    data_readiness_pass
+#> 3   Design / connectivity       ok                          design_linked
+#> 8    Diagnostic dashboard       ok                      qc_plot_available
+#> 1           Numerical fit       ok               numerical_readiness_pass
+#> 6    Section availability       ok           requested_sections_available
+#> 4               Stability       ok               stability_readiness_pass
+#> 9                  Tables       ok                       tables_collected
+#> 7              Wright map       ok          required_wright_map_available
 #>                                                                              Route
-#> 4                                            summary(res$diagnostics)$key_warnings
-#> 9                                         summary(res$components$precision_review)
-#> 10                                     summary(res$components$reporting_checklist)
-#> 1                                                           summary(res)$readiness
+#> 5                                            summary(res$diagnostics)$key_warnings
+#> 10                                        summary(res$components$precision_review)
+#> 11                                     summary(res$components$reporting_checklist)
 #> 2                                                           summary(res)$readiness
-#> 7                                   plot(res, type = "qc", preset = "publication")
-#> 5                                                              summary(res)$status
 #> 3                                                           summary(res)$readiness
-#> 8                                                  build_summary_table_bundle(res)
-#> 6  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
+#> 8                                   plot(res, type = "qc", preset = "publication")
+#> 1                                                           summary(res)$readiness
+#> 6                                                              summary(res)$status
+#> 4                                                           summary(res)$readiness
+#> 9                                                  build_summary_table_bundle(res)
+#> 7  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)
 #>                                                                                                                                                                                     Detail
-#> 4                                                                                                       Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 25.
-#> 9                                                                       Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
-#> 10 Reporting checklist is available, but the associated reporting status is `exploratory_fit_ready_for_diagnostics`. Reporting status is the strictest applicable upstream workflow state.
-#> 1                                                                                                                Data status is `pass`. No preparation warning or review row was retained.
-#> 2                        Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 7                                                                                               The QC dashboard is available as a focused follow-up after the required Wright-map review.
-#> 5                                                                                                                                Requested sections that could be computed were available.
-#> 3                                                                                                    Stability status is `pass`. No boundary-constant non-person facet level was detected.
-#> 8                                                                                                                       98 data-frame table(s) were collected for appendix or handoff use.
-#> 6                                             The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.
+#> 5                                                                                                       Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 25.
+#> 10                                                                      Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.
+#> 11 Reporting checklist is available, but the associated reporting status is `exploratory_fit_ready_for_diagnostics`. Reporting status is the strictest applicable upstream workflow state.
+#> 2                                                                                                                Data status is `pass`. No preparation warning or review row was retained.
+#> 3                        Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 8                                                                                               The QC dashboard is available as a focused follow-up after the required Wright-map review.
+#> 1                                                                                                                       Numerical status is `pass`. Optimizer returned convergence code 0.
+#> 6                                                                                                                                Requested sections that could be computed were available.
+#> 4                                                                                                    Stability status is `pass`. No boundary-constant non-person facet level was detected.
+#> 9                                                                                                                      109 data-frame table(s) were collected for appendix or handoff use.
+#> 7                                             The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.
 sx$plot_map
 #>            Type Available RequiredArtifact
 #> 1        wright      TRUE             TRUE
@@ -445,30 +457,34 @@ mfrm_results(fit, include = "validation", output = "summary")$status
 #> 11    precision_review     ok
 #> 12   facets_fit_review     ok
 #> 13 reporting_checklist     ok
-#> 14      data_readiness     ok
-#> 15    design_readiness     ok
-#> 16 stability_readiness     ok
-#> 17 plot_interpretation     ok
-#> 18 reporting_readiness review
-#>                                                                                                                                                                                                           Detail
-#> 1                                                                                                                                                                                          Input mode: mfrm_fit.
-#> 2                                                                                                       Computed automatically with residual_pca = 'none', diagnostic_mode = 'both', and fit_df_method = 'both'.
-#> 3                                                                                                                                                                                                     Available.
-#> 4                                                                                                                                                                                                     Available.
-#> 5                                                                                                                                                                                                     Available.
-#> 6                                                                                                                                                                                                     Available.
-#> 7                                                                                                                                                                                                     Available.
-#> 8                                                                                                                                                                                                     Available.
-#> 9                                                                                                                                                                                                     Available.
-#> 10                                                                                                                                                                                                    Available.
-#> 11                                                                                                                                                                                                    Available.
-#> 12                                                                                                                                                                                                    Available.
-#> 13                                                                                                                                                                                                    Available.
-#> 14                                                                                                                                         Data status: pass. No preparation warning or review row was retained.
-#> 15                                                 Design status: pass_linked. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 16                                                                                                                             Stability status: pass. No boundary-constant non-person facet level was detected.
-#> 17 Plot status: ready_for_diagnostic_interpretation. Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.
-#> 18                                                                                Reporting status: exploratory_fit_ready_for_diagnostics. Reporting status is the strictest applicable upstream workflow state.
+#> 14       fit_readiness     ok
+#> 15 numerical_readiness     ok
+#> 16      data_readiness     ok
+#> 17    design_readiness     ok
+#> 18 stability_readiness     ok
+#> 19 plot_interpretation     ok
+#> 20 reporting_readiness review
+#>                                                                                                                                                                                                                           Detail
+#> 1                                                                                                                                                                                                          Input mode: mfrm_fit.
+#> 2                                                                                                                       Computed automatically with residual_pca = 'none', diagnostic_mode = 'both', and fit_df_method = 'both'.
+#> 3                                                                                                                                                                                                                     Available.
+#> 4                                                                                                                                                                                                                     Available.
+#> 5                                                                                                                                                                                                                     Available.
+#> 6                                                                                                                                                                                                                     Available.
+#> 7                                                                                                                                                                                                                     Available.
+#> 8                                                                                                                                                                                                                     Available.
+#> 9                                                                                                                                                                                                                     Available.
+#> 10                                                                                                                                                                                                                    Available.
+#> 11                                                                                                                                                                                                                    Available.
+#> 12                                                                                                                                                                                                                    Available.
+#> 13                                                                                                                                                                                                                    Available.
+#> 14                                                                                                                                                                Fit status: ready. All stored fit-readiness components passed.
+#> 15                                                                                                                                                                Numerical status: pass. Optimizer returned convergence code 0.
+#> 16                                                                                                                                                         Data status: pass. No preparation warning or review row was retained.
+#> 17                                                                 Design status: pass_linked. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 18                                                                                                                                             Stability status: pass. No boundary-constant non-person facet level was detected.
+#> 19 Plot status: ready_for_diagnostic_interpretation. Stored fit readiness plus numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.
+#> 20                                                                                                Reporting status: exploratory_fit_ready_for_diagnostics. Reporting status is the strictest applicable upstream workflow state.
 
 plot(res, type = "qc", draw = FALSE)
 

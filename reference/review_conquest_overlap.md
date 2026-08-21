@@ -101,8 +101,10 @@ It is intentionally conservative:
 
 - its primary route expects output from
   [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md),
-  which reads the four native CSV files requested by the generated
-  command; custom extracted tables may use
+  which reads the four native comparison CSV files requested by the
+  generated command; the additional matrixout-history CSV is retained
+  for a separate objective/free-dimension verification; custom extracted
+  tables may use
   [`normalize_conquest_overlap_files()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_files.md)
   or
   [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md);
@@ -122,7 +124,7 @@ The intended workflow is:
 
 2.  run the narrow matching case in ConQuest;
 
-3.  normalize the four requested CSV files with
+3.  normalize the four comparison CSV files with
     [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md);
 
 4.  pass those tables here to inspect direct differences, centered item

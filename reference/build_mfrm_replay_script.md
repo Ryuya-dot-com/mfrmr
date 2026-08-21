@@ -148,8 +148,16 @@ The returned object contains:
 
 - `script`: the generated R code as a single string
 
+- `source_readiness`, `source_readiness_components`, and
+  `source_readiness_parameters`: readiness provenance from the source
+  fit
+
 - `anchors` and `group_anchors`: the exact stored constraints that were
   embedded into the script
+
+The source readiness row is not copied into the replayed fit. The
+generated script recomputes readiness and warns when its fit-level
+decision fields do not match the source record.
 
 If `ScriptMode` is `"facets"`, the script replays the higher-level
 [`run_mfrm_facets()`](https://ryuya-dot-com.github.io/mfrmr/reference/run_mfrm_facets.md)

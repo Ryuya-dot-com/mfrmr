@@ -15,7 +15,7 @@ documented."><meta property="og:image" content="https://ryuya-dot-com.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,7 @@ documented."><meta property="og:image" content="https://ryuya-dot-com.github.io/
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit many-facet ordered-response models with a flexible number of facets</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>fit_mfrm.Rd</code></div>
     </div>
 
@@ -99,7 +99,8 @@ documented.</p>
 <span>  facet_prior_sd <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  shrink_person <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  attach_diagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  checkpoint <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  checkpoint <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gpcm_mml_identification <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"free_population"</span>, <span class="st">"fixed_standard_normal"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -130,7 +131,11 @@ the mapping is recorded in <code>fit$prep$score_map</code>. If <code>rating_min<
 <code>rating_max</code> are supplied and the observed scores are a contiguous
 subset of that range (for example a 1-5 scale with only 2-5 observed),
 the supplied full range is retained so zero-count boundary categories
-remain part of the fitted score support.</p></dd>
+remain visible in the data-support review. A zero-count boundary category
+is retained as review evidence. With <code>keep_original = TRUE</code>, however, an
+unobserved internal category in a polytomous fitted ladder creates an
+unsupported adjacent-step contrast and fitting stops before optimization
+with a structured category-support error.</p></dd>
 
 
 <dt id="arg-rating-min">rating_min<a class="anchor" aria-label="anchor" href="#arg-rating-min"></a></dt>
@@ -195,9 +200,14 @@ set of rating-scale thresholds.</p></dd>
 
 <dt id="arg-slope-facet">slope_facet<a class="anchor" aria-label="anchor" href="#arg-slope-facet"></a></dt>
 <dd><p>Slope facet for the bounded <code>GPCM</code> branch. mfrmr
-requires <code>slope_facet == step_facet</code> and uses a
-positive-slope identification convention on the log scale with geometric
-mean discrimination fixed to 1.</p></dd>
+estimates one positive slope for every level of this designated facet.
+Thus <code>slope_facet = "Criterion"</code> gives criterion-specific slopes, whereas
+<code>slope_facet = "Rater"</code> gives rater-specific slopes. The current route
+accepts exactly one slope-owning facet, requires
+<code>slope_facet == step_facet</code>, and cannot estimate criterion and rater slope
+blocks simultaneously. Slopes are identified on the log scale with their
+geometric mean fixed to 1, so the table reports relative discrimination
+across the selected facet's levels rather than unrelated absolute weights.</p></dd>
 
 
 <dt id="arg-facet-interactions">facet_interactions<a class="anchor" aria-label="anchor" href="#arg-facet-interactions"></a></dt>
@@ -263,12 +273,16 @@ used in anchor-review recommendations.</p></dd>
 <dt id="arg-quad-points">quad_points<a class="anchor" aria-label="anchor" href="#arg-quad-points"></a></dt>
 <dd><p>Integer number of Gauss-Hermite quadrature points
 used for MML integration over the person distribution. The default is
-<code>31</code>. Useful accuracy/runtime settings are:</p><table class="table table"><tr><td><code>7</code></td><td>lightweight exploratory run; helpers such as
+<code>31</code>. Useful accuracy/runtime settings are:</p><table class="table table"><tr><td><code>7</code></td><td>lightweight screening run; information-criterion deltas,
+weights, preferences, and LRT are disabled. Helpers such as
 <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code> and
-<code><a href="reference_case_benchmark.html">reference_case_benchmark()</a></code> use this value.</td></tr><tr><td><code>15</code></td><td>intermediate analysis when runtime matters.</td></tr><tr><td><code>31</code></td><td>package default and a starting point for final analysis.</td></tr><tr><td><code>61+</code></td><td>sensitivity analysis for narrow score distributions or
+<code><a href="reference_case_benchmark.html">reference_case_benchmark()</a></code> use this value.</td></tr><tr><td><code>15</code></td><td>intermediate review run when runtime matters; automatic
+model ranking remains disabled.</td></tr><tr><td><code>31</code></td><td>package default and the starting grid for model comparison.</td></tr><tr><td><code>61+</code></td><td>sensitivity analysis for narrow score distributions or
 demanding numerical comparisons.</td></tr></table><p>Quadrature adequacy depends on the fitted distribution and score support.
 When substantive conclusions are sensitive, compare results under a
-denser rule and report the setting used.</p></dd>
+denser rule and report the setting used. Raw AIC/BIC/SABIC remain visible
+below 31 points for diagnosis, but <code><a href="compare_mfrm.html">compare_mfrm()</a></code> fails closed rather
+than turning a screening/review grid into automatic selection.</p></dd>
 
 
 <dt id="arg-maxit">maxit<a class="anchor" aria-label="anchor" href="#arg-maxit"></a></dt>
@@ -310,8 +324,10 @@ log-likelihood,
 <code>"hybrid"</code> uses EM as a warm start before the direct optimizer. Unsupported
 combinations currently fall back to <code>"direct"</code> and record that fallback in
 <code>fit$summary</code>. Direct, hybrid, and EM engines all require the common
-terminal-gradient gate for <code>InferenceReady</code>; EM relative log-likelihood
-convergence alone does not establish numerical readiness.</p></dd>
+terminal-gradient gate for the Numerical component of fit readiness; EM
+relative log-likelihood convergence alone does not establish numerical
+readiness. <code>InferenceReady</code> is <code>TRUE</code> only when every stored fit-readiness
+component passes.</p></dd>
 
 
 <dt id="arg-population-formula">population_formula<a class="anchor" aria-label="anchor" href="#arg-population-formula"></a></dt>
@@ -366,7 +382,8 @@ prior from domain knowledge or a previous fit.</p></dd>
 <dd><p>Logical. When <code>TRUE</code> and <code>facet_shrinkage</code> is
 active, the same empirical-Bayes shrinkage is applied to
 <code>fit$facets$person</code>. Default <code>FALSE</code>, since MML already integrates
-over an N(0, 1) prior on theta; the option mainly benefits JML.</p></dd>
+over a normal population distribution for theta; the option mainly
+benefits JML.</p></dd>
 
 
 <dt id="arg-attach-diagnostics">attach_diagnostics<a class="anchor" aria-label="anchor" href="#arg-attach-diagnostics"></a></dt>
@@ -397,15 +414,42 @@ resumes from the recorded iteration. Only the EM engine
 <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> engine ignores it. Use this to make long MML EM
 fits crash-resilient on shared compute environments.</p></dd>
 
+
+<dt id="arg-gpcm-mml-identification">gpcm_mml_identification<a class="anchor" aria-label="anchor" href="#arg-gpcm-mml-identification"></a></dt>
+<dd><p>Scale-identification convention for
+<code>model = "GPCM"</code> with <code>method = "MML"</code>. <code>"free_population"</code> (the
+default) estimates an intercept-only person distribution
+\(N(\beta_0,\sigma^2)\) when <code>population_formula</code> is omitted, while
+retaining geometric-mean-one relative slopes. This restores the common
+discrimination degree of freedom used by a conventional fixed-latent-
+variance GPCM; in the documented item-only overlap it is a one-to-one
+reparameterization of ConQuest <code>scoresfree</code> GPCM. An explicitly supplied
+<code>population_formula</code> is retained under this convention.
+<code>"fixed_standard_normal"</code> is the legacy restricted branch: it requires
+<code>population_formula = NULL</code>, fixes the person distribution to
+\(N(0,1)\), and also fixes the slope geometric mean to one. The latter
+is then a substantive relative-discrimination restriction rather than an
+identification requirement. This argument does not change JML, whose
+geometric-mean-one slope constraint is required to identify its freely
+estimated person coordinates.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>mfrm_fit</code> (named list) with:</p><ul><li><p><code>summary</code>: one-row model summary (<code>LogLik</code>, <code>AIC</code>, <code>BIC</code>, convergence),
-including user-facing <code>Method</code>, engine-facing <code>MethodUsed</code>, MML-engine
+    <p>An object of class <code>mfrm_fit</code> (named list) with:</p><ul><li><p><code>summary</code>: one-row model summary including <code>LogLik</code>, <code>Deviance</code>, canonical
+free dimension <code>Npar</code>, response-row/weight/Person counts, the versioned
+information-criterion contract, Person-based MML <code>AIC</code>/<code>BIC</code>/<code>SABIC</code>,
+explicitly descriptive legacy fields when the common panel is ineligible,
+and convergence; it also includes user-facing <code>Method</code>, engine-facing
+<code>MethodUsed</code>, MML-engine
 fields, terminal-gradient readiness, requested/selected-stage tolerance
 settings, and the actual L-BFGS-B <code>OptimizerFactr</code> / <code>OptimizerPgtol</code>
 controls when applicable</p></li>
-<li><p><code>facets$person</code>: person estimates (<code>Estimate</code>; plus <code>SD</code> for MML)</p></li>
+<li><p><code>facets$person</code>: person estimates (<code>Estimate</code>; plus <code>SD</code> for MML), with
+<code>SourceFitReadiness</code>, <code>SourceInferenceReady</code>, and <code>EstimateUse</code> separating
+a defined Person summary from the source fit's permission to interpret it.
+In particular, a finite prior-regularized MML EAP does not become
+reportable when the source fit is blocked.</p></li>
 <li><p><code>facets$others</code>: facet-level estimates for each facet</p></li>
 <li><p><code>steps</code>: estimated threshold/step parameters as a one-row-per-step
 <code>tibble</code> with <code>Estimate</code>. Bare fits keep this table as point estimates.
@@ -415,26 +459,55 @@ controls when applicable</p></li>
 columns are attached to <code>fit$steps</code> when the Hessian is available.
 For step-structure quality, also use the step-collapse and disordering
 warnings from <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> and <code><a href="category_structure_report.html">category_structure_report()</a></code>.</p></li>
-<li><p><code>slopes</code>: estimated discrimination parameters for <code>GPCM</code> fits as
-a one-row-per-slope-element <code>tibble</code> with <code>LogEstimate</code> and
-<code>Estimate</code>. Bare fits keep this table as point estimates. For MML
-bounded-<code>GPCM</code> fits, <code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> exposes log-slope SEs plus
-positive-scale delta-method SEs and confidence limits in
-<code>diagnostics$parameter_uncertainty$slopes</code>; when
-<code>attach_diagnostics = TRUE</code>, those columns are attached to
-<code>fit$slopes</code> when the Hessian is available. The identification
-convention pins the geometric mean of slopes at 1.</p></li>
+<li><p><code>slopes</code>: discrimination parameters for <code>GPCM</code> fits as a
+one-row-per-slope-element <code>tibble</code>. <code>LogEstimate</code> and <code>Estimate</code> retain
+the finite optimizer values for compatibility and numerical diagnosis;
+<code>OptimizerLogEstimate</code> / <code>OptimizerEstimate</code> name that role explicitly.
+Read <code>ParameterStatus</code>, <code>PrimaryLogEstimate</code>, <code>PrimaryEstimate</code>,
+<code>SEEligible</code>, <code>CIEligible</code>, and <code>ReasonCodes</code> before interpretation. A
+certified JML slope-only path receives a typed extended-real primary
+boundary. <code>config$boundary_audit</code> retains the supporting fixed-objective,
+joint-path, and terminal-gradient records. A certified path can establish
+that a finite JML maximum is unattained for the evaluated case. The
+converse is deliberately not used: failure to find a path in the
+evaluated families, or retention of a finite optimizer point, does not
+establish existence of a finite global maximum for the non-concave GPCM
+likelihood. These technical records do not promote readiness,
+uncertainty, MML, or cross-software claims.
+<code>config$boundary_audit$gpcm_terminal_gradient_stability</code> reconstructs the
+same fixed JML objective and analytic terminal gradient, checks stored
+optimizer/polish summaries and deterministic central-difference probes,
+and reports gradient norms by free-parameter block. Positive boundary
+certificates take precedence over a finite-point zero or small gradient;
+otherwise a coherent small gradient is retained-point first-order
+evidence only. The implementation threshold is not a frozen scientific
+criterion and the audit does not certify a finite global maximum,
+boundary absence, uncertainty, external comparability, or readiness.
+The conditional JML boundary checks are not reused for MML.
+<code><a href="diagnose_mfrm.html">diagnose_mfrm()</a></code> may retain observed-information and delta-method values
+in <code>Optimizer*SE</code> / <code>Optimizer*CI</code> columns, but ordinary <code>SE</code> / <code>CI</code>
+columns remain unavailable while parameter readiness is not established.
+The identification convention pins the geometric mean of finite optimizer
+slopes at 1.</p></li>
+<li><p><code>readiness</code>: the versioned fit record, five component rows, and current
+parameter-level rows. The current parameter slice includes GPCM slopes;
+other non-Person parameter classes remain scheduled for later propagation.</p></li>
 <li><p><code>interactions</code>: model-estimated facet interaction effects and metadata
 when <code>facet_interactions</code> is supplied</p></li>
-<li><p><code>population</code>: population-model metadata. Ordinary fits keep an inactive
-record (<code>active = FALSE</code>, <code>posterior_basis = "legacy_mml"</code>). Active
+<li><p><code>population</code>: population-model metadata. Ordinary RSM/PCM and JML fits
+keep an inactive record (<code>active = FALSE</code>,
+<code>posterior_basis = "legacy_mml"</code>). Default bounded-GPCM MML and active
 latent-regression fits store the fitted design matrix, regression
 coefficients, residual variance, omission review, the complete-case
 estimation table (<code>person_table</code>), and the observed-person-aligned
 replay/export provenance table retained before complete-case omission
 (<code>person_table_replay</code>), plus stored categorical <code>xlevels</code> / <code>contrasts</code>
 for model-matrix replay and scoring, together with
-<code>posterior_basis = "population_model"</code>.</p></li>
+<code>posterior_basis = "population_model"</code>. <code>estimation_converged</code> records
+optimizer convergence and <code>inference_ready</code> records the separate formal
+readiness decision. The older <code>population$converged</code> field is retained as
+a compatibility alias of <code>inference_ready</code>; its basis is recorded in
+<code>population$converged_basis</code>.</p></li>
 <li><p><code>data_review</code>: pre-fit Data, Design, Stability, and Reporting readiness
 evidence propagated into summaries and plot-interpretation gates</p></li>
 <li><p><code>config</code>: resolved model configuration used for estimation, including
@@ -486,7 +559,46 @@ a positive slope for the designated slope-facet level:</p>
   \alpha_g(\eta - \tau_{g,k}),\quad \alpha_g &gt; 0.$$</p>
 <p>The current implementation requires <code>slope_facet == step_facet</code> and
 identifies slopes by a sum-to-zero constraint on log slopes, so their
-geometric mean is 1.</p>
+geometric mean is 1.
+A selected facet owns a vector rather than one common number: if there are
+\(G\) levels, the fit returns \(G\) positive slopes with \(G-1\) free
+log-slope contrasts. Every other facet remains additive inside \(\eta\)
+and receives no separate slope. Selecting a rater facet is therefore a
+different restricted model from selecting a criterion or task facet.
+The placement of the slope is part of the model identity: it multiplies the
+complete adjacent-category predictor, including the person coordinate, all
+additive facet locations and fitted facet interactions inside \(\eta\),
+and the owned step. It is not a loading-only formulation in which the slope
+multiplies ability while rater severity and other intercept terms remain
+unscaled. Such a formulation, including TAM multifacet <code>GPCM.design</code>
+constructions with separate linear intercept and slope designs, is a
+different model unless an algebraic reduction establishes equivalence.
+This is an aligned single-owner many-facet GPCM: exactly one facet owns both
+the slope and step blocks. It is not the broader Uto–Ueno generalized MFRM,
+whose task and rater slopes enter multiplicatively and whose step owner must
+be stated separately. Setting every current slope to one recovers the
+package's equal-discrimination PCM kernel; it does not establish support for
+the omitted second slope block, multidimensional traits, or response-style
+parameters.
+Under the default <code>gpcm_mml_identification = "free_population"</code> branch,
+the population standard deviation carries the common discrimination scale
+while the geometric-mean-one slopes describe relative discrimination.
+Equivalently, on a standardized latent variable the absolute slopes are
+\(\sigma\alpha_g\). Under
+<code>gpcm_mml_identification = "fixed_standard_normal"</code>, both the population
+standard deviation and slope geometric mean are fixed to one; that legacy
+branch is a narrower relative-discrimination model. Under JML, the
+geometric-mean-one constraint is required to resolve the ability/slope
+scale because person coordinates are estimated jointly.</p>
+<p>Here and elsewhere in the package, "bounded GPCM" means that the documented
+model/workflow scope is deliberately narrow. It does not mean box-constrained
+estimation. The JML branch maximizes the identified joint log-likelihood
+without a statistical penalty or finite bounds on person, location, step, or
+slope coordinates. Numerical line-search rejection of non-representable
+slope proposals is not regularization. When a recession direction is
+certified, the finite optimizer iterate remains a numerical trace and the
+primary result uses the appropriate extended-real or typed boundary status;
+it is not relabelled as a finite maximizer of the original JML objective.</p>
 <p>With only two ordered categories (\(K = 1\)), the <code>RSM</code>/<code>PCM</code>
 branch reduces to the usual binary Rasch logit for the single category
 boundary:</p>
@@ -524,10 +636,24 @@ scheme and does not change the fixed-discrimination contract of <code>RSM</code>
 <p>Minimum required columns are:</p><ul><li><p>person identifier (<code>person</code>)</p></li>
 <li><p>one or more facet identifiers (<code>facets</code>)</p></li>
 <li><p>observed score (<code>score</code>)</p></li>
-</ul><p>Scores are treated as ordered categories.
+</ul><p>Scores are treated as ordered categories. Although the fitted category
+probabilities form a multinomial probability vector, category order is part
+of the likelihood: unordered nominal/multinomial-logit responses are not
+supported. Poisson, negative-binomial, and grouped binomial-trial counts are
+also not response families in <code>fit_mfrm()</code>. Integer counts supplied as
+<code>score</code> are interpreted only as ordered category codes.
 Non-numeric score labels are dropped with a warning after coercion, whereas
 fractional numeric scores are rejected with an error instead of being
 silently truncated.</p>
+<p>A positive numeric <code>weight</code> may encode a replication/likelihood weight for
+an ordered-rating row when weighting that conditional contribution is the
+intended estimand. It is not a general collapsed-person frequency-table
+interface: under MML, powering responses inside one Person's conditional
+pattern is not the same as replicating a complete Person pattern after
+marginalization. A weight also does not turn the score into a count outcome
+or model dependence among repeated ratings. Non-positive finite weights are
+excluded during preparation, and non-unit observation-weight fits are not
+eligible for the common MML information-criterion panel in version 0.2.3.</p>
 <p>The fitted many-facet ordered-response model assumes conditional
 independence of observations given the person and facet parameters
 (Linacre, 1989). Repeated ratings of the same
@@ -542,7 +668,12 @@ If your observed categories do not start at 0, set <code>rating_min</code>/<code
 explicitly to avoid unintended recoding assumptions. For example, if the
 intended instrument is a 1-5 scale but the current sample only uses 2-5,
 set <code>rating_min = 1, rating_max = 5</code> to retain the zero-count category 1
-in the score support.
+in the data-support review. That boundary absence is a review condition for
+the separate element-boundary contract, not by itself an unsupported free
+step contrast. By contrast, retaining an unobserved internal category in a
+polytomous fitted ladder creates an adjacent-step recession direction, so
+<code>fit_mfrm()</code> stops before optimization rather than reporting finite step
+estimates for that ladder.
 If these bounds are omitted, the observed score range is used and the
 provenance is stored in <code>fit$prep</code> and <code>summary(fit)$settings_overview</code>.
 Set <code>options(mfrmr.show_inferred_rating_range = TRUE)</code> when you want an
@@ -564,9 +695,11 @@ the full <code>rating_min</code> / <code>rating_max</code> range.</p>
 
 
 <p><code>fit_mfrm()</code> follows the Linacre (1989) many-facet Rasch specification:
-person ability is integrated out under a <code>N(0, 1)</code> prior (or under the
-<code>N(X\beta, \sigma^2)</code> latent-regression population model when
-<code>population_formula</code> is supplied), but every facet parameter
+person ability is integrated out under a <code>N(0, 1)</code> distribution (or under
+the <code>N(X\beta, \sigma^2)</code> population model when <code>population_formula</code> is
+supplied). Bounded GPCM MML instead activates an intercept-only
+<code>N(\beta_0, \sigma^2)</code> population model by default so its common
+discrimination scale is estimable. Every facet parameter
 (<code>Rater</code>, <code>Criterion</code>, <code>Task</code>, ...) is estimated as a fixed effect
 identified by a sum-to-zero constraint. There is no hierarchical
 prior, no shrinkage, and no variance component for the facets.</p>
@@ -683,8 +816,11 @@ review, posterior predictive checks, and MCMC estimation are not available
 for bounded <code>GPCM</code>. Use
 <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> as the formal boundary statement for the
 current <code>GPCM</code> scope.</p></li>
-</ul><p>Latent-regression status:</p><ul><li><p><code>population_formula = NULL</code> keeps the standard unconditional <code>MML</code> / <code>JML</code>
-behavior.</p></li>
+</ul><p>Latent-regression status:</p><ul><li><p><code>population_formula = NULL</code> keeps the standard unconditional behavior for
+RSM/PCM and JML. For bounded GPCM MML, the default
+<code>gpcm_mml_identification = "free_population"</code> constructs an intercept-only
+population model internally; use <code>"fixed_standard_normal"</code> only to
+reproduce the legacy restricted likelihood.</p></li>
 <li><p>Supplying <code>population_formula</code> activates latent regression for
 <code>method = "MML"</code> only.</p></li>
 <li><p>This implementation assumes a one-dimensional conditional-normal population
@@ -761,6 +897,62 @@ errors, or kept silent.</p></li>
 This affects interpretation of reported facet measures.</p></li>
 </ul></div>
     <div class="section level2">
+    <h2 id="estimator-specific-estimability-preflight">Estimator-specific estimability preflight<a class="anchor" aria-label="anchor" href="#estimator-specific-estimability-preflight"></a></h2>
+
+
+<p>Before optimization, mfrmr builds a sparse adjacent-category-logit design
+in the same constrained free coordinates used by the optimizer. The check
+includes Person coordinates for JML, integrates them out for MML, and
+includes facet anchors, group constraints, signs, supported two-way
+interactions, and RSM/PCM step coordinates.</p>
+<p>An exactly rank-deficient design stops with a structured
+<code>mfrmr_estimability_error</code>; its <code>estimability</code> field records rank, nullity,
+parameter blocks, tolerance checks, and a bounded null-direction
+explanation. Optimization is not run. A full-rank MML fixed-effect design
+whose corresponding free-Person JML design is rank deficient returns a
+fit with an <code>mfrmr_estimability_warning</code>: its cross-panel contrasts rely on
+the common latent-population assumption and remain review-only.</p>
+<p>Inspect <code>fit$data_review$estimability</code>. RSM and PCM use the full linear
+free-coordinate check. For bounded GPCM and an active latent-regression
+residual variance, the additive block is audited before fitting. A retained
+vector also records the analytic free-to-expanded log/natural-scale
+transformation Jacobians and a central-difference check in
+<code>fit$data_review$estimability$nonlinear_transformation</code>. This verifies the
+parameterization only; it is not a response-likelihood Jacobian or a
+structural-identification result. A stationary retained solution of modest
+free dimension also receives a local observed-information Hessian and a
+recorded eigenvalue-tolerance ladder in
+<code>fit$data_review$estimability$fitted_information</code>. Nonstationary or larger
+fits retain an explicit not-evaluated status. This fitted-information layer
+is diagnostic only: it does not yet classify weak information, make the
+nonlinear preflight complete, or turn full additive rank into a full-model
+estimability claim. Eligible nonlinear MML fits also receive bounded
+observed-pattern and all-response-pattern score checks. The latter operates
+on each Person's retained observation design under unit row weights and
+records probability-normalization, zero-expected-score, expected-information,
+and selected numerical-derivative summaries. Missing rows are not imputed;
+nonunit weights and excessive pattern grids retain explicit not-evaluated
+states. Mathematically identical Person observation designs are evaluated
+once and reconstructed by exact multiplicity; active latent-regression
+covariate rows are part of this identity. Only conceptual and evaluated
+workload summaries are retained. These retained-point diagnostics do not
+by themselves establish global structural identification, weak-information
+status, or readiness.</p>
+<p><code>fit$data_review$estimability$nonlinear_local_estimability</code> interprets only
+the first-order local rank that these maps support. For JML GPCM, full
+column rank of the complete conditional adjacent-logit Jacobian is a
+sufficient retained-point local certificate. For fixed-quadrature MML with
+unit row weights and finite parameters, the Person-specific observed-
+pattern score vectors are part of the positive finite response-pattern
+support. If those vectors span every optimizer free coordinate, the full
+expected score information is positive definite; exhaustive enumeration is
+unnecessary for this sufficient direction. A rank-deficient observed subset
+is inconclusive and is classified only when the all-pattern enumeration is
+available. The record explicitly leaves continuous-integral and global
+identification, boundary status, weak information, and inference readiness
+unclassified.</p>
+    </div>
+    <div class="section level2">
     <h2 id="choosing-maxit-without-result-driven-tuning">Choosing maxit without result-driven tuning<a class="anchor" aria-label="anchor" href="#choosing-maxit-without-result-driven-tuning"></a></h2>
 
 
@@ -768,9 +960,10 @@ This affects interpretation of reported facet measures.</p></li>
 until preferred estimates appear.</p><ol><li><p>Choose the model, estimation method, optimizer, tolerance, quadrature
 rule, and initial <code>maxit</code> before examining coefficient or fit results.
 The default <code>maxit = 400</code> is the package starting point for an analysis.</p></li>
-<li><p>Use estimates substantively only when <code>Converged</code> and <code>InferenceReady</code>
-are both <code>TRUE</code> and the Numerical row of <code>summary(fit)$readiness</code> is
-<code>pass</code>. Optimizer code zero alone is insufficient.</p></li>
+<li><p>Use estimates substantively only when <code>FitReadiness == "ready"</code> and
+<code>InferenceReady</code> is <code>TRUE</code>. Also inspect purpose-specific Design,
+Stability, Diagnostics, and Reporting workflow rows. Optimizer code zero
+alone is insufficient.</p></li>
 <li><p>If <code>ConvergenceStatus == "iteration_limit"</code>, keep that fit review-only.
 Refit the same data, model, method, anchors, optimizer, tolerance, and
 quadrature rule with the next ceiling in a prespecified sequence, such as
@@ -801,8 +994,10 @@ only to shorten runtime: integrating over a population distribution and
 treating person parameters as fixed effects are different analysis choices.</p>
 <p>For MML runs, <code>quad_points</code> is the main accuracy/speed trade-off.
 The <code>@param quad_points</code> tier table is the authoritative reference;
-in short:</p><ul><li><p><code>quad_points = 7</code> is a lightweight setting for quick iteration.</p></li>
-<li><p><code>quad_points = 15</code> is an intermediate option when runtime matters.</p></li>
+in short:</p><ul><li><p><code>quad_points = 7</code> is a lightweight screening setting; do not use its IC
+values for automatic model selection.</p></li>
+<li><p><code>quad_points = 15</code> is an intermediate review option when runtime matters;
+automatic IC ranking remains disabled.</p></li>
 <li><p><code>quad_points = 31</code> is the package default and a suitable starting point
 for a final analysis; always review convergence and, when conclusions are
 sensitive, compare a denser quadrature rule.</p></li>
@@ -857,6 +1052,34 @@ caveats. Use <code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix(
 are currently supported, caveated, blocked, or deferred.</p></li>
 </ol></div>
     <div class="section level2">
+    <h2 id="information-criterion-contract">Information-criterion contract<a class="anchor" aria-label="anchor" href="#information-criterion-contract"></a></h2>
+
+
+<p>For an eligible fixed-facet <code>MML</code> fit, let <code>D = -2 * LogLik</code>, let <code>k</code> be
+<code>Npar</code> (the retained free optimization-vector dimension after constraints),
+and let <code>N_person</code> be the number of unique prepared Persons. The canonical
+panel is <code>AIC = D + 2 * k</code>, <code>BIC = D + log(N_person) * k</code>, and
+<code>SABIC = D + log((N_person + 2) / 24) * k</code>.</p>
+<p><code>ResponseRows</code>, <code>WeightedResponseTotal</code>, <code>Persons</code>, and <code>ICSampleSize</code> are
+separate fields. The compatibility field <code>N</code> retains its earlier
+response-row or summed-observation-weight meaning and is not the 0.2.3 BIC
+sample size. Explicit all-unit weights remain eligible; every non-unit
+observation-weight fit, JML fit, and object without the current contract
+identity is excluded from the common MML panel. Its canonical
+<code>AIC</code>/<code>BIC</code>/<code>SABIC</code> fields are <code>NA</code>, while any retained raw values are
+explicitly named <code>LegacyAIC</code> and <code>LegacyBIC</code>. At 22 or fewer Persons,
+SABIC is displayed only as sensitivity evidence and
+<code>SABICSelectable = FALSE</code>.</p>
+<p>Integration adequacy is recorded separately from formula eligibility.
+<code>ICIntegrationTier</code> is <code>"coarse_screening"</code> below 15 points,
+<code>"intermediate_review"</code> at 15–30, <code>"standard_start"</code> at 31–60, and
+<code>"dense_sensitivity"</code> at 61 or more. Raw canonical criteria remain visible
+in every eligible MML tier, but <code>ICSelectable = FALSE</code> below 31 points;
+automatic deltas, criterion weights, preferences, and LRT are suppressed.
+A close or consequential q&gt;=31 comparison should still be reevaluated on a
+denser common grid.</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
 
 
@@ -865,7 +1088,9 @@ the <code>RSM</code> and <code>PCM</code> branches grounded in Andrich (1978) an
 The bounded <code>GPCM</code> branch follows the generalized partial credit
 formulation of Muraki (1992) under a package-specific positive
 log-slope identification convention. The <code>MML</code> route follows the
-quadrature-based marginal-likelihood framework of Bock and Aitkin (1981).</p><ul><li><p>Andrich, D. (1978). <em>A rating formulation for ordered response
+quadrature-based marginal-likelihood framework of Bock and Aitkin (1981).</p><ul><li><p>Akaike, H. (1974). <em>A new look at the statistical model identification</em>.
+IEEE Transactions on Automatic Control, 19(6), 716-723.</p></li>
+<li><p>Andrich, D. (1978). <em>A rating formulation for ordered response
 categories</em>. Psychometrika, 43(4), 561-573.</p></li>
 <li><p>Bock, R. D., &amp; Aitkin, M. (1981). <em>Marginal maximum likelihood estimation
 of item parameters: Application of an EM algorithm</em>. Psychometrika, 46(4),
@@ -881,9 +1106,16 @@ effects using many-facet Rasch measurement: Part II. <em>Journal of Applied
 Measurement</em>, 5(2), 189-227.</p></li>
 <li><p>Muraki, E. (1992). <em>A generalized partial credit model: Application of an
 EM algorithm</em>. Applied Psychological Measurement, 16(2), 159-176.</p></li>
+<li><p>Uto, M., &amp; Ueno, M. (2020). <em>A generalized many-facet Rasch model and its
+Bayesian estimation using Hamiltonian Monte Carlo</em>. Behaviormetrika, 47,
+469-496.</p></li>
 <li><p>Robitzsch, A., &amp; Steinfeld, J. (2018). <em>Item response models for human
 ratings: Overview, estimation methods, and implementation in R</em>.
 Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
+<li><p>Schwarz, G. (1978). <em>Estimating the dimension of a model</em>.
+Annals of Statistics, 6(2), 461-464.</p></li>
+<li><p>Sclove, S. L. (1987). <em>Application of model-selection criteria to some
+problems in multivariate analysis</em>. Psychometrika, 52(3), 333-343.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -905,13 +1137,13 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
 <span class="r-in"><span>  reltol <span class="op">=</span> <span class="fl">1e-11</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_quick</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"N"</span>, <span class="st">"Converged"</span>, <span class="st">"InferenceReady"</span>,</span></span>
-<span class="r-in"><span>  <span class="st">"ConvergenceSeverity"</span></span></span>
+<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"N"</span>, <span class="st">"Converged"</span>, <span class="st">"FitReadiness"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"InferenceReady"</span>, <span class="st">"ConvergenceSeverity"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method     N Converged InferenceReady ConvergenceSeverity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML      282 TRUE      TRUE           pass               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method     N Converged FitReadiness InferenceReady ConvergenceSeverity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML      282 TRUE      ready        TRUE           pass               </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># Full run with the package default MML estimator. This route integrates</span></span></span>
@@ -928,32 +1160,34 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
 <span class="r-in"><span>  quad_points <span class="op">=</span> <span class="fl">31</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span><span class="op">$</span><span class="va">summary</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 52</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method MethodUsed     N Persons Facets FacetInteractions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML    MML          282      48      2                 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 45 more variables: InteractionParameters &lt;int&gt;, InteractionCells &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   InteractionSparseCells &lt;int&gt;, Categories &lt;dbl&gt;, LogLik &lt;dbl&gt;, AIC &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BIC &lt;dbl&gt;, Converged &lt;lgl&gt;, InferenceReady &lt;lgl&gt;, Iterations &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   IterationsBasis &lt;chr&gt;, MMLEngineRequested &lt;chr&gt;, MMLEngineUsed &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MMLEngineDetail &lt;chr&gt;, EMIterations &lt;int&gt;, EMConverged &lt;lgl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   EMRelativeChange &lt;dbl&gt;, OptimizerMethod &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OptimizerInitialMethod &lt;chr&gt;, OptimizerPolished &lt;lgl&gt;, …</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 87</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method MethodUsed ICContractVersion      N ResponseRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML    MML        mfrmr_ic_person_v2   282          282</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 81 more variables: WeightedResponseTotal &lt;dbl&gt;, Persons &lt;int&gt;, Npar &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Facets &lt;int&gt;, FacetInteractions &lt;int&gt;, InteractionParameters &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   InteractionCells &lt;int&gt;, InteractionSparseCells &lt;int&gt;, Categories &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   LogLik &lt;dbl&gt;, Deviance &lt;dbl&gt;, WeightPolicy &lt;chr&gt;, ICEligible &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ICSelectable &lt;lgl&gt;, ICStatus &lt;chr&gt;, ICSampleSize &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ICSampleSizeBasis &lt;chr&gt;, AIC &lt;dbl&gt;, BIC &lt;dbl&gt;, SABIC &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   SABICSelectable &lt;lgl&gt;, AICFormula &lt;chr&gt;, BICFormula &lt;chr&gt;, …</span></span>
 <span class="r-in"><span><span class="va">s_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span>, <span class="st">"InferenceReady"</span>,</span></span>
-<span class="r-in"><span>                   <span class="st">"ConvergenceSeverity"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Converged InferenceReady ConvergenceSeverity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML    TRUE      TRUE           pass               </span>
-<span class="r-in"><span><span class="co"># `InferenceReady = FALSE` is a numerical stop signal. A TRUE value only</span></span></span>
-<span class="r-in"><span><span class="co"># clears the package's optimizer review; model specification, design,</span></span></span>
-<span class="r-in"><span><span class="co"># identification, and inferential assumptions still require review.</span></span></span>
+<span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span>, <span class="st">"FitReadiness"</span>,</span></span>
+<span class="r-in"><span>                   <span class="st">"InferenceReady"</span>, <span class="st">"ConvergenceSeverity"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Converged FitReadiness InferenceReady ConvergenceSeverity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML    TRUE      ready        TRUE           pass               </span>
+<span class="r-in"><span><span class="co"># `InferenceReady = FALSE` is a conservative fit-level stop signal. The</span></span></span>
+<span class="r-in"><span><span class="co"># stored component states identify whether input, estimability, category,</span></span></span>
+<span class="r-in"><span><span class="co"># boundary, or numerical review caused it.</span></span></span>
 <span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">person_overview</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Persons   Mean    SD Median   Min   Max  Span MeanPosteriorSD</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>      48 -<span style="color: #BB0000;">0.155</span> 0.824 -<span style="color: #BB0000;">0.208</span> -<span style="color: #BB0000;">1.72</span>  1.51  3.23           0.476</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 11</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Persons DistributionN ReviewExcludedExtremeE…¹ EstimateUse   Mean    SD Median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>      48            48                        0 source_fit… -<span style="color: #BB0000;">0.155</span> 0.824 -<span style="color: #BB0000;">0.208</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ abbreviated name: ¹​ReviewExcludedExtremeEAPs</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4 more variables: Min &lt;dbl&gt;, Max &lt;dbl&gt;, Span &lt;dbl&gt;, MeanPosteriorSD &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="co"># Compare the person distribution with the facet and step locations. The</span></span></span>
 <span class="r-in"><span><span class="co"># scale identification does not create universal targeting thresholds.</span></span></span>
 <span class="r-in"><span><span class="va">s_fit</span><span class="op">$</span><span class="va">targeting</span></span></span>
@@ -968,22 +1202,22 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
 <span class="r-in"><span><span class="va">p_fit</span><span class="op">$</span><span class="va">name</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "wright_map"</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">p_fit</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">locations</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 30</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet l…   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.960</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet l…   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.707</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet l…    0.180 0.185     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.183</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet l…    0.184 0.199     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.207</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet l…    0.212 0.179     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.138</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet l…    0.412 0.219     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.016</span><span style="color: #BB0000; text-decoration: underline;">8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 21 more variables: CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;, StepIndex &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;, OriginalEstimate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;, DisplayEstimate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;, OriginalCI_Upper &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, CIClippedLower &lt;lgl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIClippedUpper &lt;lgl&gt;, CIClipped &lt;lgl&gt;, BoundaryEnd &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CISuppressed &lt;lgl&gt;, CIDisplayStatus &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 37</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   StepIndex &lt;int&gt;, BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalEstimate &lt;dbl&gt;, BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   DisplayEstimate &lt;dbl&gt;, DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OriginalCI_Upper &lt;dbl&gt;, DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, …</span></span>
 <span class="r-in"><span><span class="co"># The bare plot route is the native Wright map and includes available</span></span></span>
 <span class="r-in"><span><span class="co"># facet uncertainty. Use plot(fit, type = "bundle") for the three-plot</span></span></span>
 <span class="r-in"><span><span class="co"># Wright/pathway/category overview.</span></span></span>
@@ -1020,13 +1254,14 @@ Psychological Test and Assessment Modeling, 60(1), 101-139.</p></li>
 <span class="r-in"><span>  person_data <span class="op">=</span> <span class="va">person_tbl</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_pop</span><span class="op">)</span><span class="op">$</span><span class="va">population_overview</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 11</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PopulationModel PosteriorBasis   Formula        PersonRows DesignColumns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> TRUE            population_model ~Grade + Group         48             3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 6 more variables: CodingVariables &lt;chr&gt;, ContrastVariables &lt;chr&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   Policy &lt;chr&gt;, ResidualVariance &lt;dbl&gt;, OmittedPersons &lt;int&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OmittedRows &lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 16</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PopulationModel PosteriorBasis   Source  IdentificationRole Formula PersonRows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> TRUE            population_model user_s… not_applicable     ~Grade…         48</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 10 more variables: DesignColumns &lt;int&gt;, CodingVariables &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ContrastVariables &lt;chr&gt;, Policy &lt;chr&gt;, EstimationConverged &lt;lgl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   InferenceReady &lt;lgl&gt;, LegacyConvergedBasis &lt;chr&gt;, ResidualVariance &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OmittedPersons &lt;int&gt;, OmittedRows &lt;int&gt;</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_pop</span><span class="op">)</span><span class="op">$</span><span class="va">population_coding</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Variable LevelCount Levels Contrast        EncodedColumns CodingNote          </span>

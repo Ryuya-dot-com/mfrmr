@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a scoped ConQuest-overlap bundle</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
       <div class="d-none name"><code>build_conquest_overlap_bundle.Rd</code></div>
     </div>
 
@@ -127,13 +127,21 @@ It also records the actual <code>mfrmr</code> optimizer controls, MML engine, te
 gradient, convergence status and severity, and inference-readiness decision.
 A fit that is not inference-ready remains available for convergence review,
 but its estimates should not be used for inferential comparison with
-ConQuest until the convergence issue is resolved and the model is refit.</p>
+ConQuest until the convergence issue is resolved and the model is refit.
+The generated ConQuest benchmark template fixes its parameter-change
+criterion at <code>1e-8</code>, deviance-change criterion at <code>1e-10</code>, and iteration
+ceiling at <code>2000</code>; these controls are written into the command, summary, and
+settings so a default stopping rule cannot masquerade as an objective
+discrepancy.</p>
 <p>The <code>conquest_command</code> component is a conservative starting template, not a
 guaranteed version-invariant automation. The <code>conquest_output_contract</code>
 component records which requested external output should feed each
 normalized review table.
-Use <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code> for the four CSV files requested
-by the generated command. <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code> and
+Use <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code> for the parameter, regression,
+covariance, and case-EAP CSV files requested by the generated command. The
+additional matrixout history CSV retains the objective trajectory and an
+independent estimated-parameter dimension for release verification; it is not
+parsed as a free-form report. <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code> and
 <code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code> remain available for already-extracted
 custom tables. Then use <code><a href="review_conquest_overlap.html">review_conquest_overlap()</a></code> only after the matching
 ConQuest run has been executed externally. The bundle and command template
@@ -203,64 +211,67 @@ and convergence state</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                  Convergence Converged</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                     Severity      Pass</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 Terminal gradient (sup-norm)  9.59e-05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7              Inference ready       Yes</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7              Inference ready        No</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">conquest_command_scope</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                   Area              Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1            ConQuest command template       template only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2               Command-comment syntax      block comments</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Official command-reference alignment explicit CSV widths</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                  Overlap model scope narrow overlap only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5         External output requirements           requested</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6            External comparison scope         not claimed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                   Area                        Status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1            ConQuest command template                 template only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2               Command-comment syntax comment-free executable input</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 Official command-reference alignment           explicit CSV widths</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                  Overlap model scope           narrow overlap only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         External output requirements                     requested</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6            External comparison scope                   not claimed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                 Evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                bundle$conquest_command</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                         command text starts with /* and closes with */</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       no prose or C-style comment markers precede the datafile command</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                    pidwidth and keepswidth are present</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                      binary Criterion facet with numeric covariate `X`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5    parameters, reg_coefficients, covariance, and cases EAP CSV outputs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 requires external ConQuest execution and extracted output-table review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                      Interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                  Use the command text as a starting point for a local ConQuest run, not as an executed benchmark.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 Generated comments follow the documented ConQuest block-comment style rather than FACETS-style leading asterisks.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                 CSV input with PID/keeps variables needs explicit widths in the command template.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                               The bundle does not generalize to full many-facet or polytomous ConQuest workflows.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                 Review and combine external parameter, beta, sigma, and case outputs before review normalization.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              External comparison remains scoped until external outputs are reviewed and tolerances are justified.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                         Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     Use the command text as a starting point for a local ConQuest run, not as an executed benchmark.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       The executable command contains commands only; explanatory prose remains in the bundle README.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                    CSV input with PID/keeps variables needs explicit widths in the command template.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                  The bundle does not generalize to full many-facet or polytomous ConQuest workflows.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    Review and combine external parameter, beta, sigma, and case outputs before review normalization.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 External comparison remains scoped until external outputs are reviewed and tolerances are justified.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">conquest_output_contract</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      ExternalFile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        conquest_overlap_conquest_parameters.csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2  conquest_overlap_conquest_reg_coefficients.csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3        conquest_overlap_conquest_covariance.csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4         conquest_overlap_conquest_cases_eap.csv</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 conquest_overlap_conquest_parameters_review.txt</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5           conquest_overlap_conquest_history.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 conquest_overlap_conquest_parameters_review.txt</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            ConQuestCommand</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                         export parameters ! filetype=csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                   export reg_coefficients ! filetype=csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                         export covariance ! filetype=csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 show cases ! estimates=eap, filetype=csv, regressors=yes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5          show parameters ! tables=1:2:3:4, estimates=eap</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                       ReviewHandoff</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1          Pass to normalize_conquest_overlap_exports() as the item-parameter file.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2              Pass to normalize_conquest_overlap_exports() as the regression file.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3              Pass to normalize_conquest_overlap_exports() as the covariance file.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                Pass to normalize_conquest_overlap_exports() as the case-EAP file.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Human-readable review only; do not treat this text file as a parsed review table.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                     write mfrmrCQ_history ! filetype=csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6          show parameters ! tables=1:2:3:4, estimates=eap</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                              ReviewHandoff</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                 Pass to normalize_conquest_overlap_exports() as the item-parameter file.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                     Pass to normalize_conquest_overlap_exports() as the regression file.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                     Pass to normalize_conquest_overlap_exports() as the covariance file.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                       Pass to normalize_conquest_overlap_exports() as the case-EAP file.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Retain for the objective/free-dimension verification; this is the estimate matrixout history, not a parsed report table.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                        Human-readable review only; do not treat this text file as a parsed review table.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                   DataHandling</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                     Review item labels and analysis metadata before sharing.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                Review covariate labels and analysis metadata before sharing.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                              Review covariance results and analysis metadata before sharing.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 Contains person identifiers and person-level EAP estimates; restricted handling is required.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                Review parameter labels and analysis metadata before sharing.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                Review model labels, iteration history, and analysis metadata before sharing.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                Review parameter labels and analysis metadata before sharing.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RequiredForReview</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1              TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2              TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3              TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4              TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5             FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5              TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6             FALSE</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substr</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">$</span><span class="va">conquest_command</span>, <span class="fl">1</span>, <span class="fl">120</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> /*</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Generated by mfrmr::build_conquest_overlap_bundle()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Scope: ordered-response RSM/PCM, operationalized here as binary i</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> datafile conquest_overlap_wide.csv ! filetype=csv, columnlabels=yes, pid=Person, pidwidth=32, responses=I001 to I006, ke</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

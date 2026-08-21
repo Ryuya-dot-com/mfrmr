@@ -79,7 +79,15 @@ This helper does not run FACETS. It reads FACETS output that already
 exists on disk and normalizes it to columns that
 [`facets_fit_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/facets_fit_review.md)
 can consume: `Facet`, `Level`, `Estimate`, `SE`, `N`, `Infit`, `Outfit`,
-`InfitZSTD`, `OutfitZSTD`, `DF_Infit`, and `DF_Outfit`.
+`InfitZSTD`, `OutfitZSTD`, `DF_Infit`, and `DF_Outfit`. File imports
+also retain the exact reported numeric tokens (for example,
+`InfitZSTDRaw = "2.0"`) and their displayed decimal counts. FACETS
+comparison runs should first request the highest practical output
+precision (for example, `Udecim=8` for Measure and SE). If the resulting
+displayed absolute ZSTD is still exactly equal to 2, it is classified as
+`display_boundary_indeterminate`: the text file does not expose whether
+the unrounded value lies just below, at, or just above the conventional
+threshold.
 
 Two common workflows are supported:
 
@@ -120,9 +128,14 @@ write.csv(
   row.names = FALSE
 )
 read_facets_fit_table(path)
-#> # A tibble: 1 × 12
+#> # A tibble: 1 × 27
 #>   Facet Level Estimate    SE     N Infit Outfit InfitZSTD OutfitZSTD DF_Infit
 #>   <chr> <chr>    <dbl> <dbl> <dbl> <dbl>  <dbl>     <dbl>      <dbl>    <dbl>
 #> 1 Rater R1          NA    NA    NA  1.02   0.98       0.3       -0.2       12
-#> # ℹ 2 more variables: DF_Outfit <dbl>, Source <chr>
+#> # ℹ 17 more variables: DF_Outfit <dbl>, EstimateRaw <chr>, SERaw <chr>,
+#> #   NRaw <chr>, InfitRaw <chr>, OutfitRaw <chr>, InfitZSTDRaw <chr>,
+#> #   OutfitZSTDRaw <chr>, DF_InfitRaw <chr>, DF_OutfitRaw <chr>,
+#> #   InfitZSTDReportedDecimals <int>, OutfitZSTDReportedDecimals <int>,
+#> #   InfitZSTDDisplayState <chr>, OutfitZSTDDisplayState <chr>,
+#> #   ZSTDDisplayFlagState <chr>, SourcePrecisionStatus <chr>, Source <chr>
 ```

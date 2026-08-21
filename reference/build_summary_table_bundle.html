@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a manuscript-oriented table bundle from <code>summary()</code> outputs</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>build_summary_table_bundle.Rd</code></div>
     </div>
 
@@ -199,9 +199,10 @@ handoffs.</p></li>
 <li><p>latent-regression fit summaries expose <code>population_coding</code> in the methods
 appendix role so categorical levels, contrasts, and encoded columns can be
 documented with the coefficient table.</p></li>
-<li><p>model-choice-review summaries expose <code>comparison_table</code>, <code>model_roles</code>,
-<code>downstream_routes</code>, and <code>report_templates</code> so RSM/PCM versus bounded
-<code>GPCM</code> comparisons remain tied to their equal-weighting, sensitivity, and
+<li><p>model-choice-review summaries expose <code>comparison_table</code>,
+<code>comparison_warnings</code>, <code>model_roles</code>, <code>downstream_routes</code>, and
+<code>report_templates</code> so RSM/PCM versus bounded <code>GPCM</code> comparisons remain
+tied to their same-basis limits, equal-weighting, sensitivity, and
 reporting-boundary roles.</p></li>
 </ul></div>
     <div class="section level2">
@@ -241,18 +242,18 @@ plan.</p></li>
 <span class="r-in"><span><span class="va">bundle</span> <span class="op">&lt;-</span> <span class="fu">build_summary_table_bundle</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span><span class="op">$</span><span class="va">table_index</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  Table Rows Cols                 Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             overview    1   52         run_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  population_overview    1   11     population_basis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1             overview    1   87         run_overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  population_overview    1   16     population_basis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5    population_coding    0    6    population_coding</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6       facet_overview    2    7   facet_distribution</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7      person_overview    1    7  person_distribution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7      person_overview    1   10  person_distribution</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8        step_overview    1    5   category_structure</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10   settings_overview    1   18  estimation_settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10   settings_overview    1   28  estimation_settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11       reporting_map    6    3        reporting_map</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12             caveats    0    8     analysis_caveats</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13      facet_extremes    8    3 extreme_facet_levels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14         person_high   10    4  extreme_person_high</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15          person_low   10    4   extreme_person_low</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14         person_high   10   20  extreme_person_high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15          person_low   10   20   extreme_person_low</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                       Description</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                              One-row model fit, convergence, and information-criteria overview.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                   Population-model basis, posterior basis, and omission review.</span>
@@ -268,16 +269,16 @@ plan.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                   Lowest person measures from the current fit.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">)</span><span class="op">$</span><span class="va">role_summary</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    Role Tables TotalRows TotalCols</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12         run_overview      1         1        52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12         run_overview      1         1        87</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11        reporting_map      1         6         3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 10    population_coding      1         0         6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9      population_basis      1         1        11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8   person_distribution      1         1         7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9      population_basis      1         1        16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8   person_distribution      1         1        10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7    facet_distribution      1         2         7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    extreme_person_low      1        10         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5   extreme_person_high      1        10         4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    extreme_person_low      1        10        20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   extreme_person_high      1        10        20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  extreme_facet_levels      1         8         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3   estimation_settings      1         1        18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   estimation_settings      1         1        28</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2    category_structure      1         1         5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      analysis_caveats      1         0         8</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>

@@ -46,7 +46,8 @@ This method returns a compact cross-object summary that combines:
 
 ## Interpreting output
 
-- `overview`: convergence, information criteria, and scale size.
+- `overview`: convergence, scale size, and the canonical/legacy
+  information-criterion contract status.
 
 - `mapping`: sanity check for auto/explicit column mapping.
 

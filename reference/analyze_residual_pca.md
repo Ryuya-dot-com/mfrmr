@@ -98,6 +98,11 @@ A named list with:
   underlying PCA engine. These indicate exploratory boundary conditions,
   not confirmatory evidence.
 
+- `InferenceTier`, `SupportsFormalInference`,
+  `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
+  machine-readable guards that keep this route exploratory and prohibit
+  an automatic dimensionality or subscore decision.
+
 ## Details
 
 The function works on standardized residual structures derived from
@@ -265,11 +270,15 @@ pca2 <- analyze_residual_pca(fit, mode = "both")
 summary(pca)
 #> mfrmr Residual PCA Summary 
 #>   Class: mfrm_residual_pca
-#>   Components: 12
+#>   Components: 17
 #> 
 #> PCA overview
-#>  Mode Facets OverallComponents FacetComponentRows
-#>  both      2                16                  8
+#>  Mode Facets OverallComponents FacetComponentRows InferenceTier
+#>  both      2                16                  8   exploratory
+#>  SupportsFormalInference PrimaryReportingEligible   ReportingUse
+#>                    FALSE                    FALSE screening_only
+#>                           DecisionUse
+#>  no_automatic_dimensionality_decision
 #> 
 #> Eigenvalue / loading rows: overall_table
 #>  Component Eigenvalue Proportion Cumulative
@@ -285,7 +294,9 @@ summary(pca)
 #>         10      0.846      0.053      0.848
 #> 
 #> Notes
-#>  - Residual PCA summary for unidimensionality checks (overall and/or by facet).
+#>  - Residual PCA is exploratory residual-structure screening (overall and/or by
+#>    facet), not a standalone dimensionality test or an automatic decision about
+#>    dimensions or subscores.
 p <- plot_residual_pca(pca, mode = "overall", plot_type = "scree", draw = FALSE)
 p$data$plot
 #> [1] "scree"

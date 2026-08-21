@@ -61,15 +61,24 @@ summary(facet_quality_dashboard(fit, diagnostics = diag))
 #>         0
 #> 
 #> Flagged levels
-#>  Facet Level Estimate N.x    SE ModelSE RealSE                     SE_Method
-#>  Rater   R01   -0.196 192 0.097   0.097  0.100 Observation-table information
-#>  Rater   R03    0.191 192 0.097   0.097  0.097 Observation-table information
-#>  Converged InferenceReady ConvergenceSeverity PrecisionTier
-#>      FALSE          FALSE                fail   exploratory
-#>      FALSE          FALSE                fail   exploratory
-#>  SupportsFormalInference          SEUse
-#>                    FALSE screening_only
-#>                    FALSE screening_only
+#>  Facet Level Estimate ParameterStatus BoundaryDirection ResponseExtreme
+#>  Rater   R01   -0.196            <NA>              <NA>            <NA>
+#>  Rater   R03    0.191            <NA>              <NA>            <NA>
+#>  OptimizerEstimate DisplayEstimate DisplayAdjustment PrimaryEstimateBasis
+#>                 NA              NA              <NA>                 <NA>
+#>                 NA              NA              <NA>                 <NA>
+#>  OptimizerEstimateUse ReasonCodes ReadinessContractVersion SourceFitReadiness
+#>                  <NA>        <NA>                     <NA>               <NA>
+#>                  <NA>        <NA>                     <NA>               <NA>
+#>  SourceInferenceReady EstimateUse N.x    SE ModelSE RealSE
+#>                    NA        <NA> 192 0.097   0.097  0.100
+#>                    NA        <NA> 192 0.097   0.097  0.097
+#>                      SE_Method Converged InferenceReady ConvergenceSeverity
+#>  Observation-table information     FALSE          FALSE                fail
+#>  Observation-table information     FALSE          FALSE                fail
+#>  PrecisionTier SupportsFormalInference          SEUse
+#>    exploratory                   FALSE screening_only
+#>    exploratory                   FALSE screening_only
 #>                                                CIBasis          CIUse N.y Infit
 #>  Normal interval from exploratory observation-table SE screening_only 192 1.051
 #>  Normal interval from exploratory observation-table SE screening_only 192 0.964
@@ -82,18 +91,18 @@ summary(facet_quality_dashboard(fit, diagnostics = diag))
 #>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual
 #>    191 0.303       0.054          0          1          0.072        -0.122
 #>    191 0.584       0.054          0          1          0.072         0.014
-#>  p_StdResidual  DF PTMEA N.y.y CI_Lower CI_Upper CI_Level            CI_Method
-#>          0.903 191 0.623   192   -0.386   -0.005     0.95 Normal approximation
-#>          0.989 191 0.658   192    0.000    0.382     0.95 Normal approximation
-#>  CIEligible                              CILabel   N AbsEstimate SeverityFlag
-#>       FALSE Approximate interval; screening only 192       0.196        FALSE
-#>       FALSE Approximate interval; screening only 192       0.191        FALSE
-#>  MisfitFlag CentralTendencyFlag BiasCount BiasSources BiasFlag FlagCount
-#>       FALSE                TRUE         0           0    FALSE         1
-#>       FALSE                TRUE         0           0    FALSE         1
-#>  AnyFlag FlagLabel .AbsEstimate
-#>     TRUE   central        0.196
-#>     TRUE   central        0.191
+#>  p_StdResidual  DF PTMEA N.y.y BoundaryExcluded CI_Lower CI_Upper CI_Level
+#>          0.903 191 0.623   192            FALSE   -0.386   -0.005     0.95
+#>          0.989 191 0.658   192            FALSE    0.000    0.382     0.95
+#>             CI_Method CIEligible                              CILabel   N
+#>  Normal approximation      FALSE Approximate interval; screening only 192
+#>  Normal approximation      FALSE Approximate interval; screening only 192
+#>  AbsEstimate SeverityFlag MisfitFlag CentralTendencyFlag BiasCount BiasSources
+#>        0.196        FALSE      FALSE                TRUE         0           0
+#>        0.191        FALSE      FALSE                TRUE         0           0
+#>  BiasFlag FlagCount AnyFlag FlagLabel .AbsEstimate
+#>     FALSE         1    TRUE   central        0.196
+#>     FALSE         1    TRUE   central        0.191
 #> 
 #> Settings
 #>               Setting    Value

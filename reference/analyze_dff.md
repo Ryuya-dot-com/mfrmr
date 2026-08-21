@@ -143,7 +143,17 @@ are available. However, the plug-in standard error conditions on the
 baseline anchors and omits baseline-anchor uncertainty and cross-refit
 covariance. Refit statistics therefore remain screening evidence and set
 `FormalInferenceEligible`, `SupportsFormalInference`,
-`PrimaryReportingEligible`, and `ETS_Eligible` to `FALSE`.
+`PrimaryReportingEligible`, and `ETS_Eligible` to `FALSE`. The subgroup
+fits replay the baseline response family, resolved score range,
+step/slope facets, weighting, optimizer, MML engine, and numerical
+controls; the non-target anchors are the intentional linking change.
+Refit analysis fails closed when the baseline uses a user-specified
+active latent-regression population model, facet interactions, or
+group-anchor constraints, because those structures do not yet have a
+complete subgroup-replay and linking contract. The automatically
+generated intercept-only population model used for default GPCM-MML
+scale identification is replayed and is not treated as a substantive
+covariate model.
 
 When `facet` refers to an item-like facet (for example `Criterion`),
 this recovers the familiar DIF case. When `facet` refers to raters or
@@ -165,9 +175,12 @@ In most first-pass DFF screening, start with `method = "residual"`. It
 is faster, reuses the fitted model, and is less fragile in smaller
 subsets. Use `method = "refit"` when you specifically want
 group-specific parameter estimates and can tolerate extra computation.
-Both methods should yield similar conclusions when sample sizes are
-adequate (\\N \ge 100\\ per group is a useful guideline for stable
-differential-functioning detection).
+Agreement between methods is not guaranteed by a universal per-group
+sample-size threshold: stability and detection depend jointly on effect
+size, category support, response-pattern overlap, linking strength,
+slope heterogeneity, and estimator behavior. `min_obs` is only a
+cell-computability/sparsity guard; it is not evidence of power,
+parameter stability, or sample-size adequacy.
 
 ## Interpreting output
 

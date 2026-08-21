@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Visual Diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-visual-diagnostics.Rmd" class="external-link"><code>vignettes/mfrmr-visual-diagnostics.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-visual-diagnostics.Rmd</code></div>
     </div>
 
@@ -158,6 +158,10 @@ it keeps facet uncertainty and fitted step locations visible. For a
 closer FACETS-facing handoff, switch the renderer and leave
 <code>show_ci</code> at its default <code>FALSE</code>. The fitted
 coordinates do not change.</p>
+<p>Every retained native facet level is labelled. Only label coordinates
+are displaced for collision avoidance, with leader lines back to the
+fitted points. Step thresholds form one vertical ladder and their labels
+include the fitted transition logits.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
@@ -404,57 +408,61 @@ screenshots.</p>
 <span><span class="co">#&gt; 2  wright_map              renderer    scalar_or_vector      character   NA</span></span>
 <span><span class="co">#&gt; 3  wright_map       visual_contract    scalar_or_vector      character   NA</span></span>
 <span><span class="co">#&gt; 4  wright_map                person          table_data     data.frame   48</span></span>
-<span><span class="co">#&gt; 5  wright_map           person_hist            metadata list:histogram   NA</span></span>
-<span><span class="co">#&gt; 6  wright_map          person_stats          table_data     data.frame    1</span></span>
-<span><span class="co">#&gt; 7  wright_map             locations          table_data     data.frame   12</span></span>
-<span><span class="co">#&gt; 8  wright_map          label_points          table_data     data.frame    7</span></span>
-<span><span class="co">#&gt; 9  wright_map         group_summary summary_or_guidance     data.frame    3</span></span>
-<span><span class="co">#&gt; 10 wright_map          group_levels            settings      character   NA</span></span>
-<span><span class="co">#&gt; 11 wright_map               y_range            settings         double   NA</span></span>
-<span><span class="co">#&gt; 12 wright_map      display_settings            settings     data.frame    1</span></span>
-<span><span class="co">#&gt; 13 wright_map           label_limit    scalar_or_vector        integer   NA</span></span>
-<span><span class="co">#&gt; 14 wright_map             retention          table_data     data.frame    3</span></span>
-<span><span class="co">#&gt; 15 wright_map        retention_note summary_or_guidance      character   NA</span></span>
-<span><span class="co">#&gt; 16 wright_map                 title    scalar_or_vector      character   NA</span></span>
-<span><span class="co">#&gt; 17 wright_map              subtitle    scalar_or_vector      character   NA</span></span>
-<span><span class="co">#&gt; 18 wright_map               show_ci    scalar_or_vector        logical   NA</span></span>
-<span><span class="co">#&gt; 19 wright_map   uncertainty_display    scalar_or_vector      character   NA</span></span>
-<span><span class="co">#&gt; 20 wright_map                 group    scalar_or_vector           NULL   NA</span></span>
-<span><span class="co">#&gt; 21 wright_map                preset            settings      character   NA</span></span>
-<span><span class="co">#&gt; 22 wright_map                legend               style     data.frame    5</span></span>
-<span><span class="co">#&gt; 23 wright_map       reference_lines          annotation     data.frame    1</span></span>
-<span><span class="co">#&gt; 24 wright_map             plot_name    scalar_or_vector      character   NA</span></span>
-<span><span class="co">#&gt; 25 wright_map         fit_readiness          fit_review     data.frame    5</span></span>
-<span><span class="co">#&gt; 26 wright_map interpretation_status summary_or_guidance      character   NA</span></span>
-<span><span class="co">#&gt; 27 wright_map   interpretation_note summary_or_guidance      character   NA</span></span>
+<span><span class="co">#&gt; 5  wright_map     person_exclusions          table_data     data.frame    0</span></span>
+<span><span class="co">#&gt; 6  wright_map           person_hist            metadata list:histogram   NA</span></span>
+<span><span class="co">#&gt; 7  wright_map          person_stats          table_data     data.frame    1</span></span>
+<span><span class="co">#&gt; 8  wright_map             locations          table_data     data.frame   12</span></span>
+<span><span class="co">#&gt; 9  wright_map          label_points          table_data     data.frame   12</span></span>
+<span><span class="co">#&gt; 10 wright_map         group_summary summary_or_guidance     data.frame    3</span></span>
+<span><span class="co">#&gt; 11 wright_map          group_levels            settings      character   NA</span></span>
+<span><span class="co">#&gt; 12 wright_map               y_range            settings         double   NA</span></span>
+<span><span class="co">#&gt; 13 wright_map      display_settings            settings     data.frame    1</span></span>
+<span><span class="co">#&gt; 14 wright_map           label_limit    scalar_or_vector        integer   NA</span></span>
+<span><span class="co">#&gt; 15 wright_map             retention          table_data     data.frame    3</span></span>
+<span><span class="co">#&gt; 16 wright_map        retention_note summary_or_guidance      character   NA</span></span>
+<span><span class="co">#&gt; 17 wright_map                 title    scalar_or_vector      character   NA</span></span>
+<span><span class="co">#&gt; 18 wright_map              subtitle    scalar_or_vector      character   NA</span></span>
+<span><span class="co">#&gt; 19 wright_map               show_ci    scalar_or_vector        logical   NA</span></span>
+<span><span class="co">#&gt; 20 wright_map   uncertainty_display    scalar_or_vector      character   NA</span></span>
+<span><span class="co">#&gt; 21 wright_map                 group    scalar_or_vector           NULL   NA</span></span>
+<span><span class="co">#&gt; 22 wright_map                preset            settings      character   NA</span></span>
+<span><span class="co">#&gt; 23 wright_map                legend               style     data.frame    5</span></span>
+<span><span class="co">#&gt; 24 wright_map       reference_lines          annotation     data.frame    1</span></span>
+<span><span class="co">#&gt; 25 wright_map        scale_contract          table_data     data.frame    1</span></span>
+<span><span class="co">#&gt; 26 wright_map             plot_name    scalar_or_vector      character   NA</span></span>
+<span><span class="co">#&gt; 27 wright_map         fit_readiness          fit_review     data.frame    6</span></span>
+<span><span class="co">#&gt; 28 wright_map interpretation_status summary_or_guidance      character   NA</span></span>
+<span><span class="co">#&gt; 29 wright_map   interpretation_note summary_or_guidance      character   NA</span></span>
 <span><span class="co">#&gt;    Columns Length IsTabular                                          Accessor</span></span>
 <span><span class="co">#&gt; 1       NA      1     FALSE          plot_data(x, component = "wright_style")</span></span>
 <span><span class="co">#&gt; 2       NA      1     FALSE              plot_data(x, component = "renderer")</span></span>
 <span><span class="co">#&gt; 3       NA      1     FALSE       plot_data(x, component = "visual_contract")</span></span>
-<span><span class="co">#&gt; 4        6      6      TRUE                plot_data(x, component = "person")</span></span>
-<span><span class="co">#&gt; 5        6      6     FALSE           plot_data(x, component = "person_hist")</span></span>
-<span><span class="co">#&gt; 6        4      4      TRUE          plot_data(x, component = "person_stats")</span></span>
-<span><span class="co">#&gt; 7       30     30      TRUE             plot_data(x, component = "locations")</span></span>
-<span><span class="co">#&gt; 8       30     30      TRUE          plot_data(x, component = "label_points")</span></span>
-<span><span class="co">#&gt; 9       16     16      TRUE         plot_data(x, component = "group_summary")</span></span>
-<span><span class="co">#&gt; 10      NA      3     FALSE          plot_data(x, component = "group_levels")</span></span>
-<span><span class="co">#&gt; 11      NA      2     FALSE               plot_data(x, component = "y_range")</span></span>
-<span><span class="co">#&gt; 12       8      8      TRUE      plot_data(x, component = "display_settings")</span></span>
-<span><span class="co">#&gt; 13      NA      1     FALSE           plot_data(x, component = "label_limit")</span></span>
-<span><span class="co">#&gt; 14       6      6      TRUE             plot_data(x, component = "retention")</span></span>
-<span><span class="co">#&gt; 15      NA      1     FALSE        plot_data(x, component = "retention_note")</span></span>
-<span><span class="co">#&gt; 16      NA      1     FALSE                 plot_data(x, component = "title")</span></span>
-<span><span class="co">#&gt; 17      NA      1     FALSE              plot_data(x, component = "subtitle")</span></span>
-<span><span class="co">#&gt; 18      NA      1     FALSE               plot_data(x, component = "show_ci")</span></span>
-<span><span class="co">#&gt; 19      NA      1     FALSE   plot_data(x, component = "uncertainty_display")</span></span>
-<span><span class="co">#&gt; 20      NA      0     FALSE                 plot_data(x, component = "group")</span></span>
-<span><span class="co">#&gt; 21      NA      1     FALSE                plot_data(x, component = "preset")</span></span>
-<span><span class="co">#&gt; 22       4      4      TRUE                plot_data(x, component = "legend")</span></span>
-<span><span class="co">#&gt; 23       5      5      TRUE       plot_data(x, component = "reference_lines")</span></span>
-<span><span class="co">#&gt; 24      NA      1     FALSE             plot_data(x, component = "plot_name")</span></span>
-<span><span class="co">#&gt; 25       2      2      TRUE         plot_data(x, component = "fit_readiness")</span></span>
-<span><span class="co">#&gt; 26      NA      1     FALSE plot_data(x, component = "interpretation_status")</span></span>
-<span><span class="co">#&gt; 27      NA      1     FALSE   plot_data(x, component = "interpretation_note")</span></span>
+<span><span class="co">#&gt; 4       22     22      TRUE                plot_data(x, component = "person")</span></span>
+<span><span class="co">#&gt; 5       22     22      TRUE     plot_data(x, component = "person_exclusions")</span></span>
+<span><span class="co">#&gt; 6        6      6     FALSE           plot_data(x, component = "person_hist")</span></span>
+<span><span class="co">#&gt; 7        7      7      TRUE          plot_data(x, component = "person_stats")</span></span>
+<span><span class="co">#&gt; 8       37     37      TRUE             plot_data(x, component = "locations")</span></span>
+<span><span class="co">#&gt; 9       43     43      TRUE          plot_data(x, component = "label_points")</span></span>
+<span><span class="co">#&gt; 10      16     16      TRUE         plot_data(x, component = "group_summary")</span></span>
+<span><span class="co">#&gt; 11      NA      3     FALSE          plot_data(x, component = "group_levels")</span></span>
+<span><span class="co">#&gt; 12      NA      2     FALSE               plot_data(x, component = "y_range")</span></span>
+<span><span class="co">#&gt; 13       8      8      TRUE      plot_data(x, component = "display_settings")</span></span>
+<span><span class="co">#&gt; 14      NA      1     FALSE           plot_data(x, component = "label_limit")</span></span>
+<span><span class="co">#&gt; 15       6      6      TRUE             plot_data(x, component = "retention")</span></span>
+<span><span class="co">#&gt; 16      NA      1     FALSE        plot_data(x, component = "retention_note")</span></span>
+<span><span class="co">#&gt; 17      NA      1     FALSE                 plot_data(x, component = "title")</span></span>
+<span><span class="co">#&gt; 18      NA      1     FALSE              plot_data(x, component = "subtitle")</span></span>
+<span><span class="co">#&gt; 19      NA      1     FALSE               plot_data(x, component = "show_ci")</span></span>
+<span><span class="co">#&gt; 20      NA      1     FALSE   plot_data(x, component = "uncertainty_display")</span></span>
+<span><span class="co">#&gt; 21      NA      0     FALSE                 plot_data(x, component = "group")</span></span>
+<span><span class="co">#&gt; 22      NA      1     FALSE                plot_data(x, component = "preset")</span></span>
+<span><span class="co">#&gt; 23       4      4      TRUE                plot_data(x, component = "legend")</span></span>
+<span><span class="co">#&gt; 24       5      5      TRUE       plot_data(x, component = "reference_lines")</span></span>
+<span><span class="co">#&gt; 25      15     15      TRUE        plot_data(x, component = "scale_contract")</span></span>
+<span><span class="co">#&gt; 26      NA      1     FALSE             plot_data(x, component = "plot_name")</span></span>
+<span><span class="co">#&gt; 27       2      2      TRUE         plot_data(x, component = "fit_readiness")</span></span>
+<span><span class="co">#&gt; 28      NA      1     FALSE plot_data(x, component = "interpretation_status")</span></span>
+<span><span class="co">#&gt; 29      NA      1     FALSE   plot_data(x, component = "interpretation_note")</span></span>
 <span><span class="co">#&gt;                                                                     Notes</span></span>
 <span><span class="co">#&gt; 1                                                                        </span></span>
 <span><span class="co">#&gt; 2                                                                        </span></span>
@@ -464,72 +472,76 @@ screenshots.</p>
 <span><span class="co">#&gt; 6                                                                        </span></span>
 <span><span class="co">#&gt; 7                                                                        </span></span>
 <span><span class="co">#&gt; 8                                                                        </span></span>
-<span><span class="co">#&gt; 9                            Use for captions, QA checks, or report text.</span></span>
-<span><span class="co">#&gt; 10                                                                       </span></span>
+<span><span class="co">#&gt; 9                                                                        </span></span>
+<span><span class="co">#&gt; 10                           Use for captions, QA checks, or report text.</span></span>
 <span><span class="co">#&gt; 11                                                                       </span></span>
 <span><span class="co">#&gt; 12                                                                       </span></span>
 <span><span class="co">#&gt; 13                                                                       </span></span>
 <span><span class="co">#&gt; 14                                                                       </span></span>
-<span><span class="co">#&gt; 15                           Use for captions, QA checks, or report text.</span></span>
-<span><span class="co">#&gt; 16                                                                       </span></span>
+<span><span class="co">#&gt; 15                                                                       </span></span>
+<span><span class="co">#&gt; 16                           Use for captions, QA checks, or report text.</span></span>
 <span><span class="co">#&gt; 17                                                                       </span></span>
 <span><span class="co">#&gt; 18                                                                       </span></span>
 <span><span class="co">#&gt; 19                                                                       </span></span>
 <span><span class="co">#&gt; 20                                                                       </span></span>
 <span><span class="co">#&gt; 21                                                                       </span></span>
-<span><span class="co">#&gt; 22                 Use to reproduce color, line-type, or legend mappings.</span></span>
-<span><span class="co">#&gt; 23 Use with primary data to draw thresholds, labels, and reference lines.</span></span>
-<span><span class="co">#&gt; 24                                                                       </span></span>
+<span><span class="co">#&gt; 22                                                                       </span></span>
+<span><span class="co">#&gt; 23                 Use to reproduce color, line-type, or legend mappings.</span></span>
+<span><span class="co">#&gt; 24 Use with primary data to draw thresholds, labels, and reference lines.</span></span>
 <span><span class="co">#&gt; 25                                                                       </span></span>
-<span><span class="co">#&gt; 26                           Use for captions, QA checks, or report text.</span></span>
-<span><span class="co">#&gt; 27                           Use for captions, QA checks, or report text.</span></span>
-<span><span class="co">#&gt;                                                                                                                                                                                                                                                                                                                                                                          ColumnNames</span></span>
-<span><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                                                                                                   </span></span>
-<span><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                                                                                                   </span></span>
-<span><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                                                                                                   </span></span>
-<span><span class="co">#&gt; 4                                                                                                                                                                                                                                                                                                                                     Person, Estimate, SD, PosteriorSD, SE, Extreme</span></span>
-<span><span class="co">#&gt; 5                                                                                                                                                                                                                                                                                                                                     breaks, counts, density, mids, xname, equidist</span></span>
-<span><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                                                                                N, Mean, Median, SD</span></span>
-<span><span class="co">#&gt; 7  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus</span></span>
-<span><span class="co">#&gt; 8  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus</span></span>
-<span><span class="co">#&gt; 9                                                                                                                                                                                                                                      Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap</span></span>
-<span><span class="co">#&gt; 10                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 11                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 12                                                                                                                                                                                                                                                 Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy</span></span>
-<span><span class="co">#&gt; 13                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 14                                                                                                                                                                                                                                                                                                                         Component, Shown, Total, Omitted, RequestedTopN, Complete</span></span>
-<span><span class="co">#&gt; 15                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 16                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 17                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 18                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 19                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 20                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 21                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 22                                                                                                                                                                                                                                                                                                                                                     label, role, aesthetic, value</span></span>
-<span><span class="co">#&gt; 23                                                                                                                                                                                                                                                                                                                                                axis, value, label, linetype, role</span></span>
-<span><span class="co">#&gt; 24                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 25                                                                                                                                                                                                                                                                                                                                                                    Domain, Status</span></span>
-<span><span class="co">#&gt; 26                                                                                                                                                                                                                                                                                                                                                                                  </span></span>
-<span><span class="co">#&gt; 27</span></span>
+<span><span class="co">#&gt; 26                                                                       </span></span>
+<span><span class="co">#&gt; 27                                                                       </span></span>
+<span><span class="co">#&gt; 28                           Use for captions, QA checks, or report text.</span></span>
+<span><span class="co">#&gt; 29                           Use for captions, QA checks, or report text.</span></span>
+<span><span class="co">#&gt;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ColumnNames</span></span>
+<span><span class="co">#&gt; 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span></span>
+<span><span class="co">#&gt; 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span></span>
+<span><span class="co">#&gt; 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         </span></span>
+<span><span class="co">#&gt; 4                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span></span>
+<span><span class="co">#&gt; 5                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse</span></span>
+<span><span class="co">#&gt; 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           breaks, counts, density, mids, xname, equidist</span></span>
+<span><span class="co">#&gt; 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                         N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD</span></span>
+<span><span class="co">#&gt; 8                                                                    Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus</span></span>
+<span><span class="co">#&gt; 9  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced</span></span>
+<span><span class="co">#&gt; 10                                                                                                                                                                                                                                                                                                                                                                                           Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap</span></span>
+<span><span class="co">#&gt; 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 13                                                                                                                                                                                                                                                                                                                                                                                                       Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy</span></span>
+<span><span class="co">#&gt; 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Component, Shown, Total, Omitted, RequestedTopN, Complete</span></span>
+<span><span class="co">#&gt; 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           label, role, aesthetic, value</span></span>
+<span><span class="co">#&gt; 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      axis, value, label, linetype, role</span></span>
+<span><span class="co">#&gt; 25                                                                                                                                                                                                                                                Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField</span></span>
+<span><span class="co">#&gt; 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Domain, Status</span></span>
+<span><span class="co">#&gt; 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </span></span>
+<span><span class="co">#&gt; 29</span></span>
 <span></span>
 <span><span class="va">locations</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">wright_payload</span>, component <span class="op">=</span> <span class="st">"locations"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">locations</span><span class="op">)</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 30</span></span></span>
-<span><span class="co">#&gt;   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet l…   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.960</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet l…   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.707</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet l…    0.180 0.185     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.183</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet l…    0.184 0.199     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.207</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet l…    0.212 0.179     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.138</span> </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet l…    0.412 0.219     0.95 Observat… fit + observa…  -<span style="color: #BB0000;">0.016</span><span style="color: #BB0000; text-decoration: underline;">8</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 21 more variables: CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;, StepIndex &lt;int&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;, OriginalEstimate &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;, DisplayEstimate &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;, OriginalCI_Upper &lt;dbl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, CIClippedLower &lt;lgl&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   CIClippedUpper &lt;lgl&gt;, CIClipped &lt;lgl&gt;, BoundaryEnd &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   CISuppressed &lt;lgl&gt;, CIDisplayStatus &lt;chr&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 37</span></span></span>
+<span><span class="co">#&gt;   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Rater R01   Facet level   -<span style="color: #BB0000;">0.606</span> 0.181     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> Rater R02   Facet level   -<span style="color: #BB0000;">0.382</span> 0.166     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  </span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 29 more variables: SupportsFormalInference &lt;lgl&gt;, SEUse &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   CIBasis &lt;chr&gt;, CIUse &lt;chr&gt;, CIEligible &lt;lgl&gt;, CILabel &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   Measure_Source &lt;chr&gt;, CI_Lower &lt;dbl&gt;, CI_Upper &lt;dbl&gt;, Step &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   StepIndex &lt;int&gt;, BoundarySeparated &lt;lgl&gt;, XBase &lt;dbl&gt;, X &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OriginalEstimate &lt;dbl&gt;, BelowRange &lt;lgl&gt;, AboveRange &lt;lgl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   DisplayEstimate &lt;dbl&gt;, DisplayLabel &lt;chr&gt;, OriginalCI_Lower &lt;dbl&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   OriginalCI_Upper &lt;dbl&gt;, DisplayCI_Lower &lt;dbl&gt;, DisplayCI_Upper &lt;dbl&gt;, …</span></span></span>
 <span></span>
 <span><span class="va">pathway_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/plot_data.html">plot_data</a></span><span class="op">(</span></span>
 <span>  <span class="va">fit</span>,</span>
@@ -550,14 +562,15 @@ with the plot data:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">wright_payload</span><span class="op">$</span><span class="va">data</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "wright_style"          "renderer"              "visual_contract"      </span></span>
-<span><span class="co">#&gt;  [4] "person"                "person_hist"           "person_stats"         </span></span>
-<span><span class="co">#&gt;  [7] "locations"             "label_points"          "group_summary"        </span></span>
-<span><span class="co">#&gt; [10] "group_levels"          "y_range"               "display_settings"     </span></span>
-<span><span class="co">#&gt; [13] "label_limit"           "retention"             "retention_note"       </span></span>
-<span><span class="co">#&gt; [16] "title"                 "subtitle"              "show_ci"              </span></span>
-<span><span class="co">#&gt; [19] "uncertainty_display"   "group"                 "preset"               </span></span>
-<span><span class="co">#&gt; [22] "legend"                "reference_lines"       "plot_name"            </span></span>
-<span><span class="co">#&gt; [25] "fit_readiness"         "interpretation_status" "interpretation_note"</span></span>
+<span><span class="co">#&gt;  [4] "person"                "person_exclusions"     "person_hist"          </span></span>
+<span><span class="co">#&gt;  [7] "person_stats"          "locations"             "label_points"         </span></span>
+<span><span class="co">#&gt; [10] "group_summary"         "group_levels"          "y_range"              </span></span>
+<span><span class="co">#&gt; [13] "display_settings"      "label_limit"           "retention"            </span></span>
+<span><span class="co">#&gt; [16] "retention_note"        "title"                 "subtitle"             </span></span>
+<span><span class="co">#&gt; [19] "show_ci"               "uncertainty_display"   "group"                </span></span>
+<span><span class="co">#&gt; [22] "preset"                "legend"                "reference_lines"      </span></span>
+<span><span class="co">#&gt; [25] "scale_contract"        "plot_name"             "fit_readiness"        </span></span>
+<span><span class="co">#&gt; [28] "interpretation_status" "interpretation_note"</span></span>
 <span><span class="va">wright_payload</span><span class="op">$</span><span class="va">data</span><span class="op">$</span><span class="va">reference_lines</span></span>
 <span><span class="co">#&gt;   axis value                    label linetype      role</span></span>
 <span><span class="co">#&gt; 1    h     0 Centered logit reference   dashed reference</span></span></code></pre></div>

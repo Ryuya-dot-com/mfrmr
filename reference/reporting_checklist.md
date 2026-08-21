@@ -106,6 +106,10 @@ backward-compatible alias.
   backward-compatible alias of the same flag; neither field certifies
   formal inferential adequacy.
 
+- `fit_readiness`, `fit_readiness_components`, and
+  `fit_readiness_parameters`: exact source-fit v3 readiness provenance;
+  these fields are not re-derived from checklist completeness.
+
 - `section_summary`: available items by section.
 
 - The Global Fit section includes a "Fit/separation reporting boundary"
@@ -197,9 +201,10 @@ operational review:
 # \donttest{
 # Minimal checklist example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                       method = "JML", maxit = 30)
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
                              diagnostic_mode = "legacy")
 chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
@@ -215,7 +220,7 @@ head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
 #> 1       TRUE
 #> 2       TRUE
 #> 3       TRUE
-#> 4      FALSE
+#> 4       TRUE
 #> 5       TRUE
 #> 6       TRUE
 
@@ -334,6 +339,6 @@ head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
 #   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
 #   without re-reading the methodology guide.
 nchar(apa$report_text)
-#> [1] 4396
+#> [1] 4709
 # }
 ```

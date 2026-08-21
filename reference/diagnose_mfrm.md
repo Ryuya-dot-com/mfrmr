@@ -128,6 +128,11 @@ An object of class `mfrm_diagnostics` including:
 - `fit_standardization`: guide to the df convention behind fit ZSTD
   values
 
+- `fit_readiness`, `fit_readiness_components`, and
+  `fit_readiness_parameters`: the source fit's versioned readiness
+  decision; diagnostic computation does not override a blocked or
+  review-only fit
+
 - `marginal_fit`: optional strict marginal-fit companion based on
   posterior-expected first-order category counts
 
@@ -212,8 +217,9 @@ JMLE-style residual basis (see
 
 - MnSq \> 1.5: underfit (noise degrades measurement)
 
-- \\\|\mathrm{ZSTD}\| \> 2\\: conventional approximate-normal review
-  flag; not a calibrated 5\\ and repeated screening across elements
+- \\\|\mathrm{ZSTD}\| \ge 2\\: package convention for the
+  approximate-normal review flag; not a calibrated 5\\ and repeated
+  screening across elements
 
 When Infit and Outfit disagree, Infit is generally more informative
 because it downweights extreme observations. Large Outfit with
@@ -343,20 +349,10 @@ the Wright & Masters (1982) conventions: \\G =
 
 ``` r
 # \donttest{
-# Minimal diagnostic example without residual PCA.
+# Diagnostic example without residual PCA.
 toy <- load_mfrmr_data("example_operational")
-fit_quick <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
-)
-diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "both",
-                            residual_pca = "none")
-summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
-#> # A tibble: 1 × 3
-#>   Observations Facets Categories
-#>          <int>  <int>      <int>
-#> 1          282      2          4
-
+# Seven quadrature points keep this example short; use the prespecified
+# final grid and a denser sensitivity grid for substantive analysis.
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "RSM", quad_points = 7, maxit = 30

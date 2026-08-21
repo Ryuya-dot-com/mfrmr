@@ -67,6 +67,13 @@ approximate theta values where `P(X <= k) = .5`, with `BoundaryStatus`
 and `CrossingCount` to avoid over-interpreting boundaries outside the
 requested theta range or with multiple crossings.
 
+These are reference-profile curves. Estimated step parameters and, for
+`GPCM`, each step-facet group's estimated slope are retained, while
+additive facet main effects and fitted interactions are fixed at zero.
+The `CurveBasis` and `PredictorOffset` columns, and the corresponding
+entries in `settings`, make that conditioning explicit. Thus the curves
+do not represent an arbitrary observed Person-by-facet cell.
+
 ## Interpreting output
 
 Use this report to inspect:
@@ -187,13 +194,26 @@ summary(out)
 #>              1       in_range P(X <= 3) = 0.5
 #> 
 #> Settings
-#>         Setting       Value
-#>     theta_range       -6, 6
-#>    theta_points         101
-#>          digits           4
-#>   include_fixed       FALSE
-#>  fixed_max_rows         400
-#>          scales <table 1x2>
+#>                  Setting
+#>              theta_range
+#>             theta_points
+#>                   digits
+#>              curve_basis
+#>         predictor_offset
+#>  curve_basis_description
+#>            include_fixed
+#>           fixed_max_rows
+#>                   scales
+#>                                                                                                                                Value
+#>                                                                                                                                -6, 6
+#>                                                                                                                                  101
+#>                                                                                                                                    4
+#>                                                                                                          zero_additive_facet_profile
+#>                                                                                                                                    0
+#>  Estimated step and, for GPCM, slope parameters are retained; additive facet main effects and fitted interactions are fixed at zero.
+#>                                                                                                                                FALSE
+#>                                                                                                                                  400
+#>                                                                                                                          <table 1x2>
 #> 
 #> Notes
 #>  - Category-curve bundle with probabilities, cumulative probabilities, total
@@ -243,6 +263,13 @@ head(p_info$data$category_information)
 #> 4               2e-04                   0.0132     1   RSM
 #> 5               2e-04                   0.0148     1   RSM
 #> 6               3e-04                   0.0167     1   RSM
+#>                    CurveBasis PredictorOffset
+#> 1 zero_additive_facet_profile               0
+#> 2 zero_additive_facet_profile               0
+#> 3 zero_additive_facet_profile               0
+#> 4 zero_additive_facet_profile               0
+#> 5 zero_additive_facet_profile               0
+#> 6 zero_additive_facet_profile               0
 curve_long <- plot_data(out, component = "plot_long")
 head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
 #>   PlotType Theta Series  Value

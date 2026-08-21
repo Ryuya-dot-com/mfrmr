@@ -94,19 +94,21 @@ jml_status$overview[, c(
 #> 1 RSM   JML    TRUE      TRUE           pass
 jml_status$readiness
 #>        Domain                                Status
-#> 1   Numerical                                  pass
-#> 2        Data                                  pass
-#> 3      Design                           pass_linked
-#> 4   Stability                                  pass
-#> 5 Diagnostics                          not_assessed
-#> 6   Reporting exploratory_fit_ready_for_diagnostics
+#> 1         Fit                                 ready
+#> 2   Numerical                                  pass
+#> 3        Data                                  pass
+#> 4      Design                           pass_linked
+#> 5   Stability                                  pass
+#> 6 Diagnostics                          not_assessed
+#> 7   Reporting exploratory_fit_ready_for_diagnostics
 #>                                                                                                                              Detail
-#> 1                                                                                            Optimizer returned convergence code 0.
-#> 2                                                                                No preparation warning or review row was retained.
-#> 3 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 4                                                                         No boundary-constant non-person facet level was detected.
-#> 5                                                             Diagnostics have not yet been incorporated into this fit-only status.
-#> 6                                                             Reporting status is the strictest applicable upstream workflow state.
+#> 1                                                                                       All stored fit-readiness components passed.
+#> 2                                                                                            Optimizer returned convergence code 0.
+#> 3                                                                                No preparation warning or review row was retained.
+#> 4 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 5                                                                         No boundary-constant non-person facet level was detected.
+#> 6                                                             Diagnostics have not yet been incorporated into this fit-only status.
+#> 7                                                             Reporting status is the strictest applicable upstream workflow state.
 head(run$fair_average)
 #> $raw_by_facet
 #> $raw_by_facet$Person
@@ -843,7 +845,13 @@ fit_mfrm(
 declaration becomes `rating_min = 1, rating_max = 5`. For a
 partial-credit specification, pass `model = "PCM"` and identify the
 facet that carries the step thresholds with `step_facet = "Rater"` (or
-the appropriate facet name).
+the appropriate facet name). The declaration preserves the intended
+category map, but it is not a threshold anchor. A missing boundary
+category remains review evidence for the separate element-boundary
+contract. A missing internal category in a polytomous fitted ladder
+creates an unsupported adjacent-step contrast and stops fitting before
+optimization. Review or revise the data support rather than copying
+FACETS category-dropping behavior implicitly.
 
 ### Anchoring
 
@@ -895,12 +903,20 @@ result object:
 ``` r
 
 review <- summary(fit, profile = "facets", detail = "brief")
+review$decision
 res <- review$results
 
 # Primary final-scale figure: all locations and available facet uncertainty.
 plot(res, type = "wright", renderer = "native", show_ci = TRUE,
      top_n = Inf, preset = "publication")
 ```
+
+Read `review$decision` before using the FACETS-organized tables. It
+reports the same stored mfrmr readiness decision shown by `print(fit)`;
+the `facets` profile changes the organization of the review, not the
+estimator and not the evidence threshold. `FormalInference = "No"`
+therefore remains a stop on substantive reporting even when a familiar
+FACETS-style table or plot is available.
 
 [`plot_wright_unified()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_wright_unified.md)
 is the corresponding explicit helper when the Wright map is the main

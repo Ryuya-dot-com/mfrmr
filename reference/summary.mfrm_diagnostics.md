@@ -52,6 +52,13 @@ An object of class `summary.mfrm_diagnostics` with:
 
 - `overview`: design-level counts and residual-PCA mode
 
+- `decision`: the same plain-language fit-readiness decision used by
+  `summary(fit)`, retained ahead of diagnostic screening results
+
+- `fit_readiness`, `fit_readiness_components`, and
+  `fit_readiness_parameters`: readiness provenance inherited from the
+  source fit and retained separately from diagnostic-screening status
+
 - `status`: concise front-door status block for quick review
 
 - `key_warnings`: highest-priority warnings to review first
@@ -133,6 +140,9 @@ review:
 
 - `overview`: analysis scale, subset count, and residual-PCA mode.
 
+- `fit_readiness`: the source fit's versioned readiness row. Diagnostics
+  do not promote a blocked or review-only fit to inferential use.
+
 - `diagnostic_basis`: plain-language map of which fit path was computed
   and what each path means statistically.
 
@@ -169,14 +179,15 @@ review:
 toy <- load_mfrmr_data("example_core")
 toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 s <- summary(diag, top_n = 3)
 s$key_warnings
-#> [1] "Precision review flagged 1 review/warn checks."                                                                  
-#> [2] "Unexpected responses flagged: 15."                                                                               
-#> [3] "MnSq screening flagged 1 element(s) outside the configured 0.5-1.5 band."                                        
-#> [4] "MnSq follow-up: Criterion:Organization (Infit=0.48, Outfit=0.49; outside the configured 0.5-1.5 screening band)."
-#> [5] "Strict marginal diagnostics currently require an MML fit."                                                       
+#> [1] "The source fit is review and is not inference-ready; all diagnostic outputs remain review-only."                 
+#> [2] "Precision review flagged 2 review/warn checks."                                                                  
+#> [3] "Unexpected responses flagged: 15."                                                                               
+#> [4] "MnSq screening flagged 1 element(s) outside the configured 0.5-1.5 band."                                        
+#> [5] "MnSq follow-up: Criterion:Organization (Infit=0.48, Outfit=0.49; outside the configured 0.5-1.5 screening band)."
 # Look for: lines beginning with "MnSq misfit:" name the worst
 #   element + Infit / Outfit values; "Unexpected responses flagged"
 #   counts how many cell-level surprises the screen returned.

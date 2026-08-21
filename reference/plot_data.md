@@ -47,68 +47,71 @@ The full reusable plot-data list, or the selected component.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 
 wright_plot_data <- plot_data(fit, type = "wright")
 names(wright_plot_data)
 #>  [1] "wright_style"          "renderer"              "visual_contract"      
-#>  [4] "person"                "person_hist"           "person_stats"         
-#>  [7] "locations"             "label_points"          "group_summary"        
-#> [10] "group_levels"          "y_range"               "display_settings"     
-#> [13] "label_limit"           "retention"             "retention_note"       
-#> [16] "title"                 "subtitle"              "show_ci"              
-#> [19] "uncertainty_display"   "group"                 "preset"               
-#> [22] "legend"                "reference_lines"       "plot_name"            
-#> [25] "fit_readiness"         "interpretation_status" "interpretation_note"  
+#>  [4] "person"                "person_exclusions"     "person_hist"          
+#>  [7] "person_stats"          "locations"             "label_points"         
+#> [10] "group_summary"         "group_levels"          "y_range"              
+#> [13] "display_settings"      "label_limit"           "retention"            
+#> [16] "retention_note"        "title"                 "subtitle"             
+#> [19] "show_ci"               "uncertainty_display"   "group"                
+#> [22] "preset"                "legend"                "reference_lines"      
+#> [25] "scale_contract"        "plot_name"             "fit_readiness"        
+#> [28] "interpretation_status" "interpretation_note"  
 
 wright_table <- plot_data(fit, type = "wright", component = "locations")
 head(wright_table)
-#> # A tibble: 6 × 30
-#>   Group     Label     PlotType Estimate     SE CI_Level SE_Method Measure_Source
-#>   <fct>     <chr>     <chr>       <dbl>  <dbl>    <dbl> <chr>     <chr>         
-#> 1 Rater     R02       Facet l…  -0.309  0.0942     0.95 Observat… fit + observa…
-#> 2 Rater     R01       Facet l…  -0.184  0.0938     0.95 Observat… fit + observa…
-#> 3 Rater     R03       Facet l…   0.180  0.0937     0.95 Observat… fit + observa…
-#> 4 Rater     R04       Facet l…   0.313  0.0941     0.95 Observat… fit + observa…
-#> 5 Criterion Content   Facet l…  -0.390  0.0946     0.95 Observat… fit + observa…
-#> 6 Criterion Organiza… Facet l…   0.0649 0.0936     0.95 Observat… fit + observa…
-#> # ℹ 22 more variables: CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
+#> # A tibble: 6 × 37
+#>   Group     Label    PlotType    Estimate    SE CI_Level SE_Method PrecisionTier
+#>   <fct>     <chr>    <chr>          <dbl> <dbl>    <dbl> <chr>     <chr>        
+#> 1 Rater     R02      Facet level  -0.202  0.193     0.95 Observat… exploratory  
+#> 2 Rater     R03      Facet level  -0.127  0.192     0.95 Observat… exploratory  
+#> 3 Rater     R01      Facet level   0.0925 0.189     0.95 Observat… exploratory  
+#> 4 Rater     R04      Facet level   0.236  0.188     0.95 Observat… exploratory  
+#> 5 Criterion Content  Facet level  -0.428  0.197     0.95 Observat… exploratory  
+#> 6 Criterion Language Facet level   0.0946 0.189     0.95 Observat… exploratory  
+#> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
+#> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
 #> #   StepIndex <int>, BoundarySeparated <lgl>, XBase <dbl>, X <dbl>,
 #> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
 #> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
-#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>,
-#> #   CIClippedLower <lgl>, CIClippedUpper <lgl>, CIClipped <lgl>,
-#> #   BoundaryEnd <chr>, CISuppressed <lgl>, CIDisplayStatus <chr>
+#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
 
 curves <- category_curves_report(fit, theta_points = 51)
 curve_long <- plot_data(curves, component = "plot_long")
 head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
 #>   PlotType Theta Series  Value
-#> 1    ogive -6.00 Common 1.0084
-#> 2    ogive -5.76 Common 1.0106
-#> 3    ogive -5.52 Common 1.0135
-#> 4    ogive -5.28 Common 1.0171
-#> 5    ogive -5.04 Common 1.0217
-#> 6    ogive -4.80 Common 1.0276
+#> 1    ogive -6.00 Common 1.0078
+#> 2    ogive -5.76 Common 1.0099
+#> 3    ogive -5.52 Common 1.0125
+#> 4    ogive -5.28 Common 1.0159
+#> 5    ogive -5.04 Common 1.0202
+#> 6    ogive -4.80 Common 1.0257
 
 pathway_long <- plot_data(fit, type = "pathway", component = "pathway_long")
 head(pathway_long[, c("Layer", "CurveGroup", "Theta", "Value")])
 #>            Layer CurveGroup Theta    Value
-#> 1 expected_score     Common -6.00 1.008368
-#> 2 expected_score     Common -5.95 1.008796
-#> 3 expected_score     Common -5.90 1.009245
-#> 4 expected_score     Common -5.85 1.009717
-#> 5 expected_score     Common -5.80 1.010214
-#> 6 expected_score     Common -5.75 1.010735
+#> 1 expected_score     Common -6.00 1.007757
+#> 2 expected_score     Common -5.95 1.008154
+#> 3 expected_score     Common -5.90 1.008571
+#> 4 expected_score     Common -5.85 1.009010
+#> 5 expected_score     Common -5.80 1.009471
+#> 6 expected_score     Common -5.75 1.009956
 pathway_fit <- plot_data(fit, type = "pathway", component = "fit_measures")
 head(pathway_fit[, c("Facet", "Level", "Infit", "Outfit", "FitStatus")])
 #>       Facet        Level     Infit    Outfit   FitStatus
-#> 5 Criterion     Accuracy 0.9449289 0.9263038 within_band
-#> 6 Criterion      Content 0.9404034 1.0039236 within_band
-#> 7 Criterion     Language 1.0231425 1.0169830 within_band
-#> 8 Criterion Organization 0.8029402 0.7948371     overfit
-#> 1     Rater          R01 0.9798296 0.9701823 within_band
-#> 2     Rater          R02 0.8528519 0.9143938 within_band
+#> 5 Criterion     Accuracy 0.8729305 0.8549072 within_band
+#> 6 Criterion      Content 0.9993651 0.9921785 within_band
+#> 7 Criterion     Language 1.0079938 1.0089226 within_band
+#> 8 Criterion Organization 0.8328493 0.8059775 within_band
+#> 1     Rater          R01 1.0600221 1.0481458 within_band
+#> 2     Rater          R02 0.7297932 0.7494939 within_band
 
 # Re-render one component with your own styling while keeping the
 # package-generated data and interpretation metadata.
@@ -125,12 +128,12 @@ sem_long <- plot_data(
   component = "plot_long"
 )
 head(sem_long[, c("Metric", "Theta", "Value", "DisplayedByDefault")])
-#>        Metric Theta     Value DisplayedByDefault
-#> 1 Information -6.00  6.802651              FALSE
-#> 2 Information -5.76  8.630228              FALSE
-#> 3 Information -5.52 10.942778              FALSE
-#> 4 Information -5.28 13.865339              FALSE
-#> 5 Information -5.04 17.552972              FALSE
-#> 6 Information -4.80 22.196632              FALSE
+#>        Metric Theta    Value DisplayedByDefault
+#> 1 Information -6.00 1.560503              FALSE
+#> 2 Information -5.76 1.981827              FALSE
+#> 3 Information -5.52 2.516210              FALSE
+#> 4 Information -5.28 3.193553              FALSE
+#> 5 Information -5.04 4.051378              FALSE
+#> 6 Information -4.80 5.136583              FALSE
 # }
 ```

@@ -71,6 +71,10 @@ A named list of plotting data (class `mfrm_plot_data`) with:
 
 - `data`: underlying table used for plotting
 
+- `InferenceTier`, `SupportsFormalInference`,
+  `PrimaryReportingEligible`, `ReportingUse`, and `DecisionUse`:
+  machine-readable exploratory-screening guards
+
 ## Details
 
 `x` can be either:

@@ -1,6 +1,6 @@
-# Build APA-style table output using base R structures
+# Build an APA-oriented table handoff using base R structures
 
-Build APA-style table output using base R structures
+Build an APA-oriented table handoff using base R structures
 
 ## Usage
 
@@ -40,7 +40,7 @@ apa_table(
 
 - digits:
 
-  Number of rounding digits for numeric columns.
+  Uniform number of rounding digits for numeric columns.
 
 - caption:
 
@@ -89,7 +89,12 @@ A list of class `apa_table` with fields:
 ## Details
 
 This helper avoids styling dependencies and returns a reproducible base
-`data.frame` plus metadata.
+`data.frame` plus manuscript-oriented metadata. It does not claim
+complete APA 7 or JARS compliance: `digits` applies the same rounding
+rule to every numeric column, so statistic-specific formatting (for
+example, exact *p*-value, confidence-interval, and effect-size
+conventions) and the target journal's final typography still require
+human review.
 
 Supported `which` values:
 
@@ -144,7 +149,7 @@ tbl_from_summary <- apa_table(fit_bundle, which = "facet_overview")
 summary(tbl)
 #> APA Table Summary
 #>  Branch Style   Which Rows Columns NumericColumns MissingValues
-#>     apa   apa summary    1      52             30             3
+#>     apa   apa summary    1      87             40             3
 #> 
 #> Caption
 #>  - Model summary
@@ -155,13 +160,13 @@ summary(tbl)
 #> Numeric profile
 #>            Column N   Mean SD    Min    Max
 #>               AIC 1 712.40 NA 712.40 712.40
-#>               BIC 1 745.18 NA 745.18 745.18
+#>               BIC 1 729.24 NA 729.24 729.24
 #>        Categories 1   4.00 NA   4.00   4.00
 #>   ConvergenceCode 1   0.00 NA   0.00   0.00
+#>          Deviance 1 694.40 NA 694.40 694.40
 #>      EMIterations 0     NA NA     NA     NA
 #>  EMRelativeChange 0     NA NA     NA     NA
 #>   EffectiveReltol 1   0.00 NA   0.00   0.00
-#>      ExtremeHighN 1   0.00 NA   0.00   0.00
 p <- plot(tbl, draw = FALSE)
 p_facets <- plot(tbl_facets, type = "numeric_profile", draw = FALSE)
 p$data$plot

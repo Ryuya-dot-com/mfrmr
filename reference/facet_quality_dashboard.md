@@ -190,15 +190,24 @@ summary(dash)
 #>         0
 #> 
 #> Flagged levels
-#>  Facet Level Estimate N.x    SE ModelSE RealSE                     SE_Method
-#>  Rater   R01    0.003  32 0.252   0.252  0.289 Observation-table information
-#>  Rater   R02    0.003  32 0.252   0.252  0.252 Observation-table information
-#>  Converged InferenceReady ConvergenceSeverity PrecisionTier
-#>       TRUE           TRUE                pass   exploratory
-#>       TRUE           TRUE                pass   exploratory
-#>  SupportsFormalInference          SEUse
-#>                    FALSE screening_only
-#>                    FALSE screening_only
+#>  Facet Level Estimate ParameterStatus BoundaryDirection ResponseExtreme
+#>  Rater   R01    0.003            <NA>              <NA>            <NA>
+#>  Rater   R02    0.003            <NA>              <NA>            <NA>
+#>  OptimizerEstimate DisplayEstimate DisplayAdjustment PrimaryEstimateBasis
+#>                 NA              NA              <NA>                 <NA>
+#>                 NA              NA              <NA>                 <NA>
+#>  OptimizerEstimateUse ReasonCodes ReadinessContractVersion SourceFitReadiness
+#>                  <NA>        <NA>                     <NA>               <NA>
+#>                  <NA>        <NA>                     <NA>               <NA>
+#>  SourceInferenceReady EstimateUse N.x    SE ModelSE RealSE
+#>                    NA        <NA>  32 0.252   0.252  0.289
+#>                    NA        <NA>  32 0.252   0.252  0.252
+#>                      SE_Method Converged InferenceReady ConvergenceSeverity
+#>  Observation-table information      TRUE           TRUE                pass
+#>  Observation-table information      TRUE           TRUE                pass
+#>  PrecisionTier SupportsFormalInference          SEUse
+#>    exploratory                   FALSE screening_only
+#>    exploratory                   FALSE screening_only
 #>                                                CIBasis          CIUse N.y Infit
 #>  Normal interval from exploratory observation-table SE screening_only  32 1.321
 #>  Normal interval from exploratory observation-table SE screening_only  32 0.943
@@ -211,18 +220,18 @@ summary(dash)
 #>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual
 #>     31 0.111       0.124          0          1          0.177        -0.149
 #>     31 0.559       0.124          0          1          0.177         0.063
-#>  p_StdResidual DF PTMEA N.y.y CI_Lower CI_Upper CI_Level            CI_Method
-#>          0.882 31 0.609    32    -0.49    0.497     0.95 Normal approximation
-#>          0.950 31 0.667    32    -0.49    0.497     0.95 Normal approximation
-#>  CIEligible                              CILabel  N AbsEstimate SeverityFlag
-#>       FALSE Approximate interval; screening only 32       0.003        FALSE
-#>       FALSE Approximate interval; screening only 32       0.003        FALSE
-#>  MisfitFlag CentralTendencyFlag BiasCount BiasSources BiasFlag FlagCount
-#>       FALSE                TRUE         0           0    FALSE         1
-#>       FALSE                TRUE         0           0    FALSE         1
-#>  AnyFlag FlagLabel .AbsEstimate
-#>     TRUE   central        0.003
-#>     TRUE   central        0.003
+#>  p_StdResidual DF PTMEA N.y.y BoundaryExcluded CI_Lower CI_Upper CI_Level
+#>          0.882 31 0.609    32            FALSE    -0.49    0.497     0.95
+#>          0.950 31 0.667    32            FALSE    -0.49    0.497     0.95
+#>             CI_Method CIEligible                              CILabel  N
+#>  Normal approximation      FALSE Approximate interval; screening only 32
+#>  Normal approximation      FALSE Approximate interval; screening only 32
+#>  AbsEstimate SeverityFlag MisfitFlag CentralTendencyFlag BiasCount BiasSources
+#>        0.003        FALSE      FALSE                TRUE         0           0
+#>        0.003        FALSE      FALSE                TRUE         0           0
+#>  BiasFlag FlagCount AnyFlag FlagLabel .AbsEstimate
+#>     FALSE         1    TRUE   central        0.003
+#>     FALSE         1    TRUE   central        0.003
 #> 
 #> Settings
 #>               Setting    Value

@@ -10,6 +10,12 @@ Start here for routine fit, first-screen results, reports, and exports.
 - [`list_mfrmr_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/list_mfrmr_data.md)
   : List packaged simulation datasets
 
+- [`mfrmr_example_data`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
+  [`mfrmr_example_operational`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
+  [`mfrmr_example_core`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
+  [`mfrmr_example_bias`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
+  : Synthetic many-facet rating examples
+
 - [`mfrmr_example_operational_design`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_operational_design.md)
   : Planned assignment roster for the operational example
 
@@ -43,6 +49,9 @@ Start here for routine fit, first-screen results, reports, and exports.
 - [`mfrmr_interval_guide()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_interval_guide.md)
   : Confidence-interval and uncertainty route guide
 
+- [`mfrmr_workflow_methods`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
+  : mfrmr Workflow and Method Map
+
 ## Bounded GPCM boundary
 
 Supported, caveated, blocked, and deferred bounded-GPCM routes.
@@ -58,6 +67,8 @@ Supported, caveated, blocked, and deferred bounded-GPCM routes.
 - [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
   : Build a weighting-policy review between Rasch-family and bounded
   GPCM fits
+- [`gpcm_mml_quadrature_sensitivity()`](https://ryuya-dot-com.github.io/mfrmr/reference/gpcm_mml_quadrature_sensitivity.md)
+  : Review GPCM-MML sensitivity to the quadrature grid
 - [`compute_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/compute_information.md)
   : Compute design-weighted precision curves for ordered many-facet fits
 - [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
@@ -101,6 +112,8 @@ dashboards.
   : Plot a base-R QC dashboard
 - [`plot_qc_pipeline()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_qc_pipeline.md)
   : Plot QC pipeline results
+- [`mfrmr_visual_diagnostics`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
+  : mfrmr Visual Diagnostics Map
 
 ## Reporting, tables, and exports
 
@@ -135,7 +148,7 @@ bundles.
   : Export a fit-level analysis archive
 
 - [`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md)
-  : Build APA-style table output using base R structures
+  : Build an APA-oriented table handoff using base R structures
 
 - [`as_kable()`](https://ryuya-dot-com.github.io/mfrmr/reference/as_kable.md)
   :
@@ -156,6 +169,12 @@ bundles.
 
 - [`plot_data_components()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_data_components.md)
   : List reusable components in mfrmr plot data
+
+- [`mfrmr_reports_and_tables`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reports_and_tables.md)
+  : mfrmr Reports and Tables Map
+
+- [`mfrmr_reporting_and_apa`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
+  : mfrmr Reporting and APA Guide
 
 ## Simulation, design, and recovery
 
@@ -231,6 +250,8 @@ differential-functioning review.
   : Compute interaction table between a facet and a grouping variable
 - [`dif_report()`](https://ryuya-dot-com.github.io/mfrmr/reference/dif_report.md)
   : Generate a differential-functioning interpretation report
+- [`mfrmr_linking_and_dff`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
+  : mfrmr Linking and DFF Guide
 
 ## FACETS and related-package migration
 
@@ -285,6 +306,9 @@ adapters.
   :
 
   Import an `eRm` fit to an mfrmr-compatible bundle
+
+- [`mfrmr_compatibility_layer`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
+  : mfrmr Compatibility Layer Map
 
 ## Advanced reviews and visualization
 
@@ -484,30 +508,6 @@ and compatibility helpers.
 - [`mfrmr`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr-package.md)
   [`mfrmr-package`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr-package.md)
   : mfrmr: Many-Facet Ordered-Response Modeling in R
-
-- [`mfrmr_compatibility_layer`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_compatibility_layer.md)
-  : mfrmr Compatibility Layer Map
-
-- [`mfrmr_example_data`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
-  [`mfrmr_example_operational`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
-  [`mfrmr_example_core`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
-  [`mfrmr_example_bias`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_example_data.md)
-  : Synthetic many-facet rating examples
-
-- [`mfrmr_linking_and_dff`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_linking_and_dff.md)
-  : mfrmr Linking and DFF Guide
-
-- [`mfrmr_reporting_and_apa`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reporting_and_apa.md)
-  : mfrmr Reporting and APA Guide
-
-- [`mfrmr_reports_and_tables`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_reports_and_tables.md)
-  : mfrmr Reports and Tables Map
-
-- [`mfrmr_visual_diagnostics`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_visual_diagnostics.md)
-  : mfrmr Visual Diagnostics Map
-
-- [`mfrmr_workflow_methods`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrmr_workflow_methods.md)
-  : mfrmr Workflow and Method Map
 
 - [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md)
   : Normalize the CSV exports generated by the ConQuest overlap template

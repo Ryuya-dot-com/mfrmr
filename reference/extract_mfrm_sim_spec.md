@@ -122,6 +122,7 @@ toy <- simulate_mfrm_data(
   seed = 123
 )
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
 spec <- extract_mfrm_sim_spec(fit, latent_distribution = "empirical")
 spec$assignment
 #> [1] "crossed"

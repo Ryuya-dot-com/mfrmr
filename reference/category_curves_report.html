@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a category curve export bundle (preferred alias)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>category_curves_report.Rd</code></div>
     </div>
 
@@ -112,6 +112,12 @@ convention of accumulating modeled probabilities across ordered categories
 <code>P(X &lt;= k) = .5</code>, with <code>BoundaryStatus</code> and <code>CrossingCount</code> to avoid
 over-interpreting boundaries outside the requested theta range or with
 multiple crossings.</p>
+<p>These are reference-profile curves. Estimated step parameters and, for
+<code>GPCM</code>, each step-facet group's estimated slope are retained, while additive
+facet main effects and fitted interactions are fixed at zero. The
+<code>CurveBasis</code> and <code>PredictorOffset</code> columns, and the corresponding entries in
+<code>settings</code>, make that conditioning explicit. Thus the curves do not
+represent an arbitrary observed Person-by-facet cell.</p>
     </div>
     <div class="section level2">
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
@@ -216,13 +222,26 @@ ggplot2, plotly, or another R graphics system.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              1       in_range P(X &lt;= 3) = 0.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Setting       Value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     theta_range       -6, 6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    theta_points         101</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          digits           4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   include_fixed       FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  fixed_max_rows         400</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          scales &lt;table 1x2&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  Setting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              theta_range</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             theta_points</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   digits</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              curve_basis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         predictor_offset</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  curve_basis_description</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            include_fixed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           fixed_max_rows</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   scales</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                Value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                -6, 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                  101</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                    4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                          zero_additive_facet_profile</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Estimated step and, for GPCM, slope parameters are retained; additive facet main effects and fitted interactions are fixed at zero.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                  400</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                          &lt;table 1x2&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Notes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - Category-curve bundle with probabilities, cumulative probabilities, total</span>
@@ -272,6 +291,13 @@ ggplot2, plotly, or another R graphics system.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4               2e-04                   0.0132     1   RSM</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5               2e-04                   0.0148     1   RSM</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6               3e-04                   0.0167     1   RSM</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    CurveBasis PredictorOffset</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 zero_additive_facet_profile               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 zero_additive_facet_profile               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 zero_additive_facet_profile               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 zero_additive_facet_profile               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 zero_additive_facet_profile               0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 zero_additive_facet_profile               0</span>
 <span class="r-in"><span><span class="va">curve_long</span> <span class="op">&lt;-</span> <span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">out</span>, component <span class="op">=</span> <span class="st">"plot_long"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">curve_long</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PlotType"</span>, <span class="st">"Theta"</span>, <span class="st">"Series"</span>, <span class="st">"Value"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PlotType Theta Series  Value</span>

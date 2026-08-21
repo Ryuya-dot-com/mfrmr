@@ -39,6 +39,8 @@ A data frame with one row per reusable plot-data component.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
 plot_data_components(fit, type = "pathway")
 #>       PlotName             Component                Role ObjectType Rows
@@ -49,7 +51,7 @@ plot_data_components(fit, type = "pathway")
 #> 5  pathway_map          pathway_long        primary_data data.frame  245
 #> 6  pathway_map   pathway_annotations          annotation data.frame    4
 #> 7  pathway_map          fit_measures          fit_review data.frame    8
-#> 8  pathway_map            fit_status summary_or_guidance data.frame    3
+#> 8  pathway_map            fit_status summary_or_guidance data.frame    2
 #> 9  pathway_map      curve_fit_status summary_or_guidance data.frame    1
 #> 10 pathway_map    fit_measure_status summary_or_guidance data.frame    1
 #> 11 pathway_map           score_range            settings     double   NA
@@ -58,14 +60,15 @@ plot_data_components(fit, type = "pathway")
 #> 14 pathway_map                preset            settings  character   NA
 #> 15 pathway_map                legend               style data.frame    2
 #> 16 pathway_map       reference_lines          annotation data.frame    1
-#> 17 pathway_map             plot_name    scalar_or_vector  character   NA
-#> 18 pathway_map         fit_readiness          fit_review data.frame    5
-#> 19 pathway_map interpretation_status summary_or_guidance  character   NA
-#> 20 pathway_map   interpretation_note summary_or_guidance  character   NA
+#> 17 pathway_map        scale_contract          table_data data.frame    1
+#> 18 pathway_map             plot_name    scalar_or_vector  character   NA
+#> 19 pathway_map         fit_readiness          fit_review data.frame    6
+#> 20 pathway_map interpretation_status summary_or_guidance  character   NA
+#> 21 pathway_map   interpretation_note summary_or_guidance  character   NA
 #>    Columns Length IsTabular                                          Accessor
-#> 1        7      7      TRUE              plot_data(x, component = "expected")
+#> 1        9      9      TRUE              plot_data(x, component = "expected")
 #> 2        6      6      TRUE                 plot_data(x, component = "steps")
-#> 3        7      7      TRUE       plot_data(x, component = "endpoint_labels")
+#> 3        9      9      TRUE       plot_data(x, component = "endpoint_labels")
 #> 4        6      6      TRUE     plot_data(x, component = "dominance_regions")
 #> 5       12     12      TRUE          plot_data(x, component = "pathway_long")
 #> 6       13     13      TRUE   plot_data(x, component = "pathway_annotations")
@@ -79,10 +82,11 @@ plot_data_components(fit, type = "pathway")
 #> 14      NA      1     FALSE                plot_data(x, component = "preset")
 #> 15       4      4      TRUE                plot_data(x, component = "legend")
 #> 16       5      5      TRUE       plot_data(x, component = "reference_lines")
-#> 17      NA      1     FALSE             plot_data(x, component = "plot_name")
-#> 18       2      2      TRUE         plot_data(x, component = "fit_readiness")
-#> 19      NA      1     FALSE plot_data(x, component = "interpretation_status")
-#> 20      NA      1     FALSE   plot_data(x, component = "interpretation_note")
+#> 17      15     15      TRUE        plot_data(x, component = "scale_contract")
+#> 18      NA      1     FALSE             plot_data(x, component = "plot_name")
+#> 19       2      2      TRUE         plot_data(x, component = "fit_readiness")
+#> 20      NA      1     FALSE plot_data(x, component = "interpretation_status")
+#> 21      NA      1     FALSE   plot_data(x, component = "interpretation_note")
 #>                                                                     Notes
 #> 1                                                                        
 #> 2                                                                        
@@ -102,29 +106,31 @@ plot_data_components(fit, type = "pathway")
 #> 16 Use with primary data to draw thresholds, labels, and reference lines.
 #> 17                                                                       
 #> 18                                                                       
-#> 19                           Use for captions, QA checks, or report text.
+#> 19                                                                       
 #> 20                           Use for captions, QA checks, or report text.
-#>                                                                                                                               ColumnNames
-#> 1                                                              Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup
-#> 2                                                                           CurveGroup, Step, StepIndex, Threshold, PathY, ThresholdLabel
-#> 3                                                              Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup
-#> 4                                                                            CurveGroup, Category, Region, ThetaStart, ThetaEnd, ThetaMid
-#> 5                          Layer, CurveGroup, Theta, Value, ValueName, Category, Step, StepIndex, Label, DisplayedByDefault, Model, Slope
-#> 6                          AnnotationType, CurveGroup, Facet, Level, X, Y, Label, Measure, SE, FitStatus, Underfit, Overfit, ReviewReason
-#> 7                             Facet, Level, Measure, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, FitStatus, Underfit, Overfit, ReviewReason
-#> 8                                                                                                                  Facet, FitStatus, Rows
-#> 9  CurveGroup, Facet, Level, Measure, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, FitStatus, Underfit, Overfit, ReviewReason, MatchedFitRow
-#> 10                                                                                                             Available, Status, Message
-#> 11                                                                                                                                       
-#> 12                                                                                                                                       
-#> 13                                                                                                                                       
-#> 14                                                                                                                                       
-#> 15                                                                                                          label, role, aesthetic, value
-#> 16                                                                                                     axis, value, label, linetype, role
-#> 17                                                                                                                                       
-#> 18                                                                                                                         Domain, Status
-#> 19                                                                                                                                       
-#> 20                                                                                                                                       
+#> 21                           Use for captions, QA checks, or report text.
+#>                                                                                                                                                                                                                                                                                 ColumnNames
+#> 1                                                                                                                                                                                   Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup, CurveBasis, PredictorOffset
+#> 2                                                                                                                                                                                                                             CurveGroup, Step, StepIndex, Threshold, PathY, ThresholdLabel
+#> 3                                                                                                                                                                                   Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup, CurveBasis, PredictorOffset
+#> 4                                                                                                                                                                                                                              CurveGroup, Category, Region, ThetaStart, ThetaEnd, ThetaMid
+#> 5                                                                                                                                                                            Layer, CurveGroup, Theta, Value, ValueName, Category, Step, StepIndex, Label, DisplayedByDefault, Model, Slope
+#> 6                                                                                                                                                                            AnnotationType, CurveGroup, Facet, Level, X, Y, Label, Measure, SE, FitStatus, Underfit, Overfit, ReviewReason
+#> 7                                                                                                                                                                               Facet, Level, Measure, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, FitStatus, Underfit, Overfit, ReviewReason
+#> 8                                                                                                                                                                                                                                                                    Facet, FitStatus, Rows
+#> 9                                                                                                                                                    CurveGroup, Facet, Level, Measure, SE, Infit, Outfit, InfitZSTD, OutfitZSTD, FitStatus, Underfit, Overfit, ReviewReason, MatchedFitRow
+#> 10                                                                                                                                                                                                                                                               Available, Status, Message
+#> 11                                                                                                                                                                                                                                                                                         
+#> 12                                                                                                                                                                                                                                                                                         
+#> 13                                                                                                                                                                                                                                                                                         
+#> 14                                                                                                                                                                                                                                                                                         
+#> 15                                                                                                                                                                                                                                                            label, role, aesthetic, value
+#> 16                                                                                                                                                                                                                                                       axis, value, label, linetype, role
+#> 17 Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
+#> 18                                                                                                                                                                                                                                                                                         
+#> 19                                                                                                                                                                                                                                                                           Domain, Status
+#> 20                                                                                                                                                                                                                                                                                         
+#> 21                                                                                                                                                                                                                                                                                         
 
 curves <- category_curves_report(fit, theta_points = 51)
 plot_data_components(curves, type = "category_probability")
@@ -151,12 +157,12 @@ plot_data_components(curves, type = "category_probability")
 #> 20 category_curves                plot_name    scalar_or_vector  character   NA
 #>    Columns Length IsTabular
 #> 1       NA      1     FALSE
-#> 2        7      7      TRUE
-#> 3       11     11      TRUE
+#> 2        9      9      TRUE
+#> 3       13     13      TRUE
 #> 4        9      9      TRUE
 #> 5       12     12      TRUE
 #> 6       NA      1     FALSE
-#> 7       11     11      TRUE
+#> 7       13     13      TRUE
 #> 8        3      3      TRUE
 #> 9       15     15      TRUE
 #> 10       5      5      TRUE
@@ -214,12 +220,12 @@ plot_data_components(curves, type = "category_probability")
 #> 20                                                                       
 #>                                                                                                                                                                                                    ColumnNames
 #> 1                                                                                                                                                                                                             
-#> 2                                                                                                                                   Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup
-#> 3                                                             Theta, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model, Category, CurveGroup
+#> 2                                                                                                      Theta, ExpectedScore, ScoreVariance, Information, Slope, Model, CurveGroup, CurveBasis, PredictorOffset
+#> 3                                Theta, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model, Category, CurveGroup, CurveBasis, PredictorOffset
 #> 4                                                                                              CurveGroup, Theta, Direction, BoundaryCategory, BoundaryOrder, CategorySet, CumulativeProbability, Model, Slope
 #> 5  CurveGroup, BoundaryOrder, LowerOrEqualCategory, AboveCategory, ThresholdCategory, CumulativeDirection, TargetProbability, ThurstonianThreshold, InThetaRange, CrossingCount, BoundaryStatus, BoundaryLabel
 #> 6                                                                                                                                                                                                             
-#> 7                                                             CurveGroup, Theta, Category, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model
+#> 7                                CurveGroup, Theta, Category, Probability, ExpectedScore, ScoreVariance, Information, CategoryInformation, CategoryInformationShare, Slope, Model, CurveBasis, PredictorOffset
 #> 8                                                                                                                                                                               Panel, PlotType, DataComponent
 #> 9                                            PlotType, Panel, CurveGroup, Theta, Series, Category, BoundaryCategory, BoundaryOrder, CategorySet, Direction, ValueName, Value, DisplayedByDefault, Model, Slope
 #> 10                                                                                                                                                                AnnotationType, Axis, Value, Label, LineType
@@ -244,7 +250,7 @@ rt <- response_time_review(
 )
 plot_data_components(plot_response_time_review(rt, draw = FALSE))
 #>                PlotName       Component                Role ObjectType Rows
-#> 1  response_time_review           table        primary_data data.frame  768
+#> 1  response_time_review           table        primary_data data.frame  192
 #> 2  response_time_review      thresholds            settings data.frame    2
 #> 3  response_time_review        overview summary_or_guidance data.frame    1
 #> 4  response_time_review           notes summary_or_guidance  character   NA

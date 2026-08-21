@@ -79,6 +79,8 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
   maxit = 30,
   seed = 123
 )
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
 summary(diag_eval)
 #> mfrmr Diagnostic Screening Summary
 #> 
@@ -88,7 +90,7 @@ summary(diag_eval)
 #>  ScenarioRows PerformanceRows ReportSignalRows ContrastRows RunOKRate
 #>             2               2                2            1         1
 #>  ConvergenceRate IncludeReport PlotDataContract
-#>                1         FALSE   mfrm_plot_data
+#>                0         FALSE   mfrm_plot_data
 #> 
 #> Reading order
 #>  Step                 Table
@@ -139,21 +141,21 @@ summary(diag_eval)
 #> Next actions
 #>  Priority                           Area   Status
 #>         1              Replication count   review
-#>         2 Run completion and convergence       ok
+#>         2 Run completion and convergence   review
 #>         3       Screening interpretation       ok
 #>         4             Scenario contrasts       ok
 #>         5           Report-index signals optional
 #>         6 Appendix and plot-data handoff       ok
 #>                                                                                                   Evidence
 #>                                                                                                  Reps = 1.
-#>                                                                RunOKRate = 1.000; ConvergenceRate = 1.000.
+#>                                                                RunOKRate = 1.000; ConvergenceRate = 0.000.
 #>                                                   scenario_summary rows = 2; performance_summary rows = 2.
 #>                                                                                scenario_contrast rows = 1.
 #>                                           include_report = FALSE; report-index signals were not requested.
 #>  summary tables and draw-free plot-data tables are available through the package-wide bundle/export route.
 #>                                                                                                            Action
 #>  Treat this as an initial screening run; increase `reps` before interpreting operating characteristics as stable.
-#>                       Proceed to scenario and performance summaries, while still reporting the convergence basis.
+#>                      Inspect object$results for Error, RunOK, and Converged before summarizing scenario behavior.
 #>           Read scenario_summary and performance_summary together before making legacy-vs-strict screening claims.
 #>       Use scenario_contrast to describe misspecification-minus-baseline shifts, with the baseline scenario named.
 #>     Rebuild with include_report = TRUE only if report-readiness operating behavior is part of the study question.
@@ -231,8 +233,8 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1         1
 #>        Criterion       10       2           2                 2    1         1
 #>  ConvergenceRate MeanElapsedSec MeanLegacyMeanAbsZ MeanLegacyFlaggedLevels
-#>                1          0.994              0.589                       0
-#>                1          0.985              0.563                       0
+#>                0          1.140              0.589                       0
+#>                0          1.156              0.563                       0
 #>  LegacyAnyFlagRate MeanMarginalOverallRMSD MeanMarginalMaxAbsStdResidual
 #>                  0                   0.002                         0.050
 #>                  0                   0.046                         1.705
@@ -251,8 +253,8 @@ summary(diag_eval)
 #>        Criterion       10       2           2                 2    1
 #>        Criterion       10       2           2                 2    1
 #>  MeanElapsedSec McseElapsedSec MeanElapsedSecPer100Obs LegacyAnyFlagRate
-#>           0.994             NA                   2.485                 0
-#>           0.985             NA                   2.462                 0
+#>           1.140             NA                    2.85                 0
+#>           1.156             NA                    2.89                 0
 #>  McseLegacyAnyFlagRate MarginalAnyFlagRate McseMarginalAnyFlagRate
 #>                     NA                   1                      NA
 #>                     NA                   1                      NA

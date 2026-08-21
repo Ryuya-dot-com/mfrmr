@@ -60,11 +60,10 @@ build_mfrm_manifest(
 - data:
 
   Optional original analysis data frame. When supplied, the manifest's
-  `input_hash` row for `data` is computed against the user's untouched
-  input rather than the package's internal `prep$data` (which carries
-  synthesised `Weight` / `score_k` columns) so the recorded fingerprint
-  matches what [`read.csv()`](https://rdrr.io/r/utils/read.table.html)
-  will produce in a replay session.
+  `input_summary` row for `data` describes the user's untouched input
+  rather than the package's internal `prep$data` (which carries
+  synthesised `Weight` / `score_k` columns). The summary records
+  structure, not a byte-level or serialized-object identity claim.
 
 ## Value
 
@@ -99,6 +98,10 @@ The returned bundle has class `mfrm_manifest` and includes:
 
 - `summary`: one-row analysis overview
 
+- `readiness`, `readiness_components`, and `readiness_parameters`: the
+  source fit's current readiness-contract record, its component review,
+  and any parameter-level readiness rows
+
 - `environment`: package/R/platform metadata
 
 - `model_settings`: key-value model settings table
@@ -122,8 +125,9 @@ The returned bundle has class `mfrm_manifest` and includes:
 - `available_outputs`: availability table for
   diagnostics/bias/PCA/prediction outputs
 
-- `dependencies`, `input_hash`, and `session_info`: reproducibility
-  metadata tables
+- `dependencies`, `input_summary`, and `session_info`: reproducibility
+  metadata tables. `input_summary` records object structure and does not
+  claim byte-for-byte identity across platforms or serialization formats
 
 - `settings`: manifest build settings
 
@@ -132,7 +136,13 @@ The returned bundle has class `mfrm_manifest` and includes:
 The `summary` table is the direct place to confirm that you are looking
 at the intended analysis. The `model_settings`, `source_columns`, and
 `estimation_control` tables are designed for reproducibility records and
-method write-up. Active latent-regression fits also record their
+method write-up. `Converged` records the optimizer return-code decision;
+`InferenceReady` records the stricter readiness-contract decision. They
+need not agree. The `readiness` tables are provenance: they preserve the
+decision recorded for the source fit, including its contract version and
+reason codes. They do not make a subsequently replayed fit
+inference-ready; replay must recompute readiness from the replayed data
+and numerical result. Active latent-regression fits also record their
 population-model provenance there, including the fitted scoring basis,
 stored `population_formula`, and person-level contract used by the
 fitted population model. When categorical background variables are

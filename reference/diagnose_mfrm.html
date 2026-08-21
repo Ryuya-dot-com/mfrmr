@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Compute diagnostics for an <code>mfrm_fit</code> object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-estimation.R" class="external-link"><code>R/api-estimation.R</code></a></small>
       <div class="d-none name"><code>diagnose_mfrm.Rd</code></div>
     </div>
 
@@ -148,6 +148,9 @@ for bounded <code>GPCM</code>)</p></li>
 <li><p><code>approximation_notes</code>: method notes for SE/CI/reliability summaries</p></li>
 <li><p><code>diagnostic_basis</code>: guide to the statistical target of each diagnostic path</p></li>
 <li><p><code>fit_standardization</code>: guide to the df convention behind fit ZSTD values</p></li>
+<li><p><code>fit_readiness</code>, <code>fit_readiness_components</code>, and
+<code>fit_readiness_parameters</code>: the source fit's versioned readiness decision;
+diagnostic computation does not override a blocked or review-only fit</p></li>
 <li><p><code>marginal_fit</code>: optional strict marginal-fit companion based on
 posterior-expected first-order category counts</p></li>
 <li><p><code>residual_pca_overall</code>: optional overall PCA object</p></li>
@@ -209,7 +212,7 @@ external FACETS fit comparison requires a JMLE-style residual basis
 <p><strong>Heuristic misfit-screening guidelines (Bond &amp; Fox, 2015):</strong></p><ul><li><p>MnSq &lt; 0.5: overfit (too predictable; may inflate reliability)</p></li>
 <li><p>MnSq 0.5–1.5: productive for measurement</p></li>
 <li><p>MnSq &gt; 1.5: underfit (noise degrades measurement)</p></li>
-<li><p>\(|\mathrm{ZSTD}| &gt; 2\): conventional approximate-normal review flag;
+<li><p>\(|\mathrm{ZSTD}| \ge 2\): package convention for the approximate-normal review flag;
 not a calibrated 5\<!-- % hypothesis test, especially after parameter estimation -->
 and repeated screening across elements</p></li>
 </ul><p>When Infit and Outfit disagree, Infit is generally more informative
@@ -317,20 +320,10 @@ programs</em>. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)</p></
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
-<span class="r-in"><span><span class="co"># Minimal diagnostic example without residual PCA.</span></span></span>
+<span class="r-in"><span><span class="co"># Diagnostic example without residual PCA.</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_operational"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit_quick</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">diag_quick</span> <span class="op">&lt;-</span> <span class="fu">diagnose_mfrm</span><span class="op">(</span><span class="va">fit_quick</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span>,</span></span>
-<span class="r-in"><span>                            residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag_quick</span><span class="op">)</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Observations"</span>, <span class="st">"Facets"</span>, <span class="st">"Categories"</span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 3</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Observations Facets Categories</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>          282      2          4</span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Seven quadrature points keep this example short; use the prespecified</span></span></span>
+<span class="r-in"><span><span class="co"># final grid and a denser sensitivity grid for substantive analysis.</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span>, maxit <span class="op">=</span> <span class="fl">30</span></span></span>

@@ -110,8 +110,9 @@ silently implying support.
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+# Two balanced 12-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -163,9 +164,9 @@ summary(review)
 #>      Rater  <NA> Wave2           <NA>
 #>       <NA>  <NA>  <NA> Wave1 -> Wave2
 #>                                                          Signal Magnitude
-#>  Retained common-element support is below the package guideline     1.000
-#>  Retained common-element support is below the package guideline     1.000
-#>              Thin retained support in an adjacent screened link     0.187
+#>  Retained common-element support is below the package guideline      1.00
+#>  Retained common-element support is below the package guideline      1.00
+#>              Thin retained support in an adjacent screened link      0.48
 #>  SeverityGroup ReviewPriority
 #>           high              1
 #>           high              1

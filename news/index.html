@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,11 +38,55 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.2.2" id="mfrmr-022">mfrmr 0.2.2<a class="anchor" aria-label="anchor" href="#mfrmr-022"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.3" id="mfrmr-023">mfrmr 0.2.3<a class="anchor" aria-label="anchor" href="#mfrmr-023"></a></h2><p class="text-muted">CRAN release: 2026-08-21</p>
+<p>mfrmr 0.2.3 improves the reliability and interpretation of the existing many-facet workflows, with particular emphasis on the bounded GPCM introduced before this release. No existing exported function has been removed.</p>
+<div class="section level3">
+<h3 id="bounded-gpcm-0-2-3">Bounded GPCM<a class="anchor" aria-label="anchor" href="#bounded-gpcm-0-2-3"></a></h3>
+<ul><li>Clarified the supported GPCM as an aligned, single-owner relative-slope model. A slope multiplies the complete adjacent-category predictor, including the ability, facet, interaction, and owned-step terms. This is distinct from loading-only GPCM variants and multiplicative generalized MFRM families.</li>
+<li>Corrected the default scale identification for GPCM marginal maximum likelihood fits. When no population formula is supplied, an intercept-only population model now provides the latent location and scale while relative slopes use their documented geometric-mean constraint.</li>
+<li>Added parameter-level status for free GPCM slopes. Standard errors and confidence intervals are reported as ordinary inferential results only when the fitted solution and the parameter both satisfy the relevant readiness checks. Optimizer- and Hessian-based quantities remain available as clearly labelled diagnostic evidence when formal inference is not supported.</li>
+<li>Improved handling of extreme response patterns. Joint-maximum-likelihood Person estimates can retain an unbounded primary status, while finite adjusted displays remain explicitly separate. Prior-regularized marginal EAP estimates remain available but do not override a blocked source fit.</li>
+<li>Added <code><a href="../reference/gpcm_mml_quadrature_sensitivity.html">gpcm_mml_quadrature_sensitivity()</a></code> for explicit same-data comparison of a fitted GPCM-MML result across quadrature grids. It reports changes in the marginal likelihood, relative slopes, raw observed-information quantities, population scale, and fitted probabilities without silently refitting during <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> or <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. Results support <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame()</a></code>, and <code><a href="../reference/apa_table.html">apa_table()</a></code>.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="estimation-and-readiness-0-2-3">Estimation and readiness<a class="anchor" aria-label="anchor" href="#estimation-and-readiness-0-2-3"></a></h3>
+<ul><li>Added pre-fit checks for category and step support and strengthened constrained-estimability checks for sparse many-facet designs. Unsupported step contrasts and structurally unidentified comparisons now stop or fail closed before they can be presented as ordinary estimates.</li>
+<li>Strengthened numerical and boundary reporting for JML and GPCM fits. Optimizer convergence, terminal gradients, local rank, curvature, boundary evidence, and formal inference readiness are retained as separate concepts.</li>
+<li>Corrected the alignment of MML Person EAP estimates and posterior standard deviations when observations or Person rows are filtered during fitting.</li>
+<li>Fit-level readiness is propagated to Person results, plots, model-choice reviews, reports, and exported tables. A finite value from a blocked fit is no longer presented as an unrestricted inferential estimate.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="summaries-diagnostics-and-plots-0-2-3">Summaries, diagnostics, and plots<a class="anchor" aria-label="anchor" href="#summaries-diagnostics-and-plots-0-2-3"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> for fitted models now begin with a plain-language interpretation status, the availability of formal inference, the main reason for any hold, and a suggested next action.</li>
+<li>Formal-inference reporting now distinguishes a successful fit gate from the separate precision contract. A fit-only summary does not claim formal inference until matching diagnostics support the standard-error, confidence-interval, and reliability basis.</li>
+<li>GPCM uncertainty labels are consistent across fitted objects, summaries, and plots. Intervals calculated for observation-table Wright or facet displays are labelled <code>screening_only</code> and are not described as confidence intervals.</li>
+<li>PCM/GPCM model-choice reviews retain comparison warnings and keep information criteria, automatic preferences, and likelihood-ratio results unavailable when the compared fits do not share an eligible basis. Model-choice warnings can also be included in exported summary appendices.</li>
+<li>Differential-facet-functioning refits now replay the baseline response family, scoring range, estimator, weighting, and numerical settings. They fail closed for model structures that do not yet have a valid subgroup replay and linking contract. <code>min_obs</code> remains a computability guard rather than a claim about power or adequate sample size.</li>
+<li>Residual-PCA results now carry machine-readable exploratory-use guards. Returned components and warnings are descriptive diagnostics and do not automatically support dimensionality or subscore decisions.</li>
+<li>Corrected Person-involving bias-screen collection for explicitly requested facet pairs and expanded machine-readable FACETS feature-coverage guidance.</li>
+<li>FACETS table import retains the reported numeric text and displayed decimal precision so rounded output is not silently treated as hidden full-precision data.</li>
+<li>The Infit-versus-measure pathway now has a regression-tested default: Infit is on the horizontal axis and the fitted measure remains on the vertical axis. GPCM category curves retain estimated step-facet slopes and now state explicitly that additive facet effects and interactions are fixed at zero. Multiple GPCM curve groups are shown in separate panels with category legends instead of as unlabelled overlaid traces.</li>
+<li>Native Wright maps label every retained facet level using displaced text and leader lines. Step thresholds are displayed as a vertical ladder with the score transition and fitted logit in each label.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="reporting-and-reproducibility-0-2-3">Reporting and reproducibility<a class="anchor" aria-label="anchor" href="#reporting-and-reproducibility-0-2-3"></a></h3>
+<ul><li>Reproducibility manifests describe inputs through semantic summaries such as class, dimensions, fields, and missingness instead of environment-sensitive serialization hashes. The <code>digest</code> package is no longer required by the distributed package.</li>
+<li>Reporting, APA tables, model summaries, and plots use the same readiness and estimate-use vocabulary. Added fields may affect code that assumes an exact number of rows or columns in a summary component; selecting fields by name is recommended.</li>
+<li>APA output is described as an APA/JARS-informed drafting aid rather than a compliance certificate. The reporting guide now lists study-level fields that the fitted model cannot supply, and weighted-method prose distinguishes row-level likelihood weighting from replicated Person response patterns.</li>
+<li>External programs are not required to install or use mfrmr. Comparisons with FACETS, ConQuest, TAM, or immer remain model- and estimator-specific and are not general interchangeability claims.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="scope-0-2-3">Scope<a class="anchor" aria-label="anchor" href="#scope-0-2-3"></a></h3>
+<ul><li>This release does not add unrestricted GPCM, loading-only or multiplicative generalized MFRM estimation, native multidimensional estimation, or new public multivariate G-theory and D-study functionality.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.2" id="mfrmr-022">mfrmr 0.2.2<a class="anchor" aria-label="anchor" href="#mfrmr-022"></a></h2><p class="text-muted">CRAN release: 2026-07-27</p>
 <ul><li><p>Standardized the package’s canonical joint-maximum-likelihood label as <code>"JML"</code> across fitted objects, engine state, manifests, and replay scripts. <code>method = "JMLE"</code> remains accepted only as a backward-compatible input alias and now resolves immediately to <code>"JML"</code>.</p></li>
 <li><p>Revised first-contact guides and result guidance to use reader-facing wording while retaining documented API and status vocabulary.</p></li>
 <li><p>Clarified that <code>maxit</code> is a prespecified computational ceiling rather than a result-selection control. Iteration-limited fits now direct users to keep the specification fixed, follow a prespecified ceiling sequence, and withhold interpretation until the numerical-readiness gate passes.</p></li>

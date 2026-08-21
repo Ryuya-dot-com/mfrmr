@@ -144,6 +144,8 @@ and linking routes remain visibly separate capability rows.
 ``` r
 # \donttest{
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",
   method = "MML", model = "RSM", quad_points = 7, maxit = 30
@@ -173,14 +175,14 @@ summary(vis)
 #>             residual_pca_by_facet        4
 #>               strict_marginal_fit        3
 #>  strict_pairwise_local_dependence        2
-#>                        wright_map        1
+#>                        wright_map        2
+#>                 observed_expected        1
+#>                       pathway_map        1
 #>                   category_curves        0
 #>                facet_distribution        0
 #>                   fit_diagnostics        0
 #>             fit_zstd_distribution        0
 #>                     misfit_levels        0
-#>                 observed_expected        0
-#>                       pathway_map        0
 #>                   step_thresholds        0
 #> 
 #> Summary counts

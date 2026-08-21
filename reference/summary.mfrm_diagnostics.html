@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize an <code>mfrm_diagnostics</code> object in a user-friendly format</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_diagnostics.Rd</code></div>
     </div>
 
@@ -93,6 +93,11 @@ person-level rows remain available in the returned object.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>summary.mfrm_diagnostics</code> with:</p><ul><li><p><code>overview</code>: design-level counts and residual-PCA mode</p></li>
+<li><p><code>decision</code>: the same plain-language fit-readiness decision used by
+<code>summary(fit)</code>, retained ahead of diagnostic screening results</p></li>
+<li><p><code>fit_readiness</code>, <code>fit_readiness_components</code>, and
+<code>fit_readiness_parameters</code>: readiness provenance inherited from the source
+fit and retained separately from diagnostic-screening status</p></li>
 <li><p><code>status</code>: concise front-door status block for quick review</p></li>
 <li><p><code>key_warnings</code>: highest-priority warnings to review first</p></li>
 <li><p><code>next_actions</code>: recommended follow-up helpers</p></li>
@@ -141,6 +146,8 @@ which companion outputs should be consulted</p></li>
 
 
 <ul><li><p><code>overview</code>: analysis scale, subset count, and residual-PCA mode.</p></li>
+<li><p><code>fit_readiness</code>: the source fit's versioned readiness row. Diagnostics do
+not promote a blocked or review-only fit to inferential use.</p></li>
 <li><p><code>diagnostic_basis</code>: plain-language map of which fit path was computed and
 what each path means statistically.</p></li>
 <li><p><code>overall_fit</code>: global fit indices.</p></li>
@@ -170,14 +177,15 @@ before comparing legacy and strict outputs.</p></li>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>, method <span class="op">=</span> <span class="st">"JML"</span>, maxit <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.</span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag</span>, top_n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">key_warnings</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Precision review flagged 1 review/warn checks."                                                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Unexpected responses flagged: 15."                                                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "MnSq screening flagged 1 element(s) outside the configured 0.5-1.5 band."                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "MnSq follow-up: Criterion:Organization (Infit=0.48, Outfit=0.49; outside the configured 0.5-1.5 screening band)."</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "Strict marginal diagnostics currently require an MML fit."                                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "The source fit is review and is not inference-ready; all diagnostic outputs remain review-only."                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Precision review flagged 2 review/warn checks."                                                                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "Unexpected responses flagged: 15."                                                                               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "MnSq screening flagged 1 element(s) outside the configured 0.5-1.5 band."                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "MnSq follow-up: Criterion:Organization (Infit=0.48, Outfit=0.49; outside the configured 0.5-1.5 screening band)."</span>
 <span class="r-in"><span><span class="co"># Look for: lines beginning with "MnSq misfit:" name the worst</span></span></span>
 <span class="r-in"><span><span class="co">#   element + Infit / Outfit values; "Unexpected responses flagged"</span></span></span>
 <span class="r-in"><span><span class="co">#   counts how many cell-level surprises the screen returned.</span></span></span>

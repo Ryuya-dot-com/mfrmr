@@ -69,8 +69,10 @@ apa$report_text
 #> exploratory in this run. Recommended use for this precision profile: Use for screening and
 #> calibration triage; confirm formal SE, CI, and reliability with an MML fit.. Optimization
 #> did not meet the package convergence checks after 76 function evaluations and 30 gradient
-#> evaluations (LogLik = -820.949, AIC = 1753.898, BIC = 2013.950). Terminal gradient sup-norm
-#> = 0.0035 (review threshold = 0.0001). Optimizer reached the iteration limit before the
+#> evaluations (LogLik = -820.949). The canonical MML information-criterion panel was not
+#> eligible (status: descriptive_jml). Legacy descriptive AIC = 1753.898; legacy descriptive
+#> BIC = 2013.950; neither enters the common MML ranking panel. Terminal gradient sup-norm =
+#> 0.0035 (review threshold = 0.0001). Optimizer reached the iteration limit before the
 #> terminal gradient became small enough for review-only acceptance. Constraint settings:
 #> noncenter facet = Person; anchored levels = 0 (facets: none); group anchors = 0 (facets:
 #> none); dummy facets = none.

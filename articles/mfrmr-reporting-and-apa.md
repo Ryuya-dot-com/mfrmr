@@ -223,10 +223,12 @@ cat(apa$report_text)
 #> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended
 #> use for this precision profile: Use for primary reporting of SE, CI, and reliability in
 #> this package.. Optimization met the package convergence checks after 16 function
-#> evaluations and 16 gradient evaluations (LogLik = -347.201, AIC = 712.401, BIC = 745.179).
-#> Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Optimizer returned
-#> convergence code 0. Constraint settings: noncenter facet = Person; anchored levels = 0
-#> (facets: none); group anchors = 0 (facets: none); dummy facets = none.
+#> evaluations and 16 gradient evaluations (LogLik = -347.201, canonical MML AIC = 712.401,
+#> Person-BIC = 729.242, Sclove SABIC = 701.007). These criteria are screening/review values
+#> only at q=7 (coarse_screening); automatic deltas, weights, preferences, and LRT are
+#> disabled below q=31. Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001).
+#> Optimizer returned convergence code 0. Constraint settings: noncenter facet = Person;
+#> anchored levels = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none.
 #> 
 #> Results.
 #> 
@@ -499,6 +501,32 @@ in the language of the target journal. Do not report `DraftReady`,
 decisions; use them to decide what wording is currently safe and which
 caveats must remain visible.
 
+### Standards basis—and what the template cannot certify
+
+The helpers are APA-oriented drafting aids, informed by the *Publication
+Manual of the American Psychological Association* (7th ed.) and the
+quantitative Journal Article Reporting Standards (JARS-Quant; Appelbaum
+et al., 2018). MFRM-specific prompts are also tied to the measurement
+references returned by
+`reporting_checklist(..., include_references = TRUE)`, including Eckes,
+Myford and Wolfe, Linacre, Wright and Masters, and Muraki for GPCM.
+
+This is not a certification of APA or JARS compliance. A fitted
+measurement object cannot supply or verify hypotheses and their
+confirmatory/exploratory status, recruitment and participant
+characteristics, ethics, sample-size rationale, the missing-data
+mechanism and exclusions, multiplicity or deviations from plan, or
+complete data/code availability statements. Complete those study-level
+fields manually. Also review effect sizes and uncertainty,
+statistic-specific rounding (especially *p* values and confidence
+intervals), and the target journal’s typography after exporting
+[`apa_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/apa_table.md).
+
+Reference: Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E.,
+Nezu, A. M., & Rao, S. M. (2018). Journal article reporting standards
+for quantitative research in psychology. *American Psychologist, 73*(1),
+3–25. <https://doi.org/10.1037/amp0000191>
+
 When the target is a local HTML/CSV/replay bundle rather than an
 interactive review object, use
 [`export_mfrm_bundle()`](https://ryuya-dot-com.github.io/mfrmr/reference/export_mfrm_bundle.md)
@@ -542,7 +570,9 @@ tbl_reliability$note
 ```
 
 The actual table data are stored in `tbl_summary$table` and
-`tbl_reliability$table`.
+`tbl_reliability$table`. The `digits` argument applies uniform rounding
+to all numeric columns; it is deliberately not a statistic-aware APA
+formatter.
 
 ## 5. Add figure-ready visual data
 
@@ -620,7 +650,10 @@ provides the fit-statistic table;
 [`build_model_choice_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_model_choice_review.md)
 attaches model roles, downstream route boundaries, and cautious wording.
 Convert the review to a summary-table bundle when the comparison needs
-to appear in an appendix or exported report.
+to appear in an appendix or exported report. Fit all candidates on the
+same q\>=31 grid before automatic ranking; below q=31 the raw criteria
+remain screening/review-only, and a close decision still requires a
+prespecified denser common-grid check.
 
 ``` r
 

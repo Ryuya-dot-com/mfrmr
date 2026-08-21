@@ -60,11 +60,12 @@ panel data objects under `wright`, `severity`, `threshold`, and
 ## Interpreting output
 
 Designed as a single-figure Methods or Results draft. The summary panel
-prints the model class, sample size, log-likelihood, AIC/BIC, and the
-largest non-Person facet's separation / reliability if available. A fit
-that has not passed its numerical, data, design, and stability gates
-produces one warning and a visible `"REVIEW ONLY"` label. Resolve that
-review before treating the composite as report-ready evidence.
+prints the model class, sample size, log-likelihood, the canonical MML
+IC panel or an explicit ineligibility/legacy label, and the largest
+non-Person facet's separation / reliability if available. A fit that has
+not passed its numerical, data, design, and stability gates produces one
+warning and a visible `"REVIEW ONLY"` label. Resolve that review before
+treating the composite as report-ready evidence.
 
 ## See also
 
@@ -83,7 +84,7 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                 method = "JML", maxit = 30)
 #> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 p <- plot_apa_figure_one(fit, draw = FALSE)
-#> Warning: Review-only display: Numerical=fail, Data=pass, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation.
+#> Warning: Review-only display: Fit=blocked, Numerical=fail, Data=pass, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation.
 names(p$data)
 #>  [1] "data"                  "title"                 "subtitle"             
 #>  [4] "preset"                "plot_name"             "legend"               

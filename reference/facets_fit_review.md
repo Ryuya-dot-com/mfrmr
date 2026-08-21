@@ -87,7 +87,8 @@ An `mfrm_facets_fit_review` bundle with:
 - `df_sensitivity_summary`: counts by df-sensitivity status
 
 - `external_table_quality`: completeness and duplicate-key review for
-  the supplied FACETS fit table
+  the supplied FACETS fit table, including reported-token and
+  displayed-ZSTD boundary counts
 
 - `external_comparison`: optional external FACETS-vs-mfrmr comparison
 
@@ -154,8 +155,12 @@ summary(review)
 #>                   4                         52               0            0
 #>  ExternalDuplicateKeyRows ExternalCompleteMnSqRows ExternalCompleteZSTDRows
 #>                         0                        0                        0
-#>  ExternalCompleteDFRows ExternalMatched ExternalNeedsReview ExternalComparison
-#>                       0               0                   0       Not supplied
+#>  ExternalCompleteDFRows ExternalReportedTokenRows ExternalNumericOnlyRows
+#>                       0                         0                       0
+#>  ExternalZSTDBoundaryRows ExternalMatched ExternalNeedsReview
+#>                         0               0                   0
+#>  ExternalComparison
+#>        Not supplied
 #> 
 #> Fit-standardization rows requiring review
 #>      Facet        Level Infit Outfit MaxAbsZDiff FlagChanged
@@ -168,16 +173,17 @@ summary(review)
 #>    flag status is unchanged.
 #> 
 #> Settings
-#>                     Setting                      Value
-#>                     Purpose Fit standardization review
-#>    External FACETS supplied                      FALSE
-#>               DF comparison    Engine and FACETS-style
-#>              MnSq tolerance                       0.01
-#>     External ZSTD tolerance                       0.05
-#>                DF tolerance                        0.5
-#>           DF/ZSTD tolerance                       0.05
-#>  Large ZSTD-shift threshold                        0.5
-#>          DF-ratio tolerance                       0.05
+#>                         Setting                          Value
+#>                         Purpose     Fit standardization review
+#>        External FACETS supplied                          FALSE
+#>                   DF comparison        Engine and FACETS-style
+#>                  MnSq tolerance                           0.01
+#>         External ZSTD tolerance                           0.05
+#>                    DF tolerance                            0.5
+#>               DF/ZSTD tolerance                           0.05
+#>      Large ZSTD-shift threshold                            0.5
+#>              DF-ratio tolerance                           0.05
+#>  external_zstd_threshold_policy display_equality_indeterminate
 #> 
 #> Notes
 #>  - Engine-vs-FACETS-style df/ZSTD differences need review for 56 element(s).

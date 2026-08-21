@@ -72,7 +72,21 @@ package-native evidence sources:
 The result is intended for substantive review, not for automatic model
 selection. In particular, a better-fitting `GPCM` should not by itself
 be interpreted as a reason to discard an equal-weighting Rasch-family
-route.
+route. The fitted GPCM contains one slope for every level of one
+designated facet, not one common slope and not simultaneous
+criterion-by-rater slope blocks. The overview records the slope owner,
+step owner, level count, free relative slope contrasts, and whether the
+supplied reference is the exact unit-slope PCM response-kernel
+reduction. A formal PCM-versus-GPCM chi-square LRT is intentionally
+withheld in the current comparison contract. The returned
+`comparison_contract` separates three evidence channels: selectable
+same-basis MML information criteria, descriptive JML reweighting, and
+non-ready optimizer traces. In particular, a JML log-likelihood increase
+is not promoted to automatic PCM-versus-GPCM model selection because it
+is unpenalized and the GPCM contains additional slope parameters. FACETS
+may serve as a direct comparator for the PCM/JML side only; its post-fit
+discrimination statistic is not a jointly estimated free-slope GPCM
+counterpart.
 
 ## Recommended input route
 
@@ -90,6 +104,15 @@ route.
 
 - `model_comparison`: same-data model-comparison bundle from
   [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md).
+  AIC/Person-BIC/SABIC ranking is available only when
+  `model_comparison$table$ICComparable` is true. PCM-versus-GPCM LRT
+  remains unavailable even though PCM is the aligned GPCM's unit-slope
+  reduction.
+
+- `comparison_contract`: one-row evidence-tier table stating whether
+  formal model selection is available, how any observed log-likelihood
+  difference may be read, and the bounded role of FACETS in a JML
+  review.
 
 - `facet_shift`: how non-person facet estimates move under bounded
   `GPCM`.
@@ -148,60 +171,99 @@ summary(review)
 #> Overview
 #>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SlopeFacet
 #>             RSM            GPCM             MML              MML  Criterion
-#>                 ReviewStatus            ComparisonMode MaxAbsLogSlope
-#>  reweighting_review_required same_basis_fit_comparison          0.138
+#>  StepFacet ReferenceStepFacet AlignedStepSlopeOwner SlopeLevelCount
+#>  Criterion               <NA>                 FALSE               4
+#>  FreeRelativeSlopeContrasts                                    SlopeComposition
+#>                           3 single_aligned_facet_level_specific_relative_slopes
+#>  SimultaneousCriterionRaterSlopeBlocks UnitSlopePCMReduction
+#>                                  FALSE                 FALSE
+#>                         PCMvsGPCMLRT
+#>  not_applicable_reference_is_not_pcm
+#>                                  EvidenceTier FormalModelSelectionAvailable
+#>  mml_optimizer_trace_only_not_inference_ready                         FALSE
+#>  ObservedLogLikDifference                   LogLikDifferenceStatus
+#>                     8.593 optimizer_trace_only_not_inference_ready
+#>                 ReviewStatus                  ComparisonMode MaxAbsLogSlope
+#>  reweighting_review_required descriptive_model_contrast_only          0.138
 #>  MaxAbsInfoShareDelta
-#>                 0.024
+#>                 0.026
 #> 
 #> Status
-#>                 Item
-#>       Overall status
-#>  Weighting principle
-#>     Comparison basis
+#>                    Item
+#>          Overall status
+#>     Weighting principle
+#>         Slope ownership
+#>        Comparison basis
+#>           Evidence tier
+#>  Formal model selection
+#>         PCM vs GPCM LRT
 #>                                                                          Value
 #>                                                    reweighting_review_required
 #>  Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting
-#>                                                      same_basis_fit_comparison
+#>                            Criterion levels; one aligned slope/step owner only
+#>                                                descriptive_model_contrast_only
+#>                                   mml_optimizer_trace_only_not_inference_ready
+#>                                                                       withheld
+#>                                            not_applicable_reference_is_not_pcm
+#> 
+#> Comparison Contract
+#>  ReferenceModel ComparisonModel ReferenceMethod ComparisonMethod SameMethod
+#>             RSM            GPCM             MML              MML       TRUE
+#>  SamePreparedData BothInferenceReady
+#>              TRUE              FALSE
+#>                                  EvidenceTier FormalModelSelectionAvailable
+#>  mml_optimizer_trace_only_not_inference_ready                         FALSE
+#>                            SelectionRoute ObservedLogLikDifference
+#>  withheld_comparison_basis_not_selectable                    8.593
+#>                    LogLikDifferenceStatus AICPreferred PersonBICPreferred
+#>  optimizer_trace_only_not_inference_ready         <NA>               <NA>
+#>  SABICPreferred                        PCMvsGPCMLRT
+#>            <NA> not_applicable_reference_is_not_pcm
+#>                   FACETSComparisonRole
+#>  not_an_internal_free_slope_comparator
+#>                                                                                                             RecommendedUse
+#>  Repair inference readiness, integration selectability, or comparison identity before using this pair for model selection.
 #> 
 #> Key Warnings
+#>  - Model-comparison weights are descriptive only because the two fits do not
+#>    share a fully comparable formal MML basis.
 #>  - Largest bounded GPCM slope deviation is at Criterion = Organization
 #>    (Estimate = 1.148).
-#>  - Largest within-facet information-share shift is -0.024 for Criterion =
+#>  - Largest within-facet information-share shift is -0.026 for Criterion =
 #>    Organization.
-#>  - Largest facet-measure shift is -0.032 for Criterion = Content.
+#>  - Largest facet-measure shift is -0.020 for Criterion = Organization.
 #> 
 #> Next Actions
 #>  - Read summary(model_comparison) before interpreting any fit advantage as a
 #>    scoring recommendation.
+#>  - For MML selection, require ICComparable and repeat consequential comparisons
+#>    on a denser common quadrature grid.
 #>  - Use slope_profile and top_reweighted_levels to inspect whether Criterion
 #>    levels are being upweighted or downweighted in substantively acceptable
 #>    ways.
 #>  - Use plot_information(compute_information(rasch_fit), type = "iif", facet =
 #>    "Criterion", draw = FALSE) and the bounded GPCM analogue to inspect
 #>    precision redistribution visually.
-#>  - If equal contributions of items and raters are part of the score
-#>    interpretation, retain the Rasch-family fit as the operational reference
-#>    even when bounded GPCM fits better.
 #> 
 #> Top Measure Shifts
 #>      Facet        Level ReferenceEstimate ReferenceRank ComparisonEstimate
-#>  Criterion      Content            -0.401             1             -0.433
-#>  Criterion     Language             0.094             3              0.122
-#>  Criterion     Accuracy             0.240             4              0.258
-#>  Criterion Organization             0.067             2              0.053
-#>      Rater          R03             0.184             3              0.177
-#>      Rater          R04             0.321             4              0.329
-#>      Rater          R01            -0.189             2             -0.188
-#>      Rater          R02            -0.317             1             -0.318
+#>  Criterion Organization             0.067             2              0.047
+#>  Criterion     Language             0.094             3              0.113
+#>  Criterion     Accuracy             0.240             4              0.257
+#>  Criterion      Content            -0.401             1             -0.417
+#>      Rater          R03             0.184             3              0.172
+#>      Rater          R02            -0.317             1             -0.309
+#>      Rater          R01            -0.189             2             -0.183
+#>      Rater          R04             0.321             4              0.320
 #>  ComparisonRank DeltaEstimate AbsDeltaEstimate RankShift              Direction
-#>               1        -0.032            0.032         0  Lower in bounded GPCM
-#>               3         0.028            0.028         0 Higher in bounded GPCM
-#>               4         0.018            0.018         0 Higher in bounded GPCM
-#>               2        -0.014            0.014         0  Lower in bounded GPCM
-#>               3        -0.008            0.008         0  Lower in bounded GPCM
-#>               4         0.007            0.007         0 Higher in bounded GPCM
-#>               2         0.001            0.001         0 Higher in bounded GPCM
-#>               1        -0.001            0.001         0  Lower in bounded GPCM
+#>               2        -0.020            0.020         0  Lower in bounded GPCM
+#>               3         0.019            0.019         0 Higher in bounded GPCM
+#>               4         0.017            0.017         0 Higher in bounded GPCM
+#>               1        -0.017            0.017         0  Lower in bounded GPCM
+#>               3        -0.013            0.013         0  Lower in bounded GPCM
+#>               1         0.008            0.008         0 Higher in bounded GPCM
+#>               2         0.006            0.006         0 Higher in bounded GPCM
+#>               4        -0.002            0.002         0  Lower in bounded GPCM
 #> 
 #> Top Reweighted Levels
 #>      Facet        Level ReferenceIntegratedInfo ReferenceExposure
@@ -210,25 +272,25 @@ summary(review)
 #>  Criterion      Content                1909.047               192
 #>  Criterion     Language                1909.722               192
 #>  ReferenceInfoShare ReferenceExposureShare ComparisonIntegratedInfo
-#>                0.25                   0.25                 2196.386
-#>                0.25                   0.25                 1730.686
-#>                0.25                   0.25                 1757.373
-#>                0.25                   0.25                 1983.700
+#>                0.25                   0.25                 2196.635
+#>                0.25                   0.25                 1721.569
+#>                0.25                   0.25                 1763.436
+#>                0.25                   0.25                 1989.414
 #>  ComparisonExposure ComparisonInfoShare ComparisonExposureShare InfoShareDelta
-#>                 192               0.226                    0.25         -0.024
-#>                 192               0.226                    0.25         -0.024
-#>                 192               0.226                    0.25         -0.024
-#>                 192               0.226                    0.25         -0.024
+#>                 192               0.224                    0.25         -0.026
+#>                 192               0.224                    0.25         -0.026
+#>                 192               0.224                    0.25         -0.026
+#>                 192               0.224                    0.25         -0.026
 #>  ExposureShareDelta IntegratedInfoRatio AbsInfoShareDelta AbsLogInfoRatio
-#>                   0               1.150             0.024           0.140
-#>                   0               0.906             0.024           0.098
-#>                   0               0.921             0.024           0.083
-#>                   0               1.039             0.024           0.038
+#>                   0               1.150             0.026           0.140
+#>                   0               0.902             0.026           0.104
+#>                   0               0.924             0.026           0.079
+#>                   0               1.042             0.026           0.041
 #>  SlopeEstimate SlopeLogEstimate SlopeDirection SlopeExposure SlopeExposureShare
 #>          1.148            0.138     Upweighted           192               0.25
-#>          0.910           -0.094   Downweighted           192               0.25
-#>          0.924           -0.079   Downweighted           192               0.25
-#>          1.036            0.036      Near unit           192               0.25
+#>          0.905           -0.100   Downweighted           192               0.25
+#>          0.926           -0.077   Downweighted           192               0.25
+#>          1.039            0.038      Near unit           192               0.25
 #> 
 #> Support Status
 #>                    Scope                Status
@@ -241,6 +303,13 @@ summary(review)
 #> Notes
 #>  - Observation weights and discrimination-based reweighting are separate
 #>    concepts in this package.
+#>  - The fitted slopes vary across levels of `Criterion`; other facets have no
+#>    separate slope block.
+#>  - Criterion-owned and rater-owned GPCM fits are separate restricted models;
+#>    both blocks cannot be estimated together in 0.2.3.
+#>  - FACETS is a direct JML comparator only for the aligned equal-discrimination
+#>    PCM side; its reported discrimination is a post-fit diagnostic, not the
+#>    fitted free-slope GPCM parameter.
 #>  - The review is intended to make reweighting visible; it does not decide by
 #>    itself whether bounded GPCM should replace the Rasch-family operational
 #>    model.

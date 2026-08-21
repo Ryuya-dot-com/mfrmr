@@ -223,10 +223,11 @@ routes.
 
 - Treat zero-count score categories as scale-functioning caveats.
   Boundary zero-count categories can be retained with explicit
-  `rating_min` / `rating_max`; intermediate zero-count categories
-  require `keep_original = TRUE` and make adjacent thresholds weakly
-  identified. `summary(describe_mfrm_data(...))` exposes these in
-  `Notes`, printed `Caveats`, and `$caveats`; `summary(fit)` carries
+  `rating_min` / `rating_max`; retaining an intermediate zero-count
+  category with `keep_original = TRUE` creates an unsupported
+  adjacent-step contrast in a polytomous fitted ladder, so new fits stop
+  before optimization. `summary(describe_mfrm_data(...))` exposes these
+  in `Notes`, printed `Caveats`, and `$caveats`; `summary(fit)` carries
   full structured caveats into printed `Caveats` and `$caveats`, with
   `Key warnings` as a short triage subset. Summary-table exports use
   `score_category_caveats` and `analysis_caveats`.

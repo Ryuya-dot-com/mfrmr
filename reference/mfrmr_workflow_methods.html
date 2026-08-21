@@ -9,7 +9,7 @@ output objects support summary() and plot()."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,7 @@ output objects support summary() and plot()."><meta property="og:image" content=
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow and Method Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/help_workflow_methods.R" class="external-link"><code>R/help_workflow_methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_workflow_methods.R" class="external-link"><code>R/help_workflow_methods.R</code></a></small>
       <div class="d-none name"><code>mfrmr_workflow_methods.Rd</code></div>
     </div>
 
@@ -134,6 +134,9 @@ helper rather than the latent-regression estimator itself.</p></li>
 <p>If the intended rating scale includes categories not observed in the current
 data, make that support explicit. For example, use
 <code>rating_min = 1, rating_max = 5</code> for a 1-5 scale with only 2-5 observed.
+This preserves the declaration in the data-support review. A zero-count
+boundary is review evidence for the separate element-boundary contract; it
+is not by itself an unsupported free-step contrast.
 If an intermediate category is unobserved (for example 1, 2, 4, 5 with no
 3), also set <code>keep_original = TRUE</code> if the zero-count category should remain
 in the fitted support. <code>summary(describe_mfrm_data(...))</code> reports retained
@@ -141,8 +144,9 @@ zero-count categories in <code>Notes</code>, printed <code>Caveats</code>, and <
 <code>summary(fit)</code> carries full structured rows into printed <code>Caveats</code> and
 <code>$caveats</code>, with <code>Key warnings</code> as a short triage subset. Summary-table
 exports route those rows through <code>score_category_caveats</code> or
-<code>analysis_caveats</code>. Adjacent threshold estimates should still be treated as
-weakly identified when an intermediate category is unobserved.</p>
+<code>analysis_caveats</code>. In a polytomous fitted ladder, a retained zero-count
+internal category creates an unsupported adjacent-step contrast and stops
+fitting before optimization.</p>
     </div>
     <div class="section level2">
     <h2 id="planned-assignment-and-structural-missingness">Planned assignment and structural missingness<a class="anchor" aria-label="anchor" href="#planned-assignment-and-structural-missingness"></a></h2>
@@ -288,7 +292,9 @@ bounded <code>GPCM</code>:
 <code><a href="compare_mfrm.html">compare_mfrm()</a></code> -&gt; <code><a href="build_weighting_review.html">build_weighting_review()</a></code> -&gt;
 <code><a href="compute_information.html">compute_information()</a></code> / <code><a href="plot_information.html">plot_information()</a></code> when you want to inspect
 whether bounded <code>GPCM</code> is introducing substantively acceptable
-discrimination-based reweighting relative to the Rasch-family reference.</p></li>
+discrimination-based reweighting relative to the Rasch-family reference.
+Use one selectable q&gt;=31 grid for every candidate and a denser common-grid
+sensitivity check when the comparison is close or consequential.</p></li>
 <li><p>Design planning and forecasting:
 <code><a href="build_mfrm_sim_spec.html">build_mfrm_sim_spec()</a></code> or <code><a href="extract_mfrm_sim_spec.html">extract_mfrm_sim_spec()</a></code> -&gt;
 <code><a href="evaluate_mfrm_recovery.html">evaluate_mfrm_recovery()</a></code> -&gt; <code><a href="assess_mfrm_recovery.html">assess_mfrm_recovery()</a></code> for
@@ -417,10 +423,11 @@ plots from component tables.</p>
 <span class="r-in"><span>  maxit <span class="op">=</span> <span class="fl">30</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">next_actions</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "After reviewing convergence, run `review &lt;- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface."</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for residual PCA or other custom settings."                                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."                                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision."</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2] "After reviewing convergence, run `review &lt;- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface."</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [3] "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for residual PCA or other custom settings."                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."                                                         </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span>, diagnostic_mode <span class="op">=</span> <span class="st">"both"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag</span><span class="op">)</span><span class="op">$</span><span class="va">next_actions</span></span></span>

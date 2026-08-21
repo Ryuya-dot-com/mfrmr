@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Estimate bias and interaction screening terms</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-tables.R" class="external-link"><code>R/api-tables.R</code></a></small>
       <div class="d-none name"><code>estimate_bias.Rd</code></div>
     </div>
 
@@ -76,7 +76,7 @@
 <dt id="arg-facet-a">facet_a<a class="anchor" aria-label="anchor" href="#arg-facet-a"></a></dt>
 <dd><p>First facet name. Provide together with <code>facet_b</code> for the
 classic pairwise 2-way interaction. Ignored when <code>interaction_facets</code>
-is supplied.</p></dd>
+is supplied. The canonical <code>"Person"</code> role is accepted explicitly.</p></dd>
 
 
 <dt id="arg-facet-b">facet_b<a class="anchor" aria-label="anchor" href="#arg-facet-b"></a></dt>
@@ -88,7 +88,8 @@ is supplied.</p></dd>
 one interaction effect. When supplied, this takes precedence over
 <code>facet_a</code>/<code>facet_b</code>. Use this form (rather than <code>facet_a</code>/<code>facet_b</code>)
 whenever you want 3+ way interactions, since <code>facet_a/facet_b</code> is
-restricted to the pairwise case.</p></dd>
+restricted to the pairwise case. The canonical <code>"Person"</code> role may be
+supplied explicitly; see the Person-screening boundary below.</p></dd>
 
 
 <dt id="arg-max-abs">max_abs<a class="anchor" aria-label="anchor" href="#arg-max-abs"></a></dt>
@@ -117,6 +118,8 @@ profile-likelihood columns when available</p></li>
 <li><p><code>facet_a</code>, <code>facet_b</code>: first two analyzed facet names (legacy compatibility)</p></li>
 <li><p><code>interaction_facets</code>, <code>interaction_order</code>, <code>interaction_mode</code>: full
 interaction metadata</p></li>
+<li><p><code>person_interaction</code>, <code>person_source_column</code>, <code>person_interaction_note</code>:
+Person-screening provenance and interpretation metadata</p></li>
 <li><p><code>iteration</code>: iteration history/metadata</p></li>
 <li><p><code>orientation_review</code>: facet-orientation sign-consistency review table</p></li>
 <li><p><code>mixed_sign</code>: logical flag indicating whether bias-size signs flip
@@ -155,6 +158,11 @@ screening evidence because theta, facet, step, and slope estimates are held
 fixed.</p><ul><li><p>For two-way mode, use <code>facet_a</code> and <code>facet_b</code> (or <code>interaction_facets</code>
 with length 2).</p></li>
 <li><p>For higher-order mode, provide <code>interaction_facets</code> with length &gt;= 3.</p></li>
+<li><p>A Person-involving result is a conditional plug-in likelihood screen. It
+holds fitted JML person measures or MML EAP scores and the other fitted
+parameters fixed; it is not a jointly fitted Person-by-facet interaction
+and does not support formal inference or a cell-level fairness decision.
+The function emits a classed warning when <code>"Person"</code> is requested.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="what-this-screening-means">What this screening means<a class="anchor" aria-label="anchor" href="#what-this-screening-means"></a></h2>

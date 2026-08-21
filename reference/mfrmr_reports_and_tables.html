@@ -11,7 +11,7 @@ which bundle, table, or reporting helper to call."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,7 @@ which bundle, table, or reporting helper to call."><meta property="og:image" con
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Reports and Tables Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_reports_and_tables.R" class="external-link"><code>R/help_reports_and_tables.R</code></a></small>
       <div class="d-none name"><code>mfrmr_reports_and_tables.Rd</code></div>
     </div>
 
@@ -203,8 +203,9 @@ supported for the fitted result.</p></li>
 substitutes for overall fit review.</p></li>
 <li><p>Treat zero-count score categories as scale-functioning caveats. Boundary
 zero-count categories can be retained with explicit <code>rating_min</code> /
-<code>rating_max</code>; intermediate zero-count categories require
-<code>keep_original = TRUE</code> and make adjacent thresholds weakly identified.
+<code>rating_max</code>; retaining an intermediate zero-count category with
+<code>keep_original = TRUE</code> creates an unsupported adjacent-step contrast in a
+polytomous fitted ladder, so new fits stop before optimization.
 <code>summary(describe_mfrm_data(...))</code> exposes these in <code>Notes</code>, printed
 <code>Caveats</code>, and <code>$caveats</code>; <code>summary(fit)</code> carries full structured caveats
 into printed <code>Caveats</code> and <code>$caveats</code>, with <code>Key warnings</code> as a short

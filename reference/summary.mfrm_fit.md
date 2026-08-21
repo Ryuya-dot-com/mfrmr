@@ -83,8 +83,13 @@ An object of class `summary.mfrm_fit` with:
 
 - `status`: concise front-door status block for quick review
 
-- `readiness`: domain-specific numerical, data, design, stability,
-  diagnostic, and reporting states
+- `decision`: plain-language interpretation, formal-inference status,
+  reason, and highest-priority next action derived from the stored
+  readiness contract plus supplied precision evidence; fit readiness
+  alone never yields `FormalInference = "Yes"`
+
+- `readiness`: the stored fit-level state plus numerical, data, design,
+  stability, diagnostic, and reporting workflow states
 
 - `data_review`: structured connectivity and facet-support evidence used
   by the non-numerical readiness gates
@@ -107,7 +112,9 @@ An object of class `summary.mfrm_fit` with:
 
 - `facet_overview`: per-facet estimate distribution summary
 
-- `person_overview`: person-measure distribution summary
+- `person_overview`: person-measure distribution summary with the actual
+  aggregation denominator, blocked extreme-EAP exclusion count, and
+  estimate use
 
 - `targeting`: person-versus-non-person facet targeting overview
   (Wright-map-style mean/SD comparison)
@@ -115,7 +122,14 @@ An object of class `summary.mfrm_fit` with:
 - `step_overview`: threshold/step diagnostics by PCM/GPCM `StepFacet`
   ladder, or for the common RSM ladder
 
-- `slope_overview`: discrimination summary for `GPCM` fits
+- `slope_overview`: parameter-readiness and explicitly labelled
+  optimizer- trace summary for `GPCM` discriminations
+
+- `inference_evidence`: for `GPCM` MML, a compact separation of
+  optimizer stationarity, retained-point local rank,
+  observed-information curvature, slope-boundary screening, and the
+  final readiness decision. Supportive local evidence does not override
+  an inconclusive boundary audit
 
 - `interaction_overview`: model-estimated facet-interaction summary when
   the fit was specified with `facet_interactions`
@@ -142,6 +156,12 @@ An object of class `summary.mfrm_fit` with:
 - `person_high` / `person_low`: highest and lowest person measures
 
 - `facet_extremes`: extreme facet-level estimates
+
+- `facet_support_boundaries`: observed boundary-constant non-person
+  facet levels, kept distinct from parameter-level recession conclusions
+
+- `facet_recession_review`: certified JML additive facet recession
+  directions, including review scope and completeness
 
 - `caveats`: structured warning/review rows for score-support and
   latent-regression population-model issues
@@ -171,7 +191,8 @@ navigation, but do not claim that FACETS was executed or that estimates
 are numerically equivalent to FACETS output. It returns a structured
 object and prints:
 
-- model fit overview (N, LogLik, AIC/BIC, convergence)
+- model fit overview (N, LogLik, the canonical/legacy IC status,
+  convergence)
 
 - estimation settings that affect identification/scoring interpretation
 
@@ -190,12 +211,26 @@ object and prints:
 
 ## Interpreting output
 
-- `overview`: convergence and information criteria.
+- `overview`: convergence plus the versioned information-criterion
+  contract. For eligible fixed-facet MML fits, BIC/SABIC use unique
+  Persons, not response rows; JML, non-unit observation weights, and
+  legacy objects do not enter the common MML ranking panel.
+  `ICSelectable` additionally distinguishes raw screening/review
+  criteria at q\<31 from criteria that may enter automatic same-grid
+  comparison at q\>=31; close decisions still require a denser
+  common-grid sensitivity check.
 
-- `readiness`: separate Numerical, Data, Design, Stability, Diagnostics,
-  and Reporting states. `InferenceReady` contributes only to Numerical;
-  a numerical pass cannot override a disconnected-design or boundary-
-  separation hold.
+- `readiness`: the stored fit-readiness result followed by Numerical,
+  Data, Design, Stability, Diagnostics, and Reporting workflow states.
+  `InferenceReady` is a conservative compatibility scalar and is `TRUE`
+  only when the stored `FitReadiness` is `ready`; numerical convergence
+  cannot override input, estimability, category, or boundary review.
+
+- `decision`: separates that fit gate from formal precision support. A
+  fit-only summary returns `FormalInference = "No"` until a matching
+  `mfrm_diagnostics` object is supplied through `diagnostics =`; use
+  `summary(diagnostics)$decision` for the equivalent precision-aware
+  view.
 
 - `data_review`: overall multi-facet connectivity, facet-level score
   support, boundary-constant levels, single-level facets, and retained
@@ -203,7 +238,11 @@ object and prints:
 
 - `facet_overview`: per-facet spread and range of estimates.
 
-- `person_overview`: distribution of person measures.
+- `person_overview`: distribution of person measures. For a blocked
+  source fit, a prior-regularized extreme MML EAP is retained in
+  `person_high` / `person_low` but excluded from this aggregate and
+  `targeting`; the table records its distribution denominator, exclusion
+  count, and estimate use.
 
 - `step_overview`: threshold spread and monotonicity checks, reported by
   `StepFacet` ladder for PCM/GPCM fits and as one common ladder for RSM
@@ -232,6 +271,15 @@ object and prints:
 
 - `person_high` / `person_low` (opt-in for printing) and
   `facet_extremes`: extreme estimates for focused review.
+
+- `facet_support_boundaries`: observed non-person facet levels whose
+  retained responses are constant at the minimum or maximum score. This
+  is a data- support warning, not by itself a proof that a parameter MLE
+  is infinite.
+
+- `facet_recession_review`: non-person facet directions certified as
+  unbounded in an evaluated JML additive recession subspace. Joint rows
+  are relative directions under the fitted identification constraints.
 
 ## Typical workflow
 
@@ -275,37 +323,51 @@ fit <- fit_mfrm(
 )
 s <- summary(fit)
 s$overview[, c(
-  "Model", "Method", "Converged", "InferenceReady",
+  "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
   "ConvergenceSeverity"
 )]
-#> # A tibble: 1 × 5
-#>   Model Method Converged InferenceReady ConvergenceSeverity
-#>   <chr> <chr>  <lgl>     <lgl>          <chr>              
-#> 1 RSM   MML    TRUE      TRUE           pass               
+#> # A tibble: 1 × 6
+#>   Model Method Converged FitReadiness InferenceReady ConvergenceSeverity
+#>   <chr> <chr>  <lgl>     <chr>        <lgl>          <chr>              
+#> 1 RSM   MML    TRUE      ready        TRUE           pass               
 s$readiness
 #>        Domain                                        Status
-#> 1   Numerical                                          pass
-#> 2        Data                                          pass
-#> 3      Design                                   pass_linked
-#> 4   Stability                                          pass
-#> 5 Diagnostics                                  not_assessed
-#> 6   Reporting ready_for_diagnostics_and_reporting_follow_up
+#> 1         Fit                                         ready
+#> 2   Numerical                                          pass
+#> 3        Data                                          pass
+#> 4      Design                                   pass_linked
+#> 5   Stability                                          pass
+#> 6 Diagnostics                                  not_assessed
+#> 7   Reporting ready_for_diagnostics_and_reporting_follow_up
 #>                                                                                                                              Detail
-#> 1                                                                                            Optimizer returned convergence code 0.
-#> 2                                                                                No preparation warning or review row was retained.
-#> 3 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
-#> 4                                                                         No boundary-constant non-person facet level was detected.
-#> 5                                                             Diagnostics have not yet been incorporated into this fit-only status.
-#> 6                                                             Reporting status is the strictest applicable upstream workflow state.
-# `InferenceReady = TRUE` clears only the numerical gate. Also require the
-# Data, Design, and Stability rows to support the intended interpretation.
+#> 1                                                                                       All stored fit-readiness components passed.
+#> 2                                                                                            Optimizer returned convergence code 0.
+#> 3                                                                                No preparation warning or review row was retained.
+#> 4 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.
+#> 5                                                                         No boundary-constant non-person facet level was detected.
+#> 6                                                             Diagnostics have not yet been incorporated into this fit-only status.
+#> 7                                                             Reporting status is the strictest applicable upstream workflow state.
+# `InferenceReady = TRUE` means all five stored fit components passed.
+# It does not, by itself, support formal SE/CI or reliability.
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+summary(fit, diagnostics = diag)$decision
+#>               Interpretation FormalInference FitReadiness
+#> 1 Ready for formal inference             Yes        ready
+#>                                           Why
+#> 1 All stored fit-readiness components passed.
+#>                                                                                                                                               NextAction
+#> 1 After reviewing convergence, run `review <- summary(fit, profile = "facets", detail = "brief")` for the comprehensive FACETS-organized result surface.
+# Design, Stability, Diagnostics, and Reporting remain purpose-specific
+# workflow reviews rather than alternative fit-readiness derivations.
 # If Numerical is not a pass, inspect the retained polish stages; increasing
 # `maxit` alone may not resolve the review.
 s$person_overview
-#> # A tibble: 1 × 8
-#>   Persons   Mean    SD Median   Min   Max  Span MeanPosteriorSD
-#>     <int>  <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl>           <dbl>
-#> 1      48 -0.141 0.811 -0.107 -1.71  1.45  3.15           0.463
+#> # A tibble: 1 × 11
+#>   Persons DistributionN ReviewExcludedExtremeE…¹ EstimateUse   Mean    SD Median
+#>     <int>         <int>                    <int> <chr>        <dbl> <dbl>  <dbl>
+#> 1      48            48                        0 source_fit… -0.141 0.811 -0.107
+#> # ℹ abbreviated name: ¹​ReviewExcludedExtremeEAPs
+#> # ℹ 4 more variables: Min <dbl>, Max <dbl>, Span <dbl>, MeanPosteriorSD <dbl>
 # Interpret location and spread on the fitted logit scale together with the
 # score distribution and extreme-score counts.
 s$targeting

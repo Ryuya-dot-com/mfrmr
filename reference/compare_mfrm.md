@@ -2,9 +2,10 @@
 
 Produce a side-by-side comparison of multiple
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-results using information criteria, log-likelihood, and parameter
-counts. When exactly two models are supplied and the current
-conservative nesting review passes, a likelihood-ratio test is included.
+results using AIC, Person-based BIC, Sclove SABIC, log-likelihood, and
+free-parameter counts. When exactly two models are supplied and the
+current conservative nesting review passes, a likelihood-ratio test is
+included.
 
 ## Usage
 
@@ -26,8 +27,9 @@ compare_mfrm(..., labels = NULL, warn_constraints = TRUE, nested = FALSE)
 - warn_constraints:
 
   Logical. If `TRUE` (the default), emit a warning when models use
-  different centering constraints (`noncenter_facet` or `dummy_facets`),
-  which can make information-criterion comparisons misleading.
+  different score coding or constraint settings. Ranking is suppressed
+  whenever this basis differs, regardless of whether the warning is
+  displayed.
 
 - nested:
 
@@ -42,10 +44,13 @@ compare_mfrm(..., labels = NULL, warn_constraints = TRUE, nested = FALSE)
 
 An object of class `mfrm_comparison` (named list) with:
 
-- `table`: data.frame of model-level statistics (LogLik, AIC, BIC,
-  Delta_AIC, AkaikeWeight, Delta_BIC, BICWeight, npar, nobs, WeightedN,
-  ICSampleSize, ICSampleSizeBasis, Model, Method, Converged,
-  InferenceReady, ConvergenceSeverity, ICComparable).
+- `table`: data.frame of model-level statistics including `LogLik`,
+  `Deviance`, `Npar` (and equal compatibility alias `npar`), `AIC`,
+  `BIC`, `SABIC`, criterion deltas and candidate-set weights,
+  `ResponseRows`, `WeightedResponseTotal`, `Persons`, `ICSampleSize`,
+  formula and integration identities, integration tier/selectability,
+  stored-value consistency fields, convergence fields, `ICComparable`,
+  `SABICComparable`, and `ConstraintComparable`.
 
 - `lrt`: data.frame with likelihood-ratio test result (only when two
   models are supplied and `nested = TRUE`). Contains `ChiSq`, `df`,
@@ -69,22 +74,40 @@ Models should be fit to the **same data** (same rows, same person/facet
 columns) for the comparison to be meaningful. The function checks that
 observation counts match and warns otherwise.
 
-Information-criterion ranking is reported only when all candidate models
-use the package's `MML` estimation path, analyze the same observations,
-and converge successfully. Raw `AIC` and `BIC` values are still shown
-for each model, but `Delta_*`, weights, and preferred-model summaries
-are suppressed when the likelihood basis is not comparable enough for
-primary reporting. The comparison table records both row count (`nobs`)
-and the sample-size basis used for the BIC penalty (`ICSampleSize`,
-`ICSampleSizeBasis`); for weighted fits this is the sum of weights
-rather than the number of rows.
+Information-criterion ranking is reported only when all candidates are
+inference-ready fits from the package's current `MML` contract, use the
+same prepared observations, score coding, constraints, formula contract,
+and integration-evaluation identity, are eligible under the weighting
+policy, and have a selectable integration tier. For fixed-facet MML,
+`ICSampleSize` is the number of independent Persons and
+`ICSampleSizeBasis` is `"person_count"`; response rows and their
+weighted total are retained separately. Explicit all-unit weights are
+eligible, whereas every non-unit observation-weight fit fails closed in
+version 0.2.3.
+
+Canonical `AIC`, `BIC`, and `SABIC` are recomputed from the retained
+objective, optimizer-vector dimension, and Person count. A stale stored
+value, a legacy object without the current contract identity, a JML fit,
+or an ineligible weighted fit cannot enter ranking. Earlier raw values
+may be shown only as explicitly labelled `LegacyAIC` and `LegacyBIC`
+fields.
+
+**Integration selection guard**: raw canonical criteria are retained at
+every valid MML quadrature count, but automatic comparison is
+screening-only below 15 points and review-only at 15–30 points.
+`ICSelectable` and `ICIntegrationSelectable` become `TRUE` at q\>=31.
+q=31 is a starting grid, not a universal guarantee: close or
+consequential comparisons should be reevaluated at a denser shared grid
+(normally q\>=61). The guard also applies to `nested = TRUE`, so a
+coarse-grid LRT cannot bypass it.
 
 **Nesting**: Two models are *nested* when one is a special case of the
 other obtained by imposing equality constraints. The most common nesting
 in MFRM is RSM (shared thresholds) inside PCM (item-specific
 thresholds). Models that differ only in estimation method (MML vs JML)
-on the same specification are not nested in the usual sense—use
-information criteria rather than LRT for that comparison.
+on the same specification are not nested in the usual sense, and their
+information criteria do not share the common MML contract. Do not use
+either the LRT or IC ranking as a direct cross-method comparison.
 
 In the **current `mfrmr` model space**, the automatic nesting review is
 intentionally conservative. It currently supports two fixed-effect
@@ -107,30 +130,39 @@ passes, and the difference in the number of parameters is positive:
 \$\$\Lambda = -2 (\ell\_{\mathrm{restricted}} - \ell\_{\mathrm{full}})
 \sim \chi^2\_{\Delta p}\$\$
 
-The LRT is asymptotically valid when models are nested and the data are
-independent. With small samples or boundary conditions (e.g., variance
-components near zero), treat p-values as approximate.
+The LRT is asymptotically valid only under its regularity assumptions.
+With small samples or boundary/singular conditions, the reference
+chi-square p-value can be incorrect. At large Person counts, a very
+small practical improvement can also become statistically significant.
+Read the p-value as formal nested-fit evidence, not as an automatic
+practical model preference or evidence that a subscore is useful.
 
 ## Information-criterion diagnostics
 
-In addition to raw AIC and BIC values, the function computes:
+In addition to the canonical criteria, the function computes:
 
-- **Delta_AIC / Delta_BIC**: difference from the best (minimum) value. A
-  Delta \< 2 is typically considered negligible; 4–7 suggests moderate
-  evidence; \> 10 indicates strong evidence against the higher-scoring
-  model (Burnham & Anderson, 2002).
+- **Delta_AIC / Delta_BIC / Delta_SABIC**: difference from the minimum
+  value in the supplied candidate set. A Delta \< 2 is typically
+  considered negligible; 4–7 suggests moderate evidence; \> 10 indicates
+  strong evidence against the higher-scoring model (Burnham & Anderson,
+  2002).
 
-- **AkaikeWeight / BICWeight**: model probabilities derived from
-  `exp(-0.5 * Delta)`, normalised across the candidate set. An Akaike
-  weight of 0.90 means the model has a 90\\ being the best in the
-  candidate set.
+- **AkaikeWeight / BICWeight / SABICWeight**: relative candidate-set
+  weights derived from `exp(-0.5 * Delta)` and normalized only across
+  the supplied models. They are not posterior probabilities,
+  probabilities of model truth, or guarantees that the candidate set is
+  adequate.
 
 - **Evidence ratios**: pairwise ratios of Akaike weights, quantifying
-  the relative evidence for one model over another (e.g., an evidence
-  ratio of 5 means the preferred model is 5 times more likely).
+  relative support within this candidate set. A ratio of 5 means only
+  that one normalized Akaike weight is five times the other; it does not
+  mean that one model is five times more likely to be true.
 
-AIC penalises complexity less than BIC; when they disagree, AIC favours
-the more complex model and BIC the simpler one.
+AIC, BIC, and SABIC answer different approximation/penalty questions.
+SABIC is a sensitivity criterion, not a universal tie-breaker. At 22 or
+fewer Persons its Sclove penalty is non-positive, so `SABICSelectable`
+and `SABICComparable` are `FALSE` and no automatic SABIC preference is
+returned.
 
 ## What this comparison means
 
@@ -141,8 +173,13 @@ structure.
 
 ## What this comparison does not justify
 
-- Do not treat AIC/BIC differences as primary evidence when
+- Do not treat AIC/BIC/SABIC differences as primary evidence when
   `table$ICComparable` is `FALSE`.
+
+- Do not infer numerical adequacy merely because all models share the
+  same coarse quadrature identity. Below q=31, raw criteria are
+  diagnostic only and automatic deltas, weights, preferences, and LRT
+  are suppressed.
 
 - Do not interpret the LRT unless `nested = TRUE` and the structural
   nesting review in `comparison_basis$nesting_review` passes.
@@ -155,19 +192,34 @@ structure.
   conservative nesting boundary; unsupported relations remain
   unsupported.
 
+- PCM is the unit-slope response-kernel reduction of the bounded GPCM
+  when both use the same explicit step owner. Nevertheless, the current
+  automatic nesting review does not authorize a PCM-versus-GPCM
+  chi-square LRT. Use same-basis MML information criteria plus
+  [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
+  and inspect the recorded `PCM_in_GPCM_ic_only` relation instead.
+
 - Do not compare models fit to different datasets, different score
   codings, or materially different constraint systems as if they were
   commensurate.
 
+- At large Person counts, a small systematic likelihood gain can
+  dominate an IC difference; boundary or singular fits can also
+  invalidate routine asymptotics. Evaluate effect size, stability,
+  interpretability, and score consequences separately.
+
 ## Interpreting output
 
-- Lower AIC/BIC values indicate better parsimony-accuracy trade-off only
-  when `table$ICComparable` is `TRUE`.
+- Lower AIC/BIC values indicate relative support only when
+  `table$ICComparable` is `TRUE`; use SABIC ranking only when
+  `table$SABICComparable` is also `TRUE`.
 
-- A significant LRT p-value suggests the more complex model provides a
-  meaningfully better fit only when the nesting assumption truly holds.
+- A significant LRT p-value is formal evidence against the restricted
+  model under the stated assumptions; practical gain, score utility, and
+  dimensional interpretation require separate checks.
 
-- `preferred` indicates the model preferred by each criterion.
+- `preferred` identifies the minimum criterion within the supplied
+  candidate set; it is not an unconditional model verdict.
 
 - `evidence_ratios` gives pairwise Akaike-weight ratios (returned only
   when Akaike weights can be computed for at least two models).
@@ -178,7 +230,8 @@ structure.
 ## How to read the main outputs
 
 - `table`: first-pass comparison table; start with `ICComparable`,
-  `Model`, `Method`, `AIC`, and `BIC`.
+  `ICSelectable`, `ICIntegrationTier`, `Model`, `Method`, `ICStatus`,
+  `AIC`, `BIC`, and `SABIC`.
 
 - `comparison_basis`: records whether IC and LRT claims are defensible
   for the supplied models. Inspect
@@ -202,12 +255,19 @@ before using IC or LRT results in reporting.
 
 1.  Fit two models with
     [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
-    (e.g., RSM and PCM).
+    (e.g., PCM and bounded GPCM) on the same prepared rows, explicit
+    step owner, constraints, and MML quadrature setting. Use at least 31
+    common quadrature points for selectable ICs.
 
-2.  Compare with `compare_mfrm(fit_rsm, fit_pcm)`.
+2.  Compare with `compare_mfrm(fit_pcm, fit_gpcm)` and start by checking
+    `comparison$table$ICComparable`.
 
-3.  Inspect `summary(comparison)` for AIC/BIC diagnostics and, when
-    appropriate, an LRT.
+3.  Inspect `summary(comparison)` for AIC/BIC/SABIC diagnostics and,
+    when appropriate, an LRT. PCM-versus-GPCM LRT is currently withheld.
+
+4.  Use `build_weighting_review(fit_pcm, fit_gpcm)` to inspect which
+    selected facet levels and information shares were reweighted by the
+    slopes.
 
 ## References
 
@@ -221,6 +281,9 @@ before using IC or LRT results in reporting.
 - Schwarz, G. (1978). Estimating the dimension of a model. *Annals of
   Statistics, 6*(2), 461-464.
 
+- Sclove, S. L. (1987). Application of model-selection criteria to some
+  problems in multivariate analysis. *Psychometrika, 52*(3), 333-343.
+
 ## See also
 
 [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md),
@@ -233,24 +296,28 @@ before using IC or LRT results in reporting.
 toy <- load_mfrmr_data("example_core")
 
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                     method = "MML", model = "RSM", quad_points = 7, maxit = 30)
+                     method = "MML", model = "RSM", quad_points = 31, maxit = 30)
 fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                      method = "MML", model = "PCM",
-                     step_facet = "Criterion", quad_points = 7, maxit = 30)
+                     step_facet = "Criterion", quad_points = 31, maxit = 30)
 comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
 comp$table
-#> # A tibble: 2 × 19
-#>   Label Model Method  nobs WeightedN ICSampleSize ICSampleSizeBasis  npar LogLik
-#>   <chr> <chr> <chr>  <int>     <dbl>        <dbl> <chr>             <int>  <dbl>
-#> 1 RSM   RSM   MML      768       768          768 row_count             8  -903.
-#> 2 PCM   PCM   MML      768       768          768 row_count            14  -896.
-#> # ℹ 10 more variables: AIC <dbl>, BIC <dbl>, Converged <lgl>,
-#> #   InferenceReady <lgl>, ConvergenceSeverity <chr>, ICComparable <lgl>,
-#> #   Delta_AIC <dbl>, AkaikeWeight <dbl>, Delta_BIC <dbl>, BICWeight <dbl>
+#> # A tibble: 2 × 50
+#>   Label Converged InferenceReady ConvergenceSeverity Model Method  nobs
+#>   <chr> <lgl>     <lgl>          <chr>               <chr> <chr>  <int>
+#> 1 RSM   TRUE      TRUE           pass                RSM   MML      768
+#> 2 PCM   TRUE      TRUE           pass                PCM   MML      768
+#> # ℹ 43 more variables: ResponseRows <int>, WeightedN <dbl>,
+#> #   WeightedResponseTotal <dbl>, Persons <int>, ICSampleSize <dbl>,
+#> #   ICSampleSizeBasis <chr>, Npar <int>, npar <int>, LogLik <dbl>,
+#> #   Deviance <dbl>, AIC <dbl>, BIC <dbl>, SABIC <dbl>, SABICSelectable <lgl>,
+#> #   WeightPolicy <chr>, ICEligible <lgl>, ICSelectable <lgl>, ICStatus <chr>,
+#> #   ICContractVersion <chr>, AICFormula <chr>, BICFormula <chr>,
+#> #   SABICFormula <chr>, IntegrationEvaluationId <chr>, …
 comp$evidence_ratios
 #> # A tibble: 1 × 3
 #>   Model1 Model2 EvidenceRatio
 #>   <chr>  <chr>          <dbl>
-#> 1 RSM    PCM            0.441
+#> 1 RSM    PCM            0.466
 # }
 ```

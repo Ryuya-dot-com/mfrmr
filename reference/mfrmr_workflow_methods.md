@@ -117,16 +117,19 @@ between the estimator and the forecast helpers explicit:
 If the intended rating scale includes categories not observed in the
 current data, make that support explicit. For example, use
 `rating_min = 1, rating_max = 5` for a 1-5 scale with only 2-5 observed.
-If an intermediate category is unobserved (for example 1, 2, 4, 5 with
-no 3), also set `keep_original = TRUE` if the zero-count category should
-remain in the fitted support. `summary(describe_mfrm_data(...))` reports
+This preserves the declaration in the data-support review. A zero-count
+boundary is review evidence for the separate element-boundary contract;
+it is not by itself an unsupported free-step contrast. If an
+intermediate category is unobserved (for example 1, 2, 4, 5 with no 3),
+also set `keep_original = TRUE` if the zero-count category should remain
+in the fitted support. `summary(describe_mfrm_data(...))` reports
 retained zero-count categories in `Notes`, printed `Caveats`, and
 `$caveats`; `summary(fit)` carries full structured rows into printed
 `Caveats` and `$caveats`, with `Key warnings` as a short triage subset.
 Summary-table exports route those rows through `score_category_caveats`
-or `analysis_caveats`. Adjacent threshold estimates should still be
-treated as weakly identified when an intermediate category is
-unobserved.
+or `analysis_caveats`. In a polytomous fitted ladder, a retained
+zero-count internal category creates an unsupported adjacent-step
+contrast and stops fitting before optimization.
 
 ## Planned assignment and structural missingness
 
@@ -381,7 +384,9 @@ marked as not assessed; mfrmr does not assume a complete crossing.
   [`plot_information()`](https://ryuya-dot-com.github.io/mfrmr/reference/plot_information.md)
   when you want to inspect whether bounded `GPCM` is introducing
   substantively acceptable discrimination-based reweighting relative to
-  the Rasch-family reference.
+  the Rasch-family reference. Use one selectable q\>=31 grid for every
+  candidate and a denser common-grid sensitivity check when the
+  comparison is close or consequential.
 
 - Design planning and forecasting:
   [`build_mfrm_sim_spec()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_sim_spec.md)
@@ -582,10 +587,11 @@ fit <- fit_mfrm(
   maxit = 30
 )
 summary(fit)$next_actions
-#> [1] "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface."
-#> [2] "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."                      
-#> [3] "Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for residual PCA or other custom settings."                                          
-#> [4] "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."                                                         
+#> [1] "Run `diagnose_mfrm()` and pass its result as `diagnostics =` to evaluate formal precision support; fit readiness alone is not a formal-inference decision."
+#> [2] "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface."
+#> [3] "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."                      
+#> [4] "Reuse `review$results$diagnostics`; call `diagnose_mfrm()` again only for residual PCA or other custom settings."                                          
+#> [5] "Use `reporting_checklist(fit, diagnostics = review$results$diagnostics)` for reporting readiness."                                                         
 
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 summary(diag)$next_actions

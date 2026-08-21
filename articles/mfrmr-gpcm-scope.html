@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,19 +69,168 @@
       <img src="../logo.png" class="logo" alt=""><h1>GPCM scope and current limitations</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-gpcm-scope.Rmd" class="external-link"><code>vignettes/mfrmr-gpcm-scope.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-gpcm-scope.Rmd</code></div>
     </div>
 
     
     
-<p><code>mfrmr</code> includes a bounded implementation of the
-Generalized Partial Credit Model (GPCM; Muraki 1992). The bounded
-estimator is available under the documented constraints, while several
-downstream reporting helpers remain restricted because score-side
-semantics under free discrimination differ from the Rasch-family case.
-This vignette documents which helpers are available, which are not, and
-what to use as a substitute when a helper is restricted.</p>
+<p><code>mfrmr</code> includes a scope-bounded implementation of the
+Generalized Partial Credit Model (GPCM; Muraki 1992). The estimator is
+available under the documented constraints, while several downstream
+reporting helpers remain restricted because score-side semantics under
+free discrimination differ from the Rasch-family case. This vignette
+documents which helpers are available, which are not, and what to use as
+a substitute when a helper is restricted.</p>
+<p>In this guide, <em>bounded</em> describes the supported model and
+workflow boundary; it does not mean finite lower and upper parameter
+bounds. The JML route uses an unpenalized identified joint likelihood. A
+non-representable slope proposal can be rejected during line search for
+numerical safety, but that is not a statistical penalty. If the
+likelihood has a certified recession direction, the finite optimizer
+iterate is retained only as a numerical trace and the primary result
+carries an extended-real or typed boundary status.</p>
+<div class="section level2">
+<h2 id="relationship-to-generalized-many-facet-models">Relationship to generalized many-facet models<a class="anchor" aria-label="anchor" href="#relationship-to-generalized-many-facet-models"></a>
+</h2>
+<p>Ordinary GPCM adds a positive discrimination parameter to the
+partial-credit kernel; it does not replace the item position or step
+parameters. In the current many-facet notation,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mfrac><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>Y</mi><mi>o</mi></msub><mo>=</mo><mi>k</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><msub><mi>α</mi><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>o</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo stretchy="false" form="prefix">{</mo><msub><mi>η</mi><mi>o</mi></msub><mo>−</mo><msub><mi>τ</mi><mrow><mi>g</mi><mo stretchy="false" form="prefix">(</mo><mi>o</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">}</mo><mo>,</mo><mspace width="2.0em"></mspace><munder><mo>∏</mo><mi>g</mi></munder><msub><mi>α</mi><mi>g</mi></msub><mo>=</mo><mn>1</mn><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\log\frac{P(Y_o=k)}{P(Y_o=k-1)}
+  = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
+\qquad \prod_g\alpha_g=1,
+</annotation></semantics></math></p>
+<p>where the additive predictor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>o</mi></msub><annotation encoding="application/x-tex">\eta_o</annotation></semantics></math>
+contains person ability and the signed locations of the observed facets.
+Thus the selected slope multiplies the complete adjacent-category
+predictor: person ability, every facet location or fitted interaction
+inside
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>η</mi><mi>o</mi></msub><annotation encoding="application/x-tex">\eta_o</annotation></semantics></math>,
+and the owned step. It is not a loading-only formulation in which
+discrimination multiplies ability but leaves rater severity and other
+intercept effects unscaled. Unit slopes reduce this expression to the
+equal-discrimination PCM kernel.</p>
+<p>The phrase <em>generalized many-facet Rasch model</em> is broader and
+is not a unique synonym for this implementation. For example, Uto and
+Ueno (2020, equation 9) use multiplicative task and rater slope blocks,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mi>i</mi></msub><msub><mi>α</mi><mi>r</mi></msub></mrow><annotation encoding="application/x-tex">\alpha_i\alpha_r</annotation></semantics></math>,
+together with rater severity and rater-specific steps. By contrast,
+mfrmr 0.2.3 requires one facet to own both the slope and step blocks:
+<code>slope_facet == step_facet</code>. It does not jointly estimate
+task and rater slopes, decouple the slope owner from the step owner, or
+introduce a multidimensional ability vector. The precise name used in
+the 0.2.3 evidence map is therefore <strong>aligned single-owner
+relative-slope GPCM</strong>.</p>
+<p>A rater-owned fit is close to a restricted Uto–Ueno form after
+suppressing the task-slope block, provided the remaining step and
+identification contracts are also aligned. A criterion-owned fit instead
+has criterion-owned slopes and steps and should be described as an
+analogous restricted many-facet GPCM, not as an exact fit of Uto and
+Ueno’s equation. Because free discrimination relaxes the defining
+equal-discrimination Rasch restriction, “generalized MFRM” means a model
+generalized from the MFRM baseline rather than a strict Rasch model.</p>
+<div class="section level3">
+<h3 id="which-facet-receives-different-slopes">Which facet receives different slopes?<a class="anchor" aria-label="anchor" href="#which-facet-receives-different-slopes"></a>
+</h3>
+<p>The slope is not one common number for the entire fitted GPCM. The
+selected <code>slope_facet</code> contributes one positive slope for
+each of its levels. If it has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+levels, the returned table contains
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+slopes and the model estimates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">G-1</annotation></semantics></math>
+free relative log-slope contrasts because their geometric mean is fixed
+to one.</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Configuration</th>
+<th>Meaning</th>
+<th>Current status</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>step_facet = "Criterion"</code>,
+<code>slope_facet = "Criterion"</code>
+</td>
+<td>Each criterion has its own relative discrimination and
+criterion-specific steps.</td>
+<td>Supported bounded route.</td>
+</tr>
+<tr class="even">
+<td>
+<code>step_facet = "Rater"</code>,
+<code>slope_facet = "Rater"</code>
+</td>
+<td>Each rater has its own model-conditional relative discrimination and
+rater-specific steps.</td>
+<td>Code-supported with rater-interpretation caveats; a slope is not
+automatically evidence of rater consistency.</td>
+</tr>
+<tr class="odd">
+<td>Criterion steps with rater slopes, or conversely</td>
+<td>Slope owner and step owner differ.</td>
+<td>Unsupported in 0.2.3.</td>
+</tr>
+<tr class="even">
+<td>Criterion slopes and rater slopes together</td>
+<td>Effective discrimination could involve two slope blocks.</td>
+<td>Unsupported in 0.2.3; this is closer to a multiplicative
+generalized-MFRM extension.</td>
+</tr>
+</tbody>
+</table>
+<p>Every facet that is not selected remains an additive location term
+inside
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>.
+For example, a criterion-owned GPCM can still estimate rater severity,
+but it does not give each rater a separate discrimination parameter. The
+criterion slope nevertheless scales that rater-severity contribution
+because the contribution is inside
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math>.
+“No separate rater slope” and “rater severity is unscaled” are therefore
+not the same statement.</p>
+</div>
+<div class="section level3">
+<h3 id="an-explanation-for-a-high-school-reader">An explanation for a high-school reader<a class="anchor" aria-label="anchor" href="#an-explanation-for-a-high-school-reader"></a>
+</h3>
+<p>Imagine that several teachers grade presentations on several
+criteria.</p>
+<ul>
+<li>
+<strong>PCM</strong> gives everyone rulers with the same
+magnification. One criterion may be harder and one teacher may be
+stricter, but a one-unit ability difference changes the rating
+probabilities at the same basic sharpness everywhere.</li>
+<li>
+<strong>The current mfrmr GPCM</strong> lets you choose one box of
+rulers. If the box is <code>Criterion</code>, each criterion can have a
+different magnification. If the box is <code>Rater</code>, each rater
+can have a different magnification. You may choose only one box, and the
+same box also owns the category steps.</li>
+<li>
+<strong>A broader generalized MFRM</strong> can give both the
+task/criterion and the rater their own magnification knobs. In the
+Uto–Ueno example, the effective sharpness is the product of the task and
+rater settings. It can also model rater severity and rater-specific use
+of rating categories.</li>
+</ul>
+<p>Thus the current GPCM is a smaller branch inside the broader family:
+it adds a carefully controlled slope vector to a many-facet PCM, but it
+is not the full two-knob generalized MFRM. Also, once discrimination is
+allowed to vary, the model is generalized <em>from</em> the Rasch
+baseline; it no longer retains the strict equal-discrimination Rasch
+restriction.</p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="before-fitting-model-choice-triage">Before fitting: model-choice triage<a class="anchor" aria-label="anchor" href="#before-fitting-model-choice-triage"></a>
 </h2>
@@ -130,6 +279,219 @@ bounded <code>GPCM</code> is a slope-aware extension. If equal
 contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded <code>GPCM</code> should be reported
 as sensitivity evidence rather than as an automatic replacement.</p>
+<div class="section level3">
+<h3 id="comparing-pcm-and-bounded-gpcm">Comparing PCM and bounded GPCM<a class="anchor" aria-label="anchor" href="#comparing-pcm-and-bounded-gpcm"></a>
+</h3>
+<p>The package provides three complementary comparison layers:</p>
+<ol style="list-style-type: decimal">
+<li>
+<code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> displays same-data log likelihood, AIC,
+Person-based BIC, SABIC, deltas, and candidate-set weights. Automatic
+ranking requires inference-ready MML fits, identical prepared rows and
+constraints, a common quadrature identity, and at least 31 quadrature
+points. Always inspect <code>comparison$table$ICComparable</code>
+first.</li>
+<li>
+<code><a href="../reference/build_weighting_review.html">build_weighting_review()</a></code> shows what the GPCM slopes
+changed: the slope profile, facet-measure shifts, and redistribution of
+information across levels.</li>
+<li>
+<code>build_model_choice_review(..., run_weighting_review = TRUE)</code>
+bundles the statistical comparison, operational model roles, support
+boundaries, and the weighting review.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">dat</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"PCM"</span>,</span>
+<span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, quad_points <span class="op">=</span> <span class="fl">31</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">fit_gpcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">dat</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"GPCM"</span>,</span>
+<span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>, slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  quad_points <span class="op">=</span> <span class="fl">31</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compare_mfrm.html">compare_mfrm</a></span><span class="op">(</span>PCM <span class="op">=</span> <span class="va">fit_pcm</span>, GPCM <span class="op">=</span> <span class="va">fit_gpcm</span><span class="op">)</span></span>
+<span><span class="va">comparison</span><span class="op">$</span><span class="va">table</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Label"</span>, <span class="st">"LogLik"</span>, <span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"SABIC"</span>, <span class="st">"ICComparable"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">weighting</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_weighting_review.html">build_weighting_review</a></span><span class="op">(</span><span class="va">fit_pcm</span>, <span class="va">fit_gpcm</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">weighting</span><span class="op">)</span></span>
+<span><span class="va">weighting</span><span class="op">$</span><span class="va">comparison_contract</span></span>
+<span></span>
+<span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_model_choice_review.html">build_model_choice_review</a></span><span class="op">(</span></span>
+<span>  PCM <span class="op">=</span> <span class="va">fit_pcm</span>,</span>
+<span>  GPCM <span class="op">=</span> <span class="va">fit_gpcm</span>,</span>
+<span>  run_weighting_review <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span>
+<span><span class="va">review</span><span class="op">$</span><span class="va">model_roles</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"Model"</span>, <span class="st">"StepStructure"</span>, <span class="st">"StepCoordinates"</span>, <span class="st">"FreeStepParameters"</span>,</span>
+<span>  <span class="st">"SlopeStructure"</span>, <span class="st">"SlopeCoordinates"</span>, <span class="st">"FreeSlopeParameters"</span>,</span>
+<span>  <span class="st">"FitReadiness"</span>, <span class="st">"FormalInference"</span>, <span class="st">"Interpretation"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p><code>StepCoordinates</code> and <code>SlopeCoordinates</code> count
+the values shown in fitted tables. <code>FreeStepParameters</code> and
+<code>FreeSlopeParameters</code> count the independent coordinates
+optimized after identification constraints. For example, with four score
+categories and four levels of the step facet, PCM and GPCM display 12
+step coordinates but optimize 8 free step parameters because each
+three-step ladder is sum-zero. GPCM additionally displays four relative
+slopes but optimizes three free log slopes because their geometric mean
+is one.</p>
+<p>The <code>comparison_contract</code> keeps four situations
+separate:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Evidence tier</th>
+<th>What may be concluded?</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>same_basis_mml_information_criteria</code></td>
+<td>AIC, Person-BIC, and SABIC may be read as candidate-set evidence,
+together with slope stability and a denser common-grid check.</td>
+</tr>
+<tr class="even">
+<td>
+<code>mml_screening_or_review_grid_only</code> or other
+non-comparable MML tier</td>
+<td>Raw fit values are descriptive; repair integration selectability,
+readiness, or comparison identity first.</td>
+</tr>
+<tr class="odd">
+<td><code>jml_descriptive_reweighting_only</code></td>
+<td>The fitted slopes, measure shifts, and information redistribution
+may be reviewed, but the unpenalized JML likelihood gain does not select
+GPCM.</td>
+</tr>
+<tr class="even">
+<td><code>jml_optimizer_trace_only_not_inference_ready</code></td>
+<td>Even the likelihood difference is only a comparison of retained
+optimizer traces; it is not inferential model evidence.</td>
+</tr>
+</tbody>
+</table>
+<p>For a JML question, follow that table with recovery conditions rather
+than an IC or LRT claim. <code><a href="../reference/evaluate_mfrm_recovery.html">evaluate_mfrm_recovery()</a></code> already
+distinguishes <code>unit_slopes</code>, <code>near_flat</code>,
+<code>moderate</code>, and <code>high_dispersion</code> generator
+conditions. The unit-slope condition asks how often harmless sampling
+and optimizer variation can create an apparent slope spread; the
+non-unit conditions ask whether the declared heterogeneity can be
+recovered. FACETS can support the aligned PCM/JML side of this review,
+but its Table 7 discrimination remains a post-fit diagnostic and not a
+free-slope GPCM fit.</p>
+<p>PCM is obtained from the aligned GPCM response kernel by setting all
+slopes to one. Nevertheless, the current conservative nesting contract
+does not compute a PCM-versus-GPCM chi-square likelihood-ratio test.
+Calling <code>compare_mfrm(..., nested = TRUE)</code> records the
+relation <code>PCM_in_GPCM_ic_only</code> and withholds the LRT. This
+keeps an attractive information-criterion result from being overstated
+when GPCM parameter or boundary readiness remains unresolved. When the
+IC comparison is suppressed, the raw fit values and weighting review
+remain descriptive evidence rather than an automatic selection rule.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="response-family-boundary">Response-family boundary<a class="anchor" aria-label="anchor" href="#response-family-boundary"></a>
+</h2>
+<p>Every current <code><a href="../reference/fit_mfrm.html">fit_mfrm()</a></code> likelihood is ordered
+categorical. The distinction between response values and observation
+frequencies is essential:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Input or estimand</th>
+<th>0.2.3 treatment</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Ordered binary response</td>
+<td>Supported as a two-category ordered response.</td>
+</tr>
+<tr class="even">
+<td>Ordered polytomous response</td>
+<td>Supported through RSM, PCM, or bounded GPCM.</td>
+</tr>
+<tr class="odd">
+<td>Unordered nominal/multinomial response</td>
+<td>Unsupported; category order enters the current likelihood.</td>
+</tr>
+<tr class="even">
+<td>Poisson, negative-binomial, or grouped binomial-trial count</td>
+<td>Unsupported as a response family. An integer <code>Score</code> is
+only an ordered category code.</td>
+</tr>
+<tr class="odd">
+<td>Row-frequency/replication weight for an ordered rating</td>
+<td>A positive numeric <code>weight</code> can weight that row’s
+conditional ordered-category likelihood contribution.</td>
+</tr>
+</tbody>
+</table>
+<p>Thus, the fact that the fitted category probabilities sum to one does
+not make the model a nominal-response or multinomial-logit model.
+Likewise, a frequency weight does not turn the score into a Poisson
+count or account for dependence among replicated ratings. Nor is it a
+general collapsed-person frequency table: under MML, powering responses
+inside one Person’s conditional pattern is not equivalent to replicating
+a complete Person pattern after marginalization. FACETS provides
+separate <code>Bn</code> and <code>P</code> response models; those are
+outside the current mfrmr estimator even though FACETS-style coverage
+documentation describes the handoff boundary.</p>
+<p>Within that supported scope, an explicit identification contract is
+still required. With default MML,
+<code>gpcm_mml_identification = "free_population"</code> estimates an
+intercept-only person distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>β</mi><mn>0</mn></msub><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">N(\beta_0,\sigma^2)</annotation></semantics></math>,
+while the level-specific log slopes are constrained to sum to zero
+(geometric mean 1). The fitted slopes are therefore relative
+discriminations with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">G-1</annotation></semantics></math>
+free contrasts, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><msub><mi>α</mi><mi>g</mi></msub></mrow><annotation encoding="application/x-tex">\sigma\alpha_g</annotation></semantics></math>
+gives the equivalent slope on a fixed-latent-standard- deviation scale.
+This retains the conventional common-discrimination degree of freedom.
+The explicit legacy mode
+<code>gpcm_mml_identification = "fixed_standard_normal"</code> instead
+fixes both
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sigma=1</annotation></semantics></math>
+and the slope geometric mean to one and is a narrower model.</p>
+</div>
+<div class="section level2">
+<h2 id="gpcm-is-not-one-estimator">GPCM is not one estimator<a class="anchor" aria-label="anchor" href="#gpcm-is-not-one-estimator"></a>
+</h2>
+<p>Muraki (1992) supplies the GPCM response model and an MML-EM
+estimation route; it is not a source for the present JML implementation.
+The present mfrmr JML route is an identified fixed-effects, unpenalized
+joint likelihood with post-fit boundary/recession auditing. This differs
+from penalized JML for GPCM (Wijayanto et al. 2021), whose quadratic
+regularization changes the objective, and from software routes that
+impose finite parameter boxes. A penalized, adjusted, or box-constrained
+point estimate can be a useful comparator, but it is not the maximizer
+of mfrmr’s original unpenalized JML objective.</p>
+<p>This distinction matters even when all methods return finite numbers.
+With a fixed number of observations per person, jointly estimated person
+coordinates are incidental parameters; structural JML estimates can
+retain finite-test- length bias as the number of persons grows (Hessen
+2025). An extreme response pattern can additionally make the ordinary
+finite JML maximum unattained. mfrmr therefore keeps recovery/bias
+evidence, boundary handling, numerical convergence, and cross-software
+agreement as separate gates. Under JML, the geometric-mean constraint
+resolves the scale of the jointly estimated person coordinates and
+slopes.</p>
 </div>
 <div class="section level2">
 <h2 id="report-wording-templates">Report wording templates<a class="anchor" aria-label="anchor" href="#report-wording-templates"></a>
@@ -164,45 +526,44 @@ drawn from <code>supported</code>, <code>supported_with_caveat</code>,
 <code>RecommendedRoute</code> for the route to use next. The default
 print is deliberately compact; subset by status to inspect a focused set
 of rows.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;     Status Routes</span></span>
-<span><span class="co">#&gt;  supported      3</span></span>
+<span><span class="co">#&gt;  supported      2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Route preview</span></span>
 <span><span class="co">#&gt;                                       Area    Status</span></span>
-<span><span class="co">#&gt;                 Core fitting and summaries supported</span></span>
 <span><span class="co">#&gt;  Fixed-calibration scoring and information supported</span></span>
 <span><span class="co">#&gt;              Core curve and category views supported</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"supported_with_caveat"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                 Status Routes</span></span>
-<span><span class="co">#&gt;  supported_with_caveat     14</span></span>
+<span><span class="co">#&gt;  supported_with_caveat     15</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Route preview</span></span>
-<span><span class="co">#&gt;                                                     Area                Status</span></span>
-<span><span class="co">#&gt;           Exploratory diagnostics and residual follow-up supported_with_caveat</span></span>
-<span><span class="co">#&gt;               Checklist and summary-table appendix route supported_with_caveat</span></span>
-<span><span class="co">#&gt;                              Operational misfit casebook supported_with_caveat</span></span>
-<span><span class="co">#&gt;                 Weighting review and model-choice review supported_with_caveat</span></span>
-<span><span class="co">#&gt;                            Operational linking synthesis supported_with_caveat</span></span>
-<span><span class="co">#&gt;           Direct simulation-spec generation and recovery supported_with_caveat</span></span>
-<span><span class="co">#&gt;                  APA writer and fit-based export bundles supported_with_caveat</span></span>
-<span><span class="co">#&gt;  Fair-average semantics under bounded GPCM (slope-aware) supported_with_caveat</span></span>
+<span><span class="co">#&gt;                                            Area                Status</span></span>
+<span><span class="co">#&gt;                      Core fitting and summaries supported_with_caveat</span></span>
+<span><span class="co">#&gt;  Exploratory diagnostics and residual follow-up supported_with_caveat</span></span>
+<span><span class="co">#&gt;      Checklist and summary-table appendix route supported_with_caveat</span></span>
+<span><span class="co">#&gt;                     Operational misfit casebook supported_with_caveat</span></span>
+<span><span class="co">#&gt;        Weighting review and model-choice review supported_with_caveat</span></span>
+<span><span class="co">#&gt;                   Operational linking synthesis supported_with_caveat</span></span>
+<span><span class="co">#&gt;  Direct simulation-spec generation and recovery supported_with_caveat</span></span>
+<span><span class="co">#&gt;         APA writer and fit-based export bundles supported_with_caveat</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ... 6 more route(s).</span></span>
+<span><span class="co">#&gt; ... 7 more route(s).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"blocked"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -215,7 +576,7 @@ of rows.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Filter by status, for example gpcm_capability_matrix("supported_with_caveat").</span></span>
 <span><span class="co">#&gt; Read Boundary and RecommendedRoute before interpreting a caveated or unavailable route.</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/gpcm_capability_matrix.html">gpcm_capability_matrix</a></span><span class="op">(</span><span class="st">"deferred"</span><span class="op">)</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Area"</span>, <span class="st">"Status"</span>, <span class="st">"Boundary"</span>, <span class="st">"RecommendedRoute"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt; mfrmr bounded-GPCM workflow availability</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -233,6 +594,174 @@ of rows.</p>
 computation is already available, because the scope statement includes
 the interpretation needed for a complete public workflow rather than
 only checking whether code executes.</p>
+</div>
+<div class="section level2">
+<h2 id="slope-values-boundaries-and-uncertainty">Slope values, boundaries, and uncertainty<a class="anchor" aria-label="anchor" href="#slope-values-boundaries-and-uncertainty"></a>
+</h2>
+<p>The finite <code>LogEstimate</code> and <code>Estimate</code> columns
+in <code>fit$slopes</code> are optimizer outputs, not automatic evidence
+of a finite estimand. Use <code>ParameterStatus</code> and the
+<code>Primary*</code> columns first. Under JML, mfrmr can certify a
+monotone sum-to-zero log-slope path while holding the retained additive
+coordinates fixed. Such a result yields <code>unbounded_low</code>,
+<code>unbounded_high</code>, or <code>unbounded_both</code>. If no such
+path is certified, the joint Person–facet–step– slope problem remains
+unevaluated; the finite optimizer output is retained only as a numerical
+trace. A second bounded check lets additive coordinates move with an
+ordered positive/negative log-slope pair. A competitive path from this
+family is recorded as a candidate, but <code>ParameterStatus</code>
+remains <code>not_evaluated</code> and the primary value remains
+unavailable: this sufficient path result does not determine the global
+maximum of the non-concave GPCM likelihood. Failure to find such a path
+is equally limited to that family. Under MML, Persons are integrated
+out, so neither conditional JML result is reused as marginal-likelihood
+evidence. The MML branch records a separate sufficient-path check for
+the fitted finite-quadrature objective, but that check is not a complete
+analysis of the continuous marginal likelihood. Whether it finds a path
+or not, free MML slopes remain <code>not_evaluated</code> until the
+applicable parameter-level readiness conditions are established. Use
+[gpcm_mml_quadrature_sensitivity()] to inspect movement across
+quadrature grids; grid stability is numerical evidence, not proof that a
+finite global maximum exists or that slope uncertainty is inferentially
+eligible.</p>
+<p>The same distinction applies to uncertainty.
+<code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code> can retain the local covariance calculation
+as <code>Optimizer*SE</code> and <code>Optimizer*CI</code> fields for
+numerical review. Ordinary slope <code>SE</code> and confidence-limit
+fields remain unavailable when <code>SEEligible</code> or
+<code>CIEligible</code> is false. This avoids presenting a local Hessian
+around a finite stopping point as uncertainty for a parameter whose
+applicable global boundary status has not been established.</p>
+</div>
+<div class="section level2">
+<h2 id="what-can-and-cannot-be-compared-across-programs">What can and cannot be compared across programs<a class="anchor" aria-label="anchor" href="#what-can-and-cannot-be-compared-across-programs"></a>
+</h2>
+<p>A column labelled “discrimination” is not sufficient evidence that
+two programs fitted the same GPCM. FACETS reports an
+element-discrimination diagnostic after estimating its Rasch measures
+and explicitly does not allow that diagnostic to alter the other
+estimates. It is therefore not a matched counterpart of a jointly
+estimated free slope in <code>mfrmr</code>. FACETS remains useful for
+unit- or explicitly fixed-discrimination reductions, category/threshold
+and facet-measure comparisons within a common Rasch specification, and
+as a deliberately different-model diagnostic benchmark.</p>
+<p>TAM’s MML 2PL/GPCM route does estimate slopes, including grouped or
+designed slopes, but TAM documents that slopes are not estimated by its
+many-facet fitting function. A TAM comparison must therefore use a
+provably equivalent non-faceted or re-expressed design and must match
+the latent variance, threshold convention, slope grouping, category map,
+and retained observations before computing differences.
+<code>sirt::rm.facets()</code> provides a useful second MML reference:
+it estimates item and/or rater slopes under product-one centering and an
+estimated normal trait spread. Its item-only GPCM and
+equal-discrimination many-facet reductions are candidate matched lanes
+after category, threshold, quadrature, and centering conventions are
+aligned. Its general free-slope rater kernel is not the current mfrmr
+kernel: sirt uses the product of item and rater slopes on the trait term
+while rater severity remains a separate location term, whereas mfrmr
+assigns one slope owner and multiplies the complete adjacent- category
+predictor. Such results are different-model sensitivity evidence, not
+automatic numerical validation. <code>immer</code> provides PCM-design
+JML/CML/CCML routes and a hierarchical rater model, not a direct
+free-GPCM many-facet match. Its role is consequently a unit-slope
+reduction or alternative-model sensitivity analysis rather than
+free-slope numerical validation.</p>
+<p>TAM also documents a multifacet slope construction that sends a
+facet-model intercept design <code>A</code> and a slope-group design
+<code>E</code> to <code>tam.mml.2pl()</code>. That is not automatically
+the current mfrmr kernel. In the TAM construction the slope weights the
+latent-trait term while shared Rater and step effects remain linear
+intercepts; in mfrmr the selected slope weights the complete
+adjacent-category predictor, including Rater severity and steps.
+Matching the latter would require products such as an estimated
+Criterion slope times an estimated Rater severity, which the two
+independent linear designs do not impose. A q=31
+<code>example_core</code> re-expression was therefore retained as
+different-model sensitivity evidence, not as an exact full-model
+comparison. This algebraic screen makes a second quadrature run
+unnecessary.</p>
+<p>A bounded validation comparison exercises the exact item-only TAM
+overlap on TAM’s <code>data.gpcm</code> fixture at q=31 and q=41. TAM
+fixes the latent variance and estimates absolute slopes; mfrmr fixes the
+geometric mean of its relative slopes and estimates the latent variance.
+After applying the analytic scale and location transformation, maximum
+q-specific differences were about <code>1.8e-5</code> for relative
+slopes, <code>1.3e-5</code> for transition thresholds, <code>6e-6</code>
+for fitted category probabilities, and <code>1.4e-6</code> for deviance.
+The transformed TAM probability formula itself agreed to binary64
+precision. This is external evidence for the item-only GPCM kernel,
+coordinate map, and continuous MML target; it is not a comparison of the
+rater-plus-slope model, a cross-engine SE validation, or permission to
+override mfrmr readiness. The distinction follows TAM’s documented
+separation between <a href="https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html" class="external-link"><code>tam.mml.2pl()</code>
+and <code>tam.mml.mfr()</code></a>.</p>
+<p>The same coordinate discipline prevents a direct SE comparison. TAM
+4.3-25 retains marginal slope and intercept SEs, but not the joint slope
+covariance or slope–intercept cross-covariance required by the nonlinear
+transformation to mfrmr’s relative slopes, thresholds, and free
+population scale. Two positive- definite covariance matrices can
+preserve exactly those reported marginal SEs while producing different
+transformed SEs. The repository audit demonstrates this explicitly and
+withholds the comparison rather than assuming zero covariance. TAM’s
+documented <code>tam.se()</code> route also ignores parameter
+covariances, so it does not close this gap.</p>
+<p>These distinctions also govern diagnostics. FACETS’ discrimination,
+<code>mfrmr</code> residual PCA or bias screens, and hierarchical-rater
+variance components answer different questions. Agreement among them can
+be supporting evidence; a difference is not a software error until the
+fitted likelihood, estimand, identification, data rows, and output
+transformation have first been shown to match.</p>
+<p>A population-level validation also asked whether the current
+complete-predictor slope and a loading-only slope are merely two
+coordinate systems. They reduce exactly when slopes are all one or when
+the non-owner Rater contrast is zero. In a fully crossed
+four-Criterion/four-Rater design, however, their identifying
+adjacent-logit difference in differences is zero for loading-only and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mo stretchy="false" form="prefix">{</mo><msub><mi>α</mi><mi>c</mi></msub><mo>−</mo><msub><mi>α</mi><mi>d</mi></msub><mo stretchy="false" form="postfix">}</mo><mo stretchy="false" form="prefix">{</mo><msub><mi>ρ</mi><mi>r</mi></msub><mo>−</mo><msub><mi>ρ</mi><mi>s</mi></msub><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">-\{\alpha_c-\alpha_d\}\{\rho_r-\rho_s\}</annotation></semantics></math>
+for the current kernel. After all available slopes, severities, and
+transition boundaries were re-estimated, moderate and strong fixed
+conditions retained population KL losses of about 0.0016 and
+0.0085–0.0088 per response, with maximum common-grid probability
+differences of about 0.047–0.184. q=31 and q=41 conclusions agreed
+closely. These are fixed model-form demonstrations, not practical
+cutoffs or finite-sample operating characteristics. They support
+treating a loading-only kernel as a separate possible future family
+rather than as an interpretation switch for an existing
+<code>GPCM</code> fit.</p>
+<p>Sparsity changes this distinction structurally, not merely by
+reducing sample size. On an observed Rater-by-Criterion graph with no
+cycles, the products
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mi>c</mi></msub><msub><mi>ρ</mi><mi>r</mi></msub></mrow><annotation encoding="application/x-tex">\alpha_c\rho_r</annotation></semantics></math>
+can be represented exactly by new additive Rater and Criterion
+coordinates. Thus even a connected tree cannot distinguish the two slope
+actions. A known-ability validation compared four connected graphs. At
+250 Persons, truth-selection rates were about 0.96 under complete
+crossing, 0.76–0.78 for a balanced eight-edge cycle, and only 0.58 for
+an eight-edge cycle localized to two Raters and two Criteria; the
+connected tree remained observationally equivalent. Each Person was
+observed on every edge, and abilities and both parameter vectors were
+supplied to the comparison, so these are optimistic fixed-parameter
+results rather than JML or MML model- selection performance. The design
+lesson is to inspect which slope and severity contrasts are traversed by
+cycles, not to infer identifiability from connectedness, density, or an
+anchor percentage alone.</p>
+<p>A subsequent finite-sample validation removed the known-ability
+advantage and refitted both slope actions by direct MML. The common
+identification estimated geometric-mean-one relative slopes, sum-zero
+Rater severities, mean-zero transition boundaries, and a normal
+population mean and standard deviation. Across 12 replications per truth
+and design at 250 training Persons, all 96 candidate fits converged and
+all full 19-coordinate Hessians were positive definite. Two starts
+differed by at most about <code>7.9e-6</code> log-likelihood units, and
+q=31 versus q=41 changed none of the 48 paired family decisions.
+Complete crossing selected the true family in every training and
+independent holdout dataset. Under the balanced cycle, training selected
+the truth in 7–9 of 12 datasets and median relative-slope RMSE increased
+from about 0.06 to as much as 0.12. A stricter retained-solution polish
+reduced the largest gradient by roughly an order of magnitude without
+materially changing likelihoods. These small fixed counts clarify
+optimizer, curvature, and design contributions; they do not calibrate a
+universal selection, standard-error, or readiness rule.</p>
 </div>
 <div class="section level2">
 <h2 id="source-grounded-recovery-interpretation">Source-grounded recovery interpretation<a class="anchor" aria-label="anchor" href="#source-grounded-recovery-interpretation"></a>
@@ -403,7 +932,8 @@ the practical paths are:</p>
 <li>Refit with <code>model = "PCM"</code> if the discrimination-free
 assumption is defensible for the data and a full FACETS score-side
 review is required; <code><a href="../reference/compare_mfrm.html">compare_mfrm()</a></code> quantifies the loss in
-fit.</li>
+fit only after every candidate uses the same selectable q&gt;=31 grid;
+close decisions require a denser common-grid sensitivity check.</li>
 <li>Keep the report on the <code>GPCM</code> fit itself but draft the
 manuscript section manually around the supported tables:
 <code>summary(fit)</code> for parameters, <code><a href="../reference/diagnose_mfrm.html">diagnose_mfrm()</a></code>
@@ -432,7 +962,7 @@ block that supports a bounded <code>GPCM</code> fit. This example uses
 compact quadrature and iteration settings to keep optional local
 execution short; for final evidence, rerun with the package default or a
 higher quadrature setting and a larger recovery design.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
 <span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span>
 <span></span>
@@ -441,6 +971,7 @@ higher quadrature setting and a larger recovery design.</p>
 <span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span>
 <span>  facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>,</span>
 <span>  step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  slope_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
 <span>  score <span class="op">=</span> <span class="st">"Score"</span>,</span>
 <span>  model <span class="op">=</span> <span class="st">"GPCM"</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"MML"</span>,</span>
@@ -448,7 +979,10 @@ higher quadrature setting and a larger recovery design.</p>
 <span>  maxit <span class="op">=</span> <span class="fl">20</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_gpcm</span><span class="op">)</span></span>
+<span><span class="va">fit_gpcm</span></span>
+<span><span class="va">gpcm_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_gpcm</span>, profile <span class="op">=</span> <span class="st">"fit"</span>, detail <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
+<span><span class="va">gpcm_summary</span><span class="op">$</span><span class="va">decision</span></span>
+<span><span class="va">gpcm_summary</span><span class="op">$</span><span class="va">inference_evidence</span></span>
 <span></span>
 <span><span class="va">diag_gpcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit_gpcm</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">diag_gpcm</span><span class="op">)</span></span>
@@ -496,6 +1030,13 @@ higher quadrature setting and a larger recovery design.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review_gpcm</span><span class="op">)</span><span class="op">$</span><span class="va">diagnostic_review</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">review_gpcm</span>, type <span class="op">=</span> <span class="st">"status"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">review_gpcm</span>, type <span class="op">=</span> <span class="st">"metrics"</span>, metric <span class="op">=</span> <span class="st">"rmse"</span><span class="op">)</span></span></code></pre></div>
+<p>Use the same <code>Decision</code> fields as for RSM and PCM. In
+particular, optimizer convergence does not override incomplete GPCM
+identifiability, curvature, or slope-boundary evidence. If
+<code>FormalInference</code> is <code>"No"</code>, the diagnostic and
+information calls above are investigative routes for resolving the
+recorded reason; they do not promote the fit to an inferential
+result.</p>
 <p>The fit, summary, residual diagnostics, information, recovery,
 fair-average, and conditional bias-screening helpers all run under
 <code>GPCM</code> with the caveats listed above.
@@ -503,6 +1044,25 @@ fair-average, and conditional bias-screening helpers all run under
 sensitivity-reporting object with a <code>gpcm_boundary</code>; full
 FACETS score-side review remains on the <code>RSM</code> /
 <code>PCM</code> route.</p>
+</div>
+<div class="section level2">
+<h2 id="estimator-references">Estimator references<a class="anchor" aria-label="anchor" href="#estimator-references"></a>
+</h2>
+<ul>
+<li>Muraki, E. (1992). <em>A generalized partial credit model:
+Application of an EM algorithm</em>. Applied Psychological Measurement,
+16, 159–176.</li>
+<li>Uto, M., &amp; Ueno, M. (2020). <em>A generalized many-facet Rasch
+model and its Bayesian estimation using Hamiltonian Monte Carlo</em>.
+Behaviormetrika, 47, 469–496.</li>
+<li>Wijayanto, F., Mul, K., Groot, P., van Engelen, B. G. M., &amp;
+Heskes, T. (2021). <em>Semi-automated Rasch analysis using
+in-plus-out-of-questionnaire log likelihood</em>. British Journal of
+Mathematical and Statistical Psychology, 74, 313–339.</li>
+<li>Hessen, D. J. (2025). <em>A convexity-constrained parameterization
+of the random effects generalized partial credit model</em>. British
+Journal of Mathematical and Statistical Psychology, 78, 401–419.</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="current-boundary">Current boundary<a class="anchor" aria-label="anchor" href="#current-boundary"></a>

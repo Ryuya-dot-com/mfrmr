@@ -116,7 +116,7 @@ links, monitoring drift, and screening differential facet functioning
   contrast. A generic "DIF exists" statement is not interpretable in a
   many-facet design.
 
-- Residual and refit DFF classifications are screening labels in 0.2.2;
+- Residual and refit DFF classifications are screening labels in 0.2.3;
   current refit output does not assign ETS A/B/C labels.
 
 - Treat drift flags as prompts for review, not automatic evidence that

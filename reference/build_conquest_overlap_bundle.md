@@ -94,14 +94,22 @@ engine, terminal gradient, convergence status and severity, and
 inference-readiness decision. A fit that is not inference-ready remains
 available for convergence review, but its estimates should not be used
 for inferential comparison with ConQuest until the convergence issue is
-resolved and the model is refit.
+resolved and the model is refit. The generated ConQuest benchmark
+template fixes its parameter-change criterion at `1e-8`, deviance-change
+criterion at `1e-10`, and iteration ceiling at `2000`; these controls
+are written into the command, summary, and settings so a default
+stopping rule cannot masquerade as an objective discrepancy.
 
 The `conquest_command` component is a conservative starting template,
 not a guaranteed version-invariant automation. The
 `conquest_output_contract` component records which requested external
 output should feed each normalized review table. Use
 [`normalize_conquest_overlap_exports()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_exports.md)
-for the four CSV files requested by the generated command.
+for the parameter, regression, covariance, and case-EAP CSV files
+requested by the generated command. The additional matrixout history CSV
+retains the objective trajectory and an independent estimated-parameter
+dimension for release verification; it is not parsed as a free-form
+report.
 [`normalize_conquest_overlap_files()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_files.md)
 and
 [`normalize_conquest_overlap_tables()`](https://ryuya-dot-com.github.io/mfrmr/reference/normalize_conquest_overlap_tables.md)
@@ -197,63 +205,66 @@ summary(bundle)$mfrmr_fit_status
 #> 4                  Convergence Converged
 #> 5                     Severity      Pass
 #> 6 Terminal gradient (sup-norm)  9.59e-05
-#> 7              Inference ready       Yes
+#> 7              Inference ready        No
 summary(bundle)$conquest_command_scope
-#>                                   Area              Status
-#> 1            ConQuest command template       template only
-#> 2               Command-comment syntax      block comments
-#> 3 Official command-reference alignment explicit CSV widths
-#> 4                  Overlap model scope narrow overlap only
-#> 5         External output requirements           requested
-#> 6            External comparison scope         not claimed
+#>                                   Area                        Status
+#> 1            ConQuest command template                 template only
+#> 2               Command-comment syntax comment-free executable input
+#> 3 Official command-reference alignment           explicit CSV widths
+#> 4                  Overlap model scope           narrow overlap only
+#> 5         External output requirements                     requested
+#> 6            External comparison scope                   not claimed
 #>                                                                 Evidence
 #> 1                                                bundle$conquest_command
-#> 2                         command text starts with /* and closes with */
+#> 2       no prose or C-style comment markers precede the datafile command
 #> 3                                    pidwidth and keepswidth are present
 #> 4                      binary Criterion facet with numeric covariate `X`
 #> 5    parameters, reg_coefficients, covariance, and cases EAP CSV outputs
 #> 6 requires external ConQuest execution and extracted output-table review
-#>                                                                                                      Interpretation
-#> 1                  Use the command text as a starting point for a local ConQuest run, not as an executed benchmark.
-#> 2 Generated comments follow the documented ConQuest block-comment style rather than FACETS-style leading asterisks.
-#> 3                                 CSV input with PID/keeps variables needs explicit widths in the command template.
-#> 4                               The bundle does not generalize to full many-facet or polytomous ConQuest workflows.
-#> 5                 Review and combine external parameter, beta, sigma, and case outputs before review normalization.
-#> 6              External comparison remains scoped until external outputs are reviewed and tolerances are justified.
+#>                                                                                         Interpretation
+#> 1     Use the command text as a starting point for a local ConQuest run, not as an executed benchmark.
+#> 2       The executable command contains commands only; explanatory prose remains in the bundle README.
+#> 3                    CSV input with PID/keeps variables needs explicit widths in the command template.
+#> 4                  The bundle does not generalize to full many-facet or polytomous ConQuest workflows.
+#> 5    Review and combine external parameter, beta, sigma, and case outputs before review normalization.
+#> 6 External comparison remains scoped until external outputs are reviewed and tolerances are justified.
 summary(bundle)$conquest_output_contract
 #>                                      ExternalFile
 #> 1        conquest_overlap_conquest_parameters.csv
 #> 2  conquest_overlap_conquest_reg_coefficients.csv
 #> 3        conquest_overlap_conquest_covariance.csv
 #> 4         conquest_overlap_conquest_cases_eap.csv
-#> 5 conquest_overlap_conquest_parameters_review.txt
+#> 5           conquest_overlap_conquest_history.csv
+#> 6 conquest_overlap_conquest_parameters_review.txt
 #>                                            ConQuestCommand
 #> 1                         export parameters ! filetype=csv
 #> 2                   export reg_coefficients ! filetype=csv
 #> 3                         export covariance ! filetype=csv
 #> 4 show cases ! estimates=eap, filetype=csv, regressors=yes
-#> 5          show parameters ! tables=1:2:3:4, estimates=eap
-#>                                                                       ReviewHandoff
-#> 1          Pass to normalize_conquest_overlap_exports() as the item-parameter file.
-#> 2              Pass to normalize_conquest_overlap_exports() as the regression file.
-#> 3              Pass to normalize_conquest_overlap_exports() as the covariance file.
-#> 4                Pass to normalize_conquest_overlap_exports() as the case-EAP file.
-#> 5 Human-readable review only; do not treat this text file as a parsed review table.
+#> 5                     write mfrmrCQ_history ! filetype=csv
+#> 6          show parameters ! tables=1:2:3:4, estimates=eap
+#>                                                                                                              ReviewHandoff
+#> 1                                                 Pass to normalize_conquest_overlap_exports() as the item-parameter file.
+#> 2                                                     Pass to normalize_conquest_overlap_exports() as the regression file.
+#> 3                                                     Pass to normalize_conquest_overlap_exports() as the covariance file.
+#> 4                                                       Pass to normalize_conquest_overlap_exports() as the case-EAP file.
+#> 5 Retain for the objective/free-dimension verification; this is the estimate matrixout history, not a parsed report table.
+#> 6                                        Human-readable review only; do not treat this text file as a parsed review table.
 #>                                                                                   DataHandling
 #> 1                                     Review item labels and analysis metadata before sharing.
 #> 2                                Review covariate labels and analysis metadata before sharing.
 #> 3                              Review covariance results and analysis metadata before sharing.
 #> 4 Contains person identifiers and person-level EAP estimates; restricted handling is required.
-#> 5                                Review parameter labels and analysis metadata before sharing.
+#> 5                Review model labels, iteration history, and analysis metadata before sharing.
+#> 6                                Review parameter labels and analysis metadata before sharing.
 #>   RequiredForReview
 #> 1              TRUE
 #> 2              TRUE
 #> 3              TRUE
 #> 4              TRUE
-#> 5             FALSE
+#> 5              TRUE
+#> 6             FALSE
 cat(substr(bundle$conquest_command, 1, 120))
-#> /*
-#> Generated by mfrmr::build_conquest_overlap_bundle()
-#> Scope: ordered-response RSM/PCM, operationalized here as binary i
+#> datafile conquest_overlap_wide.csv ! filetype=csv, columnlabels=yes, pid=Person, pidwidth=32, responses=I001 to I006, ke
 # }
 ```

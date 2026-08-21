@@ -198,8 +198,9 @@ facets only.
 # same rater and criterion identities by construction.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+# Two balanced 12-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -214,8 +215,8 @@ summary(drift)
 #> 
 #> Drift summary by facet and wave:
 #>      Facet  Wave N Mean_Drift Max_Drift N_Flagged
-#>  Criterion Wave2 4      0.126     0.187         0
-#>      Rater Wave2 4      0.148     0.179         0
+#>  Criterion Wave2 4     0.0717     0.148         0
+#>      Rater Wave2 4     0.2635     0.480         0
 #> 
 #> Common elements:
 #>  Wave1 Wave2 N_Common
@@ -230,14 +231,14 @@ summary(drift)
 #>                FALSE
 head(drift$drift_table[, c("Facet", "Level", "Wave", "Drift", "Flag")])
 #> # A tibble: 6 × 5
-#>   Facet     Level        Wave   Drift Flag 
-#>   <chr>     <chr>        <chr>  <dbl> <lgl>
-#> 1 Criterion Content      Wave2  0.187 FALSE
-#> 2 Rater     R03          Wave2  0.179 FALSE
-#> 3 Rater     R02          Wave2 -0.178 FALSE
-#> 4 Criterion Organization Wave2 -0.170 FALSE
-#> 5 Rater     R04          Wave2  0.120 FALSE
-#> 6 Rater     R01          Wave2 -0.115 FALSE
+#>   Facet     Level    Wave    Drift Flag 
+#>   <chr>     <chr>    <chr>   <dbl> <lgl>
+#> 1 Rater     R01      Wave2 -0.480  FALSE
+#> 2 Rater     R03      Wave2  0.470  FALSE
+#> 3 Criterion Content  Wave2 -0.148  FALSE
+#> 4 Criterion Language Wave2  0.0828 FALSE
+#> 5 Rater     R04      Wave2  0.0528 FALSE
+#> 6 Rater     R02      Wave2 -0.0518 FALSE
 drift$common_elements
 #> # A tibble: 1 × 3
 #>   Wave1 Wave2 N_Common

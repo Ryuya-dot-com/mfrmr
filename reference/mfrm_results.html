@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build comprehensive first-screen MFRM results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-results.R" class="external-link"><code>R/api-results.R</code></a></small>
       <div class="d-none name"><code>mfrm_results.Rd</code></div>
     </div>
 
@@ -192,7 +192,12 @@ only the measurement columns needed for estimation.</p>
 
 
 <p>Start with <code>summary(res)</code>. The most useful fields are:</p><ul><li><p><code>overview</code>: input mode, model, method, table count, and plot-route count</p></li>
+<li><p><code>decision</code>: plain-language interpretation, formal-inference, reason, and
+next-action text derived from the source-fit readiness record</p></li>
 <li><p><code>readiness</code>: separate analysis and plot-interpretation gates</p></li>
+<li><p><code>fit_readiness</code>, <code>fit_readiness_components</code>, and
+<code>fit_readiness_parameters</code>: the exact source-fit readiness record retained
+separately from the workflow-level <code>readiness</code> table</p></li>
 <li><p><code>triage</code>: first-screen signals ordered by unavailable/review/info/ok</p></li>
 <li><p><code>status</code>: which sections were available, skipped, or unsupported</p></li>
 <li><p><code>plot_map</code>: supported plot routes, availability, and interpretation status</p></li>
@@ -287,60 +292,65 @@ interactive session.</p></li>
 <span class="r-in"><span><span class="va">sx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">overview</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   InputMode Model Method   N Persons Facets Categories Components Tables</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  mfrm_fit   RSM    JML 128       8      2          4         10     98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  mfrm_fit   RSM    JML 128       8      2          4         10    109</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   PlotRoutes NotAvailable NotComputed</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1          7            0           0</span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">readiness</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Domain                                Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Numerical                                  pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Data                                  pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Design                           pass_linked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   Stability                                  pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Diagnostics                          not_assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Reporting exploratory_fit_ready_for_diagnostics</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7        Plot   ready_for_diagnostic_interpretation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                        Detail</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                      Optimizer returned convergence code 0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                          No preparation warning or review row was retained.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                           The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                   No boundary-constant non-person facet level was detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                       Diagnostics have not yet been incorporated into this fit-only status.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                       Reporting status is the strictest applicable upstream workflow state.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7 Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         Fit                                 ready</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   Numerical                                  pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Data                                  pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      Design                           pass_linked</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   Stability                                  pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Diagnostics                          not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   Reporting exploratory_fit_ready_for_diagnostics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8        Plot   ready_for_diagnostic_interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                        Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                 All stored fit-readiness components passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                      Optimizer returned convergence code 0.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                          No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                           The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                   No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                       Diagnostics have not yet been incorporated into this fit-only status.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                       Reporting status is the strictest applicable upstream workflow state.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8 Stored fit readiness plus numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">triage</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                      Area Severity                                 Signal</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4             Diagnostics   review            diagnostic_warnings_present</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9  Precision / separation   review             precision_review_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10              Reporting   review reporting_checklist_available_but_held</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1             Data review       ok                    data_readiness_pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   Design / connectivity       ok                          design_linked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7    Diagnostic dashboard       ok                      qc_plot_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    Section availability       ok           requested_sections_available</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3               Stability       ok               stability_readiness_pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                  Tables       ok                       tables_collected</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6              Wright map       ok          required_wright_map_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5             Diagnostics   review            diagnostic_warnings_present</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Precision / separation   review             precision_review_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11              Reporting   review reporting_checklist_available_but_held</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2             Data review       ok                    data_readiness_pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   Design / connectivity       ok                          design_linked</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8    Diagnostic dashboard       ok                      qc_plot_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           Numerical fit       ok               numerical_readiness_pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    Section availability       ok           requested_sections_available</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4               Stability       ok               stability_readiness_pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                  Tables       ok                       tables_collected</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7              Wright map       ok          required_wright_map_available</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              Route</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                            summary(res$diagnostics)$key_warnings</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                         summary(res$components$precision_review)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                     summary(res$components$reporting_checklist)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                            summary(res$diagnostics)$key_warnings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                        summary(res$components$precision_review)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                     summary(res$components$reporting_checklist)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                           summary(res)$readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                   plot(res, type = "qc", preset = "publication")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                              summary(res)$status</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                           summary(res)$readiness</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                  build_summary_table_bundle(res)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                   plot(res, type = "qc", preset = "publication")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                           summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                              summary(res)$status</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                           summary(res)$readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                  build_summary_table_bundle(res)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7  plot(res, type = "wright", preset = "publication", show_ci = TRUE, top_n = Inf)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                     Detail</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                       Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 25.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                       Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10 Reporting checklist is available, but the associated reporting status is `exploratory_fit_ready_for_diagnostics`. Reporting status is the strictest applicable upstream workflow state.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                Data status is `pass`. No preparation warning or review row was retained.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                        Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                               The QC dashboard is available as a focused follow-up after the required Wright-map review.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                Requested sections that could be computed were available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                    Stability status is `pass`. No boundary-constant non-person facet level was detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                       98 data-frame table(s) were collected for appendix or handoff use.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                             The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                       Precision review flagged 1 review/warn checks. | Unexpected responses flagged: 25.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                      Precision review is available; inspect fit, separation, reliability, and ZSTD wording boundaries before reporting.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11 Reporting checklist is available, but the associated reporting status is `exploratory_fit_ready_for_diagnostics`. Reporting status is the strictest applicable upstream workflow state.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                Data status is `pass`. No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                        Design status is `pass_linked`. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                               The QC dashboard is available as a focused follow-up after the required Wright-map review.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                       Numerical status is `pass`. Optimizer returned convergence code 0.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                Requested sections that could be computed were available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                    Stability status is `pass`. No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                      109 data-frame table(s) were collected for appendix or handoff use.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                             The required shared-logit Wright map is available; inspect person targeting, facet locations, steps, and uncertainty before follow-up plots.</span>
 <span class="r-in"><span><span class="va">sx</span><span class="op">$</span><span class="va">plot_map</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Type Available RequiredArtifact</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        wright      TRUE             TRUE</span>
@@ -448,30 +458,34 @@ interactive session.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 11    precision_review     ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 12   facets_fit_review     ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 13 reporting_checklist     ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14      data_readiness     ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15    design_readiness     ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16 stability_readiness     ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 plot_interpretation     ok</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18 reporting_readiness review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                           Detail</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                          Input mode: mfrm_fit.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                       Computed automatically with residual_pca = 'none', diagnostic_mode = 'both', and fit_df_method = 'both'.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                                                                     Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                    Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                    Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                                                    Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                    Available.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                         Data status: pass. No preparation warning or review row was retained.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                 Design status: pass_linked. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                             Stability status: pass. No boundary-constant non-person facet level was detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 17 Plot status: ready_for_diagnostic_interpretation. Fit-level numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                Reporting status: exploratory_fit_ready_for_diagnostics. Reporting status is the strictest applicable upstream workflow state.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14       fit_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15 numerical_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16      data_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17    design_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18 stability_readiness     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 plot_interpretation     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20 reporting_readiness review</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                           Detail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                                          Input mode: mfrm_fit.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                       Computed automatically with residual_pca = 'none', diagnostic_mode = 'both', and fit_df_method = 'both'.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9                                                                                                                                                                                                                     Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10                                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11                                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12                                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13                                                                                                                                                                                                                    Available.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 14                                                                                                                                                                Fit status: ready. All stored fit-readiness components passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 15                                                                                                                                                                Numerical status: pass. Optimizer returned convergence code 0.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 16                                                                                                                                                         Data status: pass. No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 17                                                                 Design status: pass_linked. The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 18                                                                                                                                             Stability status: pass. No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 19 Plot status: ready_for_diagnostic_interpretation. Stored fit readiness plus numerical, data-support, connectivity, and stability gates passed. Treat this display as diagnostic evidence, not automatic publication approval.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 20                                                                                                Reporting status: exploratory_fit_ready_for_diagnostics. Reporting status is the strictest applicable upstream workflow state.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"qc"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Review a ConQuest comparison within the documented <code>mfrmr</code> overlap scope</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
       <div class="d-none name"><code>review_conquest_overlap.Rd</code></div>
     </div>
 
@@ -143,8 +143,10 @@ EAP estimates. <code>"auto"</code> tries conservative aliases such as <code>Esti
 overlap bundle produced by <code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>. It is
 intentionally conservative:</p><ul><li><p>it does <strong>not</strong> parse raw ConQuest text output automatically;</p></li>
 <li><p>its primary route expects output from
-<code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code>, which reads the four native CSV
-files requested by the generated command; custom extracted tables may use
+<code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code>, which reads the four native
+comparison CSV files requested by the generated command; the additional
+matrixout-history CSV is retained for a separate objective/free-dimension
+verification; custom extracted tables may use
 <code><a href="normalize_conquest_overlap_files.html">normalize_conquest_overlap_files()</a></code> or
 <code><a href="normalize_conquest_overlap_tables.html">normalize_conquest_overlap_tables()</a></code>;</p></li>
 <li><p>and it reports numerical differences and missing elements without claiming
@@ -156,7 +158,7 @@ and review contract without executing ConQuest.</p>
 <p>The intended workflow is:</p><ol><li><p>export a bundle for the documented comparison scope with
 <code><a href="build_conquest_overlap_bundle.html">build_conquest_overlap_bundle()</a></code>;</p></li>
 <li><p>run the narrow matching case in ConQuest;</p></li>
-<li><p>normalize the four requested CSV files with
+<li><p>normalize the four comparison CSV files with
 <code><a href="normalize_conquest_overlap_exports.html">normalize_conquest_overlap_exports()</a></code>;</p></li>
 <li><p>pass those tables here to inspect direct differences, centered item
 agreement, and case-level EAP agreement.</p></li>

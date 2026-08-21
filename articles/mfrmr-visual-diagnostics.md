@@ -88,6 +88,11 @@ keeps facet uncertainty and fitted step locations visible. For a closer
 FACETS-facing handoff, switch the renderer and leave `show_ci` at its
 default `FALSE`. The fitted coordinates do not change.
 
+Every retained native facet level is labelled. Only label coordinates
+are displaced for collision avoidance, with leader lines back to the
+fitted points. Step thresholds form one vertical ladder and their labels
+include the fitted transition logits.
+
 ``` r
 
 plot(
@@ -374,57 +379,61 @@ plot_data_components(wright_payload)
 #> 2  wright_map              renderer    scalar_or_vector      character   NA
 #> 3  wright_map       visual_contract    scalar_or_vector      character   NA
 #> 4  wright_map                person          table_data     data.frame   48
-#> 5  wright_map           person_hist            metadata list:histogram   NA
-#> 6  wright_map          person_stats          table_data     data.frame    1
-#> 7  wright_map             locations          table_data     data.frame   12
-#> 8  wright_map          label_points          table_data     data.frame    7
-#> 9  wright_map         group_summary summary_or_guidance     data.frame    3
-#> 10 wright_map          group_levels            settings      character   NA
-#> 11 wright_map               y_range            settings         double   NA
-#> 12 wright_map      display_settings            settings     data.frame    1
-#> 13 wright_map           label_limit    scalar_or_vector        integer   NA
-#> 14 wright_map             retention          table_data     data.frame    3
-#> 15 wright_map        retention_note summary_or_guidance      character   NA
-#> 16 wright_map                 title    scalar_or_vector      character   NA
-#> 17 wright_map              subtitle    scalar_or_vector      character   NA
-#> 18 wright_map               show_ci    scalar_or_vector        logical   NA
-#> 19 wright_map   uncertainty_display    scalar_or_vector      character   NA
-#> 20 wright_map                 group    scalar_or_vector           NULL   NA
-#> 21 wright_map                preset            settings      character   NA
-#> 22 wright_map                legend               style     data.frame    5
-#> 23 wright_map       reference_lines          annotation     data.frame    1
-#> 24 wright_map             plot_name    scalar_or_vector      character   NA
-#> 25 wright_map         fit_readiness          fit_review     data.frame    5
-#> 26 wright_map interpretation_status summary_or_guidance      character   NA
-#> 27 wright_map   interpretation_note summary_or_guidance      character   NA
+#> 5  wright_map     person_exclusions          table_data     data.frame    0
+#> 6  wright_map           person_hist            metadata list:histogram   NA
+#> 7  wright_map          person_stats          table_data     data.frame    1
+#> 8  wright_map             locations          table_data     data.frame   12
+#> 9  wright_map          label_points          table_data     data.frame   12
+#> 10 wright_map         group_summary summary_or_guidance     data.frame    3
+#> 11 wright_map          group_levels            settings      character   NA
+#> 12 wright_map               y_range            settings         double   NA
+#> 13 wright_map      display_settings            settings     data.frame    1
+#> 14 wright_map           label_limit    scalar_or_vector        integer   NA
+#> 15 wright_map             retention          table_data     data.frame    3
+#> 16 wright_map        retention_note summary_or_guidance      character   NA
+#> 17 wright_map                 title    scalar_or_vector      character   NA
+#> 18 wright_map              subtitle    scalar_or_vector      character   NA
+#> 19 wright_map               show_ci    scalar_or_vector        logical   NA
+#> 20 wright_map   uncertainty_display    scalar_or_vector      character   NA
+#> 21 wright_map                 group    scalar_or_vector           NULL   NA
+#> 22 wright_map                preset            settings      character   NA
+#> 23 wright_map                legend               style     data.frame    5
+#> 24 wright_map       reference_lines          annotation     data.frame    1
+#> 25 wright_map        scale_contract          table_data     data.frame    1
+#> 26 wright_map             plot_name    scalar_or_vector      character   NA
+#> 27 wright_map         fit_readiness          fit_review     data.frame    6
+#> 28 wright_map interpretation_status summary_or_guidance      character   NA
+#> 29 wright_map   interpretation_note summary_or_guidance      character   NA
 #>    Columns Length IsTabular                                          Accessor
 #> 1       NA      1     FALSE          plot_data(x, component = "wright_style")
 #> 2       NA      1     FALSE              plot_data(x, component = "renderer")
 #> 3       NA      1     FALSE       plot_data(x, component = "visual_contract")
-#> 4        6      6      TRUE                plot_data(x, component = "person")
-#> 5        6      6     FALSE           plot_data(x, component = "person_hist")
-#> 6        4      4      TRUE          plot_data(x, component = "person_stats")
-#> 7       30     30      TRUE             plot_data(x, component = "locations")
-#> 8       30     30      TRUE          plot_data(x, component = "label_points")
-#> 9       16     16      TRUE         plot_data(x, component = "group_summary")
-#> 10      NA      3     FALSE          plot_data(x, component = "group_levels")
-#> 11      NA      2     FALSE               plot_data(x, component = "y_range")
-#> 12       8      8      TRUE      plot_data(x, component = "display_settings")
-#> 13      NA      1     FALSE           plot_data(x, component = "label_limit")
-#> 14       6      6      TRUE             plot_data(x, component = "retention")
-#> 15      NA      1     FALSE        plot_data(x, component = "retention_note")
-#> 16      NA      1     FALSE                 plot_data(x, component = "title")
-#> 17      NA      1     FALSE              plot_data(x, component = "subtitle")
-#> 18      NA      1     FALSE               plot_data(x, component = "show_ci")
-#> 19      NA      1     FALSE   plot_data(x, component = "uncertainty_display")
-#> 20      NA      0     FALSE                 plot_data(x, component = "group")
-#> 21      NA      1     FALSE                plot_data(x, component = "preset")
-#> 22       4      4      TRUE                plot_data(x, component = "legend")
-#> 23       5      5      TRUE       plot_data(x, component = "reference_lines")
-#> 24      NA      1     FALSE             plot_data(x, component = "plot_name")
-#> 25       2      2      TRUE         plot_data(x, component = "fit_readiness")
-#> 26      NA      1     FALSE plot_data(x, component = "interpretation_status")
-#> 27      NA      1     FALSE   plot_data(x, component = "interpretation_note")
+#> 4       22     22      TRUE                plot_data(x, component = "person")
+#> 5       22     22      TRUE     plot_data(x, component = "person_exclusions")
+#> 6        6      6     FALSE           plot_data(x, component = "person_hist")
+#> 7        7      7      TRUE          plot_data(x, component = "person_stats")
+#> 8       37     37      TRUE             plot_data(x, component = "locations")
+#> 9       43     43      TRUE          plot_data(x, component = "label_points")
+#> 10      16     16      TRUE         plot_data(x, component = "group_summary")
+#> 11      NA      3     FALSE          plot_data(x, component = "group_levels")
+#> 12      NA      2     FALSE               plot_data(x, component = "y_range")
+#> 13       8      8      TRUE      plot_data(x, component = "display_settings")
+#> 14      NA      1     FALSE           plot_data(x, component = "label_limit")
+#> 15       6      6      TRUE             plot_data(x, component = "retention")
+#> 16      NA      1     FALSE        plot_data(x, component = "retention_note")
+#> 17      NA      1     FALSE                 plot_data(x, component = "title")
+#> 18      NA      1     FALSE              plot_data(x, component = "subtitle")
+#> 19      NA      1     FALSE               plot_data(x, component = "show_ci")
+#> 20      NA      1     FALSE   plot_data(x, component = "uncertainty_display")
+#> 21      NA      0     FALSE                 plot_data(x, component = "group")
+#> 22      NA      1     FALSE                plot_data(x, component = "preset")
+#> 23       4      4      TRUE                plot_data(x, component = "legend")
+#> 24       5      5      TRUE       plot_data(x, component = "reference_lines")
+#> 25      15     15      TRUE        plot_data(x, component = "scale_contract")
+#> 26      NA      1     FALSE             plot_data(x, component = "plot_name")
+#> 27       2      2      TRUE         plot_data(x, component = "fit_readiness")
+#> 28      NA      1     FALSE plot_data(x, component = "interpretation_status")
+#> 29      NA      1     FALSE   plot_data(x, component = "interpretation_note")
 #>                                                                     Notes
 #> 1                                                                        
 #> 2                                                                        
@@ -434,72 +443,76 @@ plot_data_components(wright_payload)
 #> 6                                                                        
 #> 7                                                                        
 #> 8                                                                        
-#> 9                            Use for captions, QA checks, or report text.
-#> 10                                                                       
+#> 9                                                                        
+#> 10                           Use for captions, QA checks, or report text.
 #> 11                                                                       
 #> 12                                                                       
 #> 13                                                                       
 #> 14                                                                       
-#> 15                           Use for captions, QA checks, or report text.
-#> 16                                                                       
+#> 15                                                                       
+#> 16                           Use for captions, QA checks, or report text.
 #> 17                                                                       
 #> 18                                                                       
 #> 19                                                                       
 #> 20                                                                       
 #> 21                                                                       
-#> 22                 Use to reproduce color, line-type, or legend mappings.
-#> 23 Use with primary data to draw thresholds, labels, and reference lines.
-#> 24                                                                       
+#> 22                                                                       
+#> 23                 Use to reproduce color, line-type, or legend mappings.
+#> 24 Use with primary data to draw thresholds, labels, and reference lines.
 #> 25                                                                       
-#> 26                           Use for captions, QA checks, or report text.
-#> 27                           Use for captions, QA checks, or report text.
-#>                                                                                                                                                                                                                                                                                                                                                                          ColumnNames
-#> 1                                                                                                                                                                                                                                                                                                                                                                                   
-#> 2                                                                                                                                                                                                                                                                                                                                                                                   
-#> 3                                                                                                                                                                                                                                                                                                                                                                                   
-#> 4                                                                                                                                                                                                                                                                                                                                     Person, Estimate, SD, PosteriorSD, SE, Extreme
-#> 5                                                                                                                                                                                                                                                                                                                                     breaks, counts, density, mids, xname, equidist
-#> 6                                                                                                                                                                                                                                                                                                                                                                N, Mean, Median, SD
-#> 7  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
-#> 8  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
-#> 9                                                                                                                                                                                                                                      Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap
-#> 10                                                                                                                                                                                                                                                                                                                                                                                  
-#> 11                                                                                                                                                                                                                                                                                                                                                                                  
-#> 12                                                                                                                                                                                                                                                 Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy
-#> 13                                                                                                                                                                                                                                                                                                                                                                                  
-#> 14                                                                                                                                                                                                                                                                                                                         Component, Shown, Total, Omitted, RequestedTopN, Complete
-#> 15                                                                                                                                                                                                                                                                                                                                                                                  
-#> 16                                                                                                                                                                                                                                                                                                                                                                                  
-#> 17                                                                                                                                                                                                                                                                                                                                                                                  
-#> 18                                                                                                                                                                                                                                                                                                                                                                                  
-#> 19                                                                                                                                                                                                                                                                                                                                                                                  
-#> 20                                                                                                                                                                                                                                                                                                                                                                                  
-#> 21                                                                                                                                                                                                                                                                                                                                                                                  
-#> 22                                                                                                                                                                                                                                                                                                                                                     label, role, aesthetic, value
-#> 23                                                                                                                                                                                                                                                                                                                                                axis, value, label, linetype, role
-#> 24                                                                                                                                                                                                                                                                                                                                                                                  
-#> 25                                                                                                                                                                                                                                                                                                                                                                    Domain, Status
-#> 26                                                                                                                                                                                                                                                                                                                                                                                  
-#> 27
+#> 26                                                                       
+#> 27                                                                       
+#> 28                           Use for captions, QA checks, or report text.
+#> 29                           Use for captions, QA checks, or report text.
+#>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                ColumnNames
+#> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+#> 2                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+#> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+#> 4                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
+#> 5                                                                                                                                                                               Person, Estimate, SD, PosteriorSD, SE, Extreme, PrimaryEstimate, OptimizerEstimate, DisplayEstimate, DisplayAdjustment, ParameterStatus, BoundaryDirection, ResponseExtreme, ResponseRows, WeightedResponseTotal, PrimaryEstimateBasis, OptimizerEstimateUse, ReasonCodes, ReadinessContractVersion, SourceFitReadiness, SourceInferenceReady, EstimateUse
+#> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           breaks, counts, density, mids, xname, equidist
+#> 7                                                                                                                                                                                                                                                                                                                                                                                                                                                                         N, ReviewExcludedN, FiniteN, BoundaryExcludedN, Mean, Median, SD
+#> 8                                                                    Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus
+#> 9  Group, Label, PlotType, Estimate, SE, CI_Level, SE_Method, PrecisionTier, SupportsFormalInference, SEUse, CIBasis, CIUse, CIEligible, CILabel, Measure_Source, CI_Lower, CI_Upper, Step, StepIndex, BoundarySeparated, XBase, X, OriginalEstimate, BelowRange, AboveRange, DisplayEstimate, DisplayLabel, OriginalCI_Lower, OriginalCI_Upper, DisplayCI_Lower, DisplayCI_Upper, CIClippedLower, CIClippedUpper, CIClipped, BoundaryEnd, CISuppressed, CIDisplayStatus, LabelY, LabelSide, LabelX, LabelHjust, LabelText, LabelDisplaced
+#> 10                                                                                                                                                                                                                                                                                                                                                                                           Group, PlotType, Min, Q1, Median, Q3, Max, DisplayMin, DisplayQ1, DisplayMedian, DisplayQ3, DisplayMax, N, XBase, TargetGap, DisplayTargetGap
+#> 11                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 12                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 13                                                                                                                                                                                                                                                                                                                                                                                                       Renderer, LowerLogit, UpperLogit, AutoRangePolicy, BoundaryLevelsAtEnds, CIClippedCount, BoundaryCIEndpointCount, CIDisplayPolicy
+#> 14                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 15                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Component, Shown, Total, Omitted, RequestedTopN, Complete
+#> 16                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 17                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 18                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 19                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 21                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 22                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 23                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           label, role, aesthetic, value
+#> 24                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      axis, value, label, linetype, role
+#> 25                                                                                                                                                                                                                                                Model, Method, CoordinateBasis, PopulationSD, SlopeBasis, GpcmModelFamily, GpcmSlopeAction, GpcmSlopeComposition, GpcmLatentDimensionCount, GpcmMmlIdentification, GpcmEstimatorFamily, GpcmStatisticalPenalty, GpcmFiniteParameterBox, GpcmExtremePersonPolicy, FixedLatentSDSlopeField
+#> 26                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 27                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Domain, Status
+#> 28                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+#> 29
 
 locations <- plot_data(wright_payload, component = "locations")
 head(locations)
-#> # A tibble: 6 × 30
-#>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower
-#>   <fct> <chr> <chr>       <dbl> <dbl>    <dbl> <chr>     <chr>             <dbl>
-#> 1 Rater R01   Facet l…   -0.606 0.181     0.95 Observat… fit + observa…  -0.960 
-#> 2 Rater R02   Facet l…   -0.382 0.166     0.95 Observat… fit + observa…  -0.707 
-#> 3 Rater R04   Facet l…    0.180 0.185     0.95 Observat… fit + observa…  -0.183 
-#> 4 Rater R05   Facet l…    0.184 0.199     0.95 Observat… fit + observa…  -0.207 
-#> 5 Rater R03   Facet l…    0.212 0.179     0.95 Observat… fit + observa…  -0.138 
-#> 6 Rater R06   Facet l…    0.412 0.219     0.95 Observat… fit + observa…  -0.0168
-#> # ℹ 21 more variables: CI_Upper <dbl>, Step <chr>, StepIndex <int>,
-#> #   BoundarySeparated <lgl>, XBase <dbl>, X <dbl>, OriginalEstimate <dbl>,
-#> #   BelowRange <lgl>, AboveRange <lgl>, DisplayEstimate <dbl>,
-#> #   DisplayLabel <chr>, OriginalCI_Lower <dbl>, OriginalCI_Upper <dbl>,
-#> #   DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, CIClippedLower <lgl>,
-#> #   CIClippedUpper <lgl>, CIClipped <lgl>, BoundaryEnd <chr>,
-#> #   CISuppressed <lgl>, CIDisplayStatus <chr>
+#> # A tibble: 6 × 37
+#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
+#> 1 Rater R01   Facet level   -0.606 0.181     0.95 Observation-tab… exploratory  
+#> 2 Rater R02   Facet level   -0.382 0.166     0.95 Observation-tab… exploratory  
+#> 3 Rater R04   Facet level    0.180 0.185     0.95 Observation-tab… exploratory  
+#> 4 Rater R05   Facet level    0.184 0.199     0.95 Observation-tab… exploratory  
+#> 5 Rater R03   Facet level    0.212 0.179     0.95 Observation-tab… exploratory  
+#> 6 Rater R06   Facet level    0.412 0.219     0.95 Observation-tab… exploratory  
+#> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
+#> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
+#> #   StepIndex <int>, BoundarySeparated <lgl>, XBase <dbl>, X <dbl>,
+#> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
+#> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
+#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
 
 pathway_long <- plot_data(
   fit,
@@ -524,14 +537,15 @@ the plot data:
 
 names(wright_payload$data)
 #>  [1] "wright_style"          "renderer"              "visual_contract"      
-#>  [4] "person"                "person_hist"           "person_stats"         
-#>  [7] "locations"             "label_points"          "group_summary"        
-#> [10] "group_levels"          "y_range"               "display_settings"     
-#> [13] "label_limit"           "retention"             "retention_note"       
-#> [16] "title"                 "subtitle"              "show_ci"              
-#> [19] "uncertainty_display"   "group"                 "preset"               
-#> [22] "legend"                "reference_lines"       "plot_name"            
-#> [25] "fit_readiness"         "interpretation_status" "interpretation_note"
+#>  [4] "person"                "person_exclusions"     "person_hist"          
+#>  [7] "person_stats"          "locations"             "label_points"         
+#> [10] "group_summary"         "group_levels"          "y_range"              
+#> [13] "display_settings"      "label_limit"           "retention"            
+#> [16] "retention_note"        "title"                 "subtitle"             
+#> [19] "show_ci"               "uncertainty_display"   "group"                
+#> [22] "preset"                "legend"                "reference_lines"      
+#> [25] "scale_contract"        "plot_name"             "fit_readiness"        
+#> [28] "interpretation_status" "interpretation_note"
 wright_payload$data$reference_lines
 #>   axis value                    label linetype      role
 #> 1    h     0 Centered logit reference   dashed reference

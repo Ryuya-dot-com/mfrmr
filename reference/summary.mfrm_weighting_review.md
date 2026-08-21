@@ -30,7 +30,8 @@ summary(object, digits = 3, top_n = 10, ...)
 
 ## Value
 
-An object of class `summary.mfrm_weighting_review`.
+An object of class `summary.mfrm_weighting_review`, including the
+evidence-tier `comparison_contract` table.
 
 ## See also
 

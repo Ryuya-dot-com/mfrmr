@@ -133,10 +133,10 @@ export_mfrm_bundle(
   `export_mfrm_bundle()` co-locates a CSV copy of the data alongside the
   replay script and updates the script's
   [`read.csv()`](https://rdrr.io/r/utils/read.table.html) path to point
-  at it. The manifest's `input_hash` row for `data` is also computed
-  against the user's untouched input so the recorded fingerprint matches
-  what the replay script will load. Default `NULL` falls back to the
-  legacy `your_data.csv` placeholder path.
+  at it. The manifest's `input_summary` row for `data` describes the
+  user's untouched input structure; it is not a byte-level equality
+  claim about the CSV replay representation. Default `NULL` falls back
+  to the legacy `your_data.csv` placeholder path.
 
 ## Value
 
@@ -224,6 +224,9 @@ Depending on `include`, the exporter can write:
 - manifest CSV/TXT via
   [`build_mfrm_manifest()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_manifest.md)
 
+- exact source-fit readiness CSVs with fit, component, and parameter
+  scope
+
 - visual warning/summary artifacts via
   [`build_visual_summaries()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_visual_summaries.md)
 
@@ -235,6 +238,9 @@ Depending on `include`, the exporter can write:
 
 - a package-native replay script via
   [`build_mfrm_replay_script()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_mfrm_replay_script.md)
+
+- replay-source readiness CSVs retained as provenance; the replayed fit
+  recomputes its own readiness
 
 - for latent-regression fits, a replay-side person-data CSV paired with
   the replay script
@@ -315,7 +321,7 @@ bundle <- export_mfrm_bundle(
 )
 bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
 #>   FilesWritten HtmlWritten ScriptWritten
-#> 1           17           1             1
+#> 1           23           1             1
 head(bundle$written_files)
 #>          Component Format
 #> 1      core_person    csv
@@ -325,12 +331,12 @@ head(bundle$written_files)
 #> 5       core_steps    csv
 #> 6 manifest_summary    csv
 #>                                                        Path
-#> 1 /tmp/RtmpIbcapd/mfrmr_bundle_example_person_estimates.csv
-#> 2  /tmp/RtmpIbcapd/mfrmr_bundle_example_facet_estimates.csv
-#> 3      /tmp/RtmpIbcapd/mfrmr_bundle_example_fit_summary.csv
-#> 4         /tmp/RtmpIbcapd/mfrmr_bundle_example_measures.csv
-#> 5  /tmp/RtmpIbcapd/mfrmr_bundle_example_step_parameters.csv
-#> 6 /tmp/RtmpIbcapd/mfrmr_bundle_example_manifest_summary.csv
+#> 1 /tmp/RtmpJHlGr0/mfrmr_bundle_example_person_estimates.csv
+#> 2  /tmp/RtmpJHlGr0/mfrmr_bundle_example_facet_estimates.csv
+#> 3      /tmp/RtmpJHlGr0/mfrmr_bundle_example_fit_summary.csv
+#> 4         /tmp/RtmpJHlGr0/mfrmr_bundle_example_measures.csv
+#> 5  /tmp/RtmpJHlGr0/mfrmr_bundle_example_step_parameters.csv
+#> 6 /tmp/RtmpJHlGr0/mfrmr_bundle_example_manifest_summary.csv
 #>                    DataHandling
 #> 1 may_contain_person_level_data
 #> 2         review_before_sharing

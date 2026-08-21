@@ -286,6 +286,8 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
   maxit = 30,
   seed = 123
 )
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
 diag_eval$scenario_summary
 #> # A tibble: 2 × 23
 #>   design_id Scenario        ScenarioClass Model DependenceFacet n_person n_rater

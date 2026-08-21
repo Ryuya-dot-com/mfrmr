@@ -34,7 +34,7 @@ estimate_bias(
 
   First facet name. Provide together with `facet_b` for the classic
   pairwise 2-way interaction. Ignored when `interaction_facets` is
-  supplied.
+  supplied. The canonical `"Person"` role is accepted explicitly.
 
 - facet_b:
 
@@ -46,7 +46,8 @@ estimate_bias(
   effect. When supplied, this takes precedence over `facet_a`/`facet_b`.
   Use this form (rather than `facet_a`/`facet_b`) whenever you want 3+
   way interactions, since `facet_a/facet_b` is restricted to the
-  pairwise case.
+  pairwise case. The canonical `"Person"` role may be supplied
+  explicitly; see the Person-screening boundary below.
 
 - max_abs:
 
@@ -81,6 +82,10 @@ An object of class `mfrm_bias` with:
 
 - `interaction_facets`, `interaction_order`, `interaction_mode`: full
   interaction metadata
+
+- `person_interaction`, `person_source_column`,
+  `person_interaction_note`: Person-screening provenance and
+  interpretation metadata
 
 - `iteration`: iteration history/metadata
 
@@ -135,6 +140,13 @@ slope estimates are held fixed.
   with length 2).
 
 - For higher-order mode, provide `interaction_facets` with length \>= 3.
+
+- A Person-involving result is a conditional plug-in likelihood screen.
+  It holds fitted JML person measures or MML EAP scores and the other
+  fitted parameters fixed; it is not a jointly fitted Person-by-facet
+  interaction and does not support formal inference or a cell-level
+  fairness decision. The function emits a classed warning when
+  `"Person"` is requested.
 
 ## What this screening means
 

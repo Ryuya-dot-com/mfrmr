@@ -36,13 +36,19 @@ estimate_all_bias(
 
   Optional list of facet specifications. Each element should be a
   character vector of length 2 or more, for example
-  `list(c("Rater", "Criterion"), c("Task", "Criterion"))`. When `NULL`,
-  all 2-way combinations of modeled facets are used.
+  `list(c("Rater", "Criterion"), c("Task", "Criterion"))`. Explicit
+  specifications may include canonical `"Person"` regardless of
+  `include_person`. When `NULL`, all 2-way combinations of modeled
+  facets are used.
 
 - include_person:
 
   If `TRUE` and `pairs = NULL`, include `"Person"` in the automatically
-  generated pair set.
+  generated pair set. `"Person"` denotes the source column supplied as
+  `person` to
+  [`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+  and remains opt-in because these cells condition on fitted JML person
+  measures or MML EAP scores.
 
 - drop_empty:
 
@@ -93,7 +99,11 @@ for the mathematical formulation.
 When `pairs = NULL`, the function builds all 2-way combinations of
 modelled facets automatically. For a model with facets Rater, Criterion,
 and Task, this yields Rater\\\times\\Criterion, Rater\\\times\\Task, and
-Criterion\\\times\\Task.
+Criterion\\\times\\Task. With `include_person = TRUE`,
+Person\\\times\\facet pairs are prepended in the fit's facet order. They
+are conditional plug-in likelihood screens, not jointly fitted
+Person\\\times\\facet terms. A single warning records this boundary for
+the batch.
 
 The `summary` table aggregates results across pairs:
 

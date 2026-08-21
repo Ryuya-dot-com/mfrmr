@@ -223,8 +223,9 @@ element is **flagged** when \\\|\Delta_e\| \> 0.5\\ logits or
 # criterion identities from one synthetic calibration design.
 toy <- load_mfrmr_data("example_core")
 people <- unique(toy$Person)
-d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+# Two balanced 12-Person waves retain every Rater and Criterion.
+d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
                  method = "MML", quad_points = 7, maxit = 30)
 res <- anchor_to_baseline(d2, fit1, "Person",
@@ -249,10 +250,10 @@ head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 #> 4 Criterion Organization     0 FALSE
 res$baseline_anchors[1:3, ]
 #> # A tibble: 3 × 3
-#>   Facet     Level    Anchor
-#>   <chr>     <chr>     <dbl>
-#> 1 Criterion Accuracy  0.213
-#> 2 Criterion Content  -0.508
-#> 3 Criterion Language  0.138
+#>   Facet     Level     Anchor
+#>   <chr>     <chr>      <dbl>
+#> 1 Criterion Accuracy  0.210 
+#> 2 Criterion Content  -0.443 
+#> 3 Criterion Language  0.0979
 # }
 ```

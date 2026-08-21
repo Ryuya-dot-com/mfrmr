@@ -255,7 +255,10 @@ plot(
 Invisibly, an `mfrm_plot_data` object (default and for any single
 `type`), or an `mfrm_plot_bundle` when `type = "bundle"` / `"all"` /
 `"default"`. Each returned fit plot includes domain-specific readiness
-and an interpretation status in its data payload.
+and an interpretation status in its data payload. It also includes a
+one-row `scale_contract` table recording the fitted coordinate basis,
+population SD when applicable, discrimination basis, and bounded-GPCM
+MML identification convention.
 
 ## Details
 
@@ -267,13 +270,16 @@ the legacy three-plot `mfrm_plot_bundle` containing a Wright map,
 pathway map, and category characteristic curves. The compact native
 default records any omitted facet locations in `data$retention` and
 annotates the subtitle and drawn figure; use `top_n = Inf` to retain
-every fitted location in the final Wright map. Native text labels remain
-collision-aware, so a retained point may be unlabeled; its exact level
-and estimate remain available in the returned plot data. When the fit
-records boundary-separated facet levels and no display range was
-supplied, the native and FACETS-style maps use the same robust automatic
-range and place those levels at ruler ends. Exact fitted values and
-intervals remain in `OriginalEstimate`, `CI_Lower`, and `CI_Upper`;
+every fitted location in the final Wright map. Every retained native
+location is labelled. Collision-aware `LabelX` / `LabelY` coordinates
+and leader lines displace text without moving the fitted point;
+`label_points` retains both point and text coordinates for custom
+renderers. Step transitions share one vertical ladder and their labels
+include the fitted threshold logit. When the fit records
+boundary-separated facet levels and no display range was supplied, the
+native and FACETS-style maps use the same robust automatic range and
+place those levels at ruler ends. Exact fitted values and intervals
+remain in `OriginalEstimate`, `CI_Lower`, and `CI_Upper`;
 `DisplayEstimate`, `DisplayCI_Lower`, `DisplayCI_Upper`, and the
 clipping-status columns describe only the rendered coordinates. Endpoint
 triangles and the plot footer disclose any omitted or clipped interval.
@@ -285,7 +291,12 @@ Every fit-derived payload also carries `data$fit_readiness`,
 Availability and interpretability are separate: when a numerical, data,
 design, or stability gate requires review, the coordinates remain
 available for diagnosis, but the call warns and marks the returned
-subtitle and drawn title `REVIEW ONLY`.
+subtitle and drawn title `REVIEW ONLY`. A prior-regularized extreme MML
+EAP remains in `fit$facets$person`. If its source fit is blocked,
+however, it is omitted from the Wright-map scale so that a finite but
+non-interpretable trace cannot collapse the display. The exact excluded
+rows and reason remain in `data$person_exclusions`, and the omission is
+stated in `data$retention_note`.
 
 `type = "wright"` shows persons, facet levels, and step thresholds on a
 shared logit scale. Estimates are plotted as fitted, so the sign
@@ -323,9 +334,16 @@ The expected-score pathway draw-free data also includes `pathway_long`,
 plotly, or a report pipeline while keeping the same underfit/overfit
 labels used by
 [`fit_measures_table()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_measures_table.md).
-`type = "ccc"` shows category response probabilities.
-`type = "ccc_surface"` or `type = "category_surface"` returns 3D-ready
-category-probability surface data for external rendering; it
+`type = "ccc"` shows category response probabilities. Multiple curve
+groups are faceted rather than overplotted by the native renderer, and
+category-specific legends use the same colours across panels. For
+`GPCM`, these curves retain the estimated step-facet slope; all curve
+families are reference-profile curves with additive facet main effects
+and fitted interactions fixed at zero; the native footer and ggplot
+subtitle disclose that conditioning. The draw-free `curve_basis`,
+`CurveBasis`, and `PredictorOffset` fields make that conditioning
+explicit. `type = "ccc_surface"` or `type = "category_surface"` returns
+3D-ready category-probability surface data for external rendering; it
 deliberately does not add a plotly/rgl dependency or replace the 2D
 CCC/pathway reporting figures. The returned object includes
 `category_support`, `interpretation_guide`, and `reporting_policy`
@@ -378,22 +396,22 @@ fit <- fit_mfrm(
 )
 wright <- plot(fit, draw = FALSE)
 head(wright$data$locations)
-#> # A tibble: 6 × 30
-#>   Group Label PlotType Estimate    SE CI_Level SE_Method Measure_Source CI_Lower
-#>   <fct> <chr> <chr>       <dbl> <dbl>    <dbl> <chr>     <chr>             <dbl>
-#> 1 Rater R01   Facet l…   -0.597 0.180     0.95 Observat… fit + observa…  -0.950 
-#> 2 Rater R02   Facet l…   -0.334 0.165     0.95 Observat… fit + observa…  -0.657 
-#> 3 Rater R05   Facet l…    0.135 0.198     0.95 Observat… fit + observa…  -0.253 
-#> 4 Rater R04   Facet l…    0.169 0.184     0.95 Observat… fit + observa…  -0.192 
-#> 5 Rater R03   Facet l…    0.259 0.178     0.95 Observat… fit + observa…  -0.0901
-#> 6 Rater R06   Facet l…    0.368 0.217     0.95 Observat… fit + observa…  -0.0570
-#> # ℹ 21 more variables: CI_Upper <dbl>, Step <chr>, StepIndex <int>,
-#> #   BoundarySeparated <lgl>, XBase <dbl>, X <dbl>, OriginalEstimate <dbl>,
-#> #   BelowRange <lgl>, AboveRange <lgl>, DisplayEstimate <dbl>,
-#> #   DisplayLabel <chr>, OriginalCI_Lower <dbl>, OriginalCI_Upper <dbl>,
-#> #   DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, CIClippedLower <lgl>,
-#> #   CIClippedUpper <lgl>, CIClipped <lgl>, BoundaryEnd <chr>,
-#> #   CISuppressed <lgl>, CIDisplayStatus <chr>
+#> # A tibble: 6 × 37
+#>   Group Label PlotType    Estimate    SE CI_Level SE_Method        PrecisionTier
+#>   <fct> <chr> <chr>          <dbl> <dbl>    <dbl> <chr>            <chr>        
+#> 1 Rater R01   Facet level   -0.597 0.180     0.95 Observation-tab… exploratory  
+#> 2 Rater R02   Facet level   -0.334 0.165     0.95 Observation-tab… exploratory  
+#> 3 Rater R05   Facet level    0.135 0.198     0.95 Observation-tab… exploratory  
+#> 4 Rater R04   Facet level    0.169 0.184     0.95 Observation-tab… exploratory  
+#> 5 Rater R03   Facet level    0.259 0.178     0.95 Observation-tab… exploratory  
+#> 6 Rater R06   Facet level    0.368 0.217     0.95 Observation-tab… exploratory  
+#> # ℹ 29 more variables: SupportsFormalInference <lgl>, SEUse <chr>,
+#> #   CIBasis <chr>, CIUse <chr>, CIEligible <lgl>, CILabel <chr>,
+#> #   Measure_Source <chr>, CI_Lower <dbl>, CI_Upper <dbl>, Step <chr>,
+#> #   StepIndex <int>, BoundarySeparated <lgl>, XBase <dbl>, X <dbl>,
+#> #   OriginalEstimate <dbl>, BelowRange <lgl>, AboveRange <lgl>,
+#> #   DisplayEstimate <dbl>, DisplayLabel <chr>, OriginalCI_Lower <dbl>,
+#> #   OriginalCI_Upper <dbl>, DisplayCI_Lower <dbl>, DisplayCI_Upper <dbl>, …
 # Look for: persons clustered against the facet / step rows on the
 #   shared logit axis. Large gaps between the person density and
 #   the step / facet rails indicate weak targeting; ceiling /
@@ -420,20 +438,27 @@ head(surface$data$surface)
 #> 4 -5.85   0.9904413      1.009582   0.009536874 0.009536874        9.093770e-05
 #> 5 -5.80   0.9899549      1.010071   0.010021004 0.010021004        1.004038e-04
 #> 6 -5.75   0.9894439      1.010585   0.010529453 0.010529453        1.108498e-04
-#>   CategoryInformationShare Slope Model Category CurveGroup CategoryIndex
-#> 1              0.008218156     1   RSM        1     Common             1
-#> 2              0.008635851     1   RSM        1     Common             1
-#> 3              0.009074579     1   RSM        1     Common             1
-#> 4              0.009535378     1   RSM        1     Common             1
-#> 5              0.010019337     1   RSM        1     Common             1
-#> 6              0.010527594     1   RSM        1     Common             1
-#>   CategoryScore SurfaceX SurfaceY  SurfaceZ
-#> 1             1    -6.00        1 0.9917645
-#> 2             1    -5.95        1 0.9913450
-#> 3             1    -5.90        1 0.9909043
-#> 4             1    -5.85        1 0.9904413
-#> 5             1    -5.80        1 0.9899549
-#> 6             1    -5.75        1 0.9894439
+#>   CategoryInformationShare Slope Model Category CurveGroup
+#> 1              0.008218156     1   RSM        1     Common
+#> 2              0.008635851     1   RSM        1     Common
+#> 3              0.009074579     1   RSM        1     Common
+#> 4              0.009535378     1   RSM        1     Common
+#> 5              0.010019337     1   RSM        1     Common
+#> 6              0.010527594     1   RSM        1     Common
+#>                    CurveBasis PredictorOffset CategoryIndex CategoryScore
+#> 1 zero_additive_facet_profile               0             1             1
+#> 2 zero_additive_facet_profile               0             1             1
+#> 3 zero_additive_facet_profile               0             1             1
+#> 4 zero_additive_facet_profile               0             1             1
+#> 5 zero_additive_facet_profile               0             1             1
+#> 6 zero_additive_facet_profile               0             1             1
+#>   SurfaceX SurfaceY  SurfaceZ
+#> 1    -6.00        1 0.9917645
+#> 2    -5.95        1 0.9913450
+#> 3    -5.90        1 0.9909043
+#> 4    -5.85        1 0.9904413
+#> 5    -5.80        1 0.9899549
+#> 6    -5.75        1 0.9894439
 surface$data$category_support
 #>   Category CategoryIndex CategoryScore ObservedCount ZeroObserved
 #> 1        1             1             1            62        FALSE

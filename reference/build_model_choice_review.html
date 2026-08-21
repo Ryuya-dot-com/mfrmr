@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Build a model-choice review across RSM, PCM, and bounded GPCM fits</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-advanced.R" class="external-link"><code>R/api-advanced.R</code></a></small>
       <div class="d-none name"><code>build_model_choice_review.Rd</code></div>
     </div>
 
@@ -95,8 +95,13 @@ at least one <code>RSM</code>/<code>PCM</code> reference plus one bounded <code>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code>build_model_choice_review()</code> is a user-facing synthesis helper. It does not
-estimate new models. It bundles:</p><ul><li><p><code><a href="compare_mfrm.html">compare_mfrm()</a></code> for AIC/BIC/log-likelihood comparison;</p></li>
+estimate new models. It bundles:</p><ul><li><p><code><a href="compare_mfrm.html">compare_mfrm()</a></code> for verified AIC/Person-BIC/SABIC/log-likelihood
+comparison;</p></li>
+<li><p>comparison-boundary warnings captured from <code><a href="compare_mfrm.html">compare_mfrm()</a></code> and retained
+in <code>comparison_warnings</code> for printing and appendix export;</p></li>
 <li><p>model-role guidance for <code>RSM</code>, <code>PCM</code>, and bounded <code>GPCM</code>;</p></li>
+<li><p>reported step/slope coordinate counts, identified free-parameter counts,
+and the stored fit-readiness decision for every supplied model;</p></li>
 <li><p>downstream-route availability for APA output, score-side export, linking,
 recovery, fair averages, bias screening, and summary-appendix handoff;</p></li>
 <li><p>report wording templates that avoid treating better bounded-<code>GPCM</code> fit as
@@ -104,11 +109,15 @@ an automatic operational-scoring decision;</p></li>
 <li><p><code><a href="gpcm_capability_matrix.html">gpcm_capability_matrix()</a></code> when bounded <code>GPCM</code> is present;</p></li>
 <li><p>optionally, <code><a href="build_weighting_review.html">build_weighting_review()</a></code> for the first Rasch-family reference
 versus bounded-<code>GPCM</code> pair.</p></li>
-</ul><p>The word "bounded" is intentional: the package implements a bounded GPCM
-route, not every possible generalized partial-credit many-facet extension.
-The current route uses positive slopes, requires <code>slope_facet == step_facet</code>,
-identifies slopes on the log scale with geometric mean 1, and keeps several
-downstream score-side/reporting helpers outside the documented boundary.</p>
+</ul><p>The word "bounded" describes the documented model and workflow scope: the
+package does not implement every possible generalized partial-credit
+many-facet extension. It does <strong>not</strong> mean that finite optimizer box bounds
+define the estimator. The current route uses positive slopes, requires
+<code>slope_facet == step_facet</code>, identifies slopes on the log scale with
+geometric mean 1, and keeps several downstream score-side/reporting helpers
+outside the documented boundary.
+Model-choice ranking also requires the current selectable IC contract:
+q&lt;31 fits retain raw criteria but produce a screening/review-only bundle.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -121,10 +130,10 @@ downstream score-side/reporting helpers outside the documented boundary.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_rsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
-<span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"RSM"</span>, quad_points <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit_pcm</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span><span class="va">toy</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span></span>
 <span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"PCM"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span></span>
-<span class="r-in"><span>                    quad_points <span class="op">=</span> <span class="fl">7</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                    quad_points <span class="op">=</span> <span class="fl">31</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu">build_model_choice_review</span><span class="op">(</span>RSM <span class="op">=</span> <span class="va">fit_rsm</span>, PCM <span class="op">=</span> <span class="va">fit_pcm</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">review</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> mfrm Model Choice Review</span>
@@ -144,23 +153,37 @@ downstream score-side/reporting helpers outside the documented boundary.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    score contract are described accurately.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Comparison Table</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model Method nobs WeightedN ICSampleSize ICSampleSizeBasis npar   LogLik</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    MML  768       768          768         row_count    8 -903.080</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    MML  768       768          768         row_count   14 -896.262</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       AIC      BIC Converged InferenceReady ConvergenceSeverity ICComparable</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1822.161 1859.311      TRUE           TRUE                pass         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  1820.524 1885.537      TRUE           TRUE                pass         TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Delta_AIC AkaikeWeight Delta_BIC BICWeight</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      1.637        0.306     0.000         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      0.000        0.694    26.225         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model Method Persons Npar   LogLik      AIC      BIC    SABIC Delta_AIC</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM    MML      48    8 -900.013 1816.025 1830.995 1805.897     1.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM    MML      48   14 -893.249 1814.498 1840.695 1796.774     0.000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Delta_BIC Delta_SABIC ICStatus ICIntegrationTier ICSelectable ICComparable</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        0.0       9.123       ok    standard_start         TRUE         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        9.7       0.000       ok    standard_start         TRUE         TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SABICComparable InferenceReady</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             TRUE           TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             TRUE           TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Full IC audit fields remain available in `$comparison_table`.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Model Roles</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model           RecommendedRole</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM equal_weighting_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM equal_weighting_reference</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                        ScoreContract</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         Common threshold structure; equal discrimination fixed at 1.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Step thresholds vary by the designated step facet; equal discrimination fixed at 1.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Model Contracts and Readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Step parameters (reported values versus independent parameters)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model          StepStructure Reported Free</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM          shared ladder        3    2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM facet-specific ladders       12    8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Slope parameters (reported values versus independent parameters)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model SlopeStructure Reported Free</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM     fixed at 1        0    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM     fixed at 1        0    0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Fit readiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model FitReadiness FormalInference</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    RSM   RSM        ready              No</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    PCM   PCM        ready              No</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      Interpretation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit gates passed; formal precision review required</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fit gates passed; formal precision review required</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Full score contracts and readiness reasons remain in `$model_roles`.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Downstream Routes</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Label Model FullAPARoute ScoreSideExport LinkingSynthesis RecoveryChecks</span>

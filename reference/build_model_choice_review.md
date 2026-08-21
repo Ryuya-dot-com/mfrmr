@@ -57,9 +57,18 @@ An object of class `mfrm_model_choice_review`.
 not estimate new models. It bundles:
 
 - [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
-  for AIC/BIC/log-likelihood comparison;
+  for verified AIC/Person-BIC/SABIC/log-likelihood comparison;
+
+- comparison-boundary warnings captured from
+  [`compare_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/compare_mfrm.md)
+  and retained in `comparison_warnings` for printing and appendix
+  export;
 
 - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+
+- reported step/slope coordinate counts, identified free-parameter
+  counts, and the stored fit-readiness decision for every supplied
+  model;
 
 - downstream-route availability for APA output, score-side export,
   linking, recovery, fair averages, bias screening, and summary-appendix
@@ -75,12 +84,15 @@ not estimate new models. It bundles:
   [`build_weighting_review()`](https://ryuya-dot-com.github.io/mfrmr/reference/build_weighting_review.md)
   for the first Rasch-family reference versus bounded-`GPCM` pair.
 
-The word "bounded" is intentional: the package implements a bounded GPCM
-route, not every possible generalized partial-credit many-facet
-extension. The current route uses positive slopes, requires
-`slope_facet == step_facet`, identifies slopes on the log scale with
-geometric mean 1, and keeps several downstream score-side/reporting
-helpers outside the documented boundary.
+The word "bounded" describes the documented model and workflow scope:
+the package does not implement every possible generalized partial-credit
+many-facet extension. It does **not** mean that finite optimizer box
+bounds define the estimator. The current route uses positive slopes,
+requires `slope_facet == step_facet`, identifies slopes on the log scale
+with geometric mean 1, and keeps several downstream score-side/reporting
+helpers outside the documented boundary. Model-choice ranking also
+requires the current selectable IC contract: q\<31 fits retain raw
+criteria but produce a screening/review-only bundle.
 
 ## See also
 
@@ -95,10 +107,10 @@ helpers outside the documented boundary.
 # \donttest{
 toy <- load_mfrmr_data("example_core")
 fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                    method = "MML", model = "RSM", quad_points = 7)
+                    method = "MML", model = "RSM", quad_points = 31)
 fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                     method = "MML", model = "PCM", step_facet = "Criterion",
-                    quad_points = 7)
+                    quad_points = 31)
 review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 summary(review)
 #> mfrm Model Choice Review
@@ -118,23 +130,37 @@ summary(review)
 #>    score contract are described accurately.
 #> 
 #> Comparison Table
-#>  Label Model Method nobs WeightedN ICSampleSize ICSampleSizeBasis npar   LogLik
-#>    RSM   RSM    MML  768       768          768         row_count    8 -903.080
-#>    PCM   PCM    MML  768       768          768         row_count   14 -896.262
-#>       AIC      BIC Converged InferenceReady ConvergenceSeverity ICComparable
-#>  1822.161 1859.311      TRUE           TRUE                pass         TRUE
-#>  1820.524 1885.537      TRUE           TRUE                pass         TRUE
-#>  Delta_AIC AkaikeWeight Delta_BIC BICWeight
-#>      1.637        0.306     0.000         1
-#>      0.000        0.694    26.225         0
+#>  Label Model Method Persons Npar   LogLik      AIC      BIC    SABIC Delta_AIC
+#>    RSM   RSM    MML      48    8 -900.013 1816.025 1830.995 1805.897     1.527
+#>    PCM   PCM    MML      48   14 -893.249 1814.498 1840.695 1796.774     0.000
+#>  Delta_BIC Delta_SABIC ICStatus ICIntegrationTier ICSelectable ICComparable
+#>        0.0       9.123       ok    standard_start         TRUE         TRUE
+#>        9.7       0.000       ok    standard_start         TRUE         TRUE
+#>  SABICComparable InferenceReady
+#>             TRUE           TRUE
+#>             TRUE           TRUE
+#>   Full IC audit fields remain available in `$comparison_table`.
 #> 
-#> Model Roles
-#>  Label Model           RecommendedRole
-#>    RSM   RSM equal_weighting_reference
-#>    PCM   PCM equal_weighting_reference
-#>                                                                        ScoreContract
-#>                         Common threshold structure; equal discrimination fixed at 1.
-#>  Step thresholds vary by the designated step facet; equal discrimination fixed at 1.
+#> Model Contracts and Readiness
+#> 
+#> Step parameters (reported values versus independent parameters)
+#>  Label Model          StepStructure Reported Free
+#>    RSM   RSM          shared ladder        3    2
+#>    PCM   PCM facet-specific ladders       12    8
+#> 
+#> Slope parameters (reported values versus independent parameters)
+#>  Label Model SlopeStructure Reported Free
+#>    RSM   RSM     fixed at 1        0    0
+#>    PCM   PCM     fixed at 1        0    0
+#> 
+#> Fit readiness
+#>  Label Model FitReadiness FormalInference
+#>    RSM   RSM        ready              No
+#>    PCM   PCM        ready              No
+#>                                      Interpretation
+#>  Fit gates passed; formal precision review required
+#>  Fit gates passed; formal precision review required
+#>   Full score contracts and readiness reasons remain in `$model_roles`.
 #> 
 #> Downstream Routes
 #>  Label Model FullAPARoute ScoreSideExport LinkingSynthesis RecoveryChecks

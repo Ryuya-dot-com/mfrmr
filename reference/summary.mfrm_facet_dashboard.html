@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize a facet-quality dashboard</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-dashboards.R" class="external-link"><code>R/api-dashboards.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_facet_dashboard.Rd</code></div>
     </div>
 
@@ -104,15 +104,24 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>         0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Flagged levels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet Level Estimate N.x    SE ModelSE RealSE                     SE_Method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R01   -0.196 192 0.097   0.097  0.100 Observation-table information</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R03    0.191 192 0.097   0.097  0.097 Observation-table information</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Converged InferenceReady ConvergenceSeverity PrecisionTier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      FALSE          FALSE                fail   exploratory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      FALSE          FALSE                fail   exploratory</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  SupportsFormalInference          SEUse</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE screening_only</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                    FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Facet Level Estimate ParameterStatus BoundaryDirection ResponseExtreme</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R01   -0.196            &lt;NA&gt;              &lt;NA&gt;            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Rater   R03    0.191            &lt;NA&gt;              &lt;NA&gt;            &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  OptimizerEstimate DisplayEstimate DisplayAdjustment PrimaryEstimateBasis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA              NA              &lt;NA&gt;                 &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                 NA              NA              &lt;NA&gt;                 &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  OptimizerEstimateUse ReasonCodes ReadinessContractVersion SourceFitReadiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;        &lt;NA&gt;                     &lt;NA&gt;               &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  &lt;NA&gt;        &lt;NA&gt;                     &lt;NA&gt;               &lt;NA&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  SourceInferenceReady EstimateUse N.x    SE ModelSE RealSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    NA        &lt;NA&gt; 192 0.097   0.097  0.100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                    NA        &lt;NA&gt; 192 0.097   0.097  0.097</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                      SE_Method Converged InferenceReady ConvergenceSeverity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Observation-table information     FALSE          FALSE                fail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Observation-table information     FALSE          FALSE                fail</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  PrecisionTier SupportsFormalInference          SEUse</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    exploratory                   FALSE screening_only</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    exploratory                   FALSE screening_only</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                CIBasis          CIUse N.y Infit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Normal interval from exploratory observation-table SE screening_only 192 1.051</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Normal interval from exploratory observation-table SE screening_only 192 0.964</span>
@@ -125,18 +134,18 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ChiDf  ChiP SE_Residual t_Residual p_Residual SE_StdResidual t_StdResidual</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    191 0.303       0.054          0          1          0.072        -0.122</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    191 0.584       0.054          0          1          0.072         0.014</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  p_StdResidual  DF PTMEA N.y.y CI_Lower CI_Upper CI_Level            CI_Method</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.903 191 0.623   192   -0.386   -0.005     0.95 Normal approximation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          0.989 191 0.658   192    0.000    0.382     0.95 Normal approximation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  CIEligible                              CILabel   N AbsEstimate SeverityFlag</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE Approximate interval; screening only 192       0.196        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE Approximate interval; screening only 192       0.191        FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  MisfitFlag CentralTendencyFlag BiasCount BiasSources BiasFlag FlagCount</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE                TRUE         0           0    FALSE         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       FALSE                TRUE         0           0    FALSE         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  AnyFlag FlagLabel .AbsEstimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     TRUE   central        0.196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     TRUE   central        0.191</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  p_StdResidual  DF PTMEA N.y.y BoundaryExcluded CI_Lower CI_Upper CI_Level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.903 191 0.623   192            FALSE   -0.386   -0.005     0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0.989 191 0.658   192            FALSE    0.000    0.382     0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             CI_Method CIEligible                              CILabel   N</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal approximation      FALSE Approximate interval; screening only 192</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Normal approximation      FALSE Approximate interval; screening only 192</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  AbsEstimate SeverityFlag MisfitFlag CentralTendencyFlag BiasCount BiasSources</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        0.196        FALSE      FALSE                TRUE         0           0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        0.191        FALSE      FALSE                TRUE         0           0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  BiasFlag FlagCount AnyFlag FlagLabel .AbsEstimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     FALSE         1    TRUE   central        0.196</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     FALSE         1    TRUE   central        0.191</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               Setting    Value</span>

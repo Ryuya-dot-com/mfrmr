@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Migrating from FACETS to mfrmr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-facets-migration.Rmd" class="external-link"><code>vignettes/mfrmr-facets-migration.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-facets-migration.Rmd</code></div>
     </div>
 
@@ -232,19 +232,21 @@ table:</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> RSM   JML    TRUE      TRUE           pass</span></span>
 <span><span class="va">jml_status</span><span class="op">$</span><span class="va">readiness</span></span>
 <span><span class="co">#&gt;        Domain                                Status</span></span>
-<span><span class="co">#&gt; 1   Numerical                                  pass</span></span>
-<span><span class="co">#&gt; 2        Data                                  pass</span></span>
-<span><span class="co">#&gt; 3      Design                           pass_linked</span></span>
-<span><span class="co">#&gt; 4   Stability                                  pass</span></span>
-<span><span class="co">#&gt; 5 Diagnostics                          not_assessed</span></span>
-<span><span class="co">#&gt; 6   Reporting exploratory_fit_ready_for_diagnostics</span></span>
+<span><span class="co">#&gt; 1         Fit                                 ready</span></span>
+<span><span class="co">#&gt; 2   Numerical                                  pass</span></span>
+<span><span class="co">#&gt; 3        Data                                  pass</span></span>
+<span><span class="co">#&gt; 4      Design                           pass_linked</span></span>
+<span><span class="co">#&gt; 5   Stability                                  pass</span></span>
+<span><span class="co">#&gt; 6 Diagnostics                          not_assessed</span></span>
+<span><span class="co">#&gt; 7   Reporting exploratory_fit_ready_for_diagnostics</span></span>
 <span><span class="co">#&gt;                                                                                                                              Detail</span></span>
-<span><span class="co">#&gt; 1                                                                                            Optimizer returned convergence code 0.</span></span>
-<span><span class="co">#&gt; 2                                                                                No preparation warning or review row was retained.</span></span>
-<span><span class="co">#&gt; 3 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span></span>
-<span><span class="co">#&gt; 4                                                                         No boundary-constant non-person facet level was detected.</span></span>
-<span><span class="co">#&gt; 5                                                             Diagnostics have not yet been incorporated into this fit-only status.</span></span>
-<span><span class="co">#&gt; 6                                                             Reporting status is the strictest applicable upstream workflow state.</span></span>
+<span><span class="co">#&gt; 1                                                                                       All stored fit-readiness components passed.</span></span>
+<span><span class="co">#&gt; 2                                                                                            Optimizer returned convergence code 0.</span></span>
+<span><span class="co">#&gt; 3                                                                                No preparation warning or review row was retained.</span></span>
+<span><span class="co">#&gt; 4 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span></span>
+<span><span class="co">#&gt; 5                                                                         No boundary-constant non-person facet level was detected.</span></span>
+<span><span class="co">#&gt; 6                                                             Diagnostics have not yet been incorporated into this fit-only status.</span></span>
+<span><span class="co">#&gt; 7                                                             Reporting status is the strictest applicable upstream workflow state.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">run</span><span class="op">$</span><span class="va">fair_average</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $raw_by_facet</span></span>
 <span><span class="co">#&gt; $raw_by_facet$Person</span></span>
@@ -978,7 +980,13 @@ the <code>R5</code> rating-scale declaration becomes
 <code>rating_min = 1, rating_max = 5</code>. For a partial-credit
 specification, pass <code>model = "PCM"</code> and identify the facet
 that carries the step thresholds with <code>step_facet = "Rater"</code>
-(or the appropriate facet name).</p>
+(or the appropriate facet name). The declaration preserves the intended
+category map, but it is not a threshold anchor. A missing boundary
+category remains review evidence for the separate element-boundary
+contract. A missing internal category in a polytomous fitted ladder
+creates an unsupported adjacent-step contrast and stops fitting before
+optimization. Review or revise the data support rather than copying
+FACETS category-dropping behavior implicitly.</p>
 </div>
 <div class="section level3">
 <h3 id="anchoring">Anchoring<a class="anchor" aria-label="anchor" href="#anchoring"></a>
@@ -1021,11 +1029,19 @@ thresholds, first create the FACETS-organized summary and retain its
 result object:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, profile <span class="op">=</span> <span class="st">"facets"</span>, detail <span class="op">=</span> <span class="st">"brief"</span><span class="op">)</span></span>
+<span><span class="va">review</span><span class="op">$</span><span class="va">decision</span></span>
 <span><span class="va">res</span> <span class="op">&lt;-</span> <span class="va">review</span><span class="op">$</span><span class="va">results</span></span>
 <span></span>
 <span><span class="co"># Primary final-scale figure: all locations and available facet uncertainty.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">res</span>, type <span class="op">=</span> <span class="st">"wright"</span>, renderer <span class="op">=</span> <span class="st">"native"</span>, show_ci <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>     top_n <span class="op">=</span> <span class="cn">Inf</span>, preset <span class="op">=</span> <span class="st">"publication"</span><span class="op">)</span></span></code></pre></div>
+<p>Read <code>review$decision</code> before using the FACETS-organized
+tables. It reports the same stored mfrmr readiness decision shown by
+<code>print(fit)</code>; the <code>facets</code> profile changes the
+organization of the review, not the estimator and not the evidence
+threshold. <code>FormalInference = "No"</code> therefore remains a stop
+on substantive reporting even when a familiar FACETS-style table or plot
+is available.</p>
 <p><code><a href="../reference/plot_wright_unified.html">plot_wright_unified()</a></code> is the corresponding explicit
 helper when the Wright map is the main figure. For readers who expect
 the FACETS Table 6-style asterisk ruler and horizontal, rubric-labelled

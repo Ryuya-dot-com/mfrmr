@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize an <code>mfrm_fit</code> object in a user-friendly format</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-methods.R" class="external-link"><code>R/api-methods.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_fit.Rd</code></div>
     </div>
 
@@ -121,8 +121,12 @@ is <code>FALSE</code> for privacy-safe console output.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>summary.mfrm_fit</code> with:</p><ul><li><p><code>overview</code>: global model/fit indicators</p></li>
 <li><p><code>status</code>: concise front-door status block for quick review</p></li>
-<li><p><code>readiness</code>: domain-specific numerical, data, design, stability,
-diagnostic, and reporting states</p></li>
+<li><p><code>decision</code>: plain-language interpretation, formal-inference status,
+reason, and highest-priority next action derived from the stored readiness
+contract plus supplied precision evidence; fit readiness alone never
+yields <code>FormalInference = "Yes"</code></p></li>
+<li><p><code>readiness</code>: the stored fit-level state plus numerical, data, design,
+stability, diagnostic, and reporting workflow states</p></li>
 <li><p><code>data_review</code>: structured connectivity and facet-support evidence used by
 the non-numerical readiness gates</p></li>
 <li><p><code>key_warnings</code>: highest-priority warnings to review first</p></li>
@@ -136,12 +140,19 @@ population model is active</p></li>
 <li><p><code>population_coding</code>: categorical covariate levels and contrast provenance
 when a population model uses model-matrix coding</p></li>
 <li><p><code>facet_overview</code>: per-facet estimate distribution summary</p></li>
-<li><p><code>person_overview</code>: person-measure distribution summary</p></li>
+<li><p><code>person_overview</code>: person-measure distribution summary with the actual
+aggregation denominator, blocked extreme-EAP exclusion count, and estimate
+use</p></li>
 <li><p><code>targeting</code>: person-versus-non-person facet targeting overview
 (Wright-map-style mean/SD comparison)</p></li>
 <li><p><code>step_overview</code>: threshold/step diagnostics by PCM/GPCM <code>StepFacet</code>
 ladder, or for the common RSM ladder</p></li>
-<li><p><code>slope_overview</code>: discrimination summary for <code>GPCM</code> fits</p></li>
+<li><p><code>slope_overview</code>: parameter-readiness and explicitly labelled optimizer-
+trace summary for <code>GPCM</code> discriminations</p></li>
+<li><p><code>inference_evidence</code>: for <code>GPCM</code> MML, a compact separation of optimizer
+stationarity, retained-point local rank, observed-information curvature,
+slope-boundary screening, and the final readiness decision. Supportive
+local evidence does not override an inconclusive boundary audit</p></li>
 <li><p><code>interaction_overview</code>: model-estimated facet-interaction summary
 when the fit was specified with <code>facet_interactions</code></p></li>
 <li><p><code>settings_overview</code>: estimation-settings overview that pins the
@@ -160,6 +171,10 @@ reporting sections (data description, diagnostics, category
 checks, draft reporting)</p></li>
 <li><p><code>person_high</code> / <code>person_low</code>: highest and lowest person measures</p></li>
 <li><p><code>facet_extremes</code>: extreme facet-level estimates</p></li>
+<li><p><code>facet_support_boundaries</code>: observed boundary-constant non-person facet
+levels, kept distinct from parameter-level recession conclusions</p></li>
+<li><p><code>facet_recession_review</code>: certified JML additive facet recession
+directions, including review scope and completeness</p></li>
 <li><p><code>caveats</code>: structured warning/review rows for score-support and
 latent-regression population-model issues</p></li>
 <li><p><code>notes</code>: short interpretation notes</p></li>
@@ -179,7 +194,7 @@ FACETS-organization interpretation boundary</p></li>
 The expanded profiles use FACETS-style organization for navigation, but do
 not claim that FACETS was executed or that estimates are numerically
 equivalent to FACETS output.
-It returns a structured object and prints:</p><ul><li><p>model fit overview (N, LogLik, AIC/BIC, convergence)</p></li>
+It returns a structured object and prints:</p><ul><li><p>model fit overview (N, LogLik, the canonical/legacy IC status, convergence)</p></li>
 <li><p>estimation settings that affect identification/scoring interpretation</p></li>
 <li><p>facet-level estimate distribution (mean/SD/range)</p></li>
 <li><p>person measure distribution</p></li>
@@ -194,16 +209,30 @@ measures</p></li>
     <h2 id="interpreting-output">Interpreting output<a class="anchor" aria-label="anchor" href="#interpreting-output"></a></h2>
 
 
-<ul><li><p><code>overview</code>: convergence and information criteria.</p></li>
-<li><p><code>readiness</code>: separate Numerical, Data, Design, Stability, Diagnostics,
-and Reporting states. <code>InferenceReady</code> contributes only to Numerical;
-a numerical pass cannot override a disconnected-design or boundary-
-separation hold.</p></li>
+<ul><li><p><code>overview</code>: convergence plus the versioned information-criterion contract.
+For eligible fixed-facet MML fits, BIC/SABIC use unique Persons, not
+response rows; JML, non-unit observation weights, and legacy objects do
+not enter the common MML ranking panel. <code>ICSelectable</code> additionally
+distinguishes raw screening/review criteria at q&lt;31 from criteria that
+may enter automatic same-grid comparison at q&gt;=31; close decisions still
+require a denser common-grid sensitivity check.</p></li>
+<li><p><code>readiness</code>: the stored fit-readiness result followed by Numerical, Data,
+Design, Stability, Diagnostics, and Reporting workflow states.
+<code>InferenceReady</code> is a conservative compatibility scalar and is <code>TRUE</code>
+only when the stored <code>FitReadiness</code> is <code>ready</code>; numerical convergence
+cannot override input, estimability, category, or boundary review.</p></li>
+<li><p><code>decision</code>: separates that fit gate from formal precision support. A
+fit-only summary returns <code>FormalInference = "No"</code> until a matching
+<code>mfrm_diagnostics</code> object is supplied through <code>diagnostics =</code>; use
+<code>summary(diagnostics)$decision</code> for the equivalent precision-aware view.</p></li>
 <li><p><code>data_review</code>: overall multi-facet connectivity, facet-level score
 support, boundary-constant levels, single-level facets, and retained
 preparation notes behind the readiness rows.</p></li>
 <li><p><code>facet_overview</code>: per-facet spread and range of estimates.</p></li>
-<li><p><code>person_overview</code>: distribution of person measures.</p></li>
+<li><p><code>person_overview</code>: distribution of person measures. For a blocked source
+fit, a prior-regularized extreme MML EAP is retained in <code>person_high</code> /
+<code>person_low</code> but excluded from this aggregate and <code>targeting</code>; the table
+records its distribution denominator, exclusion count, and estimate use.</p></li>
 <li><p><code>step_overview</code>: threshold spread and monotonicity checks, reported by
 <code>StepFacet</code> ladder for PCM/GPCM fits and as one common ladder for RSM fits.</p></li>
 <li><p><code>settings_overview</code>: estimation settings that affect interpretation.</p></li>
@@ -221,6 +250,12 @@ population-design check row.</p></li>
 <li><p><code>reporting_map</code>: where to get companion outputs for manuscript reporting.</p></li>
 <li><p><code>person_high</code> / <code>person_low</code> (opt-in for printing) and <code>facet_extremes</code>:
 extreme estimates for focused review.</p></li>
+<li><p><code>facet_support_boundaries</code>: observed non-person facet levels whose retained
+responses are constant at the minimum or maximum score. This is a data-
+support warning, not by itself a proof that a parameter MLE is infinite.</p></li>
+<li><p><code>facet_recession_review</code>: non-person facet directions certified as
+unbounded in an evaluated JML additive recession subspace. Joint rows are
+relative directions under the fitted identification constraints.</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="typical-workflow">Typical workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a></h2>
@@ -253,37 +288,51 @@ checks. For bounded <code>GPCM</code>, continue with <code><a href="compute_info
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">overview</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span>, <span class="st">"InferenceReady"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"Model"</span>, <span class="st">"Method"</span>, <span class="st">"Converged"</span>, <span class="st">"FitReadiness"</span>, <span class="st">"InferenceReady"</span>,</span></span>
 <span class="r-in"><span>  <span class="st">"ConvergenceSeverity"</span></span></span>
 <span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Converged InferenceReady ConvergenceSeverity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML    TRUE      TRUE           pass               </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Model Method Converged FitReadiness InferenceReady ConvergenceSeverity</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> RSM   MML    TRUE      ready        TRUE           pass               </span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">readiness</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Domain                                        Status</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   Numerical                                          pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        Data                                          pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      Design                                   pass_linked</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4   Stability                                          pass</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 Diagnostics                                  not_assessed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6   Reporting ready_for_diagnostics_and_reporting_follow_up</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         Fit                                         ready</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   Numerical                                          pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3        Data                                          pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4      Design                                   pass_linked</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   Stability                                          pass</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 Diagnostics                                  not_assessed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   Reporting ready_for_diagnostics_and_reporting_follow_up</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                              Detail</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                            Optimizer returned convergence code 0.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                No preparation warning or review row was retained.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                         No boundary-constant non-person facet level was detected.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                             Diagnostics have not yet been incorporated into this fit-only status.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                             Reporting status is the strictest applicable upstream workflow state.</span>
-<span class="r-in"><span><span class="co"># `InferenceReady = TRUE` clears only the numerical gate. Also require the</span></span></span>
-<span class="r-in"><span><span class="co"># Data, Design, and Stability rows to support the intended interpretation.</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                       All stored fit-readiness components passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                            Optimizer returned convergence code 0.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                No preparation warning or review row was retained.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 The observed graph satisfies the connectivity requirement; review the remaining design and identification assumptions separately.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                         No boundary-constant non-person facet level was detected.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                             Diagnostics have not yet been incorporated into this fit-only status.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7                                                             Reporting status is the strictest applicable upstream workflow state.</span>
+<span class="r-in"><span><span class="co"># `InferenceReady = TRUE` means all five stored fit components passed.</span></span></span>
+<span class="r-in"><span><span class="co"># It does not, by itself, support formal SE/CI or reliability.</span></span></span>
+<span class="r-in"><span><span class="va">diag</span> <span class="op">&lt;-</span> <span class="fu"><a href="diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, diagnostics <span class="op">=</span> <span class="va">diag</span><span class="op">)</span><span class="op">$</span><span class="va">decision</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Interpretation FormalInference FitReadiness</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Ready for formal inference             Yes        ready</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           Why</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 All stored fit-readiness components passed.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                               NextAction</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 After reviewing convergence, run `review &lt;- summary(fit, profile = "facets", detail = "brief")` for the comprehensive FACETS-organized result surface.</span>
+<span class="r-in"><span><span class="co"># Design, Stability, Diagnostics, and Reporting remain purpose-specific</span></span></span>
+<span class="r-in"><span><span class="co"># workflow reviews rather than alternative fit-readiness derivations.</span></span></span>
 <span class="r-in"><span><span class="co"># If Numerical is not a pass, inspect the retained polish stages; increasing</span></span></span>
 <span class="r-in"><span><span class="co"># `maxit` alone may not resolve the review.</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">person_overview</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Persons   Mean    SD Median   Min   Max  Span MeanPosteriorSD</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>      48 -<span style="color: #BB0000;">0.141</span> 0.811 -<span style="color: #BB0000;">0.107</span> -<span style="color: #BB0000;">1.71</span>  1.45  3.15           0.463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 11</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Persons DistributionN ReviewExcludedExtremeE…¹ EstimateUse   Mean    SD Median</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>                    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>      48            48                        0 source_fit… -<span style="color: #BB0000;">0.141</span> 0.811 -<span style="color: #BB0000;">0.107</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ abbreviated name: ¹​ReviewExcludedExtremeEAPs</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 4 more variables: Min &lt;dbl&gt;, Max &lt;dbl&gt;, Span &lt;dbl&gt;, MeanPosteriorSD &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="co"># Interpret location and spread on the fitted logit scale together with the</span></span></span>
 <span class="r-in"><span><span class="co"># score distribution and extreme-score counts.</span></span></span>
 <span class="r-in"><span><span class="va">s</span><span class="op">$</span><span class="va">targeting</span></span></span>

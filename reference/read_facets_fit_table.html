@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Read a FACETS fit table for fit review</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>read_facets_fit_table.Rd</code></div>
     </div>
 
@@ -122,7 +122,14 @@ tab, and semicolon are detected from the header line.</p></dd>
     <p>This helper does not run FACETS. It reads FACETS output that already exists
 on disk and normalizes it to columns that <code><a href="facets_fit_review.html">facets_fit_review()</a></code> can consume:
 <code>Facet</code>, <code>Level</code>, <code>Estimate</code>, <code>SE</code>, <code>N</code>, <code>Infit</code>, <code>Outfit</code>, <code>InfitZSTD</code>,
-<code>OutfitZSTD</code>, <code>DF_Infit</code>, and <code>DF_Outfit</code>.</p>
+<code>OutfitZSTD</code>, <code>DF_Infit</code>, and <code>DF_Outfit</code>. File imports also retain the
+exact reported numeric tokens (for example, <code>InfitZSTDRaw = "2.0"</code>) and
+their displayed decimal counts. FACETS comparison runs should first request
+the highest practical output precision (for example, <code>Udecim=8</code> for Measure
+and SE). If the resulting displayed absolute ZSTD is still exactly equal to
+2, it is classified as <code>display_boundary_indeterminate</code>: the text file does
+not expose whether the unrounded value lies just below, at, or just above
+the conventional threshold.</p>
 <p>Two common workflows are supported:</p><ul><li><p>a FACETS score file such as <code>score.2.txt</code>, where the facet name is supplied
 by <code>facet_map</code> or inferred as <code>Facet2</code>. Both comma-delimited score files
 with field names and fixed-field score files using the FACETS manual
@@ -155,11 +162,16 @@ for a quick visual check of the largest ZSTD shifts caused by df convention.</p>
 <span class="r-in"><span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">read_facets_fit_table</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 12</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 27</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet Level Estimate    SE     N Infit Outfit InfitZSTD OutfitZSTD DF_Infit</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Rater R1          <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>  1.02   0.98       0.3       -<span style="color: #BB0000;">0.2</span>       12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: DF_Outfit &lt;dbl&gt;, Source &lt;chr&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 17 more variables: DF_Outfit &lt;dbl&gt;, EstimateRaw &lt;chr&gt;, SERaw &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   NRaw &lt;chr&gt;, InfitRaw &lt;chr&gt;, OutfitRaw &lt;chr&gt;, InfitZSTDRaw &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   OutfitZSTDRaw &lt;chr&gt;, DF_InfitRaw &lt;chr&gt;, DF_OutfitRaw &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   InfitZSTDReportedDecimals &lt;int&gt;, OutfitZSTDReportedDecimals &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   InfitZSTDDisplayState &lt;chr&gt;, OutfitZSTDDisplayState &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   ZSTDDisplayFlagState &lt;chr&gt;, SourcePrecisionStatus &lt;chr&gt;, Source &lt;chr&gt;</span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

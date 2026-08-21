@@ -82,6 +82,8 @@ diag_eval <- evaluate_mfrm_diagnostic_screening(
   include_report = TRUE,
   seed = 123
 )
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
+#> Warning: Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.
 plot(diag_eval, type = "overview", draw = FALSE)
 #> <mfrm_plot_data>
 #>   name     : diagnostic_screening
@@ -143,21 +145,21 @@ plot_data(diag_eval, type = "overview", component = "plot_long")
 plot_data(diag_eval, type = "overview", component = "next_actions")
 #>   Priority                           Area Status
 #> 1        1              Replication count review
-#> 2        2 Run completion and convergence     ok
+#> 2        2 Run completion and convergence review
 #> 3        3       Screening interpretation     ok
 #> 4        4             Scenario contrasts     ok
 #> 5        5           Report-index signals     ok
 #> 6        6 Appendix and plot-data handoff     ok
 #>                                                                                                    Evidence
 #> 1                                                                                                 Reps = 1.
-#> 2                                                               RunOKRate = 1.000; ConvergenceRate = 1.000.
+#> 2                                                               RunOKRate = 1.000; ConvergenceRate = 0.000.
 #> 3                                                  scenario_summary rows = 2; performance_summary rows = 2.
 #> 4                                                                               scenario_contrast rows = 1.
 #> 5                                                                           report_signal_summary rows = 2.
 #> 6 summary tables and draw-free plot-data tables are available through the package-wide bundle/export route.
 #>                                                                                                             Action
 #> 1 Treat this as an initial screening run; increase `reps` before interpreting operating characteristics as stable.
-#> 2                      Proceed to scenario and performance summaries, while still reporting the convergence basis.
+#> 2                     Inspect object$results for Error, RunOK, and Converged before summarizing scenario behavior.
 #> 3          Read scenario_summary and performance_summary together before making legacy-vs-strict screening claims.
 #> 4      Use scenario_contrast to describe misspecification-minus-baseline shifts, with the baseline scenario named.
 #> 5                   Use report_signal_summary to prioritize report text review, not as a diagnostic adequacy test.

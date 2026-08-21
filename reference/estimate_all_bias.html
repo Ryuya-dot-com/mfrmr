@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Estimate bias across multiple facet pairs</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-bias-collection.R" class="external-link"><code>R/api-bias-collection.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-bias-collection.R" class="external-link"><code>R/api-bias-collection.R</code></a></small>
       <div class="d-none name"><code>estimate_all_bias.Rd</code></div>
     </div>
 
@@ -79,12 +79,16 @@ diagnostics are computed with <code>residual_pca = "none"</code>.</p></dd>
 <dd><p>Optional list of facet specifications. Each element should be a
 character vector of length 2 or more, for example
 <code>list(c("Rater", "Criterion"), c("Task", "Criterion"))</code>.
-When <code>NULL</code>, all 2-way combinations of modeled facets are used.</p></dd>
+Explicit specifications may include canonical <code>"Person"</code> regardless of
+<code>include_person</code>. When <code>NULL</code>, all 2-way combinations of modeled facets
+are used.</p></dd>
 
 
 <dt id="arg-include-person">include_person<a class="anchor" aria-label="anchor" href="#arg-include-person"></a></dt>
 <dd><p>If <code>TRUE</code> and <code>pairs = NULL</code>, include <code>"Person"</code> in the
-automatically generated pair set.</p></dd>
+automatically generated pair set. <code>"Person"</code> denotes the source column
+supplied as <code>person</code> to <code><a href="fit_mfrm.html">fit_mfrm()</a></code> and remains opt-in because these
+cells condition on fitted JML person measures or MML EAP scores.</p></dd>
 
 
 <dt id="arg-drop-empty">drop_empty<a class="anchor" aria-label="anchor" href="#arg-drop-empty"></a></dt>
@@ -128,7 +132,11 @@ criterion).  See <code><a href="estimate_bias.html">estimate_bias()</a></code> f
 <p>When <code>pairs = NULL</code>, the function builds all 2-way combinations of
 modelled facets automatically.  For a model with facets Rater,
 Criterion, and Task, this yields Rater\(\times\)Criterion,
-Rater\(\times\)Task, and Criterion\(\times\)Task.</p>
+Rater\(\times\)Task, and Criterion\(\times\)Task.
+With <code>include_person = TRUE</code>, Person\(\times\)facet pairs are prepended in
+the fit's facet order. They are conditional plug-in likelihood screens, not
+jointly fitted Person\(\times\)facet terms. A single warning records this
+boundary for the batch.</p>
 <p>The <code>summary</code> table aggregates results across pairs:</p><ul><li><p><code>Rows</code>: number of interaction cells estimated</p></li>
 <li><p><code>ScreenPositive</code>: count of cells with \(|t| \ge 2\)</p></li>
 <li><p><code>Significant</code>: backward-compatible alias for <code>ScreenPositive</code></p></li>

@@ -84,7 +84,7 @@ summary(sig_eval)
 #> 
 #> Overview
 #>  Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>        1            1              1             0          0.849
+#>        1            1              0             0          0.316
 #> 
 #> Detection summary (preview)
 #>  design_id n_person n_rater n_criterion raters_per_person DIFTargetLevel
@@ -96,15 +96,15 @@ summary(sig_eval)
 #>  MeanTargetContrast McseTargetContrast MeanTargetContrastAbs
 #>                 NaN                 NA                   NaN
 #>  McseTargetContrastAbs DIFFalsePositiveRate McseDIFFalsePositiveRate
-#>                     NA                    0                       NA
+#>                     NA                  NaN                       NA
 #>  BiasScreenRate McseBiasScreenRate MeanTargetBias McseTargetBias
-#>               0                 NA         -6.756             NA
+#>               0                 NA            NaN             NA
 #>  MeanAbsTargetBias McseAbsTargetBias MeanTargetBiasT McseTargetBiasT
-#>              6.756                NA          -0.326              NA
+#>                NaN                NA             NaN              NA
 #>  BiasScreenMetricAvailabilityRate McseBiasScreenMetricAvailabilityRate
-#>                                 1                                   NA
+#>                                 0                                   NA
 #>  BiasScreenFalsePositiveRate McseBiasScreenFalsePositiveRate MeanElapsedSec
-#>                            0                              NA          0.849
+#>                          NaN                              NA          0.316
 #>  McseElapsedSec
 #>              NA
 #> 
@@ -127,6 +127,7 @@ summary(sig_eval)
 #>  - Some design conditions did not converge in every replication.
 #>  - Some design conditions showed DIF power below 0.80.
 #>  - Some design conditions showed bias-screen hit rates below 0.80.
+#>  - Some design conditions did not yield usable bias-screening t/p metrics in every replication.
 #>  - Bias-side rates are screening summaries derived from `estimate_bias()` output and should not be interpreted as formal power or alpha-calibrated false-positive rates.
 #>  - MCSE columns summarize finite-replication uncertainty around the reported means and rates.
 #>  - Planning helpers vary one person count and two named non-person facet roles (Rater and Criterion). Estimation may contain additional facets, but planning and forecasting are limited to this role-based design.

@@ -13,7 +13,7 @@ clone."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,7 +44,7 @@ clone."><meta property="og:image" content="https://ryuya-dot-com.github.io/mfrmr
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>FACETS Positioning Guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/help_facets_coverage.R" class="external-link"><code>R/help_facets_coverage.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_facets_coverage.R" class="external-link"><code>R/help_facets_coverage.R</code></a></small>
       <div class="d-none name"><code>facets_positioning_guide.Rd</code></div>
     </div>
 
@@ -75,10 +75,12 @@ FACETS output is explicitly supplied;</p></li>
 handoff, and report-organization surfaces;</p></li>
 <li><p>external comparison: FACETS comparisons require a supplied external table
 and should separate MnSq differences from df/ZSTD convention differences;</p></li>
-<li><p>current model boundary: one response-model family and one observed score
-scale are used per fit; mixed families, multiple independent scales,
-general threshold anchoring, and fixed-calibration scoring are not part of
-the current public estimator;</p></li>
+<li><p>current model boundary: one ordered-categorical response-model family and
+one observed score scale are used per fit; nominal and count-response
+families, mixed families, multiple independent scales,
+general threshold anchoring, and scoring from an imported versioned frozen
+calibration are not part of the current public estimator; posterior
+scoring from an existing fitted object is a separate current route;</p></li>
 <li><p>extension surface: native R tables, plot data, GPCM diagnostics,
 network views, and G/D-study helpers are package extensions, not promises
 of FACETS menu-level reproduction.</p></li>
@@ -99,13 +101,13 @@ of FACETS menu-level reproduction.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4 Current model and calibration boundary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5              Reporting source of truth</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6                Extension beyond FACETS</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                           Position</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                              mfrmr estimates are package-native; FACETS-style names do not mean that FACETS estimated the model.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                           FACETS-style wrappers, table labels, and files support transition, handoff, and report organization, not optimizer-level reproduction.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                     Numerical comparison requires an explicit external FACETS output table supplied by the user.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Each fit uses one response-model family and one observed score scale; mixed families, multiple independent scales, general threshold anchors, and fixed-calibration scoring are not current public capabilities.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                        Inference and reporting should be based on native fit, diagnostics, review, table, and plot-data objects.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                     GPCM, D-study, network, and reusable visualization data are extension routes rather than FACETS menu clones.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Position</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                          mfrmr estimates are package-native; FACETS-style names do not mean that FACETS estimated the model.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                                                                                                                                                                                                                                                                                                                                                                                                       FACETS-style wrappers, table labels, and files support transition, handoff, and report organization, not optimizer-level reproduction.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Numerical comparison requires an explicit external FACETS output table supplied by the user.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 Each fit uses one ordered-categorical response-model family and one observed score scale; nominal and count-response families, mixed families, multiple independent scales, general threshold anchors, and scoring from an imported versioned frozen calibration are not current public capabilities. Positive observation weights act on row-level conditional ordered-rating contributions; they are not a general collapsed-person frequency-table interface and do not change the response family. Posterior scoring from an existing fitted object is a separate route.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Inference and reporting should be based on native fit, diagnostics, review, table, and plot-data objects.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                 GPCM, D-study, network, and reusable visualization data are extension routes rather than FACETS menu clones.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                   RecommendedWording</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                The model was estimated with mfrmr; FACETS-style output names are used only to organize the report.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2                      FACETS-style outputs were generated for handoff or reader familiarity; they are not evidence of FACETS numerical equivalence.</span>

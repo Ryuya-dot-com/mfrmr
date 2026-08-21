@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Summarize a summary-table bundle for manuscript QC</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-reports.R" class="external-link"><code>R/api-reports.R</code></a></small>
       <div class="d-none name"><code>summary.mfrm_summary_table_bundle.Rd</code></div>
     </div>
 
@@ -158,33 +158,33 @@ in the bundle.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Role summary</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  Role Tables TotalRows TotalCols</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          run_overview      1         1        52</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          run_overview      1         1        87</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         reporting_map      1         6         3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     population_coding      1         0         6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      population_basis      1         1        11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   person_distribution      1         1         7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      population_basis      1         1        16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   person_distribution      1         1        10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    facet_distribution      1         2         7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    extreme_person_low      1        10         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   extreme_person_high      1        10         4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    extreme_person_low      1        10        20</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   extreme_person_high      1        10        20</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  extreme_facet_levels      1         8         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   estimation_settings      1         1        18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   estimation_settings      1         1        28</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    category_structure      1         1         5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      analysis_caveats      1         0         8</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Table catalog</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Table Rows Cols                 Role</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             overview    1   52         run_overview</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  population_overview    1   11     population_basis</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             overview    1   87         run_overview</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  population_overview    1   16     population_basis</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    population_coding    0    6    population_coding</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       facet_overview    2    7   facet_distribution</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      person_overview    1    7  person_distribution</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      person_overview    1   10  person_distribution</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        step_overview    1    5   category_structure</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    settings_overview    1   18  estimation_settings</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    settings_overview    1   28  estimation_settings</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        reporting_map    6    3        reporting_map</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              caveats    0    8     analysis_caveats</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       facet_extremes    8    3 extreme_facet_levels</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          person_high   10    4  extreme_person_high</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           person_low   10    4   extreme_person_low</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          person_high   10   20  extreme_person_high</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           person_low   10   20   extreme_person_low</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                                                     Description</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                              One-row model fit, convergence, and information-criteria overview.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                   Population-model basis, posterior basis, and omission review.</span>
@@ -199,18 +199,18 @@ in the bundle.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                   Highest person measures from the current fit.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                    Lowest person measures from the current fit.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  PlotReady NumericColumns               DefaultPlotTypes ExportReady</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE             30 numeric_profile, first_numeric        TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE             40 numeric_profile, first_numeric        TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              5 numeric_profile, first_numeric        TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      FALSE              1                                       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              6 numeric_profile, first_numeric        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              7 numeric_profile, first_numeric        TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              9 numeric_profile, first_numeric        TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              4 numeric_profile, first_numeric        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              4 numeric_profile, first_numeric        TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              5 numeric_profile, first_numeric        TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      FALSE              0                                       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      FALSE              0                                       TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              1 numeric_profile, first_numeric        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              2 numeric_profile, first_numeric        TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              2 numeric_profile, first_numeric        TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              7 numeric_profile, first_numeric        TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       TRUE              7 numeric_profile, first_numeric        TRUE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  ApaTableReady                       RecommendedBridge AppendixSection</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           TRUE              apa_table() / plot(bundle)         methods</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           TRUE              apa_table() / plot(bundle)         methods</span>
@@ -253,14 +253,14 @@ in the bundle.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Table profile</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Table Rows Cols NumericColumns MissingValues</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          person_high   10    4              2            10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           person_low   10    4              2            10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          person_high   10   20              7            10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           person_low   10   20              7            10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       facet_extremes    8    3              1             0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        reporting_map    6    3              0             0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       facet_overview    2    7              6             0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             overview    1   52             30             9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    settings_overview    1   18              4             3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  population_overview    1   11              5             5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             overview    1   87             40            14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    settings_overview    1   28              5             5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  population_overview    1   16              5             5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  Role</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   extreme_person_high</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    extreme_person_low</span>
@@ -282,18 +282,18 @@ in the bundle.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Plot index</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Table PlotReady NumericColumns               DefaultPlotTypes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             overview      TRUE             30 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             overview      TRUE             40 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  population_overview      TRUE              5 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    population_coding     FALSE              1                               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       facet_overview      TRUE              6 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      person_overview      TRUE              7 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      person_overview      TRUE              9 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        step_overview      TRUE              4 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    settings_overview      TRUE              4 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    settings_overview      TRUE              5 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        reporting_map     FALSE              0                               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              caveats     FALSE              0                               </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       facet_extremes      TRUE              1 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          person_high      TRUE              2 numeric_profile, first_numeric</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           person_low      TRUE              2 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          person_high      TRUE              7 numeric_profile, first_numeric</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           person_low      TRUE              7 numeric_profile, first_numeric</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Appendix presets</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Preset Tables PlotReadyTables RolesCovered</span>

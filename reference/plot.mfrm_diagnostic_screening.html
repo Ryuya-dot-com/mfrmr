@@ -15,7 +15,7 @@ one operating-characteristic surface."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,7 @@ one operating-characteristic surface."><meta property="og:image" content="https:
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Plot a diagnostic-screening simulation study</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>plot.mfrm_diagnostic_screening.Rd</code></div>
     </div>
 
@@ -131,6 +131,8 @@ after drawing.</p>
 <span class="r-in"><span>  include_report <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">123</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Category support is retained but requires review: at least one fitted or local scope contains an empty or singleton category/transition cell. The fit may be inspected, but category-information strength has not been certified; inspect `fit$data_review$category_support` before inference.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"overview"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;mfrm_plot_data&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   name     : diagnostic_screening</span>
@@ -192,21 +194,21 @@ after drawing.</p>
 <span class="r-in"><span><span class="fu"><a href="plot_data.html">plot_data</a></span><span class="op">(</span><span class="va">diag_eval</span>, type <span class="op">=</span> <span class="st">"overview"</span>, component <span class="op">=</span> <span class="st">"next_actions"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Priority                           Area Status</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1        1              Replication count review</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2        2 Run completion and convergence     ok</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2        2 Run completion and convergence review</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3        3       Screening interpretation     ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4        4             Scenario contrasts     ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5        5           Report-index signals     ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6        6 Appendix and plot-data handoff     ok</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                    Evidence</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1                                                                                                 Reps = 1.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                               RunOKRate = 1.000; ConvergenceRate = 1.000.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                                                               RunOKRate = 1.000; ConvergenceRate = 0.000.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3                                                  scenario_summary rows = 2; performance_summary rows = 2.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4                                                                               scenario_contrast rows = 1.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                                                                           report_signal_summary rows = 2.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 summary tables and draw-free plot-data tables are available through the package-wide bundle/export route.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                                                                             Action</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 Treat this as an initial screening run; increase `reps` before interpreting operating characteristics as stable.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                      Proceed to scenario and performance summaries, while still reporting the convergence basis.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                     Inspect object$results for Error, RunOK, and Converged before summarizing scenario behavior.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3          Read scenario_summary and performance_summary together before making legacy-vs-strict screening claims.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4      Use scenario_contrast to describe misspecification-minus-baseline shifts, with the baseline scenario named.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5                   Use report_signal_summary to prioritize report text review, not as a diagnostic adequacy test.</span>

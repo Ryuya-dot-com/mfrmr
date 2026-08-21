@@ -43,7 +43,15 @@ build_apa_outputs(
 
 An object of class `mfrm_apa_outputs` with:
 
-- `report_text`: APA-style Method/Results draft prose
+- `report_text`: APA-oriented Method/Results draft prose
+
+- `decision`: plain-language source-fit interpretation plus the separate
+  precision-contract decision; `FormalInference` is `"Yes"` only when
+  both the fit gate and `contract$precision$supports_formal_inference`
+  pass
+
+- `fit_readiness`, `fit_readiness_components`, and
+  `fit_readiness_parameters`: exact source-fit readiness provenance
 
 - `table_figure_notes`: consolidated draft notes for tables/visuals
 
@@ -82,8 +90,11 @@ By default, `report_text` includes:
 
 - model/data design summary (N, facet counts, scale range)
 
-- optimization/convergence metrics (`Converged`, `Iterations`, `LogLik`,
-  `AIC`, `BIC`)
+- optimization/convergence metrics (`Converged`, `Iterations`, `LogLik`)
+  plus the eligible canonical MML AIC/Person-BIC/SABIC panel or its
+  explicit ineligibility and legacy-descriptive status; q\<31 MML
+  criteria are explicitly labelled screening/review-only rather than
+  automatic ranking
 
 - anchor/constraint summary (`noncenter_facet`, anchored levels, group
   anchors, dummy facets)
@@ -104,9 +115,9 @@ By default, `report_text` includes:
 - `report_text`: manuscript-draft narrative covering Method (model
   specification, estimation, convergence) and Results (global fit, facet
   separation/reliability, misfit triage, category diagnostics,
-  residual-PCA screening, bias screening). Written in third-person past
-  tense following APA 7th edition conventions, but still intended for
-  human review.
+  residual-PCA screening, bias screening), organized as an APA-oriented,
+  third-person Method/Results draft. It is intended for human review and
+  is not a claim of complete APA 7 or JARS compliance.
 
 - `table_figure_notes`: reusable draft note blocks for table/figure
   appendices.
@@ -171,10 +182,11 @@ or another package-native bias helper that provides a table component.
 # \donttest{
 # Minimal APA-output example using a JML fit and lightweight diagnostics.
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
   method = "JML", maxit = 30
 )
-#> Warning: Optimization convergence review did not produce an inference-ready numerical solution (code = 1, status = iteration_limit). Optimizer reached the iteration limit before the terminal gradient became small enough for review-only acceptance. Inspect the model specification, data support, and starting values. Do not interpret estimates until the review is resolved.
 diag_quick <- diagnose_mfrm(fit_quick,
   residual_pca = "none",
   diagnostic_mode = "legacy"
@@ -200,7 +212,7 @@ apa <- build_apa_outputs(
 s_apa <- summary(apa)
 s_apa$overview
 #>   Components NonEmptyComponents TotalCharacters TotalNonEmptyLines Sections
-#> 1          3                  3            9634                121        9
+#> 1          3                  3            9943                125        9
 #>   AvailableSections ContentChecks ContentChecksPassed DraftContractPass
 #> 1                 7             9                   9              TRUE
 #>   ReadyForAPA
@@ -242,12 +254,12 @@ cat(apa$report_text)
 #> 
 #> Design and data.
 #> The analysis focused on Toy writing task in Demonstration dataset. A many-facet
-#> rating-scale Rasch model was fit to 768 observations from 48 persons scored on a 4-category
+#> rating-scale Rasch model was fit to 192 observations from 12 persons scored on a 4-category
 #> scale (1-4). The design included facets for Rater (n = 4), Criterion (n = 4). Facet-level
-#> sample sizes were strong (smallest level N = 192), though facets were still estimated as
-#> fixed effects with sum-to-zero identification; `analyze_hierarchical_structure()` is
-#> available for nesting and variance-component follow-up. The rating scale was described as
-#> 0-2 rating scale.
+#> sample sizes met the package's `standard` band (smallest level N = 48), an mfrmr-specific
+#> watermark adapted from Linacre's (1994) 30/100 guidance; facets were nonetheless estimated
+#> as fixed effects with sum-to-zero identification (see `facet_small_sample_review()`). The
+#> rating scale was described as 0-2 rating scale.
 #> 
 #> Estimation settings.
 #> The RSM specification was estimated using MML with mfrmr. Model-based precision summaries
@@ -255,53 +267,57 @@ cat(apa$report_text)
 #> under the marginal person distribution, and residual-based fit statistics are evaluated at
 #> these EAP measures rather than at joint maximum likelihood (JMLE) estimates. Recommended
 #> use for this precision profile: Use for primary reporting of SE, CI, and reliability in
-#> this package.. Optimization met the package convergence checks after 13 function
-#> evaluations and 13 gradient evaluations (LogLik = -903.080, AIC = 1822.161, BIC =
-#> 1859.311). Terminal gradient sup-norm = 0.0001 (review threshold = 0.0001). Optimizer
-#> returned convergence code 0. Constraint settings: noncenter facet = Person; anchored levels
-#> = 0 (facets: none); group anchors = 0 (facets: none); dummy facets = none.
+#> this package.. Optimization met the package convergence checks after 22 function
+#> evaluations and 22 gradient evaluations (LogLik = -223.729, canonical MML AIC = 463.458,
+#> Person-BIC = 467.338, Sclove SABIC = 443.146). These criteria are screening/review values
+#> only at q=7 (coarse_screening); automatic deltas, weights, preferences, and LRT are
+#> disabled below q=31. SABIC was retained for sensitivity only; automatic selection is
+#> disabled at 22 or fewer Persons. Terminal gradient sup-norm = 0.0000 (review threshold =
+#> 0.0001). Optimizer returned convergence code 0. Constraint settings: noncenter facet =
+#> Person; anchored levels = 0 (facets: none); group anchors = 0 (facets: none); dummy facets
+#> = none.
 #> 
 #> Results.
 #> 
 #> Scale functioning.
 #> Category usage was adequate (unused categories = 0, low-count categories = 0), and
-#> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.30 to 1.35
+#> thresholds were ordered. Step/threshold summary: 3 step(s); estimate range = -1.22 to 1.44
 #> logits; no disordered steps.
 #> 
 #> Facet measures.
-#> Person measures ranged from -2.02 to 2.33 logits (M = 0.03, SD = 1.01). Rater measures
-#> ranged from -0.32 to 0.33 logits (M = -0.00, SD = 0.31). Criterion measures ranged from
-#> -0.41 to 0.24 logits (M = 0.00, SD = 0.28).
+#> Person measures ranged from -1.22 to 1.24 logits (M = 0.28, SD = 0.97). Rater measures
+#> ranged from -0.21 to 0.25 logits (M = 0.00, SD = 0.21). Criterion measures ranged from
+#> -0.44 to 0.21 logits (M = 0.00, SD = 0.30).
 #> 
 #> Fit and precision.
-#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.99, outfit
-#> MnSq = 1.01). This band is the package's review convention; published mean-square
+#> Overall mean-square fit was within the 0.5-1.5 screening band (infit MnSq = 0.98, outfit
+#> MnSq = 0.98). This band is the package's review convention; published mean-square
 #> guidelines differ, and band position is screening evidence rather than a model-validity
-#> decision. 1 of 56 elements fell outside the 0.5-1.5 mean-square screening band. Largest
-#> misfit signals: Person:P023 (|ZSTD| = 2.09); Criterion:Organization (|ZSTD| = 1.69);
-#> Person:P018 (|ZSTD| = 1.45). Criterion reliability = 0.91 (separation = 3.21). Person
-#> reliability = 0.90 (separation = 3.06). Rater reliability = 0.92 (separation = 3.51). These
-#> are Rasch/FACETS-style separation indices (measure spread relative to measurement error),
-#> not inter-rater agreement. The Person row uses EAP measures with posterior SDs, which
-#> yields a conservative summary that is not numerically comparable to JMLE-based person
-#> reliability from FACETS. Observed inter-rater agreement is reported separately from
-#> separation reliability: for Rater, exact agreement = 0.36, expected exact agreement = 0.37,
-#> adjacent agreement = 0.83. Element-level 95% confidence intervals (Normal approximation)
-#> accompany the measures (CI_Lower / CI_Upper); 56 of 56 rows are flagged CIEligible for
-#> primary reporting.
+#> decision. 0 of 20 elements fell outside the 0.5-1.5 mean-square screening band. Largest
+#> misfit signals: Person:P008 (|ZSTD| = 1.40); Person:P004 (|ZSTD| = 1.33); Person:P006
+#> (|ZSTD| = 0.89). Criterion reliability = 0.68 (separation = 1.45). Person reliability =
+#> 0.89 (separation = 2.88). Rater reliability = 0.34 (separation = 0.72). These are
+#> Rasch/FACETS-style separation indices (measure spread relative to measurement error), not
+#> inter-rater agreement. The Person row uses EAP measures with posterior SDs, which yields a
+#> conservative summary that is not numerically comparable to JMLE-based person reliability
+#> from FACETS. Observed inter-rater agreement is reported separately from separation
+#> reliability: for Rater, exact agreement = 0.34, expected exact agreement = 0.37, adjacent
+#> agreement = 0.85. Element-level 95% confidence intervals (Normal approximation) accompany
+#> the measures (CI_Lower / CI_Upper); 20 of 20 rows are flagged CIEligible for primary
+#> reporting.
 #> 
 #> Residual structure.
 #> Exploratory residual PCA (overall standardized residual matrix) showed PC1 eigenvalue =
-#> 2.10 (13.2% variance), with PC2 eigenvalue = 1.79. Facet-specific exploratory residual PCA
-#> showed the largest first-component signal in Rater (eigenvalue = 1.55, 38.7% variance).
+#> 4.02 (25.1% variance), with PC2 eigenvalue = 2.75. Facet-specific exploratory residual PCA
+#> showed the largest first-component signal in Criterion (eigenvalue = 2.18, 54.5% variance).
 #> Heuristic reference bands: EV >= 1.4 (critical minimum), >= 1.5 (caution), >= 2.0 (common),
 #> >= 3.0 (strong); variance >= 5% (minor), >= 10% (caution), >= 20% (strong). Strict marginal
 #> screening was available as a latent-integrated exploratory check (overall RMSD = 0.00,
-#> overall max |standardized residual| = 0.48). The largest strict marginal cell involved
-#> Criterion: Language | Cat 1 (standardized residual = 2.47, proportion difference = 0.06).
+#> overall max |standardized residual| = 0.15). The largest strict marginal cell involved
+#> Criterion: Language | Cat 1 (standardized residual = 1.34, proportion difference = 0.06).
 #> Strict pairwise local-dependence follow-up flagged 0 level pair(s) under the
 #> latent-integrated agreement screen. The largest strict pairwise signal involved Criterion:
-#> Language vs Organization (ExactStdResidual = -1.45, AdjacentStdResidual = 0.39).
+#> Accuracy vs Content (ExactStdResidual = -1.28, AdjacentStdResidual = -0.12).
 #> 
 #> Reporting cautions.
 #> Fit-basis note: MnSq/ZSTD fit statistics in this run were computed at EAP person measures,

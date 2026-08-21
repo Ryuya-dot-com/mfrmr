@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Export a fit-level analysis archive</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
       <div class="d-none name"><code>export_mfrm_bundle.Rd</code></div>
     </div>
 
@@ -163,11 +163,10 @@ local R installation.</p></dd>
 <dd><p>Optional original analysis data frame. When supplied,
 <code>export_mfrm_bundle()</code> co-locates a CSV copy of the data
 alongside the replay script and updates the script's
-<code><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv()</a></code> path to point at it. The manifest's <code>input_hash</code>
-row for <code>data</code> is also computed against the user's untouched
-input so the recorded fingerprint matches what the replay
-script will load. Default <code>NULL</code> falls back to the legacy
-<code>your_data.csv</code> placeholder path.</p></dd>
+<code><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv()</a></code> path to point at it. The manifest's <code>input_summary</code>
+row for <code>data</code> describes the user's untouched input structure; it is not
+a byte-level equality claim about the CSV replay representation. Default
+<code>NULL</code> falls back to the legacy <code>your_data.csv</code> placeholder path.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -225,10 +224,13 @@ to travel with the bundle.</p></li>
 <li><p>manuscript-summary CSVs via <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code></p></li>
 <li><p>anchor CSV via <code><a href="make_anchor_table.html">make_anchor_table()</a></code></p></li>
 <li><p>manifest CSV/TXT via <code><a href="build_mfrm_manifest.html">build_mfrm_manifest()</a></code></p></li>
+<li><p>exact source-fit readiness CSVs with fit, component, and parameter scope</p></li>
 <li><p>visual warning/summary artifacts via <code><a href="build_visual_summaries.html">build_visual_summaries()</a></code></p></li>
 <li><p>prediction/forecast CSVs via <code><a href="predict_mfrm_population.html">predict_mfrm_population()</a></code>,
 <code><a href="predict_mfrm_units.html">predict_mfrm_units()</a></code>, and <code><a href="sample_mfrm_plausible_values.html">sample_mfrm_plausible_values()</a></code></p></li>
 <li><p>a package-native replay script via <code><a href="build_mfrm_replay_script.html">build_mfrm_replay_script()</a></code></p></li>
+<li><p>replay-source readiness CSVs retained as provenance; the replayed fit
+recomputes its own readiness</p></li>
 <li><p>for latent-regression fits, a replay-side person-data CSV paired with the
 replay script</p></li>
 <li><p>a lightweight HTML report that bundles the exported tables/text and, for
@@ -295,7 +297,7 @@ replay script, and HTML summary.</p></li>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bundle</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"FilesWritten"</span>, <span class="st">"HtmlWritten"</span>, <span class="st">"ScriptWritten"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   FilesWritten HtmlWritten ScriptWritten</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           17           1             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           23           1             1</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bundle</span><span class="op">$</span><span class="va">written_files</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Component Format</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1      core_person    csv</span>
@@ -305,12 +307,12 @@ replay script, and HTML summary.</p></li>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5       core_steps    csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 6 manifest_summary    csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                        Path</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 /tmp/RtmpIbcapd/mfrmr_bundle_example_person_estimates.csv</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  /tmp/RtmpIbcapd/mfrmr_bundle_example_facet_estimates.csv</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      /tmp/RtmpIbcapd/mfrmr_bundle_example_fit_summary.csv</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4         /tmp/RtmpIbcapd/mfrmr_bundle_example_measures.csv</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  /tmp/RtmpIbcapd/mfrmr_bundle_example_step_parameters.csv</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 /tmp/RtmpIbcapd/mfrmr_bundle_example_manifest_summary.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 /tmp/RtmpJHlGr0/mfrmr_bundle_example_person_estimates.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  /tmp/RtmpJHlGr0/mfrmr_bundle_example_facet_estimates.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      /tmp/RtmpJHlGr0/mfrmr_bundle_example_fit_summary.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         /tmp/RtmpJHlGr0/mfrmr_bundle_example_measures.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  /tmp/RtmpJHlGr0/mfrmr_bundle_example_step_parameters.csv</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 /tmp/RtmpJHlGr0/mfrmr_bundle_example_manifest_summary.csv</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                    DataHandling</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 may_contain_person_level_data</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2         review_before_sharing</span>

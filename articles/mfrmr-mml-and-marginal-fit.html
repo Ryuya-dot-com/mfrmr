@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>MML estimation and marginal-fit diagnostics</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/vignettes/mfrmr-mml-and-marginal-fit.Rmd" class="external-link"><code>vignettes/mfrmr-mml-and-marginal-fit.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-mml-and-marginal-fit.Rmd</code></div>
     </div>
 
@@ -441,6 +441,13 @@ slopes, information redistribution, bias-screening rows, fair averages,
 or conclusions. Do not let fit improvement alone decide the operational
 model.</li>
 </ol>
+<p>After fitting candidates, <code><a href="../reference/build_model_choice_review.html">build_model_choice_review()</a></code>
+places the reported step/slope coordinate counts, identified
+free-parameter counts, and each fit’s stored readiness decision in
+<code>review$model_roles</code>. Read those fields before the
+information criteria: a more flexible fit that is not inference-ready
+cannot become the selected operational model through AIC or BIC
+alone.</p>
 <p>This sequence keeps the interpretation aligned with the validation
 boundary: <code>RSM</code>/<code>PCM</code> support the full
 manuscript/reporting route, while bounded <code>GPCM</code> supports the

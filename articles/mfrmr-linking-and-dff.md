@@ -31,7 +31,7 @@ fit <- fit_mfrm(
   score = "Score",
   method = "MML",
   model = "RSM",
-  quad_points = 7
+  quad_points = 31
 )
 
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -76,7 +76,7 @@ head(anchors)
 #> 1 Criterion Accuracy      0.524 
 #> 2 Criterion Content      -0.199 
 #> 3 Criterion Language     -0.275 
-#> 4 Criterion Organization -0.0498
+#> 4 Criterion Organization -0.0499
 ```
 
 Use
@@ -184,19 +184,19 @@ head(dit$table)
 #> # A tibble: 6 × 15
 #>   Level  GroupValue     N ObsScore ExpScore ObsExpAvg Var_sum sparse StdResidual
 #>   <chr>  <chr>      <int>    <int>    <dbl>     <dbl>   <dbl> <lgl>        <dbl>
-#> 1 Accur… A             48      125     113.   0.251      28.5 FALSE       2.26  
-#> 2 Accur… B             48      117     124.  -0.150      29.2 FALSE      -1.33  
-#> 3 Conte… A             48      134     134.   0.00968    27.8 FALSE       0.0882
-#> 4 Conte… B             48      148     144.   0.0745     26.1 FALSE       0.700 
-#> 5 Langu… A             48      128     136.  -0.159      27.5 FALSE      -1.46  
-#> 6 Langu… B             48      158     146.   0.242      25.6 FALSE       2.30  
+#> 1 Accur… A             48      125     113.    0.255     28.6 FALSE        2.29 
+#> 2 Accur… B             48      117     124.   -0.147     29.2 FALSE       -1.31 
+#> 3 Conte… A             48      134     133.    0.0131    27.8 FALSE        0.119
+#> 4 Conte… B             48      148     144.    0.0774    26.1 FALSE        0.727
+#> 5 Langu… A             48      128     135.   -0.156     27.5 FALSE       -1.43 
+#> 6 Langu… B             48      158     146.    0.245     25.6 FALSE        2.32 
 #> # ℹ 6 more variables: t <dbl>, df <dbl>, p_value <dbl>, p_adjusted <dbl>,
 #> #   flag_t <lgl>, flag_bias <lgl>
 
 dr <- dif_report(dff_resid)
 cat(dr$narrative)
 #> DIF screening was conducted for the Criterion facet across levels of Group using the residual method. A total of 4 pairwise facet-level comparisons were evaluated. 2 comparison(s) were screening-positive and 2 were screening-negative based on the residual-contrast test. 
-#> The following Criterion level(s) showed screening-positive residual contrasts: Accuracy, Language.   - Accuracy: A vs B (contrast = 0.401 on the residual scale; A was higher).   - Language: A vs B (contrast = -0.401 on the residual scale; A was lower). 
+#> The following Criterion level(s) showed screening-positive residual contrasts: Accuracy, Language.   - Accuracy: A vs B (contrast = 0.403 on the residual scale; A was higher).   - Language: A vs B (contrast = -0.401 on the residual scale; A was lower). 
 #> Note: The presence of differential functioning does not necessarily indicate measurement bias. Differential functioning may reflect construct-relevant variation (e.g., true group differences in the attribute being measured) rather than unwanted measurement bias. Substantive review is recommended to distinguish between these possibilities (cf. Eckes, 2011; McNamara & Knoch, 2012).
 ```
 
@@ -227,7 +227,7 @@ fit_interaction <- fit_mfrm(
   method = "MML",
   model = "RSM",
   facet_interactions = "Rater:Criterion",
-  quad_points = 7
+  quad_points = 31
 )
 
 interaction_effect_table(fit_interaction)

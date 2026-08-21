@@ -35,7 +35,7 @@ treated as automatic operational-scoring evidence."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">mfrmr</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@ treated as automatic operational-scoring evidence."><meta property="og:image" co
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Reporting and APA Guide</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/main/R/help_reporting_and_apa.R" class="external-link"><code>R/help_reporting_and_apa.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/development/0.2.3/R/help_reporting_and_apa.R" class="external-link"><code>R/help_reporting_and_apa.R</code></a></small>
       <div class="d-none name"><code>mfrmr_reporting_and_apa.Rd</code></div>
     </div>
 
@@ -147,7 +147,10 @@ discrimination-based operational scoring.</p></li>
 
 <p>Use <code><a href="compare_mfrm.html">compare_mfrm()</a></code> to build the candidate-model table and inspect
 <code>ICComparable</code>, <code>ComparisonBasis</code>, and any nesting warnings before reading
-information criteria. Then use <code><a href="build_model_choice_review.html">build_model_choice_review()</a></code> to attach the
+information criteria. Automatic ranking requires the current contract and
+a shared q&gt;=31 grid; q&lt;31 retains raw screening/review criteria only, and a
+close decision still needs a prespecified denser common-grid check. Then use
+<code><a href="build_model_choice_review.html">build_model_choice_review()</a></code> to attach the
 comparison to explicit model roles, downstream-route boundaries, wording
 templates, and optional <code><a href="build_weighting_review.html">build_weighting_review()</a></code> output. Convert that
 review with <code><a href="build_summary_table_bundle.html">build_summary_table_bundle()</a></code> when a manuscript appendix,
@@ -196,6 +199,29 @@ as drafting and caveat-routing aids. They are not formal acceptance rules,
 proof of validity, or a substitute for peer-review judgment. Before copying
 text, inspect <code>mfrm_report(res, style = "apa")$first_screen</code>,
 <code>$claim_readiness</code>, <code>$report_gaps</code>, and <code>$template_index</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="standards-basis-and-boundary">Standards basis and boundary<a class="anchor" aria-label="anchor" href="#standards-basis-and-boundary"></a></h2>
+
+
+<p>The manuscript helpers are APA-oriented drafting aids informed by the
+<em>Publication Manual of the American Psychological Association</em> (7th ed.)
+and the quantitative Journal Article Reporting Standards (JARS-Quant;
+Appelbaum et al., 2018). The MFRM-specific prompts also draw on the model and
+diagnostic sources returned by <code>reporting_checklist(..., include_references = TRUE)</code>, including Eckes, Myford and Wolfe, Linacre,
+Wright and Masters, and Muraki for bounded <code>GPCM</code>.</p>
+<p>The package only knows the fitted measurement objects and context supplied
+by the analyst. It therefore cannot certify research-level JARS completeness
+for hypotheses and their confirmatory/exploratory status, recruitment and
+participant characteristics, ethics, sample-size rationale, missing-data
+mechanism and exclusions, multiplicity or deviations from plan, or complete
+data/code availability statements. Those study-level fields, effect-size and
+uncertainty choices, statistic-specific rounding, and journal typography
+must be reviewed and completed outside the generated template.</p>
+<p>Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E., Nezu, A. M., and
+Rao, S. M. (2018). Journal article reporting standards for quantitative
+research in psychology. <em>American Psychologist, 73</em>(1), 3-25.
+<a href="https://doi.org/10.1037/amp0000191" class="external-link">doi:10.1037/amp0000191</a></p>
     </div>
     <div class="section level2">
     <h2 id="which-helper-answers-which-task">Which helper answers which task<a class="anchor" aria-label="anchor" href="#which-helper-answers-which-task"></a></h2>
@@ -335,6 +361,8 @@ caveated <code><a href="build_apa_outputs.html">build_apa_outputs()</a></code>, 
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="fu"><a href="load_mfrmr_data.html">load_mfrmr_data</a></span><span class="op">(</span><span class="st">"example_core"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># A balanced slice retains every Rater and Criterion while running quickly.</span></span></span>
+<span class="r-in"><span><span class="va">toy</span> <span class="op">&lt;-</span> <span class="va">toy</span><span class="op">[</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">toy</span><span class="op">$</span><span class="va">Person</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  <span class="va">toy</span>,</span></span>
 <span class="r-in"><span>  person <span class="op">=</span> <span class="st">"Person"</span>,</span></span>

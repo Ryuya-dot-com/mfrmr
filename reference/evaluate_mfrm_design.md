@@ -208,7 +208,10 @@ An object of class `mfrm_design_evaluation` with components:
   design-variable alias columns when applicable.
 
 - `rep_overview`: run-level status and timing, with the same
-  design-variable alias columns when applicable.
+  design-variable alias columns when applicable. Failed fits retain the
+  condition class, failure component, and category-support state/reason
+  codes when available; a completely failed design still returns the
+  documented zero-row `results` schema rather than a zero-column table.
 
 - `design_descriptor`: role-based design-variable metadata used by
   planning summaries and plots
@@ -395,7 +398,7 @@ study.
 ``` r
 # \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
+  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
   maxit = 30,
   seed = 123
@@ -405,12 +408,12 @@ s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRM
 #> # A tibble: 6 × 4
 #>   Facet     n_person MeanSeparation MeanSeverityRMSE
 #>   <chr>        <dbl>          <dbl>            <dbl>
-#> 1 Criterion        8           0               0.102
-#> 2 Criterion       12           0               0.155
-#> 3 Person           8           0              16.2  
-#> 4 Person          12           0               6.03 
-#> 5 Rater            8           0               0.783
-#> 6 Rater           12           9.06            2.86 
+#> 1 Criterion        8           1.18            0.502
+#> 2 Criterion       12           1.98            0.406
+#> 3 Person           8           5.19            4.89 
+#> 4 Person          12           1.61            0.631
+#> 5 Rater            8           2.05            0.649
+#> 6 Rater           12           0               0.075
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
 #>  [1] "plot"                    "facet"                  

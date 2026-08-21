@@ -134,33 +134,33 @@ summary(bundle)
 #> 
 #> Role summary
 #>                  Role Tables TotalRows TotalCols
-#>          run_overview      1         1        52
+#>          run_overview      1         1        87
 #>         reporting_map      1         6         3
 #>     population_coding      1         0         6
-#>      population_basis      1         1        11
-#>   person_distribution      1         1         7
+#>      population_basis      1         1        16
+#>   person_distribution      1         1        10
 #>    facet_distribution      1         2         7
-#>    extreme_person_low      1        10         4
-#>   extreme_person_high      1        10         4
+#>    extreme_person_low      1        10        20
+#>   extreme_person_high      1        10        20
 #>  extreme_facet_levels      1         8         3
-#>   estimation_settings      1         1        18
+#>   estimation_settings      1         1        28
 #>    category_structure      1         1         5
 #>      analysis_caveats      1         0         8
 #> 
 #> Table catalog
 #>                Table Rows Cols                 Role
-#>             overview    1   52         run_overview
-#>  population_overview    1   11     population_basis
+#>             overview    1   87         run_overview
+#>  population_overview    1   16     population_basis
 #>    population_coding    0    6    population_coding
 #>       facet_overview    2    7   facet_distribution
-#>      person_overview    1    7  person_distribution
+#>      person_overview    1   10  person_distribution
 #>        step_overview    1    5   category_structure
-#>    settings_overview    1   18  estimation_settings
+#>    settings_overview    1   28  estimation_settings
 #>        reporting_map    6    3        reporting_map
 #>              caveats    0    8     analysis_caveats
 #>       facet_extremes    8    3 extreme_facet_levels
-#>          person_high   10    4  extreme_person_high
-#>           person_low   10    4   extreme_person_low
+#>          person_high   10   20  extreme_person_high
+#>           person_low   10   20   extreme_person_low
 #>                                                                                                                                     Description
 #>                                                                              One-row model fit, convergence, and information-criteria overview.
 #>                                                                                   Population-model basis, posterior basis, and omission review.
@@ -175,18 +175,18 @@ summary(bundle)
 #>                                                                                                   Highest person measures from the current fit.
 #>                                                                                                    Lowest person measures from the current fit.
 #>  PlotReady NumericColumns               DefaultPlotTypes ExportReady
-#>       TRUE             30 numeric_profile, first_numeric        TRUE
+#>       TRUE             40 numeric_profile, first_numeric        TRUE
 #>       TRUE              5 numeric_profile, first_numeric        TRUE
 #>      FALSE              1                                       TRUE
 #>       TRUE              6 numeric_profile, first_numeric        TRUE
-#>       TRUE              7 numeric_profile, first_numeric        TRUE
+#>       TRUE              9 numeric_profile, first_numeric        TRUE
 #>       TRUE              4 numeric_profile, first_numeric        TRUE
-#>       TRUE              4 numeric_profile, first_numeric        TRUE
+#>       TRUE              5 numeric_profile, first_numeric        TRUE
 #>      FALSE              0                                       TRUE
 #>      FALSE              0                                       TRUE
 #>       TRUE              1 numeric_profile, first_numeric        TRUE
-#>       TRUE              2 numeric_profile, first_numeric        TRUE
-#>       TRUE              2 numeric_profile, first_numeric        TRUE
+#>       TRUE              7 numeric_profile, first_numeric        TRUE
+#>       TRUE              7 numeric_profile, first_numeric        TRUE
 #>  ApaTableReady                       RecommendedBridge AppendixSection
 #>           TRUE              apa_table() / plot(bundle)         methods
 #>           TRUE              apa_table() / plot(bundle)         methods
@@ -229,14 +229,14 @@ summary(bundle)
 #> 
 #> Table profile
 #>                Table Rows Cols NumericColumns MissingValues
-#>          person_high   10    4              2            10
-#>           person_low   10    4              2            10
+#>          person_high   10   20              7            10
+#>           person_low   10   20              7            10
 #>       facet_extremes    8    3              1             0
 #>        reporting_map    6    3              0             0
 #>       facet_overview    2    7              6             0
-#>             overview    1   52             30             9
-#>    settings_overview    1   18              4             3
-#>  population_overview    1   11              5             5
+#>             overview    1   87             40            14
+#>    settings_overview    1   28              5             5
+#>  population_overview    1   16              5             5
 #>                  Role
 #>   extreme_person_high
 #>    extreme_person_low
@@ -258,18 +258,18 @@ summary(bundle)
 #> 
 #> Plot index
 #>                Table PlotReady NumericColumns               DefaultPlotTypes
-#>             overview      TRUE             30 numeric_profile, first_numeric
+#>             overview      TRUE             40 numeric_profile, first_numeric
 #>  population_overview      TRUE              5 numeric_profile, first_numeric
 #>    population_coding     FALSE              1                               
 #>       facet_overview      TRUE              6 numeric_profile, first_numeric
-#>      person_overview      TRUE              7 numeric_profile, first_numeric
+#>      person_overview      TRUE              9 numeric_profile, first_numeric
 #>        step_overview      TRUE              4 numeric_profile, first_numeric
-#>    settings_overview      TRUE              4 numeric_profile, first_numeric
+#>    settings_overview      TRUE              5 numeric_profile, first_numeric
 #>        reporting_map     FALSE              0                               
 #>              caveats     FALSE              0                               
 #>       facet_extremes      TRUE              1 numeric_profile, first_numeric
-#>          person_high      TRUE              2 numeric_profile, first_numeric
-#>           person_low      TRUE              2 numeric_profile, first_numeric
+#>          person_high      TRUE              7 numeric_profile, first_numeric
+#>           person_low      TRUE              7 numeric_profile, first_numeric
 #> 
 #> Appendix presets
 #>       Preset Tables PlotReadyTables RolesCovered

@@ -248,7 +248,8 @@ summary(run)
 #> FACETS-style Workflow Summary
 #>   Model: RSM | Method: JML
 #>   N: 192 | Persons: 12 | Facets: 2 | Categories: 4
-#>   LogLik: -203.282 | AIC: 446.564 | BIC: 511.714
+#>   LogLik: -203.282 | Canonical MML information-criterion panel: not eligible (descriptive_jml).
+#>   Legacy descriptive AIC: 446.564 | Legacy descriptive BIC: 511.714. These values are not part of the common MML ranking panel.
 #>   Optimizer returned code 0: Yes | Formal inference: Ready | Iterations: 66
 #> 
 #> Column mapping

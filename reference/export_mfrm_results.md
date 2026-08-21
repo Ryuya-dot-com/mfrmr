@@ -155,6 +155,6 @@ exported <- export_mfrm_results(
 #> Warning: This export is an analysis archive, not a deidentified or automatically shareable package. It can contain direct person identifiers, person-level estimates, original facet labels, local file paths, and a complete RDS result object. Review and transform every file under the applicable data-handling policy before sharing it. Set `acknowledge_sensitive = TRUE` only to acknowledge this risk; that setting does not deidentify the export.
 exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
 #>   FilesWritten CsvWritten HtmlWritten
-#> 1          142        129           3
+#> 1          158        145           3
 # }
 ```

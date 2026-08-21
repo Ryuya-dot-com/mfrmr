@@ -58,10 +58,11 @@ plot_wright_unified(
   Maximum number of facet/step locations retained by the native renderer
   for a compact display. Step transitions are always retained and
   omitted facet locations are reported in `retention`; use `Inf` for the
-  complete final map. Native text labels remain collision-aware even
-  when all coordinates are retained. The FACETS-style payload retains
-  and labels every fitted location, grouping coincident labels when
-  needed.
+  complete final map. Every retained native location is labelled using
+  collision-aware displaced text and leader lines; step transitions are
+  shown as one vertical ladder with fitted logits in their labels. The
+  FACETS-style payload retains and labels every fitted location,
+  grouping coincident labels when needed.
 
 - show_ci:
 
@@ -242,13 +243,13 @@ names(map_data)
 #>  [1] "persons"               "facets"                "thresholds"           
 #>  [4] "facet_names"           "y_lim"                 "title"                
 #>  [7] "wright_style"          "renderer"              "visual_contract"      
-#> [10] "person"                "person_hist"           "person_stats"         
-#> [13] "locations"             "label_points"          "group_summary"        
-#> [16] "group_levels"          "y_range"               "display_settings"     
-#> [19] "label_limit"           "retention"             "retention_note"       
-#> [22] "show_ci"               "uncertainty_display"   "legend"               
-#> [25] "subtitle"              "fit_readiness"         "interpretation_status"
-#> [28] "interpretation_note"  
+#> [10] "person"                "person_exclusions"     "person_hist"          
+#> [13] "person_stats"          "locations"             "label_points"         
+#> [16] "group_summary"         "group_levels"          "y_range"              
+#> [19] "display_settings"      "label_limit"           "retention"            
+#> [22] "retention_note"        "show_ci"               "uncertainty_display"  
+#> [25] "legend"                "subtitle"              "fit_readiness"        
+#> [28] "interpretation_status" "interpretation_note"  
 facets_map <- plot_wright_unified(
   fit,
   renderer = "facets",
