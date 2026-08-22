@@ -674,7 +674,7 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_true(status$CIWorkflowOK)
 })
 
-test_that("record and roadmap close CORE-05 but keep CORE-06 and G4 open", {
+test_that("record and roadmap close CORE-05, CORE-06, and G4", {
   ctx <- load_fixed_calibration_g4_contract()
   record_path <- file.path(
     ctx$validation, "fixed-calibration-g4-evidence-record-0.2.4.md"
@@ -694,23 +694,40 @@ test_that("record and roadmap close CORE-05 but keep CORE-06 and G4 open", {
   )
   expect_match(record, ctx$env$mfrmr_fc_g4_specification, fixed = TRUE)
   expect_match(record, "`CORE05Complete=TRUE`", fixed = TRUE)
-  expect_match(record, "`CORE06Complete=FALSE`", fixed = TRUE)
-  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`CORE06Complete=TRUE`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=TRUE`", fixed = TRUE)
   expect_match(
     record, "`MacOSReleaseNativePreflightComplete=TRUE`", fixed = TRUE
   )
   expect_match(
-    record, "`MacOSReleaseWorkflowComplete=FALSE`", fixed = TRUE
+    record, "`MacOSReleaseWorkflowComplete=TRUE`", fixed = TRUE
   )
-  expect_match(record, "`RemainingRequiredWorkflowCells=5`", fixed = TRUE)
+  expect_match(record, "`RemainingRequiredWorkflowCells=0`", fixed = TRUE)
+  expect_match(record, "`HostedWorkflowRun=32534030853`", fixed = TRUE)
+  expect_match(
+    record,
+    "`HostedWorkflowCommit=f492fb9f0ee977777d03f0255de008af33860db5`",
+    fixed = TRUE
+  )
+  expect_match(
+    record, "`HostedWorkflowRequiredCellsPassed=5`", fixed = TRUE
+  )
+  expect_match(
+    record, "`HostedWindowsPathHarnessAttemptRetained=TRUE`", fixed = TRUE
+  )
+  expect_match(record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
+  expect_match(record, "`OptionalLaneAuthorized=FALSE`", fixed = TRUE)
+  expect_match(
+    record, "`NextGate=G5-optional-lane-qualification`", fixed = TRUE
+  )
   expect_match(
     macos_record, "`MacOSReleaseNativePreflightComplete=TRUE`", fixed = TRUE
   )
   expect_match(
-    macos_record, "`MacOSReleaseWorkflowComplete=FALSE`", fixed = TRUE
+    macos_record, "`MacOSReleaseWorkflowComplete=TRUE`", fixed = TRUE
   )
   expect_match(
-    macos_record, "`RemainingRequiredWorkflowCells=5`", fixed = TRUE
+    macos_record, "`RemainingRequiredWorkflowCells=0`", fixed = TRUE
   )
   expect_match(
     macos_record, "`HostedMacOSAttempt1Retained=TRUE`", fixed = TRUE
@@ -720,14 +737,16 @@ test_that("record and roadmap close CORE-05 but keep CORE-06 and G4 open", {
   )
   expect_match(roadmap, "- [x] **CORE-05 — Independent evidence:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [ ] **CORE-06 — Reproducible operation:**",
+  expect_match(roadmap, "- [x] **CORE-06 — Reproducible operation:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [ ] **G4 — Independent and operational evidence**",
+  expect_match(roadmap, "- [x] **G4 — Independent and operational evidence**",
                fixed = TRUE)
   expect_match(
     roadmap,
-    "  - [ ] Run the prospectively required hosted macOS release workflow cell",
+    "  - [x] Run the prospectively required hosted macOS release workflow cell",
     fixed = TRUE
   )
-  expect_match(roadmap, "  - [ ] **G4 exit:**", fixed = TRUE)
+  expect_match(roadmap, "  - [x] **G4 exit:**", fixed = TRUE)
+  expect_match(roadmap, "- [ ] **G5 — Optional-lane qualification**",
+               fixed = TRUE)
 })

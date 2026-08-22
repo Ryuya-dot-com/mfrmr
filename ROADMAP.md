@@ -1651,8 +1651,8 @@ silently substituted for one another:
 
 ### 0.2.4 release control board
 
-Overall status: **G0 through G3 complete; G4 local CORE-05 and native installed
-macOS preflight complete, with all five CORE-06 workflow cells pending**.
+Overall status: **G0 through G4 complete; G5 optional-lane qualification is
+next, while public 0.2.4 API promotion remains closed**.
 The 0.2.3 baseline is bound to
 the CRAN source artifact,
 the internal core artifact passes freeze--persist--load--score evidence, its
@@ -1702,7 +1702,7 @@ calibration claim:
   coded, conditional on the declared frozen basis, and performs no refit.
 - [x] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
   metamorphic tests, and disjoint confirmation pass frozen rules.
-- [ ] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
+- [x] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
   chunk-order, locale, encoding, platform, R-version, and bounded performance
   checks pass.
 - [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
@@ -2056,7 +2056,7 @@ required children are checked.
     dispositions, a direct hand-enumerated posterior oracle, and fitted-object
     parity as secondary evidence. The functions and optional lanes remain
     unexported/unpromoted.
-- [ ] **G4 — Independent and operational evidence**
+- [x] **G4 — Independent and operational evidence**
   - [x] Freeze numerical rules, denominators, resource budgets, and disjoint
     confirmation identities before opening confirmation results.
   - [x] Run independent probability/posterior and constraint/rank oracles that
@@ -2067,17 +2067,17 @@ required children are checked.
     on native arm64 macOS with R release.
   - [x] Wire hosted macOS release as the prerequisite job that must succeed
     before the four remaining platform/R jobs are released in parallel.
-  - [ ] Run the prospectively required hosted macOS release workflow cell
+  - [x] Run the prospectively required hosted macOS release workflow cell
     first; do not substitute the native preflight after seeing its result.
-  - [ ] Then run Windows release and Linux devel/release/oldrel checks for the
+  - [x] Then run Windows release and Linux devel/release/oldrel checks for the
     public core contract.
   - [x] Measure artifact size and scoring time/memory against the frozen small,
     medium, and operationally plausible budgets.
   - [x] Retain failed cells and require a new disjoint confirmation whenever a
     result changes code or rules.
-  - [ ] **G4 exit:** CORE-05 and CORE-06 pass without pooling away failures or
+  - [x] **G4 exit:** CORE-05 and CORE-06 pass without pooling away failures or
     relying on historical/skipped evidence.
-  - Local evidence: the repository-only prospective contract froze two
+  - Evidence: the repository-only prospective contract froze two
     disjoint RSM/PCM fixtures, six numerical rules, nineteen adversarial cells,
     five platform cells, and three resource scales before confirmation. The
     independent posterior differences were at most `2.23e-15`; explicit step
@@ -2085,19 +2085,24 @@ required children are checked.
     alternative-prior cell retained its predeclared material-review result
     (`max |EAP shift| = 0.570`), so prior robustness remains a non-claim. The
     120/6,000/30,000-row resource observations passed their frozen local
-    ceilings. CORE-05 is complete for the exact fixed-N(0,1) core, but workflow
-    wiring is not execution evidence. A subsequent isolated source-tarball
-    install passed the complete denominator under native arm64 macOS and R
-    4.6.1 release, closing the local preflight. Because the frozen matrix names
-    workflow evidence, that result does not post hoc close `macos-latest`.
-    The workflow now enforces hosted macOS as the prerequisite, but wiring is
-    not execution evidence. The first hosted attempt passed R CMD check and
-    release-readiness, then stopped in the G4 bootstrap before opening the
-    denominator because `pkgload::load_all()` requested an undeclared
-    development helper. That attempt and the four designed downstream skips
-    are retained. Hosted macOS is the first unresolved cell and must rerun with
-    the installed check payload; Windows release and Linux devel/release/oldrel
-    results then remain before CORE-06 or G4 can close.
+    ceilings. The isolated source-tarball install then passed the complete
+    denominator under native arm64 macOS and R 4.6.1 release. The first hosted
+    run, `32530223829`, is retained: check/readiness passed, but an undeclared
+    development helper stopped G4 before the denominator and skipped the four
+    dependent jobs. Run `32531360127` is also retained: macOS and all Ubuntu
+    cells passed, while the Windows vanilla child rejected an equivalent
+    installed-library path represented with different separators/case. The
+    path-only harness repair changed no production code, fixture, identity,
+    numerical rule, denominator, or threshold. Fresh run `32534030853` at
+    commit `f492fb9f0ee977777d03f0255de008af33860db5` passed R CMD check,
+    repository release-readiness, and all 121 G4 expectations with zero
+    failures, errors, warnings, or skips in hosted macOS release, Windows
+    release, and Ubuntu devel/release/oldrel-1. No failed cell was pooled into
+    that result. CORE-05, CORE-06, and G4 therefore close for the exact
+    fixed-N(0,1) RSM/PCM core. Node-runtime deprecation annotations from the
+    Actions platform are non-blocking workflow-maintenance signals, not G4
+    evidence. Public API and optional-lane authorization remain closed; G5,
+    including OPT-02 bounded GPCM MML, is next and inherits no core pass.
 - [ ] **G5 — Optional-lane qualification**
   - [ ] Adjudicate OPT-01 estimated-population/latent-regression MML.
   - [ ] Adjudicate OPT-02 bounded GPCM MML.

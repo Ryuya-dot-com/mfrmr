@@ -78,22 +78,23 @@ identify whether the opt-in layer ran and retain its test log.
   `fixed-calibration-g4-evidence-record-0.2.4.md`: prospectively freeze the
   disjoint RSM/PCM confirmation identities, complete adversarial denominator,
   numerical and resource rules, and five-cell OS/R matrix, then support a
-  vanilla-process artifact-only replay. The record closes CORE-05 for the exact
-  fixed-basis local core, records material alternative-prior sensitivity as a
-  review/non-claim, and leaves CORE-06 and G4 open for the CI platform cells.
+  vanilla-process artifact-only replay. The record closes CORE-05, CORE-06,
+  and G4 for the exact fixed-basis core after one fresh five-cell hosted run,
+  while retaining both earlier harness failures and material alternative-prior
+  sensitivity as a review/non-claim.
 - `fixed-calibration-g4-macos-installed-runner-0.2.4.R` and
   `fixed-calibration-g4-macos-record-0.2.4.md`: enforce and record an isolated
   source-tarball installation exercised in native arm64 macOS/R release
-  vanilla processes. This closes the native macOS preflight, but deliberately
-  leaves the prospectively required hosted macOS workflow cell and the four
-  distinct Windows/Linux/R-version cells open.
+  vanilla processes. This closes the native macOS preflight separately from
+  the later hosted macOS prerequisite and four downstream platform/R passes;
+  the record does not substitute one evidence layer for another.
 - `.github/workflows/R-CMD-check.yaml` and
   `.github/workflows/R-CMD-check-cell.yaml`: run hosted macOS/R release as a
   prerequisite, then release the four remaining cells in parallel through one
-  shared R CMD check, release-readiness, and G4 procedure. Workflow wiring is
-  tested repository evidence, but does not count as a platform pass. The G4
-  procedure loads the package installed by R CMD check and propagates that
-  installed-library boundary to its vanilla child process.
+  shared R CMD check, release-readiness, and G4 procedure. Workflow wiring
+  alone does not count as a platform pass. Run `32534030853` executed the
+  complete matrix successfully against the package installed by R CMD check,
+  including the installed-library boundary in the vanilla child process.
 - `internal-roadmap-0.2.3.md`: repository-only maintainer roadmap containing
   detailed release sequencing, evidence invalidation, local external-tool
   identities, and completion gates that do not belong in user-facing roadmap

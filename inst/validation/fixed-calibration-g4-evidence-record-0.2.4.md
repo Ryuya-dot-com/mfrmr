@@ -1,21 +1,22 @@
-# Fixed-calibration G4 local evidence record for mfrmr 0.2.4
+# Fixed-calibration G4 evidence record for mfrmr 0.2.4
 
-Status: `G4_local_CORE05_complete_CORE06_platform_pending`, 2026-08-22.
+Status: `G4_CORE05_CORE06_complete`, 2026-08-22.
 
 - Specification: `0.2.4-fixed-calibration-g4-independent-operational-evidence-v1`
 - Contract: `mfrmr_fixed_calibration_g4_evidence_v1`
 - Contract frozen before confirmation: `TRUE`
 - Complete local denominator opened: `TRUE`
 - CORE-05 complete for the exact fixed-basis core: `TRUE`
-- CORE-06 complete: `FALSE`
-- G4 exit complete: `FALSE`
+- CORE-06 complete: `TRUE`
+- G4 exit complete: `TRUE`
 - Public API authorized: `FALSE`
 - Optional lane authorized: `FALSE`
 - Native installed macOS release preflight complete: `TRUE`
 - macOS-first workflow dependency wired: `TRUE`
-- GitHub-hosted macOS release workflow cell complete: `FALSE`
-- Next required evidence: macOS release workflow first, then Windows release
-  and Ubuntu devel/release/oldrel-1
+- GitHub-hosted macOS release workflow cell complete: `TRUE`
+- All five required hosted workflow cells complete: `TRUE`
+- Next gate: G5 optional-lane qualification, including independent OPT-02
+  bounded GPCM MML adjudication
 
 ## Prospective boundary
 
@@ -26,13 +27,13 @@ numerical rules, nineteen required adversarial cells, five OS/R cells, and
 three resource scales. The confirmation Persons and response rows do not occur
 in the source fits or in the earlier `example_core` G1/G3 fixtures.
 
-The G4 result is deliberately split. The complete local independent and
+The G4 result remains deliberately layered. The complete local independent and
 adversarial denominator closes CORE-05 for the exact one-scale RSM/PCM MML,
-fixed-N(0,1), point-calibration core. It does not close CORE-06 or G4 because
-the current payload still lacks every prospectively frozen workflow result.
-The separate native installed-payload macOS record closes a stronger local
-preflight, but cannot be substituted post hoc for the GitHub-hosted macOS
-workflow cell or stand in for the four Windows/Linux cells.
+fixed-N(0,1), point-calibration core. The separate native installed-payload
+macOS record is a stronger local preflight, but was not substituted post hoc
+for the GitHub-hosted macOS workflow cell or for the four Windows/Linux cells.
+Fresh run `32534030853` supplied all five prospectively frozen hosted results
+for the same commit and closes CORE-06 and G4 without pooling earlier cells.
 
 ## Independent mathematics
 
@@ -109,22 +110,22 @@ capacity recommendations. Observations on R 4.6.1, arm64 macOS were:
 | operationally plausible | 30,000 | 12,577 | 0.568 | 673,864,136 | 7,757,418 |
 
 Every observation is below its pre-opened size, time, profiled-allocation, and
-serialized-result ceiling. These are one-machine observations. CORE-06 remains
-open until the same repository-only test produces zero-failure, zero-warning,
-zero-skip results in all five workflow cells.
+serialized-result ceiling. These remain one-machine performance observations,
+not general throughput promises. The same repository-only test subsequently
+produced zero-failure, zero-error, zero-warning, zero-skip results in all five
+prospectively required workflow cells.
 
 ## Verification and decision
 
-`test-fixed-calibration-g4-evidence.R` passed 119 expectations in 11 tests with
+`test-fixed-calibration-g4-evidence.R` passed 121 expectations in 11 tests with
 zero failures, errors, warnings, or skips. The test file is excluded from the
 source package and is now explicitly invoked by the shared
 `.github/workflows/R-CMD-check-cell.yaml` called from
 `.github/workflows/R-CMD-check.yaml`. The orchestrator makes macOS release a
-prerequisite for the other four jobs. Merely editing that dependency is not CI
-evidence. The subsequent isolated installed-payload macOS execution passed the
-same 11 tests and 119 expectations with zero failures, errors, warnings, or
-skips. GitHub-hosted macOS remains the first required unresolved workflow cell;
-all five prospectively frozen OS/R workflow cells still lack passing evidence.
+prerequisite for the other four jobs. Wiring alone was not counted as CI
+evidence. The isolated installed-payload macOS preflight and each hosted cell
+passed the same 11 tests and 121 expectations with zero failures, errors,
+warnings, or skips.
 
 The first hosted macOS attempt is retained as Actions run `32530223829` at
 commit `d307031a5a4fea79ebf8c810eba2c691169c067d`. Its R CMD check and repository
@@ -135,8 +136,46 @@ loads the already installed `check/mfrmr.Rcheck/mfrmr` payload and passes that
 same installed-library requirement to the vanilla child. No production code,
 fixture, identity, numerical rule, denominator, or decision threshold changed,
 so this is a retained harness bootstrap failure rather than a failed numerical
-confirmation. A new hosted run is required; the failed attempt is not pass
+confirmation. A new hosted run was required; the failed attempt is not pass
 evidence.
+
+The next hosted run, Actions run `32531360127` at commit
+`a23c009bb1106fb7fd676e7febcc9b90a6cb9a1b`, passed macOS release and Ubuntu
+devel, release, and oldrel-1. Windows release reached the G4 test file but its
+vanilla child compared equivalent installed-library paths with different
+Windows separator/case representations, returned status 1, and produced no
+result RDS. That run is retained as a platform-harness path-identity failure;
+it is not a numerical/core failure and is not pooled with a later Windows
+result. The correction canonicalizes both paths with forward slashes and
+case-folds them only on Windows. It changes no production code, fixture,
+confirmation identity, numerical rule, denominator, or decision threshold.
+
+Fresh Actions run `32534030853` at commit
+`f492fb9f0ee977777d03f0255de008af33860db5` reran the complete matrix. Every
+job passed R CMD check, repository release-readiness, and the G4 installed-
+payload step:
+
+| Required cell | Job ID | Duration | G4 result |
+| --- | ---: | ---: | --- |
+| macOS release prerequisite | `96931462336` | 10m24s | 121/121; pass |
+| Windows release | `96933399945` | 18m33s | 121/121; pass |
+| Ubuntu devel | `96933399841` | 15m34s | 121/121; pass |
+| Ubuntu release | `96933399867` | 1h1m32s | 121/121; pass |
+| Ubuntu oldrel-1 | `96933399798` | 14m50s | 121/121; pass |
+
+This single fresh run supplies the complete five-cell denominator; no result
+from either failed run was pooled into it. Actions annotations that older
+action versions are being forced from Node.js 20 to Node.js 24 are non-
+blocking workflow-maintenance signals and do not replace or negate any G4
+cell. CORE-06 and G4 therefore close for the fixed-N(0,1) RSM/PCM core.
+
+After adjudication, eight static assertions bind this record to the successful
+run ID, commit SHA, required-cell count, retained Windows harness failure,
+closed public/optional authorization, and the unopened G5 boundary. The
+repository G4 file therefore now has 129 expectations in the same 11 tests.
+Those assertions audit the record and scope boundary; they do not alter or
+retroactively enlarge the 121-expectation numerical/operational denominator
+that passed in each hosted cell above.
 
 After the semantic-components change, a source-tarball
 `R CMD check --no-manual --ignore-vignettes` completed with `Status: OK` under
@@ -147,18 +186,23 @@ payload, not 0.2.4 release evidence. Tarball inspection found no `ROADMAP.md`,
 repository-index messages did not alter the check status.
 
 - `CORE05Complete=TRUE`
-- `CORE06Complete=FALSE`
-- `G4ExitComplete=FALSE`
+- `CORE06Complete=TRUE`
+- `G4ExitComplete=TRUE`
 - `MacOSReleaseNativePreflightComplete=TRUE`
 - `MacOSFirstWorkflowWiringComplete=TRUE`
-- `MacOSReleaseWorkflowComplete=FALSE`
-- `RemainingRequiredWorkflowCells=5`
+- `MacOSReleaseWorkflowComplete=TRUE`
+- `RemainingRequiredWorkflowCells=0`
 - `HostedMacOSAttempt1Retained=TRUE`
 - `HostedMacOSAttempt1DenominatorOpened=FALSE`
+- `HostedWindowsPathHarnessAttemptRetained=TRUE`
+- `HostedWorkflowRun=32534030853`
+- `HostedWorkflowCommit=f492fb9f0ee977777d03f0255de008af33860db5`
+- `HostedWorkflowRequiredCellsPassed=5`
 - `PriorRobustnessClaim=FALSE`
 - `PublicAPIAuthorized=FALSE`
 - `OptionalLaneAuthorized=FALSE`
-- `NextGate=G4-macOS-release-workflow-first`
+- `NextGate=G5-optional-lane-qualification`
 
-G5, including OPT-02 bounded GPCM MML, remains unopened. It cannot inherit the
-fixed-basis RSM/PCM result and must not begin before G4 exit.
+G5, including OPT-02 bounded GPCM MML, is now the next unopened gate. It cannot
+inherit the fixed-basis RSM/PCM result; its own contract, falsifiers, and
+confirmation denominator must be frozen before its results are opened.
