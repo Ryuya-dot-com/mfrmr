@@ -126,6 +126,52 @@ mfrmr_fc_g4h_test_installed_evidence <- function(context, installed_library) {
   )
 }
 
+mfrmr_fc_g4h_repository_review <- function(context, readiness) {
+  required_gates <- c(
+    "source_truth", "public_scope", "evidence_counts", "example_policy",
+    "release_evidence_freshness", "ci_workflow", "terminology",
+    "evidence_artifacts"
+  )
+  gates <- readiness$gate_summary
+  check <- readiness$check_status
+  mfrmr_fc_g4h_assert(
+    is.data.frame(gates) && all(c("Gate", "Status") %in% names(gates)) &&
+      !anyDuplicated(gates$Gate) && all(required_gates %in% gates$Gate),
+    "The repository readiness result lacks the hosted G4 gate registry."
+  )
+  required <- gates[match(required_gates, gates$Gate), , drop = FALSE]
+  mfrmr_fc_g4h_assert(
+    all(required$Status == "ok"),
+    "A repository gate required for hosted G4 evidence is not OK."
+  )
+  check_fields <- c("CheckPassed", "StatusPresent", "VersionMatchesTarget")
+  mfrmr_fc_g4h_assert(
+    is.data.frame(check) && nrow(check) == 1L &&
+      all(check_fields %in% names(check)) &&
+      all(vapply(check[check_fields], isTRUE, logical(1L))),
+    "The exact hosted G4 package check is not successful and version-matched."
+  )
+  deferred <- gates[setdiff(seq_len(nrow(gates)), match(
+    required_gates, gates$Gate
+  )), , drop = FALSE]
+  list(
+    Contract = "mfrmr_fixed_calibration_g4_repository_review_v1",
+    RequiredGates = required,
+    DeferredReleaseGates = deferred,
+    ExactPackageCheckPassed = TRUE,
+    G4RepositoryScopeComplete = TRUE,
+    G6Authorized = FALSE,
+    PublicAPIAuthorized = FALSE,
+    Hash = context$Preflight$mfrmr_fc_g4b_hash(list(
+      RequiredGates = required,
+      ExactPackageCheckPassed = TRUE,
+      G4RepositoryScopeComplete = TRUE,
+      G6Authorized = FALSE,
+      PublicAPIAuthorized = FALSE
+    ))
+  )
+}
+
 mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
   mfrmr_fc_g4h_assert(
     requireNamespace("pkgbuild", quietly = TRUE) &&
@@ -292,9 +338,7 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
     FinishedAtUTC = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS6Z", tz = "UTC")
   )
   receipt <- c(receipt_payload, list(
-    ReceiptHash = digest::digest(
-      receipt_payload, algo = "sha256", serialize = TRUE
-    )
+    ReceiptHash = context$Preflight$mfrmr_fc_g4b_hash(receipt_payload)
   ))
   receipt_path <- file.path(evidence_directory, "hosted-cell-receipt.rds")
   saveRDS(receipt, receipt_path, version = 3)
@@ -329,7 +373,7 @@ mfrmr_fc_g4h_aggregate_main <- function(package_root, evidence_root,
     payload <- receipt[setdiff(names(receipt), "ReceiptHash")]
     identical(
       receipt$ReceiptHash,
-      digest::digest(payload, algo = "sha256", serialize = TRUE)
+      context$Preflight$mfrmr_fc_g4b_hash(payload)
     )
   }, logical(1L))
   ids <- vapply(receipts, `[[`, character(1L), "CellId")
@@ -394,9 +438,7 @@ mfrmr_fc_g4h_aggregate_main <- function(package_root, evidence_root,
     AggregatedAtUTC = format(Sys.time(), "%Y-%m-%dT%H:%M:%OS6Z", tz = "UTC")
   )
   result <- c(payload, list(
-    MatrixReceiptHash = digest::digest(
-      payload, algo = "sha256", serialize = TRUE
-    )
+    MatrixReceiptHash = context$Preflight$mfrmr_fc_g4b_hash(payload)
   ))
   saveRDS(result, output_file, version = 3)
   cat(

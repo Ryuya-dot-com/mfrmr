@@ -69,6 +69,38 @@ g4b_rehash_git_identity <- function(env, identity) {
   identity
 }
 
+test_that("G4 identity hashes use a frozen portable text encoding", {
+  binding <- load_fixed_calibration_g4_candidate_binding()
+  value <- list(
+    alpha = c("Å", "", NA_character_),
+    beta = data.frame(
+      i = c(1L, NA_integer_), ok = c(TRUE, FALSE),
+      stringsAsFactors = FALSE
+    ),
+    gamma = c(0, -0, 0.1, Inf, -Inf, NaN, NA_real_)
+  )
+  expect_identical(
+    binding$env$mfrmr_fc_g4b_hash(value),
+    "de752d512a8e7f9d3aa5af7412882a208295340bed50a0eff1db6b316957ef42"
+  )
+  expect_match(
+    paste(binding$env$mfrmr_fc_g4b_canonical_tokens(value), collapse = "\n"),
+    "atomic_value:1:utf8:c385", fixed = TRUE
+  )
+  expect_error(
+    binding$env$mfrmr_fc_g4b_hash(as.POSIXct("2026-08-25", tz = "UTC")),
+    "unsupported value", fixed = TRUE
+  )
+  lf <- tempfile("g4-lf-")
+  crlf <- tempfile("g4-crlf-")
+  on.exit(unlink(c(lf, crlf)), add = TRUE)
+  writeBin(charToRaw("alpha\nbeta\n"), lf)
+  writeBin(charToRaw("alpha\r\nbeta\r\n"), crlf)
+  lf_observation <- binding$env$mfrmr_fc_g4b_text_file_observation(lf)
+  crlf_observation <- binding$env$mfrmr_fc_g4b_text_file_observation(crlf)
+  expect_identical(lf_observation, crlf_observation)
+})
+
 g4_deterministic_data <- function(n_person, prefix, offset) {
   persons <- sprintf(paste0(prefix, "%03d"), seq_len(n_person))
   raters <- paste0("Judge_", c("A", "B", "C", "D"))
@@ -1196,9 +1228,10 @@ test_that("macOS release gates the four remaining workflow cells", {
   worker <- paste(readLines(file.path(
     ctx$validation, "fixed-calibration-g4-confirmation-worker-0.2.4.R"
   ), warn = FALSE), collapse = "\n")
-  runner <- paste(readLines(file.path(
+  runner_path <- file.path(
     ctx$validation, "fixed-calibration-g4-hosted-runner-0.2.4.R"
-  ), warn = FALSE), collapse = "\n")
+  )
+  runner <- paste(readLines(runner_path, warn = FALSE), collapse = "\n")
   expect_match(workflow, "permissions:\n  contents: read", fixed = TRUE)
   expect_match(workflow, "  macos-release:", fixed = TRUE)
   expect_match(
@@ -1236,6 +1269,12 @@ test_that("macOS release gates the four remaining workflow cells", {
   )
   expect_match(cell, "MFRMR_CHECK_ERROR_ON: warning", fixed = TRUE)
   expect_match(cell, "Repository validation review", fixed = TRUE)
+  expect_match(
+    cell, "mfrmr_fc_g4h_repository_review", fixed = TRUE
+  )
+  expect_match(
+    cell, "G6 and public API remain", fixed = TRUE
+  )
   expect_false(grepl("pkgload::load_all", cell, fixed = TRUE))
   expect_match(cell, "Upload bound G4 cell receipt", fixed = TRUE)
   expect_match(cell, "hosted-cell-receipt.rds", fixed = TRUE)
@@ -1267,6 +1306,58 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(runner, "HostedPlatformMatrixComplete = TRUE", fixed = TRUE)
   expect_match(runner, "G6Authorized = FALSE", fixed = TRUE)
   expect_match(runner, "PublicAPIAuthorized = FALSE", fixed = TRUE)
+  expect_false(grepl("serialize = TRUE", runner, fixed = TRUE))
+
+  binding <- load_fixed_calibration_g4_candidate_binding()
+  runner_env <- new.env(parent = globalenv())
+  sys.source(runner_path, envir = runner_env)
+  gate_names <- c(
+    "version_contract", "source_truth", "candidate_identity",
+    "gate_results", "public_scope", "claim_disposition",
+    "evidence_counts", "package_check", "check_timing", "example_policy",
+    "release_evidence_freshness", "ci_workflow", "terminology",
+    "evidence_artifacts"
+  )
+  release_only <- c(
+    "version_contract", "claim_disposition", "package_check", "check_timing"
+  )
+  readiness <- list(
+    gate_summary = data.frame(
+      Gate = gate_names,
+      Status = ifelse(gate_names %in% release_only, "concern", "ok"),
+      stringsAsFactors = FALSE
+    ),
+    check_status = data.frame(
+      CheckPassed = TRUE, StatusPresent = TRUE,
+      VersionMatchesTarget = TRUE, AsCRAN = FALSE,
+      ManualChecked = FALSE, RunDonttest = FALSE
+    )
+  )
+  review <- runner_env$mfrmr_fc_g4h_repository_review(
+    list(Preflight = binding$env), readiness
+  )
+  expect_true(review$G4RepositoryScopeComplete)
+  expect_false(review$G6Authorized)
+  expect_false(review$PublicAPIAuthorized)
+  expect_identical(nrow(review$RequiredGates), 8L)
+  bad_gate <- readiness
+  bad_gate$gate_summary$Status[
+    bad_gate$gate_summary$Gate == "terminology"
+  ] <- "concern"
+  expect_error(
+    runner_env$mfrmr_fc_g4h_repository_review(
+      list(Preflight = binding$env), bad_gate
+    ),
+    "required for hosted G4 evidence", fixed = TRUE
+  )
+  bad_check <- readiness
+  bad_check$check_status$CheckPassed <- FALSE
+  expect_error(
+    runner_env$mfrmr_fc_g4h_repository_review(
+      list(Preflight = binding$env), bad_check
+    ),
+    "package check is not successful", fixed = TRUE
+  )
 
   protocol <- new.env(parent = globalenv())
   source(
@@ -1275,6 +1366,24 @@ test_that("macOS release gates the four remaining workflow cells", {
   )
   status <- protocol$mfrmr_release_readiness_ci_workflow_status(workflow_path)
   expect_true(status$CIWorkflowOK)
+})
+
+test_that("hosted post-receipt review failure remains below matrix completion", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-hosted-run-32821105381-record-0.2.4.md"
+  )
+  expect_true(file.exists(path))
+  record <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_match(record, "`HostedCurrentWorkerInvoked=TRUE`", fixed = TRUE)
+  expect_match(record, "`PassedCells=49`", fixed = TRUE)
+  expect_match(record, "`FailedCells=0`", fixed = TRUE)
+  expect_match(record, "`ResourceScalesPassed=3`", fixed = TRUE)
+  expect_match(record, "`HostedCellReceiptCreated=TRUE`", fixed = TRUE)
+  expect_match(record, "`HostedPlatformMatrixComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
 })
 
 test_that("historical G4 close is retained while current-source G4 is reopened", {

@@ -4,11 +4,99 @@
 # the prospective contract, and an optional source tarball. It neither changes
 # Git nor builds, installs, tests, scores, checkpoints, or opens confirmation.
 
+mfrmr_fc_g4b_canonical_tokens <- function(value) {
+  encode_character <- function(item) {
+    if (is.na(item)) return("NA")
+    bytes <- charToRaw(enc2utf8(item))
+    paste0("utf8:", paste(sprintf("%02x", as.integer(bytes)), collapse = ""))
+  }
+  encode_atomic <- function(item) {
+    type <- typeof(item)
+    encoded <- switch(
+      type,
+      character = vapply(item, encode_character, character(1L)),
+      logical = ifelse(is.na(item), "NA", ifelse(item, "TRUE", "FALSE")),
+      integer = ifelse(is.na(item), "NA", as.character(item)),
+      double = vapply(item, function(number) {
+        if (is.na(number) && !is.nan(number)) return("NA")
+        if (is.nan(number)) return("NaN")
+        if (is.infinite(number)) {
+          return(if (number > 0) "Inf" else "-Inf")
+        }
+        sprintf("%a", number)
+      }, character(1L)),
+      raw = sprintf("%02x", as.integer(item)),
+      stop("The G4 canonical hash received an unsupported atomic type.",
+           call. = FALSE)
+    )
+    c(
+      paste0("atomic_type:", type),
+      paste0("atomic_length:", length(item)),
+      "atomic_names_begin",
+      if (is.null(names(item))) "names:null" else
+        mfrmr_fc_g4b_canonical_tokens(names(item)),
+      "atomic_names_end",
+      paste0("atomic_value:", seq_along(encoded), ":", encoded)
+    )
+  }
+
+  if (is.null(value)) return("null")
+  if (is.data.frame(value)) {
+    columns <- unlist(lapply(seq_along(value), function(index) {
+      c(
+        paste0("data_frame_column_begin:", index),
+        mfrmr_fc_g4b_canonical_tokens(value[[index]]),
+        paste0("data_frame_column_end:", index)
+      )
+    }), use.names = FALSE)
+    return(c(
+      "data_frame_v1", paste0("rows:", nrow(value)),
+      paste0("columns:", ncol(value)), "column_names_begin",
+      mfrmr_fc_g4b_canonical_tokens(names(value)), "column_names_end",
+      "row_names_begin",
+      mfrmr_fc_g4b_canonical_tokens(rownames(value)), "row_names_end",
+      columns
+    ))
+  }
+  if (is.factor(value)) {
+    return(c(
+      "factor_v1", paste0("ordered:", is.ordered(value)),
+      "levels_begin", mfrmr_fc_g4b_canonical_tokens(levels(value)),
+      "levels_end", "codes_begin",
+      mfrmr_fc_g4b_canonical_tokens(unclass(value)), "codes_end"
+    ))
+  }
+  if (is.list(value)) {
+    items <- unlist(lapply(seq_along(value), function(index) {
+      c(
+        paste0("list_item_begin:", index),
+        mfrmr_fc_g4b_canonical_tokens(value[[index]]),
+        paste0("list_item_end:", index)
+      )
+    }), use.names = FALSE)
+    return(c(
+      "list_v1", paste0("length:", length(value)), "list_names_begin",
+      if (is.null(names(value))) "names:null" else
+        mfrmr_fc_g4b_canonical_tokens(names(value)),
+      "list_names_end", items
+    ))
+  }
+  if (is.object(value)) {
+    stop("The G4 canonical hash received an unsupported value.", call. = FALSE)
+  }
+  if (is.atomic(value) && is.null(dim(value))) return(encode_atomic(value))
+  stop("The G4 canonical hash received an unsupported value.", call. = FALSE)
+}
+
 mfrmr_fc_g4b_hash <- function(value) {
   if (!requireNamespace("digest", quietly = TRUE)) {
     stop("G4 candidate binding requires `digest`.", call. = FALSE)
   }
-  digest::digest(value, algo = "sha256", serialize = TRUE)
+  canonical <- paste(
+    c("mfrmr_g4_canonical_text_v1", mfrmr_fc_g4b_canonical_tokens(value)),
+    collapse = "\n"
+  )
+  digest::digest(canonical, algo = "sha256", serialize = FALSE)
 }
 
 mfrmr_fc_g4b_file_hash <- function(path) {
@@ -16,6 +104,29 @@ mfrmr_fc_g4b_file_hash <- function(path) {
     stop("A required G4 candidate-binding file is absent.", call. = FALSE)
   }
   digest::digest(file = path, algo = "sha256", serialize = FALSE)
+}
+
+mfrmr_fc_g4b_text_file_observation <- function(path) {
+  if (!file.exists(path) || dir.exists(path)) {
+    stop("A required G4 candidate-binding text file is absent.",
+         call. = FALSE)
+  }
+  size <- file.info(path)$size
+  bytes <- readBin(path, what = "raw", n = size)
+  text <- tryCatch(rawToChar(bytes), error = identity)
+  if (inherits(text, "error")) {
+    stop("A G4 source-identity text file is not canonicalizable.",
+         call. = FALSE)
+  }
+  text <- gsub("\r\n", "\n", text, fixed = TRUE, useBytes = TRUE)
+  text <- gsub("\r", "\n", text, fixed = TRUE, useBytes = TRUE)
+  canonical <- charToRaw(text)
+  list(
+    Bytes = as.numeric(length(canonical)),
+    SHA256 = digest::digest(
+      canonical, algo = "sha256", serialize = FALSE
+    )
+  )
 }
 
 mfrmr_fc_g4b_command <- function(repo_root, arguments) {
@@ -181,10 +292,11 @@ mfrmr_fc_g4b_file_registry <- function(root, paths, role) {
   if (!all(file.exists(full)) || any(dir.exists(full))) {
     stop("The G4 candidate source registry is incomplete.", call. = FALSE)
   }
+  observation <- lapply(full, mfrmr_fc_g4b_text_file_observation)
   data.frame(
     Ordinal = seq_along(paths), Path = paths, Role = role,
-    Bytes = as.numeric(file.info(full)$size),
-    SHA256 = vapply(full, mfrmr_fc_g4b_file_hash, character(1L)),
+    Bytes = vapply(observation, `[[`, numeric(1L), "Bytes"),
+    SHA256 = vapply(observation, `[[`, character(1L), "SHA256"),
     stringsAsFactors = FALSE
   )
 }
@@ -406,9 +518,17 @@ mfrmr_fc_g4b_tarball_observation <- function(
     file.path(package_root, "DESCRIPTION")
   )
   code_rows <- production$Path != "DESCRIPTION"
+  tar_code_hashes <- if (!anyNA(tar_index[code_rows])) {
+    vapply(
+      full[tar_index[code_rows]],
+      function(path) mfrmr_fc_g4b_text_file_observation(path)$SHA256,
+      character(1L)
+    )
+  } else {
+    character()
+  }
   code_matches <- !anyNA(tar_index[code_rows]) && identical(
-    unname(registry$SHA256[tar_index[code_rows]]),
-    unname(production$SHA256[code_rows])
+    unname(tar_code_hashes), unname(production$SHA256[code_rows])
   )
   boundary_matches <- code_matches && isTRUE(description_semantics$Match)
   list(

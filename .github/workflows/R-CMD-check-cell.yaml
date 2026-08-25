@@ -84,6 +84,11 @@ jobs:
       - name: Repository validation review
         run: |
           source("inst/validation/release-readiness.R")
+          hosted <- new.env(parent = globalenv())
+          sys.source(
+            "inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R",
+            envir = hosted
+          )
           tarball <- list.files(
             "validation-results/g4-hosted",
             pattern = "^mfrmr_[0-9.]+[.]tar[.]gz$", full.names = TRUE
@@ -99,7 +104,14 @@ jobs:
             tarball = tarball
           )
           print(summary(readiness))
-          if (any(readiness$gate_summary$Status == "concern", na.rm = TRUE)) {
-            stop("Repository validation review has concern rows.", call. = FALSE)
-          }
+          context <- hosted$mfrmr_fc_g4h_context(".")
+          g4_review <- hosted$mfrmr_fc_g4h_repository_review(
+            context, readiness
+          )
+          print(g4_review$RequiredGates, row.names = FALSE)
+          cat(
+            "Hosted G4 repository scope complete; G6 and public API remain ",
+            "unauthorized.\n",
+            sep = ""
+          )
         shell: Rscript {0}

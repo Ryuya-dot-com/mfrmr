@@ -2177,6 +2177,16 @@ required children are checked.
     dedicated dependency transport was active, but the exact installed-library
     binding occurred after the static fresh-process test. Move that binding
     before static execution and guard the source order mechanically.
+  - [x] Retain candidate `a2ced01` as the first completed hosted macOS receipt:
+    exact tarball check, installed-package static evidence, 49/49 current cells,
+    and 3/3 resource scales passed. The later repository review incorrectly
+    applied CRAN-candidate gates to the development-only G4 lane, so the four
+    dependent cells remained closed.
+  - [x] Replace R-object serialization hashes in the cross-version G4 identity
+    path with a frozen canonical UTF-8/text encoding. The same clean `a2ced01`
+    source produced different production/support registry hashes locally and on
+    hosted macOS because serialized objects embed runtime-version metadata;
+    cross-R receipt aggregation must not depend on that representation.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.
