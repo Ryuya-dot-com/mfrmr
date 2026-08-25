@@ -1292,7 +1292,27 @@ mfrmr_fc_g4w_load_installed <- function() {
   installed_library <- normalizePath(
     installed_library, winslash = "/", mustWork = TRUE
   )
-  .libPaths(c(installed_library, .libPaths()))
+  dependency_value <- Sys.getenv(
+    "MFRMR_G4_DEPENDENCY_LIBRARIES", unset = ""
+  )
+  dependency_libraries <- if (nzchar(dependency_value)) {
+    strsplit(
+      dependency_value, .Platform$path.sep, fixed = TRUE
+    )[[1L]]
+  } else {
+    character()
+  }
+  dependency_libraries <- dependency_libraries[
+    nzchar(dependency_libraries) & dir.exists(dependency_libraries)
+  ]
+  if (length(dependency_libraries)) {
+    dependency_libraries <- normalizePath(
+      dependency_libraries, winslash = "/", mustWork = TRUE
+    )
+  }
+  .libPaths(unique(c(
+    installed_library, dependency_libraries, .libPaths()
+  )))
   suppressPackageStartupMessages(library(mfrmr))
   loaded_package_path <- normalizePath(
     find.package("mfrmr"), winslash = "/", mustWork = TRUE

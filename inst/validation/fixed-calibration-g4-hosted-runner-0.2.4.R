@@ -199,14 +199,29 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
     winslash = "/", mustWork = TRUE
   )
   old_r_libs <- Sys.getenv("R_LIBS", unset = NA_character_)
+  old_dependency_libraries <- Sys.getenv(
+    "MFRMR_G4_DEPENDENCY_LIBRARIES", unset = NA_character_
+  )
   on.exit({
     if (is.na(old_r_libs)) {
       Sys.unsetenv("R_LIBS")
     } else {
       Sys.setenv(R_LIBS = old_r_libs)
     }
+    if (is.na(old_dependency_libraries)) {
+      Sys.unsetenv("MFRMR_G4_DEPENDENCY_LIBRARIES")
+    } else {
+      Sys.setenv(
+        MFRMR_G4_DEPENDENCY_LIBRARIES = old_dependency_libraries
+      )
+    }
   }, add = TRUE)
   Sys.setenv(R_LIBS = paste(child_libraries, collapse = .Platform$path.sep))
+  Sys.setenv(
+    MFRMR_G4_DEPENDENCY_LIBRARIES = paste(
+      child_libraries, collapse = .Platform$path.sep
+    )
+  )
   static <- mfrmr_fc_g4h_test_installed_evidence(
     context, installed_library
   )

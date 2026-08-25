@@ -2169,6 +2169,10 @@ required children are checked.
     static fresh-process test because a `--vanilla` child could not see
     setup-r's dependency library; all four dependent cells and aggregation
     were correctly skipped.
+  - [x] Retain candidate `12596f5` as a second pre-worker hosted failure:
+    standard `R_LIBS` alone did not survive the static `--vanilla` worker's
+    library reconstruction. Replace implicit startup inheritance with a
+    dedicated, validated platform-separated dependency-library transport.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

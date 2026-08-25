@@ -523,10 +523,16 @@ test_that("local v4 success and hosted pre-worker failure stay distinct", {
     ctx$validation,
     "fixed-calibration-g4-hosted-run-32815204590-record-0.2.4.md"
   )
+  hosted2_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-hosted-run-32818900492-record-0.2.4.md"
+  )
   expect_true(file.exists(local_path))
   expect_true(file.exists(hosted_path))
+  expect_true(file.exists(hosted2_path))
   local <- paste(readLines(local_path, warn = FALSE), collapse = "\n")
   hosted <- paste(readLines(hosted_path, warn = FALSE), collapse = "\n")
+  hosted2 <- paste(readLines(hosted2_path, warn = FALSE), collapse = "\n")
   expect_match(local, "`PassedCells=49`", fixed = TRUE)
   expect_match(local, "`FailedCells=0`", fixed = TRUE)
   expect_match(local, "`ResourceScalesPassed=3`", fixed = TRUE)
@@ -540,6 +546,12 @@ test_that("local v4 success and hosted pre-worker failure stay distinct", {
   expect_match(hosted, "`DependentPlatformJobsSkipped=TRUE`", fixed = TRUE)
   expect_match(hosted, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
   expect_match(hosted, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(hosted2, "`ExactTarballCheckStatus=OK`", fixed = TRUE)
+  expect_match(hosted2, "`HostedCurrentWorkerInvoked=FALSE`", fixed = TRUE)
+  expect_match(hosted2, "`HostedCellReceiptCreated=FALSE`", fixed = TRUE)
+  expect_match(hosted2, "`DependentPlatformJobsSkipped=TRUE`", fixed = TRUE)
+  expect_match(hosted2, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
+  expect_match(hosted2, "`G4ExitComplete=FALSE`", fixed = TRUE)
 })
 
 test_that("G4 candidate binding observes source identities and stays closed", {
@@ -1217,12 +1229,19 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(cell, "hosted-cell-receipt.rds", fixed = TRUE)
   expect_match(worker, "winslash = \"/\"", fixed = TRUE)
   expect_match(worker, "tolower(loaded_library_path)", fixed = TRUE)
+  expect_match(
+    worker, "MFRMR_G4_DEPENDENCY_LIBRARIES", fixed = TRUE
+  )
+  expect_match(worker, ".Platform$path.sep", fixed = TRUE)
   expect_match(runner, "pkgbuild::build(", fixed = TRUE)
   expect_match(runner, "rcmdcheck::rcmdcheck(", fixed = TRUE)
   expect_match(runner, "path = tarball", fixed = TRUE)
   expect_match(runner, "error_on = \"warning\"", fixed = TRUE)
   expect_match(runner, "Sys.setenv(R_LIBS =", fixed = TRUE)
   expect_match(runner, "collapse = .Platform$path.sep", fixed = TRUE)
+  expect_match(
+    runner, "MFRMR_G4_DEPENDENCY_LIBRARIES = paste(", fixed = TRUE
+  )
   expect_match(runner, "hosted-cell-receipt.rds", fixed = TRUE)
   expect_match(runner, "HostedPlatformMatrixComplete = TRUE", fixed = TRUE)
   expect_match(runner, "G6Authorized = FALSE", fixed = TRUE)
