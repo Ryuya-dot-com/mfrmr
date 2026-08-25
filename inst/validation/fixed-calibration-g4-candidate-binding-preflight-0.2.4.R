@@ -237,11 +237,18 @@ mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
     "inst/validation/fixed-calibration-g4-current-source-contract-0.2.4.R",
     "inst/validation/fixed-calibration-g4-confirmation-worker-0.2.4.R",
     "tests/testthat/test-fixed-calibration-g4-evidence.R",
-    "inst/validation/fixed-calibration-g4-candidate-binding-preflight-0.2.4.R"
+    "inst/validation/fixed-calibration-g4-candidate-binding-preflight-0.2.4.R",
+    "inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R",
+    ".github/workflows/R-CMD-check-cell.yaml",
+    ".github/workflows/R-CMD-check.yaml"
   )
   support <- mfrmr_fc_g4b_file_registry(
     repo_root, support_paths,
-    c("contract", "confirmation_worker", "confirmation_test", "binding_preflight")
+    c(
+      "contract", "confirmation_worker", "confirmation_test",
+      "binding_preflight", "hosted_runner", "hosted_cell_workflow",
+      "hosted_matrix_workflow"
+    )
   )
   worker_path <- file.path(
     repo_root, "inst", "validation",
@@ -454,7 +461,8 @@ mfrmr_fc_g4b_manifest <- function(
       "GitCommitSHA40", "GitTreeClean", "PackageVersion",
       "SourceTarballSHA256", "SourceTarballFileRegistrySHA256",
       "ProductionBoundaryRegistrySHA256", "ConfirmationWorkerSHA256",
-      "ConfirmationTestSHA256", "ContractSHA256"
+      "ConfirmationTestSHA256", "ContractSHA256", "HostedRunnerSHA256",
+      "HostedCellWorkflowSHA256", "HostedMatrixWorkflowSHA256"
     ),
     Value = c(
       git_identity$HeadCommit,
@@ -463,7 +471,9 @@ mfrmr_fc_g4b_manifest <- function(
       tar_observation$FileRegistryHash,
       registries$ProductionRegistryHash,
       support_hash("confirmation_worker"),
-      support_hash("confirmation_test"), support_hash("contract")
+      support_hash("confirmation_test"), support_hash("contract"),
+      support_hash("hosted_runner"), support_hash("hosted_cell_workflow"),
+      support_hash("hosted_matrix_workflow")
     ),
     Required = TRUE,
     stringsAsFactors = FALSE

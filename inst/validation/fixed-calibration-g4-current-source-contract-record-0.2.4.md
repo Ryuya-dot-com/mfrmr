@@ -2,8 +2,8 @@
 
 Status: `rules_frozen_candidate_unbound_confirmation_unopened`, 2026-08-25.
 
-- Specification: `0.2.4-fixed-calibration-g4-current-source-boundary-evidence-v3`
-- Contract: `mfrmr_fixed_calibration_g4_current_source_evidence_v3`
+- Specification: `0.2.4-fixed-calibration-g4-current-source-boundary-evidence-v4`
+- Contract: `mfrmr_fixed_calibration_g4_current_source_evidence_v4`
 - Rules frozen before current-source execution: `TRUE`
 - Current disjoint fixture identities frozen: `TRUE`
 - Current execution opened: `FALSE`
@@ -22,19 +22,21 @@ pool, or reinterpret that result. It prospectively defines the evidence that
 the hardened current source must produce before CORE-05, CORE-06, and G4 can
 close again.
 
-The v2 current-source execution at commit `53f5f21` is also immutable and is
-retained separately. It returned all 49 rows, with 44 passes and five worker-
-specification failures. Because the worker decision logic must change after
-that result was viewed, modular-1009/default and modular-1013/source-one are
-consumed and cannot authorize a later decision. This v3 contract is a new
-prospective boundary, not a retry or reinterpretation of v2.
+The v2 and v3 current-source executions at commits `53f5f21` and `7afff78`
+are also immutable and retained separately. They returned 44/49 and 48/49
+passes, respectively, with complete failure rows. Because worker decision
+logic changed after each result was viewed, modular-1009/1013 and modular-
+1019/1021 are consumed and cannot authorize a later decision. This v4
+contract is a new prospective boundary, not a retry or reinterpretation of an
+earlier result.
 
 The contract is frozen before binding a candidate commit or opening any
 current execution result. Candidate binding requires a clean 40-character Git
 commit, package version, source-tarball and file-registry hashes, production-
-boundary registry hash, worker and test hashes, and this contract's hash. No
-current-source result may be inspected as confirmatory evidence until all nine
-fields are bound to one candidate.
+boundary registry hash, worker and test hashes, this contract's hash, and the
+hosted runner plus both workflow hashes. No current-source result may be
+inspected as confirmatory evidence until all twelve fields are bound to one
+candidate.
 
 ## Scoring basis and disjoint identities
 
@@ -45,7 +47,7 @@ Gauss--Hermite nodes and the minimum permitted scoring order is two.
 Four new authoritative identities are frozen: RSM and PCM default-31
 confirmations fitted with 13 integration nodes, plus RSM and PCM adversaries
 whose source fits use one integration node but whose portable scoring basis
-uses 31 nodes. Their modular-1019 and modular-1021 generators, changed Person
+uses 31 nodes. Their modular-1031 and modular-1033 generators, changed Person
 counts, new offsets, and new calibration/fixture identifiers are disjoint from
 both the consumed v2 identities and the historical modular-997 fixtures.
 
@@ -87,9 +89,14 @@ cell.
 
 After candidate binding, the next step is an isolated source-tarball execution
 of all 49 cells, ordinary package tests, examples, vignettes, release-
-readiness, and R CMD check against that same installed payload. Hosted macOS R
-release must then pass first. Only then may Windows release and Linux devel,
-release, and oldrel-1 run for the exact same commit.
+readiness, and R CMD check against that same installed payload. The bound
+hosted runner builds each platform's tarball once, binds it, checks that exact
+file, and executes the worker against the package retained by that check.
+Hosted macOS R release must pass first. Only then may Windows release and Linux
+devel, release, and oldrel-1 run for the exact same commit. A separate
+aggregation job must retain five complete receipts with a common commit,
+production-boundary registry, and support registry before hosted completion is
+recorded.
 
 The 31-node small, medium, and operationally plausible resource ceilings are
 regression limits, not public throughput promises. G6 and public API promotion
@@ -100,6 +107,10 @@ remain closed until the complete current-source result is recorded.
 - `SupersededV2PassedCells=44`
 - `SupersededV2FailedCells=5`
 - `SupersededV2IdentityReuseAuthorized=FALSE`
+- `SupersededV3ExecutionRetained=TRUE`
+- `SupersededV3PassedCells=48`
+- `SupersededV3FailedCells=1`
+- `SupersededV3IdentityReuseAuthorized=FALSE`
 - `AmendedG4CurrentExecutionOpened=FALSE`
 - `AmendedG4CandidateBound=FALSE`
 - `AmendedG4DenominatorCells=49`
@@ -107,6 +118,9 @@ remain closed until the complete current-source result is recorded.
 - `ConfirmationWorkerExactDenominatorImplemented=TRUE`
 - `ConfirmationWorkerDeclaredCells=49`
 - `ConfirmationWorkerExecutionOpened=FALSE`
+- `CandidateBindingFields=12`
+- `HostedExecutionRunnerBound=TRUE`
+- `HostedMatrixAggregatorBound=TRUE`
 - `HistoricalNineNodeControlAuthorizesCurrentG4=FALSE`
 - `CORE05Complete=FALSE`
 - `CORE06Complete=FALSE`

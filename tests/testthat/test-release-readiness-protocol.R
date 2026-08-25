@@ -2589,6 +2589,50 @@ test_that("release-readiness follows local reusable CI workflows", {
   expect_false(traversal$CIWorkflowOK)
 })
 
+test_that("release-readiness accepts an exact bound-tarball check runner", {
+  protocol <- release_readiness_protocol_path()
+  env <- new.env(parent = globalenv())
+  source(protocol, local = env)
+
+  root <- tempfile("pkg")
+  workflow_dir <- file.path(root, ".github", "workflows")
+  dir.create(workflow_dir, recursive = TRUE)
+  workflow <- file.path(workflow_dir, "R-CMD-check.yaml")
+  cell <- file.path(workflow_dir, "R-CMD-check-cell.yaml")
+  writeLines(c(
+    "name: R-CMD-check",
+    "on:",
+    "  push:",
+    "    branches: [main, 'development/**']",
+    "matrix: [macos-latest, windows-latest, ubuntu-latest, devel, release, oldrel-1]",
+    "uses: ./.github/workflows/R-CMD-check-cell.yaml"
+  ), workflow)
+  writeLines(c(
+    "on: workflow_call",
+    "- name: Exact bound-tarball R CMD check and G4 evidence",
+    "  env:",
+    "    MFRMR_CHECK_ERROR_ON: warning",
+    "  run: Rscript --vanilla inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R cell . evidence",
+    "- name: Upload check results",
+    "  uses: actions/upload-artifact@v4",
+    "  with:",
+    "    path: check",
+    "- name: Repository validation review",
+    "  run: mfrmr_release_readiness_review(pkg_dir = \".\")"
+  ), cell)
+
+  status <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_true(status$PackageCheckStepPresent)
+  expect_true(status$WarningsAreFailures)
+  expect_true(status$CIWorkflowOK)
+
+  lines <- readLines(cell, warn = FALSE)
+  writeLines(lines[!grepl("MFRMR_CHECK_ERROR_ON", lines, fixed = TRUE)], cell)
+  missing_policy <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_false(missing_policy$WarningsAreFailures)
+  expect_false(missing_policy$CIWorkflowOK)
+})
+
 test_that("release-readiness protocol checks source-truth alignment", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())

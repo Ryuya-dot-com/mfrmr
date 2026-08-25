@@ -135,17 +135,17 @@ mfrmr_fc_g4w_fixture <- function(family, role, design) {
   ]
   mfrmr_fc_g4w_assert(nrow(row) == 1L, "Frozen fixture identity is missing.")
   if (identical(role, "current_default31_confirmation")) {
-    modulus <- 1019L
+    modulus <- 1031L
     source_prefix <- paste0("G4D31", substr(family, 1L, 1L), "S")
     confirmation_prefix <- paste0("G4D31", substr(family, 1L, 1L), "C")
-    source_offset <- 191L
-    confirmation_offset <- 773L
+    source_offset <- 227L
+    confirmation_offset <- 887L
   } else if (identical(role, "one_node_source_fit_adversary")) {
-    modulus <- 1021L
+    modulus <- 1033L
     source_prefix <- paste0("G4S01", substr(family, 1L, 1L), "S")
     confirmation_prefix <- paste0("G4S01", substr(family, 1L, 1L), "C")
-    source_offset <- 347L
-    confirmation_offset <- 829L
+    source_offset <- 389L
+    confirmation_offset <- 941L
   } else {
     modulus <- 997L
     source_prefix <- paste0("G4H09", substr(family, 1L, 1L), "S")
@@ -813,13 +813,16 @@ mfrmr_fc_g4w_current_handlers <- function(contract_environment,
       abs(wide$Estimate - baseline$Estimate)
     )
     threshold <- tolerance("PRIOR_SENSITIVITY_REVIEW")
-    mfrmr_fc_g4w_assert(
-      is.finite(sensitivity) && sensitivity >= threshold,
-      "Prior-sensitivity review threshold was not reached."
-    )
+    mfrmr_fc_g4w_assert(is.finite(sensitivity),
+                        "Prior-sensitivity result is non-finite.")
+    disposition <- if (sensitivity >= threshold) {
+      "material review retained; no robustness claim"
+    } else {
+      "below material-review trigger; no robustness claim"
+    }
     mfrmr_fc_g4w_observation(
       "maximum absolute EAP sensitivity", sensitivity, threshold,
-      "material review retained; no robustness claim"
+      disposition
     )
   }
   handlers[["CORRUPT_COORDINATE_LOAD_REFUSAL"]] <- function() {

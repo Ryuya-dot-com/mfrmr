@@ -326,6 +326,7 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   review <- ctx$env$mfrmr_fc_g4_current_review()
   identity <- ctx$env$mfrmr_fc_g4_current_scoring_identity()
   design <- ctx$env$mfrmr_fc_g4_current_confirmation_design()
+  rules <- ctx$env$mfrmr_fc_g4_current_numerical_rules()
   denominator <- ctx$env$mfrmr_fc_g4_current_denominator()
   binding <- ctx$env$mfrmr_fc_g4_current_candidate_binding()
   platforms <- ctx$env$mfrmr_fc_g4_current_platform_matrix()
@@ -356,6 +357,10 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   expect_identical(
     identity$Value[identity$Field == "MinimumScoringQuadratureOrder"], "2"
   )
+  expect_identical(
+    rules$Comparison[rules$RuleId == "PRIOR_SENSITIVITY_REVIEW"],
+    "review_if_greater_or_equal"
+  )
   current <- design[design$DisjointCurrentConfirmationAuthority, ]
   control <- design[
     design$EvidenceRole == "historical_explicit9_regression_control", ,
@@ -363,14 +368,14 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   ]
   expect_identical(current$FitQuadratureOrder, c(13L, 13L, 1L, 1L))
   expect_identical(current$ScoringQuadratureOrder, rep(31L, 4L))
-  expect_identical(current$SourcePersons, c(54L, 54L, 46L, 46L))
-  expect_identical(current$ConfirmationPersons, c(9L, 9L, 7L, 7L))
+  expect_identical(current$SourcePersons, c(56L, 56L, 48L, 48L))
+  expect_identical(current$ConfirmationPersons, c(10L, 10L, 8L, 8L))
   expect_identical(current$GeneratorIdentity, c(
-    rep("closed-form-logits-mod1019-v1-no-r-rng", 2L),
-    rep("closed-form-logits-mod1021-v1-no-r-rng", 2L)
+    rep("closed-form-logits-mod1031-v1-no-r-rng", 2L),
+    rep("closed-form-logits-mod1033-v1-no-r-rng", 2L)
   ))
-  expect_true(all(grepl("mod1019|mod1021", current$SourceFixtureId)))
-  expect_true(all(grepl("mod1019|mod1021", current$ConfirmationFixtureId)))
+  expect_true(all(grepl("mod1031|mod1033", current$SourceFixtureId)))
+  expect_true(all(grepl("mod1031|mod1033", current$ConfirmationFixtureId)))
   expect_false(any(current$PreviouslyUsedFixture))
   expect_false(any(current$CurrentExecutionOpened))
   expect_true(all(control$PreviouslyUsedFixture))
@@ -390,7 +395,7 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
     "CHECKPOINT_CROSS_STAGE_REFUSAL",
     "CHECKPOINT_CHECKED_ATOMIC_REPLACEMENT"
   ) %in% denominator$CellId))
-  expect_identical(nrow(binding), 9L)
+  expect_identical(nrow(binding), 12L)
   expect_true(all(binding$RequiredBeforeExecution))
   expect_true(all(is.na(binding$BoundValue)))
   expect_identical(
@@ -474,24 +479,38 @@ test_that("amended G4 worker statically covers every frozen cell exactly", {
   expect_match(source, "nrow(cells) == 49L", fixed = TRUE)
 })
 
-test_that("current-source v2 failure is retained before v3 execution", {
+test_that("consumed current-source failures are retained before v4 execution", {
   ctx <- load_fixed_calibration_g4_current_contract()
-  record_path <- file.path(
+  v2_path <- file.path(
     ctx$validation,
     "fixed-calibration-g4-current-execution-53f5f21-record-0.2.4.md"
   )
-  expect_true(file.exists(record_path))
-  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
-  expect_match(record, "`DenominatorRowsRetained=49`", fixed = TRUE)
-  expect_match(record, "`PassedCells=44`", fixed = TRUE)
-  expect_match(record, "`FailedCells=5`", fixed = TRUE)
-  expect_match(record, "`ResourceScalesPassed=3`", fixed = TRUE)
-  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
-  expect_match(record, "`RetrySameCurrentIdentityAuthorized=FALSE`", fixed = TRUE)
+  v3_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-current-execution-7afff78-record-0.2.4.md"
+  )
+  expect_true(file.exists(v2_path))
+  expect_true(file.exists(v3_path))
+  v2 <- paste(readLines(v2_path, warn = FALSE), collapse = "\n")
+  v3 <- paste(readLines(v3_path, warn = FALSE), collapse = "\n")
+  for (record in list(v2, v3)) {
+    expect_match(record, "`DenominatorRowsRetained=49`", fixed = TRUE)
+    expect_match(record, "`ResourceScalesPassed=3`", fixed = TRUE)
+    expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+    expect_match(
+      record, "`RetrySameCurrentIdentityAuthorized=FALSE`", fixed = TRUE
+    )
+  }
+  expect_match(v2, "`PassedCells=44`", fixed = TRUE)
+  expect_match(v2, "`FailedCells=5`", fixed = TRUE)
+  expect_match(v3, "`PassedCells=48`", fixed = TRUE)
+  expect_match(v3, "`FailedCells=1`", fixed = TRUE)
   design <- ctx$env$mfrmr_fc_g4_current_confirmation_design()
   current <- design[design$DisjointCurrentConfirmationAuthority, , drop = FALSE]
-  expect_false(any(grepl("mod1009|mod1013", current$GeneratorIdentity)))
-  expect_true(all(grepl("mod1019|mod1021", current$GeneratorIdentity)))
+  expect_false(any(grepl(
+    "mod1009|mod1013|mod1019|mod1021", current$GeneratorIdentity
+  )))
+  expect_true(all(grepl("mod1031|mod1033", current$GeneratorIdentity)))
 })
 
 test_that("G4 candidate binding observes source identities and stays closed", {
@@ -500,7 +519,7 @@ test_that("G4 candidate binding observes source identities and stays closed", {
   expect_s3_class(manifest, "mfrmr_fc_g4b_manifest")
   expect_silent(ctx$env$mfrmr_fc_g4b_assert_manifest(manifest, ctx$root))
   expect_identical(manifest$ProspectiveContract,
-                   "mfrmr_fixed_calibration_g4_current_source_evidence_v3")
+                   "mfrmr_fixed_calibration_g4_current_source_evidence_v4")
   expect_true(manifest$ObservedGitIdentity$GitAvailable)
   expect_true(manifest$GitIdentityMatchesLive)
   expect_identical(nrow(manifest$ProductionRegistry), 5L)
@@ -509,7 +528,12 @@ test_that("G4 candidate binding observes source identities and stays closed", {
     "R/api-export-bundles.R", "R/core-optimizer.R", "DESCRIPTION"
   ))
   expect_true(all(nchar(manifest$ProductionRegistry$SHA256) == 64L))
-  expect_identical(nrow(manifest$SupportRegistry), 4L)
+  expect_identical(nrow(manifest$SupportRegistry), 7L)
+  expect_identical(manifest$SupportRegistry$Role, c(
+    "contract", "confirmation_worker", "confirmation_test",
+    "binding_preflight", "hosted_runner", "hosted_cell_workflow",
+    "hosted_matrix_workflow"
+  ))
   expect_true(all(nchar(manifest$SupportRegistry$SHA256) == 64L))
   expect_true(manifest$WorkerDenominatorCoverage$Exact)
   expect_identical(
@@ -520,7 +544,11 @@ test_that("G4 candidate binding observes source identities and stays closed", {
     manifest$WorkerDenominatorCoverage$ExpectedCellIds,
     manifest$WorkerDenominatorCoverage$HandlerNames
   )
-  expect_identical(nrow(manifest$Binding), 9L)
+  expect_identical(nrow(manifest$Binding), 12L)
+  expect_true(all(c(
+    "HostedRunnerSHA256", "HostedCellWorkflowSHA256",
+    "HostedMatrixWorkflowSHA256"
+  ) %in% manifest$Binding$Field))
   expect_false(manifest$CandidateBindingComplete)
   expect_false(manifest$IsolatedExecutionAdmissionReady)
   expect_false(manifest$CurrentExecutionOpened)
@@ -1113,6 +1141,9 @@ test_that("macOS release gates the four remaining workflow cells", {
   worker <- paste(readLines(file.path(
     ctx$validation, "fixed-calibration-g4-confirmation-worker-0.2.4.R"
   ), warn = FALSE), collapse = "\n")
+  runner <- paste(readLines(file.path(
+    ctx$validation, "fixed-calibration-g4-hosted-runner-0.2.4.R"
+  ), warn = FALSE), collapse = "\n")
   expect_match(workflow, "permissions:\n  contents: read", fixed = TRUE)
   expect_match(workflow, "  macos-release:", fixed = TRUE)
   expect_match(
@@ -1133,21 +1164,36 @@ test_that("macOS release gates the four remaining workflow cells", {
     2L
   )
   expect_false(grepl("- {os: macos-latest", workflow, fixed = TRUE))
-  expect_match(workflow, "- {os: windows-latest, r: 'release'", fixed = TRUE)
-  expect_match(workflow, "- {os: ubuntu-latest,  r: 'devel'", fixed = TRUE)
-  expect_match(workflow, "- {os: ubuntu-latest,  r: 'release'", fixed = TRUE)
-  expect_match(workflow, "- {os: ubuntu-latest,  r: 'oldrel-1'", fixed = TRUE)
+  expect_match(workflow, "id: windows-release", fixed = TRUE)
+  expect_match(workflow, "id: ubuntu-devel", fixed = TRUE)
+  expect_match(workflow, "id: ubuntu-release", fixed = TRUE)
+  expect_match(workflow, "id: ubuntu-oldrel-1", fixed = TRUE)
+  expect_match(workflow, "  g4-hosted-matrix:", fixed = TRUE)
+  expect_match(workflow, "needs: [macos-release, remaining-platforms]",
+               fixed = TRUE)
+  expect_match(workflow, "Aggregate five bound G4 receipts", fixed = TRUE)
 
   expect_match(cell, "  workflow_call:", fixed = TRUE)
-  expect_match(cell, "r-lib/actions/check-r-package@v2", fixed = TRUE)
+  expect_match(cell, "Exact bound-tarball R CMD check and G4 evidence",
+               fixed = TRUE)
+  expect_match(
+    cell, "fixed-calibration-g4-hosted-runner-0.2.4.R", fixed = TRUE
+  )
+  expect_match(cell, "MFRMR_CHECK_ERROR_ON: warning", fixed = TRUE)
   expect_match(cell, "Repository validation review", fixed = TRUE)
-  expect_match(cell, "Fixed-calibration G4 platform evidence", fixed = TRUE)
   expect_false(grepl("pkgload::load_all", cell, fixed = TRUE))
-  expect_match(cell, "MFRMR_G4_INSTALLED_LIBRARY", fixed = TRUE)
-  expect_match(cell, "find.package(\"mfrmr\")", fixed = TRUE)
-  expect_match(cell, "sum(counts$skipped) > 0L", fixed = TRUE)
+  expect_match(cell, "Upload bound G4 cell receipt", fixed = TRUE)
+  expect_match(cell, "hosted-cell-receipt.rds", fixed = TRUE)
   expect_match(worker, "winslash = \"/\"", fixed = TRUE)
   expect_match(worker, "tolower(loaded_library_path)", fixed = TRUE)
+  expect_match(runner, "pkgbuild::build(", fixed = TRUE)
+  expect_match(runner, "rcmdcheck::rcmdcheck(", fixed = TRUE)
+  expect_match(runner, "path = tarball", fixed = TRUE)
+  expect_match(runner, "error_on = \"warning\"", fixed = TRUE)
+  expect_match(runner, "hosted-cell-receipt.rds", fixed = TRUE)
+  expect_match(runner, "HostedPlatformMatrixComplete = TRUE", fixed = TRUE)
+  expect_match(runner, "G6Authorized = FALSE", fixed = TRUE)
+  expect_match(runner, "PublicAPIAuthorized = FALSE", fixed = TRUE)
 
   protocol <- new.env(parent = globalenv())
   source(

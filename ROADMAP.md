@@ -2152,6 +2152,13 @@ required children are checked.
     observations; do not pool its passes or reuse its opened identities.
   - [x] Freeze disjoint v3 modular-1019/default and modular-1021/source-one
     identities before replacing the five faulty worker handlers.
+  - [x] Retain v3 candidate `7afff78` as an incomplete 48/49 result after the
+    worker misread `review_if_greater_or_equal` as a pass threshold; consume
+    its identities and freeze disjoint v4 modular-1031/1033 replacements.
+  - [x] Bind the hosted transport itself: each platform now builds and binds
+    one tarball, checks that exact file, executes all 49 cells against the
+    check-installed package, uploads a typed receipt, and feeds a five-receipt
+    same-commit/registry aggregation gate.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

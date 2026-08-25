@@ -2301,9 +2301,14 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
     contains,
     logical(1)
   ))
-  package_check <- contains("r-lib/actions/check-r-package@v2")
+  exact_bound_check <- contains(
+    "fixed-calibration-g4-hosted-runner-0.2.4.R"
+  ) && contains("Exact bound-tarball R CMD check")
+  package_check <- contains("r-lib/actions/check-r-package@v2") ||
+    exact_bound_check
   warning_policy <- any(grepl("error-on:", lines, fixed = TRUE) &
-    grepl("warning", lines, fixed = TRUE))
+    grepl("warning", lines, fixed = TRUE)) ||
+    (exact_bound_check && contains("MFRMR_CHECK_ERROR_ON: warning"))
   artifact_upload <- contains("actions/upload-artifact@v4") &&
     any(grepl("check", lines, fixed = TRUE) | grepl("Rcheck", lines, fixed = TRUE))
   readiness_gate <- contains("Repository validation review") &&

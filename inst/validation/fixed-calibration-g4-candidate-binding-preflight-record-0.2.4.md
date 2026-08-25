@@ -7,7 +7,8 @@ Status: `preflight_implemented_live_candidate_unbound`, 2026-08-25.
 The read-only candidate-binding preflight is implemented. It observes the live
 Git commit, tree, branch, complete porcelain status, package version, five-file
 production boundary, prospective contract, confirmation worker, confirmation
-test, and its own implementation. When a source tarball is supplied, it first
+test, its own implementation, the hosted runner, and both hosted workflow
+files. When a source tarball is supplied, it first
 rejects unsafe archive layouts, extracts only into a temporary directory,
 hashes every package file, reads the packaged version, and requires the five
 production files to match the observed repository byte for byte.
@@ -58,6 +59,13 @@ failures, so it did not close G4. The detailed execution record consumes the
 modular-1009 and modular-1013 identities. The next candidate must bind the new
 disjoint v3 contract rather than retry that opened evidence.
 
+Candidate `7afff78aeda811e1e9e87ab9cb7f7cd8de6734e7` then returned all 49
+rows under v3. Forty-eight passed and one failed because the worker interpreted
+the prior-sensitivity material-review trigger as a minimum pass threshold.
+That result and all three resource observations are retained; modular-
+1019/1021 are consumed. The unopened v4 contract uses disjoint modular-
+1031/1033 identities and the correct two-branch review disposition.
+
 Candidate admission now sources the hash-bound worker in a non-executing
 environment. Its declared cell IDs and handler names must both equal the
 frozen 49-row denominator in exact order. A matching file hash alone is not
@@ -73,8 +81,11 @@ The preflight itself performs no Git mutation, build, installation, fit,
 score, replay, checkpoint, package check, or platform action. The admitted
 `c65ad61` audit built and checked a tarball outside the preflight, but opened
 no current confirmation result. The next transition requires a new reviewed
-clean commit containing the complete worker and its matching
-`mfrmr_0.2.4.9000.tar.gz` payload.
+clean commit containing the complete worker, the exact-tarball hosted runner,
+both bound workflows, and its matching `mfrmr_0.2.4.9000.tar.gz` payload. Each
+hosted cell must bind, check, and execute one tarball; the matrix aggregator
+must then reconcile exactly five receipts for one commit and common
+production/support registries.
 
 - `CandidateBindingPreflightImplemented=TRUE`
 - `FirstFullyBoundPreconfirmationCandidate=c65ad6141ed8ab55f01e12ed076c3dd18baff67b`
@@ -86,6 +97,12 @@ clean commit containing the complete worker and its matching
 - `FirstCompleteCurrentExecutionPassedCells=44`
 - `FirstCompleteCurrentExecutionFailedCells=5`
 - `FirstCompleteCurrentExecutionClosedG4=FALSE`
+- `SecondCompleteCurrentExecutionCandidate=7afff78aeda811e1e9e87ab9cb7f7cd8de6734e7`
+- `SecondCompleteCurrentExecutionPassedCells=48`
+- `SecondCompleteCurrentExecutionFailedCells=1`
+- `SecondCompleteCurrentExecutionClosedG4=FALSE`
+- `CurrentCandidateBindingFields=12`
+- `HostedRunnerAndWorkflowsBound=TRUE`
 - `LiveCandidateBindingComplete=FALSE`
 - `LiveSourceTarballBound=FALSE`
 - `SyntheticCleanPromotionAllowed=FALSE`

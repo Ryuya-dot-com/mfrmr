@@ -9,6 +9,10 @@ on:
         description: R version selector understood by setup-r.
         required: true
         type: string
+      cell-id:
+        description: Frozen fixed-calibration G4 platform cell identifier.
+        required: true
+        type: string
       full:
         description: Whether to enable the full NOT_CRAN validation layer.
         required: false
@@ -45,65 +49,57 @@ jobs:
         with:
           # Invalidate compiled-package caches after the runner TBB ABI change.
           cache-version: "2"
-          extra-packages: any::rcmdcheck
+          extra-packages: any::digest, any::pkgbuild, any::rcmdcheck, any::testthat
           needs: check
 
-      - uses: r-lib/actions/check-r-package@v2
-        with:
-          upload-snapshots: true
-          error-on: '"warning"'
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+      - name: Exact bound-tarball R CMD check and G4 evidence
+        env:
+          MFRMR_G4_CELL_ID: ${{ inputs.cell-id }}
+          MFRMR_G4_R_SELECTOR: ${{ inputs.r }}
+          MFRMR_CHECK_ERROR_ON: warning
+        run: |
+          Rscript --vanilla \
+            inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R \
+            cell . validation-results/g4-hosted
+        shell: bash
 
       - name: Upload check results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: r-cmd-check-${{ inputs.os }}-${{ inputs.r }}
+          name: r-cmd-check-${{ inputs.cell-id }}
           path: |
-            check
-            *.Rcheck
+            validation-results/g4-hosted/check
+            validation-results/g4-hosted/worker.log
+          if-no-files-found: ignore
+
+      - name: Upload bound G4 cell receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g4-evidence-${{ inputs.cell-id }}
+          path: validation-results/g4-hosted/hosted-cell-receipt.rds
           if-no-files-found: ignore
 
       - name: Repository validation review
         run: |
           source("inst/validation/release-readiness.R")
-          readiness <- mfrmr_release_readiness_review(pkg_dir = ".")
+          tarball <- list.files(
+            "validation-results/g4-hosted",
+            pattern = "^mfrmr_[0-9.]+[.]tar[.]gz$", full.names = TRUE
+          )
+          if (length(tarball) != 1L) {
+            stop("The bound G4 source tarball is unavailable.", call. = FALSE)
+          }
+          readiness <- mfrmr_release_readiness_review(
+            pkg_dir = ".",
+            check_log = file.path(
+              "validation-results/g4-hosted/check/mfrmr.Rcheck/00check.log"
+            ),
+            tarball = tarball
+          )
           print(summary(readiness))
           if (any(readiness$gate_summary$Status == "concern", na.rm = TRUE)) {
             stop("Repository validation review has concern rows.", call. = FALSE)
-          }
-        shell: Rscript {0}
-
-      - name: Fixed-calibration G4 platform evidence
-        run: |
-          installed_library <- normalizePath(
-            file.path("check", "mfrmr.Rcheck"),
-            winslash = "/",
-            mustWork = TRUE
-          )
-          installed_package <- normalizePath(
-            file.path(installed_library, "mfrmr"),
-            winslash = "/",
-            mustWork = TRUE
-          )
-          .libPaths(c(installed_library, .libPaths()))
-          Sys.setenv(MFRMR_G4_INSTALLED_LIBRARY = installed_library)
-          suppressPackageStartupMessages(library(mfrmr))
-          loaded_package <- normalizePath(
-            find.package("mfrmr"), winslash = "/", mustWork = TRUE
-          )
-          if (!identical(loaded_package, installed_package)) {
-            stop("G4 did not load the package installed by R CMD check.",
-                 call. = FALSE)
-          }
-          result <- testthat::test_file(
-            "tests/testthat/test-fixed-calibration-g4-evidence.R",
-            reporter = "summary"
-          )
-          counts <- as.data.frame(result)
-          if (sum(counts$failed) > 0L || sum(counts$error) > 0L ||
-              sum(counts$warning) > 0L || sum(counts$skipped) > 0L) {
-            stop("The fixed-calibration G4 platform evidence is incomplete.",
-                 call. = FALSE)
           }
         shell: Rscript {0}

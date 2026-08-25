@@ -67,7 +67,8 @@ mfrmr_fc_g4i_classify_path <- function(path) {
       grepl("^inst/extdata/vignette-artifacts/", path)) {
     return("release_public_and_user_facing_surface")
   }
-  if (identical(path, ".Rbuildignore") ||
+  if (grepl("^[.]github/workflows/R-CMD-check(-cell)?[.]yaml$", path) ||
+      identical(path, ".Rbuildignore") ||
       path %in% c(
         "inst/validation/README.md",
         "inst/validation/internal-roadmap-0.2.3.md",
@@ -97,7 +98,9 @@ mfrmr_fc_g4i_package_payload_expected <- function(path, classification) {
     return(!path %in% c("CITATION.cff", "ROADMAP.md"))
   }
   if (classification == "release_build_test_and_repository_evidence") {
-    repository_only <- identical(path, ".Rbuildignore") ||
+    repository_only <-
+      grepl("^[.]github/workflows/R-CMD-check(-cell)?[.]yaml$", path) ||
+      identical(path, ".Rbuildignore") ||
       grepl("^inst/validation/", path) ||
       path %in% c(
         "tests/testthat/test-fixed-calibration-g0-contract.R",
