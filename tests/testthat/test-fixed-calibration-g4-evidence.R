@@ -400,14 +400,14 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   ]
   expect_identical(current$FitQuadratureOrder, c(13L, 13L, 1L, 1L))
   expect_identical(current$ScoringQuadratureOrder, rep(31L, 4L))
-  expect_identical(current$SourcePersons, c(56L, 56L, 48L, 48L))
-  expect_identical(current$ConfirmationPersons, c(10L, 10L, 8L, 8L))
+  expect_identical(current$SourcePersons, c(58L, 58L, 50L, 50L))
+  expect_identical(current$ConfirmationPersons, c(11L, 11L, 9L, 9L))
   expect_identical(current$GeneratorIdentity, c(
-    rep("closed-form-logits-mod1031-v1-no-r-rng", 2L),
-    rep("closed-form-logits-mod1033-v1-no-r-rng", 2L)
+    rep("closed-form-logits-mod1039-v1-no-r-rng", 2L),
+    rep("closed-form-logits-mod1049-v1-no-r-rng", 2L)
   ))
-  expect_true(all(grepl("mod1031|mod1033", current$SourceFixtureId)))
-  expect_true(all(grepl("mod1031|mod1033", current$ConfirmationFixtureId)))
+  expect_true(all(grepl("mod1039|mod1049", current$SourceFixtureId)))
+  expect_true(all(grepl("mod1039|mod1049", current$ConfirmationFixtureId)))
   expect_false(any(current$PreviouslyUsedFixture))
   expect_false(any(current$CurrentExecutionOpened))
   expect_true(all(control$PreviouslyUsedFixture))
@@ -440,7 +440,7 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   ))
 })
 
-test_that("amended G4 contract is prospective and binds its unopened record", {
+test_that("amended G4 v5 contract is prospective and binds its unopened record", {
   ctx <- load_fixed_calibration_g4_current_contract()
   source <- paste(readLines(ctx$script, warn = FALSE), collapse = "\n")
   expect_false(grepl("fit_mfrm\\s*\\(", source, perl = TRUE))
@@ -450,7 +450,7 @@ test_that("amended G4 contract is prospective and binds its unopened record", {
 
   record_path <- file.path(
     ctx$validation,
-    "fixed-calibration-g4-current-source-contract-record-0.2.4.md"
+    "fixed-calibration-g4-current-source-v5-contract-record-0.2.4.md"
   )
   expect_true(file.exists(record_path))
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
@@ -464,12 +464,13 @@ test_that("amended G4 contract is prospective and binds its unopened record", {
   expect_match(
     record, ctx$env$mfrmr_fc_g4_current_specification, fixed = TRUE
   )
-  expect_match(record, "`AmendedG4ContractFrozen=TRUE`", fixed = TRUE)
+  expect_match(record, "`V5ContractFrozen=TRUE`", fixed = TRUE)
   expect_match(
-    record, "`AmendedG4CurrentExecutionOpened=FALSE`", fixed = TRUE
+    record, "`V5CurrentExecutionOpened=FALSE`", fixed = TRUE
   )
-  expect_match(record, "`AmendedG4CandidateBound=FALSE`", fixed = TRUE)
-  expect_match(record, "`AmendedG4DenominatorCells=49`", fixed = TRUE)
+  expect_match(record, "`V5CandidateBound=FALSE`", fixed = TRUE)
+  expect_match(record, "`V5DenominatorCells=49`", fixed = TRUE)
+  expect_match(record, "`V4IdentityReuseAuthorized=FALSE`", fixed = TRUE)
   expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
   expect_match(
     hardening, "`AmendedG4ContractFrozen=TRUE`", fixed = TRUE
@@ -511,7 +512,7 @@ test_that("amended G4 worker statically covers every frozen cell exactly", {
   expect_match(source, "nrow(cells) == 49L", fixed = TRUE)
 })
 
-test_that("consumed current-source failures are retained before v4 execution", {
+test_that("consumed current-source failures are retained before v5 execution", {
   ctx <- load_fixed_calibration_g4_current_contract()
   v2_path <- file.path(
     ctx$validation,
@@ -540,9 +541,31 @@ test_that("consumed current-source failures are retained before v4 execution", {
   design <- ctx$env$mfrmr_fc_g4_current_confirmation_design()
   current <- design[design$DisjointCurrentConfirmationAuthority, , drop = FALSE]
   expect_false(any(grepl(
-    "mod1009|mod1013|mod1019|mod1021", current$GeneratorIdentity
+    "mod1009|mod1013|mod1019|mod1021|mod1031|mod1033",
+    current$GeneratorIdentity
   )))
-  expect_true(all(grepl("mod1031|mod1033", current$GeneratorIdentity)))
+  expect_true(all(grepl("mod1039|mod1049", current$GeneratorIdentity)))
+})
+
+test_that("v4 hosted integration failure is retained below G4 completion", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-hosted-run-32822833138-record-0.2.4.md"
+  )
+  expect_true(file.exists(path))
+  record <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_match(record, "`CompletedHostedCellReceipts=4`", fixed = TRUE)
+  expect_match(
+    record, "`CompletedHostedCellsPassed49Of49=4`", fixed = TRUE
+  )
+  expect_match(
+    record, "`UbuntuReleasePackageSuitePassed=FALSE`", fixed = TRUE
+  )
+  expect_match(record, "`V4ConfirmationIdentityConsumed=TRUE`", fixed = TRUE)
+  expect_match(record, "`V4ReceiptsReusableForV5=FALSE`", fixed = TRUE)
+  expect_match(record, "`HostedPlatformMatrixComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
 })
 
 test_that("local v4 success and hosted pre-worker failure stay distinct", {
@@ -604,13 +627,14 @@ test_that("G4 candidate binding observes source identities and stays closed", {
   expect_s3_class(manifest, "mfrmr_fc_g4b_manifest")
   expect_silent(ctx$env$mfrmr_fc_g4b_assert_manifest(manifest, ctx$root))
   expect_identical(manifest$ProspectiveContract,
-                   "mfrmr_fixed_calibration_g4_current_source_evidence_v4")
+                   "mfrmr_fixed_calibration_g4_current_source_evidence_v5")
   expect_true(manifest$ObservedGitIdentity$GitAvailable)
   expect_true(manifest$GitIdentityMatchesLive)
-  expect_identical(nrow(manifest$ProductionRegistry), 5L)
+  expect_identical(nrow(manifest$ProductionRegistry), 6L)
   expect_identical(manifest$ProductionRegistry$Path, c(
     "R/core-fixed-calibration.R", "R/api-prediction.R",
-    "R/api-export-bundles.R", "R/core-optimizer.R", "DESCRIPTION"
+    "R/api-reference-benchmark.R", "R/api-export-bundles.R",
+    "R/core-optimizer.R", "DESCRIPTION"
   ))
   expect_true(all(nchar(manifest$ProductionRegistry$SHA256) == 64L))
   expect_identical(nrow(manifest$SupportRegistry), 7L)

@@ -14,6 +14,9 @@
   writes use checked same-directory replacement.
 * Portable calibration artifacts now record an explicit scoring algorithm and
   a scoring grid independent of the source fit's integration grid.
+* Latent-regression reference benchmarks no longer attempt Person scoring when
+  their fitted model is not scoring-ready. The posterior-shift check is kept as
+  an explicit unevaluated warning instead of using a review-only score.
 
 # mfrmr 0.2.3
 

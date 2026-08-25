@@ -2187,6 +2187,17 @@ required children are checked.
     source produced different production/support registry hashes locally and on
     hosted macOS because serialized objects embed runtime-version metadata;
     cross-R receipt aggregation must not depend on that representation.
+  - [x] Retain candidate `d37434e` and hosted run `32822833138` without
+    pooling: macOS release, Windows release, Ubuntu devel, and Ubuntu oldrel-1
+    each produced a valid 49/49, 3/3 v4 receipt with common portable
+    production/support identities, while the Ubuntu release full package suite
+    failed before its worker and correctly prevented five-receipt aggregation.
+  - [x] Propagate scoring readiness through the latent-regression reference
+    benchmark: a non-ready benchmark fit leaves posterior shift unevaluated as
+    `Warn` instead of requesting an ordinary or review-only score. Add this
+    public benchmark file to the production registry, consume modular-1031/1033
+    after the four observed v4 receipts, and freeze disjoint modular-1039/1049
+    v5 identities before the next candidate is bound.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

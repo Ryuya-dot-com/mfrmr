@@ -107,6 +107,13 @@ identify whether the opt-in layer ran and retain its test log.
   candidate-binding requirements, and the macOS-first five-cell matrix. The
   contract opens no result and leaves CORE-05, CORE-06, G4, G6, and the public
   API closed until one clean source candidate is bound and executed.
+- `fixed-calibration-g4-hosted-run-32822833138-record-0.2.4.md` and
+  `fixed-calibration-g4-current-source-v5-contract-record-0.2.4.md`: retain the
+  four complete v4 hosted receipts and the Ubuntu full-suite failure that
+  exposed reference-benchmark readiness propagation, then freeze disjoint
+  modular-1039/1049 v5 identities without reusing the four observed v4
+  results. The benchmark repair is included in a six-file production registry;
+  G4, G6, and public promotion remain closed before the v5 rerun.
 - `fixed-calibration-g4-candidate-binding-preflight-0.2.4.R` and
   `fixed-calibration-g4-candidate-binding-preflight-record-0.2.4.md`: implement
   the read-only live-Git and optional source-tarball binding boundary. A second

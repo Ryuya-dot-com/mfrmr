@@ -519,30 +519,51 @@ build_latent_recovery_checks <- function(case_id, fit_obj) {
     Detail = "Criterion recovery is reviewed after centering because the Rasch location origin remains unidentified."
   )
 
-  pred_new <- dplyr::bind_rows(lapply(c("LOW", "HIGH"), function(id) {
-    data.frame(
-      Person = id,
-      Criterion = names(truth$criterion),
-      Score = c(0L, 0L, 0L, 1L, 1L, 1L),
+  scoring_readiness <- prediction_source_scoring_readiness(fit_obj$fit)
+  shift <- NA_real_
+  shift_status <- "Warn"
+  shift_detail <- paste0(
+    "Posterior-shift recovery was not evaluated because the benchmark fit ",
+    "was not scoring-ready (", paste(scoring_readiness$reason_codes,
+                                      collapse = "; "), ")."
+  )
+  if (isTRUE(scoring_readiness$ready)) {
+    pred_new <- dplyr::bind_rows(lapply(c("LOW", "HIGH"), function(id) {
+      data.frame(
+        Person = id,
+        Criterion = names(truth$criterion),
+        Score = c(0L, 0L, 0L, 1L, 1L, 1L),
+        stringsAsFactors = FALSE
+      )
+    }))
+    pred_person <- data.frame(
+      Person = c("LOW", "HIGH"), X = c(-1.5, 1.5),
       stringsAsFactors = FALSE
     )
-  }))
-  pred_person <- data.frame(Person = c("LOW", "HIGH"), X = c(-1.5, 1.5), stringsAsFactors = FALSE)
-  pred_obj <- predict_mfrm_units(
-    fit = fit_obj$fit,
-    new_data = pred_new,
-    person_data = pred_person,
-    n_draws = 0
-  )
-  pred_tbl <- as.data.frame(pred_obj$estimates, stringsAsFactors = FALSE)
-  shift <- with(pred_tbl, Estimate[Person == "HIGH"][1] - Estimate[Person == "LOW"][1])
+    pred_obj <- predict_mfrm_units(
+      fit = fit_obj$fit,
+      new_data = pred_new,
+      person_data = pred_person,
+      n_draws = 0
+    )
+    pred_tbl <- as.data.frame(pred_obj$estimates, stringsAsFactors = FALSE)
+    shift <- with(
+      pred_tbl,
+      Estimate[Person == "HIGH"][1] - Estimate[Person == "LOW"][1]
+    )
+    shift_status <- if (is.finite(shift) && shift > 0) "Pass" else "Fail"
+    shift_detail <- paste(
+      "Posterior scoring for matched response patterns should shift upward",
+      "when the scored covariate value is higher."
+    )
+  }
   shift_row <- tibble::tibble(
     Case = case_id,
     Facet = "Population:posterior_shift",
     Correlation = NA_real_,
     MeanAbsoluteDeviation = NA_real_,
-    Status = if (is.finite(shift) && shift > 0) "Pass" else "Fail",
-    Detail = "Posterior scoring for matched response patterns should shift upward when the scored covariate value is higher."
+    Status = shift_status,
+    Detail = shift_detail
   )
 
   dplyr::bind_rows(dplyr::bind_rows(coeff_rows), sigma_row, criterion_row, shift_row)
@@ -1294,7 +1315,9 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
 #'   categorical-coding details when present).
 #' - `design_checks`: exact design recovery checks for each dataset.
 #' - `recovery_checks`: known-truth recovery metrics for the synthetic cases,
-#'   including the latent-regression reference case.
+#'   including the latent-regression reference case. If a benchmark fit is not
+#'   scoring-ready, its posterior-shift row is retained as `Warn` and is not
+#'   calculated from a review-only score.
 #' - `bias_checks`: source-backed bias/local-measure identity checks.
 #' - `pair_checks`: paired-dataset stability screens for the iterated cases.
 #' - `linking_checks`: common-element reviews for paired calibration datasets.

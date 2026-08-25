@@ -7,9 +7,9 @@
 # benchmark, package build, or subprocess.
 
 mfrmr_fc_g4_current_specification <-
-  "0.2.4-fixed-calibration-g4-current-source-boundary-evidence-v4"
+  "0.2.4-fixed-calibration-g4-current-source-boundary-evidence-v5"
 mfrmr_fc_g4_current_contract <-
-  "mfrmr_fixed_calibration_g4_current_source_evidence_v4"
+  "mfrmr_fixed_calibration_g4_current_source_evidence_v5"
 
 mfrmr_fc_g4_current_scoring_identity <- function() {
   data.frame(
@@ -41,39 +41,39 @@ mfrmr_fc_g4_current_confirmation_design <- function() {
       "historical_explicit9_regression_control"
     ), each = 2L),
     CalibrationId = c(
-      "fc-g4-current-rsm-default31-024-f",
-      "fc-g4-current-pcm-default31-024-f",
-      "fc-g4-current-rsm-source1-024-g",
-      "fc-g4-current-pcm-source1-024-g",
+      "fc-g4-current-rsm-default31-024-h",
+      "fc-g4-current-pcm-default31-024-h",
+      "fc-g4-current-rsm-source1-024-i",
+      "fc-g4-current-pcm-source1-024-i",
       "fc-g4-confirmation-rsm-024-a",
       "fc-g4-confirmation-pcm-024-a"
     ),
     SourceFixtureId = c(
-      "fc-g4-current-source-rsm-mod1031-offset227",
-      "fc-g4-current-source-pcm-mod1031-offset227",
-      "fc-g4-current-source1-rsm-mod1033-offset389",
-      "fc-g4-current-source1-pcm-mod1033-offset389",
+      "fc-g4-current-source-rsm-mod1039-offset271",
+      "fc-g4-current-source-pcm-mod1039-offset271",
+      "fc-g4-current-source1-rsm-mod1049-offset431",
+      "fc-g4-current-source1-pcm-mod1049-offset431",
       "fc-g4-source-rsm-mod997-offset000",
       "fc-g4-source-pcm-mod997-offset000"
     ),
     ConfirmationFixtureId = c(
-      "fc-g4-current-confirm-rsm-mod1031-offset887",
-      "fc-g4-current-confirm-pcm-mod1031-offset887",
-      "fc-g4-current-confirm-source1-rsm-mod1033-offset941",
-      "fc-g4-current-confirm-source1-pcm-mod1033-offset941",
+      "fc-g4-current-confirm-rsm-mod1039-offset919",
+      "fc-g4-current-confirm-pcm-mod1039-offset919",
+      "fc-g4-current-confirm-source1-rsm-mod1049-offset977",
+      "fc-g4-current-confirm-source1-pcm-mod1049-offset977",
       "fc-g4-confirm-rsm-mod997-offset401",
       "fc-g4-confirm-pcm-mod997-offset401"
     ),
-    SourcePersons = c(56L, 56L, 48L, 48L, 48L, 48L),
-    ConfirmationPersons = c(10L, 10L, 8L, 8L, 7L, 7L),
+    SourcePersons = c(58L, 58L, 50L, 50L, 48L, 48L),
+    ConfirmationPersons = c(11L, 11L, 9L, 9L, 7L, 7L),
     Raters = 4L,
     Criteria = 3L,
     Categories = 4L,
     FitQuadratureOrder = c(13L, 13L, 1L, 1L, 9L, 9L),
     ScoringQuadratureOrder = c(31L, 31L, 31L, 31L, 9L, 9L),
     GeneratorIdentity = c(
-      rep("closed-form-logits-mod1031-v1-no-r-rng", 2L),
-      rep("closed-form-logits-mod1033-v1-no-r-rng", 2L),
+      rep("closed-form-logits-mod1039-v1-no-r-rng", 2L),
+      rep("closed-form-logits-mod1049-v1-no-r-rng", 2L),
       rep("historical-closed-form-logits-mod997-v1-no-r-rng", 2L)
     ),
     PreviouslyUsedFixture = c(FALSE, FALSE, FALSE, FALSE, TRUE, TRUE),
@@ -208,11 +208,13 @@ mfrmr_fc_g4_current_production_boundary <- function() {
   data.frame(
     Path = c(
       "R/core-fixed-calibration.R", "R/api-prediction.R",
-      "R/api-export-bundles.R", "R/core-optimizer.R", "DESCRIPTION"
+      "R/api-reference-benchmark.R", "R/api-export-bundles.R",
+      "R/core-optimizer.R", "DESCRIPTION"
     ),
     Boundary = c(
       "portable calibration schema identity and artifact-only scoring",
       "fitted-object scoring grid readiness and input validation",
+      "reference benchmark scoring-readiness propagation",
       "fit and scoring replay completeness",
       "MML-EM checkpoint schema identity stage and iteration control",
       "development release identity"
@@ -281,11 +283,11 @@ mfrmr_fc_g4_current_review <- function() {
     all(!current_design$CurrentExecutionOpened) &&
     identical(current_design$ScoringQuadratureOrder, rep(31L, 4L)) &&
     identical(current_design$FitQuadratureOrder, c(13L, 13L, 1L, 1L)) &&
-    identical(current_design$SourcePersons, c(56L, 56L, 48L, 48L)) &&
-    identical(current_design$ConfirmationPersons, c(10L, 10L, 8L, 8L)) &&
+    identical(current_design$SourcePersons, c(58L, 58L, 50L, 50L)) &&
+    identical(current_design$ConfirmationPersons, c(11L, 11L, 9L, 9L)) &&
     identical(current_design$GeneratorIdentity, c(
-      rep("closed-form-logits-mod1031-v1-no-r-rng", 2L),
-      rep("closed-form-logits-mod1033-v1-no-r-rng", 2L)
+      rep("closed-form-logits-mod1039-v1-no-r-rng", 2L),
+      rep("closed-form-logits-mod1049-v1-no-r-rng", 2L)
     )) &&
     !anyDuplicated(current_design$CalibrationId) &&
     !anyDuplicated(current_design$SourceFixtureId) &&
@@ -301,7 +303,7 @@ mfrmr_fc_g4_current_review <- function() {
     all(denominator$Required) && !any(denominator$CurrentExecutionOpened) &&
     identical(nrow(binding), 12L) && all(binding$RequiredBeforeExecution) &&
     all(is.na(binding$BoundValue)) &&
-    identical(nrow(boundary), 5L) &&
+    identical(nrow(boundary), 6L) &&
     all(boundary$RequiredInCandidateRegistry) &&
     identical(nrow(platforms), 5L) && all(platforms$Required) &&
     identical(platforms$ExecutionOrder[1], "prerequisite_first") &&

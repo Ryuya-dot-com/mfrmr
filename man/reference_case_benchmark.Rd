@@ -89,7 +89,9 @@ latent-regression population-model/posterior-basis fields, including
 categorical-coding details when present).
 \item \code{design_checks}: exact design recovery checks for each dataset.
 \item \code{recovery_checks}: known-truth recovery metrics for the synthetic cases,
-including the latent-regression reference case.
+including the latent-regression reference case. If a benchmark fit is not
+scoring-ready, its posterior-shift row is retained as \code{Warn} and is not
+calculated from a review-only score.
 \item \code{bias_checks}: source-backed bias/local-measure identity checks.
 \item \code{pair_checks}: paired-dataset stability screens for the iterated cases.
 \item \code{linking_checks}: common-element reviews for paired calibration datasets.

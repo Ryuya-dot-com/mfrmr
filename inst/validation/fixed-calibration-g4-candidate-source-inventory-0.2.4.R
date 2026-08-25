@@ -76,6 +76,7 @@ mfrmr_fc_g4i_classify_path <- function(path) {
       ) || grepl("^inst/validation/fixed-calibration-", path) ||
       path %in% c(
         "tests/testthat/test-prediction.R",
+        "tests/testthat/test-reference-benchmark.R",
         "tests/testthat/test-replay-roundtrip.R",
         "tests/testthat/test-resumable-fits.R",
         "tests/testthat/test-gpcm-capability-matrix.R",

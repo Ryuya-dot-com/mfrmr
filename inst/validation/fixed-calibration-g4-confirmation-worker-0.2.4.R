@@ -135,17 +135,17 @@ mfrmr_fc_g4w_fixture <- function(family, role, design) {
   ]
   mfrmr_fc_g4w_assert(nrow(row) == 1L, "Frozen fixture identity is missing.")
   if (identical(role, "current_default31_confirmation")) {
-    modulus <- 1031L
-    source_prefix <- paste0("G4D31", substr(family, 1L, 1L), "S")
-    confirmation_prefix <- paste0("G4D31", substr(family, 1L, 1L), "C")
-    source_offset <- 227L
-    confirmation_offset <- 887L
+    modulus <- 1039L
+    source_prefix <- paste0("G4V5D31", substr(family, 1L, 1L), "S")
+    confirmation_prefix <- paste0("G4V5D31", substr(family, 1L, 1L), "C")
+    source_offset <- 271L
+    confirmation_offset <- 919L
   } else if (identical(role, "one_node_source_fit_adversary")) {
-    modulus <- 1033L
-    source_prefix <- paste0("G4S01", substr(family, 1L, 1L), "S")
-    confirmation_prefix <- paste0("G4S01", substr(family, 1L, 1L), "C")
-    source_offset <- 389L
-    confirmation_offset <- 941L
+    modulus <- 1049L
+    source_prefix <- paste0("G4V5S01", substr(family, 1L, 1L), "S")
+    confirmation_prefix <- paste0("G4V5S01", substr(family, 1L, 1L), "C")
+    source_offset <- 431L
+    confirmation_offset <- 977L
   } else {
     modulus <- 997L
     source_prefix <- paste0("G4H09", substr(family, 1L, 1L), "S")
