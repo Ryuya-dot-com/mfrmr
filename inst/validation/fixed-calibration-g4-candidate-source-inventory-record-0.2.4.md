@@ -1,6 +1,6 @@
 # Fixed-calibration G4 candidate-source inventory record
 
-Status: `research_history_committed_release_history_unstaged`, 2026-08-25.
+Status: `research_and_release_history_committed_tarball_unbound`, 2026-08-25.
 
 ## Decision
 
@@ -41,7 +41,8 @@ replay, checkpoint, fixed-calibration, and GPCM boundary group contributed 102
 tests; the three CRAN-skipped GPCM helpers were explicitly rerun under
 `NOT_CRAN=true`; and the repository release-readiness protocol contributed 40
 tests and 794 expectations. No source tarball was built, installed, or used
-for confirmation at this stage.
+for confirmation at this stage. The exact 42-path release lane was then
+audited for zero research-path contamination and committed as `6ac8273`.
 
 - `AllLiveChangesClassified=TRUE`
 - `UnknownPathCount=0`
@@ -52,16 +53,18 @@ for confirmation at this stage.
 - `ResearchHistoryPathCount=103`
 - `ResearchHistoryReleasePathContamination=0`
 - `ReleaseHistoryPathCount=42`
+- `ReleaseHistoryCommit=6ac8273`
+- `ReleaseHistoryResearchPathContamination=0`
 - `ReleaseFocusedTests=142`
 - `ReleaseFocusedExpectations=1715`
 - `ReleaseFocusedFailures=0`
 - `ReleaseFocusedErrors=0`
 - `ReleaseFocusedWarnings=0`
 - `ReleaseFocusedSkips=0`
-- `ReleaseHistoryCommitComplete=FALSE`
-- `WorkingTreeClean=FALSE`
+- `ReleaseHistoryCommitComplete=TRUE`
+- `WorkingTreeClean=TRUE`
 - `CandidateBindingComplete=FALSE`
 - `CurrentExecutionOpened=FALSE`
 - `G4ExitComplete=FALSE`
 - `PublicAPIAuthorized=FALSE`
-- `NextGate=release-regression-and-release-history-commit`
+- `NextGate=build-and-bind-source-tarball`
