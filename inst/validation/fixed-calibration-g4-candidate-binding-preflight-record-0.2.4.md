@@ -72,6 +72,16 @@ frozen 49-row denominator in exact order. A matching file hash alone is not
 sufficient: a missing, duplicated, or reordered handler produces
 `CONFIRMATION_WORKER_DENOMINATOR_INCOMPLETE` and keeps confirmation closed.
 
+The first bound hosted-runner exercise at candidate `1111cdf` built and bound
+one tarball and obtained `Status: OK` from an exact-tarball check. It then
+stopped in the repository-only static layer before invoking the 49-cell
+worker: the candidate-inventory test had assumed that every execution occurs
+in a dirty development tree and rejected the correct clean-checkout state.
+No `current-confirmation.rds` was created and no v4 confirmation result was
+observed. The test now derives its cleanliness expectation from the observed
+inventory, so dirty development review and clean candidate execution are both
+covered without weakening candidate admission.
+
 The 2026-08-25 live development tree is not a candidate. It contains ongoing
 tracked and untracked work and no bound source tarball was supplied. The
 preflight therefore returns a typed refusal and keeps current confirmation
@@ -103,6 +113,10 @@ production/support registries.
 - `SecondCompleteCurrentExecutionClosedG4=FALSE`
 - `CurrentCandidateBindingFields=12`
 - `HostedRunnerAndWorkflowsBound=TRUE`
+- `FirstHostedRunnerCandidate=1111cdf97f4863206ef8741f377e35bc6d2e231e`
+- `FirstHostedRunnerExactTarballCheckStatus=OK`
+- `FirstHostedRunnerOpenedV4Confirmation=FALSE`
+- `FirstHostedRunnerStoppedAt=repository-static-candidate-inventory-test`
 - `LiveCandidateBindingComplete=FALSE`
 - `LiveSourceTarballBound=FALSE`
 - `SyntheticCleanPromotionAllowed=FALSE`

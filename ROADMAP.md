@@ -2159,6 +2159,10 @@ required children are checked.
     one tarball, checks that exact file, executes all 49 cells against the
     check-installed package, uploads a typed receipt, and feeds a five-receipt
     same-commit/registry aggregation gate.
+  - [x] Retain candidate `1111cdf` as a pre-confirmation harness result: its
+    exact tarball check passed, but a dirty-tree-only inventory assertion
+    stopped the hosted runner before any v4 cell opened; make that assertion
+    valid for both clean candidates and dirty development review.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

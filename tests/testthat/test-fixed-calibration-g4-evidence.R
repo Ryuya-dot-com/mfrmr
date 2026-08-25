@@ -703,7 +703,7 @@ test_that("G4 candidate inventory classifies every live path fail closed", {
   expect_true(review$ResearchExcludedFromPackagePayload)
   expect_true(review$PublicInternalLanguageClean)
   expect_true(review$CommitPlanReady)
-  expect_false(review$WorkingTreeClean)
+  expect_identical(review$WorkingTreeClean, nrow(inventory) == 0L)
   expect_false(review$CandidateBindingComplete)
   expect_false(review$CurrentExecutionOpened)
   expect_false(review$G4ExitComplete)
