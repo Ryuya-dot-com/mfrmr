@@ -1735,9 +1735,9 @@ calibration claim:
   coordinates pass conflict, identification, and reduction gates.
 - [x] **CORE-04 — Pure scoring:** new-Person scoring is fail-closed, reason-
   coded, conditional on the declared frozen basis, and performs no refit.
-- [ ] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
+- [x] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
   metamorphic tests, and disjoint confirmation pass frozen rules.
-- [ ] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
+- [x] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
   chunk-order, locale, encoding, platform, R-version, and bounded performance
   checks pass.
 - [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
@@ -2108,7 +2108,7 @@ required children are checked.
     dispositions, a direct hand-enumerated posterior oracle, and fitted-object
     parity as secondary evidence. The functions and optional lanes remain
     unexported/unpromoted.
-- [ ] **G4 — Independent and operational evidence**
+- [x] **G4 — Independent and operational evidence**
   - [x] Freeze numerical rules, denominators, resource budgets, and disjoint
     confirmation identities before opening confirmation results.
   - [x] Run independent probability/posterior and constraint/rank oracles that
@@ -2198,12 +2198,12 @@ required children are checked.
     public benchmark file to the production registry, consume modular-1031/1033
     after the four observed v4 receipts, and freeze disjoint modular-1039/1049
     v5 identities before the next candidate is bound.
-  - [ ] Run the amended denominator from an isolated current source-tarball
+  - [x] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.
-  - [ ] Re-run hosted macOS release first, followed by Windows release and
+  - [x] Re-run hosted macOS release first, followed by Windows release and
     Linux devel/release/oldrel, on one current commit.
-  - [ ] **G4 exit:** CORE-05 and CORE-06 pass for the current hardened source
+  - [x] **G4 exit:** CORE-05 and CORE-06 pass for the current hardened source
     without pooling away failures or relying on the historical 2026-08-22
     result.
   - Evidence: the repository-only prospective contract froze two
@@ -2234,7 +2234,15 @@ required children are checked.
     closed and G5 inherited no core pass; the subsequent G5 disposition is
     recorded below. The 2026-08-24 boundary-hardening changes supersede that
     close for the current source; the historical result remains intact, but
-    CORE-05, CORE-06, and G4 are open until the amended confirmation above.
+    CORE-05, CORE-06, and G4 were open until the amended confirmation above.
+    The disjoint v5 candidate at commit
+    `bcf86197619e3eae4c7cdd5288b797549df47c99` then passed the exact
+    source-tarball check, all 49 cells, and all three resource scales on hosted
+    macOS release, Windows release, Ubuntu devel/release/oldrel-1. Run
+    `32832244619` successfully aggregated five valid same-commit receipts with
+    common portable production/support identities. CORE-05, CORE-06, and G4
+    therefore close for that exact current source; G6 and public API promotion
+    remain open.
 - [x] **G5 — Optional-lane qualification**
   - [x] Adjudicate OPT-01 estimated-population/latent-regression MML as
     unavailable for portable calibration in 0.2.4.
@@ -2252,7 +2260,7 @@ required children are checked.
     fail-closed extractor/schema behavior, and the fitted-object versus
     portable-calibration terminology boundary.
 - [ ] **G6 — Release-candidate hardening**
-  - [ ] Start only after the reopened current-source G4 exit is complete.
+  - [x] Start only after the reopened current-source G4 exit is complete.
   - [ ] Add one fresh-session end-to-end operational vignette using synthetic
     data and the installed public API only.
   - [ ] Add schema compatibility and explicit migration/refusal fixtures.

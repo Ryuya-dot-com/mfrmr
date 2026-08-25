@@ -114,6 +114,16 @@ identify whether the opt-in layer ran and retain its test log.
   modular-1039/1049 v5 identities without reusing the four observed v4
   results. The benchmark repair is included in a six-file production registry;
   G4, G6, and public promotion remain closed before the v5 rerun.
+- `fixed-calibration-g4-current-execution-bcf8619-record-0.2.4.md`: binds the
+  clean local v5 candidate, its exact source tarball and portable registries,
+  the successful check-installed 49/49 denominator, and all three resource
+  scales. This is local candidate evidence only and leaves five-platform
+  aggregation, G4, G6, and public promotion open.
+- `fixed-calibration-g4-hosted-run-32832244619-record-0.2.4.md`: retains the
+  complete disjoint v5 five-platform run and independently revalidated matrix.
+  It closes CORE-05, CORE-06, and G4 for commit `bcf8619`, while keeping G6,
+  optional portable-calibration lanes, and public API promotion separate and
+  unauthorized.
 - `fixed-calibration-g4-candidate-binding-preflight-0.2.4.R` and
   `fixed-calibration-g4-candidate-binding-preflight-record-0.2.4.md`: implement
   the read-only live-Git and optional source-tarball binding boundary. A second

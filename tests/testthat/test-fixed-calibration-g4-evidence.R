@@ -482,7 +482,7 @@ test_that("amended G4 v5 contract is prospective and binds its unopened record",
   )
   expect_match(
     roadmap,
-    "  - [ ] Run the amended denominator from an isolated current source-tarball",
+    "  - [x] Run the amended denominator from an isolated current source-tarball",
     fixed = TRUE
   )
 })
@@ -566,6 +566,26 @@ test_that("v4 hosted integration failure is retained below G4 completion", {
   expect_match(record, "`V4ReceiptsReusableForV5=FALSE`", fixed = TRUE)
   expect_match(record, "`HostedPlatformMatrixComplete=FALSE`", fixed = TRUE)
   expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+})
+
+test_that("local v5 success remains below hosted matrix completion", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-current-execution-bcf8619-record-0.2.4.md"
+  )
+  expect_true(file.exists(path))
+  record <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  expect_match(record, "`V5DisjointIdentitiesUsed=TRUE`", fixed = TRUE)
+  expect_match(record, "`DenominatorRowsRetained=49`", fixed = TRUE)
+  expect_match(record, "`PassedCells=49`", fixed = TRUE)
+  expect_match(record, "`FailedCells=0`", fixed = TRUE)
+  expect_match(record, "`ResourceScalesPassed=3`", fixed = TRUE)
+  expect_match(record, "`G4LocalCandidateComplete=TRUE`", fixed = TRUE)
+  expect_match(record, "`HostedPlatformMatrixComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`G6Authorized=FALSE`", fixed = TRUE)
+  expect_match(record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
 })
 
 test_that("local v4 success and hosted pre-worker failure stay distinct", {
@@ -1410,7 +1430,7 @@ test_that("hosted post-receipt review failure remains below matrix completion", 
   expect_match(record, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
 })
 
-test_that("historical G4 close is retained while current-source G4 is reopened", {
+test_that("historical reopening is retained while v5 closes current-source G4", {
   ctx <- load_fixed_calibration_g4_contract()
   record_path <- file.path(
     ctx$validation, "fixed-calibration-g4-evidence-record-0.2.4.md"
@@ -1430,6 +1450,14 @@ test_that("historical G4 close is retained while current-source G4 is reopened",
   expect_true(file.exists(hardening_record_path))
   hardening_record <- paste(
     readLines(hardening_record_path, warn = FALSE), collapse = "\n"
+  )
+  current_record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-hosted-run-32832244619-record-0.2.4.md"
+  )
+  expect_true(file.exists(current_record_path))
+  current_record <- paste(
+    readLines(current_record_path, warn = FALSE), collapse = "\n"
   )
   roadmap <- paste(
     readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
@@ -1484,18 +1512,46 @@ test_that("historical G4 close is retained while current-source G4 is reopened",
   expect_match(hardening_record, "`CORE05Complete=FALSE`", fixed = TRUE)
   expect_match(hardening_record, "`CORE06Complete=FALSE`", fixed = TRUE)
   expect_match(hardening_record, "`G4ExitComplete=FALSE`", fixed = TRUE)
-  expect_match(roadmap, "- [ ] **CORE-05 — Independent evidence:**",
+  expect_match(
+    current_record,
+    "`HostedWorkflowConclusion=success`", fixed = TRUE
+  )
+  expect_match(current_record, "`HostedPlatformCells=5`", fixed = TRUE)
+  expect_match(
+    current_record, "`CompleteHostedPlatformCells=5`", fixed = TRUE
+  )
+  expect_match(
+    current_record, "`EachPlatformPassedCells=49`", fixed = TRUE
+  )
+  expect_match(
+    current_record, "`EachPlatformResourceScalesPassed=3`", fixed = TRUE
+  )
+  expect_match(current_record, "`AllReceiptHashesValid=TRUE`", fixed = TRUE)
+  expect_match(current_record, "`HostedMatrixHashValid=TRUE`", fixed = TRUE)
+  expect_match(current_record, "`CORE05Complete=TRUE`", fixed = TRUE)
+  expect_match(current_record, "`CORE06Complete=TRUE`", fixed = TRUE)
+  expect_match(current_record, "`G4ExitComplete=TRUE`", fixed = TRUE)
+  expect_match(current_record, "`G6Authorized=FALSE`", fixed = TRUE)
+  expect_match(current_record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
+  expect_match(roadmap, "- [x] **CORE-05 — Independent evidence:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [ ] **CORE-06 — Reproducible operation:**",
+  expect_match(roadmap, "- [x] **CORE-06 — Reproducible operation:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [ ] **G4 — Independent and operational evidence**",
+  expect_match(roadmap, "- [x] **G4 — Independent and operational evidence**",
                fixed = TRUE)
   expect_match(
     roadmap,
     "  - [x] Run the prospectively required hosted macOS release workflow cell",
     fixed = TRUE
   )
-  expect_match(roadmap, "  - [ ] **G4 exit:**", fixed = TRUE)
+  expect_match(roadmap, "  - [x] **G4 exit:**", fixed = TRUE)
   expect_match(roadmap, "- [x] **G5 — Optional-lane qualification**",
                fixed = TRUE)
+  expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
+               fixed = TRUE)
+  expect_match(
+    roadmap,
+    "  - [x] Start only after the reopened current-source G4 exit is complete.",
+    fixed = TRUE
+  )
 })
