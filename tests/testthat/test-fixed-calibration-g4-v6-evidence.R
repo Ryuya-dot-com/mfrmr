@@ -149,7 +149,7 @@ test_that("v6 worker covers the exact 49-cell denominator", {
   expect_identical(length(handlers), 49L)
 })
 
-test_that("v6 workflow is manual and separated from routine checks", {
+test_that("v6 workflow is explicitly activated and separated from routine checks", {
   root <- g4v6_root()
   workflow_path <- file.path(
     root, ".github", "workflows", "fixed-calibration-g4-v6.yaml"
@@ -167,7 +167,9 @@ test_that("v6 workflow is manual and separated from routine checks", {
     root, "inst", "validation", "release-check-runner-0.2.4.R"
   ), warn = FALSE), collapse = "\n")
   expect_match(workflow, "  workflow_dispatch:", fixed = TRUE)
-  expect_false(grepl("  push:", workflow, fixed = TRUE))
+  expect_match(workflow, "  push:\n    tags:", fixed = TRUE)
+  expect_match(workflow, "'g4-v6-candidate-*'", fixed = TRUE)
+  expect_false(grepl("    branches:", workflow, fixed = TRUE))
   expect_false(grepl("  pull_request:", workflow, fixed = TRUE))
   expect_match(
     workflow, "uses: ./.github/workflows/fixed-calibration-g4-v6-cell.yaml",

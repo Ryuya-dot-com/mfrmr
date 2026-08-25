@@ -146,9 +146,10 @@ identify whether the opt-in layer ran and retain its test log.
   unchanged 49-cell denominator. The contract is candidate-unbound and opens
   no result.
 - `.github/workflows/fixed-calibration-g4-v6.yaml` and its reusable cell
-  workflow: provide a manual-only macOS-first five-platform confirmation path.
-  Routine pushes continue to use the check-only workflow and cannot issue v6
-  receipts.
+  workflow: provide an explicitly activated macOS-first five-platform path.
+  It accepts `workflow_dispatch` or an exact `g4-v6-candidate-*` tag, not
+  ordinary branch pushes or pull requests. Routine pushes continue to use the
+  check-only workflow and cannot issue v6 receipts.
 - `release-check-runner-0.2.4.R`: builds and checks the exact source tarball in
   each routine CI cell and writes a check-only receipt. The receipt fixes
   `G4EvidenceIssued=FALSE`; the runner never calls a G4 worker or aggregator.

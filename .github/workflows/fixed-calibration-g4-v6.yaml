@@ -1,7 +1,12 @@
-# Manually dispatched successor evidence. Routine pushes use R-CMD-check.yaml
-# and cannot issue G4 receipts.
+# Explicitly activated successor evidence. Routine branch pushes use
+# R-CMD-check.yaml and cannot issue G4 receipts. Before this workflow reaches
+# the default branch, a maintainer may activate the frozen candidate only by
+# pushing a `g4-v6-candidate-*` tag that names the exact candidate commit.
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'g4-v6-candidate-*'
 
 name: Fixed-calibration G4 v6
 

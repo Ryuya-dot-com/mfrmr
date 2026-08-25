@@ -2260,8 +2260,8 @@ required children are checked.
     boundary includes both compiled translation units and whose support
     registry includes the compiled-header regression contract. The unopened
     v6 contract uses modular-1061/default-31 and modular-1063/source-one
-    fixtures and can run only through a manually dispatched workflow that is
-    separate from routine package checks.
+    fixtures and can run only through an explicitly dispatched or
+    candidate-tagged workflow that is separate from routine package checks.
   - [ ] Bind one clean post-maintenance candidate and rerun the complete local
     denominator, GCC-LTO check, five-platform matrix, full Ubuntu-release
     suite, and receipt aggregation without pooling v5 results.

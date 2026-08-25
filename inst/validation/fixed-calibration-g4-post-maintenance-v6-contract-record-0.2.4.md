@@ -44,9 +44,11 @@ manual-only workflows, `test-compiled-header-contract.R`, the maintenance
 admission review, and the exact 0.2.3.1 public-predecessor identity.
 
 Routine `R-CMD-check` remains check-only and cannot issue a G4 receipt. The v6
-five-platform path is a distinct `workflow_dispatch` workflow. Candidate
-binding and execution remain closed until this frozen source is committed and
-one exact clean source tarball is bound.
+five-platform path is distinct and may be activated only by
+`workflow_dispatch` or an explicit `g4-v6-candidate-*` tag; ordinary branch
+pushes and pull requests cannot open it. Candidate binding and execution remain
+closed until this frozen source is committed and one exact clean source
+tarball is bound.
 
 ## Next gate
 
