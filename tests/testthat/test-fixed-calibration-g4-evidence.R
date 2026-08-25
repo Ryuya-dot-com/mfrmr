@@ -1591,7 +1591,7 @@ test_that("historical reopening is retained while v5 closes current-source G4", 
   expect_match(roadmap, "  - [x] **v5 G4 exit:**", fixed = TRUE)
   expect_match(roadmap, "- [x] **G5 — Optional-lane qualification**",
                fixed = TRUE)
-  expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
+  expect_match(roadmap, "- [x] **G6 — Release-candidate hardening**",
                fixed = TRUE)
   expect_match(
     roadmap,
@@ -1669,7 +1669,7 @@ test_that("post-maintenance v6 execution closes G4 only for its bound core", {
   expect_match(record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
 })
 
-test_that("G6 public surface closes CORE-07 without authorizing release", {
+test_that("G6 public-surface slice closes CORE-07 before final decision", {
   ctx <- load_fixed_calibration_g4_contract()
   path <- file.path(
     ctx$validation,
@@ -1728,7 +1728,7 @@ test_that("G6 public surface closes CORE-07 without authorizing release", {
     "  - [x] Reconcile code, help, README, vignette, NEWS, capability matrix,",
     fixed = TRUE
   )
-  expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
+  expect_match(roadmap, "- [x] **G6 — Release-candidate hardening**",
                fixed = TRUE)
 
   pkgdown <- file.path(ctx$root, "_pkgdown.yml")
@@ -1782,4 +1782,87 @@ test_that("G6 public surface closes CORE-07 without authorizing release", {
     public_text,
     perl = TRUE
   ))
+})
+
+test_that("G6 final decision binds the successful matrix and bounded scope", {
+  ctx <- load_fixed_calibration_g4_contract()
+  path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g6-release-decision-record-0.2.4.md"
+  )
+  expect_true(file.exists(path))
+  record <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  roadmap <- paste(
+    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
+    collapse = "\n"
+  )
+
+  expect_match(
+    record,
+    "`ValidatedPayloadCommitSHA40=cf20dd0167db3f39224cea7d1c70998b1142f81f`",
+    fixed = TRUE
+  )
+  expect_match(record, "`HostedRunId=32906087561`", fixed = TRUE)
+  expect_match(record, "`HostedWorkflowConclusion=success`", fixed = TRUE)
+  expect_match(record, "`HostedPlatformCells=5`", fixed = TRUE)
+  expect_match(record, "`HostedPassedCells=5`", fixed = TRUE)
+  expect_match(record, "`HostedFailedCells=0`", fixed = TRUE)
+  expect_match(record, "`CheckArtifactCount=5`", fixed = TRUE)
+  expect_match(record, "`UnexpectedG4ArtifactCount=0`", fixed = TRUE)
+  expect_match(record, "`PriorFailedHostedRuns=2`", fixed = TRUE)
+  expect_match(
+    record,
+    "`PriorFailedHostedRunIds=32894811905,32900730800`",
+    fixed = TRUE
+  )
+  expect_match(
+    record,
+    paste0(
+      "`LocalSourceTarballSHA256=",
+      "c93983d677739d8658b7c64c37b4da3062ed4ca8a5dc9884d37cf3d5bd788963`"
+    ),
+    fixed = TRUE
+  )
+  expect_match(
+    record, "`RepositoryDecisionExpectationsPassed=530`", fixed = TRUE
+  )
+  expect_match(record, "`DecisionFilesRbuildExcluded=TRUE`", fixed = TRUE)
+  expect_match(
+    record,
+    "`PostDecisionPayloadDiff=DESCRIPTION_PACKAGED_TIMESTAMP_ONLY`",
+    fixed = TRUE
+  )
+  expect_match(record, "`PublicPredecessorVersion=0.2.3.1`", fixed = TRUE)
+  expect_match(
+    record,
+    paste0(
+      "`PublicPredecessorSHA256=",
+      "d3d2b00638fcbd8407dfabd5206eb670b2a3470e0e30e0079ca64a2e7a77b67a`"
+    ),
+    fixed = TRUE
+  )
+  expect_match(record, "`ReverseDepends=0`", fixed = TRUE)
+  expect_match(record, "`ReverseImports=0`", fixed = TRUE)
+  expect_match(record, "`ReverseLinkingTo=0`", fixed = TRUE)
+  expect_match(record, "`ReverseSuggests=0`", fixed = TRUE)
+  expect_match(record, "`ReverseEnhances=0`", fixed = TRUE)
+  expect_match(
+    record, "`ReverseDependencyReviewComplete=TRUE`", fixed = TRUE
+  )
+  expect_match(record, "`NoGoAuditComplete=TRUE`", fixed = TRUE)
+  expect_match(record, "`CORE07Complete=TRUE`", fixed = TRUE)
+  expect_match(record, "`CORE08Complete=TRUE`", fixed = TRUE)
+  expect_match(record, "`G6ExitComplete=TRUE`", fixed = TRUE)
+  expect_match(
+    record, "`PublicAPIAuthorizedForRelease=TRUE`", fixed = TRUE
+  )
+  expect_match(record, "`CRANSubmissionPerformed=FALSE`", fixed = TRUE)
+
+  expect_match(roadmap, "- [x] **CORE-08 — Final release decision:**",
+               fixed = TRUE)
+  expect_match(roadmap, "- [x] **G6 — Release-candidate hardening**",
+               fixed = TRUE)
+  expect_match(roadmap, "  - [x] **G6 exit:**", fixed = TRUE)
+  expect_match(roadmap, "No 0.2.4 CRAN submission has been performed.",
+               fixed = TRUE)
 })

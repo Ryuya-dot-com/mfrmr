@@ -40,7 +40,7 @@ The project develops in this order:
 | 0.2.2 | Published stabilization and contract baseline. |
 | 0.2.3 | Published numerical and empirical operating-envelope release for the existing models. |
 | 0.2.3.1 | Published CRAN maintenance correction for compiled-header consistency and expired documentation links. |
-| 0.2.4 | Add typed fixed calibration, threshold/step anchors, and operational scoring for one observed scale. |
+| 0.2.4 | Add portable fixed calibration and operational scoring for one observed RSM/PCM scale, preserving stored direct/group facet anchors. |
 | 0.2.5 | Add explicit multiple-scale routing and mixed response structures without silent pooling. |
 | 0.3.0 | Consolidate APIs, object schemas, compatibility policy, examples, performance evidence, and contributor workflows. |
 | 1.0.0 | Declare a deliberately bounded, validated core stable. |
@@ -66,7 +66,8 @@ claims, not merely because a validation branch or prototype exists.
 The 0.2.4 release-critical path is limited to:
 
 1. an explicit single-scale calibration schema and lifecycle;
-2. exact, typed element/group and threshold/step anchor semantics;
+2. exact typed direct/group facet-anchor preservation in the public route,
+   backed by distinct internal element/group and threshold/step namespaces;
 3. application of an eligible frozen calibration to new response data without
    refitting or silently changing its scale; and
 4. independent mathematical, adversarial, round-trip, compatibility, and
@@ -1653,10 +1654,10 @@ silently substituted for one another:
 
 ### 0.2.4 release control board
 
-Overall status: **G0 through G5 are complete for the deliberately bounded
-fixed-N(0,1) RSM/PCM core; post-maintenance G4 v6 closes CORE-05 and CORE-06
-for exact candidate `0aac546`; G6 is the next open gate, and public 0.2.4 API
-promotion remains closed**.
+Overall status: **G0 through G6 are complete for the deliberately bounded
+fixed-N(0,1) RSM/PCM portable-calibration core; the public API is authorized
+to enter final 0.2.4 release-candidate preparation**. The branch remains
+0.2.4.9000, and no 0.2.4 CRAN submission has been performed.
 The 0.2.3 baseline and its 0.2.3.1 maintenance addendum are bound to their CRAN
 source artifacts,
 the internal core artifact passes freeze--persist--load--score evidence, its
@@ -1750,7 +1751,7 @@ calibration claim:
 - [x] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
   NEWS, capability matrix, runtime wording, package metadata, and source
   package all state the same supported envelope.
-- [ ] **CORE-08 — Final release decision:** every preceding core gate is
+- [x] **CORE-08 — Final release decision:** every preceding core gate is
   closed, no no-go condition remains, and optional-lane failures have been
   removed from or labelled accurately in the public claim.
 
@@ -1830,8 +1831,8 @@ minimum, the artifact records:
 - full-precision fixed parameter values in named coordinates, including
   population and quadrature/scoring-basis fields when they are part of the
   promoted lane;
-- direct, group, and threshold/step anchor declarations in separate typed
-  namespaces;
+- stored direct/group facet-anchor declarations exposed by the public route,
+  plus internal threshold/step declarations in separate typed namespaces;
 - source-fit readiness and parameter-class eligibility, creation provenance,
   validation results, and the reasons for every caveat or block; and
 - a minimal semantic identity sufficient to detect model, scale, map, and
@@ -1865,11 +1866,13 @@ before/after validation; best-effort list repair is not compatibility.
 
 ### Anchor semantics and identification
 
-0.2.4 extends the current facet-element and group-anchor surface to typed
-threshold/step anchors. The schema must distinguish at least facet elements,
-group constraints, shared RSM steps, facet-owned PCM/GPCM steps, relative
-slopes, and population coordinates. A shared label such as `"2"` must never
-be enough to infer which parameter class is anchored.
+The internal 0.2.4 schema distinguishes facet elements, group constraints,
+shared RSM steps, facet-owned PCM/GPCM steps, relative slopes, and population
+coordinates. A shared label such as `"2"` is never enough to infer which
+parameter class is anchored. The public 0.2.4 fitter does not add typed step-
+anchor construction; its portable route preserves stored direct/group facet
+anchors only, while the internal step namespaces remain tested groundwork for
+a later public extension.
 
 Conflict behavior is strict and order-invariant:
 
@@ -2302,7 +2305,7 @@ required children are checked.
   - Evidence: the repository-only G5 lane-disposition record, executable
     fail-closed extractor/schema behavior, and the fitted-object versus
     portable-calibration terminology boundary.
-- [ ] **G6 — Release-candidate hardening**
+- [x] **G6 — Release-candidate hardening**
   - [x] Start only after the post-maintenance current-source G4 exit is
     complete.
   - [x] Add one fresh-session end-to-end operational vignette using synthetic
@@ -2316,18 +2319,18 @@ required children are checked.
   - [x] Reconcile code, help, README, vignette, NEWS, capability matrix,
     runtime messages, package metadata, and website against one centrally
     tested support matrix.
-  - [ ] Check source-package contents, examples, ordinary tests, vignettes,
+  - [x] Check source-package contents, examples, ordinary tests, vignettes,
     reverse dependencies where available, and the cross-platform R CMD check
     matrix.
     - [x] Local macOS source build/check, installed-package tests, examples,
       and complete vignette rebuilding pass for the current payload.
-    - [ ] Confirm the committed payload on the routine five-platform matrix
+    - [x] Confirm the committed payload on the routine five-platform matrix
       and review reverse dependencies where available.
   - [x] Confirm no release-critical row depends solely on a slow, skipped,
     historical, local-only, or repository-absent artifact.
   - [x] Re-run the no-go audit and explicitly remove or relabel every failed
     optional claim.
-  - [ ] **G6 exit:** CORE-07 passes and CORE-08 is decided from the complete
+  - [x] **G6 exit:** CORE-07 passes and CORE-08 is decided from the complete
     claim ledger rather than from schedule or version pressure.
   - Evidence to date: the first public-surface slice exports thin lifecycle and
     scoring wrappers plus a six-row capability matrix with only fixed-standard-
@@ -2339,14 +2342,22 @@ required children are checked.
     navigation share the narrow portable-versus-fitted-object distinction.
     The final local source package passed examples, 435 distributed tests, and
     complete vignette rebuilding; its fresh-process test used only exported
-    functions. The no-go audit retains estimated-population/latent-regression
-    MML, JML, bounded GPCM, and public step-anchor construction as unavailable
-    portable routes. CORE-07 is complete. CORE-08 and G6 remain open pending
-    the ordinary five-platform matrix and reverse-dependency review where
-    available. Repository-only version-pinned or opt-in research tests are not
-    used to close a release-critical row. The output guide and public
-    extraction messages use the central matrix and actionable fitted-object
-    alternatives.
+    functions. After two retained four-of-five failed runs exposed and fixed
+    source-package test-path assumptions, fresh ordinary run `32906087561`
+    passed macOS release, Windows release, Ubuntu devel, Ubuntu release/full,
+    and Ubuntu oldrel-1 for exact payload commit `cf20dd0167db3f39224cea7d1c70998b1142f81f`.
+    It produced exactly five check artifacts and no G4 evidence artifact.
+    The CRAN dependency index contained zero reverse Depends, Imports,
+    LinkingTo, Suggests, and Enhances relationships, so the zero-denominator
+    reverse-dependency review is complete. The no-go audit retains estimated-
+    population/latent-regression MML, JML, bounded GPCM, and public step-anchor
+    construction as unavailable portable routes. CORE-07, CORE-08, and G6 are
+    complete for that bounded claim; the public API may enter final 0.2.4
+    release-candidate preparation. No 0.2.4 CRAN submission has been performed.
+    Repository-only version-pinned or opt-in research tests are not used to
+    close a release-critical row. The append-only G6 release-decision record
+    retains the successful run, both failed runs and their corrections, exact
+    source identity, artifacts, predecessor hashes, and no-go dispositions.
 
 ### Public-document audience boundary
 
