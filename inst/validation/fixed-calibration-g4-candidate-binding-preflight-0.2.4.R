@@ -373,7 +373,9 @@ mfrmr_fc_g4b_reason_table <- function(codes) {
   codes <- unique(as.character(codes[nzchar(codes)]))
   data.frame(
     Ordinal = seq_along(codes), Code = codes,
-    Disposition = "candidate_binding_refused_confirmation_unopened",
+    Disposition = rep(
+      "candidate_binding_refused_confirmation_unopened", length(codes)
+    ),
     stringsAsFactors = FALSE
   )
 }

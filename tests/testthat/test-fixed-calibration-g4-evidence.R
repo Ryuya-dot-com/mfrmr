@@ -544,6 +544,19 @@ test_that("G4 candidate binding distinguishes DCF normalization from drift", {
   expect_identical(drift$ErrorCode, "DESCRIPTION_SEMANTIC_MISMATCH")
 })
 
+test_that("G4 candidate binding represents zero refusals as an empty table", {
+  ctx <- load_fixed_calibration_g4_candidate_binding()
+  empty <- ctx$env$mfrmr_fc_g4b_reason_table(character(0))
+  expect_s3_class(empty, "data.frame")
+  expect_identical(nrow(empty), 0L)
+  expect_identical(
+    names(empty), c("Ordinal", "Code", "Disposition")
+  )
+  expect_identical(empty$Ordinal, integer(0))
+  expect_identical(empty$Code, character(0))
+  expect_identical(empty$Disposition, character(0))
+})
+
 test_that("G4 candidate-binding record retains the live refusal boundary", {
   ctx <- load_fixed_calibration_g4_candidate_binding()
   record_path <- file.path(

@@ -27,6 +27,13 @@ confirmation cell was opened. The binding rule now requires normalized DCF
 equality for every source field, permits exactly those four build-added
 fields, and continues to require byte equality for all production R files.
 
+The first fully matching clean-candidate preflight then exposed a zero-refusal
+transport bug: the empty reason table combined zero-length code columns with a
+length-one disposition column. The preflight stopped before returning a bound
+manifest and before any confirmation cell opened. The disposition column now
+has exactly the reason-code length, including zero, and an explicit empty-table
+regression prevents a success-only recurrence.
+
 The 2026-08-25 live development tree is not a candidate. It contains ongoing
 tracked and untracked work and no bound source tarball was supplied. The
 preflight therefore returns a typed refusal and keeps current confirmation
@@ -43,6 +50,8 @@ commit and its matching `mfrmr_0.2.4.9000.tar.gz` payload.
 - `SyntheticCleanPromotionAllowed=FALSE`
 - `InitialDescriptionNormalizationIncidentRetained=TRUE`
 - `InitialDescriptionNormalizationIncidentOpenedConfirmation=FALSE`
+- `ZeroRefusalTransportIncidentRetained=TRUE`
+- `ZeroRefusalTransportIncidentOpenedConfirmation=FALSE`
 - `CurrentExecutionOpened=FALSE`
 - `ConfirmationResultObserved=FALSE`
 - `CORE05Complete=FALSE`
