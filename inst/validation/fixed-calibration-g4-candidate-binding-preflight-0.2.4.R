@@ -243,6 +243,53 @@ mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
     repo_root, support_paths,
     c("contract", "confirmation_worker", "confirmation_test", "binding_preflight")
   )
+  worker_path <- file.path(
+    repo_root, "inst", "validation",
+    "fixed-calibration-g4-confirmation-worker-0.2.4.R"
+  )
+  worker_environment <- new.env(parent = globalenv())
+  worker_error <- tryCatch({
+    sys.source(worker_path, envir = worker_environment)
+    NULL
+  }, error = identity)
+  denominator <- context$Environment$mfrmr_fc_g4_current_denominator()
+  worker_ids <- if (is.null(worker_error) &&
+      exists("mfrmr_fc_g4w_cell_ids", envir = worker_environment,
+             inherits = FALSE)) {
+    tryCatch(
+      worker_environment$mfrmr_fc_g4w_cell_ids(), error = identity
+    )
+  } else {
+    if (is.null(worker_error)) {
+      simpleError("The confirmation worker has no cell registry.")
+    } else {
+      worker_error
+    }
+  }
+  handler_names <- if (!inherits(worker_ids, "error") &&
+      exists("mfrmr_fc_g4w_current_handlers", envir = worker_environment,
+             inherits = FALSE)) {
+    tryCatch(names(worker_environment$mfrmr_fc_g4w_current_handlers(
+      context$Environment, normalizePath(repo_root, mustWork = TRUE),
+      normalizePath(worker_path, mustWork = TRUE)
+    )), error = identity)
+  } else {
+    worker_ids
+  }
+  worker_coverage <- list(
+    Contract = "mfrmr_fixed_calibration_g4_worker_denominator_coverage_v1",
+    ExpectedCellIds = denominator$CellId,
+    WorkerCellIds = if (inherits(worker_ids, "error")) character() else
+      as.character(worker_ids),
+    HandlerNames = if (inherits(handler_names, "error")) character() else
+      as.character(handler_names),
+    Error = if (inherits(worker_ids, "error")) conditionMessage(worker_ids) else
+      if (inherits(handler_names, "error")) conditionMessage(handler_names) else "",
+    Exact = !inherits(worker_ids, "error") &&
+      !inherits(handler_names, "error") &&
+      identical(as.character(worker_ids), denominator$CellId) &&
+      identical(as.character(handler_names), denominator$CellId)
+  )
   list(
     Production = production,
     ProductionRegistryHash = mfrmr_fc_g4b_hash(
@@ -252,6 +299,7 @@ mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
     SupportRegistryHash = mfrmr_fc_g4b_hash(
       support[c("Path", "Bytes", "SHA256")]
     ),
+    WorkerDenominatorCoverage = worker_coverage,
     ContractReview = context$Review
   )
 }
@@ -440,6 +488,9 @@ mfrmr_fc_g4b_manifest <- function(
   if (anyNA(binding$Value) || any(!nzchar(binding$Value))) {
     codes <- c(codes, "BINDING_FIELD_INCOMPLETE")
   }
+  if (!isTRUE(registries$WorkerDenominatorCoverage$Exact)) {
+    codes <- c(codes, "CONFIRMATION_WORKER_DENOMINATOR_INCOMPLETE")
+  }
   refusals <- mfrmr_fc_g4b_reason_table(codes)
   complete <- nrow(refusals) == 0L && all(nchar(binding$Value) > 0L)
   payload <- list(
@@ -453,6 +504,7 @@ mfrmr_fc_g4b_manifest <- function(
     ProductionRegistryHash = registries$ProductionRegistryHash,
     SupportRegistry = registries$Support,
     SupportRegistryHash = registries$SupportRegistryHash,
+    WorkerDenominatorCoverage = registries$WorkerDenominatorCoverage,
     TarballObservation = tar_observation,
     Binding = binding,
     Refusals = refusals

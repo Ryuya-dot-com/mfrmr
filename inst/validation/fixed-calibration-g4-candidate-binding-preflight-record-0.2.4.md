@@ -42,17 +42,39 @@ assertion rejected the first observation; no receipt or confirmation result
 was accepted. Tarball hashes are now explicitly unnamed and registry row names
 reset, so ephemeral extraction paths cannot enter candidate identity.
 
+Commit `c65ad6141ed8ab55f01e12ed076c3dd18baff67b` then produced the first
+fully bound candidate manifest and its exact source tarball passed local
+`R CMD check --no-manual`. Before a current confirmation cell was opened, a
+denominator audit found that the prospective contract declared 49 cells but
+the hash-bound worker did not yet expose a one-to-one executable cell
+registry. That candidate is retained as an admitted pre-confirmation harness
+milestone, not as confirmation evidence, and is superseded by the worker
+hardening described here.
+
+Candidate admission now sources the hash-bound worker in a non-executing
+environment. Its declared cell IDs and handler names must both equal the
+frozen 49-row denominator in exact order. A matching file hash alone is not
+sufficient: a missing, duplicated, or reordered handler produces
+`CONFIRMATION_WORKER_DENOMINATOR_INCOMPLETE` and keeps confirmation closed.
+
 The 2026-08-25 live development tree is not a candidate. It contains ongoing
 tracked and untracked work and no bound source tarball was supplied. The
 preflight therefore returns a typed refusal and keeps current confirmation
 unopened. This is the intended result, not a failed numerical cell.
 
-No Git state was changed, no tarball was built or installed, and no fit,
-score, replay, checkpoint, package check, platform job, or confirmation result
-was executed. The next transition requires one deliberately reviewed clean
-commit and its matching `mfrmr_0.2.4.9000.tar.gz` payload.
+The preflight itself performs no Git mutation, build, installation, fit,
+score, replay, checkpoint, package check, or platform action. The admitted
+`c65ad61` audit built and checked a tarball outside the preflight, but opened
+no current confirmation result. The next transition requires a new reviewed
+clean commit containing the complete worker and its matching
+`mfrmr_0.2.4.9000.tar.gz` payload.
 
 - `CandidateBindingPreflightImplemented=TRUE`
+- `FirstFullyBoundPreconfirmationCandidate=c65ad6141ed8ab55f01e12ed076c3dd18baff67b`
+- `FirstFullyBoundPreconfirmationCandidateCheckStatus=OK`
+- `FirstFullyBoundPreconfirmationCandidateOpenedConfirmation=FALSE`
+- `ConfirmationWorkerExactDenominatorRequired=TRUE`
+- `ConfirmationWorkerDeclaredCells=49`
 - `LiveCandidateBindingComplete=FALSE`
 - `LiveSourceTarballBound=FALSE`
 - `SyntheticCleanPromotionAllowed=FALSE`

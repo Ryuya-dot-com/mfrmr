@@ -2144,6 +2144,9 @@ required children are checked.
     and deferred-research commit lanes; fail on unknown paths and confirm that
     deferred G-theory and Rater-assignment material is excluded from the
     package payload and user-facing release language.
+  - [x] Implement an atomic current-source worker whose declared IDs and
+    retained-result handlers match all 49 frozen denominator cells exactly;
+    reject candidate admission on any missing, duplicated, or reordered cell.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

@@ -441,6 +441,31 @@ test_that("amended G4 contract is prospective and binds its unopened record", {
   )
 })
 
+test_that("amended G4 worker statically covers every frozen cell exactly", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  worker_path <- file.path(
+    ctx$validation, "fixed-calibration-g4-confirmation-worker-0.2.4.R"
+  )
+  expect_true(file.exists(worker_path))
+  worker <- new.env(parent = globalenv())
+  before_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  sys.source(worker_path, envir = worker)
+  denominator <- ctx$env$mfrmr_fc_g4_current_denominator()
+  handlers <- worker$mfrmr_fc_g4w_current_handlers(
+    ctx$env, ctx$root, worker_path
+  )
+  expect_identical(worker$mfrmr_fc_g4w_cell_ids(), denominator$CellId)
+  expect_identical(names(handlers), denominator$CellId)
+  expect_identical(length(handlers), 49L)
+  expect_identical(
+    exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE), before_seed
+  )
+  source <- paste(readLines(worker_path, warn = FALSE), collapse = "\n")
+  expect_match(source, "CurrentExecutionOpened = TRUE", fixed = TRUE)
+  expect_match(source, "retained_failure", fixed = TRUE)
+  expect_match(source, "nrow(cells) == 49L", fixed = TRUE)
+})
+
 test_that("G4 candidate binding observes source identities and stays closed", {
   ctx <- load_fixed_calibration_g4_candidate_binding()
   manifest <- ctx$env$mfrmr_fc_g4b_manifest(ctx$root)
@@ -458,6 +483,15 @@ test_that("G4 candidate binding observes source identities and stays closed", {
   expect_true(all(nchar(manifest$ProductionRegistry$SHA256) == 64L))
   expect_identical(nrow(manifest$SupportRegistry), 4L)
   expect_true(all(nchar(manifest$SupportRegistry$SHA256) == 64L))
+  expect_true(manifest$WorkerDenominatorCoverage$Exact)
+  expect_identical(
+    manifest$WorkerDenominatorCoverage$ExpectedCellIds,
+    manifest$WorkerDenominatorCoverage$WorkerCellIds
+  )
+  expect_identical(
+    manifest$WorkerDenominatorCoverage$ExpectedCellIds,
+    manifest$WorkerDenominatorCoverage$HandlerNames
+  )
   expect_identical(nrow(manifest$Binding), 9L)
   expect_false(manifest$CandidateBindingComplete)
   expect_false(manifest$IsolatedExecutionAdmissionReady)

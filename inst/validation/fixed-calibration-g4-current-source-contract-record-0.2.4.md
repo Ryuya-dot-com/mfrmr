@@ -70,6 +70,12 @@ production implementation or decision rule changes, a new disjoint identity
 is required; historical and earlier current cells are not pooled into the new
 decision.
 
+The hash-bound confirmation worker now declares exactly the same 49 cell IDs
+in the same order and supplies one retained-result handler per cell. Candidate
+binding checks both registries without executing them. This closes the
+denominator-transport gap but does not itself open or pass any confirmation
+cell.
+
 ## Execution order
 
 After candidate binding, the next step is an isolated source-tarball execution
@@ -87,6 +93,9 @@ remain closed until the complete current-source result is recorded.
 - `AmendedG4CandidateBound=FALSE`
 - `AmendedG4DenominatorCells=49`
 - `AmendedG4NumericalRules=11`
+- `ConfirmationWorkerExactDenominatorImplemented=TRUE`
+- `ConfirmationWorkerDeclaredCells=49`
+- `ConfirmationWorkerExecutionOpened=FALSE`
 - `HistoricalNineNodeControlAuthorizesCurrentG4=FALSE`
 - `CORE05Complete=FALSE`
 - `CORE06Complete=FALSE`
