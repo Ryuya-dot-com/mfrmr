@@ -2163,6 +2163,12 @@ required children are checked.
     exact tarball check passed, but a dirty-tree-only inventory assertion
     stopped the hosted runner before any v4 cell opened; make that assertion
     valid for both clean candidates and dirty development review.
+  - [x] Retain candidate `5af00ed` as a complete native local v4 result
+    (49/49 cells and 3/3 resource scales), while keeping G4 open. Hosted run
+    `32815204590` passed exact-tarball check but stopped in the pre-worker
+    static fresh-process test because a `--vanilla` child could not see
+    setup-r's dependency library; all four dependent cells and aggregation
+    were correctly skipped.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

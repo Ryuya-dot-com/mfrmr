@@ -513,6 +513,35 @@ test_that("consumed current-source failures are retained before v4 execution", {
   expect_true(all(grepl("mod1031|mod1033", current$GeneratorIdentity)))
 })
 
+test_that("local v4 success and hosted pre-worker failure stay distinct", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  local_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-current-execution-5af00ed-record-0.2.4.md"
+  )
+  hosted_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-hosted-run-32815204590-record-0.2.4.md"
+  )
+  expect_true(file.exists(local_path))
+  expect_true(file.exists(hosted_path))
+  local <- paste(readLines(local_path, warn = FALSE), collapse = "\n")
+  hosted <- paste(readLines(hosted_path, warn = FALSE), collapse = "\n")
+  expect_match(local, "`PassedCells=49`", fixed = TRUE)
+  expect_match(local, "`FailedCells=0`", fixed = TRUE)
+  expect_match(local, "`ResourceScalesPassed=3`", fixed = TRUE)
+  expect_match(local, "`HostedPlatformMatrixComplete=FALSE`", fixed = TRUE)
+  expect_match(local, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(hosted, "`ExactTarballCheckStatus=OK`", fixed = TRUE)
+  expect_match(hosted, "`HostedCurrentWorkerInvoked=FALSE`", fixed = TRUE)
+  expect_match(
+    hosted, "`HostedConfirmationResultObserved=FALSE`", fixed = TRUE
+  )
+  expect_match(hosted, "`DependentPlatformJobsSkipped=TRUE`", fixed = TRUE)
+  expect_match(hosted, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
+  expect_match(hosted, "`G4ExitComplete=FALSE`", fixed = TRUE)
+})
+
 test_that("G4 candidate binding observes source identities and stays closed", {
   ctx <- load_fixed_calibration_g4_candidate_binding()
   manifest <- ctx$env$mfrmr_fc_g4b_manifest(ctx$root)
@@ -1008,16 +1037,18 @@ test_that("order chunk locale encoding and fresh process preserve scores", {
   )
   rscript <- file.path(R.home("bin"), "Rscript")
   if (.Platform$OS.type == "windows") rscript <- paste0(rscript, ".exe")
-  status <- system2(
+  status <- suppressWarnings(system2(
     rscript,
     c("--vanilla", worker, ctx$root, artifact_path, input_path,
       output_path, "C"),
     stdout = TRUE, stderr = TRUE
-  )
+  ))
   process_status <- attr(status, "status")
   if (is.null(process_status)) process_status <- 0L
-  expect_identical(process_status, 0L,
-                   info = paste(status, collapse = "\n"))
+  if (!identical(process_status, 0L)) {
+    testthat::fail(paste(status, collapse = "\n"))
+    return(invisible(NULL))
+  }
   child <- readRDS(output_path)
   expect_identical(child$status, "pass")
   expected_load_mode <- if (nzchar(Sys.getenv(
@@ -1190,6 +1221,8 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(runner, "rcmdcheck::rcmdcheck(", fixed = TRUE)
   expect_match(runner, "path = tarball", fixed = TRUE)
   expect_match(runner, "error_on = \"warning\"", fixed = TRUE)
+  expect_match(runner, "Sys.setenv(R_LIBS =", fixed = TRUE)
+  expect_match(runner, "collapse = .Platform$path.sep", fixed = TRUE)
   expect_match(runner, "hosted-cell-receipt.rds", fixed = TRUE)
   expect_match(runner, "HostedPlatformMatrixComplete = TRUE", fixed = TRUE)
   expect_match(runner, "G6Authorized = FALSE", fixed = TRUE)

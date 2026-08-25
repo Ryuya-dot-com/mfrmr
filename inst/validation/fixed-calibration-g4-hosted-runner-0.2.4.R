@@ -190,6 +190,23 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
     file.exists(check_log) && dir.exists(file.path(installed_library, "mfrmr")),
     "The exact check did not retain its log and installed package."
   )
+  installed_library <- normalizePath(
+    installed_library, winslash = "/", mustWork = TRUE
+  )
+  child_libraries <- unique(c(installed_library, .libPaths()))
+  child_libraries <- normalizePath(
+    child_libraries[dir.exists(child_libraries)],
+    winslash = "/", mustWork = TRUE
+  )
+  old_r_libs <- Sys.getenv("R_LIBS", unset = NA_character_)
+  on.exit({
+    if (is.na(old_r_libs)) {
+      Sys.unsetenv("R_LIBS")
+    } else {
+      Sys.setenv(R_LIBS = old_r_libs)
+    }
+  }, add = TRUE)
+  Sys.setenv(R_LIBS = paste(child_libraries, collapse = .Platform$path.sep))
   static <- mfrmr_fc_g4h_test_installed_evidence(
     context, installed_library
   )
@@ -247,6 +264,7 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
     SupportRegistrySHA256 = manifest$SupportRegistryHash,
     Binding = manifest$Binding,
     CheckLogSHA256 = mfrmr_fc_g4h_file_hash(check_log),
+    ChildLibraryCount = as.integer(length(child_libraries)),
     StaticEvidence = static,
     ConfirmationOutputSHA256 = mfrmr_fc_g4h_file_hash(worker_output),
     DenominatorCells = result$DenominatorCells,
