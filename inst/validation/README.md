@@ -135,8 +135,20 @@ identify whether the opt-in layer ran and retain its test log.
   0.2.3.1 public baseline and both patch-equivalent integration commits are
   present, scans all compiled sources for the forbidden header override, and
   freezes the eight-file post-maintenance production boundary. It also verifies
-  that routine CI cannot issue legacy v5 G4 receipts. It deliberately leaves
-  the successor disjoint confirmation contract, G4, and G6 open.
+  that routine CI cannot issue legacy v5 G4 receipts and that the successor v6
+  contract is frozen but unopened. G4 and G6 remain open.
+- `fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R`,
+  `fixed-calibration-g4-post-maintenance-v6-worker-0.2.4.R`, and
+  `fixed-calibration-g4-post-maintenance-v6-contract-record-0.2.4.md`: freeze
+  the disjoint modular-1061/default-31 and modular-1063/source-one fixtures,
+  retain the historical nine-node control as non-authorizing, bind both
+  compiled translation units and the compiled-header regression, and cover the
+  unchanged 49-cell denominator. The contract is candidate-unbound and opens
+  no result.
+- `.github/workflows/fixed-calibration-g4-v6.yaml` and its reusable cell
+  workflow: provide a manual-only macOS-first five-platform confirmation path.
+  Routine pushes continue to use the check-only workflow and cannot issue v6
+  receipts.
 - `release-check-runner-0.2.4.R`: builds and checks the exact source tarball in
   each routine CI cell and writes a check-only receipt. The receipt fixes
   `G4EvidenceIssued=FALSE`; the runner never calls a G4 worker or aggregator.
@@ -145,7 +157,8 @@ identify whether the opt-in layer ran and retain its test log.
   the read-only live-Git and optional source-tarball binding boundary. A second
   live Git observation rejects synthetic clean identities; safe temporary
   tarball inspection binds the complete package file registry and requires the
-  five production-boundary files to match the repository. The current dirty,
+  generation-specific production boundary to match the repository. The v6
+  profile includes eight production files and ten support files. A dirty or
   tarball-absent development state is refused without opening confirmation.
 - `fixed-calibration-g4-candidate-source-inventory-0.2.4.R` and
   `fixed-calibration-g4-candidate-source-inventory-record-0.2.4.md`: classify

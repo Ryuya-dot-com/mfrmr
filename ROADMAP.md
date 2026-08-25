@@ -2256,9 +2256,12 @@ required children are checked.
   - [x] Stop automatic v5 G4 receipt issuance after the maintenance merge and
     keep the five-platform exact source-tarball package check independent of
     G4 confirmation until a successor contract is frozen.
-  - [ ] Freeze a successor disjoint confirmation identity whose production
+  - [x] Freeze a successor disjoint confirmation identity whose production
     boundary includes both compiled translation units and whose support
-    registry includes the compiled-header regression contract.
+    registry includes the compiled-header regression contract. The unopened
+    v6 contract uses modular-1061/default-31 and modular-1063/source-one
+    fixtures and can run only through a manually dispatched workflow that is
+    separate from routine package checks.
   - [ ] Bind one clean post-maintenance candidate and rerun the complete local
     denominator, GCC-LTO check, five-platform matrix, full Ubuntu-release
     suite, and receipt aggregation without pooling v5 results.

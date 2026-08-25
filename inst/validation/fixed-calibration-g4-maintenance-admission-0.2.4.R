@@ -50,6 +50,11 @@ mfrmr_fc_g4m_required_support_boundary <- function() {
       "inst/validation/fixed-calibration-g0-maintenance-addendum-0.2.4.md",
       "inst/validation/fixed-calibration-boundary-hardening-0.2.4.md",
       "inst/validation/release-check-runner-0.2.4.R",
+      "inst/validation/fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R",
+      "inst/validation/fixed-calibration-g4-post-maintenance-v6-worker-0.2.4.R",
+      "tests/testthat/test-fixed-calibration-g4-v6-evidence.R",
+      ".github/workflows/fixed-calibration-g4-v6.yaml",
+      ".github/workflows/fixed-calibration-g4-v6-cell.yaml",
       ".github/workflows/R-CMD-check.yaml",
       ".github/workflows/R-CMD-check-cell.yaml"
     ),
@@ -59,6 +64,11 @@ mfrmr_fc_g4m_required_support_boundary <- function() {
       "maintenance_patch_bridge",
       "post_maintenance_gate_disposition",
       "package_check_without_g4_receipt",
+      "post_maintenance_v6_contract",
+      "post_maintenance_v6_worker",
+      "post_maintenance_v6_repository_test",
+      "manual_v6_matrix_orchestration",
+      "manual_v6_platform_execution",
       "five_platform_check_orchestration",
       "platform_check_without_legacy_g4_issuance"
     ),
@@ -205,15 +215,38 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     identical(tolower(description_value("Config/mfrmr/release-status")),
               "development") &&
     identical(description_value("Config/mfrmr/public-version"), "0.2.3.1")
+  v6_path <- file.path(
+    repo_root, "inst", "validation",
+    "fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R"
+  )
+  v6_review <- if (file.exists(v6_path)) {
+    tryCatch({
+      environment <- new.env(parent = globalenv())
+      sys.source(v6_path, envir = environment)
+      environment$mfrmr_fc_g4v6_review()
+    }, error = identity)
+  } else {
+    simpleError("The post-maintenance v6 contract is absent.")
+  }
+  v6_contract_frozen <- !inherits(v6_review, "error") &&
+    identical(
+      v6_review$status,
+      "G4_v6_rules_frozen_candidate_unbound_confirmation_unopened"
+    ) && isTRUE(v6_review$rules_frozen) &&
+    isTRUE(v6_review$v6_identities_disjoint_and_frozen) &&
+    isTRUE(v6_review$denominator_frozen) &&
+    isTRUE(v6_review$compiled_boundary_frozen) &&
+    !isTRUE(v6_review$v6_execution_opened) &&
+    !isTRUE(v6_review$G4_exit_complete)
   bridge_complete <- all(required_present) && baseline_ok && all(integrated) &&
     length(scanned) > 0L && !any(header_override) &&
     length(invalid_hits) == 0L && metadata_ok && v5_change$Status == 1L &&
-    legacy_v5_automatic_issuance_disabled
+    legacy_v5_automatic_issuance_disabled && v6_contract_frozen
 
   list(
     Contract = "mfrmr_fixed_calibration_g4_maintenance_admission_v1",
     Status = if (bridge_complete) {
-      "maintenance_bridge_complete_v6_confirmation_required"
+      "maintenance_bridge_complete_v6_contract_frozen_execution_required"
     } else {
       "maintenance_bridge_blocked"
     },
@@ -234,7 +267,7 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     LegacyV5AutomaticIssuanceDisabled =
       legacy_v5_automatic_issuance_disabled,
     V6SourceBoundaryFrozen = TRUE,
-    V6ConfirmationContractFrozen = FALSE,
+    V6ConfirmationContractFrozen = v6_contract_frozen,
     PostMaintenanceG4Complete = FALSE,
     G6Authorized = FALSE,
     MaintenanceBridgeComplete = bridge_complete

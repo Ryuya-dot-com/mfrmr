@@ -69,7 +69,10 @@ mfrmr_fc_g4i_classify_path <- function(path) {
       grepl("^inst/extdata/vignette-artifacts/", path)) {
     return("release_public_and_user_facing_surface")
   }
-  if (grepl("^[.]github/workflows/R-CMD-check(-cell)?[.]yaml$", path) ||
+  if (grepl(
+        "^[.]github/workflows/(R-CMD-check(-cell)?|fixed-calibration-g4-v6(-cell)?)[.]yaml$",
+        path
+      ) ||
       identical(path, ".Rbuildignore") ||
       path %in% c(
         "inst/validation/README.md",
@@ -105,7 +108,10 @@ mfrmr_fc_g4i_package_payload_expected <- function(path, classification) {
   }
   if (classification == "release_build_test_and_repository_evidence") {
     repository_only <-
-      grepl("^[.]github/workflows/R-CMD-check(-cell)?[.]yaml$", path) ||
+      grepl(
+        "^[.]github/workflows/(R-CMD-check(-cell)?|fixed-calibration-g4-v6(-cell)?)[.]yaml$",
+        path
+      ) ||
       identical(path, ".Rbuildignore") ||
       grepl("^inst/validation/", path) ||
       path %in% c(
@@ -174,6 +180,7 @@ mfrmr_fc_g4i_buildignore_contract <- function(repo_root = ".") {
     "^tests/testthat/test-gtheory-.*[.]R$",
     "^tests/testthat/test-rater-anchor-.*[.]R$",
     "^tests/testthat/test-fixed-calibration-g4-evidence[.]R$",
+    "^tests/testthat/test-fixed-calibration-g4-v6-evidence[.]R$",
     "^tests/testthat/test-fixed-calibration-g5-disposition[.]R$"
   )
   data.frame(
@@ -182,7 +189,7 @@ mfrmr_fc_g4i_buildignore_contract <- function(repo_root = ".") {
     Role = c(
       "repository_validation_exclusion", "gtheory_research_test_exclusion",
       "anchor_research_test_exclusion", "g4_repository_test_exclusion",
-      "g5_repository_test_exclusion"
+      "g4_v6_repository_test_exclusion", "g5_repository_test_exclusion"
     ),
     stringsAsFactors = FALSE
   )

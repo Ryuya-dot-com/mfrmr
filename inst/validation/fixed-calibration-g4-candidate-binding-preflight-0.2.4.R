@@ -253,10 +253,44 @@ mfrmr_fc_g4b_assert_git_identity <- function(identity) {
   invisible(TRUE)
 }
 
+mfrmr_fc_g4b_profile <- function() {
+  generation <- Sys.getenv(
+    "MFRMR_G4_CONTRACT_GENERATION", unset = "v5"
+  )
+  if (identical(generation, "v6")) {
+    return(list(
+      Generation = "v6",
+      ContractFile =
+        "fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R",
+      ContractStatus =
+        "G4_v6_rules_frozen_candidate_unbound_confirmation_unopened",
+      WorkerFile =
+        "fixed-calibration-g4-post-maintenance-v6-worker-0.2.4.R",
+      EvidenceTest = "test-fixed-calibration-g4-v6-evidence.R",
+      CellWorkflow = "fixed-calibration-g4-v6-cell.yaml",
+      MatrixWorkflow = "fixed-calibration-g4-v6.yaml"
+    ))
+  }
+  if (!identical(generation, "v5")) {
+    stop("The requested G4 contract generation is unsupported.",
+         call. = FALSE)
+  }
+  list(
+    Generation = "v5",
+    ContractFile = "fixed-calibration-g4-current-source-contract-0.2.4.R",
+    ContractStatus =
+      "G4_current_rules_frozen_candidate_unbound_confirmation_unopened",
+    WorkerFile = "fixed-calibration-g4-confirmation-worker-0.2.4.R",
+    EvidenceTest = "test-fixed-calibration-g4-evidence.R",
+    CellWorkflow = "R-CMD-check-cell.yaml",
+    MatrixWorkflow = "R-CMD-check.yaml"
+  )
+}
+
 mfrmr_fc_g4b_contract_context <- function(repo_root = ".") {
+  profile <- mfrmr_fc_g4b_profile()
   path <- file.path(
-    repo_root, "inst", "validation",
-    "fixed-calibration-g4-current-source-contract-0.2.4.R"
+    repo_root, "inst", "validation", profile$ContractFile
   )
   if (!file.exists(path)) {
     stop("The amended G4 contract is absent.", call. = FALSE)
@@ -264,16 +298,24 @@ mfrmr_fc_g4b_contract_context <- function(repo_root = ".") {
   environment <- new.env(parent = globalenv())
   sys.source(path, envir = environment)
   review <- environment$mfrmr_fc_g4_current_review()
+  opened_field <- if (identical(profile$Generation, "v6")) {
+    "v6_execution_opened"
+  } else {
+    "current_execution_opened"
+  }
   if (!identical(
-    review$status,
-    "G4_current_rules_frozen_candidate_unbound_confirmation_unopened"
+    review$status, profile$ContractStatus
   ) || !isTRUE(review$rules_frozen) ||
-      isTRUE(review$current_execution_opened) ||
-      isTRUE(review$G4_exit_complete)) {
+      !opened_field %in% names(review) ||
+      !identical(review[[opened_field]], FALSE) ||
+      !"G4_exit_complete" %in% names(review) ||
+      !identical(review$G4_exit_complete, FALSE)) {
     stop("The amended G4 contract is not frozen and unopened.", call. = FALSE)
   }
-  list(Path = normalizePath(path, mustWork = TRUE), Environment = environment,
-       Review = review)
+  list(
+    Path = normalizePath(path, mustWork = TRUE), Environment = environment,
+    Review = review, Profile = profile
+  )
 }
 
 mfrmr_fc_g4b_package_version <- function(repo_root = ".") {
@@ -341,30 +383,42 @@ mfrmr_fc_g4b_description_semantics <- function(source_path, built_path) {
 
 mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
   context <- mfrmr_fc_g4b_contract_context(repo_root)
+  profile <- context$Profile
   boundary <- context$Environment$mfrmr_fc_g4_current_production_boundary()
   production <- mfrmr_fc_g4b_file_registry(
     repo_root, boundary$Path, rep("production_boundary", nrow(boundary))
   )
   support_paths <- c(
-    "inst/validation/fixed-calibration-g4-current-source-contract-0.2.4.R",
-    "inst/validation/fixed-calibration-g4-confirmation-worker-0.2.4.R",
-    "tests/testthat/test-fixed-calibration-g4-evidence.R",
+    file.path("inst", "validation", profile$ContractFile),
+    file.path("inst", "validation", profile$WorkerFile),
+    file.path("tests", "testthat", profile$EvidenceTest),
     "inst/validation/fixed-calibration-g4-candidate-binding-preflight-0.2.4.R",
     "inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R",
-    ".github/workflows/R-CMD-check-cell.yaml",
-    ".github/workflows/R-CMD-check.yaml"
+    file.path(".github", "workflows", profile$CellWorkflow),
+    file.path(".github", "workflows", profile$MatrixWorkflow)
   )
-  support <- mfrmr_fc_g4b_file_registry(
-    repo_root, support_paths,
-    c(
-      "contract", "confirmation_worker", "confirmation_test",
-      "binding_preflight", "hosted_runner", "hosted_cell_workflow",
-      "hosted_matrix_workflow"
+  support_roles <- c(
+    "contract", "confirmation_worker", "confirmation_test",
+    "binding_preflight", "hosted_runner", "hosted_cell_workflow",
+    "hosted_matrix_workflow"
+  )
+  if (identical(profile$Generation, "v6")) {
+    support_paths <- c(
+      support_paths,
+      "tests/testthat/test-compiled-header-contract.R",
+      "inst/validation/fixed-calibration-g4-maintenance-admission-0.2.4.R",
+      "inst/validation/public-release-baseline-0.2.4.csv"
     )
+    support_roles <- c(
+      support_roles, "compiled_header_regression",
+      "maintenance_admission", "public_predecessor_identity"
+    )
+  }
+  support <- mfrmr_fc_g4b_file_registry(
+    repo_root, support_paths, support_roles
   )
   worker_path <- file.path(
-    repo_root, "inst", "validation",
-    "fixed-calibration-g4-confirmation-worker-0.2.4.R"
+    repo_root, "inst", "validation", profile$WorkerFile
   )
   worker_environment <- new.env(parent = globalenv())
   worker_error <- tryCatch({
@@ -372,12 +426,29 @@ mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
     NULL
   }, error = identity)
   denominator <- context$Environment$mfrmr_fc_g4_current_denominator()
+  worker_id_function <- if (identical(profile$Generation, "v6")) {
+    "mfrmr_fc_g4v6w_cell_ids"
+  } else {
+    "mfrmr_fc_g4w_cell_ids"
+  }
+  handler_function <- if (identical(profile$Generation, "v6")) {
+    "mfrmr_fc_g4v6w_handlers"
+  } else {
+    "mfrmr_fc_g4w_current_handlers"
+  }
   worker_ids <- if (is.null(worker_error) &&
-      exists("mfrmr_fc_g4w_cell_ids", envir = worker_environment,
+      exists(worker_id_function, envir = worker_environment,
              inherits = FALSE)) {
-    tryCatch(
-      worker_environment$mfrmr_fc_g4w_cell_ids(), error = identity
-    )
+    tryCatch({
+      function_value <- get(
+        worker_id_function, envir = worker_environment, inherits = FALSE
+      )
+      if (identical(profile$Generation, "v6")) {
+        function_value(repo_root)
+      } else {
+        function_value()
+      }
+    }, error = identity)
   } else {
     if (is.null(worker_error)) {
       simpleError("The confirmation worker has no cell registry.")
@@ -386,12 +457,22 @@ mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
     }
   }
   handler_names <- if (!inherits(worker_ids, "error") &&
-      exists("mfrmr_fc_g4w_current_handlers", envir = worker_environment,
+      exists(handler_function, envir = worker_environment,
              inherits = FALSE)) {
-    tryCatch(names(worker_environment$mfrmr_fc_g4w_current_handlers(
-      context$Environment, normalizePath(repo_root, mustWork = TRUE),
-      normalizePath(worker_path, mustWork = TRUE)
-    )), error = identity)
+    tryCatch({
+      function_value <- get(
+        handler_function, envir = worker_environment, inherits = FALSE
+      )
+      arguments <- if (identical(profile$Generation, "v6")) {
+        list(context$Environment, normalizePath(repo_root, mustWork = TRUE))
+      } else {
+        list(
+          context$Environment, normalizePath(repo_root, mustWork = TRUE),
+          normalizePath(worker_path, mustWork = TRUE)
+        )
+      }
+      names(do.call(function_value, arguments))
+    }, error = identity)
   } else {
     worker_ids
   }

@@ -1,6 +1,7 @@
 # 0.2.4 boundary-hardening disposition
 
-Status: `maintenance_integrated_post_maintenance_g4_pending`, 2026-08-26.
+Status: `maintenance_integrated_v6_contract_frozen_execution_pending`,
+2026-08-26.
 
 ## Decision
 
@@ -60,8 +61,8 @@ The ordinary five-platform CI check is now separated from G4 confirmation.
 The workflow builds and checks one exact source tarball per cell, records a
 check-only receipt with `G4EvidenceIssued=FALSE`, and does not invoke the v5
 hosted runner or aggregate v5 receipts. This prevents a green routine check
-from being misread as post-maintenance G4 evidence before the successor
-contract and disjoint identities exist.
+from being misread as post-maintenance G4 evidence. The successor v6 contract
+is now frozen, but remains candidate-unbound and unopened.
 
 The audit additionally revealed that a portable calibration extracted from an
 otherwise eligible one-node MML source fit could inherit that grid. Draft
@@ -91,7 +92,8 @@ not close the reopened independent or cross-platform gates.
    It must retain the scoring algorithm, the 31-node default, an explicit
    non-authorizing nine-node historical control, a one-node source-fit
    adversary, and all replay, scoring, checkpoint, and operational cells while
-   adding both compiled translation units to the production boundary.
+   adding both compiled translation units to the production boundary. This is
+   complete under the unopened modular-1061/1063 v6 identity.
 2. Bind one clean candidate source identity, then add a disjoint posterior
    oracle and semantic-identity mutations that do not
    call production scoring or identity helpers.
@@ -117,7 +119,7 @@ not close the reopened independent or cross-platform gates.
 - `HistoricalG4Retained=TRUE`
 - `HistoricalG4CurrentSourceEvidence=FALSE`
 - `LegacyV5AutomaticIssuanceDisabled=TRUE`
-- `PostMaintenanceG4ContractFrozen=FALSE`
+- `PostMaintenanceG4ContractFrozen=TRUE`
 - `PostMaintenanceG4CurrentExecutionOpened=FALSE`
 - `PostMaintenanceG4CandidateBound=FALSE`
 - `CandidateBindingPreflightImplemented=TRUE`

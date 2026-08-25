@@ -493,7 +493,7 @@ test_that("amended G4 v5 contract remains immutable historical evidence", {
     hardening, "`HistoricalG4CurrentSourceEvidence=FALSE`", fixed = TRUE
   )
   expect_match(
-    hardening, "`PostMaintenanceG4ContractFrozen=FALSE`", fixed = TRUE
+    hardening, "`PostMaintenanceG4ContractFrozen=TRUE`", fixed = TRUE
   )
   expect_match(
     roadmap,
@@ -911,7 +911,7 @@ test_that("G4 candidate inventory keeps deferred research outside payload", {
   expect_false(any(payload))
   ignore <- ctx$env$mfrmr_fc_g4i_buildignore_contract(ctx$root)
   expect_true(all(ignore$PresentExactly))
-  expect_identical(nrow(ignore), 5L)
+  expect_identical(nrow(ignore), 6L)
 })
 
 test_that("G4 candidate inventory keeps internal mechanics out of public help", {
@@ -1610,7 +1610,7 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
   )
   expect_identical(
     review$Status,
-    "maintenance_bridge_complete_v6_confirmation_required"
+    "maintenance_bridge_complete_v6_contract_frozen_execution_required"
   )
   expect_true(review$RequiredPathsPresent)
   expect_true(review$PublicBaselineMatched)
@@ -1622,7 +1622,7 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
   expect_true(review$V5EvidenceRetainedAsHistorical)
   expect_true(review$LegacyV5AutomaticIssuanceDisabled)
   expect_true(review$V6SourceBoundaryFrozen)
-  expect_false(review$V6ConfirmationContractFrozen)
+  expect_true(review$V6ConfirmationContractFrozen)
   expect_false(review$PostMaintenanceG4Complete)
   expect_false(review$G6Authorized)
   expect_true(review$MaintenanceBridgeComplete)

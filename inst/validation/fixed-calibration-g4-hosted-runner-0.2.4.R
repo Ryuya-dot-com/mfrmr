@@ -30,19 +30,47 @@ mfrmr_fc_g4h_context <- function(package_root) {
     package_root, winslash = "/", mustWork = TRUE
   )
   validation <- file.path(package_root, "inst", "validation")
+  generation <- Sys.getenv(
+    "MFRMR_G4_CONTRACT_GENERATION", unset = "v5"
+  )
+  mfrmr_fc_g4h_assert(
+    generation %in% c("v5", "v6"),
+    "The requested hosted G4 contract generation is unsupported."
+  )
+  v6 <- identical(generation, "v6")
   contract_path <- file.path(
-    validation, "fixed-calibration-g4-current-source-contract-0.2.4.R"
+    validation,
+    if (v6) {
+      "fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R"
+    } else {
+      "fixed-calibration-g4-current-source-contract-0.2.4.R"
+    }
   )
   preflight_path <- file.path(
     validation,
     "fixed-calibration-g4-candidate-binding-preflight-0.2.4.R"
   )
   worker_path <- file.path(
-    validation, "fixed-calibration-g4-confirmation-worker-0.2.4.R"
+    validation,
+    if (v6) {
+      "fixed-calibration-g4-post-maintenance-v6-worker-0.2.4.R"
+    } else {
+      "fixed-calibration-g4-confirmation-worker-0.2.4.R"
+    }
+  )
+  evidence_test_path <- file.path(
+    package_root, "tests", "testthat",
+    if (v6) {
+      "test-fixed-calibration-g4-v6-evidence.R"
+    } else {
+      "test-fixed-calibration-g4-evidence.R"
+    }
   )
   mfrmr_fc_g4h_assert(
-    all(file.exists(c(contract_path, preflight_path, worker_path))),
-    "The hosted G4 contract, preflight, or worker is absent."
+    all(file.exists(c(
+      contract_path, preflight_path, worker_path, evidence_test_path
+    ))),
+    "The hosted G4 contract, preflight, worker, or evidence test is absent."
   )
   contract <- new.env(parent = globalenv())
   preflight <- new.env(parent = globalenv())
@@ -51,7 +79,12 @@ mfrmr_fc_g4h_context <- function(package_root) {
   list(
     PackageRoot = package_root, Validation = validation,
     Contract = contract, Preflight = preflight,
-    WorkerPath = normalizePath(worker_path, winslash = "/", mustWork = TRUE)
+    Generation = generation,
+    WorkerMode = if (v6) "v6" else "current",
+    WorkerPath = normalizePath(worker_path, winslash = "/", mustWork = TRUE),
+    EvidenceTestPath = normalizePath(
+      evidence_test_path, winslash = "/", mustWork = TRUE
+    )
   )
 }
 
@@ -105,10 +138,7 @@ mfrmr_fc_g4h_test_installed_evidence <- function(context, installed_library) {
     same, "Hosted G4 tests did not load the checked package."
   )
   result <- testthat::test_file(
-    file.path(
-      context$PackageRoot, "tests", "testthat",
-      "test-fixed-calibration-g4-evidence.R"
-    ),
+    context$EvidenceTestPath,
     reporter = "summary"
   )
   counts <- as.data.frame(result)
@@ -288,7 +318,8 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
   worker_log <- system2(
     rscript,
     c(
-      "--vanilla", context$WorkerPath, "current", context$PackageRoot,
+      "--vanilla", context$WorkerPath, context$WorkerMode,
+      context$PackageRoot,
       tarball, binding_path, worker_output
     ),
     stdout = TRUE, stderr = TRUE

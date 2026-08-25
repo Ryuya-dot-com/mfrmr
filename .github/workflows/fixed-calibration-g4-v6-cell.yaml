@@ -2,7 +2,7 @@ on:
   workflow_call:
     inputs:
       os:
-        description: Runner image for the required platform cell.
+        description: Runner image for the frozen v6 platform cell.
         required: true
         type: string
       r:
@@ -10,7 +10,7 @@ on:
         required: true
         type: string
       cell-id:
-        description: Package-check platform cell identifier.
+        description: Frozen post-maintenance G4 v6 cell identifier.
         required: true
         type: string
       full:
@@ -33,6 +33,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
       NOT_CRAN: ${{ inputs.full && 'true' || 'false' }}
+      MFRMR_G4_CONTRACT_GENERATION: v6
 
     steps:
       - uses: actions/checkout@v4
@@ -49,70 +50,73 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # Invalidate compiled-package caches after the runner TBB ABI change.
           cache-version: "2"
           extra-packages: any::digest, any::pkgbuild, any::rcmdcheck, any::testthat
           needs: check
 
-      - name: Exact source-tarball R CMD check (G4 confirmation held)
+      - name: Exact bound-tarball check and post-maintenance G4 v6 evidence
         env:
+          MFRMR_G4_CELL_ID: ${{ inputs.cell-id }}
+          MFRMR_G4_R_SELECTOR: ${{ inputs.r }}
           MFRMR_CHECK_ERROR_ON: warning
         run: |
           Rscript --vanilla \
-            inst/validation/release-check-runner-0.2.4.R \
-            . validation-results/release-check
+            inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R \
+            cell . validation-results/g4-v6-hosted
         shell: bash
 
-      - name: Upload check results
+      - name: Upload v6 check results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: r-cmd-check-${{ inputs.cell-id }}
+          name: g4-v6-check-${{ inputs.cell-id }}
           path: |
-            validation-results/release-check/check
-            validation-results/release-check/release-check-receipt.rds
+            validation-results/g4-v6-hosted/check
+            validation-results/g4-v6-hosted/worker.log
+          if-no-files-found: ignore
+
+      - name: Upload bound G4 v6 cell receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g4-v6-evidence-${{ inputs.cell-id }}
+          path: validation-results/g4-v6-hosted/hosted-cell-receipt.rds
           if-no-files-found: ignore
 
       - name: Repository validation review
         run: |
           source("inst/validation/release-readiness.R")
-          maintenance <- new.env(parent = globalenv())
+          hosted <- new.env(parent = globalenv())
           sys.source(
-            paste0(
-              "inst/validation/",
-              "fixed-calibration-g4-maintenance-admission-0.2.4.R"
-            ),
-            envir = maintenance
+            "inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R",
+            envir = hosted
           )
           tarball <- list.files(
-            "validation-results/release-check",
+            "validation-results/g4-v6-hosted",
             pattern = "^mfrmr_[0-9.]+[.]tar[.]gz$", full.names = TRUE
           )
           if (length(tarball) != 1L) {
-            stop("The checked source tarball is unavailable.", call. = FALSE)
+            stop("The bound G4 v6 source tarball is unavailable.",
+                 call. = FALSE)
           }
           readiness <- mfrmr_release_readiness_review(
             pkg_dir = ".",
             check_log = file.path(
-              "validation-results/release-check/check/",
+              "validation-results/g4-v6-hosted/check/",
               "mfrmr.Rcheck/00check.log"
             ),
             tarball = tarball
           )
           print(summary(readiness))
-          admission <- maintenance$mfrmr_fc_g4m_review(".")
-          stopifnot(
-            isTRUE(readiness$source_truth_status$SourceTruthOK[[1L]]),
-            isTRUE(readiness$check_status$CheckPassed[[1L]]),
-            isTRUE(readiness$ci_workflow_status$CIWorkflowOK[[1L]]),
-            isTRUE(admission$MaintenanceBridgeComplete),
-            isTRUE(admission$LegacyV5AutomaticIssuanceDisabled),
-            isTRUE(admission$V6ConfirmationContractFrozen),
-            !isTRUE(admission$PostMaintenanceG4Complete)
+          context <- hosted$mfrmr_fc_g4h_context(".")
+          stopifnot(identical(context$Generation, "v6"))
+          g4_review <- hosted$mfrmr_fc_g4h_repository_review(
+            context, readiness
           )
+          print(g4_review$RequiredGates, row.names = FALSE)
           cat(
-            "Package check complete; no G4 receipt issued; G6 and public ",
-            "API remain unauthorized.\n",
+            "Hosted post-maintenance G4 v6 repository scope complete; ",
+            "G6 and public API remain unauthorized.\n",
             sep = ""
           )
         shell: Rscript {0}
