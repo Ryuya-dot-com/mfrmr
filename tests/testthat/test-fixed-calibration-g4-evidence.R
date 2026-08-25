@@ -1338,6 +1338,7 @@ test_that("macOS gates standard checks while legacy v5 issuance is disabled", {
   ))
 
   expect_match(cell, "  workflow_call:", fixed = TRUE)
+  expect_match(cell, "          fetch-depth: 0", fixed = TRUE)
   expect_match(cell, "Exact source-tarball R CMD check (G4 confirmation held)",
                fixed = TRUE)
   expect_match(
