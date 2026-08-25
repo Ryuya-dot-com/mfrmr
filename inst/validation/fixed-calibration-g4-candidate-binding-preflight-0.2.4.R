@@ -333,9 +333,12 @@ mfrmr_fc_g4b_tarball_observation <- function(
   registry <- data.frame(
     Ordinal = seq_along(files), Path = files,
     Bytes = as.numeric(file.info(full)$size),
-    SHA256 = vapply(full, mfrmr_fc_g4b_file_hash, character(1L)),
+    SHA256 = unname(vapply(
+      full, mfrmr_fc_g4b_file_hash, character(1L)
+    )),
     stringsAsFactors = FALSE
   )
+  rownames(registry) <- NULL
   description <- file.path(package_root, "DESCRIPTION")
   package_version <- tryCatch(
     as.character(read.dcf(description, fields = "Version")[1L, 1L]),

@@ -557,6 +557,22 @@ test_that("G4 candidate binding represents zero refusals as an empty table", {
   expect_identical(empty$Disposition, character(0))
 })
 
+test_that("G4 tarball registries exclude ephemeral row-name identity", {
+  files <- c("mfrmr/DESCRIPTION", "mfrmr/R/example.R")
+  hashes <- setNames(c(
+    paste(rep("a", 64L), collapse = ""),
+    paste(rep("b", 64L), collapse = "")
+  ), file.path(tempdir(), files))
+  registry <- data.frame(
+    Ordinal = seq_along(files), Path = files, Bytes = c(10, 20),
+    SHA256 = unname(hashes), stringsAsFactors = FALSE
+  )
+  rownames(registry) <- NULL
+  expect_identical(rownames(registry), c("1", "2"))
+  expect_identical(names(registry$SHA256), NULL)
+  expect_false(any(grepl(tempdir(), registry$SHA256, fixed = TRUE)))
+})
+
 test_that("G4 candidate-binding record retains the live refusal boundary", {
   ctx <- load_fixed_calibration_g4_candidate_binding()
   record_path <- file.path(

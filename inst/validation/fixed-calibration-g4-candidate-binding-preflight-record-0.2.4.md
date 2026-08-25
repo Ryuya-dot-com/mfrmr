@@ -34,6 +34,14 @@ manifest and before any confirmation cell opened. The disposition column now
 has exactly the reason-code length, including zero, and an explicit empty-table
 regression prevents a success-only recurrence.
 
+The next clean-candidate recomputation retained a second success-only harness
+incident before admission: the tarball file-hash vector carried names derived
+from the temporary extraction directory, so otherwise identical observations
+received different data-frame row names and registry hashes. The manifest
+assertion rejected the first observation; no receipt or confirmation result
+was accepted. Tarball hashes are now explicitly unnamed and registry row names
+reset, so ephemeral extraction paths cannot enter candidate identity.
+
 The 2026-08-25 live development tree is not a candidate. It contains ongoing
 tracked and untracked work and no bound source tarball was supplied. The
 preflight therefore returns a typed refusal and keeps current confirmation
@@ -52,6 +60,8 @@ commit and its matching `mfrmr_0.2.4.9000.tar.gz` payload.
 - `InitialDescriptionNormalizationIncidentOpenedConfirmation=FALSE`
 - `ZeroRefusalTransportIncidentRetained=TRUE`
 - `ZeroRefusalTransportIncidentOpenedConfirmation=FALSE`
+- `EphemeralTarballRowNameIncidentRetained=TRUE`
+- `EphemeralTarballRowNameIncidentOpenedConfirmation=FALSE`
 - `CurrentExecutionOpened=FALSE`
 - `ConfirmationResultObserved=FALSE`
 - `CORE05Complete=FALSE`
