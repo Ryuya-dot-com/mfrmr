@@ -55,6 +55,20 @@ load_fixed_calibration_g4_candidate_inventory <- function() {
   list(root = root, validation = validation, script = script, env = env)
 }
 
+load_fixed_calibration_release_candidate_transition <- function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  script <- file.path(
+    validation, "fixed-calibration-release-candidate-transition-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(script), "Release-candidate transition contract is excluded."
+  )
+  env <- new.env(parent = globalenv())
+  sys.source(script, envir = env)
+  list(root = root, validation = validation, script = script, env = env)
+}
+
 load_fixed_calibration_g4_maintenance_admission <- function() {
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   validation <- file.path(root, "inst", "validation")
@@ -1937,4 +1951,174 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   expect_false(grepl(
     "mfrmr-internal-strategic-roadmap", public_text, fixed = TRUE
   ))
+})
+
+test_that("0.2.4 candidate transition admits metadata but refuses payload drift", {
+  transition <- load_fixed_calibration_release_candidate_transition()
+  contract <- transition$env$mfrmr_rc04_contract()
+  review <- transition$env$mfrmr_rc04_review(transition$root)
+
+  expect_identical(
+    contract$ContractId, "mfrmr_release_candidate_transition_0_2_4_v1"
+  )
+  expect_identical(contract$TargetVersion, "0.2.4")
+  expect_identical(contract$DevelopmentVersion, "0.2.4.9000")
+  expect_identical(contract$PublicPredecessor, "0.2.3.1")
+  expect_identical(
+    contract$G6ValidatedCommit,
+    "cf20dd0167db3f39224cea7d1c70998b1142f81f"
+  )
+  expect_identical(contract$G6HostedRunId, "32906087561")
+  expect_identical(
+    contract$ProductionChangePolicy,
+    "invalidate_candidate_return_to_development_and_rerun_evidence"
+  )
+  expect_false(contract$SubmissionAuthorized)
+
+  expect_true(review$G6BaselineAncestor)
+  expect_true(review$ChangedPathsAllowed)
+  expect_true(review$ProductionPayloadUnchanged)
+  expect_true(review$G6DecisionBound)
+  expect_true(review$Metadata$DevelopmentMetadataOK)
+  expect_identical(review$Metadata$Stage, "development")
+  expect_true(review$DevelopmentTransitionReady)
+  expect_false(review$CandidateReady)
+  expect_false(review$SubmissionAuthorized)
+  expect_false(any(
+    review$Inventory$Classification == "package_payload_change_forbidden"
+  ))
+
+  classify <- transition$env$mfrmr_rc04_classify_path
+  expect_identical(
+    classify("DESCRIPTION"), "candidate_package_metadata"
+  )
+  expect_identical(classify("NEWS.md"), "candidate_package_metadata")
+  expect_identical(
+    classify("CITATION.cff"),
+    "candidate_repository_metadata_or_internal_roadmap"
+  )
+  expect_identical(
+    classify("inst/validation/candidate-record.md"),
+    "candidate_internal_evidence"
+  )
+  expect_identical(
+    classify("R/api-calibration.R"), "package_payload_change_forbidden"
+  )
+  expect_identical(
+    classify("man/mfrm_calibration_workflow.Rd"),
+    "package_payload_change_forbidden"
+  )
+  expect_identical(
+    classify("vignettes/mfrmr-portable-calibration.Rmd"),
+    "package_payload_change_forbidden"
+  )
+})
+
+test_that("0.2.4 candidate metadata transition is exact and adversarial", {
+  transition <- load_fixed_calibration_release_candidate_transition()
+  env <- transition$env
+  base <- env$mfrmr_rc04_contract()$G6ValidatedCommit
+  baseline_description <- env$mfrmr_rc04_git_lines(
+    transition$root, base, "DESCRIPTION"
+  )
+  baseline_cff <- env$mfrmr_rc04_git_lines(
+    transition$root, base, "CITATION.cff"
+  )
+  baseline_news <- env$mfrmr_rc04_git_lines(
+    transition$root, base, "NEWS.md"
+  )
+
+  candidate_description <- sub(
+    "^Version: 0[.]2[.]4[.]9000$", "Version: 0.2.4",
+    baseline_description
+  )
+  version_row <- which(candidate_description == "Version: 0.2.4")
+  candidate_description <- append(
+    candidate_description, "Date: 2026-08-26", after = version_row
+  )
+  candidate_description <- sub(
+    "^Config/mfrmr/release-status: development$",
+    "Config/mfrmr/release-status: candidate",
+    candidate_description
+  )
+  candidate_cff <- sub(
+    '^version: "0[.]2[.]4[.]9000"$', 'version: "0.2.4"', baseline_cff
+  )
+  cff_version_row <- which(candidate_cff == 'version: "0.2.4"')
+  candidate_cff <- append(
+    candidate_cff, 'date-released: "2026-08-26"',
+    after = cff_version_row
+  )
+  candidate_news <- baseline_news
+  candidate_news[grep("^# ", candidate_news)[1L]] <- "# mfrmr 0.2.4"
+  candidate_cran <- c(
+    "This is an update from mfrmr 0.2.3.1 to 0.2.4.",
+    "Portable calibration supports RSM and PCM MML under a fixed-standard-normal basis.",
+    "GPCM and JML portable-calibration routes are unavailable.",
+    "Checks completed with 0 errors, 0 warnings, and 0 notes."
+  )
+  review_candidate <- function(
+      description = candidate_description,
+      cff = candidate_cff,
+      news = candidate_news,
+      cran = candidate_cran) {
+    env$mfrmr_rc04_metadata_review(
+      description_lines = description,
+      cff_lines = cff,
+      news_lines = news,
+      cran_comments_lines = cran,
+      baseline_description_lines = baseline_description,
+      baseline_cff_lines = baseline_cff,
+      baseline_news_lines = baseline_news
+    )
+  }
+
+  candidate <- review_candidate()
+  expect_identical(candidate$Stage, "candidate")
+  expect_setequal(
+    candidate$ChangedDescriptionFields,
+    c("Version", "Date", "Config/mfrmr/release-status")
+  )
+  expect_true(candidate$DescriptionAllowedFieldsOnly)
+  expect_true(candidate$CffAllowedFieldsOnly)
+  expect_true(candidate$NewsBodyUnchanged)
+  expect_true(candidate$CranCommentsReady)
+  expect_true(all(candidate$CranCommentsReview$Matched))
+  expect_true(candidate$CandidateMetadataOK)
+  expect_true(candidate$MetadataTransitionOK)
+
+  wrong_title <- sub(
+    "^Title: ", "Title: Candidate ", candidate_description
+  )
+  title_review <- review_candidate(description = wrong_title)
+  expect_false(title_review$DescriptionAllowedFieldsOnly)
+  expect_false(title_review$CandidateMetadataOK)
+
+  wrong_public <- sub(
+    "^Config/mfrmr/public-version: 0[.]2[.]3[.]1$",
+    "Config/mfrmr/public-version: 0.2.4",
+    candidate_description
+  )
+  public_review <- review_candidate(description = wrong_public)
+  expect_false(public_review$DescriptionAllowedFieldsOnly)
+  expect_false(public_review$CandidateMetadataOK)
+
+  news_review <- review_candidate(news = c(candidate_news, "Silent feature"))
+  expect_false(news_review$NewsBodyUnchanged)
+  expect_false(news_review$CandidateMetadataOK)
+
+  cff_review <- review_candidate(cff = sub(
+    '^title: ', 'title: "Changed ', candidate_cff
+  ))
+  expect_false(cff_review$CffAllowedFieldsOnly)
+  expect_false(cff_review$CandidateMetadataOK)
+
+  cran_review <- review_candidate(cran = candidate_cran[1:2])
+  expect_false(cran_review$CranCommentsReady)
+  expect_false(cran_review$CandidateMetadataOK)
+
+  mismatched_date <- review_candidate(cff = sub(
+    "2026-08-26", "2026-08-27", candidate_cff, fixed = TRUE
+  ))
+  expect_false(mismatched_date$CandidateMetadataOK)
 })
