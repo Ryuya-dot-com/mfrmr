@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-24.
+Status: public roadmap, updated 2026-08-25.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -8,9 +8,10 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
 
 ## Current position
 
-- mfrmr 0.2.3 is the current CRAN source release, published 2026-08-21. G0
-  binds the exact source payload independently of lagging binary and secondary
-  distribution channels.
+- mfrmr 0.2.3.1 is the current CRAN source release, published 2026-08-25. The
+  G0 maintenance addendum binds its exact source payload and its two
+  patch-equivalent 0.2.4 integration commits independently of lagging binary
+  and secondary distribution channels.
 - Development is focused on the deliberately bounded 0.2.4 fixed-calibration
   release described below.
 - The package currently supports one observed rating scale per fit and a
@@ -38,6 +39,7 @@ The project develops in this order:
 | --- | --- |
 | 0.2.2 | Published stabilization and contract baseline. |
 | 0.2.3 | Published numerical and empirical operating-envelope release for the existing models. |
+| 0.2.3.1 | Published CRAN maintenance correction for compiled-header consistency and expired documentation links. |
 | 0.2.4 | Add typed fixed calibration, threshold/step anchors, and operational scoring for one observed scale. |
 | 0.2.5 | Add explicit multiple-scale routing and mixed response structures without silent pooling. |
 | 0.3.0 | Consolidate APIs, object schemas, compatibility policy, examples, performance evidence, and contributor workflows. |
@@ -1651,11 +1653,12 @@ silently substituted for one another:
 
 ### 0.2.4 release control board
 
-Overall status: **G0 through G3 and G5 remain complete; G4 has been reopened
-for the current hardened source, G6 is held, and public 0.2.4 API promotion
-remains closed**.
-The 0.2.3 baseline is bound to
-the CRAN source artifact,
+Overall status: **G0 through G3 and G5 remain complete; the v5 G4 result is
+historical after integration of the 0.2.3.1 compiled-source maintenance fix;
+post-maintenance G4 is open, G6 is held, and public 0.2.4 API promotion remains
+closed**.
+The 0.2.3 baseline and its 0.2.3.1 maintenance addendum are bound to their CRAN
+source artifacts,
 the internal core artifact passes freeze--persist--load--score evidence, its
 typed direct/group/shared-step/owned-step constraints share one parameter-
 count, expansion, gradient, category-support, and rank contract, and its pure
@@ -1670,9 +1673,11 @@ lane or public 0.2.4 API is promoted by those facts.
 
 A source-level comparison of CRAN 0.2.3 and `development/0.2.4` identified
 eight defects at the replay, fitted-object scoring, checkpoint, and release-
-metadata boundaries. The fixes are being integrated directly into 0.2.4; no
-0.2.3.1 release line will be created. The ordinary RSM/PCM likelihood and
-gradient core was not changed by this disposition.
+metadata boundaries. Those fixes were integrated directly into 0.2.4. The
+later CRAN-requested 0.2.3.1 maintenance release was deliberately narrower: it
+corrected compiled-header consistency and expired documentation links without
+changing the ordinary RSM/PCM likelihood, gradient, public R API, or fitted-
+model contracts. Its two material patches are now integrated into 0.2.4.
 
 | Boundary | 0.2.4 disposition | Required evidence consequence |
 | --- | --- | --- |
@@ -1683,7 +1688,7 @@ gradient core was not changed by this disposition.
 | EM checkpoint identity | Introduce a versioned checkpoint schema binding prepared data, model, parameter layout, constraints, interactions, population, quadrature, package version, and engine stage. | Reject same-dimension but semantically different objectives and corrupt or legacy payloads. |
 | Hybrid checkpoint | Pass checkpoints through the hybrid EM warm start and keep its stage identity distinct from pure EM. | Demonstrate write, load, and direct-polish continuation without cross-stage reuse. |
 | Checkpoint iteration boundary | Validate iteration/control scalars and refuse completed pure-EM re-entry at the same `maxit`; write through checked same-directory replacement. | Test interrupted continuation, increased `maxit`, completed-state refusal, and fresh-session persistence. |
-| Release metadata | Mark the branch as version 0.2.4.9000, development status, public predecessor 0.2.3, with no release date. | Make source-truth and release preflight enforce the version/status/date combination. |
+| Release metadata | Mark the branch as version 0.2.4.9000, development status, public predecessor 0.2.3.1, with no release date. | Make source-truth and release preflight enforce the version/status/date combination and the declared public-baseline record. |
 
 The audit also exposed the same one-node inheritance risk in the new portable
 calibration draft path. The calibration schema now records
@@ -1705,9 +1710,10 @@ test, or prose assertion cannot close a box.
 
 Governance decisions already fixed for 0.2.4:
 
-- [x] **GOV-01 — Release sequencing fact:** bind CRAN source release 0.2.3 as
-  the predecessor and 0.2.4 as the active development target; treat lagging
-  binary, GitHub, and R-universe channels as separate distribution facts.
+- [x] **GOV-01 — Release sequencing fact:** bind CRAN source release 0.2.3.1
+  and its maintenance relationship to 0.2.3 as the public predecessor, with
+  0.2.4 as the active development target; treat lagging binary, GitHub, and
+  R-universe channels as separate distribution facts.
 - [x] **GOV-02 — North-star claim:** freeze, persist, load, and apply one
   reviewed single-scale calibration without silent semantic change.
 - [x] **GOV-03 — Operation boundary:** keep source fitting, draft extraction,
@@ -1735,9 +1741,9 @@ calibration claim:
   coordinates pass conflict, identification, and reduction gates.
 - [x] **CORE-04 — Pure scoring:** new-Person scoring is fail-closed, reason-
   coded, conditional on the declared frozen basis, and performs no refit.
-- [x] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
+- [ ] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
   metamorphic tests, and disjoint confirmation pass frozen rules.
-- [x] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
+- [ ] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
   chunk-order, locale, encoding, platform, R-version, and bounded performance
   checks pass.
 - [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
@@ -2108,7 +2114,7 @@ required children are checked.
     dispositions, a direct hand-enumerated posterior oracle, and fitted-object
     parity as secondary evidence. The functions and optional lanes remain
     unexported/unpromoted.
-- [x] **G4 — Independent and operational evidence**
+- [ ] **G4 — Independent and operational evidence**
   - [x] Freeze numerical rules, denominators, resource budgets, and disjoint
     confirmation identities before opening confirmation results.
   - [x] Run independent probability/posterior and constraint/rank oracles that
@@ -2203,7 +2209,7 @@ required children are checked.
     identity after any evaluated production change.
   - [x] Re-run hosted macOS release first, followed by Windows release and
     Linux devel/release/oldrel, on one current commit.
-  - [x] **G4 exit:** CORE-05 and CORE-06 pass for the current hardened source
+  - [x] **v5 G4 exit:** CORE-05 and CORE-06 passed for candidate `bcf8619`
     without pooling away failures or relying on the historical 2026-08-22
     result.
   - Evidence: the repository-only prospective contract froze two
@@ -2241,8 +2247,20 @@ required children are checked.
     macOS release, Windows release, Ubuntu devel/release/oldrel-1. Run
     `32832244619` successfully aggregated five valid same-commit receipts with
     common portable production/support identities. CORE-05, CORE-06, and G4
-    therefore close for that exact current source; G6 and public API promotion
-    remain open.
+    therefore closed for that exact v5 source. The later 0.2.3.1 maintenance
+    merge changes the compiled package payload; the v5 close remains
+    historical and cannot authorize the post-maintenance source.
+  - [x] Merge the two patch-equivalent 0.2.3.1 maintenance corrections into
+    0.2.4 without changing replay, scoring, checkpoint, or calibration-schema
+    code, and retain the published-source and patch-id bridge.
+  - [ ] Freeze a successor disjoint confirmation identity whose production
+    boundary includes both compiled translation units and whose support
+    registry includes the compiled-header regression contract.
+  - [ ] Bind one clean post-maintenance candidate and rerun the complete local
+    denominator, GCC-LTO check, five-platform matrix, full Ubuntu-release
+    suite, and receipt aggregation without pooling v5 results.
+  - [ ] **Post-maintenance G4 exit:** CORE-05 and CORE-06 pass for the exact
+    source that will enter G6.
 - [x] **G5 — Optional-lane qualification**
   - [x] Adjudicate OPT-01 estimated-population/latent-regression MML as
     unavailable for portable calibration in 0.2.4.
@@ -2260,7 +2278,8 @@ required children are checked.
     fail-closed extractor/schema behavior, and the fitted-object versus
     portable-calibration terminology boundary.
 - [ ] **G6 — Release-candidate hardening**
-  - [x] Start only after the reopened current-source G4 exit is complete.
+  - [ ] Start only after the post-maintenance current-source G4 exit is
+    complete.
   - [ ] Add one fresh-session end-to-end operational vignette using synthetic
     data and the installed public API only.
   - [ ] Add schema compatibility and explicit migration/refusal fixtures.

@@ -46,6 +46,12 @@ identify whether the opt-in layer ran and retain its test log.
   fitted-object scorer field/behavior inventory, and provisional six-lane
   support matrix. They bind the CRAN 0.2.3 source payload to the local baseline
   and authorize bounded G1 work, but no public API or lane promotion.
+- `public-release-baseline-0.2.4.csv` and
+  `fixed-calibration-g0-maintenance-addendum-0.2.4.md`: bind the published CRAN
+  0.2.3.1 source, its exact source hash, and the two stable patch-id bridges
+  used to integrate its compiled-header and documentation corrections into
+  0.2.4. The addendum preserves the original 0.2.3 G0 inventory as historical
+  substantive evidence while withholding post-maintenance G4 and G6.
 - `fixed-calibration-g1-schema-0.2.4.R` and
   `fixed-calibration-g1-schema-record-0.2.4.md`: freeze the minimum RSM/PCM MML
   artifact field ownership, expanded coordinate and typed-anchor shapes,
@@ -121,9 +127,15 @@ identify whether the opt-in layer ran and retain its test log.
   aggregation, G4, G6, and public promotion open.
 - `fixed-calibration-g4-hosted-run-32832244619-record-0.2.4.md`: retains the
   complete disjoint v5 five-platform run and independently revalidated matrix.
-  It closes CORE-05, CORE-06, and G4 for commit `bcf8619`, while keeping G6,
-  optional portable-calibration lanes, and public API promotion separate and
-  unauthorized.
+  It closed CORE-05, CORE-06, and G4 for commit `bcf8619`. The later 0.2.3.1
+  compiled-source maintenance integration makes that close historical for its
+  exact payload; post-maintenance G4, G6, and public API promotion are open or
+  unauthorized as stated in the maintenance addendum.
+- `fixed-calibration-g4-maintenance-admission-0.2.4.R`: verifies that the
+  0.2.3.1 public baseline and both patch-equivalent integration commits are
+  present, scans all compiled sources for the forbidden header override, and
+  freezes the eight-file post-maintenance production boundary. It deliberately
+  leaves the successor disjoint confirmation contract, G4, and G6 open.
 - `fixed-calibration-g4-candidate-binding-preflight-0.2.4.R` and
   `fixed-calibration-g4-candidate-binding-preflight-record-0.2.4.md`: implement
   the read-only live-Git and optional source-tarball binding boundary. A second

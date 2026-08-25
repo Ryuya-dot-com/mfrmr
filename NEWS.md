@@ -18,6 +18,17 @@
   their fitted model is not scoring-ready. The posterior-shift check is kept as
   an explicit unevaluated warning instead of using a review-only score.
 
+# mfrmr 0.2.3.1
+
+mfrmr 0.2.3.1 was a focused CRAN maintenance release. It did not change the
+public R API or fitted-model contracts introduced in 0.2.3.
+
+* Corrected the compiled-header configuration used under link-time
+  optimization so all C++ translation units use R's configured `Rboolean`
+  definition.
+* Removed expired FACETS/Winsteps hyperlinks while retaining the substantive
+  model distinctions and bibliographic references.
+
 # mfrmr 0.2.3
 
 mfrmr 0.2.3 improves the reliability and interpretation of the existing

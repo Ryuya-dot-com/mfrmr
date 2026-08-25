@@ -1,0 +1,201 @@
+# 0.2.4 post-maintenance G4 admission boundary.
+#
+# This repository-only helper verifies the 0.2.3.1 maintenance bridge and
+# freezes the additional compiled-source boundary required before a successor
+# G4 confirmation contract can be opened. It performs no fit or scoring.
+
+mfrmr_fc_g4m_git <- function(repo_root, arguments) {
+  output <- tryCatch(
+    suppressWarnings(system2(
+      "git", c("-C", shQuote(repo_root), arguments),
+      stdout = TRUE, stderr = TRUE
+    )),
+    error = function(condition) structure(
+      conditionMessage(condition), status = 127L
+    )
+  )
+  status <- attr(output, "status")
+  if (is.null(status)) status <- 0L
+  list(Status = as.integer(status), Output = enc2utf8(as.character(output)))
+}
+
+mfrmr_fc_g4m_required_production_boundary <- function() {
+  data.frame(
+    Path = c(
+      "R/core-fixed-calibration.R", "R/api-prediction.R",
+      "R/api-reference-benchmark.R", "R/api-export-bundles.R",
+      "R/core-optimizer.R", "DESCRIPTION", "src/mml_backend.cpp",
+      "src/cpp11.cpp"
+    ),
+    Role = c(
+      "calibration_schema_and_artifact_scoring",
+      "fitted_object_scoring",
+      "reference_benchmark_readiness",
+      "replay_completeness",
+      "checkpoint_identity_and_resume",
+      "development_release_identity",
+      "compiled_likelihood_backend",
+      "compiled_registration_translation_unit"
+    ),
+    Required = TRUE,
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_fc_g4m_required_support_boundary <- function() {
+  data.frame(
+    Path = c(
+      "tests/testthat/test-compiled-header-contract.R",
+      "inst/validation/public-release-baseline-0.2.4.csv",
+      "inst/validation/fixed-calibration-g0-maintenance-addendum-0.2.4.md",
+      "inst/validation/fixed-calibration-boundary-hardening-0.2.4.md"
+    ),
+    Role = c(
+      "compiled_header_regression",
+      "public_predecessor_identity",
+      "maintenance_patch_bridge",
+      "post_maintenance_gate_disposition"
+    ),
+    Required = TRUE,
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_fc_g4m_baseline <- function(path) {
+  if (!file.exists(path)) return(data.frame())
+  tryCatch(
+    utils::read.csv(path, stringsAsFactors = FALSE, check.names = FALSE),
+    error = function(...) data.frame()
+  )
+}
+
+mfrmr_fc_g4m_baseline_value <- function(baseline, field) {
+  if (!all(c("Field", "Value") %in% names(baseline))) return(NA_character_)
+  hit <- which(as.character(baseline$Field) == field)
+  if (length(hit) != 1L) return(NA_character_)
+  as.character(baseline$Value[hit])
+}
+
+mfrmr_fc_g4m_review <- function(repo_root = ".") {
+  repo_root <- normalizePath(repo_root, winslash = "/", mustWork = TRUE)
+  production <- mfrmr_fc_g4m_required_production_boundary()
+  support <- mfrmr_fc_g4m_required_support_boundary()
+  required_paths <- c(production$Path, support$Path)
+  required_present <- file.exists(file.path(repo_root, required_paths))
+
+  description <- tryCatch(
+    read.dcf(file.path(repo_root, "DESCRIPTION")),
+    error = function(...) matrix(character(), nrow = 0L, ncol = 0L)
+  )
+  description_value <- function(field) {
+    if (nrow(description) == 1L && field %in% colnames(description)) {
+      as.character(description[1L, field])
+    } else {
+      NA_character_
+    }
+  }
+  baseline <- mfrmr_fc_g4m_baseline(file.path(
+    repo_root, "inst", "validation", "public-release-baseline-0.2.4.csv"
+  ))
+  expected <- c(
+    PublicVersion = "0.2.3.1",
+    CranSourceSHA256 =
+      "d3d2b00638fcbd8407dfabd5206eb670b2a3470e0e30e0079ca64a2e7a77b67a",
+    ReleaseCommit = "be5611ed9a9390ac6d33997f28e16be041aec56f",
+    LTOPatchId = "8744a9894ab0a02186cab16ef3e337b067abbbeb",
+    DocumentationPatchId = "b99133ae6ab40c1496e9b7550b2b98097cd194d8"
+  )
+  observed <- vapply(
+    names(expected),
+    function(field) mfrmr_fc_g4m_baseline_value(baseline, field),
+    character(1L)
+  )
+  baseline_ok <- identical(unname(observed), unname(expected))
+
+  integrated_commits <- c(
+    "dc4a3375411ce3b2ccb8a28d3985436e66ba0b9d",
+    "7fa91a110b1f6abac30a567b76d9275b7de9afd5"
+  )
+  integrated <- vapply(integrated_commits, function(commit) {
+    identical(mfrmr_fc_g4m_git(
+      repo_root, c("merge-base", "--is-ancestor", commit, "HEAD")
+    )$Status, 0L)
+  }, logical(1L))
+
+  compiled <- list.files(
+    file.path(repo_root, "src"),
+    pattern = "[.](c|cc|cpp|cxx|h|hh|hpp)$",
+    recursive = TRUE, full.names = TRUE
+  )
+  makevars <- list.files(
+    file.path(repo_root, "src"), pattern = "^Makevars", full.names = TRUE
+  )
+  scanned <- c(compiled, makevars)
+  header_override <- vapply(scanned, function(path) {
+    any(grepl("HAVE_ENUM_BASE_TYPE", readLines(path, warn = FALSE),
+              fixed = TRUE))
+  }, logical(1L))
+
+  public_paths <- c(
+    "R/api-hierarchical-audit.R", "R/api-tables.R",
+    "R/help_facets_coverage.R", "README.md",
+    "man/analyze_hierarchical_structure.Rd",
+    "man/facet_small_sample_review.Rd", "man/facets_feature_coverage.Rd",
+    "man/fair_average_table.Rd"
+  )
+  invalid_targets <- c(
+    "https://www.winsteps.com/facets.htm",
+    "https://www.winsteps.com/facetman64/outputtableindex.htm",
+    "https://www.winsteps.com/facetman64/models.htm",
+    "https://www.winsteps.com/facetman64/t7menu.htm"
+  )
+  public_text <- unlist(lapply(file.path(repo_root, public_paths), function(path) {
+    if (file.exists(path)) readLines(path, warn = FALSE) else character()
+  }), use.names = FALSE)
+  invalid_hits <- invalid_targets[vapply(
+    invalid_targets,
+    function(target) any(grepl(target, public_text, fixed = TRUE)),
+    logical(1L)
+  )]
+
+  v5_change <- mfrmr_fc_g4m_git(repo_root, c(
+    "diff", "--quiet", "bcf86197619e3eae4c7cdd5288b797549df47c99",
+    "--", "src/mml_backend.cpp", "tests/testthat.R",
+    "tests/testthat/test-compiled-header-contract.R"
+  ))
+  metadata_ok <- identical(description_value("Version"), "0.2.4.9000") &&
+    identical(tolower(description_value("Config/mfrmr/release-status")),
+              "development") &&
+    identical(description_value("Config/mfrmr/public-version"), "0.2.3.1")
+  bridge_complete <- all(required_present) && baseline_ok && all(integrated) &&
+    length(scanned) > 0L && !any(header_override) &&
+    length(invalid_hits) == 0L && metadata_ok && v5_change$Status == 1L
+
+  list(
+    Contract = "mfrmr_fixed_calibration_g4_maintenance_admission_v1",
+    Status = if (bridge_complete) {
+      "maintenance_bridge_complete_v6_confirmation_required"
+    } else {
+      "maintenance_bridge_blocked"
+    },
+    ProductionBoundary = production,
+    SupportBoundary = support,
+    RequiredPathsPresent = all(required_present),
+    MissingRequiredPaths = required_paths[!required_present],
+    PublicBaselineMatched = baseline_ok,
+    IntegratedCommits = integrated_commits,
+    IntegratedCommitsAreAncestors = integrated,
+    CompiledSourcesScanned = as.integer(length(scanned)),
+    CompiledHeaderOverrideAbsent = length(scanned) > 0L &&
+      !any(header_override),
+    InvalidDocumentationTargets = invalid_hits,
+    DevelopmentMetadataAligned = metadata_ok,
+    V5ExactSourceChanged = identical(v5_change$Status, 1L),
+    V5EvidenceRetainedAsHistorical = TRUE,
+    V6SourceBoundaryFrozen = TRUE,
+    V6ConfirmationContractFrozen = FALSE,
+    PostMaintenanceG4Complete = FALSE,
+    G6Authorized = FALSE,
+    MaintenanceBridgeComplete = bridge_complete
+  )
+}

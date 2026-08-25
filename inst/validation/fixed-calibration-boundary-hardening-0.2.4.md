@@ -1,14 +1,16 @@
 # 0.2.4 boundary-hardening disposition
 
-Status: `implementation_complete_local_reconfirmation_pending`, 2026-08-24.
+Status: `maintenance_integrated_post_maintenance_g4_pending`, 2026-08-25.
 
 ## Decision
 
 The replay, fitted-object scoring, MML--EM checkpoint, and release-metadata
 defects found by the 2026-08-23 source audit are corrected directly on
-`development/0.2.4`. No 0.2.3.1 branch or release is planned. This disposition
-does not change the audited ordinary RSM/PCM fitting likelihood or gradient;
-it hardens post-fit reproduction, scoring, resume, and identity boundaries.
+`development/0.2.4`. At the time of this disposition no 0.2.3.1 release was
+planned. That sequencing decision was superseded on 2026-08-25 by a focused
+CRAN-requested maintenance release. This disposition does not change the
+audited ordinary RSM/PCM fitting likelihood or gradient; it hardens post-fit
+reproduction, scoring, resume, and identity boundaries.
 
 The changes are production-code changes after the hosted G4 result at commit
 `f492fb9f0ee977777d03f0255de008af33860db5`. That result is retained as
@@ -27,7 +29,32 @@ G6 and public API promotion remain held.
 | Checkpoints lacked objective identity | Checkpoint schema v2 binds package, engine stage, model, parameter layout/names, facet dictionaries, score map, constraints/anchors, interactions, population specification, quadrature, and a prepared-objective fingerprint. Payload scalars and the finite named parameter vector are validated before use. | Same-shape score and quadrature mutations, legacy payloads, corrupt layouts, and cross-stage reuse are rejected. |
 | Hybrid ignored checkpoints | Hybrid passes the checkpoint through its EM warm-start stage with a distinct stage identity. | A hybrid run writes a completed warm-start checkpoint and a second run loads it before direct polishing. |
 | Completed checkpoint could enter a descending iteration sequence | Iteration and cadence values require finite positive integers; completed pure EM cannot re-enter at the same `maxit`; writes use a temporary file and checked same-directory replacement. | Same-`maxit` reuse leaves the saved boundary unchanged; a non-converged pure-EM checkpoint can continue only with a larger outer limit. |
-| Development metadata described the wrong release | `DESCRIPTION` and `CITATION.cff` use 0.2.4.9000; release status is `development`; public predecessor is 0.2.3; development release dates are absent. | The source-truth release check binds version, lifecycle, predecessor, and date policy. |
+| Development metadata described the wrong release | `DESCRIPTION` and `CITATION.cff` use 0.2.4.9000; release status is `development`; public predecessor is 0.2.3.1; development release dates are absent. | The source-truth release check binds version, lifecycle, declared public baseline, and date policy. |
+
+## 2026-08-25 maintenance-line addendum
+
+CRAN 0.2.3.1 was published as a narrower maintenance correction. It removes a
+local `HAVE_ENUM_BASE_TYPE` override that made compiled translation units use
+inconsistent `Rboolean` definitions under LTO, adds a source-level regression
+contract, and removes expired FACETS/Winsteps hyperlinks. It does not contain
+the eight replay, scoring, checkpoint, and metadata corrections above.
+
+The 0.2.3.1 implementation commits and their 0.2.4 integration counterparts
+have identical stable patch ids:
+
+- `69cc7a0 = dc4a337` (`8744a9894ab0a02186cab16ef3e337b067abbbeb`);
+- `3eda09f = 7fa91a1` (`b99133ae6ab40c1496e9b7550b2b98097cd194d8`).
+
+The integration merge preserves all eight 0.2.4 boundary corrections and
+changes no exported R signature, likelihood/gradient expression, scoring
+algorithm, checkpoint schema, or calibration schema. `DESCRIPTION` now names
+0.2.3.1 as the public predecessor, and the exact CRAN source identity is bound
+by `public-release-baseline-0.2.4.csv` and the G0 maintenance addendum.
+
+The v5 G4 close at `bcf8619` predates this compiled-source integration. Its
+results and hosted receipts remain valid historical evidence for their exact
+source, but CORE-05, CORE-06, and G4 are open for the post-maintenance source.
+G6 remains held.
 
 The audit additionally revealed that a portable calibration extracted from an
 otherwise eligible one-node MML source fit could inherit that grid. Draft
@@ -53,10 +80,11 @@ not close the reopened independent or cross-platform gates.
 
 ## Required current-source reconfirmation
 
-1. The amended G4 contract is frozen before inspecting new confirmation
-   results. It binds the scoring algorithm, the 31-node default, an explicit
+1. Freeze a successor G4 contract before inspecting new confirmation results.
+   It must retain the scoring algorithm, the 31-node default, an explicit
    non-authorizing nine-node historical control, a one-node source-fit
-   adversary, and 49 replay, scoring, checkpoint, and operational cells.
+   adversary, and all replay, scoring, checkpoint, and operational cells while
+   adding both compiled translation units to the production boundary.
 2. Bind one clean candidate source identity, then add a disjoint posterior
    oracle and semantic-identity mutations that do not
    call production scoring or identity helpers.
@@ -73,15 +101,17 @@ not close the reopened independent or cross-platform gates.
 
 ## Machine-readable consequence
 
-- `PatchRelease0231Planned=FALSE`
+- `PatchRelease0231Published=TRUE`
+- `PatchReleaseCommit=be5611ed9a9390ac6d33997f28e16be041aec56f`
 - `FixTarget=development/0.2.4`
 - `DevelopmentVersion=0.2.4.9000`
-- `PublicPredecessor=0.2.3`
+- `PublicPredecessor=0.2.3.1`
+- `MaintenanceHotfixIntegrated=TRUE`
 - `HistoricalG4Retained=TRUE`
 - `HistoricalG4CurrentSourceEvidence=FALSE`
-- `AmendedG4ContractFrozen=TRUE`
-- `AmendedG4CurrentExecutionOpened=FALSE`
-- `AmendedG4CandidateBound=FALSE`
+- `PostMaintenanceG4ContractFrozen=FALSE`
+- `PostMaintenanceG4CurrentExecutionOpened=FALSE`
+- `PostMaintenanceG4CandidateBound=FALSE`
 - `CandidateBindingPreflightImplemented=TRUE`
 - `CandidateBindingPreflightLiveReady=FALSE`
 - `CORE05Complete=FALSE`

@@ -127,6 +127,7 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
     pkg_dir,
     target_version = target_version
   )
+  release_version <- sub("\\.9000$", "", target_version)
   validation_dir <- file.path(pkg_dir, "inst", "validation")
   if (!dir.exists(validation_dir)) {
     validation_dir <- file.path(pkg_dir, "validation")
@@ -140,6 +141,10 @@ mfrmr_release_readiness_paths <- function(pkg_dir = ".",
     buildignore = file.path(pkg_dir, ".Rbuildignore"),
     news = file.path(pkg_dir, "NEWS.md"),
     cran_comments = file.path(pkg_dir, "cran-comments.md"),
+    public_release_baseline = file.path(
+      validation_dir,
+      paste0("public-release-baseline-", release_version, ".csv")
+    ),
     ci_workflow = file.path(pkg_dir, ".github", "workflows", "R-CMD-check.yaml"),
     evidence_map = mfrmr_release_readiness_versioned_file(
       validation_dir,
@@ -1546,6 +1551,36 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
     "Config/mfrmr/release-status"
   ))
   public_version <- description_value("Config/mfrmr/public-version")
+  baseline_path <- paths$public_release_baseline %||% ""
+  baseline <- if (length(baseline_path) == 1L && nzchar(baseline_path) &&
+      file.exists(baseline_path)) {
+    tryCatch(
+      utils::read.csv(
+        baseline_path, stringsAsFactors = FALSE, check.names = FALSE
+      ),
+      error = function(...) data.frame()
+    )
+  } else {
+    data.frame()
+  }
+  baseline_columns_ok <- all(c("Field", "Value") %in% names(baseline))
+  baseline_value <- function(field) {
+    if (!baseline_columns_ok) return(NA_character_)
+    hit <- which(as.character(baseline$Field) == field)
+    if (length(hit) != 1L) return(NA_character_)
+    as.character(baseline$Value[hit])
+  }
+  baseline_public_version <- baseline_value("PublicVersion")
+  baseline_source_sha256 <- tolower(baseline_value("CranSourceSHA256"))
+  baseline_available <- nrow(baseline) > 0L && baseline_columns_ok
+  baseline_version_valid <- mfrmr_release_readiness_has_value(
+    baseline_public_version
+  )
+  baseline_source_sha256_valid <-
+    mfrmr_release_readiness_has_value(baseline_source_sha256) &&
+    grepl("^[0-9a-f]{64}$", baseline_source_sha256)
+  baseline_record_ok <- baseline_available && baseline_version_valid &&
+    baseline_source_sha256_valid
   cff_version <- mfrmr_release_readiness_cff_value(cff_lines, "version")
   cff_date <- mfrmr_release_readiness_cff_value(cff_lines, "date-released")
   patterns <- mfrmr_release_readiness_buildignore_patterns(paths$pkg_dir)
@@ -1587,15 +1622,19 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   } else {
     FALSE
   }
+  public_version_matches_baseline <-
+    !is.na(public_version) && !is.na(baseline_public_version) &&
+    identical(public_version, baseline_public_version)
   public_version_ok <- if (
       release_status %in% c("development", "candidate") &&
       !is.na(public_version) && !is.na(description_version)) {
     isTRUE(tryCatch(
       utils::compareVersion(public_version, description_version) < 0L,
       error = function(...) FALSE
-    ))
+    )) && baseline_record_ok && public_version_matches_baseline
   } else if (identical(release_status, "released")) {
-    !is.na(public_version) && identical(public_version, description_version)
+    !is.na(public_version) && identical(public_version, description_version) &&
+      baseline_record_ok
   } else {
     FALSE
   }
@@ -1608,6 +1647,12 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
     CFFVersion = cff_version,
     ReleaseStatus = release_status,
     PublicVersion = public_version,
+    PublicBaselineAvailable = baseline_available,
+    PublicBaselineVersion = baseline_public_version,
+    PublicVersionMatchesBaseline = public_version_matches_baseline,
+    PublicBaselineSourceSHA256 = baseline_source_sha256,
+    PublicBaselineSourceSHA256Valid = baseline_source_sha256_valid,
+    PublicBaselineRecordOK = baseline_record_ok,
     DescriptionDate = description_date,
     CFFDate = cff_date,
     VersionMatchesCFF = version_match,
@@ -2496,6 +2541,12 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
           "cff_version_match=", source_truth_status$VersionMatchesCFF[1],
           "; release_status=", source_truth_status$ReleaseStatus[1],
           "; public_version=", source_truth_status$PublicVersion[1],
+          "; public_baseline_version=",
+          source_truth_status$PublicBaselineVersion[1],
+          "; public_version_matches_baseline=",
+          source_truth_status$PublicVersionMatchesBaseline[1],
+          "; public_baseline_sha256_valid=",
+          source_truth_status$PublicBaselineSourceSHA256Valid[1],
           "; release_date_policy=",
           source_truth_status$ReleaseDatePolicyOK[1],
           "; roadmap=", source_truth_status$RoadmapAvailable[1],

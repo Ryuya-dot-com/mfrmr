@@ -55,6 +55,20 @@ load_fixed_calibration_g4_candidate_inventory <- function() {
   list(root = root, validation = validation, script = script, env = env)
 }
 
+load_fixed_calibration_g4_maintenance_admission <- function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  script <- file.path(
+    validation, "fixed-calibration-g4-maintenance-admission-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(script), "Fixed-calibration maintenance admission is excluded."
+  )
+  env <- new.env(parent = globalenv())
+  sys.source(script, envir = env)
+  list(root = root, validation = validation, script = script, env = env)
+}
+
 g4b_rehash_git_identity <- function(env, identity) {
   payload_names <- c(
     "Contract", "RepositoryRoot", "HeadCommit", "HeadTree", "Branch",
@@ -440,7 +454,7 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   ))
 })
 
-test_that("amended G4 v5 contract is prospective and binds its unopened record", {
+test_that("amended G4 v5 contract remains immutable historical evidence", {
   ctx <- load_fixed_calibration_g4_current_contract()
   source <- paste(readLines(ctx$script, warn = FALSE), collapse = "\n")
   expect_false(grepl("fit_mfrm\\s*\\(", source, perl = TRUE))
@@ -473,7 +487,13 @@ test_that("amended G4 v5 contract is prospective and binds its unopened record",
   expect_match(record, "`V4IdentityReuseAuthorized=FALSE`", fixed = TRUE)
   expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
   expect_match(
-    hardening, "`AmendedG4ContractFrozen=TRUE`", fixed = TRUE
+    hardening, "`HistoricalG4Retained=TRUE`", fixed = TRUE
+  )
+  expect_match(
+    hardening, "`HistoricalG4CurrentSourceEvidence=FALSE`", fixed = TRUE
+  )
+  expect_match(
+    hardening, "`PostMaintenanceG4ContractFrozen=FALSE`", fixed = TRUE
   )
   expect_match(
     roadmap,
@@ -483,6 +503,11 @@ test_that("amended G4 v5 contract is prospective and binds its unopened record",
   expect_match(
     roadmap,
     "  - [x] Run the amended denominator from an isolated current source-tarball",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "  - [ ] **Post-maintenance G4 exit:**",
     fixed = TRUE
   )
 })
@@ -849,10 +874,13 @@ test_that("G4 candidate inventory classifies every live path fail closed", {
   )
   expect_true(all(inventory$Classification %in% allowed))
   representative <- vapply(c(
-    "R/api-prediction.R", "NEWS.md",
-    "inst/validation/fixed-calibration-example-0.2.4.md"
+    "R/api-prediction.R", "src/mml_backend.cpp", "NEWS.md",
+    "inst/validation/fixed-calibration-example-0.2.4.md",
+    "inst/validation/public-release-baseline-0.2.4.csv"
   ), ctx$env$mfrmr_fc_g4i_classify_path, character(1L))
-  expect_identical(unname(representative), allowed[1:3])
+  expect_identical(unname(representative), c(
+    rep(allowed[1], 2L), allowed[2], rep(allowed[3], 2L)
+  ))
 })
 
 test_that("G4 candidate inventory keeps deferred research outside payload", {
@@ -1533,25 +1561,61 @@ test_that("historical reopening is retained while v5 closes current-source G4", 
   expect_match(current_record, "`G4ExitComplete=TRUE`", fixed = TRUE)
   expect_match(current_record, "`G6Authorized=FALSE`", fixed = TRUE)
   expect_match(current_record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
-  expect_match(roadmap, "- [x] **CORE-05 — Independent evidence:**",
+  expect_match(roadmap, "- [ ] **CORE-05 — Independent evidence:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [x] **CORE-06 — Reproducible operation:**",
+  expect_match(roadmap, "- [ ] **CORE-06 — Reproducible operation:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [x] **G4 — Independent and operational evidence**",
+  expect_match(roadmap, "- [ ] **G4 — Independent and operational evidence**",
                fixed = TRUE)
   expect_match(
     roadmap,
     "  - [x] Run the prospectively required hosted macOS release workflow cell",
     fixed = TRUE
   )
-  expect_match(roadmap, "  - [x] **G4 exit:**", fixed = TRUE)
+  expect_match(roadmap, "  - [x] **v5 G4 exit:**", fixed = TRUE)
   expect_match(roadmap, "- [x] **G5 — Optional-lane qualification**",
                fixed = TRUE)
   expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
                fixed = TRUE)
   expect_match(
     roadmap,
-    "  - [x] Start only after the reopened current-source G4 exit is complete.",
+    "  - [ ] Start only after the post-maintenance current-source G4 exit is",
     fixed = TRUE
+  )
+})
+
+test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
+  admission <- load_fixed_calibration_g4_maintenance_admission()
+  review <- admission$env$mfrmr_fc_g4m_review(admission$root)
+
+  expect_identical(
+    review$Contract,
+    "mfrmr_fixed_calibration_g4_maintenance_admission_v1"
+  )
+  expect_identical(
+    review$Status,
+    "maintenance_bridge_complete_v6_confirmation_required"
+  )
+  expect_true(review$RequiredPathsPresent)
+  expect_true(review$PublicBaselineMatched)
+  expect_true(all(review$IntegratedCommitsAreAncestors))
+  expect_true(review$CompiledHeaderOverrideAbsent)
+  expect_length(review$InvalidDocumentationTargets, 0L)
+  expect_true(review$DevelopmentMetadataAligned)
+  expect_true(review$V5ExactSourceChanged)
+  expect_true(review$V5EvidenceRetainedAsHistorical)
+  expect_true(review$V6SourceBoundaryFrozen)
+  expect_false(review$V6ConfirmationContractFrozen)
+  expect_false(review$PostMaintenanceG4Complete)
+  expect_false(review$G6Authorized)
+  expect_true(review$MaintenanceBridgeComplete)
+  expect_setequal(
+    review$ProductionBoundary$Path,
+    c(
+      "R/core-fixed-calibration.R", "R/api-prediction.R",
+      "R/api-reference-benchmark.R", "R/api-export-bundles.R",
+      "R/core-optimizer.R", "DESCRIPTION", "src/mml_backend.cpp",
+      "src/cpp11.cpp"
+    )
   )
 })

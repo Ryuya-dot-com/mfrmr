@@ -2640,6 +2640,18 @@ test_that("release-readiness protocol checks source-truth alignment", {
 
   root <- tempfile("pkg")
   dir.create(file.path(root, "inst", "validation"), recursive = TRUE)
+  baseline_file <- file.path(
+    root, "inst", "validation", "public-release-baseline-0.2.2.csv"
+  )
+  write_public_baseline <- function(version, sha256 = paste(rep("a", 64L),
+                                                             collapse = "")) {
+    utils::write.csv(data.frame(
+      Field = c("PublicVersion", "CranSourceSHA256"),
+      Value = c(version, sha256),
+      stringsAsFactors = FALSE
+    ), baseline_file, row.names = FALSE)
+  }
+  write_public_baseline("0.2.1")
   writeLines(c(
     "Package: mfrmr",
     "Version: 0.2.2",
@@ -2668,6 +2680,9 @@ test_that("release-readiness protocol checks source-truth alignment", {
   expect_true(status$DateMatchesCFF)
   expect_identical(status$ReleaseStatus, "candidate")
   expect_identical(status$PublicVersion, "0.2.1")
+  expect_identical(status$PublicBaselineVersion, "0.2.1")
+  expect_true(status$PublicVersionMatchesBaseline)
+  expect_true(status$PublicBaselineSourceSHA256Valid)
   expect_true(status$LifecycleStatusOK)
   expect_true(status$PublicVersionOK)
   expect_true(status$ReleaseDatePolicyOK)
@@ -2676,6 +2691,21 @@ test_that("release-readiness protocol checks source-truth alignment", {
   expect_true(status$RoadmapAuthoritative)
   expect_identical(status$DevelopmentOnlyCurrentClaims, "")
   expect_true(status$SourceTruthOK)
+
+  write_public_baseline("0.2.0")
+  stale_public_baseline <- env$mfrmr_release_readiness_source_truth_status(
+    paths
+  )
+  expect_false(stale_public_baseline$PublicVersionMatchesBaseline)
+  expect_false(stale_public_baseline$PublicVersionOK)
+  expect_false(stale_public_baseline$SourceTruthOK)
+
+  write_public_baseline("0.2.1", "not-a-sha256")
+  invalid_public_hash <- env$mfrmr_release_readiness_source_truth_status(paths)
+  expect_false(invalid_public_hash$PublicBaselineSourceSHA256Valid)
+  expect_false(invalid_public_hash$PublicBaselineRecordOK)
+  expect_false(invalid_public_hash$SourceTruthOK)
+  write_public_baseline("0.2.1")
 
   writeLines(
     "The current API is mfrmr_model_family_scope().",
@@ -2695,6 +2725,7 @@ test_that("release-readiness protocol checks source-truth alignment", {
     "Config/mfrmr/release-status: development",
     "Config/mfrmr/public-version: 0.2.2"
   ), paths$description)
+  write_public_baseline("0.2.2")
   writeLines(c(
     "cff-version: 1.2.0",
     "version: \"0.2.3\""

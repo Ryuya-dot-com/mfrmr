@@ -58,7 +58,9 @@ mfrmr_fc_g4i_classify_path <- function(path) {
   )) {
     return("deferred_rater_anchor_design_research")
   }
-  if (grepl("^R/[^/]+[.]R$", path) || identical(path, "DESCRIPTION")) {
+  if (grepl("^R/[^/]+[.]R$", path) ||
+      grepl("^src/.*[.](c|cc|cpp|cxx|h|hh|hpp)$", path) ||
+      grepl("^src/Makevars", path) || identical(path, "DESCRIPTION")) {
     return("release_production_code_and_metadata")
   }
   if (identical(path, "NEWS.md") || identical(path, "CITATION.cff") ||
@@ -72,9 +74,11 @@ mfrmr_fc_g4i_classify_path <- function(path) {
       path %in% c(
         "inst/validation/README.md",
         "inst/validation/internal-roadmap-0.2.3.md",
-        "inst/validation/release-readiness.R"
+        "inst/validation/release-readiness.R",
+        "inst/validation/public-release-baseline-0.2.4.csv"
       ) || grepl("^inst/validation/fixed-calibration-", path) ||
       path %in% c(
+        "tests/testthat/test-compiled-header-contract.R",
         "tests/testthat/test-prediction.R",
         "tests/testthat/test-reference-benchmark.R",
         "tests/testthat/test-replay-roundtrip.R",
