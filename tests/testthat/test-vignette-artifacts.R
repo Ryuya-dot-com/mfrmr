@@ -78,7 +78,7 @@ test_that("precomputed workflow artifacts represent the canonical successful fit
   expect_true(isTRUE(fit_overview$InferenceReady))
   expect_identical(fit_overview$ConvergenceSeverity, "pass")
   expect_identical(fit_decision$Interpretation,
-                   "Fit gates passed; formal precision review required")
+                   "Fit-readiness requirements satisfied; formal precision review required")
   expect_identical(fit_decision$FormalInference, "No")
   expect_identical(fit_decision$FitReadiness, "ready")
   expect_identical(fit_decision$Why,

@@ -70,7 +70,7 @@ test_that("CRAN smoke covers the primary MML review and export route", {
   expect_s3_class(facets_summary$results, "mfrm_results")
   expect_identical(
     fit_summary$decision$Interpretation,
-    "Fit gates passed; formal precision review required"
+    "Fit-readiness requirements satisfied; formal precision review required"
   )
   expect_identical(fit_summary$decision$FormalInference, "No")
   expect_identical(fit_summary$decision$FitReadiness, "ready")
@@ -182,7 +182,7 @@ test_that("the canonical PCM first-use route separates coordinates from freedom"
   sizes <- mfrmr:::build_param_sizes(fit$config)
 
   expect_identical(fit_summary$decision$Interpretation,
-                   "Fit gates passed; formal precision review required")
+                   "Fit-readiness requirements satisfied; formal precision review required")
   expect_identical(fit_summary$decision$FormalInference, "No")
   expect_match(
     fit_summary$decision$NextAction,

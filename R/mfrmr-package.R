@@ -56,6 +56,8 @@
 #' - [mfrmr_reports_and_tables]
 #' - [mfrmr_reporting_and_apa]
 #' - [mfrmr_linking_and_dff]
+#' - [mfrm_calibration_capabilities()] and [mfrm_calibration_workflow] for
+#'   portable fixed calibration
 #' - [gpcm_capability_matrix]
 #' - [mfrmr_compatibility_layer]
 #'
@@ -65,6 +67,7 @@
 #' - `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`
 #' - `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`
 #' - `vignette("mfrmr-linking-and-dff", package = "mfrmr")`
+#' - `vignette("mfrmr-portable-calibration", package = "mfrmr")`
 #'
 #' A printable landscape cheatsheet of the public API ships at
 #' `system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`
@@ -72,6 +75,17 @@
 #' package = "mfrmr")` (source). Open the PDF directly for a printable
 #' reference card, or knit the source with `rmarkdown::render()` when
 #' you want a customised version.
+#'
+#' @section Portable fixed calibration:
+#' A saved, versioned calibration artifact can be created from an eligible
+#' one-scale `RSM` or `PCM` MML fit under the fixed standard-normal scoring
+#' basis. Use [mfrm_calibration_capabilities()] before extraction, then follow
+#' [mfrm_calibration_workflow] to review, validate, freeze, save, load, and
+#' score the artifact. Estimated-population or latent-regression MML, JML, and
+#' bounded `GPCM` remain fitted-object-only scoring routes in 0.2.4. Artifact
+#' score uncertainty is conditional on the frozen point calibration and its
+#' recorded prior; loading validates consistency but does not authenticate an
+#' untrusted file.
 #'
 #' @section First 5-minute route:
 #' Use this order before exploring the broader feature surface:

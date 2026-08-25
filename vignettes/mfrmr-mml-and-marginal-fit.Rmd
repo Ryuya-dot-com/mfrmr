@@ -97,7 +97,7 @@ setting, objective, terminal gradient, parameter change, and evaluation
 counts. For L-BFGS-B, the stage table also records the actual `factr` and
 `pgtol` controls; `EffectiveReltol` is not itself a native L-BFGS-B argument.
 EM retains its relative log-likelihood stopping result but must also pass the
-same terminal-gradient gate; use the direct engine for bounded gradient
+same terminal-gradient check; use the direct engine for bounded gradient
 polishing when an EM fit remains under numerical review.
 
 Read `summary(fit)$readiness` as separate gates. `InferenceReady` and the

@@ -2,6 +2,12 @@
 
 ## Reliability and reproducibility
 
+* Added a public portable-calibration workflow for eligible one-scale RSM/PCM
+  MML fits under the fixed standard-normal scoring basis. Draft extraction,
+  review, validation, freezing, persistence, and artifact-only scoring are
+  separate operations; `mfrm_calibration_capabilities()` reports the narrower
+  portable support envelope and the fitted-object alternatives for unavailable
+  routes.
 * Fitted-object scoring now uses an explicit scoring quadrature grid rather
   than inheriting the fit-time grid. It refuses a one-point grid, rejects
   invalid weights, and fails closed when the source is not scoring-ready unless
@@ -81,7 +87,8 @@ before this release. No existing exported function has been removed.
 * `print()` and `summary()` for fitted models now begin with a plain-language
   interpretation status, the availability of formal inference, the main reason
   for any hold, and a suggested next action.
-* Formal-inference reporting now distinguishes a successful fit gate from the
+* Formal-inference reporting now distinguishes satisfied fit-readiness
+  requirements from the
   separate precision contract. A fit-only summary does not claim formal
   inference until matching diagnostics support the standard-error,
   confidence-interval, and reliability basis.
@@ -152,21 +159,14 @@ before this release. No existing exported function has been removed.
 * Clarified that `maxit` is a prespecified computational ceiling rather than a
   result-selection control. Iteration-limited fits now direct users to keep the
   specification fixed, follow a prespecified ceiling sequence, and withhold
-  interpretation until the numerical-readiness gate passes.
+  interpretation until the numerical-readiness criteria are satisfied.
 
 * Replaced blanket `\dontrun{}` and `@examplesIf interactive()` guards with
   checkable examples or `\donttest{}` blocks. Only the two workflows that need
   separately generated ConQuest files remain `\dontrun{}`, and only the local
-  Shiny viewer remains interactive-only. The release-readiness review now
-  enforces that allowlist and flags CRAN-side package workload above ten
-  minutes, based on ordinary examples, `donttest` examples, tests, and vignette
-  rebuilding. Other top-level check components remain visible as diagnostics
-  but do not inflate that package-controlled threshold.
-
-- Added one authoritative repository roadmap and aligned release metadata and
-  validation notes with the accepted 0.2.2 boundary. External numerical
-  comparison and calibrated MML joint-stationarity gates are explicitly 0.2.3
-  work rather than retroactive 0.2.2 requirements.
+  Shiny viewer remains interactive-only. This makes most examples executable
+  while keeping workflows that require separately generated files clearly
+  marked.
 - Corrected bounded-GPCM score-side delta-method uncertainty to use the
   expected-score derivative `ScoreSlope * Var`. `ScoreSideLogitSE` remains the
   logit-side component SE, while `ScoreSideSE` and its interval columns now
@@ -218,7 +218,7 @@ before this release. No existing exported function has been removed.
   objective, terminal gradient, maximum parameter change, evaluations, and
   elapsed time; the best non-worsening stage is retained rather than assuming
   that stricter controls improve every fit monotonically.
-- Direct, hybrid, and EM MML engines now apply the same terminal-gradient gate
+- Direct, hybrid, and EM MML engines now apply the same terminal-gradient check
   to `InferenceReady`. EM relative log-likelihood convergence remains visible
   as an engine-specific stopping condition but no longer overrides the common
   numerical-readiness contract.
@@ -297,8 +297,8 @@ before this release. No existing exported function has been removed.
   compact output. Without a roster, structural missingness is reported as not
   assessed rather than inferred from a hypothetical complete crossing.
 - `list_mfrmr_data(details = TRUE)` now explains the design and intended role
-  of every bundled synthetic dataset. Fixed-seed generators for the compact
-  examples are tracked in the public source repository. Combined-study
+  of every bundled synthetic dataset. The compact examples can be regenerated
+  with fixed seeds. Combined-study
   objects now explain that relabeling prevents identifier collisions but does
   not establish a common scale without an explicit anchor/linking design.
 - Precomputed vignette tables now follow the same successful operational MML
@@ -309,7 +309,7 @@ before this release. No existing exported function has been removed.
 
 - The public default remains `reltol = 1e-9` for the initial optimizer stage;
   bounded polishing is invoked only when `reltol <= 1e-9` and code zero
-  precedes the terminal-gradient gate. The fitted object records requested and
+  precedes the terminal-gradient check. The fitted object records requested and
   selected-stage controls for replay. Model specification, design,
   identification, and inferential assumptions remain separate review
   questions.
@@ -343,18 +343,6 @@ before this release. No existing exported function has been removed.
   and avoids presenting a generic facet as a rater.
 - Latent regression rejects a non-person-centered parameterization that would
   confound the population intercept with the measurement scale.
-- CRAN checks now exercise the complete introductory workflow once and
-  use the exact README/default MML controls rather than a reduced quadrature
-  setting. They retain lightweight compatibility/backend/artifact contracts.
-  Repeated
-  estimation, detailed plotting, simulation, and broad regression coverage
-  remain in the complete local and GitHub Actions suite.
-- A repository-level first-use workflow stress protocol covers linked, sparse,
-  disconnected, shared-link, PCM, bounded-GPCM, extreme-score, separation,
-  missing-code, and weighted scenarios across deterministic seeds. It keeps
-  expectation matching separate from actual report readiness and is excluded
-  from routine CRAN checks.
-
 ## Interpretation and compatibility boundaries
 
 - Optimizer code zero is no longer treated as sufficient evidence of a clean
@@ -371,11 +359,10 @@ before this release. No existing exported function has been removed.
   `normalize_conquest_overlap_exports()` reads those files, reconstructs the
   sum-constrained item location, trims fixed-width person identifiers, and
   prepares them for `review_conquest_overlap()`.
-- A matched 31-node run with ConQuest 5.47.5 Demonstration Version is recorded
-  in the public source repository's validation record (excluded from the
-  installed CRAN package) for the documented binary, item-only, one-covariate
-  MML overlap case. The result supports that narrow handoff and is not a claim
-  of general numerical equivalence.
+- The documented binary, item-only, one-covariate MML handoff was compared in
+  a matched 31-node run with ConQuest 5.47.5 Demonstration Version. The result
+  supports that narrow handoff and is not a claim of general numerical
+  equivalence.
 - `export_mfrm_results()` now labels every preset as a potentially identifying
   analysis archive, warns before writing unless the risk is explicitly
   acknowledged, and records privacy status in its summary, HTML index, and

@@ -7,7 +7,8 @@
 mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
-    "simulation", "linking", "network", "response_time", "facets", "conquest", "r")
+    "calibration", "simulation", "linking", "network", "response_time", "facets",
+    "conquest", "r")
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ local-viewer routes built around \code{mfrm_results(include = ...)}. \code{"bina
 returns the two-category person-item Rasch route and checks. Other values
 filter to one output family or to bounded-\code{GPCM}-relevant routes.
 \code{"linking"} returns anchor, drift, and equating route rows.
+\code{"calibration"} returns the portable fixed-calibration lifecycle and
+artifact-only scoring route.
 \code{"simulation"} and \code{"network"} return advanced design-review rows.
 \code{"response_time"} returns descriptive response-time QC rows.
 \code{"facets"}, \code{"conquest"}, and \code{"r"} return user-pathway rows for people
@@ -102,6 +105,7 @@ reviews[, c("Question", "MainFunction", "UseWhen")]
 mfrmr_output_guide("gpcm")[, c("Question", "MainFunction", "GPCMStatus")]
 mfrmr_output_guide("simulation")[, c("Question", "Lifecycle")]
 mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
+mfrmr_output_guide("calibration")[, c("Question", "MainFunction")]
 mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
 mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
 mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]

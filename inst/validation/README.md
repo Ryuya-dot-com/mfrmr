@@ -152,6 +152,14 @@ identify whether the opt-in layer ran and retain its test log.
   independently revalidated matrix. It closes CORE-05, CORE-06, and G4 for the
   post-maintenance fixed-N(0,1) RSM/PCM executable boundary. G6 completion and
   public API promotion remain unauthorized.
+- `fixed-calibration-g6-public-surface-record-0.2.4.md`: records the public
+  release-candidate hardening slice: thin exported lifecycle/scoring wrappers,
+  the central six-row capability matrix, an executable synthetic vignette,
+  installed fresh-process scoring, incompatible-schema refusals, rendered-site
+  review, and a clean local source-package check. The public step-anchor gap is
+  resolved by narrowing the portable envelope to stored direct/group anchors.
+  CORE-07 is complete; CORE-08 and G6 remain open for the committed
+  cross-platform and reverse-dependency decision.
 - `.github/workflows/fixed-calibration-g4-v6.yaml` and its reusable cell
   workflow: provide an explicitly activated macOS-first five-platform path.
   It accepts `workflow_dispatch` or an exact `g4-v6-candidate-*` tag, not

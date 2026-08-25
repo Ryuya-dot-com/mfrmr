@@ -93,8 +93,6 @@ test_that("public documentation does not advertise later-release routes as curre
     "supports multiple independent rating scales",
     "supports general threshold anchors",
     "supports threshold anchoring",
-    "supports versioned frozen calibration",
-    "supports a versioned frozen calibration",
     "supports native multidimensional estimation",
     "provides native multidimensional estimation"
   )
@@ -108,7 +106,8 @@ test_that("public documentation does not advertise later-release routes as curre
 
   expect_identical(hits, character(0))
   expect_match(flat, "one observed score scale", fixed = TRUE)
-  expect_match(flat, "imported versioned frozen-calibration bundle", fixed = TRUE)
+  expect_match(flat, "portable fixed-calibration artifacts are available only", fixed = TRUE)
+  expect_match(flat, "estimated-population and latent-regression mml", fixed = TRUE)
   expect_match(flat, "posterior scoring from an existing fitted object is a separate", fixed = TRUE)
 })
 
@@ -205,6 +204,10 @@ test_that("CRAN-facing documentation excludes development-process language", {
   blocked <- c(
     "release evidence map",
     "release-readiness",
+    "repository roadmap",
+    "repository-level",
+    "validation record",
+    "CRAN checks",
     "pre-release status",
     "checked locally",
     "regression fixture",
@@ -239,20 +242,11 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "future-branch active planning scaffold"
   )
 
-  # NEWS is an immutable historical record once a release is submitted. Keep
-  # the exact 0.2.2 wording visible without allowing the same process language
-  # to leak into current guides or future release notes.
-  historical_news_allowlist <-
-    "Shiny viewer remains interactive-only. The release-readiness review now"
-
   hits <- character(0)
   for (path in names(docs)) {
     lines <- docs[[path]]
     for (phrase in blocked) {
       idx <- grep(tolower(phrase), tolower(lines), fixed = TRUE)
-      if (identical(basename(path), "NEWS.md") && length(idx) > 0L) {
-        idx <- idx[trimws(lines[idx]) != historical_news_allowlist]
-      }
       if (length(idx) > 0L) {
         hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
       }
@@ -292,6 +286,19 @@ test_that("the shipped source excludes development-stage contract names", {
   source_files <- source_files[
     basename(source_files) != "test-documentation-terminology.R"
   ]
+  ignore_path <- file.path(pkg_root, ".Rbuildignore")
+  if (file.exists(ignore_path)) {
+    ignore <- readLines(ignore_path, warn = FALSE)
+    ignore <- ignore[nzchar(ignore) & !startsWith(trimws(ignore), "#")]
+    relative <- substring(
+      normalizePath(source_files, winslash = "/", mustWork = FALSE),
+      nchar(normalizePath(pkg_root, winslash = "/", mustWork = TRUE)) + 2L
+    )
+    ignored <- vapply(relative, function(path) {
+      any(vapply(ignore, grepl, logical(1), x = path, perl = TRUE))
+    }, logical(1))
+    source_files <- source_files[!ignored]
+  }
   bad_file_names <- grep(
     "coverage-(push|boost|gaps)|final-coverage|remaining-coverage",
     basename(source_files),

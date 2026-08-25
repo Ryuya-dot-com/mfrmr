@@ -1,0 +1,133 @@
+---
+title: "Portable calibration and fresh-session scoring"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Portable calibration and fresh-session scoring}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = !is_cran_check
+)
+```
+
+This workflow creates a portable calibration from an eligible fitted model,
+validates and freezes it, saves it, and then scores new Persons without the
+source fit or training responses. The scoring phase uses only the saved
+artifact and the new response rows.
+
+The portable workflow is deliberately narrower than fitted-object scoring.
+It supports one observed score scale and one latent dimension for `RSM` or
+`PCM` fitted by `MML` under the fixed standard-normal scoring basis. It does
+not currently create portable artifacts for estimated-population or latent-
+regression fits, `JML`, or bounded `GPCM`.
+
+```{r capabilities}
+library(mfrmr)
+
+mfrm_calibration_capabilities()[, c(
+  "Model", "Estimator", "ScoringBasis", "PortableCalibration"
+)]
+```
+
+## Calibration session
+
+The bundled `example_core` data are synthetic. This example uses 18 Persons
+to keep vignette runtime modest; a substantive analysis should use its planned
+sample and design rather than copying that count.
+
+```{r create-calibration}
+synthetic <- load_mfrmr_data("example_core")
+person_ids <- unique(as.character(synthetic$Person))
+training_ids <- person_ids[seq_len(18L)]
+training <- synthetic[
+  as.character(synthetic$Person) %in% training_ids,
+  ,
+  drop = FALSE
+]
+
+fit <- suppressWarnings(fit_mfrm(
+  training,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  model = "RSM",
+  method = "MML",
+  quad_points = 5,
+  maxit = 20
+))
+
+draft <- extract_mfrm_calibration(
+  fit,
+  calibration_id = "portable-rsm-example",
+  source_fit_id = "synthetic-rsm-fit",
+  scoring_quad_points = 31
+)
+review_mfrm_calibration(draft)
+
+validated <- validate_mfrm_calibration(draft)
+frozen <- freeze_mfrm_calibration(validated)
+frozen
+
+artifact_file <- tempfile(fileext = ".rds")
+save_mfrm_calibration(frozen, artifact_file)
+```
+
+The fit-time quadrature and the scoring-time quadrature are distinct. Here the
+small fit-time grid keeps the example quick, while the artifact explicitly
+records the 31-point grid used for later posterior scoring.
+
+## Fresh scoring session
+
+In operational use, start a new R process and supply only the artifact path and
+new response rows. The following chunk removes the fit, draft, validation
+object, and training data before loading the artifact, so none can influence
+the score.
+
+```{r score-from-artifact}
+new_rows <- synthetic[
+  as.character(synthetic$Person) %in% person_ids[19:20],
+  c("Person", "Rater", "Criterion", "Score"),
+  drop = FALSE
+]
+new_ids <- stats::setNames(
+  c("NEW_PERSON_1", "NEW_PERSON_2"), person_ids[19:20]
+)
+new_rows$Person <- unname(new_ids[as.character(new_rows$Person)])
+rownames(new_rows) <- NULL
+
+rm(fit, draft, validated, frozen, training, synthetic)
+invisible(gc())
+
+calibration <- load_mfrm_calibration(artifact_file)
+scores <- score_mfrm_calibration(calibration, new_rows)
+scores$estimates
+scores$row_review
+scores$person_dispositions
+
+unlink(artifact_file)
+```
+
+For a separate scoring script, the essential code is:
+
+```r
+library(mfrmr)
+
+calibration <- load_mfrm_calibration("reviewed-calibration.rds")
+new_rows <- read.csv("new-responses.csv", stringsAsFactors = FALSE)
+scores <- score_mfrm_calibration(calibration, new_rows)
+write.csv(scores$estimates, "person-scores.csv", row.names = FALSE)
+```
+
+Unknown facet levels, unknown score values, invalid weights, ambiguous
+duplicates, and malformed artifacts fail closed. Missing responses require an
+explicit `missing_response = "omit"` policy. Every returned estimate is a
+posterior EAP conditional on the recorded fixed point calibration and prior;
+its uncertainty interval excludes calibration-parameter uncertainty. Validate
+the intended score use, population transport, and decision consequences
+outside this numerical workflow.

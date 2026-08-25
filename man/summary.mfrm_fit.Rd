@@ -62,7 +62,7 @@ yields \code{FormalInference = "Yes"}
 \item \code{readiness}: the stored fit-level state plus numerical, data, design,
 stability, diagnostic, and reporting workflow states
 \item \code{data_review}: structured connectivity and facet-support evidence used by
-the non-numerical readiness gates
+the non-numerical readiness requirements
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
 \item \code{population_overview}: current population-model basis, residual variance,
@@ -160,7 +160,7 @@ Design, Stability, Diagnostics, and Reporting workflow states.
 \code{InferenceReady} is a conservative compatibility scalar and is \code{TRUE}
 only when the stored \code{FitReadiness} is \code{ready}; numerical convergence
 cannot override input, estimability, category, or boundary review.
-\item \code{decision}: separates that fit gate from formal precision support. A
+\item \code{decision}: separates fit readiness from formal precision support. A
 fit-only summary returns \code{FormalInference = "No"} until a matching
 \code{mfrm_diagnostics} object is supplied through \verb{diagnostics =}; use
 \code{summary(diagnostics)$decision} for the equivalent precision-aware view.

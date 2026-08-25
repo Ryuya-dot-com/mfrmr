@@ -215,7 +215,7 @@ log-likelihood,
 \code{"hybrid"} uses EM as a warm start before the direct optimizer. Unsupported
 combinations currently fall back to \code{"direct"} and record that fallback in
 \code{fit$summary}. Direct, hybrid, and EM engines all require the common
-terminal-gradient gate for the Numerical component of fit readiness; EM
+terminal-gradient check for the Numerical component of fit readiness; EM
 relative log-likelihood convergence alone does not establish numerical
 readiness. \code{InferenceReady} is \code{TRUE} only when every stored fit-readiness
 component passes.}
@@ -952,7 +952,7 @@ without a latent-regression population model.
 \item Benchmark your own workload before using \code{mml_engine = "em"} or
 \code{"hybrid"} for final reporting; \code{direct} remains the documented default
 when you have not compared engines for your data.
-\item When a direct code-zero stage stops ahead of the terminal-gradient gate,
+\item When a direct code-zero stage stops ahead of the terminal-gradient check,
 bounded polishing is automatic. Inspect \code{fit$opt$optimizer_polish$Stages}
 rather than repeatedly lowering \code{reltol} without reviewing the retained
 objective, gradient, and parameter changes.

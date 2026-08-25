@@ -1553,10 +1553,10 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     add(
       1L,
       "Numerical fit",
-      "Keep the fit review-only and resolve the numerical convergence gate.",
+      "Keep the fit review-only and resolve the numerical convergence issue.",
       "summary(res$fit)$next_actions; summary(res)$readiness",
       as.character(numerical_row$Detail[1L] %||%
-        "The numerical readiness gate did not pass.")
+        "The numerical-readiness criteria were not satisfied.")
     )
   }
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)) {

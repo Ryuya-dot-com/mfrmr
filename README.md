@@ -21,9 +21,10 @@ reproducibility, network review, and reporting support. It is not a general
 FACETS replacement: each `fit_mfrm()` call uses one response-model family and
 one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
-anchoring, or an imported versioned frozen-calibration bundle for operational
-scoring. Posterior scoring from an existing fitted object is a separate
-analysis route.
+anchoring, or online calibration updates. Portable fixed-calibration artifacts
+are available only for one-scale `RSM`/`PCM` `MML` fits under the fixed
+standard-normal scoring basis. Posterior scoring from an existing fitted
+object is a separate, wider analysis route.
 
 The recommended workflow is:
 
@@ -96,6 +97,35 @@ For the shortest end-to-end explanation, open
 `help("mfrmr_visual_diagnostics", package = "mfrmr")` when choosing a figure
 and `help("mfrmr_reporting_and_apa", package = "mfrmr")` when moving from a
 reviewed fit to tables and manuscript-draft output.
+
+## Portable fixed calibration
+
+An eligible `RSM` or `PCM` `MML` fit can be converted into a versioned
+calibration artifact, validated, frozen, saved, and applied to new Persons
+without retaining the source fit or training responses:
+
+```r
+draft <- extract_mfrm_calibration(fit)
+review_mfrm_calibration(draft)
+
+validated <- validate_mfrm_calibration(draft)
+calibration <- freeze_mfrm_calibration(validated)
+save_mfrm_calibration(calibration, "reviewed-calibration.rds")
+
+# This can run in a new R session.
+calibration <- load_mfrm_calibration("reviewed-calibration.rds")
+scores <- score_mfrm_calibration(calibration, new_responses)
+scores$estimates
+```
+
+Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
+and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
+example. Estimated-population and latent-regression MML, JML, and bounded GPCM
+remain fitted-object-only routes; they do not create portable calibration
+artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
+frozen point calibration and recorded prior. Their intervals exclude
+calibration-parameter uncertainty, and loading validates consistency rather
+than authenticating files from untrusted sources.
 
 ## Data format
 
@@ -292,7 +322,7 @@ fit_summary$step_overview
 ```
 
 Read `fit_summary$decision` first. It translates the stored readiness contract
-into four practical questions: did the fit gates pass, has formal precision
+into four practical questions: are the fit-readiness requirements satisfied, has formal precision
 support been evaluated, what evidence prevents formal use, and what should be
 done next. A fit-only summary deliberately returns
 `FormalInference = "No"` even when `InferenceReady = TRUE`, because convergence

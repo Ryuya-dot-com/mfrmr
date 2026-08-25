@@ -203,6 +203,8 @@ NULL
 #'   returns the two-category person-item Rasch route and checks. Other values
 #'   filter to one output family or to bounded-`GPCM`-relevant routes.
 #'   `"linking"` returns anchor, drift, and equating route rows.
+#'   `"calibration"` returns the portable fixed-calibration lifecycle and
+#'   artifact-only scoring route.
 #'   `"simulation"` and `"network"` return advanced design-review rows.
 #'   `"response_time"` returns descriptive response-time QC rows.
 #'   `"facets"`, `"conquest"`, and `"r"` return user-pathway rows for people
@@ -271,6 +273,7 @@ NULL
 #' mfrmr_output_guide("gpcm")[, c("Question", "MainFunction", "GPCMStatus")]
 #' mfrmr_output_guide("simulation")[, c("Question", "Lifecycle")]
 #' mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
+#' mfrmr_output_guide("calibration")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
 #' mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
@@ -284,7 +287,7 @@ NULL
 mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychometric",
                                          "entry", "viewer", "binary", "tables", "reports", "reviews",
                                          "bundles", "exports", "compatibility",
-                                         "gpcm", "simulation", "linking", "network",
+                                         "gpcm", "calibration", "simulation", "linking", "network",
                                          "response_time", "facets", "conquest", "r")) {
   scope <- match.arg(scope)
 
@@ -470,6 +473,57 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "The native map retains mfrmr's facet uncertainty display and is the required first fitted-scale figure.",
       "The closest FACETS-style renderer uses show_ci = FALSE; show_ci = TRUE is a deliberate hybrid that adds mfrmr uncertainty intervals. The Infit pathway adds persons only when explicitly requested.",
       "Reporting and export organize existing evidence; they do not improve model fit or create an automatic acceptance rule."
+    ),
+    stringsAsFactors = FALSE
+  )
+
+  calibration_rows <- data.frame(
+    Scope = rep("calibration", 4L),
+    Question = c(
+      "Check whether a fitted route can create a portable calibration",
+      "Extract, review, validate, and freeze an eligible calibration",
+      "Save and load the reviewed calibration artifact",
+      "Score new Persons from the frozen artifact without the source fit"
+    ),
+    OutputFamily = c("guide", "review", "export", "review"),
+    MainFunction = c(
+      "mfrm_calibration_capabilities()",
+      paste0(
+        "extract_mfrm_calibration(); review_mfrm_calibration(); ",
+        "validate_mfrm_calibration(); freeze_mfrm_calibration()"
+      ),
+      "save_mfrm_calibration(); load_mfrm_calibration()",
+      "score_mfrm_calibration()"
+    ),
+    UseWhen = c(
+      "You need to distinguish the narrow portable-artifact envelope from fitted-object scoring.",
+      "A ready one-scale RSM/PCM MML fit uses the fixed standard-normal scoring basis.",
+      "A frozen artifact must move to a separate scoring session or controlled storage location.",
+      "New response rows use only known facet levels and the calibration's recorded score map."
+    ),
+    TypicalInput = c(
+      "none",
+      "eligible mfrm_fit",
+      "validated or frozen mfrm_calibration and an .rds path",
+      "frozen mfrm_calibration plus new response rows"
+    ),
+    NextStep = c(
+      "Use an available portable row or follow its fitted-object alternative.",
+      "Resolve every structured refusal before freezing; do not bypass lifecycle states.",
+      "Load the artifact in the scoring session and retain its calibration identity with outputs.",
+      "Review row and Person dispositions before using posterior EAP estimates."
+    ),
+    GPCMStatus = c(
+      "portable_gpcm_unavailable; fitted_object_route_available",
+      "rsm_pcm_mml_fixed_normal_only",
+      "rsm_pcm_mml_fixed_normal_only",
+      "portable_gpcm_unavailable; fitted_object_route_available"
+    ),
+    Notes = c(
+      "The matrix is authoritative for portable artifacts and does not narrow fitted-object capabilities.",
+      "Public 0.2.4 extraction preserves stored direct/group facet anchors; it does not construct typed step anchors.",
+      "Loading validates schema and semantics but does not authenticate untrusted files.",
+      "Intervals are conditional on the frozen point calibration and exclude calibration-parameter uncertainty."
     ),
     stringsAsFactors = FALSE
   )
@@ -1010,19 +1064,19 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   )
 
   out <- rbind(
-    public_rows, entry_rows, viewer_rows, binary_rows, out, linking_rows,
+    public_rows, calibration_rows, entry_rows, viewer_rows, binary_rows, out, linking_rows,
     advanced_rows, gpcm_rows, migration_entry_rows, user_pathway_rows
   )
   out$Lifecycle <- "stable"
   out$Lifecycle[out$OutputFamily %in% "compatibility" | out$Scope %in% c("compatibility", "facets", "conquest")] <- "compatibility"
   out$Lifecycle[out$Scope %in% c("simulation", "network")] <- "advanced"
   out$UserLevel <- "intermediate"
-  out$UserLevel[out$Scope %in% c("public", "entry", "viewer", "binary")] <- "beginner"
+  out$UserLevel[out$Scope %in% c("public", "calibration", "entry", "viewer", "binary")] <- "beginner"
   out$UserLevel[out$Scope %in% c("simulation", "network", "reviews")] <- "advanced"
   out$UserLevel[out$Scope %in% c("compatibility", "facets", "conquest")] <- "migration"
   out$APILayer <- "specialist_component"
   out$APILayer[out$Scope %in% "public"] <- "top_level_public_surface"
-  out$APILayer[out$Scope %in% c("entry", "viewer", "binary")] <- "recommended_entry_route"
+  out$APILayer[out$Scope %in% c("calibration", "entry", "viewer", "binary")] <- "recommended_entry_route"
   out$APILayer[out$Scope %in% c("reports", "reviews", "tables", "bundles", "exports", "linking", "gpcm")] <- "specialist_followup"
   out$APILayer[out$Scope %in% c("simulation", "network")] <- "advanced_design_review"
   out$APILayer[out$Scope %in% c("compatibility", "facets", "conquest", "r")] <- "migration_or_integration"
@@ -1042,6 +1096,10 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   out$ObjectRole[grepl("export_", out$MainFunction, fixed = TRUE)] <- "file export surface"
   out$ObjectRole[grepl("mfrmr_output_guide", out$MainFunction, fixed = TRUE)] <- "route-selection guide"
   out$ObjectRole[grepl("gpcm_runtime_guard_coverage", out$MainFunction, fixed = TRUE)] <- "unavailable-route alternatives"
+  out$ObjectRole[grepl("mfrm_calibration_capabilities", out$MainFunction, fixed = TRUE)] <- "route-selection guide"
+  out$ObjectRole[grepl("extract_mfrm_calibration", out$MainFunction, fixed = TRUE)] <- "portable calibration lifecycle"
+  out$ObjectRole[grepl("save_mfrm_calibration", out$MainFunction, fixed = TRUE)] <- "calibration persistence"
+  out$ObjectRole[grepl("score_mfrm_calibration", out$MainFunction, fixed = TRUE)] <- "artifact-only posterior scoring"
   out$ObjectRole[grepl("mfrm_results_interactive", out$MainFunction, fixed = TRUE)] <- "explicit opt-in interactive entry"
   out$ObjectRole[grepl('summary(fit, profile = "fit"', out$MainFunction, fixed = TRUE)] <- "fit summary surface"
   out$ObjectRole[grepl('summary(fit, profile = "facets"', out$MainFunction, fixed = TRUE)] <- "comprehensive result object"
@@ -1065,6 +1123,16 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     "Explains supported-with-caveat, blocked, and deferred bounded-GPCM route handling; it does not broaden any route beyond its current capability row."
   out$DecisionBoundary[out$ObjectRole %in% "explicit opt-in interactive entry"] <-
     "Collects column choices interactively; move replay code into an explicit script before reporting."
+  out$DecisionBoundary[out$ObjectRole %in% "portable calibration lifecycle"] <-
+    "Creates only the fixed-standard-normal RSM/PCM MML artifact; every refusal must be resolved before freezing."
+  out$DecisionBoundary[out$ObjectRole %in% "calibration persistence"] <-
+    "Preserves and validates a calibration lifecycle object; loading is not authentication of an untrusted file."
+  out$DecisionBoundary[out$ObjectRole %in% "artifact-only posterior scoring"] <-
+    paste(
+      "Returns posterior EAP uncertainty conditional on the frozen point",
+      "calibration and recorded prior, excludes calibration-parameter",
+      "uncertainty, and performs no refit."
+    )
   out$DecisionBoundary[grepl("precision", out$MainFunction, ignore.case = TRUE)] <-
     "Precision and separation evidence are not inter-rater agreement or standalone validity proof."
   out$DecisionBoundary[grepl("response_time", out$MainFunction, fixed = TRUE)] <-
@@ -1078,7 +1146,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   out$DecisionBoundary[out$Scope %in% c("compatibility", "facets", "conquest")] <-
     "Compatibility rows are presentation or migration contracts, not numerical equivalence claims unless external outputs are explicitly compared."
 
-  out$RecommendedEntry <- out$Scope %in% c("public", "entry", "viewer", "binary")
+  out$RecommendedEntry <- out$Scope %in% c("public", "calibration", "entry", "viewer", "binary")
   out <- out[, c(
     "Scope", "Question", "OutputFamily", "Lifecycle", "UserLevel",
     "APILayer", "ObjectRole", "DecisionBoundary", "RecommendedEntry",

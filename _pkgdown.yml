@@ -24,6 +24,12 @@ reference:
       - mfrmr_interval_guide
       - mfrmr_workflow_methods
 
+  - title: "Portable fixed calibration"
+    desc: "Create, validate, freeze, persist, and apply the bounded RSM/PCM MML calibration artifact."
+    contents:
+      - mfrm_calibration_capabilities
+      - mfrm_calibration_workflow
+
   - title: "Bounded GPCM boundary"
     desc: "Supported, caveated, blocked, and deferred bounded-GPCM routes."
     contents:

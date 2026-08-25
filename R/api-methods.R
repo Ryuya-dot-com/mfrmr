@@ -7158,7 +7158,7 @@ summary.mfrm_diagnostics <- function(object,
     isTRUE(fit_readiness_tbl$InferenceReady[1])
   source_fit_label <- switch(
     source_fit_state,
-    ready = "ready; fit gates passed, with formal precision evaluated separately",
+    ready = "ready; fit-readiness requirements satisfied, with formal precision evaluated separately",
     ready_with_exclusions = "ready with exclusions; review parameter eligibility",
     review = "review required; formal inference is not ready",
     blocked = "blocked; formal inference is not ready",
@@ -7465,7 +7465,7 @@ summary.mfrm_diagnostics <- function(object,
   )
   if (!source_inference_ready) {
     next_actions <- c(
-      "Inspect `summary(fit)$readiness` and resolve the source-fit gate before interpreting diagnostic magnitudes substantively.",
+      "Inspect `summary(fit)$readiness` and resolve the source-fit readiness issues before interpreting diagnostic magnitudes substantively.",
       next_actions
     )
   }
@@ -8222,7 +8222,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   `InferenceReady` is a conservative compatibility scalar and is `TRUE`
 #'   only when the stored `FitReadiness` is `ready`; numerical convergence
 #'   cannot override input, estimability, category, or boundary review.
-#' - `decision`: separates that fit gate from formal precision support. A
+#' - `decision`: separates fit readiness from formal precision support. A
 #'   fit-only summary returns `FormalInference = "No"` until a matching
 #'   `mfrm_diagnostics` object is supplied through `diagnostics =`; use
 #'   `summary(diagnostics)$decision` for the equivalent precision-aware view.
@@ -8280,7 +8280,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `readiness`: the stored fit-level state plus numerical, data, design,
 #'   stability, diagnostic, and reporting workflow states
 #' - `data_review`: structured connectivity and facet-support evidence used by
-#'   the non-numerical readiness gates
+#'   the non-numerical readiness requirements
 #' - `key_warnings`: highest-priority warnings to review first
 #' - `next_actions`: recommended follow-up helpers
 #' - `population_overview`: current population-model basis, residual variance,
@@ -10217,9 +10217,9 @@ mfrm_fit_decision_summary <- function(readiness,
     ready = if (formal_supported) {
       "Ready for formal inference"
     } else if (precision_known) {
-      "Fit gates passed; formal inference is not supported"
+      "Fit-readiness requirements satisfied; formal inference is not supported"
     } else {
-      "Fit gates passed; formal precision review required"
+      "Fit-readiness requirements satisfied; formal precision review required"
     },
     ready_with_exclusions = "Usable only with the recorded exclusions",
     review = "Review before reporting or inference",

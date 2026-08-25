@@ -1668,3 +1668,66 @@ test_that("post-maintenance v6 execution closes G4 only for its bound core", {
   expect_match(record, "`G6Authorized=FALSE`", fixed = TRUE)
   expect_match(record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
 })
+
+test_that("G6 public surface closes CORE-07 without authorizing release", {
+  ctx <- load_fixed_calibration_g4_contract()
+  path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g6-public-surface-record-0.2.4.md"
+  )
+  expect_true(file.exists(path))
+  record <- paste(readLines(path, warn = FALSE), collapse = "\n")
+  roadmap <- paste(
+    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
+    collapse = "\n"
+  )
+
+  expect_match(record, "`PublicWrapperParityComplete=TRUE`", fixed = TRUE)
+  expect_match(record, "`PublicCapabilityRows=6`", fixed = TRUE)
+  expect_match(record, "`PortableAvailableRows=2`", fixed = TRUE)
+  expect_match(record, "`PortableUnavailableRows=4`", fixed = TRUE)
+  expect_match(
+    record, "`FreshSessionPublicAPIScoringComplete=TRUE`", fixed = TRUE
+  )
+  expect_match(record, "`PublicVignetteRendered=TRUE`", fixed = TRUE)
+  expect_match(record, "`PublicOutputGuideIntegrated=TRUE`", fixed = TRUE)
+  expect_match(record, "`PublicExtractionMessagesClean=TRUE`", fixed = TRUE)
+  expect_match(record, "`PackageMetadataAligned=TRUE`", fixed = TRUE)
+  expect_match(record, "`WebsiteBuiltAndReviewed=TRUE`", fixed = TRUE)
+  expect_match(record, "`LocalSourceCheckStatus=OK`", fixed = TRUE)
+  expect_match(record, "`DistributedTestPasses=435`", fixed = TRUE)
+  expect_match(record, "`DistributedTestFailures=0`", fixed = TRUE)
+  expect_match(record, "`NoGoAuditComplete=TRUE`", fixed = TRUE)
+  expect_match(
+    record, "`StepAnchorPublicConstructionResolved=TRUE`", fixed = TRUE
+  )
+  expect_match(
+    record, "`StepAnchorPublicConstructionAvailable=FALSE`", fixed = TRUE
+  )
+  expect_match(record, "`CORE07Complete=TRUE`", fixed = TRUE)
+  expect_match(record, "`CORE08Complete=FALSE`", fixed = TRUE)
+  expect_match(record, "`G6ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(
+    record, "`PublicAPIAuthorizedForRelease=FALSE`", fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "  - [x] Add one fresh-session end-to-end operational vignette",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "  - [x] Add schema compatibility and explicit migration/refusal fixtures.",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap, "  - [x] Resolve the public step-anchor boundary:", fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "  - [x] Reconcile code, help, README, vignette, NEWS, capability matrix,",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
+               fixed = TRUE)
+})

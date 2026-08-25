@@ -2376,7 +2376,7 @@ build_mfrm_network_review <- function(fit,
     notes = c(
       "MFRM estimates remain the measurement-model results; network rows summarize observed design links.",
       "Articulation points and bridge edges identify levels or links whose removal would fragment the co-observation graph.",
-      "Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit gates.",
+      "Sparse-design review rows, when supplied, report planned-missingness and rater-link diagnostics rather than recovery or fit-readiness decisions.",
       "Peer-review design rows, when supplied, report assignment structure and reviewer linkage rather than reviewer quality or fairness."
     )
   )
@@ -4859,7 +4859,7 @@ plot_bias_interaction <- function(x,
 #' - `report_text`: APA-oriented Method/Results draft prose
 #' - `decision`: plain-language source-fit interpretation plus the separate
 #'   precision-contract decision; `FormalInference` is `"Yes"` only when both
-#'   the fit gate and `contract$precision$supports_formal_inference` pass
+#'   fit readiness and `contract$precision$supports_formal_inference` support it
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: exact source-fit readiness provenance
 #' - `table_figure_notes`: consolidated draft notes for tables/visuals
@@ -4963,7 +4963,7 @@ build_apa_outputs <- function(fit,
       isTRUE(fit_readiness$InferenceReady[1L])
   ) {
     paste(
-      "The fit gates passed, but the precision contract does not support",
+      "The fit-readiness requirements were satisfied, but the precision contract does not support",
       "formal inference; keep the draft exploratory and review",
       "`precision_review_report()` before substantive use."
     )

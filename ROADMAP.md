@@ -1747,7 +1747,7 @@ calibration claim:
 - [x] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
   chunk-order, locale, encoding, platform, R-version, and bounded performance
   checks pass.
-- [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
+- [x] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
   NEWS, capability matrix, runtime wording, package metadata, and source
   package all state the same supported envelope.
 - [ ] **CORE-08 — Final release decision:** every preceding core gate is
@@ -1778,10 +1778,14 @@ not remove the existing fitted-object analysis routes.
 
 The minimum release lane is a one-scale RSM/PCM MML calibration under the
 current documented unconditional fixed-standard-normal scoring basis. It
-includes a typed calibration artifact, strict direct/group and step-anchor
-handling, and posterior scoring of new or partially observed Persons using
-only known non-Person levels. This is the smallest lane that demonstrates the
-complete freeze--persist--load--score contract.
+includes a typed calibration artifact, preservation of direct/group facet
+anchors already present in an eligible public fit, and posterior scoring of
+new or partially observed Persons using only known non-Person levels. The
+internal schema can represent shared and owner-specific step anchors, but
+0.2.4 has no public construction path for them and does not claim that
+capability. This is the smallest lane that demonstrates the complete freeze--
+persist--load--score contract without widening the estimator API during
+release hardening.
 
 Existing fitted-object support for latent-regression MML, JML, and bounded
 GPCM must remain regression-tested, but callability does not automatically
@@ -2301,21 +2305,48 @@ required children are checked.
 - [ ] **G6 — Release-candidate hardening**
   - [x] Start only after the post-maintenance current-source G4 exit is
     complete.
-  - [ ] Add one fresh-session end-to-end operational vignette using synthetic
+  - [x] Add one fresh-session end-to-end operational vignette using synthetic
     data and the installed public API only.
-  - [ ] Add schema compatibility and explicit migration/refusal fixtures.
-  - [ ] Reconcile code, help, README, vignette, NEWS, capability matrix,
+  - [x] Add schema compatibility and explicit migration/refusal fixtures.
+  - [x] Resolve the public step-anchor boundary: the internal artifact contract
+    represents shared/owned step anchors, but the public fitter has no typed
+    step-anchor declaration. The 0.2.4 public envelope therefore preserves
+    direct/group facet anchors only; public step-anchor construction is deferred
+    rather than inferred from internal representation.
+  - [x] Reconcile code, help, README, vignette, NEWS, capability matrix,
     runtime messages, package metadata, and website against one centrally
     tested support matrix.
   - [ ] Check source-package contents, examples, ordinary tests, vignettes,
     reverse dependencies where available, and the cross-platform R CMD check
     matrix.
-  - [ ] Confirm no release-critical row depends solely on a slow, skipped,
+    - [x] Local macOS source build/check, installed-package tests, examples,
+      and complete vignette rebuilding pass for the current payload.
+    - [ ] Confirm the committed payload on the routine five-platform matrix
+      and review reverse dependencies where available.
+  - [x] Confirm no release-critical row depends solely on a slow, skipped,
     historical, local-only, or repository-absent artifact.
-  - [ ] Re-run the no-go audit and explicitly remove or relabel every failed
+  - [x] Re-run the no-go audit and explicitly remove or relabel every failed
     optional claim.
   - [ ] **G6 exit:** CORE-07 passes and CORE-08 is decided from the complete
     claim ledger rather than from schedule or version pressure.
+  - Evidence to date: the first public-surface slice exports thin lifecycle and
+    scoring wrappers plus a six-row capability matrix with only fixed-standard-
+    normal RSM/PCM MML available. The synthetic vignette rendered successfully,
+    and a check-installed package loaded and scored the saved artifact in a
+    separate vanilla R process using exported functions only. Public loader
+    fixtures reject newer schema, unknown fields, and partial response maps.
+    README, NEWS, help, vignette, runtime messages, package help, and pkgdown
+    navigation share the narrow portable-versus-fitted-object distinction.
+    The final local source package passed examples, 435 distributed tests, and
+    complete vignette rebuilding; its fresh-process test used only exported
+    functions. The no-go audit retains estimated-population/latent-regression
+    MML, JML, bounded GPCM, and public step-anchor construction as unavailable
+    portable routes. CORE-07 is complete. CORE-08 and G6 remain open pending
+    the ordinary five-platform matrix and reverse-dependency review where
+    available. Repository-only version-pinned or opt-in research tests are not
+    used to close a release-critical row. The output guide and public
+    extraction messages use the central matrix and actionable fitted-object
+    alternatives.
 
 ### Public-document audience boundary
 
@@ -2355,9 +2386,12 @@ following remains true for the core lane:
 
 When a no-go condition cannot be closed, optional scope shrinks before
 evidence does. An OPT lane may be deferred, blocked, or relabelled without
-blocking the core. Direct/group and threshold/step anchoring are part of the
-current CORE-03 claim; if that gate cannot close, 0.2.4 either waits or is
-explicitly re-chartered in this roadmap before a release candidate is built.
+blocking the core. Direct/group and threshold/step anchoring were part of the
+original CORE-03 implementation target. The 2026-08-26 G6 review found that
+the public fitter has no typed step-anchor declaration, so the public 0.2.4
+envelope was explicitly re-chartered before G6 exit to preserve direct/group
+facet anchors only. Internal shared/owned step-anchor representation remains
+tested but is not a public capability.
 Re-chartering changes the public goal and resets the affected confirmation
 gate; it is not a post-result shortcut. The project must not retain the word
 `operational`, weaken a rule after viewing confirmation results, or convert a

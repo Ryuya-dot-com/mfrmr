@@ -58,12 +58,13 @@ mfrmr_fc_g4i_classify_path <- function(path) {
   )) {
     return("deferred_rater_anchor_design_research")
   }
-  if (grepl("^R/[^/]+[.]R$", path) ||
+  if (grepl("^R/[^/]+[.]R$", path) || identical(path, "NAMESPACE") ||
       grepl("^src/.*[.](c|cc|cpp|cxx|h|hh|hpp)$", path) ||
       grepl("^src/Makevars", path) || identical(path, "DESCRIPTION")) {
     return("release_production_code_and_metadata")
   }
-  if (identical(path, "NEWS.md") || identical(path, "CITATION.cff") ||
+  if (identical(path, "NEWS.md") || identical(path, "README.md") ||
+      identical(path, "CITATION.cff") || identical(path, "_pkgdown.yml") ||
       identical(path, "ROADMAP.md") || grepl("^man/[^/]+[.]Rd$", path) ||
       grepl("^vignettes/[^/]+[.]Rmd$", path) ||
       grepl("^inst/extdata/vignette-artifacts/", path)) {
@@ -85,10 +86,14 @@ mfrmr_fc_g4i_classify_path <- function(path) {
         "tests/testthat/test-compiled-header-contract.R",
         "tests/testthat/test-prediction.R",
         "tests/testthat/test-reference-benchmark.R",
+        "tests/testthat/test-calibration-public-api.R",
+        "tests/testthat/test-cran-smoke.R",
+        "tests/testthat/test-documentation-terminology.R",
         "tests/testthat/test-replay-roundtrip.R",
         "tests/testthat/test-resumable-fits.R",
         "tests/testthat/test-gpcm-capability-matrix.R",
-        "tests/testthat/test-release-readiness-protocol.R"
+        "tests/testthat/test-release-readiness-protocol.R",
+        "tests/testthat/test-vignette-artifacts.R"
       ) || grepl("^tests/testthat/test-fixed-calibration-", path)) {
     return("release_build_test_and_repository_evidence")
   }
@@ -104,7 +109,7 @@ mfrmr_fc_g4i_package_payload_expected <- function(path, classification) {
   }
   if (classification == "release_production_code_and_metadata") return(TRUE)
   if (classification == "release_public_and_user_facing_surface") {
-    return(!path %in% c("CITATION.cff", "ROADMAP.md"))
+    return(!path %in% c("CITATION.cff", "ROADMAP.md", "_pkgdown.yml"))
   }
   if (classification == "release_build_test_and_repository_evidence") {
     repository_only <-
