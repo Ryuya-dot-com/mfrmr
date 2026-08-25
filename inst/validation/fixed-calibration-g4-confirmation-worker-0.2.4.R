@@ -135,17 +135,17 @@ mfrmr_fc_g4w_fixture <- function(family, role, design) {
   ]
   mfrmr_fc_g4w_assert(nrow(row) == 1L, "Frozen fixture identity is missing.")
   if (identical(role, "current_default31_confirmation")) {
-    modulus <- 1009L
+    modulus <- 1019L
     source_prefix <- paste0("G4D31", substr(family, 1L, 1L), "S")
     confirmation_prefix <- paste0("G4D31", substr(family, 1L, 1L), "C")
-    source_offset <- 127L
-    confirmation_offset <- 613L
+    source_offset <- 191L
+    confirmation_offset <- 773L
   } else if (identical(role, "one_node_source_fit_adversary")) {
-    modulus <- 1013L
+    modulus <- 1021L
     source_prefix <- paste0("G4S01", substr(family, 1L, 1L), "S")
     confirmation_prefix <- paste0("G4S01", substr(family, 1L, 1L), "C")
-    source_offset <- 263L
-    confirmation_offset <- 709L
+    source_offset <- 347L
+    confirmation_offset <- 829L
   } else {
     modulus <- 997L
     source_prefix <- paste0("G4H09", substr(family, 1L, 1L), "S")
@@ -387,9 +387,11 @@ mfrmr_fc_g4w_replay <- function(fit, data, prefix, unit_prediction = NULL) {
   old <- getwd()
   on.exit(setwd(old), add = TRUE)
   setwd(directory)
+  include <- c("core_tables", "manifest", "script")
+  if (!is.null(unit_prediction)) include <- c(include, "predictions")
   mfrmr::export_mfrm_bundle(
     fit, unit_prediction = unit_prediction, output_dir = ".", prefix = prefix,
-    include = c("core_tables", "manifest", "predictions", "script"),
+    include = include,
     data = data, acknowledge_sensitive = TRUE
   )
   environment <- new.env(parent = globalenv())
@@ -531,7 +533,10 @@ mfrmr_fc_g4w_current_handlers <- function(contract_environment,
       path <- tempfile(fileext = ".rds")
       on.exit(unlink(path), add = TRUE)
       data <- checkpoint_data(identical(kind, "weighted"))
-      anchors <- if (identical(kind, "anchored")) c(R01 = 0) else NULL
+      anchors <- if (identical(kind, "anchored")) data.frame(
+        Facet = "Rater", Level = "R01", Anchor = 0,
+        stringsAsFactors = FALSE
+      ) else NULL
       fit <- mfrmr_fc_g4w_checkpoint_fit(
         data, path,
         weight = if (identical(kind, "weighted")) "Weight" else NULL,
@@ -590,7 +595,7 @@ mfrmr_fc_g4w_current_handlers <- function(contract_environment,
     error <- mfrmr_fc_g4w_expect_error(
       mfrmr:::mfrmr_score_calibration(
         altered, base()$confirmation, weight = "Weight"
-      ), "IDENTITY_COMPONENT_MISMATCH"
+      ), "SCORING_BASIS_UNSUPPORTED"
     )
     mfrmr_fc_g4w_observation("refusal observed", 1, 1, error$Code)
   }
@@ -600,7 +605,7 @@ mfrmr_fc_g4w_current_handlers <- function(contract_environment,
     error <- mfrmr_fc_g4w_expect_error(
       mfrmr:::mfrmr_score_calibration(
         altered, base()$confirmation, weight = "Weight"
-      ), "IDENTITY_COMPONENT_MISMATCH"
+      ), "QUADRATURE_ORDER_INVALID"
     )
     mfrmr_fc_g4w_observation("refusal observed", 1, 1, error$Code)
   }
@@ -1037,7 +1042,11 @@ mfrmr_fc_g4w_current_handlers <- function(contract_environment,
     error <- with_checkpoint(base_checkpoint$Saved, function(path) {
       mfrmr_fc_g4w_expect_error(
         mfrmr_fc_g4w_checkpoint_fit(
-          base_checkpoint$Data, path, maxit = 6L, anchors = c(R01 = 0.1)
+          base_checkpoint$Data, path, maxit = 6L,
+          anchors = data.frame(
+            Facet = "Rater", Level = "R01", Anchor = 0.1,
+            stringsAsFactors = FALSE
+          )
         ), pattern = "checkpoint identity does not match"
       )
     })
@@ -1061,11 +1070,12 @@ mfrmr_fc_g4w_current_handlers <- function(contract_environment,
       checkpoint_data(), path, maxit = 5L, engine = "hybrid"
     )
     saved <- readRDS(path)
-    messages <- capture.output(
-      second <- mfrmr_fc_g4w_checkpoint_fit(
-        checkpoint_data(), path, maxit = 5L, engine = "hybrid"
-      ), type = "message"
-    )
+    messages <- capture.output(second <- suppressWarnings(mfrmr::fit_mfrm(
+      checkpoint_data(), "Person", c("Rater", "Criterion"), "Score",
+      method = "MML", quad_points = 5L, maxit = 5L,
+      mml_engine = "hybrid",
+      checkpoint = list(file = path, every_iter = 1L)
+    )), type = "message")
     mfrmr_fc_g4w_assert(
       inherits(first, "mfrm_fit") && inherits(second, "mfrm_fit") &&
         identical(saved$identity$engine_stage, "hybrid_em_warm_start") &&

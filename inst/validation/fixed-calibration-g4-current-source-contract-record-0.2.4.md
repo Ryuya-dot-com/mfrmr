@@ -2,8 +2,8 @@
 
 Status: `rules_frozen_candidate_unbound_confirmation_unopened`, 2026-08-25.
 
-- Specification: `0.2.4-fixed-calibration-g4-current-source-boundary-evidence-v2`
-- Contract: `mfrmr_fixed_calibration_g4_current_source_evidence_v2`
+- Specification: `0.2.4-fixed-calibration-g4-current-source-boundary-evidence-v3`
+- Contract: `mfrmr_fixed_calibration_g4_current_source_evidence_v3`
 - Rules frozen before current-source execution: `TRUE`
 - Current disjoint fixture identities frozen: `TRUE`
 - Current execution opened: `FALSE`
@@ -22,6 +22,13 @@ pool, or reinterpret that result. It prospectively defines the evidence that
 the hardened current source must produce before CORE-05, CORE-06, and G4 can
 close again.
 
+The v2 current-source execution at commit `53f5f21` is also immutable and is
+retained separately. It returned all 49 rows, with 44 passes and five worker-
+specification failures. Because the worker decision logic must change after
+that result was viewed, modular-1009/default and modular-1013/source-one are
+consumed and cannot authorize a later decision. This v3 contract is a new
+prospective boundary, not a retry or reinterpretation of v2.
+
 The contract is frozen before binding a candidate commit or opening any
 current execution result. Candidate binding requires a clean 40-character Git
 commit, package version, source-tarball and file-registry hashes, production-
@@ -38,9 +45,9 @@ Gauss--Hermite nodes and the minimum permitted scoring order is two.
 Four new authoritative identities are frozen: RSM and PCM default-31
 confirmations fitted with 13 integration nodes, plus RSM and PCM adversaries
 whose source fits use one integration node but whose portable scoring basis
-uses 31 nodes. Their modular-1009 and modular-1013 generators, source and
-confirmation Person counts, offsets, and identifiers are disjoint from the
-historical modular-997 fixtures.
+uses 31 nodes. Their modular-1019 and modular-1021 generators, changed Person
+counts, new offsets, and new calibration/fixture identifiers are disjoint from
+both the consumed v2 identities and the historical modular-997 fixtures.
 
 The two known modular-997 nine-node identities are retained only as explicit
 regression controls. They are marked previously used and cannot authorize the
@@ -89,6 +96,10 @@ regression limits, not public throughput promises. G6 and public API promotion
 remain closed until the complete current-source result is recorded.
 
 - `AmendedG4ContractFrozen=TRUE`
+- `SupersededV2ExecutionRetained=TRUE`
+- `SupersededV2PassedCells=44`
+- `SupersededV2FailedCells=5`
+- `SupersededV2IdentityReuseAuthorized=FALSE`
 - `AmendedG4CurrentExecutionOpened=FALSE`
 - `AmendedG4CandidateBound=FALSE`
 - `AmendedG4DenominatorCells=49`

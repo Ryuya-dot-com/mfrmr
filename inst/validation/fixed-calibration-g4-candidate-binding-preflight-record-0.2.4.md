@@ -51,6 +51,13 @@ registry. That candidate is retained as an admitted pre-confirmation harness
 milestone, not as confirmation evidence, and is superseded by the worker
 hardening described here.
 
+Candidate `53f5f212625761f141d9de5270de41797e38602d` subsequently bound the
+exact 49-handler worker and opened one complete current-source v2 execution.
+Its immutable receipt retained 44 passes and five worker-specification
+failures, so it did not close G4. The detailed execution record consumes the
+modular-1009 and modular-1013 identities. The next candidate must bind the new
+disjoint v3 contract rather than retry that opened evidence.
+
 Candidate admission now sources the hash-bound worker in a non-executing
 environment. Its declared cell IDs and handler names must both equal the
 frozen 49-row denominator in exact order. A matching file hash alone is not
@@ -75,6 +82,10 @@ clean commit containing the complete worker and its matching
 - `FirstFullyBoundPreconfirmationCandidateOpenedConfirmation=FALSE`
 - `ConfirmationWorkerExactDenominatorRequired=TRUE`
 - `ConfirmationWorkerDeclaredCells=49`
+- `FirstCompleteCurrentExecutionCandidate=53f5f212625761f141d9de5270de41797e38602d`
+- `FirstCompleteCurrentExecutionPassedCells=44`
+- `FirstCompleteCurrentExecutionFailedCells=5`
+- `FirstCompleteCurrentExecutionClosedG4=FALSE`
 - `LiveCandidateBindingComplete=FALSE`
 - `LiveSourceTarballBound=FALSE`
 - `SyntheticCleanPromotionAllowed=FALSE`

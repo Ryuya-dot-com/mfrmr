@@ -2147,6 +2147,11 @@ required children are checked.
   - [x] Implement an atomic current-source worker whose declared IDs and
     retained-result handlers match all 49 frozen denominator cells exactly;
     reject candidate admission on any missing, duplicated, or reordered cell.
+  - [x] Retain current-source v2 candidate `53f5f21` as an incomplete 44/49
+    result with all five worker-specification failures and all three resource
+    observations; do not pool its passes or reuse its opened identities.
+  - [x] Freeze disjoint v3 modular-1019/default and modular-1021/source-one
+    identities before replacing the five faulty worker handlers.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.

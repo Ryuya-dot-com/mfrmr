@@ -363,6 +363,14 @@ test_that("amended G4 freezes current scoring and boundary identities unopened",
   ]
   expect_identical(current$FitQuadratureOrder, c(13L, 13L, 1L, 1L))
   expect_identical(current$ScoringQuadratureOrder, rep(31L, 4L))
+  expect_identical(current$SourcePersons, c(54L, 54L, 46L, 46L))
+  expect_identical(current$ConfirmationPersons, c(9L, 9L, 7L, 7L))
+  expect_identical(current$GeneratorIdentity, c(
+    rep("closed-form-logits-mod1019-v1-no-r-rng", 2L),
+    rep("closed-form-logits-mod1021-v1-no-r-rng", 2L)
+  ))
+  expect_true(all(grepl("mod1019|mod1021", current$SourceFixtureId)))
+  expect_true(all(grepl("mod1019|mod1021", current$ConfirmationFixtureId)))
   expect_false(any(current$PreviouslyUsedFixture))
   expect_false(any(current$CurrentExecutionOpened))
   expect_true(all(control$PreviouslyUsedFixture))
@@ -466,13 +474,33 @@ test_that("amended G4 worker statically covers every frozen cell exactly", {
   expect_match(source, "nrow(cells) == 49L", fixed = TRUE)
 })
 
+test_that("current-source v2 failure is retained before v3 execution", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-current-execution-53f5f21-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expect_match(record, "`DenominatorRowsRetained=49`", fixed = TRUE)
+  expect_match(record, "`PassedCells=44`", fixed = TRUE)
+  expect_match(record, "`FailedCells=5`", fixed = TRUE)
+  expect_match(record, "`ResourceScalesPassed=3`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`RetrySameCurrentIdentityAuthorized=FALSE`", fixed = TRUE)
+  design <- ctx$env$mfrmr_fc_g4_current_confirmation_design()
+  current <- design[design$DisjointCurrentConfirmationAuthority, , drop = FALSE]
+  expect_false(any(grepl("mod1009|mod1013", current$GeneratorIdentity)))
+  expect_true(all(grepl("mod1019|mod1021", current$GeneratorIdentity)))
+})
+
 test_that("G4 candidate binding observes source identities and stays closed", {
   ctx <- load_fixed_calibration_g4_candidate_binding()
   manifest <- ctx$env$mfrmr_fc_g4b_manifest(ctx$root)
   expect_s3_class(manifest, "mfrmr_fc_g4b_manifest")
   expect_silent(ctx$env$mfrmr_fc_g4b_assert_manifest(manifest, ctx$root))
   expect_identical(manifest$ProspectiveContract,
-                   "mfrmr_fixed_calibration_g4_current_source_evidence_v2")
+                   "mfrmr_fixed_calibration_g4_current_source_evidence_v3")
   expect_true(manifest$ObservedGitIdentity$GitAvailable)
   expect_true(manifest$GitIdentityMatchesLive)
   expect_identical(nrow(manifest$ProductionRegistry), 5L)
