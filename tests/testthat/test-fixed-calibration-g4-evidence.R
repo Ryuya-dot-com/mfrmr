@@ -1735,4 +1735,51 @@ test_that("G6 public surface closes CORE-07 without authorizing release", {
   expect_true(file.exists(pkgdown))
   pkgdown_text <- paste(readLines(pkgdown, warn = FALSE), collapse = "\n")
   expect_match(pkgdown_text, "mfrm_calibration_workflow", fixed = TRUE)
+
+  surface_paths <- c(
+    "README.md", "NEWS.md", "vignettes/mfrmr-portable-calibration.Rmd",
+    "man/mfrm_calibration_workflow.Rd",
+    "man/mfrm_calibration_capabilities.Rd", "man/mfrmr_output_guide.Rd",
+    "man/mfrmr-package.Rd", "_pkgdown.yml"
+  )
+  expect_true(all(file.exists(file.path(ctx$root, surface_paths))))
+  surface_text <- lapply(surface_paths, function(path) {
+    paste(readLines(file.path(ctx$root, path), warn = FALSE), collapse = "\n")
+  })
+  names(surface_text) <- surface_paths
+  core_surfaces <- surface_text[c(
+    "README.md", "vignettes/mfrmr-portable-calibration.Rmd",
+    "man/mfrm_calibration_workflow.Rd", "man/mfrmr-package.Rd"
+  )]
+  for (surface in core_surfaces) {
+    expect_match(surface, "RSM", fixed = TRUE)
+    expect_match(surface, "PCM", fixed = TRUE)
+    expect_match(surface, "MML", fixed = TRUE)
+    expect_match(surface, "fixed\\s+standard-normal", perl = TRUE)
+    expect_match(surface, "GPCM", fixed = TRUE)
+    expect_match(surface, "JML", fixed = TRUE)
+  }
+  expect_match(
+    surface_text$README.md,
+    "mfrm_calibration_capabilities()",
+    fixed = TRUE
+  )
+  expect_match(
+    surface_text[["vignettes/mfrmr-portable-calibration.Rmd"]],
+    "score_mfrm_calibration(calibration, new_rows)",
+    fixed = TRUE
+  )
+  expect_match(
+    surface_text[["man/mfrmr_output_guide.Rd"]],
+    "mfrmr_output_guide(\"calibration\")",
+    fixed = TRUE
+  )
+  public_text <- paste(
+    unlist(surface_text, use.names = FALSE), collapse = "\n"
+  )
+  expect_false(grepl(
+    "mfrmr:::|CORE-[0-9]|G[0-6] exit|PublicAPIAuthorized",
+    public_text,
+    perl = TRUE
+  ))
 })

@@ -224,38 +224,32 @@ test_that("public extraction refusals give actionable non-internal alternatives"
   }
 })
 
-test_that("public surfaces share the bounded portable-calibration wording", {
-  root <- normalizePath(
-    file.path(testthat::test_path(), "..", ".."),
-    winslash = "/",
-    mustWork = TRUE
-  )
-  paths <- c(
-    "README.md", "NEWS.md", "vignettes/mfrmr-portable-calibration.Rmd",
-    "man/mfrm_calibration_workflow.Rd",
-    "man/mfrm_calibration_capabilities.Rd", "man/mfrmr_output_guide.Rd",
-    "man/mfrmr-package.Rd"
-  )
-  expect_true(all(file.exists(file.path(root, paths))))
-  text <- lapply(paths, function(path) {
-    paste(readLines(file.path(root, path), warn = FALSE), collapse = "\n")
-  })
-  names(text) <- paths
-
-  # `_pkgdown.yml` is repository build configuration and is intentionally
-  # absent from the source package. Review it when this test runs from a
-  # checkout, without making an installed/source-package test depend on it.
-  pkgdown_path <- file.path(root, "_pkgdown.yml")
-  if (file.exists(pkgdown_path)) {
-    text[["_pkgdown.yml"]] <- paste(
-      readLines(pkgdown_path, warn = FALSE), collapse = "\n"
+test_that("installed public surfaces share the bounded calibration wording", {
+  root <- normalizePath(find.package("mfrmr"), winslash = "/")
+  article_candidates <- file.path(
+    root,
+    c(
+      "doc/mfrmr-portable-calibration.Rmd",
+      "vignettes/mfrmr-portable-calibration.Rmd"
     )
-  }
+  )
+  article <- article_candidates[file.exists(article_candidates)][1L]
+  expect_true(file.exists(file.path(root, "README.md")))
+  expect_true(file.exists(file.path(root, "NEWS.md")))
+  expect_length(article, 1L)
+  expect_true(!is.na(article) && file.exists(article))
 
-  core_surfaces <- text[c(
-    "README.md", "vignettes/mfrmr-portable-calibration.Rmd",
-    "man/mfrm_calibration_workflow.Rd", "man/mfrmr-package.Rd"
-  )]
+  text <- list(
+    README = paste(
+      readLines(file.path(root, "README.md"), warn = FALSE), collapse = "\n"
+    ),
+    NEWS = paste(
+      readLines(file.path(root, "NEWS.md"), warn = FALSE), collapse = "\n"
+    ),
+    article = paste(readLines(article, warn = FALSE), collapse = "\n")
+  )
+
+  core_surfaces <- text[c("README", "article")]
   for (surface in core_surfaces) {
     expect_match(surface, "RSM", fixed = TRUE)
     expect_match(surface, "PCM", fixed = TRUE)
@@ -264,20 +258,10 @@ test_that("public surfaces share the bounded portable-calibration wording", {
     expect_match(surface, "GPCM", fixed = TRUE)
     expect_match(surface, "JML", fixed = TRUE)
   }
-  expect_match(text$README.md, "mfrm_calibration_capabilities()", fixed = TRUE)
+  expect_match(text$README, "mfrm_calibration_capabilities()", fixed = TRUE)
   expect_match(
-    text[["vignettes/mfrmr-portable-calibration.Rmd"]],
+    text$article,
     "score_mfrm_calibration(calibration, new_rows)",
-    fixed = TRUE
-  )
-  if (!is.null(text[["_pkgdown.yml"]])) {
-    expect_match(
-      text[["_pkgdown.yml"]], "mfrm_calibration_workflow", fixed = TRUE
-    )
-  }
-  expect_match(
-    text[["man/mfrmr_output_guide.Rd"]],
-    "mfrmr_output_guide(\"calibration\")",
     fixed = TRUE
   )
 
