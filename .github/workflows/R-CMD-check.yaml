@@ -1,9 +1,10 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Runs the macOS/R-release cell first on every push and pull request. The
 # remaining Windows/Linux R-version cells start only after that prerequisite
-# succeeds. Isolated G-theory execution/resume validation remains an explicit
-# slow tier and is not a release check unless MFRMR_RUN_GTHEORY_SLOW is set by
-# a dedicated run.
+# succeeds. Fixed-calibration G4 receipt issuance is held until the
+# post-maintenance successor contract is frozen. Isolated G-theory
+# execution/resume validation remains an explicit slow tier and is not a
+# release check unless MFRMR_RUN_GTHEORY_SLOW is set by a dedicated run.
 on:
   push:
     branches: [main, master, 'dev/**', 'development/**']
@@ -42,38 +43,3 @@ jobs:
       cell-id: ${{ matrix.config.id }}
       full: ${{ matrix.config.full }}
       http-user-agent: ${{ matrix.config['http-user-agent'] || '' }}
-
-  g4-hosted-matrix:
-    name: Aggregate fixed-calibration G4 hosted matrix
-    needs: [macos-release, remaining-platforms]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: release
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: any::digest
-
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: g4-evidence-*
-          path: validation-results/g4-downloads
-
-      - name: Aggregate five bound G4 receipts
-        run: |
-          Rscript --vanilla \
-            inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R \
-            aggregate . validation-results/g4-downloads \
-            validation-results/g4-hosted-matrix.rds
-        shell: bash
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: g4-hosted-matrix
-          path: validation-results/g4-hosted-matrix.rds
-          if-no-files-found: error

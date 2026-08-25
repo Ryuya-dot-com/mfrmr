@@ -48,13 +48,19 @@ mfrmr_fc_g4m_required_support_boundary <- function() {
       "tests/testthat/test-compiled-header-contract.R",
       "inst/validation/public-release-baseline-0.2.4.csv",
       "inst/validation/fixed-calibration-g0-maintenance-addendum-0.2.4.md",
-      "inst/validation/fixed-calibration-boundary-hardening-0.2.4.md"
+      "inst/validation/fixed-calibration-boundary-hardening-0.2.4.md",
+      "inst/validation/release-check-runner-0.2.4.R",
+      ".github/workflows/R-CMD-check.yaml",
+      ".github/workflows/R-CMD-check-cell.yaml"
     ),
     Role = c(
       "compiled_header_regression",
       "public_predecessor_identity",
       "maintenance_patch_bridge",
-      "post_maintenance_gate_disposition"
+      "post_maintenance_gate_disposition",
+      "package_check_without_g4_receipt",
+      "five_platform_check_orchestration",
+      "platform_check_without_legacy_g4_issuance"
     ),
     Required = TRUE,
     stringsAsFactors = FALSE
@@ -158,6 +164,38 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     logical(1L)
   )]
 
+  workflow_paths <- file.path(repo_root, c(
+    ".github/workflows/R-CMD-check.yaml",
+    ".github/workflows/R-CMD-check-cell.yaml"
+  ))
+  workflow_text <- unlist(lapply(workflow_paths, function(path) {
+    if (file.exists(path)) readLines(path, warn = FALSE) else character()
+  }), use.names = FALSE)
+  check_runner_path <- file.path(
+    repo_root, "inst", "validation", "release-check-runner-0.2.4.R"
+  )
+  check_runner_text <- if (file.exists(check_runner_path)) {
+    readLines(check_runner_path, warn = FALSE)
+  } else {
+    character()
+  }
+  legacy_v5_tokens <- c(
+    "fixed-calibration-g4-hosted-runner-0.2.4.R",
+    "Upload bound G4 cell receipt", "g4-hosted-matrix",
+    "hosted-cell-receipt.rds"
+  )
+  legacy_v5_automatic_issuance_disabled <-
+    length(workflow_text) > 0L &&
+    !any(vapply(legacy_v5_tokens, function(token) {
+      any(grepl(token, workflow_text, fixed = TRUE))
+    }, logical(1L))) &&
+    any(grepl(
+      "release-check-runner-0.2.4.R", workflow_text, fixed = TRUE
+    )) &&
+    any(grepl(
+      "G4EvidenceIssued = FALSE", check_runner_text, fixed = TRUE
+    ))
+
   v5_change <- mfrmr_fc_g4m_git(repo_root, c(
     "diff", "--quiet", "bcf86197619e3eae4c7cdd5288b797549df47c99",
     "--", "src/mml_backend.cpp", "tests/testthat.R",
@@ -169,7 +207,8 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     identical(description_value("Config/mfrmr/public-version"), "0.2.3.1")
   bridge_complete <- all(required_present) && baseline_ok && all(integrated) &&
     length(scanned) > 0L && !any(header_override) &&
-    length(invalid_hits) == 0L && metadata_ok && v5_change$Status == 1L
+    length(invalid_hits) == 0L && metadata_ok && v5_change$Status == 1L &&
+    legacy_v5_automatic_issuance_disabled
 
   list(
     Contract = "mfrmr_fixed_calibration_g4_maintenance_admission_v1",
@@ -192,6 +231,8 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     DevelopmentMetadataAligned = metadata_ok,
     V5ExactSourceChanged = identical(v5_change$Status, 1L),
     V5EvidenceRetainedAsHistorical = TRUE,
+    LegacyV5AutomaticIssuanceDisabled =
+      legacy_v5_automatic_issuance_disabled,
     V6SourceBoundaryFrozen = TRUE,
     V6ConfirmationContractFrozen = FALSE,
     PostMaintenanceG4Complete = FALSE,

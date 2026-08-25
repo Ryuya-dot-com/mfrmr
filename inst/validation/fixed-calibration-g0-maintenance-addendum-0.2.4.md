@@ -38,7 +38,9 @@ identical to the corresponding integrated 0.2.4 files. This permits the
 0.2.3.1 GCC-LTO result to remain exact source-level maintenance evidence.
 It does not authorize carrying the 0.2.4 fixed-calibration G4 close across the
 new package payload: the v5 result remains historical for commit `bcf8619`,
-and a successor source-bound confirmation is required before G6.
+and a successor source-bound confirmation is required before G6. Routine CI
+therefore emits package-check evidence only and cannot issue or aggregate a
+new v5 G4 receipt for the post-maintenance source.
 
 - `PublicPredecessorBound=TRUE`
 - `MaintenancePatchIdsMatched=TRUE`
@@ -46,5 +48,6 @@ and a successor source-bound confirmation is required before G6.
 - `FittedModelContractChanged=FALSE`
 - `G0SubstantiveInventoryReopened=FALSE`
 - `G4V5RetainedAsHistorical=TRUE`
+- `LegacyV5AutomaticIssuanceDisabled=TRUE`
 - `PostMaintenanceG4Complete=FALSE`
 - `G6Authorized=FALSE`

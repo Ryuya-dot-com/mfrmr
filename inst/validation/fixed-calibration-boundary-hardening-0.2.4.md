@@ -1,6 +1,6 @@
 # 0.2.4 boundary-hardening disposition
 
-Status: `maintenance_integrated_post_maintenance_g4_pending`, 2026-08-25.
+Status: `maintenance_integrated_post_maintenance_g4_pending`, 2026-08-26.
 
 ## Decision
 
@@ -56,6 +56,13 @@ results and hosted receipts remain valid historical evidence for their exact
 source, but CORE-05, CORE-06, and G4 are open for the post-maintenance source.
 G6 remains held.
 
+The ordinary five-platform CI check is now separated from G4 confirmation.
+The workflow builds and checks one exact source tarball per cell, records a
+check-only receipt with `G4EvidenceIssued=FALSE`, and does not invoke the v5
+hosted runner or aggregate v5 receipts. This prevents a green routine check
+from being misread as post-maintenance G4 evidence before the successor
+contract and disjoint identities exist.
+
 The audit additionally revealed that a portable calibration extracted from an
 otherwise eligible one-node MML source fit could inherit that grid. Draft
 extraction now defaults to a separate 31-node scoring grid, refuses an order
@@ -109,6 +116,7 @@ not close the reopened independent or cross-platform gates.
 - `MaintenanceHotfixIntegrated=TRUE`
 - `HistoricalG4Retained=TRUE`
 - `HistoricalG4CurrentSourceEvidence=FALSE`
+- `LegacyV5AutomaticIssuanceDisabled=TRUE`
 - `PostMaintenanceG4ContractFrozen=FALSE`
 - `PostMaintenanceG4CurrentExecutionOpened=FALSE`
 - `PostMaintenanceG4CandidateBound=FALSE`

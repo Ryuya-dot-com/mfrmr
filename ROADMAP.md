@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-25.
+Status: public roadmap, updated 2026-08-26.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -2253,6 +2253,9 @@ required children are checked.
   - [x] Merge the two patch-equivalent 0.2.3.1 maintenance corrections into
     0.2.4 without changing replay, scoring, checkpoint, or calibration-schema
     code, and retain the published-source and patch-id bridge.
+  - [x] Stop automatic v5 G4 receipt issuance after the maintenance merge and
+    keep the five-platform exact source-tarball package check independent of
+    G4 confirmation until a successor contract is frozen.
   - [ ] Freeze a successor disjoint confirmation identity whose production
     boundary includes both compiled translation units and whose support
     registry includes the compiled-header regression contract.

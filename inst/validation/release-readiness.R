@@ -2288,6 +2288,7 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
       WarningsAreFailures = FALSE,
       CheckArtifactsUploaded = FALSE,
       ReadinessGatePresent = FALSE,
+      LegacyG4AutomaticIssuanceAbsent = FALSE,
       CIWorkflowOK = FALSE,
       stringsAsFactors = FALSE
     ))
@@ -2346,18 +2347,23 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
     contains,
     logical(1)
   ))
-  exact_bound_check <- contains(
-    "fixed-calibration-g4-hosted-runner-0.2.4.R"
-  ) && contains("Exact bound-tarball R CMD check")
+  exact_source_check <- contains(
+    "release-check-runner-0.2.4.R"
+  ) && contains("Exact source-tarball R CMD check")
   package_check <- contains("r-lib/actions/check-r-package@v2") ||
-    exact_bound_check
+    exact_source_check
   warning_policy <- any(grepl("error-on:", lines, fixed = TRUE) &
     grepl("warning", lines, fixed = TRUE)) ||
-    (exact_bound_check && contains("MFRMR_CHECK_ERROR_ON: warning"))
+    (exact_source_check && contains("MFRMR_CHECK_ERROR_ON: warning"))
   artifact_upload <- contains("actions/upload-artifact@v4") &&
     any(grepl("check", lines, fixed = TRUE) | grepl("Rcheck", lines, fixed = TRUE))
   readiness_gate <- contains("Repository validation review") &&
     contains("mfrmr_release_readiness_review")
+  legacy_g4_issuance <- contains(
+    "fixed-calibration-g4-hosted-runner-0.2.4.R"
+  ) || contains("Upload bound G4 cell receipt") ||
+    contains("g4-hosted-matrix")
+  legacy_g4_absent <- !legacy_g4_issuance
   data.frame(
     Workflow = path,
     WorkflowAvailable = TRUE,
@@ -2368,8 +2374,10 @@ mfrmr_release_readiness_ci_workflow_status <- function(path) {
     WarningsAreFailures = warning_policy,
     CheckArtifactsUploaded = artifact_upload,
     ReadinessGatePresent = readiness_gate,
+    LegacyG4AutomaticIssuanceAbsent = legacy_g4_absent,
     CIWorkflowOK = isTRUE(development_branch_trigger && matrix_os && matrix_r &&
-      package_check && warning_policy && artifact_upload && readiness_gate),
+      package_check && warning_policy && artifact_upload && readiness_gate &&
+      legacy_g4_absent),
     stringsAsFactors = FALSE
   )
 }
@@ -2681,7 +2689,9 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
         "; check_step=", ci_workflow_status$PackageCheckStepPresent[1],
         "; warnings_fail=", ci_workflow_status$WarningsAreFailures[1],
         "; artifacts=", ci_workflow_status$CheckArtifactsUploaded[1],
-        "; gate=", ci_workflow_status$ReadinessGatePresent[1]
+        "; gate=", ci_workflow_status$ReadinessGatePresent[1],
+        "; legacy_g4_issuance_absent=",
+        ci_workflow_status$LegacyG4AutomaticIssuanceAbsent[1] %||% FALSE
       ),
       paste0(term_status$DisallowedRemovedTerms[1], " disallowed removed-name hit(s)"),
       paste0(

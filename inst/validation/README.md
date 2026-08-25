@@ -134,8 +134,12 @@ identify whether the opt-in layer ran and retain its test log.
 - `fixed-calibration-g4-maintenance-admission-0.2.4.R`: verifies that the
   0.2.3.1 public baseline and both patch-equivalent integration commits are
   present, scans all compiled sources for the forbidden header override, and
-  freezes the eight-file post-maintenance production boundary. It deliberately
-  leaves the successor disjoint confirmation contract, G4, and G6 open.
+  freezes the eight-file post-maintenance production boundary. It also verifies
+  that routine CI cannot issue legacy v5 G4 receipts. It deliberately leaves
+  the successor disjoint confirmation contract, G4, and G6 open.
+- `release-check-runner-0.2.4.R`: builds and checks the exact source tarball in
+  each routine CI cell and writes a check-only receipt. The receipt fixes
+  `G4EvidenceIssued=FALSE`; the runner never calls a G4 worker or aggregator.
 - `fixed-calibration-g4-candidate-binding-preflight-0.2.4.R` and
   `fixed-calibration-g4-candidate-binding-preflight-record-0.2.4.md`: implement
   the read-only live-Git and optional source-tarball binding boundary. A second

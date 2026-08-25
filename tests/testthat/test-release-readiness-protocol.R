@@ -2504,6 +2504,7 @@ test_that("release-readiness protocol checks CI workflow contract", {
   expect_true(status$WarningsAreFailures)
   expect_true(status$CheckArtifactsUploaded)
   expect_true(status$ReadinessGatePresent)
+  expect_true(status$LegacyG4AutomaticIssuanceAbsent)
   expect_true(status$CIWorkflowOK)
 
   lines <- readLines(workflow, warn = FALSE)
@@ -2563,6 +2564,7 @@ test_that("release-readiness follows local reusable CI workflows", {
   expect_true(status$WarningsAreFailures)
   expect_true(status$CheckArtifactsUploaded)
   expect_true(status$ReadinessGatePresent)
+  expect_true(status$LegacyG4AutomaticIssuanceAbsent)
   expect_true(status$CIWorkflowOK)
 
   unlink(cell)
@@ -2589,7 +2591,7 @@ test_that("release-readiness follows local reusable CI workflows", {
   expect_false(traversal$CIWorkflowOK)
 })
 
-test_that("release-readiness accepts an exact bound-tarball check runner", {
+test_that("release-readiness accepts check-only runner and rejects legacy G4", {
   protocol <- release_readiness_protocol_path()
   env <- new.env(parent = globalenv())
   source(protocol, local = env)
@@ -2609,10 +2611,10 @@ test_that("release-readiness accepts an exact bound-tarball check runner", {
   ), workflow)
   writeLines(c(
     "on: workflow_call",
-    "- name: Exact bound-tarball R CMD check and G4 evidence",
+    "- name: Exact source-tarball R CMD check (G4 confirmation held)",
     "  env:",
     "    MFRMR_CHECK_ERROR_ON: warning",
-    "  run: Rscript --vanilla inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R cell . evidence",
+    "  run: Rscript --vanilla inst/validation/release-check-runner-0.2.4.R . evidence",
     "- name: Upload check results",
     "  uses: actions/upload-artifact@v4",
     "  with:",
@@ -2624,9 +2626,26 @@ test_that("release-readiness accepts an exact bound-tarball check runner", {
   status <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
   expect_true(status$PackageCheckStepPresent)
   expect_true(status$WarningsAreFailures)
+  expect_true(status$LegacyG4AutomaticIssuanceAbsent)
   expect_true(status$CIWorkflowOK)
 
   lines <- readLines(cell, warn = FALSE)
+  legacy <- sub(
+    "inst/validation/release-check-runner-0.2.4.R . evidence",
+    paste(
+      "inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R",
+      "cell . evidence"
+    ),
+    lines,
+    fixed = TRUE
+  )
+  writeLines(c(legacy, "Upload bound G4 cell receipt"), cell)
+  legacy_status <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
+  expect_false(legacy_status$LegacyG4AutomaticIssuanceAbsent)
+  expect_false(legacy_status$PackageCheckStepPresent)
+  expect_false(legacy_status$CIWorkflowOK)
+
+  writeLines(lines, cell)
   writeLines(lines[!grepl("MFRMR_CHECK_ERROR_ON", lines, fixed = TRUE)], cell)
   missing_policy <- env$mfrmr_release_readiness_ci_workflow_status(workflow)
   expect_false(missing_policy$WarningsAreFailures)

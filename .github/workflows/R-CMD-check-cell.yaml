@@ -10,7 +10,7 @@ on:
         required: true
         type: string
       cell-id:
-        description: Frozen fixed-calibration G4 platform cell identifier.
+        description: Package-check platform cell identifier.
         required: true
         type: string
       full:
@@ -52,15 +52,13 @@ jobs:
           extra-packages: any::digest, any::pkgbuild, any::rcmdcheck, any::testthat
           needs: check
 
-      - name: Exact bound-tarball R CMD check and G4 evidence
+      - name: Exact source-tarball R CMD check (G4 confirmation held)
         env:
-          MFRMR_G4_CELL_ID: ${{ inputs.cell-id }}
-          MFRMR_G4_R_SELECTOR: ${{ inputs.r }}
           MFRMR_CHECK_ERROR_ON: warning
         run: |
           Rscript --vanilla \
-            inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R \
-            cell . validation-results/g4-hosted
+            inst/validation/release-check-runner-0.2.4.R \
+            . validation-results/release-check
         shell: bash
 
       - name: Upload check results
@@ -69,49 +67,50 @@ jobs:
         with:
           name: r-cmd-check-${{ inputs.cell-id }}
           path: |
-            validation-results/g4-hosted/check
-            validation-results/g4-hosted/worker.log
-          if-no-files-found: ignore
-
-      - name: Upload bound G4 cell receipt
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: g4-evidence-${{ inputs.cell-id }}
-          path: validation-results/g4-hosted/hosted-cell-receipt.rds
+            validation-results/release-check/check
+            validation-results/release-check/release-check-receipt.rds
           if-no-files-found: ignore
 
       - name: Repository validation review
         run: |
           source("inst/validation/release-readiness.R")
-          hosted <- new.env(parent = globalenv())
+          maintenance <- new.env(parent = globalenv())
           sys.source(
-            "inst/validation/fixed-calibration-g4-hosted-runner-0.2.4.R",
-            envir = hosted
+            paste0(
+              "inst/validation/",
+              "fixed-calibration-g4-maintenance-admission-0.2.4.R"
+            ),
+            envir = maintenance
           )
           tarball <- list.files(
-            "validation-results/g4-hosted",
+            "validation-results/release-check",
             pattern = "^mfrmr_[0-9.]+[.]tar[.]gz$", full.names = TRUE
           )
           if (length(tarball) != 1L) {
-            stop("The bound G4 source tarball is unavailable.", call. = FALSE)
+            stop("The checked source tarball is unavailable.", call. = FALSE)
           }
           readiness <- mfrmr_release_readiness_review(
             pkg_dir = ".",
             check_log = file.path(
-              "validation-results/g4-hosted/check/mfrmr.Rcheck/00check.log"
+              "validation-results/release-check/check/",
+              "mfrmr.Rcheck/00check.log"
             ),
             tarball = tarball
           )
           print(summary(readiness))
-          context <- hosted$mfrmr_fc_g4h_context(".")
-          g4_review <- hosted$mfrmr_fc_g4h_repository_review(
-            context, readiness
+          admission <- maintenance$mfrmr_fc_g4m_review(".")
+          stopifnot(
+            isTRUE(readiness$source_truth_status$SourceTruthOK[[1L]]),
+            isTRUE(readiness$check_status$CheckPassed[[1L]]),
+            isTRUE(readiness$ci_workflow_status$CIWorkflowOK[[1L]]),
+            isTRUE(admission$MaintenanceBridgeComplete),
+            isTRUE(admission$LegacyV5AutomaticIssuanceDisabled),
+            !isTRUE(admission$V6ConfirmationContractFrozen),
+            !isTRUE(admission$PostMaintenanceG4Complete)
           )
-          print(g4_review$RequiredGates, row.names = FALSE)
           cat(
-            "Hosted G4 repository scope complete; G6 and public API remain ",
-            "unauthorized.\n",
+            "Package check complete; no G4 receipt issued; G6 and public ",
+            "API remain unauthorized.\n",
             sep = ""
           )
         shell: Rscript {0}

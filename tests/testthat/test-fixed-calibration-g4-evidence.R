@@ -1284,7 +1284,7 @@ test_that("G4 contract source is prospective and non-executing", {
   expect_false(grepl("system2\\s*\\(|system\\s*\\(", source, perl = TRUE))
 })
 
-test_that("macOS release gates the four remaining workflow cells", {
+test_that("macOS gates standard checks while legacy v5 issuance is disabled", {
   ctx <- load_fixed_calibration_g4_contract()
   workflow_path <- file.path(
     ctx$root, ".github", "workflows", "R-CMD-check.yaml"
@@ -1304,6 +1304,9 @@ test_that("macOS release gates the four remaining workflow cells", {
     ctx$validation, "fixed-calibration-g4-hosted-runner-0.2.4.R"
   )
   runner <- paste(readLines(runner_path, warn = FALSE), collapse = "\n")
+  release_runner <- paste(readLines(file.path(
+    ctx$validation, "release-check-runner-0.2.4.R"
+  ), warn = FALSE), collapse = "\n")
   expect_match(workflow, "permissions:\n  contents: read", fixed = TRUE)
   expect_match(workflow, "  macos-release:", fixed = TRUE)
   expect_match(
@@ -1328,28 +1331,39 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(workflow, "id: ubuntu-devel", fixed = TRUE)
   expect_match(workflow, "id: ubuntu-release", fixed = TRUE)
   expect_match(workflow, "id: ubuntu-oldrel-1", fixed = TRUE)
-  expect_match(workflow, "  g4-hosted-matrix:", fixed = TRUE)
-  expect_match(workflow, "needs: [macos-release, remaining-platforms]",
-               fixed = TRUE)
-  expect_match(workflow, "Aggregate five bound G4 receipts", fixed = TRUE)
+  expect_match(workflow, "post-maintenance successor contract", fixed = TRUE)
+  expect_false(grepl("  g4-hosted-matrix:", workflow, fixed = TRUE))
+  expect_false(grepl(
+    "Aggregate five bound G4 receipts", workflow, fixed = TRUE
+  ))
 
   expect_match(cell, "  workflow_call:", fixed = TRUE)
-  expect_match(cell, "Exact bound-tarball R CMD check and G4 evidence",
+  expect_match(cell, "Exact source-tarball R CMD check (G4 confirmation held)",
                fixed = TRUE)
   expect_match(
-    cell, "fixed-calibration-g4-hosted-runner-0.2.4.R", fixed = TRUE
+    cell, "release-check-runner-0.2.4.R", fixed = TRUE
   )
   expect_match(cell, "MFRMR_CHECK_ERROR_ON: warning", fixed = TRUE)
   expect_match(cell, "Repository validation review", fixed = TRUE)
   expect_match(
-    cell, "mfrmr_fc_g4h_repository_review", fixed = TRUE
+    cell, "mfrmr_fc_g4m_review", fixed = TRUE
   )
   expect_match(
-    cell, "G6 and public API remain", fixed = TRUE
+    cell, "G6 and public", fixed = TRUE
   )
+  expect_match(cell, "API remain unauthorized", fixed = TRUE)
   expect_false(grepl("pkgload::load_all", cell, fixed = TRUE))
-  expect_match(cell, "Upload bound G4 cell receipt", fixed = TRUE)
-  expect_match(cell, "hosted-cell-receipt.rds", fixed = TRUE)
+  expect_false(grepl("Upload bound G4 cell receipt", cell, fixed = TRUE))
+  expect_false(grepl("hosted-cell-receipt.rds", cell, fixed = TRUE))
+  expect_false(grepl(
+    "fixed-calibration-g4-hosted-runner-0.2.4.R", cell, fixed = TRUE
+  ))
+  expect_match(release_runner, "pkgbuild::build(", fixed = TRUE)
+  expect_match(release_runner, "rcmdcheck::rcmdcheck(", fixed = TRUE)
+  expect_match(release_runner, "G4EvidenceIssued = FALSE", fixed = TRUE)
+  expect_match(
+    release_runner, 'EvidenceRole = "package_check_only"', fixed = TRUE
+  )
   expect_match(worker, "winslash = \"/\"", fixed = TRUE)
   expect_match(worker, "tolower(loaded_library_path)", fixed = TRUE)
   expect_match(
@@ -1438,6 +1452,7 @@ test_that("macOS release gates the four remaining workflow cells", {
   )
   status <- protocol$mfrmr_release_readiness_ci_workflow_status(workflow_path)
   expect_true(status$CIWorkflowOK)
+  expect_true(status$LegacyG4AutomaticIssuanceAbsent)
 })
 
 test_that("hosted post-receipt review failure remains below matrix completion", {
@@ -1604,6 +1619,7 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
   expect_true(review$DevelopmentMetadataAligned)
   expect_true(review$V5ExactSourceChanged)
   expect_true(review$V5EvidenceRetainedAsHistorical)
+  expect_true(review$LegacyV5AutomaticIssuanceDisabled)
   expect_true(review$V6SourceBoundaryFrozen)
   expect_false(review$V6ConfirmationContractFrozen)
   expect_false(review$PostMaintenanceG4Complete)
