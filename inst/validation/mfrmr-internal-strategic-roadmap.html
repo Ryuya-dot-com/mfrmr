@@ -1,0 +1,1100 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+  <title>mfrmr 内部戦略ロードマップ</title>
+  <style>
+    :root {
+      --ink: #172126;
+      --muted: #5a696f;
+      --paper: #f5f1e8;
+      --surface: #fffdf8;
+      --line: #d8d2c4;
+      --navy: #193b4d;
+      --teal: #0e7169;
+      --green: #24724b;
+      --amber: #9a6114;
+      --red: #a33a32;
+      --blue-soft: #e7f0f3;
+      --green-soft: #e7f3eb;
+      --amber-soft: #fbf0da;
+      --red-soft: #f8e7e3;
+      --shadow: 0 12px 35px rgba(23, 33, 38, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(14, 113, 105, 0.12), transparent 31rem),
+        linear-gradient(180deg, #f8f5ee 0%, var(--paper) 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP",
+        "Hiragino Sans", sans-serif;
+      line-height: 1.62;
+    }
+
+    a { color: var(--teal); }
+
+    code {
+      padding: 0.08rem 0.32rem;
+      border-radius: 5px;
+      background: rgba(25, 59, 77, 0.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 1.5rem 1.2rem;
+      color: #eef5f4;
+      background: linear-gradient(165deg, #193b4d, #102c35 68%, #0d4948);
+    }
+
+    .brand {
+      margin-bottom: 1.35rem;
+      padding-bottom: 1.15rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.17);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 1.15rem;
+      letter-spacing: 0.02em;
+    }
+
+    .brand small { color: #bdd2d3; }
+
+    nav a {
+      display: block;
+      margin: 0.16rem 0;
+      padding: 0.5rem 0.65rem;
+      border-radius: 9px;
+      color: #e8f1f1;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover,
+    nav a:focus { background: rgba(255, 255, 255, 0.12); }
+
+    .side-note {
+      margin-top: 1.4rem;
+      padding: 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      color: #c7d9da;
+      font-size: 0.78rem;
+    }
+
+    main {
+      width: min(1180px, 100%);
+      padding: 2.6rem clamp(1rem, 4vw, 4rem) 5rem;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      border-radius: 26px;
+      color: white;
+      background: linear-gradient(135deg, var(--navy), #145b60 75%, #168174);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -6rem;
+      bottom: -8rem;
+      width: 22rem;
+      height: 22rem;
+      border: 1px solid rgba(255, 255, 255, 0.17);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3rem rgba(255, 255, 255, 0.035),
+        0 0 0 7rem rgba(255, 255, 255, 0.025);
+    }
+
+    .eyebrow {
+      margin: 0 0 0.55rem;
+      color: #aee4dc;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); }
+    h2 { margin: 0; color: var(--navy); font-size: clamp(1.4rem, 3vw, 2rem); }
+    h3 { margin: 0; color: var(--navy); font-size: 1.05rem; }
+
+    .hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 52rem;
+      margin: 1rem 0 0;
+      color: #e6f1f0;
+      font-size: 1.02rem;
+    }
+
+    .hero .north-star {
+      margin-top: 1.35rem;
+      padding: 1rem 1.15rem;
+      border-left: 4px solid #94dfd5;
+      border-radius: 0 12px 12px 0;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 1.08rem;
+      font-weight: 700;
+    }
+
+    .meta-row,
+    .toolbar,
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      align-items: center;
+    }
+
+    .meta-row { margin-top: 1.25rem; }
+
+    .pill,
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.75rem;
+      padding: 0.22rem 0.62rem;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .pill { color: #eff9f8; background: rgba(255, 255, 255, 0.13); }
+    .chip.done { color: var(--green); background: var(--green-soft); }
+    .chip.open { color: var(--amber); background: var(--amber-soft); }
+    .chip.hold { color: var(--red); background: var(--red-soft); }
+    .chip.recurring { color: var(--navy); background: var(--blue-soft); }
+
+    .toolbar {
+      position: sticky;
+      z-index: 5;
+      top: 0;
+      margin: 1.2rem 0;
+      padding: 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, 0.94);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 5px 20px rgba(23, 33, 38, 0.06);
+    }
+
+    button,
+    input[type="search"] {
+      min-height: 2.35rem;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+    }
+
+    button {
+      padding: 0.35rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    button[aria-pressed="true"] {
+      border-color: var(--teal);
+      color: white;
+      background: var(--teal);
+    }
+
+    input[type="search"] {
+      flex: 1 1 15rem;
+      padding: 0.4rem 0.75rem;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.85rem;
+      margin: 1.25rem 0 2rem;
+    }
+
+    .metric {
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: 0 5px 20px rgba(23, 33, 38, 0.04);
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--navy);
+      font-size: 1.6rem;
+    }
+
+    .metric span { color: var(--muted); font-size: 0.78rem; }
+
+    .progress {
+      height: 7px;
+      margin-top: 0.65rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e7e1d5;
+    }
+
+    .progress > span {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--teal), #42a16e);
+      transition: width 220ms ease;
+    }
+
+    section { scroll-margin-top: 5.5rem; margin: 2.8rem 0; }
+
+    .section-head {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--line);
+    }
+
+    .section-head p {
+      max-width: 40rem;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .grid-2,
+    .grid-3 {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: 0 7px 24px rgba(23, 33, 38, 0.045);
+    }
+
+    .card-head {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(231, 240, 243, 0.65), transparent);
+    }
+
+    .card-head p {
+      margin: 0.28rem 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .card-body { padding: 0.45rem 1.1rem 0.95rem; }
+
+    .task {
+      display: grid;
+      grid-template-columns: 1.35rem minmax(0, 1fr) auto;
+      gap: 0.68rem;
+      align-items: start;
+      padding: 0.78rem 0;
+      border-bottom: 1px dashed #ddd6c9;
+    }
+
+    .task:last-child { border-bottom: 0; }
+    .task[hidden] { display: none; }
+
+    .task input {
+      width: 1rem;
+      height: 1rem;
+      margin: 0.28rem 0 0;
+      accent-color: var(--teal);
+      opacity: 1;
+    }
+
+    .task strong { display: block; font-size: 0.91rem; }
+    .task p { margin: 0.18rem 0 0; color: var(--muted); font-size: 0.8rem; }
+    .task[data-state="hold"] { border-left: 3px solid var(--red); padding-left: 0.65rem; }
+    .task[data-state="open"][data-priority="p0"] { border-left: 3px solid var(--amber); padding-left: 0.65rem; }
+
+    .truth {
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      background: var(--blue-soft);
+    }
+
+    .truth strong { color: var(--navy); }
+    .truth p { margin: 0.35rem 0 0; font-size: 0.88rem; }
+
+    .warning {
+      border-left: 5px solid var(--red);
+      background: var(--red-soft);
+    }
+
+    .principles {
+      counter-reset: principle;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .principles li {
+      position: relative;
+      min-height: 5rem;
+      padding: 0.9rem 0.9rem 0.9rem 3.2rem;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--surface);
+    }
+
+    .principles li::before {
+      counter-increment: principle;
+      content: counter(principle, decimal-leading-zero);
+      position: absolute;
+      top: 0.85rem;
+      left: 0.85rem;
+      color: var(--teal);
+      font-size: 0.75rem;
+      font-weight: 900;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      font-size: 0.82rem;
+    }
+
+    th, td {
+      padding: 0.72rem;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th { color: white; background: var(--navy); }
+    tr:last-child td { border-bottom: 0; }
+
+    .priority-list {
+      margin: 0;
+      padding-left: 1.35rem;
+    }
+
+    .priority-list li { margin: 0.55rem 0; }
+
+    .decision-line {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+
+    .decision-line div {
+      position: relative;
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--surface);
+      font-size: 0.78rem;
+    }
+
+    .decision-line div:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -0.48rem;
+      z-index: 2;
+      color: var(--teal);
+      font-weight: 900;
+      transform: translateY(-50%);
+    }
+
+    .footer {
+      margin-top: 3rem;
+      padding: 1.2rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .empty-note { display: none; color: var(--muted); font-size: 0.85rem; }
+
+    @media (max-width: 950px) {
+      .shell { display: block; }
+      aside { position: static; width: auto; height: auto; }
+      nav { display: flex; flex-wrap: wrap; }
+      nav a { margin-right: 0.25rem; }
+      main { margin: 0 auto; }
+      .dashboard, .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 650px) {
+      .dashboard, .grid-2, .grid-3, .principles, .decision-line {
+        grid-template-columns: 1fr;
+      }
+      .decision-line div:not(:last-child)::after { display: none; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 0.45rem; }
+      .task { grid-template-columns: 1.25rem minmax(0, 1fr); }
+      .task .chip { grid-column: 2; justify-self: start; }
+    }
+
+    @media print {
+      body { background: white; }
+      .shell { display: block; }
+      aside, .toolbar, .hero::after { display: none; }
+      main { width: 100%; padding: 0; }
+      .hero { color: black; background: white; box-shadow: none; border: 2px solid black; }
+      .hero p, .hero .eyebrow { color: black; }
+      .hero .north-star { background: white; border-color: black; }
+      .card, .metric { break-inside: avoid; box-shadow: none; }
+      section { break-before: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <strong>mfrmr / internal</strong>
+        <small>Strategic roadmap · truth snapshot 2026-08-26</small>
+      </div>
+      <nav aria-label="ロードマップ内ナビゲーション">
+        <a href="#charter">01 · 軸と非目標</a>
+        <a href="#truth">02 · 現在地</a>
+        <a href="#critical">03 · 直近クリティカルパス</a>
+        <a href="#horizons">04 · バージョン別地平</a>
+        <a href="#research">05 · 独立研究レーン</a>
+        <a href="#adversarial">06 · 敵対的レビュー</a>
+        <a href="#risks">07 · リスク台帳</a>
+        <a href="#governance">08 · 意思決定ガバナンス</a>
+        <a href="#metrics">09 · 完了定義と指標</a>
+        <a href="#queue">10 · 次の実行順</a>
+      </nav>
+      <div class="side-note">
+        チェック状態はソース管理された証拠状態です。ブラウザ上では変更できません。
+        「実装済み」「テスト成功」「統計的に妥当」「公開サポート」「安定API」は別段階です。
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <p class="eyebrow">Internal decision instrument · not public documentation</p>
+        <h1>本質から逆算する<br>戦略ロードマップ</h1>
+        <p>
+          目的は機能数、記録数、テスト数、他ソフトとの一致率を最大化することではない。
+          測定上の意味が明確で、誤った結果がもっともらしく見えず、再現可能で、利用者が
+          支持範囲を誤認しないワークフローを段階的に提供する。
+        </p>
+        <p class="north-star">
+          North star：同じ測定尺度を、意味を変えず、失敗を隠さず、独立に再現・保存・適用できること。
+        </p>
+        <div class="meta-row">
+          <span class="pill">0.2.3.1: CRAN public baseline</span>
+          <span class="pill">0.2.4: G6 complete / candidate prep</span>
+          <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
+          <span class="pill">CRAN submission: not performed</span>
+        </div>
+      </header>
+
+      <div class="toolbar" aria-label="表示フィルター">
+        <button type="button" data-filter="all" aria-pressed="true">すべて</button>
+        <button type="button" data-filter="open" aria-pressed="false">未完了・保留</button>
+        <button type="button" data-filter="now" aria-pressed="false">直近P0/P1</button>
+        <button type="button" data-filter="research" aria-pressed="false">研究レーン</button>
+        <input id="task-search" type="search" placeholder="タスク・リスク・キーワードを検索" aria-label="ロードマップを検索">
+        <button type="button" id="print-roadmap">印刷</button>
+      </div>
+
+      <div class="dashboard" aria-label="ロードマップ集計">
+        <div class="metric">
+          <strong id="done-count">0</strong>
+          <span>証拠付き完了</span>
+        </div>
+        <div class="metric">
+          <strong id="open-count">0</strong>
+          <span>未完了</span>
+        </div>
+        <div class="metric">
+          <strong id="hold-count">0</strong>
+          <span>明示的保留・非昇格</span>
+        </div>
+        <div class="metric">
+          <strong id="completion-rate">0%</strong>
+          <span>完了率（反復項目を除く）</span>
+          <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+        </div>
+      </div>
+
+      <section id="charter">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">01 · Charter</p>
+            <h2>判断軸と非目標</h2>
+          </div>
+          <p>下位の都合で上位の意味・安全性を交換しない。優先順位は辞書順であり、点数の合計では逆転できない。</p>
+        </div>
+
+        <div class="decision-line" aria-label="判断優先順位">
+          <div><strong>1. 測定上の意味</strong><br>estimand・識別・利用判断</div>
+          <div><strong>2. 失敗時の安全</strong><br>fail-closed・プライバシー</div>
+          <div><strong>3. 再現と互換性</strong><br>意味同一性・移行・来歴</div>
+          <div><strong>4. API明瞭性</strong><br>誤用耐性・説明可能性</div>
+          <div><strong>5. 速度と広さ</strong><br>最後に最適化する</div>
+        </div>
+
+        <h3 style="margin: 1.4rem 0 0.8rem;">不変原則</h3>
+        <ol class="principles">
+          <li><strong>もっともらしい誤答を最優先で潰す。</strong><br>停止する誤答より、静かに通る誤答の方が危険。</li>
+          <li><strong>公開範囲は証拠の積集合。</strong><br>実装・検証・文書・運用の最小共通部分だけを支援対象とする。</li>
+          <li><strong>外部ソフトは真理ではない。</strong><br>estimandと座標が一致した重複領域でのみ独立証拠として使う。</li>
+          <li><strong>失敗を分母から消さない。</strong><br>failed cell、非収束、欠測、境界を成功例に埋没させない。</li>
+          <li><strong>研究の進捗を製品成熟度に換算しない。</strong><br>prototype、preflight、runner、recordはpublic supportではない。</li>
+          <li><strong>後方互換性は意味単位で守る。</strong><br>読み込めることより、同じ尺度・同じ判断を再現できることを優先する。</li>
+          <li><strong>大規模計算の前に意思決定を明記する。</strong><br>結果が何を変えるか不明なら実行しない。</li>
+          <li><strong>範囲を縮めて規則を守る。</strong><br>結果を見た後に閾値や定義を緩めない。</li>
+        </ol>
+
+        <div class="grid-2" style="margin-top: 1rem;">
+          <div class="truth warning">
+            <strong>局所最適の兆候</strong>
+            <p>記録・テスト・fixtureが増える一方で、現在の真実が一文で言えない／次の利用者判断が変わらない／同じ不確実性を別名で追い続ける。</p>
+          </div>
+          <div class="truth">
+            <strong>ポートフォリオ制約</strong>
+            <p>同時進行は release-critical 1本、maintenance 1本、研究probe最大2本。新しい研究実行は、既存レーンの停止・統合・判定のいずれかと交換する。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="truth">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">02 · Current truth</p>
+            <h2>現在地を誇張せず固定する</h2>
+          </div>
+          <p>「何が動くか」ではなく「何を公開上の判断に使えるか」で成熟度を表す。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="card-head">
+              <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
+              <span class="chip open">candidate prep</span>
+            </div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>CRAN 0.2.3.1を公開前身として厳密に固定</strong><p>source hash、maintenance差分、0.2.4への祖先関係を確認済み。</p></div>
+                <span class="chip done">done</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>0.2.4 G0–G6を限定範囲で完了</strong><p>exact payload <code>cf20dd0…</code>、通常5-platform matrix 5/5成功。</p></div>
+                <span class="chip done">done</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>公開範囲をRSM/PCM MML fixed N(0,1)に限定</strong><p>stored direct/group anchors、frozen artifact scoringのみ。</p></div>
+                <span class="chip done">done</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>最終release candidateを作成</strong><p>0.2.4 metadata、candidate identity、最終source checkは未実施。</p></div>
+                <span class="chip open">next</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <div><h3>機能レーンの実際</h3><p>callableとsupportedを分離</p></div>
+              <span class="chip hold">bounded</span>
+            </div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>bounded GPCM fitted-object route</strong><p>aligned single-owner relative-slope GPCMとして相当程度実装済み。</p></div>
+                <span class="chip done">fitted</span>
+              </div>
+              <div class="task" data-state="hold" data-horizon="research">
+                <input type="checkbox" disabled aria-label="保留">
+                <div><strong>portable GPCM calibration</strong><p>schema v1とartifact-only scorerがslope/owner semanticsを持たないため非昇格。</p></div>
+                <span class="chip hold">unsupported</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="research">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>G-theoryの内部基礎</strong><p>univariate baseline、typed algebra/incidence、multivariate preflight群は存在。</p></div>
+                <span class="chip done">internal</span>
+              </div>
+              <div class="task" data-state="hold" data-horizon="research">
+                <input type="checkbox" disabled aria-label="保留">
+                <div><strong>multivariate G-theory public support</strong><p>有限標本回復・不確実性・D-study判断・統合された現行証拠が未完了。</p></div>
+                <span class="chip hold">unsupported</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="critical">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">03 · Critical path</p>
+            <h2>0.2.4を「終えたこと」にしない</h2>
+          </div>
+          <p>G6完了は公開API範囲の承認。CRAN公開と公開後検証は別の出口条件。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="card-head">
+              <div><h3>R0 · Release candidate freeze</h3><p>最優先。研究レーンより先に閉じる。</p></div>
+              <span class="chip open">P0</span>
+            </div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>G6後の記録commitがpayloadを変えないことを確認</strong><p>展開比較の差は自動<code>Packaged</code>時刻のみ。</p></div><span class="chip done">done</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>release差分allowlistを事前固定</strong><p>Version、status、public-version、日付、NEWS、cran-comments以外のproduction差分を原則拒否。</p></div><span class="chip open">open</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>release metadataを0.2.4へ遷移</strong><p><code>development</code>から正式状態へ。意味のない日付先行はしない。</p></div><span class="chip open">open</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>公開文面の最終claim diffを監査</strong><p>help、README、vignette、NEWS、capability matrixが同じ限定範囲を述べる。</p></div><span class="chip open">open</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>clean source tarballと候補tagを一対一に固定</strong><p>dirty tree、未追跡production file、生成物混入を拒否。</p></div><span class="chip open">open</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>候補tagで最終 package checks</strong><p>local source check、5-platform、source contents、fresh-process scoringを再確認。</p></div><span class="chip open">open</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>人間による最終sign-off</strong><p>機械的passと「この範囲を公開する」判断を分離して記録。</p></div><span class="chip open">open</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <div><h3>R1 · Submission &amp; publication</h3><p>投稿は不可逆ではないが外部影響がある。</p></div>
+              <span class="chip open">P0 → P1</span>
+            </div>
+            <div class="card-body">
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>CRAN preflightとsubmission packageを確定</strong><p>incoming feasibility、cran-comments、既知NOTEの説明を最終確認。</p></div><span class="chip open">open</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>0.2.4をCRANへ投稿</strong><p>この項目は明示的な実行判断後のみ完了にする。</p></div><span class="chip open">not submitted</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p1">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>公開source artifactを再取得して照合</strong><p>Version、hash、NEWS、compiled source、public scopeを候補と比較。</p></div><span class="chip open">post-release</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p1">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>CRAN各flavorと配布チャネルを追跡</strong><p>binary/check tableの遅延をsource releaseの失敗と混同しない。</p></div><span class="chip open">post-release</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p1">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>30日後のrelease retrospective</strong><p>利用上の混乱、migration、性能、bug分類を0.2.5の入口資料にする。</p></div><span class="chip open">post-release</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p1">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>patch policyを事前定義</strong><p>plausible-wrong result、crash、docs-only、compatibilityのseverityと対応を分ける。</p></div><span class="chip open">open</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="horizons">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">04 · Product horizons</p>
+            <h2>版番号ではなく意味の増分で進める</h2>
+          </div>
+          <p>後続版の抽象化を先回りして0.2.4へ混ぜない。各版は前版への正確な縮約を必要とする。</p>
+        </div>
+
+        <div class="grid-3">
+          <article class="card">
+            <div class="card-head"><div><h3>0.2.5 · Multiple observed scales</h3><p>次の製品仮説。まだ着工しない。</p></div><span class="chip open">future</span></div>
+            <div class="card-body">
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>実利用問題を先に収集</strong><p>複数尺度が必要な具体例、誤用、代替策を記述する。</p></div><span class="chip open">intake</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong><code>ScaleId</code>と観測モデルIDを分離</strong><p>カテゴリ値やfamilyから尺度を推測しない。</p></div><span class="chip open">semantics</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>latent dimensionを別軸に保つ</strong><p>multiple scaleをmultidimensional traitと同義にしない。</p></div><span class="chip open">scope</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>schema v1→v2 migration contract</strong><p>0.2.4の意味を推測せず、明示的に移行または拒否。</p></div><span class="chip open">compat</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>単一尺度への厳密縮約</strong><p>probability、likelihood、artifact、score、diagnosticsを0.2.4と照合。</p></div><span class="chip open">oracle</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>尺度間linkingと識別をfail-closed化</strong><p>接続不足をpoolingやdefaultで隠さない。</p></div><span class="chip open">safety</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>0.3.0 · Consolidation</h3><p>増築より整理を優先。</p></div><span class="chip open">future</span></div>
+            <div class="card-body">
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>実使用からAPI摩擦を測る</strong><p>0.2.4/0.2.5のissueとmigration事実なしに統合しない。</p></div><span class="chip open">evidence</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>schema互換・廃止方針を明文化</strong><p>読み込み期間、migration、warning、refusalをversion単位で決める。</p></div><span class="chip open">compat</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>証拠レコードを索引化・圧縮</strong><p>superseded chainを保存しつつ、current truthを一画面で読めるようにする。</p></div><span class="chip open">clarity</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>性能envelopeを利用規模で定義</strong><p>速度だけでなくmemory、artifact size、validation costを含める。</p></div><span class="chip open">performance</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>独立method/code review</strong><p>内部テスト作者と異なる視点でestimand・API・失敗挙動を監査。</p></div><span class="chip open">review</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>1.0.0 · Stable bounded core</h3><p>すべてをstableにしない。</p></div><span class="chip open">long-term</span></div>
+            <div class="card-body">
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>stable coreの選抜規則</strong><p>歴史的にcallableな全経路ではなく、複数releaseを耐えた積集合を選ぶ。</p></div><span class="chip open">scope</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>replicated recoveryとnegative controls</strong><p>モデル・推定法・design条件ごとに分母を持つ。</p></div><span class="chip open">methods</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>APIとartifactの長期互換性</strong><p>major-version内の読込・意味・failure contractを固定。</p></div><span class="chip open">contract</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>高stakes非主張を維持</strong><p>construct validity、fairness、cut score、securityをpackage validationから推論しない。</p></div><span class="chip open">boundary</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="research">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">05 · Research portfolio</p>
+            <h2>製品本線から分離した研究レーン</h2>
+          </div>
+          <p>各レーンは独自のestimand、反証条件、昇格gateを持つ。0.2.4のpassを借りない。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="card-head"><div><h3>GPCM</h3><p>「boundedの解除」ではなく、何を一般化するかを分解。</p></div><span class="chip hold">portable hold</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>現行fitted-object境界を明示</strong><p>aligned single-owner、relative slope、MML/JMLのroute-specific caveats。</p></div><span class="chip done">done</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>0.2.4 portable非昇格を決定</strong><p>「未実装」ではなくschema/scorerの意味不足として記録。</p></div><span class="chip done">done</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>利用者価値のある次のGPCM範囲を選ぶ</strong><p>owner一般化、portable calibration、boundary改善を一括しない。</p></div><span class="chip open">decision</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>slope/step ownerのcanonical schema</strong><p>centering、relative slope、population scale、anchor namespaceを損失なく保持。</p></div><span class="chip open">foundation</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>artifact-only probability/posterior oracle</strong><p>source fitを参照しない独立再構成とmutation test。</p></div><span class="chip open">oracle</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>MMLとJMLを別々に昇格判定</strong><p>marginal boundaryとconditional boundary／post-hoc priorを共有gateにしない。</p></div><span class="chip open">gate</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Multivariate G-theory</h3><p>内部preflightの量を成熟度と誤認しない。</p></div><span class="chip hold">public unsupported</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>typed algebra・incidence・quadratic-form基礎</strong><p>一変量縮約、PSD/rank、allocation overlapの内部oracleが存在。</p></div><span class="chip done">internal</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>backend/worker/processのpreflight群</strong><p>候補経路はあるがstudy executionとpublic supportは閉鎖中。</p></div><span class="chip done">preflight</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>多数の逐次recordをcurrent-state ledgerへ統合</strong><p>最新のblocking condition、superseded chain、次の一手を一意にする。</p></div><span class="chip open">clarify first</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>研究が変える利用判断を定義</strong><p>単なるbackend成功ではなく、どのD-study/composite判断を可能にするか。</p></div><span class="chip open">estimand</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>有限標本回復と失敗率</strong><p>component covariance、rank/boundary、missing/unbalanced designを完全分母で評価。</p></div><span class="chip open">evidence</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>full-refit uncertaintyとD-study stability</strong><p>周辺intervalの代入ではなくscenarioごとに再計算。</p></div><span class="chip open">inference</span></div>
+              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>public API設計</strong><p>上記の意味・回復・不確実性が閉じるまでexportしない。</p></div><span class="chip hold">blocked</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>ConQuest / external comparators</h3><p>独立性を得るために使い、模倣を目的にしない。</p></div><span class="chip open">conditional</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>ローカルConQuest経路を指定</strong><p><code>/Applications/ConQuest</code>を使用する。</p></div><span class="chip done">bound path</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>実行ごとにbinary/version identityを固定</strong><p>pathだけで同じsolverとみなさない。</p></div><span class="chip open">provenance</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較前にestimand overlapを署名</strong><p>model、estimator、constraints、quadrature、score map、roundingを一致させる。</p></div><span class="chip open">admission</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較が変える判断を先に記録</strong><p>一致率を増やすだけのrunは行わない。</p></div><span class="chip open">consequence</span></div>
+              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>solver完全再現・feature parity</strong><p>目的ではない。matched overlapがなければ主張を撤回し、製品を止めない。</p></div><span class="chip hold">non-goal</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Rater assignment / anchors</h3><p>anchor意味論と割付最適化を混同しない。</p></div><span class="chip open">design pending</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>McEwen・DeMarsのsource synthesis</strong><p>不完全割付、link、order、workloadを別要因として整理。</p></div><span class="chip done">done</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>scenario分母を階層化</strong><p>typed anchor 9、direct-anchor configuration 8、McEwen design 20×order 4を混ぜない。</p></div><span class="chip done">done</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>successor network catalogをfreeze</strong><p>bridge topology、cut、degree、workloadをanchor rateより先に定義。</p></div><span class="chip open">RDA-1</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>assignment generatorとgraph oracle</strong><p>planned/observed graph、missingness、order、pairwise overlapを監査。</p></div><span class="chip open">RDA-2</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>段階的precision design</strong><p>feasibility→calibration→confirmationを分離し、独立単位をdatasetにする。</p></div><span class="chip open">RDA-3–5</span></div>
+              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>「最適anchor率」の公開</strong><p>Pareto frontierとnetwork-conditioned evidenceが揃うまで単一率を選ばない。</p></div><span class="chip hold">not selected</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="adversarial">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">06 · Adversarial review</p>
+            <h2>緑色のチェックを疑う質問</h2>
+          </div>
+          <p>各PR、各gate、各release candidateで回答する反復チェック。未回答なら昇格しない。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="card-head"><div><h3>科学・統計</h3><p>正しそうな数値ほど疑う。</p></div><span class="chip recurring">recurring</span></div>
+            <div class="card-body">
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>この主張を反証する観測を作れるか？</strong><p>反証不能なclaimはsupport matrixへ入れない。</p></div><span class="chip recurring">every gate</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>oracleはproduction mistakeから独立か？</strong><p>同じparameter expansionやprobability helperの再利用を独立証拠と呼ばない。</p></div><span class="chip recurring">every gate</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>有限値を識別・収束・妥当性と誤認していないか？</strong><p>boundary、rank、support、prior dominationを別々に確認。</p></div><span class="chip recurring">every gate</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>選択後推論になっていないか？</strong><p>閾値、fixture、replicate、optimizerを結果閲覧後に選んでいないか。</p></div><span class="chip recurring">every gate</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>製品・組織</h3><p>良い研究が良い製品とは限らない。</p></div><span class="chip recurring">recurring</span></div>
+            <div class="card-body">
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>この作業でどの利用者判断が変わるか？</strong><p>答えがなければcritical pathから外す。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>既存の単純な代替で十分ではないか？</strong><p>docs、refusal、縮小scopeで解ける問題に新モデルを足さない。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>既投入コストに引っ張られていないか？</strong><p>大量のrecordやfitを「続ける理由」にしない。</p></div><span class="chip recurring">monthly</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>内部複雑性がcurrent truthを隠していないか？</strong><p>一文で現状と次のblockerを言えなければ、実行より統合を先にする。</p></div><span class="chip recurring">monthly</span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="truth warning" style="margin-top: 1rem;">
+          <strong>停止条件</strong>
+          <p>
+            claimの反証条件が書けない／実行結果が意思決定を変えない／matched estimandが成立しない／
+            failure denominatorを完全に保持できない／current statusを統合できない／public wordingを一意にできない場合、
+            実装・simulation・公開を停止し、scope縮小またはarchiveへ移す。
+          </p>
+        </div>
+      </section>
+
+      <section id="risks">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">07 · Risk register</p>
+            <h2>多角的リスク台帳</h2>
+          </div>
+          <p>確率ではなく、早期兆候と具体的な防御が観測可能かを重視する。</p>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>リスク</th><th>影響</th><th>早期兆候</th><th>防御／出口</th></tr></thead>
+            <tbody>
+              <tr><td>もっともらしい誤得点</td><td><span class="chip hold">critical</span></td><td>unknown level、prior、schema driftでも有限値</td><td>fail-closed、独立posterior oracle、fresh-process、negative fixture</td></tr>
+              <tr><td>support scopeの漏出</td><td><span class="chip hold">critical</span></td><td>helpとcapability matrixの不一致、callable＝supported表現</td><td>中央matrix、public surface scan、scope縮小</td></tr>
+              <tr><td>schema lock-in</td><td><span class="chip open">high</span></td><td>将来fieldを0.2.4 defaultから推測</td><td>versioned schema、明示migration、unknown拒否、単一尺度縮約</td></tr>
+              <tr><td>CI green fallacy</td><td><span class="chip open">high</span></td><td>pass数のみで統計的claimを閉じる</td><td>claim ledger、独立oracle、decision consequence、人間sign-off</td></tr>
+              <tr><td>証拠recordの過剰増殖</td><td><span class="chip open">high</span></td><td>最新blockerが複数recordで矛盾／探索に時間</td><td>append-only history＋一つのcurrent-state index、superseded表示</td></tr>
+              <tr><td>external comparator権威化</td><td><span class="chip open">high</span></td><td>相関や名前だけで等価と主張</td><td>estimand署名、version identity、独立normalizer、非主張</td></tr>
+              <tr><td>研究compute sink</td><td><span class="chip open">high</span></td><td>fit行数が独立dataset数や判断価値を上回る</td><td>precision design、sequential stop、代数・microcase優先、WIP制限</td></tr>
+              <tr><td>release後の互換性負債</td><td><span class="chip open">high</span></td><td>old artifactが黙って読める／意味が変わる</td><td>schema/version refusal、migration fixtures、公開artifact再取得試験</td></tr>
+              <tr><td>high-stakes misuse</td><td><span class="chip open">high</span></td><td>conditional intervalを総不確実性や妥当性と解釈</td><td>明示non-claims、output labeling、deployment reviewをpackage外に置く</td></tr>
+              <tr><td>単一保守者・知識集中</td><td><span class="chip open">medium</span></td><td>手動判断がrecord作者しか再現できない</td><td>decision template、再現script、独立review、handoff資料</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="governance">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">08 · Governance</p>
+            <h2>タスク投入と昇格の規律</h2>
+          </div>
+          <p>チェックボックス消化自体を目的にしない。新規タスクは必ず入口審査を通す。</p>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="card-head"><div><h3>Task intake</h3><p>すべて未チェックの反復template。</p></div><span class="chip recurring">required</span></div>
+            <div class="card-body">
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>閉じるclaim/gateは一つに特定できるか</strong><p>「全体改善」のような曖昧な目的は禁止。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>利用者への便益または害低減は何か</strong><p>内部の美しさだけならresearch/debt laneへ。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>反証・独立証拠・完全分母は何か</strong><p>test implementationとoracleを分離。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>失敗時に何を削るか</strong><p>閾値変更で救済せず、scope・claim・scheduleを調整。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>後続版・研究scopeを混入していないか</strong><p>ScaleId、multidimensional、GPCM portable等の先回りを監査。</p></div><span class="chip recurring">intake</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Review cadence</h3><p>頻度別の観測点。</p></div><span class="chip open">institutionalize</span></div>
+            <div class="card-body">
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>PRごとのclaim-diff欄</strong><p>code diffだけでなくsupport matrixが変わるかを明記。</p></div><span class="chip open">process</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>月次portfolio review</strong><p>WIP、停止候補、record debt、次の利用者判断を棚卸し。</p></div><span class="chip open">monthly</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>releaseごとのadversarial sign-off</strong><p>実装者と同じ仮定を共有しないreviewを最低1回入れる。</p></div><span class="chip open">release</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>公開後30/90日review</strong><p>実際の利用・bug・support costで次版の仮説を更新。</p></div><span class="chip open">post-release</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="metrics">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">09 · Definition of done</p>
+            <h2>成熟度を一段ずつ区別する</h2>
+          </div>
+          <p>下段を飛ばしてpublic/stableと呼ばない。pass数は補助指標であり目的関数ではない。</p>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>段階</th><th>必要条件</th><th>まだ主張できないこと</th></tr></thead>
+            <tbody>
+              <tr><td>1 · Implemented</td><td>API/helperが意図した経路を実行</td><td>正確性、識別、一般性</td></tr>
+              <tr><td>2 · Behavior-tested</td><td>unit/negative/round-trip testが通る</td><td>独立した統計的妥当性</td></tr>
+              <tr><td>3 · Method-qualified</td><td>独立oracle、recovery、failure denominator、設計条件</td><td>公開文面・移行・運用安全</td></tr>
+              <tr><td>4 · Public-supported</td><td>code/help/example/capability/release evidenceが一致</td><td>長期安定性、全設計への一般化</td></tr>
+              <tr><td>5 · Stable core</td><td>複数release、migration、利用実績、独立reviewを通過</td><td>construct validity、高stakes suitability、全MFRM機能</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-2" style="margin-top: 1rem;">
+          <div class="truth">
+            <strong>追う指標</strong>
+            <p>silent acceptance件数、claimに反証がある割合、fresh-process再現時間、schema migration成功、完全分母、公開surface不一致、release後severity。</p>
+          </div>
+          <div class="truth warning">
+            <strong>目的化しない指標</strong>
+            <p>総テスト数、総record数、fit回数、行数、外部相関、対応モデル数、チェック済みbox数。これらは品質を保証しない。</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="queue">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">10 · Ordered queue</p>
+            <h2>次に行うこと</h2>
+          </div>
+          <p>順番を変える場合は、上位の未完了項目を飛ばす理由とリスクを記録する。</p>
+        </div>
+
+        <article class="card">
+          <div class="card-body">
+            <ol class="priority-list">
+              <li><strong>0.2.4 release差分allowlistとmetadata遷移規則をfreezeする。</strong></li>
+              <li><strong>最終candidate commit/tagを作り、clean source tarballを固定する。</strong></li>
+              <li><strong>候補tagのlocal＋5-platform＋public claim差分を再検証する。</strong></li>
+              <li><strong>人間sign-off後にCRAN投稿を行う。</strong></li>
+              <li><strong>公開artifactを再取得して候補と照合し、30日monitoringを開始する。</strong></li>
+              <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
+              <li><strong>0.2.5について実利用problem discoveryを行い、着工／延期を判断する。</strong></li>
+              <li><strong>GPCM、G-theory、anchor研究は各1つのdecision-changing probeだけを選ぶ。</strong></li>
+            </ol>
+          </div>
+        </article>
+
+        <div class="truth warning" style="margin-top: 1rem;">
+          <strong>今は行わない</strong>
+          <p>
+            0.2.4への新機能追加、portable GPCMの便宜的昇格、multivariate G-theoryのexport、
+            単一anchor率の選定、ConQuest完全模倣、意思決定のない大規模simulation、
+            将来のmultiple-scale fieldを0.2.4 schemaへ先回りして追加すること。
+          </p>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>
+          Internal source of direction: <a href="../../ROADMAP.md">ROADMAP.md</a> ·
+          G6 decision: <a href="fixed-calibration-g6-release-decision-record-0.2.4.md">release record</a> ·
+          GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
+          anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
+        </p>
+        <p>
+          このHTMLは内部意思決定用であり、package source・help・NEWS・public websiteには含めない。
+          更新時は日付、current truth、未完了の最上位blocker、停止条件を必ず同時に見直す。
+        </p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const tasks = [...document.querySelectorAll('.task[data-state]')];
+      const counted = tasks.filter(task => task.dataset.state !== 'recurring');
+      const done = counted.filter(task => task.dataset.state === 'done').length;
+      const open = counted.filter(task => task.dataset.state === 'open').length;
+      const hold = counted.filter(task => task.dataset.state === 'hold').length;
+      const rate = counted.length ? Math.round((done / counted.length) * 100) : 0;
+
+      document.getElementById('done-count').textContent = done;
+      document.getElementById('open-count').textContent = open;
+      document.getElementById('hold-count').textContent = hold;
+      document.getElementById('completion-rate').textContent = `${rate}%`;
+      document.getElementById('progress-bar').style.width = `${rate}%`;
+
+      let activeFilter = 'all';
+      const search = document.getElementById('task-search');
+      const buttons = [...document.querySelectorAll('[data-filter]')];
+
+      function applyFilters() {
+        const query = search.value.trim().toLocaleLowerCase('ja');
+        tasks.forEach(task => {
+          const state = task.dataset.state;
+          const horizon = task.dataset.horizon;
+          const priority = task.dataset.priority;
+          const matchesText = !query || task.textContent.toLocaleLowerCase('ja').includes(query);
+          const matchesFilter =
+            activeFilter === 'all' ||
+            (activeFilter === 'open' && state !== 'done') ||
+            (activeFilter === 'now' && horizon === 'now' && (priority === 'p0' || priority === 'p1')) ||
+            (activeFilter === 'research' && horizon === 'research');
+          task.hidden = !(matchesText && matchesFilter);
+        });
+      }
+
+      buttons.forEach(button => {
+        button.addEventListener('click', () => {
+          activeFilter = button.dataset.filter;
+          buttons.forEach(candidate => candidate.setAttribute(
+            'aria-pressed', String(candidate === button)
+          ));
+          applyFilters();
+        });
+      });
+
+      search.addEventListener('input', applyFilters);
+      document.getElementById('print-roadmap').addEventListener('click', () => window.print());
+    })();
+  </script>
+</body>
+</html>

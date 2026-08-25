@@ -1866,3 +1866,75 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
   expect_match(roadmap, "No 0.2.4 CRAN submission has been performed.",
                fixed = TRUE)
 })
+
+test_that("internal strategic roadmap preserves the long-horizon decision axis", {
+  ctx <- load_fixed_calibration_g4_contract()
+  path <- file.path(
+    ctx$validation,
+    "mfrmr-internal-strategic-roadmap.html"
+  )
+  expect_true(file.exists(path))
+  roadmap <- paste(readLines(path, warn = FALSE), collapse = "\n")
+
+  for (section in c(
+    "charter", "truth", "critical", "horizons", "research",
+    "adversarial", "risks", "governance", "metrics", "queue"
+  )) {
+    expect_match(roadmap, paste0("id=\"", section, "\""), fixed = TRUE)
+  }
+
+  expect_match(
+    roadmap,
+    "同じ測定尺度を、意味を変えず、失敗を隠さず、独立に再現・保存・適用できること。",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "0.2.4: G6 complete / candidate prep", fixed = TRUE)
+  expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
+  expect_match(
+    roadmap, "Public scope: RSM · PCM · MML · fixed N(0,1)", fixed = TRUE
+  )
+  expect_match(roadmap, "portable GPCM calibration", fixed = TRUE)
+  expect_match(roadmap, "multivariate G-theory public support", fixed = TRUE)
+  expect_match(roadmap, "public unsupported", fixed = TRUE)
+  expect_match(roadmap, "今は行わない", fixed = TRUE)
+  expect_match(roadmap, "停止条件", fixed = TRUE)
+  expect_match(roadmap, "同時進行は release-critical 1本", fixed = TRUE)
+
+  count_token <- function(token) {
+    length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
+  }
+  expect_identical(count_token("data-state=\"done\""), 13L)
+  expect_identical(count_token("data-state=\"open\""), 47L)
+  expect_identical(count_token("data-state=\"hold\""), 6L)
+  expect_identical(count_token("data-state=\"recurring\""), 13L)
+
+  ignore <- readLines(file.path(ctx$root, ".Rbuildignore"), warn = FALSE)
+  expect_true("^inst/validation$" %in% ignore)
+  expect_true(
+    "^tests/testthat/test-fixed-calibration-g4-evidence[.]R$" %in% ignore
+  )
+  inventory <- load_fixed_calibration_g4_candidate_inventory()
+  expect_identical(
+    inventory$env$mfrmr_fc_g4i_classify_path(
+      "inst/validation/mfrmr-internal-strategic-roadmap.html"
+    ),
+    "release_build_test_and_repository_evidence"
+  )
+
+  public_paths <- c(
+    "README.md", "NEWS.md", "_pkgdown.yml",
+    "vignettes/mfrmr-portable-calibration.Rmd",
+    "man/mfrm_calibration_workflow.Rd",
+    "man/mfrm_calibration_capabilities.Rd",
+    "man/mfrmr_output_guide.Rd", "man/mfrmr-package.Rd"
+  )
+  public_text <- paste(vapply(public_paths, function(public_path) {
+    paste(
+      readLines(file.path(ctx$root, public_path), warn = FALSE),
+      collapse = "\n"
+    )
+  }, character(1)), collapse = "\n")
+  expect_false(grepl(
+    "mfrmr-internal-strategic-roadmap", public_text, fixed = TRUE
+  ))
+})

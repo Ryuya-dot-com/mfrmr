@@ -78,6 +78,7 @@ mfrmr_fc_g4i_classify_path <- function(path) {
       path %in% c(
         "inst/validation/README.md",
         "inst/validation/internal-roadmap-0.2.3.md",
+        "inst/validation/mfrmr-internal-strategic-roadmap.html",
         "inst/validation/release-readiness.R",
         "inst/validation/release-check-runner-0.2.4.R",
         "inst/validation/public-release-baseline-0.2.4.csv"
