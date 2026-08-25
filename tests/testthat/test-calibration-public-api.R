@@ -234,14 +234,23 @@ test_that("public surfaces share the bounded portable-calibration wording", {
     "README.md", "NEWS.md", "vignettes/mfrmr-portable-calibration.Rmd",
     "man/mfrm_calibration_workflow.Rd",
     "man/mfrm_calibration_capabilities.Rd", "man/mfrmr_output_guide.Rd",
-    "man/mfrmr-package.Rd",
-    "_pkgdown.yml"
+    "man/mfrmr-package.Rd"
   )
   expect_true(all(file.exists(file.path(root, paths))))
   text <- lapply(paths, function(path) {
     paste(readLines(file.path(root, path), warn = FALSE), collapse = "\n")
   })
   names(text) <- paths
+
+  # `_pkgdown.yml` is repository build configuration and is intentionally
+  # absent from the source package. Review it when this test runs from a
+  # checkout, without making an installed/source-package test depend on it.
+  pkgdown_path <- file.path(root, "_pkgdown.yml")
+  if (file.exists(pkgdown_path)) {
+    text[["_pkgdown.yml"]] <- paste(
+      readLines(pkgdown_path, warn = FALSE), collapse = "\n"
+    )
+  }
 
   core_surfaces <- text[c(
     "README.md", "vignettes/mfrmr-portable-calibration.Rmd",
@@ -261,7 +270,11 @@ test_that("public surfaces share the bounded portable-calibration wording", {
     "score_mfrm_calibration(calibration, new_rows)",
     fixed = TRUE
   )
-  expect_match(text$`_pkgdown.yml`, "mfrm_calibration_workflow", fixed = TRUE)
+  if (!is.null(text[["_pkgdown.yml"]])) {
+    expect_match(
+      text[["_pkgdown.yml"]], "mfrm_calibration_workflow", fixed = TRUE
+    )
+  }
   expect_match(
     text[["man/mfrmr_output_guide.Rd"]],
     "mfrmr_output_guide(\"calibration\")",

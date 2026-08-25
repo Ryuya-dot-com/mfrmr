@@ -1730,4 +1730,9 @@ test_that("G6 public surface closes CORE-07 without authorizing release", {
   )
   expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
                fixed = TRUE)
+
+  pkgdown <- file.path(ctx$root, "_pkgdown.yml")
+  expect_true(file.exists(pkgdown))
+  pkgdown_text <- paste(readLines(pkgdown, warn = FALSE), collapse = "\n")
+  expect_match(pkgdown_text, "mfrm_calibration_workflow", fixed = TRUE)
 })
