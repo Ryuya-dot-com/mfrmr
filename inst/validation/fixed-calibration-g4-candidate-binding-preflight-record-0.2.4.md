@@ -18,6 +18,15 @@ manifest is recomputed before a bound candidate can be admitted. Mutating a
 readiness flag, source hash, refusal, or observed identity invalidates the
 manifest.
 
+The first clean-tree source build was retained as a pre-confirmation harness
+incident. All four production R files matched byte for byte, while
+`DESCRIPTION` differed only because `R CMD build` normalized DCF whitespace
+and added `NeedsCompilation`, `Packaged`, `Author`, and `Maintainer`. The
+preflight initially refused this payload with `TARBALL_SOURCE_MISMATCH`; no
+confirmation cell was opened. The binding rule now requires normalized DCF
+equality for every source field, permits exactly those four build-added
+fields, and continues to require byte equality for all production R files.
+
 The 2026-08-25 live development tree is not a candidate. It contains ongoing
 tracked and untracked work and no bound source tarball was supplied. The
 preflight therefore returns a typed refusal and keeps current confirmation
@@ -32,6 +41,8 @@ commit and its matching `mfrmr_0.2.4.9000.tar.gz` payload.
 - `LiveCandidateBindingComplete=FALSE`
 - `LiveSourceTarballBound=FALSE`
 - `SyntheticCleanPromotionAllowed=FALSE`
+- `InitialDescriptionNormalizationIncidentRetained=TRUE`
+- `InitialDescriptionNormalizationIncidentOpenedConfirmation=FALSE`
 - `CurrentExecutionOpened=FALSE`
 - `ConfirmationResultObserved=FALSE`
 - `CORE05Complete=FALSE`

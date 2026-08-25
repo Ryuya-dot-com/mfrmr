@@ -189,6 +189,44 @@ mfrmr_fc_g4b_file_registry <- function(root, paths, role) {
   )
 }
 
+mfrmr_fc_g4b_description_semantics <- function(source_path, built_path) {
+  read_one <- function(path) {
+    value <- tryCatch(read.dcf(path), error = function(condition) NULL)
+    if (is.null(value) || nrow(value) != 1L || anyDuplicated(colnames(value))) {
+      return(NULL)
+    }
+    value <- as.character(value[1L, ])
+    names(value) <- colnames(read.dcf(path))
+    value
+  }
+  normalize <- function(value) {
+    trimws(gsub("[[:space:]]+", " ", as.character(value)))
+  }
+  source <- read_one(source_path)
+  built <- read_one(built_path)
+  allowed_added <- c("NeedsCompilation", "Packaged", "Author", "Maintainer")
+  if (is.null(source) || is.null(built)) {
+    return(list(
+      Match = FALSE, SourceFields = character(), BuiltFields = character(),
+      AddedFields = character(), ChangedSourceFields = character(),
+      ErrorCode = "DESCRIPTION_DCF_INVALID"
+    ))
+  }
+  source_fields <- names(source)
+  built_fields <- names(built)
+  missing <- setdiff(source_fields, built_fields)
+  added <- setdiff(built_fields, source_fields)
+  common <- intersect(source_fields, built_fields)
+  changed <- common[normalize(source[common]) != normalize(built[common])]
+  valid <- length(missing) == 0L && length(changed) == 0L &&
+    all(added %in% allowed_added)
+  list(
+    Match = valid, SourceFields = source_fields, BuiltFields = built_fields,
+    AddedFields = added, ChangedSourceFields = changed,
+    ErrorCode = if (valid) "" else "DESCRIPTION_SEMANTIC_MISMATCH"
+  )
+}
+
 mfrmr_fc_g4b_repository_registries <- function(repo_root = ".") {
   context <- mfrmr_fc_g4b_contract_context(repo_root)
   boundary <- context$Environment$mfrmr_fc_g4_current_production_boundary()
@@ -228,6 +266,9 @@ mfrmr_fc_g4b_empty_tarball <- function(path = "", code = "TARBALL_ABSENT") {
       SHA256 = character(), stringsAsFactors = FALSE
     ),
     FileRegistryHash = NA_character_,
+    DescriptionSemanticMatch = FALSE,
+    DescriptionAddedFields = character(),
+    DescriptionChangedSourceFields = character(),
     ProductionBoundaryMatchesRepository = FALSE,
     ErrorCode = code
   )
@@ -302,9 +343,16 @@ mfrmr_fc_g4b_tarball_observation <- function(
   )
   production <- repository_registries$Production
   tar_index <- match(production$Path, registry$Path)
-  boundary_matches <- !anyNA(tar_index) && identical(
-    unname(registry$SHA256[tar_index]), unname(production$SHA256)
+  description_semantics <- mfrmr_fc_g4b_description_semantics(
+    file.path(repo_root, "DESCRIPTION"),
+    file.path(package_root, "DESCRIPTION")
   )
+  code_rows <- production$Path != "DESCRIPTION"
+  code_matches <- !anyNA(tar_index[code_rows]) && identical(
+    unname(registry$SHA256[tar_index[code_rows]]),
+    unname(production$SHA256[code_rows])
+  )
+  boundary_matches <- code_matches && isTRUE(description_semantics$Match)
   list(
     Contract = "mfrmr_fixed_calibration_g4_tarball_observation_v1",
     Path = normalizePath(tarball, mustWork = TRUE), Exists = TRUE, Safe = TRUE,
@@ -312,6 +360,10 @@ mfrmr_fc_g4b_tarball_observation <- function(
     TarballSHA256 = mfrmr_fc_g4b_file_hash(tarball),
     FileRegistry = registry,
     FileRegistryHash = mfrmr_fc_g4b_hash(registry),
+    DescriptionSemanticMatch = isTRUE(description_semantics$Match),
+    DescriptionAddedFields = description_semantics$AddedFields,
+    DescriptionChangedSourceFields =
+      description_semantics$ChangedSourceFields,
     ProductionBoundaryMatchesRepository = boundary_matches,
     ErrorCode = if (boundary_matches) "" else "TARBALL_SOURCE_MISMATCH"
   )

@@ -513,6 +513,37 @@ test_that("G4 candidate binding rejects tampering and invalid tarballs", {
   )
 })
 
+test_that("G4 candidate binding distinguishes DCF normalization from drift", {
+  ctx <- load_fixed_calibration_g4_candidate_binding()
+  source <- tempfile(fileext = ".dcf")
+  built <- tempfile(fileext = ".dcf")
+  on.exit(unlink(c(source, built)), add = TRUE)
+  writeLines(c(
+    "Package: mfrmr", "Version: 0.2.4.9000",
+    "Imports:", "    stats,", "    utils"
+  ), source)
+  writeLines(c(
+    "Package: mfrmr", "Version: 0.2.4.9000",
+    "Imports: stats, utils", "NeedsCompilation: yes",
+    "Packaged: 2026-08-25 00:00:00 UTC; builder",
+    "Author: Example Author", "Maintainer: Example <example@example.org>"
+  ), built)
+  equivalent <- ctx$env$mfrmr_fc_g4b_description_semantics(source, built)
+  expect_true(equivalent$Match)
+  expect_identical(sort(equivalent$AddedFields), sort(c(
+    "NeedsCompilation", "Packaged", "Author", "Maintainer"
+  )))
+  expect_identical(equivalent$ChangedSourceFields, character(0))
+
+  changed <- readLines(built, warn = FALSE)
+  changed[changed == "Version: 0.2.4.9000"] <- "Version: 0.2.4.9001"
+  writeLines(changed, built)
+  drift <- ctx$env$mfrmr_fc_g4b_description_semantics(source, built)
+  expect_false(drift$Match)
+  expect_identical(drift$ChangedSourceFields, "Version")
+  expect_identical(drift$ErrorCode, "DESCRIPTION_SEMANTIC_MISMATCH")
+})
+
 test_that("G4 candidate-binding record retains the live refusal boundary", {
   ctx <- load_fixed_calibration_g4_candidate_binding()
   record_path <- file.path(
@@ -569,7 +600,11 @@ test_that("G4 candidate inventory classifies every live path fail closed", {
     "deferred_rater_anchor_design_research"
   )
   expect_true(all(inventory$Classification %in% allowed))
-  expect_true(all(allowed[1:3] %in% inventory$Classification))
+  representative <- vapply(c(
+    "R/api-prediction.R", "NEWS.md",
+    "inst/validation/fixed-calibration-example-0.2.4.md"
+  ), ctx$env$mfrmr_fc_g4i_classify_path, character(1L))
+  expect_identical(unname(representative), allowed[1:3])
 })
 
 test_that("G4 candidate inventory keeps deferred research outside payload", {
@@ -616,7 +651,7 @@ test_that("G4 candidate inventory keeps internal mechanics out of public help", 
   expect_match(record, "`AllLiveChangesClassified=TRUE`", fixed = TRUE)
   expect_match(record, "`UnknownPathCount=0`", fixed = TRUE)
   expect_match(record, "`PublicInternalLanguageClean=TRUE`", fixed = TRUE)
-  expect_match(record, "`WorkingTreeClean=FALSE`", fixed = TRUE)
+  expect_match(record, "`WorkingTreeClean=TRUE`", fixed = TRUE)
 })
 
 test_that("disjoint RSM and PCM probability/posterior oracles pass frozen rules", {
