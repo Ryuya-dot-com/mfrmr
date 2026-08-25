@@ -26,6 +26,8 @@ references were retained.
 
 - Local: macOS Tahoe 26.5.2, arm64, R 4.6.1 (2026-06-24), Apple clang 21
 - Dedicated LTO link: GCC 15.2.0, `-flto=10 -Werror=odr`
+- Win-builder R-release: Windows Server 2022, R 4.6.1 ucrt, GCC 14.3.0
+- Win-builder R-devel: Windows Server 2022, R-devel r90445 ucrt, GCC 14.3.0
 
 ## R CMD check results
 
@@ -39,6 +41,10 @@ successfully.
 
 A separate `NOT_CRAN=true R CMD check --no-manual` of the same tarball ran the
 complete included testthat suite and finished with `Status: OK`.
+
+The same source tarball completed both Win-builder R-release and R-devel
+checks with 0 errors, 0 warnings, and 1 note. In each case the sole note was
+the same expected `Days since last update: 4` incoming-feasibility note.
 
 External proprietary software is not required to install, check, or use the
 package.
