@@ -1,26 +1,44 @@
 ## Submission
 
-This is an update from mfrmr 0.2.2 to 0.2.3. The maintainer and license are
+This is a focused correction from mfrmr 0.2.3 to 0.2.3.1 in response to the
+CRAN Team's 2026-08-25 request concerning the package's Additional issues.
+The maintainer, license, public R API, and fitted-model contracts are
 unchanged.
 
-The release strengthens numerical diagnostics, fail-closed inference
-readiness, extreme-score handling, and the bounded generalized partial-credit
-workflow.
+## CRAN-requested correction
 
-## Test environments
+The CRAN LTO check reported one-definition-rule warnings for `Rboolean` and
+`R_UnwindProtect`. One C++ translation unit locally disabled
+`HAVE_ENUM_BASE_TYPE`, while the cpp11-generated registration translation unit
+used R's configured definition. The obsolete local override has been removed,
+so all translation units now use the same R header configuration.
 
-- Local: macOS Tahoe 26.5.2, arm64, R 4.6.1 (2026-06-24),
-  `R CMD check --as-cran --run-donttest`
-- Win-builder: R-oldrelease 4.5.3 (2026-03-11 ucrt)
-- Win-builder: R-release 4.6.1 (2026-06-24 ucrt)
-- Win-builder: R-devel (2026-08-17 r90424 ucrt)
+A source contract now rejects `HAVE_ENUM_BASE_TYPE` overrides in compiled
+sources and `Makevars` files. A dedicated GCC 15 LTO build with `-flto=10` and
+`-Werror=odr` links without warnings.
+
+Four distinct FACETS/Winsteps documentation targets also began failing URL
+checks because the upstream TLS certificate had expired. The hyperlinks were
+removed while their substantive model distinctions and bibliographic
+references were retained.
+
+## Test environment
+
+- Local: macOS Tahoe 26.5.2, arm64, R 4.6.1 (2026-06-24), Apple clang 21
+- Dedicated LTO link: GCC 15.2.0, `-flto=10 -Werror=odr`
 
 ## R CMD check results
 
-The exact source tarball submitted to Win-builder completed with 0 errors,
-0 warnings, and 0 notes on all four environments listed above. The local check
-also ran the `donttest` examples. Package tests, vignette rebuilding, and PDF
-and HTML manual checks completed successfully.
+The exact 0.2.3.1 source tarball completed
+`R CMD check --as-cran --run-donttest` with 0 errors, 0 warnings, and 1 note.
+The sole note was `Days since last update: 4`, which is expected for this
+CRAN-requested correction shortly after publication of 0.2.3. The incoming
+check reported no invalid URLs. Package tests, ordinary and `donttest`
+examples, vignette rebuilding, and PDF and HTML manual checks completed
+successfully.
+
+A separate `NOT_CRAN=true R CMD check --no-manual` of the same tarball ran the
+complete included testthat suite and finished with `Status: OK`.
 
 External proprietary software is not required to install, check, or use the
 package.
