@@ -1,6 +1,6 @@
 # 0.2.4 boundary-hardening disposition
 
-Status: `maintenance_integrated_v6_contract_frozen_execution_pending`,
+Status: `maintenance_integrated_v6_complete_g4_closed_g6_next`,
 2026-08-26.
 
 ## Decision
@@ -16,8 +16,10 @@ reproduction, scoring, resume, and identity boundaries.
 The changes are production-code changes after the hosted G4 result at commit
 `f492fb9f0ee977777d03f0255de008af33860db5`. That result is retained as
 historical evidence for its exact explicit nine-node calibration payload. It
-is not current-source confirmation. CORE-05, CORE-06, and G4 are reopened;
-G6 and public API promotion remain held.
+is not current-source confirmation. The later disjoint v6 result at commit
+`0aac54600062cdf5ad4a1aba699b48f1818888bc` now closes CORE-05, CORE-06, and
+G4 for the post-maintenance executable boundary. G6 completion and public API
+promotion remain unauthorized.
 
 ## Implemented disposition
 
@@ -54,15 +56,19 @@ by `public-release-baseline-0.2.4.csv` and the G0 maintenance addendum.
 
 The v5 G4 close at `bcf8619` predates this compiled-source integration. Its
 results and hosted receipts remain valid historical evidence for their exact
-source, but CORE-05, CORE-06, and G4 are open for the post-maintenance source.
-G6 remains held.
+source, but they were not pooled into the post-maintenance result. The disjoint
+v6 candidate `0aac546` separately passed the complete local and hosted
+denominator, so CORE-05, CORE-06, and G4 are closed for that exact executable
+boundary. G6 remains a separate, incomplete gate.
 
 The ordinary five-platform CI check is now separated from G4 confirmation.
 The workflow builds and checks one exact source tarball per cell, records a
 check-only receipt with `G4EvidenceIssued=FALSE`, and does not invoke the v5
 hosted runner or aggregate v5 receipts. This prevents a green routine check
 from being misread as post-maintenance G4 evidence. The successor v6 contract
-is now frozen, but remains candidate-unbound and unopened.
+was frozen before its candidate was bound and remains an immutable prospective
+authority; the later execution result is retained in a separate completion
+record.
 
 The audit additionally revealed that a portable calibration extracted from an
 otherwise eligible one-node MML source fit could inherit that grid. Draft
@@ -83,30 +89,46 @@ default.
   `Status: OK`. Network-restricted repository-index messages did not change
   the check result.
 
-These local results establish implementation regression coverage only. They do
-not close the reopened independent or cross-platform gates.
+The earlier local results established implementation regression coverage only.
+The later exact-candidate execution added the frozen 49-cell denominator,
+three resource scales, and an explicit GCC 15.2.0 LTO build of both compiled
+translation units. Cross-platform authority still comes only from the hosted
+matrix below.
 
-## Required current-source reconfirmation
+## Completed current-source reconfirmation
 
 1. Freeze a successor G4 contract before inspecting new confirmation results.
    It must retain the scoring algorithm, the 31-node default, an explicit
    non-authorizing nine-node historical control, a one-node source-fit
    adversary, and all replay, scoring, checkpoint, and operational cells while
    adding both compiled translation units to the production boundary. This is
-   complete under the unopened modular-1061/1063 v6 identity.
-2. Bind one clean candidate source identity, then add a disjoint posterior
+   Completed under the then-unopened modular-1061/1063 v6 identity.
+2. Bound one clean candidate source identity, then added a disjoint posterior
    oracle and semantic-identity mutations that do not
    call production scoring or identity helpers.
-3. Exercise replay and checkpoint behavior from an isolated source-tarball
+3. Exercised replay and checkpoint behavior from an isolated source-tarball
    install and a fresh R session, including same-dimension objective changes,
    interrupted continuation, completed-state refusal, and hybrid stage reuse.
-4. Run ordinary package tests, examples, vignettes, release-readiness, and R
+4. Ran ordinary package tests, examples, vignettes, release-readiness, and R
    CMD check against the same built payload.
-5. Run hosted macOS release first and then Windows release plus Linux devel,
-   release, and oldrel on one unchanged commit. Retain failures; do not pool
-   historical cells into the new denominator.
-6. Only after those results pass may CORE-05, CORE-06, and G4 close again and
-   G6 resume.
+5. Ran hosted macOS release first and then Windows release plus Linux devel,
+   release, and oldrel on one unchanged commit. Retained failures and did not
+   pool historical cells into the new denominator.
+6. Closed CORE-05, CORE-06, and G4 only after those results passed; G6 may now
+   resume under its separate gate.
+
+All six requirements completed for candidate
+`0aac54600062cdf5ad4a1aba699b48f1818888bc`. Dedicated run `32877939836`
+passed macOS release, Windows release, Ubuntu devel/release/oldrel-1, and the
+five-receipt aggregation. Each platform retained 49 passes, zero failures, and
+three passing resource scales with common portable production/support
+identities. Independent recomputation validated every receipt hash and hosted
+matrix hash
+`faf0b7493cbd73e1fd127d58bde46c94d8d038e53e5bcc735f6761133dad3ba3`.
+Routine check-only run `32877893348` separately passed all five environments
+without issuing G4 evidence. The exact result and its non-promotion boundary
+are recorded in
+`fixed-calibration-g4-hosted-run-32877939836-record-0.2.4.md`.
 
 ## Machine-readable consequence
 
@@ -120,13 +142,14 @@ not close the reopened independent or cross-platform gates.
 - `HistoricalG4CurrentSourceEvidence=FALSE`
 - `LegacyV5AutomaticIssuanceDisabled=TRUE`
 - `PostMaintenanceG4ContractFrozen=TRUE`
-- `PostMaintenanceG4CurrentExecutionOpened=FALSE`
-- `PostMaintenanceG4CandidateBound=FALSE`
+- `PostMaintenanceG4CurrentExecutionOpened=TRUE`
+- `PostMaintenanceG4CandidateBound=TRUE`
 - `CandidateBindingPreflightImplemented=TRUE`
-- `CandidateBindingPreflightLiveReady=FALSE`
-- `CORE05Complete=FALSE`
-- `CORE06Complete=FALSE`
-- `G4ExitComplete=FALSE`
+- `CandidateBindingPreflightLiveReady=TRUE`
+- `CORE05Complete=TRUE`
+- `CORE06Complete=TRUE`
+- `G4ExitComplete=TRUE`
 - `G5DispositionUnchanged=TRUE`
-- `G6Held=TRUE`
+- `G6HeldByG4=FALSE`
+- `G6Authorized=FALSE`
 - `PublicAPIAuthorized=FALSE`

@@ -1653,21 +1653,22 @@ silently substituted for one another:
 
 ### 0.2.4 release control board
 
-Overall status: **G0 through G3 and G5 remain complete; the v5 G4 result is
-historical after integration of the 0.2.3.1 compiled-source maintenance fix;
-post-maintenance G4 is open, G6 is held, and public 0.2.4 API promotion remains
-closed**.
+Overall status: **G0 through G5 are complete for the deliberately bounded
+fixed-N(0,1) RSM/PCM core; post-maintenance G4 v6 closes CORE-05 and CORE-06
+for exact candidate `0aac546`; G6 is the next open gate, and public 0.2.4 API
+promotion remains closed**.
 The 0.2.3 baseline and its 0.2.3.1 maintenance addendum are bound to their CRAN
 source artifacts,
 the internal core artifact passes freeze--persist--load--score evidence, its
 typed direct/group/shared-step/owned-step constraints share one parameter-
 count, expansion, gradient, category-support, and rank contract, and its pure
 RSM/PCM scorer now returns explicit row/Person dispositions and scoring-basis
-identities. The 2026-08-22 G4 record remains valid historical evidence for its
-exact source and explicit nine-node payload, but later scoring, replay, and
-checkpoint hardening changed production code and calibration identity. A new
-disjoint confirmation and platform matrix are therefore required. No optional
-lane or public 0.2.4 API is promoted by those facts.
+identities. The 2026-08-22 and v5 G4 records remain valid historical evidence
+for their exact sources, but later scoring, replay, checkpoint, and compiled-
+source maintenance changed production code or calibration identity. The
+disjoint modular-1061/1063 v6 confirmation has now passed locally and on the
+required five-platform matrix without pooling those earlier results. No
+optional lane or public 0.2.4 API is promoted by that close.
 
 ### 2026-08-24 boundary-hardening disposition
 
@@ -1741,9 +1742,9 @@ calibration claim:
   coordinates pass conflict, identification, and reduction gates.
 - [x] **CORE-04 — Pure scoring:** new-Person scoring is fail-closed, reason-
   coded, conditional on the declared frozen basis, and performs no refit.
-- [ ] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
+- [x] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
   metamorphic tests, and disjoint confirmation pass frozen rules.
-- [ ] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
+- [x] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
   chunk-order, locale, encoding, platform, R-version, and bounded performance
   checks pass.
 - [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
@@ -2114,7 +2115,7 @@ required children are checked.
     dispositions, a direct hand-enumerated posterior oracle, and fitted-object
     parity as secondary evidence. The functions and optional lanes remain
     unexported/unpromoted.
-- [ ] **G4 — Independent and operational evidence**
+- [x] **G4 — Independent and operational evidence**
   - [x] Freeze numerical rules, denominators, resource budgets, and disjoint
     confirmation identities before opening confirmation results.
   - [x] Run independent probability/posterior and constraint/rank oracles that
@@ -2262,11 +2263,25 @@ required children are checked.
     v6 contract uses modular-1061/default-31 and modular-1063/source-one
     fixtures and can run only through an explicitly dispatched or
     candidate-tagged workflow that is separate from routine package checks.
-  - [ ] Bind one clean post-maintenance candidate and rerun the complete local
+  - [x] Bind one clean post-maintenance candidate and rerun the complete local
     denominator, GCC-LTO check, five-platform matrix, full Ubuntu-release
     suite, and receipt aggregation without pooling v5 results.
-  - [ ] **Post-maintenance G4 exit:** CORE-05 and CORE-06 pass for the exact
-    source that will enter G6.
+  - [x] **Post-maintenance G4 exit:** CORE-05 and CORE-06 pass for the exact
+    executable and source-package boundary that will enter G6.
+  - Evidence: candidate tag `g4-v6-candidate-0aac546` bound commit
+    `0aac54600062cdf5ad4a1aba699b48f1818888bc` to the eight-file production
+    registry and ten-file support registry. Its exact local source tarball
+    passed R CMD check, all 49 v6 cells, all three resource scales, and an
+    explicit GCC 15.2.0 LTO build of both compiled translation units. Dedicated
+    run `32877939836` then passed hosted macOS release first, followed by
+    Windows release and Ubuntu devel/release/oldrel-1; the release cell included
+    the full package suite. Five independently hash-valid receipts shared one
+    commit and portable registry identities, retained 49/49 cells and 3/3
+    resource scales per platform, and produced valid matrix hash
+    `faf0b7493cbd73e1fd127d58bde46c94d8d038e53e5bcc735f6761133dad3ba3`.
+    Separate check-only run `32877893348` also passed all five environments but
+    issued no G4 evidence. CORE-05, CORE-06, and G4 close only for the exact v6
+    executable boundary; G6 and public API authorization remain separate.
 - [x] **G5 — Optional-lane qualification**
   - [x] Adjudicate OPT-01 estimated-population/latent-regression MML as
     unavailable for portable calibration in 0.2.4.
@@ -2284,7 +2299,7 @@ required children are checked.
     fail-closed extractor/schema behavior, and the fitted-object versus
     portable-calibration terminology boundary.
 - [ ] **G6 — Release-candidate hardening**
-  - [ ] Start only after the post-maintenance current-source G4 exit is
+  - [x] Start only after the post-maintenance current-source G4 exit is
     complete.
   - [ ] Add one fresh-session end-to-end operational vignette using synthetic
     data and the installed public API only.

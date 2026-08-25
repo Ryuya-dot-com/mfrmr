@@ -136,7 +136,8 @@ identify whether the opt-in layer ran and retain its test log.
   present, scans all compiled sources for the forbidden header override, and
   freezes the eight-file post-maintenance production boundary. It also verifies
   that routine CI cannot issue legacy v5 G4 receipts and that the successor v6
-  contract is frozen but unopened. G4 and G6 remain open.
+  contract is frozen but unopened at admission. It is a prospective admission
+  check and does not consume the later execution result.
 - `fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R`,
   `fixed-calibration-g4-post-maintenance-v6-worker-0.2.4.R`, and
   `fixed-calibration-g4-post-maintenance-v6-contract-record-0.2.4.md`: freeze
@@ -145,6 +146,12 @@ identify whether the opt-in layer ran and retain its test log.
   compiled translation units and the compiled-header regression, and cover the
   unchanged 49-cell denominator. The contract is candidate-unbound and opens
   no result.
+- `fixed-calibration-g4-hosted-run-32877939836-record-0.2.4.md`: binds the
+  later disjoint v6 execution to exact candidate `0aac546`, its local source-
+  tarball and GCC-LTO checks, five hash-valid hosted receipts, and the
+  independently revalidated matrix. It closes CORE-05, CORE-06, and G4 for the
+  post-maintenance fixed-N(0,1) RSM/PCM executable boundary. G6 completion and
+  public API promotion remain unauthorized.
 - `.github/workflows/fixed-calibration-g4-v6.yaml` and its reusable cell
   workflow: provide an explicitly activated macOS-first five-platform path.
   It accepts `workflow_dispatch` or an exact `g4-v6-candidate-*` tag, not
