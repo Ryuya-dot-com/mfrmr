@@ -527,12 +527,18 @@ test_that("local v4 success and hosted pre-worker failure stay distinct", {
     ctx$validation,
     "fixed-calibration-g4-hosted-run-32818900492-record-0.2.4.md"
   )
+  hosted3_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-hosted-run-32819992290-record-0.2.4.md"
+  )
   expect_true(file.exists(local_path))
   expect_true(file.exists(hosted_path))
   expect_true(file.exists(hosted2_path))
+  expect_true(file.exists(hosted3_path))
   local <- paste(readLines(local_path, warn = FALSE), collapse = "\n")
   hosted <- paste(readLines(hosted_path, warn = FALSE), collapse = "\n")
   hosted2 <- paste(readLines(hosted2_path, warn = FALSE), collapse = "\n")
+  hosted3 <- paste(readLines(hosted3_path, warn = FALSE), collapse = "\n")
   expect_match(local, "`PassedCells=49`", fixed = TRUE)
   expect_match(local, "`FailedCells=0`", fixed = TRUE)
   expect_match(local, "`ResourceScalesPassed=3`", fixed = TRUE)
@@ -552,6 +558,12 @@ test_that("local v4 success and hosted pre-worker failure stay distinct", {
   expect_match(hosted2, "`DependentPlatformJobsSkipped=TRUE`", fixed = TRUE)
   expect_match(hosted2, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
   expect_match(hosted2, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(hosted3, "`ExactTarballCheckStatus=OK`", fixed = TRUE)
+  expect_match(hosted3, "`HostedCurrentWorkerInvoked=FALSE`", fixed = TRUE)
+  expect_match(hosted3, "`HostedCellReceiptCreated=FALSE`", fixed = TRUE)
+  expect_match(hosted3, "`DependentPlatformJobsSkipped=TRUE`", fixed = TRUE)
+  expect_match(hosted3, "`V4NumericalIdentityChanged=FALSE`", fixed = TRUE)
+  expect_match(hosted3, "`G4ExitComplete=FALSE`", fixed = TRUE)
 })
 
 test_that("G4 candidate binding observes source identities and stays closed", {
@@ -1242,6 +1254,15 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_match(
     runner, "MFRMR_G4_DEPENDENCY_LIBRARIES = paste(", fixed = TRUE
   )
+  installed_binding <- regexpr(
+    "Sys.setenv(MFRMR_G4_INSTALLED_LIBRARY = installed_library)",
+    runner, fixed = TRUE
+  )[[1L]]
+  static_execution <- regexpr(
+    "static <- mfrmr_fc_g4h_test_installed_evidence(", runner, fixed = TRUE
+  )[[1L]]
+  expect_gt(installed_binding, 0L)
+  expect_gt(static_execution, installed_binding)
   expect_match(runner, "hosted-cell-receipt.rds", fixed = TRUE)
   expect_match(runner, "HostedPlatformMatrixComplete = TRUE", fixed = TRUE)
   expect_match(runner, "G6Authorized = FALSE", fixed = TRUE)

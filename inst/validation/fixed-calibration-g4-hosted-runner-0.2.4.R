@@ -222,13 +222,9 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
       child_libraries, collapse = .Platform$path.sep
     )
   )
-  static <- mfrmr_fc_g4h_test_installed_evidence(
-    context, installed_library
+  old_library <- Sys.getenv(
+    "MFRMR_G4_INSTALLED_LIBRARY", unset = NA_character_
   )
-  worker_output <- file.path(evidence_directory, "current-confirmation.rds")
-  rscript <- file.path(R.home("bin"), "Rscript")
-  if (.Platform$OS.type == "windows") rscript <- paste0(rscript, ".exe")
-  old_library <- Sys.getenv("MFRMR_G4_INSTALLED_LIBRARY", unset = NA_character_)
   on.exit({
     if (is.na(old_library)) {
       Sys.unsetenv("MFRMR_G4_INSTALLED_LIBRARY")
@@ -236,9 +232,13 @@ mfrmr_fc_g4h_cell_main <- function(package_root, evidence_directory) {
       Sys.setenv(MFRMR_G4_INSTALLED_LIBRARY = old_library)
     }
   }, add = TRUE)
-  Sys.setenv(MFRMR_G4_INSTALLED_LIBRARY = normalizePath(
-    installed_library, winslash = "/", mustWork = TRUE
-  ))
+  Sys.setenv(MFRMR_G4_INSTALLED_LIBRARY = installed_library)
+  static <- mfrmr_fc_g4h_test_installed_evidence(
+    context, installed_library
+  )
+  worker_output <- file.path(evidence_directory, "current-confirmation.rds")
+  rscript <- file.path(R.home("bin"), "Rscript")
+  if (.Platform$OS.type == "windows") rscript <- paste0(rscript, ".exe")
   worker_log <- system2(
     rscript,
     c(

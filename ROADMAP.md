@@ -2173,6 +2173,10 @@ required children are checked.
     standard `R_LIBS` alone did not survive the static `--vanilla` worker's
     library reconstruction. Replace implicit startup inheritance with a
     dedicated, validated platform-separated dependency-library transport.
+  - [x] Retain candidate `87951ea` as a third pre-worker hosted failure: the
+    dedicated dependency transport was active, but the exact installed-library
+    binding occurred after the static fresh-process test. Move that binding
+    before static execution and guard the source order mechanically.
   - [ ] Run the amended denominator from an isolated current source-tarball
     install, retaining every failure and using a new disjoint confirmation
     identity after any evaluated production change.
