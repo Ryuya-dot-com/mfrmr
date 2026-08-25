@@ -174,6 +174,15 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     add_optional("step_facet", ri$step_facet),
     add_optional("slope_facet", ri$slope_facet),
     emit("gpcm_mml_identification", as.character(replay_gpcm_identification)),
+    add_optional("facet_interactions", ri$facet_interactions),
+    emit(
+      "min_obs_per_interaction",
+      as.numeric(ri$min_obs_per_interaction %||% 10)
+    ),
+    emit(
+      "interaction_policy",
+      as.character(ri$interaction_policy %||% "warn")
+    ),
     "  anchors = anchors,",
     "  group_anchors = group_anchors,",
     emit("noncenter_facet", as.character(ri$noncenter_facet %||% "Person")),
@@ -1595,6 +1604,8 @@ build_mfrm_replay_script <- function(fit,
       paste0("  person_id = ", if (!is.null(unit_person_id) && nzchar(as.character(unit_person_id))) render_r_object_literal(as.character(unit_person_id)) else "NULL", ","),
       paste0("  population_policy = ", if (!is.null(unit_population_policy) && nzchar(as.character(unit_population_policy))) render_r_object_literal(as.character(unit_population_policy)) else "NULL", ","),
       paste0("  interval_level = ", render_r_object_literal(as.numeric(unit_settings$interval_level %||% 0.95)), ","),
+      paste0("  scoring_quad_points = ", render_r_object_literal(as.integer(unit_settings$scoring_quad_points %||% unit_settings$quad_points %||% 31L)), ","),
+      paste0("  readiness_policy = ", render_r_object_literal(as.character(unit_settings$readiness_policy %||% "error")), ","),
       paste0("  n_draws = ", render_r_object_literal(as.integer(unit_settings$n_draws %||% 0L)), ","),
       paste0("  seed = ", if (!is.null(unit_settings$seed)) render_r_object_literal(unit_settings$seed) else "NULL"),
       ")"
@@ -1645,6 +1656,8 @@ build_mfrm_replay_script <- function(fit,
       paste0("  population_policy = ", if (!is.null(pv_population_policy) && nzchar(as.character(pv_population_policy))) render_r_object_literal(as.character(pv_population_policy)) else "NULL", ","),
       paste0("  n_draws = ", render_r_object_literal(as.integer(pv_settings$n_draws %||% 5L)), ","),
       paste0("  interval_level = ", render_r_object_literal(as.numeric(pv_settings$interval_level %||% 0.95)), ","),
+      paste0("  scoring_quad_points = ", render_r_object_literal(as.integer(pv_settings$scoring_quad_points %||% pv_settings$quad_points %||% 31L)), ","),
+      paste0("  readiness_policy = ", render_r_object_literal(as.character(pv_settings$readiness_policy %||% "error")), ","),
       paste0("  seed = ", if (!is.null(pv_settings$seed)) render_r_object_literal(pv_settings$seed) else "NULL"),
       ")"
     )
@@ -2428,6 +2441,11 @@ build_conquest_overlap_bundle <- function(fit = NULL,
     score = "Score",
     person_data = prepared$person_data,
     person_id = "Person",
+    readiness_policy = if (isTRUE(mfrmr_fit_status$inference_ready)) {
+      "error"
+    } else {
+      "review"
+    },
     n_draws = 0
   )$estimates
   case_eap <- as.data.frame(case_eap, stringsAsFactors = FALSE)

@@ -15,6 +15,8 @@ predict_mfrm_units(
   person_id = NULL,
   population_policy = c("error", "omit"),
   interval_level = 0.95,
+  scoring_quad_points = 31L,
+  readiness_policy = c("error", "review"),
   n_draws = 0,
   seed = NULL
 )
@@ -44,7 +46,7 @@ column recorded in \code{fit}, if any.}
 
 \item{person_data}{Optional one-row-per-person data.frame with the
 background variables required by a latent-regression fit. Ignored for
-ordinary fixed-calibration scoring. For intercept-only latent-regression
+ordinary fitted-object posterior scoring. For intercept-only latent-regression
 fits (\code{population_formula = ~ 1}), \code{mfrmr} reconstructs the minimal
 one-row-per-person table internally from the scored person IDs. This is the
 scoring-time table for \code{new_data}, not the fit object's replay/export
@@ -63,6 +65,15 @@ scored persons lacking complete covariates and records that omission in
 \code{population_review}.}
 
 \item{interval_level}{Posterior interval level returned in \code{Lower}/\code{Upper}.}
+
+\item{scoring_quad_points}{Number of Gauss-Hermite nodes used only for this
+scoring call. It is independent of the quadrature order used while fitting
+\code{fit}; the default is 31 and values below 2 are refused.}
+
+\item{readiness_policy}{How a source fit that is not scoring-ready is
+handled. \code{"error"} (default) refuses scoring. \code{"review"} permits an
+explicitly review-only fitted-object calculation and labels the returned
+estimates and settings accordingly; it does not make the source fit ready.}
 
 \item{n_draws}{Optional number of quadrature-grid posterior draws to return
 per scored person. Use 0 to skip draws.}
@@ -102,7 +113,7 @@ N(x^\top\hat\beta, \hat\sigma^2)}, so the returned summaries are
 population-model-aware posterior EAP estimates. When the original fit uses
 \code{method = "JML"}, \code{mfrmr} applies the fitted facet/step parameters with a
 standard normal reference prior on the quadrature grid, so the returned
-person scores remain fixed-calibration EAP summaries rather than direct JML
+person scores remain fitted-object EAP summaries rather than direct JML
 estimates from the fitting step.
 
 When the fitted population model is intercept-only (\code{population_formula = ~ 1}), \code{predict_mfrm_units()} still uses the fitted population-model basis,
@@ -110,7 +121,7 @@ but it can reconstruct the minimal scored-person table internally because no
 background covariates are needed beyond the person IDs in \code{new_data}.
 
 The current bounded \code{GPCM} branch is included in this scoring layer,
-so fitted \code{GPCM} objects can be used for the same fixed-calibration
+so fitted \code{GPCM} objects can be used for the same fitted-object
 posterior summaries. This does not imply that every downstream diagnostic or
 reporting helper has already been generalized to \code{GPCM}.
 
@@ -136,7 +147,7 @@ For \code{JML} fits, this scoring stage is intentionally post hoc: \code{mfrmr} 
 the fitted facet and step parameters from the joint-likelihood fit, then
 adds a standard normal reference prior only for the scoring layer so that
 new or partially observed units can be summarized on a quadrature grid.
-This is a practical fixed-calibration EAP procedure, not a claim that the
+This is a practical fitted-object EAP procedure, not a claim that the
 original \code{JML} fit itself estimated a population model.
 }
 \section{Interpreting output}{

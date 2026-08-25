@@ -215,9 +215,13 @@
 #'   preserves the minimal `Facet` / `Level` / `Estimate` layout.
 #' @param checkpoint Optional `list(file = ..., every_iter = ...)`.
 #'   When supplied, the MML EM engine writes its state to `file`
-#'   every `every_iter` outer EM iterations using `saveRDS()`.
-#'   If the file already exists when the fit starts, the engine
-#'   resumes from the recorded iteration. Only the EM engine
+#'   every `every_iter` outer EM iterations using checked same-directory
+#'   replacement. If the file already exists when the fit starts, the engine
+#'   resumes only when its versioned identity exactly matches the current data,
+#'   model, parameter layout, constraints, quadrature, package version, and
+#'   engine stage. Legacy, corrupt, or incompatible files fail closed. A
+#'   non-converged pure-EM run may resume with a larger `maxit`; a completed
+#'   checkpoint cannot re-enter the same iteration boundary. Only the EM engine
 #'   (`mml_engine = "em"` or the EM warm-start step of
 #'   `mml_engine = "hybrid"`) honours the checkpoint; the direct
 #'   `optim()` engine ignores it. Use this to make long MML EM
@@ -518,7 +522,7 @@
 #'   two-way non-person facet interactions
 #' - `model = "GPCM"` is currently implemented only for the narrow bounded
 #'   branch with `slope_facet == step_facet`; `MML` and `JML` fitting, core
-#'   summaries, fixed-calibration posterior scoring, [compute_information()],
+#'   summaries, fitted-object posterior scoring, [compute_information()],
 #'   Wright/pathway/CCC fit plots, [diagnose_mfrm()], residual-PCA follow-up,
 #'   [interrater_agreement_table()], [unexpected_response_table()],
 #'   [displacement_table()], [measurable_summary_table()],

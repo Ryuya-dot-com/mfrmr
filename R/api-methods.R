@@ -8268,7 +8268,7 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'    Infit pathway only when they answer a specific follow-up question.
 #' 5. For `RSM` / `PCM`, continue with [diagnose_mfrm()] for element-level fit
 #'    checks. For bounded `GPCM`, continue with [compute_information()] /
-#'    [plot_information()] or the fixed-calibration posterior scoring helpers.
+#'    [plot_information()] or the fitted-object posterior scoring helpers.
 #'
 #' @return An object of class `summary.mfrm_fit` with:
 #' - `overview`: global model/fit indicators

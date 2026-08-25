@@ -404,6 +404,58 @@ test_that("source readiness and optional lanes do not inherit core eligibility",
   expect_identical(err$code, "SCORING_BASIS_UNSUPPORTED")
 })
 
+test_that("portable scoring grid is independent of a one-point source fit grid", {
+  toy <- load_mfrmr_data("example_core")
+  fit <- suppressWarnings(fit_mfrm(
+    toy,
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    method = "MML",
+    model = "RSM",
+    quad_points = 1,
+    maxit = 100
+  ))
+  expect_true(mfrmr:::mfrm_inference_ready(fit))
+
+  draft <- mfrmr:::mfrmr_extract_calibration_draft(
+    fit,
+    calibration_id = "source-one-scoring-thirty-one",
+    source_fit_id = "fit-source-one",
+    created_at_utc = "2026-08-24T00:00:00Z"
+  )
+  expect_identical(fit$config$estimation_control$quad_points, 1L)
+  expect_identical(draft$scoring_basis$quadrature_order, 31L)
+  expect_identical(
+    draft$scoring_basis$scoring_algorithm, "quadrature_eap_v1"
+  )
+
+  validated <- mfrmr:::mfrmr_validate_calibration_draft(
+    draft, validated_at_utc = "2026-08-24T00:01:00Z"
+  )
+  frozen <- mfrmr:::mfrmr_freeze_calibration(
+    validated, frozen_at_utc = "2026-08-24T00:02:00Z"
+  )
+  rows <- data.frame(
+    Person = c("LOW", "LOW", "HIGH", "HIGH"),
+    Rater = c("R01", "R02", "R01", "R02"),
+    Criterion = c("Accuracy", "Content", "Accuracy", "Content"),
+    Score = c(1, 1, 4, 4),
+    stringsAsFactors = FALSE
+  )
+  scored <- mfrmr:::mfrmr_score_calibration(frozen, rows)
+  expect_true(all(scored$estimates$SD > 0))
+  expect_gt(scored$estimates$Estimate[scored$estimates$Person == "HIGH"],
+            scored$estimates$Estimate[scored$estimates$Person == "LOW"])
+
+  err <- capture_calibration_error(
+    mfrmr:::mfrmr_extract_calibration_draft(
+      fit, scoring_quad_points = 1
+    )
+  )
+  expect_identical(err$code, "QUADRATURE_ORDER_INVALID")
+})
+
 test_that("calibration print and summary expose scope without source Persons", {
   draft <- fixed_calibration_draft_fixture("RSM")$draft
   validated <- mfrmr:::mfrmr_validate_calibration_draft(
@@ -684,6 +736,13 @@ test_that("artifact scoring fails closed with stable input and operational codes
     )$code,
     "SCORING_WEIGHT_INVALID"
   )
+  bad_weight$Weight[1] <- Inf
+  expect_identical(
+    capture_calibration_error(
+      mfrmr:::mfrmr_score_calibration(artifact, bad_weight, weight = "Weight")
+    )$code,
+    "SCORING_WEIGHT_INVALID"
+  )
   duplicate <- rbind(rows, rows[1, , drop = FALSE])
   expect_identical(
     capture_calibration_error(
@@ -824,9 +883,11 @@ test_that("endpoint and sparse EAP scores carry explicit conditional disposition
   expect_true(all(is.finite(dispositions$QuadratureEdgeMass)))
   expect_true(all(dispositions$QuadratureEdgeMass >= 0 &
                     dispositions$QuadratureEdgeMass <= 1))
-  expect_true(any(grepl(
-    "QUADRATURE_EDGE_MASS_REVIEW", dispositions$ReasonCodes, fixed = TRUE
-  )))
+  expect_identical(
+    grepl("QUADRATURE_EDGE_MASS_REVIEW", dispositions$ReasonCodes,
+          fixed = TRUE),
+    dispositions$QuadratureEdgeMass >= dispositions$QuadratureEdgeThreshold
+  )
   expect_identical(
     dispositions$PriorSensitivityStatus,
     rep("not_evaluated_fixed_basis", 2L)

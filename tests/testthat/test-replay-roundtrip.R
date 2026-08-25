@@ -72,6 +72,74 @@ test_that("replay carries `mml_engine` argument forward", {
   )
 })
 
+test_that("replay preserves the complete interaction specification", {
+  interaction_fit <- suppressMessages(suppressWarnings(
+    fit_mfrm(
+      .toy, "Person", c("Rater", "Criterion"), "Score",
+      method = "JML", maxit = 30,
+      facet_interactions = "Rater:Criterion",
+      min_obs_per_interaction = 0,
+      interaction_policy = "error"
+    )
+  ))
+  replayed <- bundle_and_source(
+    interaction_fit, .toy, prefix = "rt_interaction"
+  )$fit
+
+  expect_identical(
+    names(replayed$config$interaction_specs),
+    names(interaction_fit$config$interaction_specs)
+  )
+  expect_identical(length(replayed$opt$par), length(interaction_fit$opt$par))
+  expect_equal(
+    replayed$summary$LogLik, interaction_fit$summary$LogLik,
+    tolerance = 1e-6
+  )
+  expect_equal(
+    as.data.frame(interaction_effect_table(replayed)),
+    as.data.frame(interaction_effect_table(interaction_fit)),
+    tolerance = 1e-6
+  )
+  expect_equal(
+    replayed$facets$others, interaction_fit$facets$others,
+    tolerance = 1e-6
+  )
+  expect_identical(
+    replayed$summary$FitReadiness,
+    interaction_fit$summary$FitReadiness
+  )
+})
+
+test_that("replay argument registry has no unhandled material fields", {
+  replay_inputs <- list(
+    person = "Person",
+    facets = c("Rater", "Criterion"),
+    score = "Score",
+    model = "RSM",
+    method = "JML",
+    facet_interactions = "Rater:Criterion",
+    min_obs_per_interaction = 3,
+    interaction_policy = "error",
+    population_policy = "error",
+    package_version = "0.2.4.9000"
+  )
+  lines <- mfrmr:::build_replay_fit_mfrm_lines(
+    replay_inputs = replay_inputs,
+    fit_population = list(active = FALSE),
+    fit_population_person_id = NULL,
+    src = list(
+      person = "Person", facets = c("Rater", "Criterion"), score = "Score"
+    ),
+    cfg = list(model = "RSM", method = "JML")
+  )
+  call <- parse(text = paste(lines, collapse = "\n"))[[1]][[3]]
+  emitted <- names(as.list(call)[-1])
+  intentionally_conditional <- c("population_policy", "package_version")
+  material <- setdiff(names(replay_inputs), intentionally_conditional)
+
+  expect_identical(setdiff(material, emitted), character(0))
+})
+
 test_that("replay records a package-version mismatch warning", {
   e <- bundle_and_source(.fit, .toy, prefix = "rt_ver")
   td <- attr(e, "path", exact = TRUE)

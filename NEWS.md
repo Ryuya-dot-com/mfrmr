@@ -1,3 +1,20 @@
+# mfrmr 0.2.4.9000 (development version)
+
+## Reliability and reproducibility
+
+* Fitted-object scoring now uses an explicit scoring quadrature grid rather
+  than inheriting the fit-time grid. It refuses a one-point grid, rejects
+  invalid weights, and fails closed when the source is not scoring-ready unless
+  the user explicitly requests a labelled review-only calculation.
+* Replay scripts now preserve facet-interaction specifications and their
+  support policy.
+* MML EM checkpoints now bind the data, model, parameter layout, quadrature,
+  package version, and engine stage. Incompatible checkpoints and completed
+  pure-EM re-entry are refused, hybrid warm-start checkpoints are honored, and
+  writes use checked same-directory replacement.
+* Portable calibration artifacts now record an explicit scoring algorithm and
+  a scoring grid independent of the source fit's integration grid.
+
 # mfrmr 0.2.3
 
 mfrmr 0.2.3 improves the reliability and interpretation of the existing

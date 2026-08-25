@@ -107,6 +107,15 @@ test_that("gpcm_capability_matrix exposes only user-facing route guidance", {
       tbl$Status == "supported_with_caveat"
   ))
   expect_true(any(
+    tbl$Area == "Fitted-object posterior scoring and information" &
+      tbl$Status == "supported" &
+      grepl("not scoring from a saved, versioned calibration artifact",
+            tbl$Boundary, fixed = TRUE)
+  ))
+  expect_false(any(
+    tbl$Area == "Fixed-calibration scoring and information"
+  ))
+  expect_true(any(
     tbl$Area == "Exploratory diagnostics and residual follow-up" &
       tbl$Status == "supported_with_caveat"
   ))

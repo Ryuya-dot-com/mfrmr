@@ -210,7 +210,7 @@ FACETS-organized review.
 Infit pathway only when they answer a specific follow-up question.
 \item For \code{RSM} / \code{PCM}, continue with \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for element-level fit
 checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]{compute_information()}} /
-\code{\link[=plot_information]{plot_information()}} or the fixed-calibration posterior scoring helpers.
+\code{\link[=plot_information]{plot_information()}} or the fitted-object posterior scoring helpers.
 }
 }
 

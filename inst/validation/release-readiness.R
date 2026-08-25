@@ -37,10 +37,9 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
     ),
     Prompt = c(
       paste0(
-        "Do DESCRIPTION, NEWS, generated help, the source tarball, and the ",
-        "selected check log all resolve to one candidate and frozen gate ",
-        "specification for ", target_label, " rather than a development ",
-        "snapshot or stale release artifact?"
+        "Do DESCRIPTION, NEWS, generated help, and the source tarball agree on ",
+        "the user-visible version and supported scope for ", target_label,
+        ", while repository-only records separately bind the release evidence?"
       ),
       "Do blocker rows for identification, GPCM slope/information kernels, fair-average uncertainty, person fit, and recovery validation have explicit evidence?",
       "Are supported, caveated, blocked, and deferred bounded-GPCM routes visible before users reach unsupported score-side workflows?",
@@ -48,17 +47,17 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
       "Can users start from summaries, status tables, and reusable draw-free plot data before reading row-level internals?",
       "Do public-facing docs use review/check/traceability wording and avoid exposing removed helper names as current API?",
       "Does R CMD build/check complete with zero errors and zero warnings, and does CI preserve cross-platform check evidence?",
-      "Do cran-comments, NEWS, and validation artifacts tell the same story about release scope, caveats, and deferred work?"
+      "Do cran-comments and NEWS give a concise user-facing account of release scope, caveats, and deferred features while validation artifacts retain the internal decision history?"
     ),
     Evidence = c(
-      "DESCRIPTION release lifecycle, public baseline, version, and date policy; CITATION version and release date; authoritative roadmap; first NEWS heading; candidate manifest; source commit/tree and tarball SHA-256; frozen specification/checklist identity; tarball/check timestamps; check-log package version and --as-cran provenance; absence of development labels in current release files",
+      "DESCRIPTION release lifecycle, public baseline, version, and date policy; CITATION version and release date; authoritative roadmap; first NEWS heading; source-package identity and check provenance in repository-only records; absence of development labels or internal gate mechanics in public release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
       "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
       "summary methods; plot(..., draw = FALSE); plot_data(); summary-table bundles",
       "README/vignettes/man/cheatsheet terminology scan",
       "mfrmr.Rcheck/00check.log or attached check log; GitHub Actions warning policy and check artifacts",
-      "root ROADMAP.md; cran-comments.md; NEWS.md; release-evidence map; GPCM technical supplement; external parameter-recovery summary and local review helper"
+      "root ROADMAP.md and repository validation records for internal decisions; cran-comments.md and NEWS.md for the concise user-facing release account"
     ),
     Gate = c(
       "blocker",

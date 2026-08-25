@@ -2810,16 +2810,29 @@ test_that("release-readiness protocol reviews the source tree shape", {
       review$prose_count_status$ProseCountStatus[1],
       "ok"
     )
-    expect_identical(
-      review$claim_disposition_status$ClaimDispositionStatus[1],
-      "ok"
-    )
-    expect_true(review$claim_disposition_status$ProfileIntegrityOK[1])
-    expect_false(review$claim_disposition_status$CurrentReleaseGate[1])
-    expect_identical(
-      review$claim_disposition_status$ReleaseScopeDecision[1],
-      "historical_portfolio_46_spine_rows_open_no_direct_release_effect"
-    )
+    if (grepl("\\.9000$", description_version)) {
+      expect_identical(
+        review$claim_disposition_status$ClaimDispositionStatus[1],
+        "concern"
+      )
+      expect_false(review$claim_disposition_status$ProfileIntegrityOK[1])
+      expect_false(review$claim_disposition_status$CurrentReleaseGate[1])
+      expect_identical(
+        review$claim_disposition_status$ReleaseScopeDecision[1],
+        "invalid_profile_no_decision"
+      )
+    } else {
+      expect_identical(
+        review$claim_disposition_status$ClaimDispositionStatus[1],
+        "ok"
+      )
+      expect_true(review$claim_disposition_status$ProfileIntegrityOK[1])
+      expect_false(review$claim_disposition_status$CurrentReleaseGate[1])
+      expect_identical(
+        review$claim_disposition_status$ReleaseScopeDecision[1],
+        "historical_portfolio_46_spine_rows_open_no_direct_release_effect"
+      )
+    }
   } else {
     expect_identical(
       review$candidate_identity_status$CandidateIdentityStatus[1],

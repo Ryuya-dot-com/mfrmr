@@ -40,7 +40,7 @@ This vignette outlines a reproducible workflow for:
 - producing the required Wright map on the fitted shared logit scale
 - running diagnostics and residual PCA
 - generating APA and visual summary outputs
-- moving from fitted models into design simulation and fixed-calibration
+- moving from fitted models into design simulation and fitted-object posterior
   prediction
 
 For a plot-first companion guide, see the separate
@@ -70,7 +70,7 @@ For a faster preliminary run without changing the final analysis target:
   the documented EM and EM-warm-start routes for supported RSM/PCM fits.
 - `JML` is useful for JMLE-oriented comparisons and analyses that avoid a
   parametric person distribution. `MML` is the package default and supports
-  marginal and fixed-calibration follow-up when its response-model and
+  marginal and fitted-object posterior follow-up when its response-model and
   population-distribution assumptions are defensible.
 
 For `RSM` and `PCM`, diagnostics now expose two distinct evidence paths:

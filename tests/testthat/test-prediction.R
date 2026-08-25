@@ -460,7 +460,8 @@ test_that("predict_mfrm_units supports JML PCM calibrations with custom facet na
       method = "JML",
       model = "PCM",
       step_facet = "Task",
-      maxit = 15
+      quad_points = 1,
+      maxit = 50
     )
   )
 
@@ -476,6 +477,8 @@ test_that("predict_mfrm_units supports JML PCM calibrations with custom facet na
 
   expect_s3_class(pred, "mfrm_unit_prediction")
   expect_equal(pred$settings$method, "JML")
+  expect_identical(pred$settings$scoring_quad_points, 31L)
+  expect_true(all(pred$estimates$SD > 0))
   expect_true(any(grepl("standard normal reference prior", pred$notes, fixed = TRUE)))
   expect_true(all(c("Person", "Judge", "Task", "Score", "Weight") %in% names(pred$input_data)))
   expect_s3_class(pv, "mfrm_plausible_values")
@@ -507,14 +510,23 @@ test_that("predict_mfrm_units supports bounded GPCM fixed-calibration scoring", 
     Score = c(2, 3, 2, 4)
   )
 
-  pred <- predict_mfrm_units(fit_gpcm, new_units, n_draws = 2, seed = 31)
-  pv <- sample_mfrm_plausible_values(fit_gpcm, new_units, n_draws = 2, seed = 32)
+  pred <- predict_mfrm_units(
+    fit_gpcm, new_units, readiness_policy = "review",
+    n_draws = 2, seed = 31
+  )
+  pv <- sample_mfrm_plausible_values(
+    fit_gpcm, new_units, readiness_policy = "review",
+    n_draws = 2, seed = 32
+  )
 
   expect_s3_class(pred, "mfrm_unit_prediction")
   expect_equal(pred$settings$method, "MML")
   expect_identical(pred$settings$posterior_basis, "population_model")
   expect_equal(sort(unique(pred$estimates$Person)), c("NEW01", "NEW02"))
   expect_true(all(is.finite(pred$estimates$Estimate)))
+  expect_true(all(!pred$estimates$SourceScoringReady))
+  expect_identical(unique(pred$estimates$EstimateUse),
+                   "review_only_nonready_source")
   expect_true(any(grepl("conditional normal population model", pred$notes,
                         fixed = TRUE)))
   expect_s3_class(pv, "mfrm_plausible_values")
@@ -593,14 +605,14 @@ test_that("sample_mfrm_plausible_values requires positive draw count", {
   )
 })
 
-test_that("prediction preprocessing warns and audits dropped invalid rows", {
+test_that("prediction preprocessing audits missing responses and refuses invalid weights", {
   fixture <- make_prediction_fixture()
   new_units <- data.frame(
     Candidate = c("NEW01", "NEW01", "NEW02", "NEW03"),
     Judge = c(fixture$new_units$Rater[1], fixture$new_units$Rater[2], fixture$new_units$Rater[1], fixture$new_units$Rater[2]),
     Dimension = c(fixture$new_units$Criterion[1], fixture$new_units$Criterion[2], fixture$new_units$Criterion[1], fixture$new_units$Criterion[2]),
     Rating = c(2, 3, NA, 4),
-    Wt = c(1, 1, 1, 0)
+    Wt = c(1, 1, 1, 1)
   )
 
   expect_warning(
@@ -612,14 +624,72 @@ test_that("prediction preprocessing warns and audits dropped invalid rows", {
       score = "Rating",
       weight = "Wt"
     ),
-    "Dropped 2 row\\(s\\) from `new_data` before posterior scoring"
+    "Dropped 1 row\\(s\\) from `new_data` before posterior scoring"
   )
 
   expect_equal(pred$row_review$InputRows, 4)
-  expect_equal(pred$row_review$KeptRows, 2)
-  expect_equal(pred$row_review$DroppedRows, 2)
+  expect_equal(pred$row_review$KeptRows, 3)
+  expect_equal(pred$row_review$DroppedRows, 1)
   expect_equal(pred$row_review$DroppedMissing, 1)
-  expect_equal(pred$row_review$DroppedNonpositiveWeight, 1)
+  expect_equal(pred$row_review$DroppedNonpositiveWeight, 0)
+
+  for (invalid in list(0, Inf, -Inf, NaN, NA_real_)) {
+    bad <- new_units
+    bad$Wt[1] <- invalid
+    expect_error(
+      predict_mfrm_units(
+        fixture$fit,
+        bad,
+        person = "Candidate",
+        facets = c(Rater = "Judge", Criterion = "Dimension"),
+        score = "Rating",
+        weight = "Wt"
+      ),
+      "Scoring weights must be finite and strictly positive",
+      fixed = TRUE
+    )
+  }
+})
+
+test_that("unit scoring fails closed for non-ready fits unless review is explicit", {
+  fixture <- make_prediction_fixture()
+  nonready <- fixture$fit
+  nonready$readiness$fit$FitReadiness[1] <- "blocked"
+  nonready$readiness$fit$InferenceReady[1] <- FALSE
+  nonready$readiness$fit$NumericalState[1] <- "failed"
+  nonready$readiness$fit$ReasonCodes[1] <- "test_nonready_source"
+  nonready$summary$FitReadiness[1] <- "blocked"
+  nonready$summary$InferenceReady[1] <- FALSE
+  nonready$summary$NumericalState[1] <- "failed"
+  nonready$summary$ReadinessReasonCodes[1] <- "test_nonready_source"
+
+  expect_error(
+    predict_mfrm_units(nonready, fixture$new_units),
+    "not ready for fitted-object scoring",
+    fixed = TRUE
+  )
+  reviewed <- predict_mfrm_units(
+    nonready, fixture$new_units, readiness_policy = "review"
+  )
+  expect_true(all(!reviewed$estimates$SourceScoringReady))
+  expect_identical(reviewed$settings$source_scoring_status, "review_only")
+  expect_true(any(grepl("review-only", reviewed$notes, fixed = TRUE)))
+})
+
+test_that("scoring quadrature is explicit and cannot degenerate to one point", {
+  fixture <- make_prediction_fixture()
+  expect_error(
+    predict_mfrm_units(
+      fixture$fit, fixture$new_units, scoring_quad_points = 1
+    ),
+    "greater than or equal to 2",
+    fixed = TRUE
+  )
+  scored <- predict_mfrm_units(
+    fixture$fit, fixture$new_units, scoring_quad_points = 17
+  )
+  expect_identical(scored$settings$quad_points, 17L)
+  expect_identical(scored$settings$scoring_algorithm, "quadrature_eap_v1")
 })
 
 test_that("prediction integer validation does not leak coercion warnings", {

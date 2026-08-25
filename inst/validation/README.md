@@ -88,6 +88,39 @@ identify whether the opt-in layer ran and retain its test log.
   vanilla processes. This closes the native macOS preflight separately from
   the later hosted macOS prerequisite and four downstream platform/R passes;
   the record does not substitute one evidence layer for another.
+- `fixed-calibration-g5-lane-disposition-0.2.4.md`: adjudicates all four
+  optional portable-calibration lanes as unavailable in 0.2.4 and moves the
+  deliberately smaller RSM/PCM MML core to release-candidate hardening. It
+  records why mature fitted-object GPCM workflows are not the same capability
+  as a saved, versioned GPCM calibration artifact and keeps internal gate
+  language out of public help and release notes.
+- `fixed-calibration-boundary-hardening-0.2.4.md`: records the direct 0.2.4
+  disposition of eight replay, fitted-object scoring, checkpoint, and metadata
+  defects; the additional portable-scoring-grid correction; and why the exact
+  2026-08-22 G4 result remains historical while CORE-05, CORE-06, and G4 are
+  reopened for current-source disjoint and hosted confirmation.
+- `fixed-calibration-g4-current-source-contract-0.2.4.R` and
+  `fixed-calibration-g4-current-source-contract-record-0.2.4.md`: freeze the
+  amended current-source G4 scoring identity, new default-31 and source-one
+  disjoint fixtures, non-authorizing explicit-nine historical controls, 49
+  replay/scoring/checkpoint/operational cells, eleven numerical rules, exact
+  candidate-binding requirements, and the macOS-first five-cell matrix. The
+  contract opens no result and leaves CORE-05, CORE-06, G4, G6, and the public
+  API closed until one clean source candidate is bound and executed.
+- `fixed-calibration-g4-candidate-binding-preflight-0.2.4.R` and
+  `fixed-calibration-g4-candidate-binding-preflight-record-0.2.4.md`: implement
+  the read-only live-Git and optional source-tarball binding boundary. A second
+  live Git observation rejects synthetic clean identities; safe temporary
+  tarball inspection binds the complete package file registry and requires the
+  five production-boundary files to match the repository. The current dirty,
+  tarball-absent development state is refused without opening confirmation.
+- `fixed-calibration-g4-candidate-source-inventory-0.2.4.R` and
+  `fixed-calibration-g4-candidate-source-inventory-record-0.2.4.md`: classify
+  every live Git change into release production, public surface, release
+  evidence, deferred multivariate G-theory, or deferred Rater-assignment lanes.
+  Unknown paths fail closed; research tests and validation files must remain
+  outside the package payload. A separate public-language audit confirms that
+  Help, NEWS, and vignettes contain no internal G4 or Draft.85 mechanics.
 - `.github/workflows/R-CMD-check.yaml` and
   `.github/workflows/R-CMD-check-cell.yaml`: run hosted macOS/R release as a
   prerequisite, then release the four remaining cells in parallel through one
@@ -953,6 +986,16 @@ identify whether the opt-in layer ran and retain its test log.
   authority record for the 12-fit smoke and 560-fit feasibility manifests.
   Execution, broad simulation, confirmation, and operational percentage
   selection remain unauthorized.
+- `rater-anchor-incomplete-design-refinement-0.2.4.R`: no-fit literature audit
+  preserving McEwen's 20 incomplete designs, four paired Rater orders, ten
+  evidence requirements, eight successor contrast families, and dual-graph
+  plus substantive-decision metrics without changing the frozen 0.2.3
+  contract.
+- `rater-anchor-incomplete-design-refinement-record-0.2.4.md`: source-grounded
+  interpretation and gap record. It keeps the nine typed anchor scenarios,
+  eight direct-anchor configurations, seven prospective networks, and the
+  20-design source catalog as distinct denominators; execution and percentage
+  selection remain closed.
 - `rater-anchor-sparse-prospective-smoke-0.2.3.R`: explicit opt-in runner sealed
   to the 12-fit smoke manifest. It realizes independent external selection and
   value errors, preserves paired identities, audits assignment resources, and
@@ -1672,6 +1715,260 @@ identify whether the opt-in layer ran and retain its test log.
   weighted composite G/Phi. Common/partial/independent facet sharing, exact
   one-stratum reduction, PSD/rank, and invalid-matrix controls are tested, but
   no covariance is estimated and no public multivariate claim is added.
+- `gtheory-multivariate-incidence-contract-0.2.4.md`,
+  `gtheory-multivariate-incidence-preflight-0.2.4.R`, and
+  `gtheory-multivariate-incidence-record-0.2.4.md`: Draft.85b0 long-form
+  semantic preflight. Ordered strata, globally linked objects, explicit
+  global-versus-local condition identities, missing-stratum patterns, direct
+  pairwise overlap, graph connectivity, and canonical omission hashes are
+  audited before any covariance backend. Connected indirect-only links,
+  ambiguous condition scope, invalid identifiers, and nonfinite scores fail
+  closed. No component covariance is estimated and all inferential and
+  decision-readiness flags remain false.
+- `gtheory-multivariate-matched-backend-contract-0.2.4.md`,
+  `gtheory-multivariate-matched-backend-prototype-0.2.4.R`, and
+  `gtheory-multivariate-matched-backend-record-0.2.4.md`: Draft.85b1 strict
+  component/effect map, joint group and observation-link identity,
+  covariance-derivative rank audit, and semantic lme4/glmmTMB Gaussian
+  ML/REML comparison. Exact object/data schemas, replayed design hashes,
+  regenerated canonical formulas, and derived readiness gates reject stale
+  mutation. The global-component smoke agrees numerically, but the
+  installed glmmTMB was built against TMB 1.9.23 and runs with TMB 1.9.25;
+  ordinary fitting therefore fails closed and explicit diagnostic fits remain
+  non-ready. Local diagonal components, recovery, uncertainty, and public
+  support are deferred.
+- `gtheory-multivariate-k-oracle-contract-0.2.4.md`,
+  `gtheory-multivariate-k-oracle-prototype-0.2.4.R`, and
+  `gtheory-multivariate-k-oracle-record-0.2.4.md`: Draft.85c0 neutral,
+  backend-free pairwise/Z dual K construction, covariance-coordinate rank,
+  population-map round trip, full Gaussian ML/REML objective, analytic score,
+  local expected information, sealed-candidate reference joining, and atomic
+  registry mechanics. Exact schemas, monotone candidate states, scaled
+  near-singular controls, and derivative-identified information readiness are
+  enforced. Two- and three-stratum population controls and an lme4 fit-point
+  objective binding pass, but process-level truth blindness, denominator
+  readiness, optimization, finite-sample recovery, uncertainty, composite,
+  and public support remain unclaimed.
+- `gtheory-multivariate-ademp-plan-contract-0.2.4.md`,
+  `gtheory-multivariate-ademp-plan-prototype-0.2.4.R`, and
+  `gtheory-multivariate-ademp-plan-record-0.2.4.md`: Draft.85c1 planning-only
+  ADEMP registry. Fourteen tests and 387 expectations seal 14 explicit scenarios,
+  full deterministic structural-row/rank preflights, disjoint pilot and
+  confirmation seed bands, four paired lme4/glmmTMB ML/REML methods, 5,042
+  independent dataset identities, 20,168 atomic method rows, 20,168 paired
+  comparison rows, and 292,436 coordinate rows. Twenty-two metrics now bind a
+  truth-side normalizer, natural-unit denominators, all 572 actual stage x
+  scenario x metric applicability cells, 288 explicit availability targets,
+  24 truth-side component boundary classes, four pair foreign keys, boundary
+  precedence, and stage-specific precision. The c1-to-c0 receipt tuple catalog is
+  legal but every mapping remains unimplemented. The candidate preview
+  exposes only allowlisted opaque unit/dataset, method-control, and coordinate-
+  layout fields; a root-plan holder can still join its opaque key to truth, so
+  process isolation remains explicitly false. Its content hash does not prove
+  pre-outcome timing: no external freeze receipt, generator fixture/state hash,
+  accuracy threshold, backend qualification, or execution authority exists,
+  and all recovery/public-readiness states remain false.
+- `gtheory-multivariate-generator-preflight-contract-0.2.4.md`,
+  `gtheory-multivariate-generator-preflight-0.2.4.R`, and
+  `gtheory-multivariate-generator-preflight-record-0.2.4.md`: Draft.85c2
+  nonreserved generator preflight. Ten tests and 106 expectations replay all 12
+  recovery-scenario structures with fixture-only seeds, four L'Ecuyer-CMRG
+  component starts, exact stored-factor draw counts, 48 start/end state rows,
+  caller RNG restoration, and candidate/truth column separation. The 14 c2
+  functions and content registries are independently hashed. No c1 plan seed,
+  backend, recovery metric, or public surface is opened; external freeze,
+  environment repair, process isolation, and pilot authorization remain later
+  gates.
+- `gtheory-multivariate-execution-admission-contract-0.2.4.md`,
+  `gtheory-multivariate-execution-admission-preflight-0.2.4.R`, and
+  `gtheory-multivariate-execution-admission-record-0.2.4.md`: Draft.85c3
+  closed execution-admission preflight. Nine tests and 82 expectations record
+  the lme4/glmmTMB/TMB environment identity, preserve separate empty templates
+  for external freeze, an independently sourced accuracy rule, process
+  isolation, and three lane authorities, and replay all eight c1
+  prerequisites. A sealed dispatcher rejects every planned response/backend
+  callback before use; caller `authorize=TRUE`, package availability, or an
+  ABI match cannot open a lane by themselves. No plan seed, outcome payload,
+  estimator, ConQuest process, or public surface is opened.
+- `gtheory-multivariate-candidate-receipt-contract-0.2.4.md`,
+  `gtheory-multivariate-candidate-receipt-preflight-0.2.4.R`,
+  `gtheory-multivariate-candidate-receipt-worker-0.2.4.R`, and
+  `gtheory-multivariate-candidate-receipt-record-0.2.4.md`: Draft.85c4a
+  fixture-only candidate/receipt preflight. Nine tests and 85 expectations
+  pass all 12 c2 candidate tables through a standalone four-function worker
+  with `baseenv()` as parent. Exact payload, opaque-token, receipt, namespace,
+  and vault-content-exclusion checks fail closed, while every receipt remains
+  an explicit backend non-attempt outside recovery denominators. This proves
+  namespace and payload separation, not OS capability isolation; process truth
+  blindness, backend qualification, execution authority, and public support
+  remain false.
+- `gtheory-multivariate-capability-isolation-contract-0.2.4.md`,
+  `gtheory-multivariate-capability-isolation-preflight-0.2.4.R`,
+  `gtheory-multivariate-capability-worker-0.2.4.R`, and
+  `gtheory-multivariate-capability-isolation-record-0.2.4.md`: Draft.85c4b
+  runtime-bound macOS capability preflight. One c2 nonreserved fixture passes
+  the normal candidate/receipt path under a default-deny profile; staged-vault
+  read, repository read, outside write, parent-secret inheritance, and
+  unlisted executable controls are denied. Nine live tests and 76 expectations
+  pass. Process capability isolation and truth blindness are true only for the
+  hashed Darwin/R/system-profile/worker combination. Backend qualification,
+  planned execution, recovery evidence, and public support remain false.
+- `gtheory-multivariate-isolation-integration-contract-0.2.4.md`,
+  `gtheory-multivariate-isolation-integration-preflight-0.2.4.R`, and
+  `gtheory-multivariate-isolation-integration-record-0.2.4.md`: Draft.85c4c
+  c3/c4a/c4b identity integration. Ten live tests and 60 expectations bind the
+  executor bundle, input/receipt schemas, exact one-fixture denied vault, c4a
+  12-fixture registry vault, and all five c3 access questions. Fixture truth
+  blindness is available, but every question requires a planned-material
+  recheck; c3 planned isolation, dispatch, recovery, and public support remain
+  closed. The accepted `mfrmr_gtvj_*` namespace preserves the sealed c1 root.
+- `gtheory-multivariate-source-freeze-admission-contract-0.2.4.md`,
+  `gtheory-multivariate-source-freeze-admission-preflight-0.2.4.R`, and
+  `gtheory-multivariate-source-freeze-admission-record-0.2.4.md`: Draft.85c4d
+  read-only source-freeze admission. Ten tests and 62 expectations bind the
+  exact 26-file c1-c4d implementation/test allowlist, seven upstream roots,
+  live Git base/status identity, and a prospective external-anchor request.
+  A second live Git observation prevents a self-consistent synthetic clean
+  identity from asserting current clean-source readiness. The working tree is
+  dirty; no immutable artifact, external receipt, Git mutation, planned seed,
+  estimator, execution authority, or public capability is created.
+- `gtheory-multivariate-backend-qualification-admission-contract-0.2.4.md`,
+  `gtheory-multivariate-backend-qualification-admission-preflight-0.2.4.R`,
+  and
+  `gtheory-multivariate-backend-qualification-admission-record-0.2.4.md`:
+  Draft.85c4e read-only backend admission. Ten tests and 78 expectations bind
+  the c3 environment, installed lme4/glmmTMB/TMB DESCRIPTION files and native
+  DLLs, loaded glmmTMB build-TMB identity, a six-step declarative repair plan,
+  and four empty ML/REML qualification receipts. The current build/runtime TMB
+  mismatch keeps repair required and qualification closed. No package
+  installation, fit, planned response, ConQuest route, or public capability is
+  created; the historical c4d admission hash is not a post-c4e external freeze.
+- `gtheory-multivariate-four-route-qualification-protocol-contract-0.2.4.md`,
+  `gtheory-multivariate-four-route-qualification-protocol-0.2.4.R`, and
+  `gtheory-multivariate-four-route-qualification-protocol-record-0.2.4.md`:
+  Draft.85c4f prospective four-route receipt protocol. Ten tests and 105
+  expectations freeze four lme4/glmmTMB ML/REML routes, two matched pairs, b1
+  comparison tolerances, complete-object requirements, and candidate versus
+  trusted receipt states. A fully positive self-reported summary can become a
+  candidate only; without complete b1 object revalidation by a trusted worker
+  it remains operationally inadmissible. No repair, worker, fit, receipt
+  promotion, planned response, ConQuest route, or public capability is opened.
+- `gtheory-multivariate-qualification-worker-preflight-contract-0.2.4.md`,
+  `gtheory-multivariate-qualification-worker-preflight-0.2.4.R`,
+  `gtheory-multivariate-qualification-worker-0.2.4.R`, and
+  `gtheory-multivariate-qualification-worker-preflight-record-0.2.4.md`:
+  Draft.85c4g sealed refusal-worker build preflight. Ten tests and 80
+  expectations bind the c4f root, exact eight-file future worker bundle,
+  seven-function standalone worker, hash-only request, and fresh-process typed
+  non-attempt receipt. The child receives no fit/data/seed payload and makes no
+  backend attempt. This proves fresh-process refusal transport, not capability
+  isolation or a qualification-capable trusted worker; all execution and
+  public states remain false.
+- `gtheory-multivariate-qualification-capability-isolation-contract-0.2.4.md`,
+  `gtheory-multivariate-qualification-capability-isolation-preflight-0.2.4.R`,
+  `gtheory-multivariate-qualification-capability-worker-0.2.4.R`, and
+  `gtheory-multivariate-qualification-capability-isolation-record-0.2.4.md`:
+  Draft.85c4h runtime-bound refusal-path isolation. Ten live tests and 68
+  expectations place the exact c4g hash-only request and non-attempt worker
+  under a macOS default-deny profile. Normal refusal transport succeeds while
+  denied-vault read, repository read, outside write, parent-secret inheritance,
+  and unlisted execution fail. This promotes capability isolation only for the
+  refusal path; ABI repair, full-object intake, a qualification-capable worker,
+  backend fits, trusted receipts, execution authority, and public support
+  remain false.
+- `gtheory-multivariate-abi-repair-execution-contract-0.2.4.md`,
+  `gtheory-multivariate-abi-repair-execution-0.2.4.R`,
+  `gtheory-multivariate-abi-repair-identity-worker-0.2.4.R`, and
+  `gtheory-multivariate-abi-repair-execution-record-0.2.4.md`: Draft.85c4i
+  isolated ABI repair. Ten tests and 71 expectations bind exact CRAN TMB
+  1.9.25/glmmTMB 1.1.14 sources, a temporary Homebrew-gfortran override, two
+  source-build logs, installed native identities, and a fresh-process overlay.
+  Build/runtime TMB now agree at 1.9.25 with ABI 2. Three classified RcppEigen
+  compiler warnings remain visible. The repaired environment may enter
+  qualification, but no fit, full-object worker, route/pair receipt, trusted
+  qualification result, execution authority, or public support is created.
+- `gtheory-multivariate-full-object-qualification-execution-contract-0.2.4.md`,
+  `gtheory-multivariate-full-object-qualification-execution-0.2.4.R`,
+  `gtheory-multivariate-full-object-qualification-worker-0.2.4.R`, and
+  `gtheory-multivariate-full-object-qualification-execution-record-0.2.4.md`:
+  Draft.85c4j repaired-overlay full-object qualification. Eleven live tests and
+  65 expectations execute lme4/glmmTMB under ML/REML, retain and independently
+  revalidate four complete b1 fit objects and two complete parity objects, and
+  materialize four route plus two pair receipts. A 38-namespace/27-native-
+  binary loaded-runtime closure is retained for the next capability allowlist.
+  All numerical checks pass
+  without warnings or diagnostic override. The worker's larger capability
+  surface is not yet isolated, so candidate numerical evidence is ready while
+  trusted qualification, operational admission, planned execution, ConQuest,
+  and public support remain closed.
+- `gtheory-multivariate-full-object-capability-isolation-contract-0.2.4.md`,
+  `gtheory-multivariate-full-object-capability-isolation-preflight-0.2.4.R`,
+  `gtheory-multivariate-full-object-capability-worker-0.2.4.R`, and
+  `gtheory-multivariate-full-object-capability-isolation-record-0.2.4.md`:
+  Draft.85c4k default-deny qualification rerun. Ten live tests and 61
+  expectations stage exactly 38 observed package namespaces, bind 32 literal
+  traversal ancestors and the complete native closure, reproduce all four c4j
+  fit objects and both parity objects under `C.UTF-8`, and pass normal plus five
+  denial controls. Trusted backend qualification is ready, but planned study,
+  recovery, estimation, inference, decision, ConQuest, and public lanes remain
+  closed.
+- `gtheory-multivariate-backend-qualification-integration-contract-0.2.4.md`,
+  `gtheory-multivariate-backend-qualification-integration-preflight-0.2.4.R`,
+  and
+  `gtheory-multivariate-backend-qualification-integration-record-0.2.4.md`:
+  Draft.85c4l non-executing admission integration. Ten focused tests and 64
+  expectations revalidate the c3-through-c4k chain, complete the six c4e
+  repair-plan rows, materialize four trusted route plus two trusted pair rows,
+  and transition only `all_four_matched_backends_qualified` in the eight-row
+  c3 prerequisite audit. Backend qualification admission is ready, but only 2
+  of 8 c3 prerequisites are satisfied; every planned-study, recovery,
+  inference, decision, ConQuest, and public lane remains closed.
+- `gtheory-multivariate-planned-adapter-contract-0.2.4.md`,
+  `gtheory-multivariate-planned-adapter-preflight-0.2.4.R`,
+  `gtheory-multivariate-planned-adapter-worker-0.2.4.R`, and
+  `gtheory-multivariate-planned-adapter-record-0.2.4.md`: Draft.85c4m
+  truth-blind payload preflight. Ten focused tests and 68 expectations bind
+  the c4l qualification receipt to all three c1 handoff denominators, pass 960,
+  19,200, and 8 opaque units through a sealed non-attempt worker, and exclude
+  all five protected access classes from the request schema. Payload
+  truth-blindness is ready, but process-capability isolation is unassessed and
+  the c3 prerequisite count remains 2 of 8; all execution and public lanes stay
+  closed.
+- `gtheory-multivariate-planned-adapter-capability-isolation-contract-0.2.4.md`,
+  `gtheory-multivariate-planned-adapter-capability-isolation-preflight-0.2.4.R`,
+  `gtheory-multivariate-planned-adapter-capability-worker-0.2.4.R`, and
+  `gtheory-multivariate-planned-adapter-capability-isolation-record-0.2.4.md`:
+  Draft.85c4n live capability isolation for the exact c4m non-attempt adapter.
+  Ten tests and 59 expectations reproduce all three canonical receipts in
+  fresh default-deny processes and pass protected-vault, repository, outside-
+  write, parent-environment, unlisted-executable, and network denial controls.
+  This qualifies the narrow adapter process, not the future fit-capable
+  truth-blind process; zero c3 prerequisites transition, the count remains 2
+  of 8, and all execution and public lanes stay closed.
+- `gtheory-multivariate-fit-candidate-envelope-contract-0.2.4.md`,
+  `gtheory-multivariate-fit-candidate-envelope-preflight-0.2.4.R`,
+  `gtheory-multivariate-fit-candidate-envelope-worker-0.2.4.R`, and
+  `gtheory-multivariate-fit-candidate-envelope-record-0.2.4.md`: Draft.85c4o
+  candidate-fit interface preflight. Ten tests and 87 expectations replace the
+  raw within-cell observation ordinal in one 720-row nonreserved fixture with
+  a stable opaque `ObservationLink`, exercise exact seven-column envelopes for
+  all four c4l-qualified routes, and reproduce the c1
+  5,042-dataset/20,168-method-unit topology without a second denominator. The
+  contract worker deliberately cannot fit; fit-worker implementation,
+  capability isolation, c3 transition, planned execution, and public support
+  remain closed.
+- `gtheory-multivariate-fit-candidate-execution-contract-0.2.4.md`,
+  `gtheory-multivariate-fit-candidate-execution-0.2.4.R`,
+  `gtheory-multivariate-fit-candidate-worker-0.2.4.R`, and
+  `gtheory-multivariate-fit-candidate-execution-record-0.2.4.md`:
+  Draft.85c4p nonreserved fit-worker execution. Eight tests and 48
+  expectations run the four c4o/c4l-bound lme4/glmmTMB by ML/REML routes in
+  four distinct fresh processes, revalidate every normalized b1 fit, extract
+  all 40 c1-ordered coordinates, and pass both backend-parity comparisons.
+  Route-minimal package registries exclude glmmTMB/TMB from lme4 processes.
+  Fit-process capability isolation is still unassessed; zero c3 prerequisites
+  transition, the count remains 2 of 8, and every planned, recovery, and
+  public lane stays closed.
 - `jml-lp-attribution-pilot-0.2.3.R` and its record: draft.56 guarded
   attribution of LP-base, R-dispatch, and solver time, with independent GLPK
   parity over 40 PCM/RSM/bounded-GPCM conditional-additive targets. The

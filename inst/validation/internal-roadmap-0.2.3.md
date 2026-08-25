@@ -3400,10 +3400,728 @@ selection, public object, or support claim exists. `EstimationReady`,
 `InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
 
 This preflight does not replace the remaining Draft.83d2 or Draft.84 gates.
-Future Draft.85b must
-bind a typed Stratum design to estimated component covariance matrices, and
-Draft.85c must establish sparse/unequal/missing two-/three-stratum recovery,
+Draft.85b0 now adds a repository-only long-form incidence preflight. It binds
+ordered Stratum identity, global object links, explicit global-versus-local
+condition scope, missing-stratum patterns, direct pairwise overlap, graph
+connectivity, and canonical omission hashes. A connected A--B--C design with
+no direct A--C object overlap remains blocked for an unrestricted covariance;
+stratum-local facets instead receive an explicit structural-zero target.
+Five focused tests and 56 expectations pass, while `EstimationReady`,
+`InferenceReady`, `CoefficientEligible`, and `DecisionReady` remain false.
+
+Draft.85b1 now binds a strict component/effect map, component-joint group
+identity, explicit observation links, fixed/random design hashes, and full
+covariance-derivative rank to matched lme4/glmmTMB Gaussian ML/REML adapters.
+Eight tests and 101 expectations pass. Exact schemas, backend-data bindings,
+recomputed design identities, canonical formula regeneration, and derived
+eligibility/gate checks now reject post-construction mutation. The
+deterministic global-component
+fixture agrees numerically under the recorded smoke tolerances, but the local
+glmmTMB 1.1.14 binary was built with TMB 1.9.23 while runtime TMB is 1.9.25.
+Default fitting fails closed; an explicit diagnostic override remains
+non-ready, so `MatchedBackendPointReady=FALSE`. Local diagonal components are
+deferred until their two-parser reduction contract is demonstrated.
+
+Draft.85c must establish an independent covariance-design oracle plus
+sparse/unequal/structurally-absent-row two-/three-stratum recovery (not
+missing-response recovery),
 PSD/rank recovery, shared-facet operator recovery, and full-refit uncertainty.
+
+Draft.85c0 now closes only the first of those subgates. Its neutral core takes
+integer stratum/component-group codes, X, and y; constructs K independently by
+pairwise predicates and `Z (I x Gamma) Z'`; audits the covariance-coordinate
+map; and reconstructs the complete Gaussian ML/REML objective without calling
+the b1 parser or either backend. Nine tests and 131 expectations pass. Exact
+neutral/covariance/bridge/derivative/receipt schemas, scaled near-singular
+classification, derivative-identified information readiness, monotone
+candidate states, and atomic-registry matching now fail closed. Candidate
+sealing proves reference-join integrity, not process-level truth blindness or
+denominator readiness. The
+two-/three-stratum population maps have ranks 10/10 and 19/19, and the
+independent lme4 objective differs by `1.14e-13` for both ML and REML on the
+deterministic smoke. These are estimand/likelihood mechanics, not sampling
+recovery. A finite-sample program still requires a candidate/reference-
+separated ADEMP registry, pilot and confirmation seed content, component
+metrics, a prospectively independent accuracy rule, denominator rules, sparse
+and unequal assignments, structural row absence, and boundary handling.
+Process isolation and an external pre-outcome anchor must precede execution;
+composite G/Phi and full-refit uncertainty remain later gates.
+
+Draft.85c1 now closes the content-planning portion of that gate without
+claiming chronological preregistration. Fourteen focused tests and 387
+expectations
+seal 14 covering scenarios: eight regular interior cells, four PSD/residual/
+scaled-rank boundary cells, and two derivative-rank negative controls. The
+deterministic assignments retain the planned 720/240/240/576 two-stratum and
+1080/360/360/864 three-stratum row patterns; compact signature ranks are full
+for recovery cells, while the no-A-C and no-replication controls reproduce
+17/19 and 9/10 under the c0 derivative design. The prospective inventory has
+240 pilot, 4,800 untouched confirmation, and two deterministic negative-
+control datasets. Four paired lme4/glmmTMB x ML/REML routes expand those 5,042
+datasets to 20,168 atomic method rows, 20,168 registered pair rows, and 292,436
+coordinate rows without counting methods or pairs as independent replications.
+Twenty-two metrics bind natural unit, truth-side normalization, reduction,
+all 572 actual applicability cells, denominator, availability companion,
+288 explicit availability targets, 24 truth-side component comparison
+classes, boundary precedence, four pair foreign keys, and stage-specific
+precision policy.
+The prospective c1-to-c0 receipt tuple catalog validates six c0-expressible
+outcome shapes while leaving
+the generation and pre-fit c1 envelopes, and every implementation flag,
+unfinished.
+
+This checkpoint deliberately separates five concepts that a single `frozen`
+label would obscure. `PlanContentSealed`, metric definitions, seed-partition
+content,
+candidate-column allowlisting, and denominator planning are true. An
+adversarial join confirms that the opaque candidate key can recover the
+reference identity whenever the root plan is present, so process-level truth
+isolation is not inferred from the allowlist. An external timestamped
+`FreezeReceipt`, isolated execution boundary, complete candidate receipts, an
+accuracy decision rule, generator fixture/state hash, and denominator
+accounting are absent. Therefore
+`RecoveryDesignFrozen`, `RecoveryThresholdFrozen`, both execution-authority
+flags, `RecoveryExecuted`, and all evidentiary/public readiness remain false.
+The current glmmTMB/TMB build-runtime mismatch also closes the stage-wide
+matched-backend gate; lme4-only partial execution and diagnostic-override
+promotion are prohibited. The next admissible work is an external content
+anchor plus environment repair, generator implementation, and a separate pilot
+authorization. Pilot data
+may check feasibility, schemas, failure paths, and resource use, but may not
+choose accuracy cutoffs; no pilot truth, fit, availability, or recovery outcome
+may inform the independent accuracy rule. Pilot rows may not enter confirmation
+summaries. Composite G/Phi,
+allocation, intervals, local-diagonal components, missing-response mechanisms,
+and public multivariate G-theory remain later gates.
+
+Draft.85c2 now closes the separate generator-implementation and fixture-state
+preflight without opening that pilot gate. Ten focused tests and 106
+expectations replay all 12 recovery-scenario row/reference combinations on the
+nonreserved `854000001:854000012` fixture band. The generator consumes the
+stored factor columns exactly, uses four c1-specified L'Ecuyer-CMRG component
+starts, binds 48 start/end/draw/effect state rows, restores the caller RNG kind
+and state, and exposes a candidate-shaped score table separately from its
+truth-side fixture audit. Rank-one and rank-two factors are not padded or
+repaired; the scaled three-column factor retains its small registered column.
+The content roots and all 14 c2 functions reproduce.
+
+This successor does not retroactively alter the c1 plan object and is not a
+recovery execution. Every c1 plan seed remains unopened; no lme4, glmmTMB, or
+ConQuest estimator is called. External freeze, glmmTMB/TMB environment repair,
+an authorization-bound isolated adapter, complete candidate receipts,
+accuracy-rule freeze, and separate pilot authorization remain necessary before
+any planned response can be generated.
+
+Draft.85c3 now places those remaining conditions behind a typed, repository-
+only execution-admission boundary. The read-only environment snapshot keeps
+package presence, the glmmTMB build/runtime TMB identity, and actual four-route
+backend qualification separate. On 2026-08-24, lme4 2.0.6, glmmTMB 1.1.14,
+and runtime TMB 1.9.25 are present, but glmmTMB records build TMB 1.9.23; the
+ABI and environment-qualification states are therefore false. Even a future
+ABI match leaves backend qualification false until acceptable lme4/glmmTMB x
+ML/REML receipts exist.
+
+The c3 manifest also carries distinct empty templates for the external
+timestamped freeze, clean source identity, independently justified six-
+criterion accuracy rule, isolated candidate/receipt boundary, withheld
+reference vault, and pilot/confirmation/negative-control authorities. It
+replays the eight c1 prerequisites; only the prohibition on diagnostic
+override is a satisfied policy state, and partial execution is disallowed. Its
+guard accepts only the four c1 R routes and rejects every callback before
+response generation or backend dispatch. ConQuest is not a route in this
+estimand and `/Applications/ConQuest` is not launched. No plan/fixture seed,
+candidate response, truth audit, scenario identity, or reference identity is
+carried in the admission manifest.
+
+Nine focused tests and 82 expectations pass. The combined Draft.85a0 through
+c3 suite passes 64 tests and 929 expectations without failure, error, warning,
+or skip.
+
+This closes gate construction, not a gate outcome. The next admissible work is
+external/environmental: repair and freeze the ABI-consistent environment,
+anchor the clean source and c1 content externally, then qualify an actually
+isolated candidate/receipt adapter. Only a subsequent lane-specific authority
+may open a pilot; pilot outcomes remain prohibited inputs to the independent
+accuracy rule, and confirmation remains separately unauthorized.
+
+Draft.85c4a now implements the nonreserved candidate-envelope and receipt
+shape that can be tested before an OS sandbox is selected. All 12 c2 fixture
+responses enter exact seven-column candidate payloads. Their opaque identities
+are derived only from candidate data/schema hashes, and a standalone worker
+with `baseenv()` as parent has exactly four hash/schema/receive functions. It
+returns a typed backend non-attempt receipt for every fixture. Unknown fields,
+changed scores with recomputed hashes but stale opaque identity, opened backend
+flags, altered receipts, and extra worker bindings fail closed.
+
+The controller temporarily constructs a 12-row opaque-to-reference audit but
+retains only its hash and row count. No fixture/scenario/reference/seed/truth
+field enters the candidate receipt registry or final manifest. Nine focused
+tests and 85 expectations pass without failure, error, warning, or skip. This
+advances namespace/payload separation only: a `baseenv()` worker under the same
+OS user is not a deny-by-default filesystem boundary, so
+`ProcessCapabilityIsolationReady` and `TruthBlindProcessBoundaryReady` remain
+false. No planned seed, estimator, ConQuest process, denominator, or public
+surface is opened. A later capability-sandbox gate must prove file-read denial,
+sanitized arguments/environment, output confinement, and negative controls
+before c3's isolation prerequisite can change.
+
+The combined Draft.85a0 through c4a suite passes 73 tests and 1,014
+expectations without failure, error, warning, or skip.
+
+Draft.85c4b now adds the first operating-system capability result. On the
+hashed Darwin 25.5.0 arm64/R 4.6.1 runtime, one c2 nonreserved fixture reaches
+the c4a receipt worker through a `sandbox-exec` profile beginning with default
+deny. Exact staged input and worker reads plus receipt/scratch writes are
+allowlisted. The staged reference vault, repository source, forbidden output,
+parent-only secret, and `/bin/cat` execution remain unavailable. The normal
+path succeeds and all five negative actions fail with their registered denial
+classes; all worker processes still return typed control evidence.
+
+Nine live-focused tests and 76 expectations pass without failure, error,
+warning, or skip. `ProcessCapabilityIsolationReady` and
+`TruthBlindProcessBoundaryReady` are now true only for this exact c4b
+fixture/runtime/profile/worker identity. The imported Apple `system.sb` is
+hashed and permits standard local system facilities, so the network statement
+is limited to absence of a general external-network allowance rather than an
+absence of all IPC. The original c3 manifest and c4a record remain historical
+closed states and are not rewritten.
+
+This does not authorize a planned response or backend. The next admissible
+repository step is a typed isolation-integration successor that binds the c4b
+evidence to c3's five information-access questions without opening a lane.
+External content/source anchoring, clean-source identity, ABI-consistent
+four-route qualification, an independently fixed accuracy rule, and explicit
+pilot authority remain separate prerequisites. No c1 seed, estimator, ConQuest
+process, denominator, or public surface was opened by c4b.
+
+The combined Draft.85a0 through c4b suite passes 82 tests and 1,090
+expectations across nine files without failure, error, warning, or skip.
+
+Draft.85c4c now joins the historical c3 manifest, c4a candidate/receipt roots,
+and c4b live evidence into a typed isolation receipt. The c4b one-fixture vault
+hash occupies the successor `ReferenceVaultSHA256` identity; the c4a
+12-fixture registry-vault hash remains separate. Executor, candidate-input,
+receipt-schema, access-registry, and prerequisite-audit identities are each
+independently bound.
+
+All five c3 information-access questions receive fixture-level false answers.
+Scenario, nonreserved fixture-seed, reference, and truth material were present
+only in the denied vault; an independent accuracy threshold was not
+materialized. Every row therefore retains
+`PlannedExecutionRecheckRequired=TRUE`. The fourth c3 prerequisite records
+fixture evidence but remains currently unsatisfied. `TruthBlindProcessBoundaryReady`
+at the c4c plan level is false, `ExecutionGateClosed=TRUE`, and the historical
+c3 manifest is not rewritten.
+
+An initial `mfrmr_gtvi_*` implementation was rejected because that namespace
+belongs to the incidence layer and changed the sealed c1 implementation
+identity. The accepted `mfrmr_gtvj_*` implementation preserves the original
+PlanHash. Ten c4c tests and 60 expectations pass; c4b+c4c together pass 19
+tests and 136 expectations without failure, error, warning, or skip. The
+combined Draft.85a0 through c4c suite passes 92 tests and 1,150 expectations
+across ten files with the same clean disposition.
+
+The next admissible work is not planned execution. It is an external/source
+freeze receipt and a separately reviewed environment-repair/qualification
+contract, followed by planned-material isolation requalification after an
+independent accuracy rule exists. No c1 seed, estimator, ConQuest process,
+denominator, or public surface was opened by c4c.
+
+Draft.85c4d now implements the read-only source side of that freeze boundary.
+An exact 26-file allowlist covers `DESCRIPTION`, c1 through c4d controllers,
+both standalone workers, and eleven regression-test files. Their SHA-256
+registry is joined to the seven c1/c1-core/c2/c3/c4a/c4b/c4c evidence roots
+and to the live HEAD commit, committed tree, branch, and porcelain-status
+registry. The resulting external-anchor request names the fields an independent
+authority must return, but does not invent them or contact a service.
+
+Cleanliness is not inferred from content hashes or a caller-supplied Git
+object. The manifest re-observes the current repository and requires exact
+identity equality before `CleanSourceIdentityReady` can become true. A
+self-consistent synthetic empty-status control therefore remains descriptive
+request input and cannot promote current readiness. The observed working tree
+is dirty, so clean-source readiness remains false. Immutable artifact
+materialization, an external receipt, external freeze, recovery-design freeze,
+backend qualification, every execution lane, and public support remain false.
+
+Ten c4d tests and 62 expectations pass without failure, error, warning, or
+skip. No Git mutation, planned seed, response generation, estimator, ConQuest
+process, denominator, or public surface is opened. The next external step
+requires authority to create an immutable artifact and independently anchor
+its exact identity from a clean source snapshot; it is not simulated inside
+the repository. Environment ABI repair and four-route qualification remain a
+separate read-only workstream and cannot substitute for source freezing.
+
+The combined Draft.85a0 through c4d suite passes 102 tests and 1,212
+expectations across eleven files without failure, error, warning, or skip. Its
+c4b/c4c macOS live subset contributes 19 tests and 136 expectations under the
+explicit live-sandbox switch.
+
+Draft.85c4e now implements the separate read-only backend-qualification
+admission boundary. It extends c3's package-version snapshot with SHA-256
+identities for the lme4, glmmTMB, and TMB DESCRIPTION files and native DLLs,
+plus the loaded glmmTMB build-TMB and ABI observations. The supplied
+environment is compared with a second live reconstruction. A synthetic c3
+snapshot that changes build TMB to the runtime version is rejected as
+ineligible because it contradicts the loaded glmmTMB binary identity.
+
+The current native identities are complete, but glmmTMB 1.1.14 was built with
+TMB 1.9.23 while runtime TMB is 1.9.25. Therefore
+`BuildIdentityMatchesLoadedNamespace=TRUE`, `NativeBinaryIdentityReady=TRUE`,
+`DependencyABIMatch=FALSE`, `RepairRequired=TRUE`, and
+`EnvironmentReadyForBackendQualification=FALSE`. Numerical b1 diagnostic
+agreement cannot override this disposition.
+
+The c4e repair plan lists six evidence requirements—isolated library, pinned
+package sources, selected TMB installation, glmmTMB rebuild, fresh-process
+identity, and four completed route receipts—but performs none of them. The
+lme4/glmmTMB ML/REML receipt templates remain empty, and both repair and fit
+callbacks fail before invocation for either caller authorization value. The
+c4d admission root is retained as historical upstream identity; adding c4e did
+not retroactively create a clean post-c4e snapshot, immutable artifact, or
+external anchor.
+
+Ten c4e tests and 78 expectations pass. With the c4b/c4c live subset replacing
+the ordinary skips, the combined Draft.85a0 through c4e suite passes 112 tests
+and 1,290 expectations across twelve files without failure, error, warning, or
+skip. No package mutation, planned seed, response generation, estimator,
+ConQuest process, denominator, or public surface is opened.
+
+Draft.85c4f now freezes the prospective four-route qualification-receipt
+protocol without executing that protocol. It retains the existing b1
+covariance absolute/relative `1e-4`, fixed `1e-4`, and log-likelihood `1e-5`
+comparison defaults for the lme4/glmmTMB ML and REML pairs. Because the b1
+diagnostic outcomes are already known, the policy explicitly records
+`OutcomeIndependentThresholdClaimed=FALSE`; these are adapter-wiring
+tolerances, not recovery or operational accuracy thresholds.
+
+Every route requires a fresh process, exact fit integrity, identified point
+status, row preservation, dependency agreement, zero warnings, and no
+diagnostic override. Every ML/REML pair additionally requires exact
+environment/specification/semantic identities, both point gates, and b1
+numerical parity. Summary-only receipts are insufficient: the future trusted
+worker must retain and revalidate the complete two fit objects and parity
+object so cell-wise combined tolerances and typed identities remain auditable.
+
+Adversarial candidate summaries demonstrate the trust separation. A fully
+positive self-report may set candidate readiness true, but
+`FullB1ObjectsRevalidated`, trusted readiness, operational admissibility,
+backend qualification, and execution authority remain false. Diagnostic
+override, warning, dependency mismatch, non-fresh execution, non-identified
+status, backend error, mixed ML/REML pairing, and rehashed trust mutation each
+fail independently.
+
+Ten c4f tests and 105 expectations pass; the c4e+c4f boundary subset passes 20
+tests and 183 expectations. Together with the same-turn a0-c4e suite and c4b/c4c
+live evidence, Draft.85a0 through c4f covers 122 tests and 1,395 expectations
+across thirteen files without failure, error, warning, or skip. No environment
+repair, trusted worker, fit, planned seed, response generation, ConQuest
+process, denominator, or public surface is opened.
+
+Draft.85c4g now seals and exercises the refusal boundary for a future trusted
+qualification worker. The exact eight-file bundle includes the a0/b0/b1
+validators, c3 environment snapshot, c4e admission, c4f protocol, and a
+standalone seven-function refusal worker. c4f protocol, full bundle, and worker
+source roots are fixed in the controller so source drift cannot become
+canonical merely by recalculating hashes.
+
+The request carries only protocol/environment/bundle/worker/route/pair hashes,
+the four route labels, and fixed false execution states. It has no fit
+specification, backend data, score, response, seed, truth, or reference
+payload. A fresh `Rscript --vanilla` child validates that request and returns
+`environment_not_ready_no_backend_attempt` with exit status zero. It receives
+no full b1 object, performs no backend call or diagnostic override, and cannot
+produce a trusted receipt.
+
+Freshness is recorded by the parent process rather than asserted by the child.
+The child was not placed under the c4b capability profile, so this advances
+process provenance and transport only: `FreshProcessRefusalObserved=TRUE` but
+`ProcessCapabilityIsolationReady=FALSE` and
+`QualificationWorkerImplemented=FALSE`. A ready environment is outside this
+worker's accepted schema and will require a new qualification-capable worker
+identity after repair.
+
+Ten c4g tests and 80 expectations pass; the c4f+c4g boundary subset passes 20
+tests and 185 expectations. With the same-turn upstream and c4b/c4c live
+evidence, Draft.85a0 through c4g covers 132 tests and 1,475 expectations across
+fourteen files without failure, error, warning, or skip. No environment repair,
+backend fit, planned response, trusted receipt, ConQuest process, denominator,
+or public surface is opened.
+
+Draft.85c4h now closes the capability-isolation gap for that exact c4g refusal
+path. The c4g seven-function worker, c4h four-function wrapper, hash-only
+request, direct R executable, Apple sandbox profile, and digest runtime are
+bound separately. The c4g and c4h worker source hashes are fixed in the
+controller so changing either source cannot silently redefine the accepted
+runtime.
+
+Six fresh sandbox invocations exercise the normal refusal receipt plus denied
+synthetic-vault read, repository read, outside write, parent-secret visibility,
+and `/bin/cat` execution. Only the normal action succeeds; every process exits
+zero after returning a typed control result, and the outside file is absent.
+The denied vault is synthetic and request-bound. It contains no seed, response,
+reference output, or truth, so this layer tests capability denial without
+opening any previously protected study material.
+
+The managed outer sandbox cannot nest Apple `sandbox-exec`; its expected
+`sandbox_apply: Operation not permitted` result was separated from the target
+profile. The final live suite was rerun outside the containing sandbox while
+retaining the exact c4h default-deny profile. Ten tests and 68 expectations
+pass without failure, error, warning, or skip. The c4g+c4h subset is 20 tests
+and 148 expectations; Draft.85a0 through c4h now covers 15 test files, 142
+tests, and 1,543 expectations under the required live switches.
+
+`ProcessCapabilityIsolationReady=TRUE` and
+`HashOnlyRefusalBoundaryReady=TRUE` apply only to the refusal-only request.
+They do not transfer to a future worker that must read full b1 fit objects,
+load lme4/glmmTMB, write four route receipts, or retain two parity objects; that
+larger capability surface requires a new profile and new negative controls.
+The present ABI mismatch, repair requirement, qualification-worker
+implementation, backend qualification, execution lanes, recovery evidence,
+and public support therefore remain unchanged and closed.
+
+The next ordered transition requires explicit authority for the already
+specified isolated-library ABI repair. Only after a fresh runtime satisfies
+the c4e admission identity may a distinct qualification-capable worker be
+built. Its capability profile must be requalified for full-object intake and
+backend loading; c4h evidence cannot be reused as a blanket isolation claim.
+ConQuest remains outside these four backend-qualification routes and was not
+launched.
+
+Draft.85c4i now executes that authorized repair without mutating the existing R
+libraries. Exact CRAN TMB 1.9.25 and glmmTMB 1.1.14 source tarballs are bound by
+internal DESCRIPTION metadata and SHA-256 before use. Both are installed into
+a deterministic `/private/tmp` overlay, with the existing lme4 2.0.6, Matrix
+1.7.6, and RcppEigen 0.3.4.0.2 dependency identities retained read-only below
+the overlay in the library order.
+
+The first probe exposed a toolchain defect separate from the package ABI:
+R 4.6 names absent `/opt/gfortran` compiler/runtime paths. c4i does not change
+R Makeconf or install a compiler. It generates one hashed temporary Makevars
+that binds the existing Homebrew GCC 15.2.0_1 gfortran and four exact runtime
+files. The formal TMB and glmmTMB source installs then return status zero.
+
+TMB compiles without warnings. glmmTMB emits exactly three RcppEigen
+`unused-but-set-variable` warnings; they are classified and hashed, not hidden.
+`BuildDiagnosticsAdmissible=TRUE` therefore does not imply
+`SourceBuildWarningFree=TRUE`. Any other warning class or count fails closed.
+
+A standalone five-function identity worker observes the retained overlay in a
+fresh `Rscript --vanilla` process. TMB and glmmTMB resolve from the overlay;
+lme4, Matrix, and RcppEigen resolve outside it. glmmTMB build-time TMB and
+runtime TMB both equal 1.9.25, ABI equals 2, and all five package DESCRIPTION
+and native DLL identities are bound. R JIT state initially exposed an
+implementation-hash instability; c4i now hashes normalized formals/body text,
+and exact receipt reuse passes after execution.
+
+Ten c4i tests and 71 expectations pass without failure, error, warning, or
+skip. The retained repair root is
+`/private/tmp/mfrmr-c4i-f78ac8f5f9c79ecd`. It contains the pinned sources,
+Makevars, logs, overlay, staged identity worker, fresh-process receipt, and
+repair receipt. This is ephemeral validation state, not a package artifact.
+
+The first five c4e repair steps are now complete and
+`RepairedEnvironmentReadyForBackendQualification=TRUE`. The sixth step—four
+route receipts—remains false. Write isolation of the repair is not OS
+capability isolation; a future full-object worker has a larger read/execute
+surface than c4h and requires its own profile. `BackendQualificationReady`,
+every planned lane, recovery evidence, and public support remain false.
+
+The next ordered slice is a distinct qualification-capable worker operating
+only on the retained repaired overlay and complete b1 objects. It must produce
+four route receipts and two matched-pair receipts under the frozen c4f policy,
+retain raw fit/parity objects, prohibit diagnostic override, and requalify
+capability controls for package loading and object intake. ConQuest remains an
+independent external comparator and was not launched by c4i.
+
+Draft.85c4j now implements and executes the distinct qualification-capable
+worker on the retained c4i overlay. A fresh `Rscript --vanilla` child runs
+lme4/glmmTMB under both ML and REML on the fixed b1 fixture. It returns four
+complete typed fit objects and two complete parity objects; the parent reruns
+every b1 fit-integrity assertion, reconstructs both parity objects, and
+materializes four revalidated route receipts plus two revalidated pair
+receipts. Summary-only promotion remains impossible.
+
+All four routes are identified point fits, preserve the exact backend rows,
+pass their point gates, report zero fit warnings, observe matching dependency
+identity, and use no diagnostic override. Both pairs pass the frozen b1
+combined covariance absolute/relative rule, fixed-effect absolute rule, and
+log-likelihood rule. Maximum covariance absolute differences are
+`7.021595e-05` for ML and `8.762925e-05` for REML; maximum fixed-effect
+difference is `3.806434e-05`; maximum log-likelihood difference is
+`7.106848e-08`. The largest relative differences slightly exceed `1e-4`, but
+the frozen covariance rule is the combined `absolute <= 1e-4 + 1e-4 * scale`
+rule, not an independent relative-only threshold.
+
+Eleven c4j tests and 65 expectations pass without failure, error, warning, or
+skip. The exact receipt can be reloaded only after parent, source, worker,
+package/DLL, process, complete-object, derived-parity, route/pair receipt, and
+readiness revalidation. The retained qualification receipt is a child of the
+c4i temporary root and is not a package artifact.
+
+The same worker now records the complete post-fit runtime closure: 38 loaded
+namespaces and 27 loaded native binaries with exact paths, versions,
+DESCRIPTION hashes, and native hashes. This was added before c4k because a
+five-package registry alone would force a capability profile either to guess
+at transitive dependencies or to grant the entire user library. The numerical
+fit/parity hashes remain unchanged after this provenance refinement.
+
+This completes numerical four-route revalidation, not trusted qualification.
+`BackendQualificationNumericallyReady=TRUE` and
+`CandidateQualificationEvidenceReady=TRUE`, while
+`ProcessCapabilityIsolationAssessed=FALSE`,
+`QualificationEvidenceReady=FALSE`, `BackendQualificationReady=FALSE`, and
+`OperationallyAdmissible=FALSE`. c4h isolated only the hash-only refusal
+worker; it cannot authorize this worker's full-object, package-loading,
+fitting, and output surface.
+
+Draft.85c4k now completes that c4j-specific capability run. A five-function
+wrapper and 23-function controller stage the exact c4j worker, its five source
+files, a projected capability request, and a symlink runtime containing exactly
+the 38 namespaces observed after c4j fitting. Original library roots are not
+granted as package subpaths. Thirty-two package/native ancestors receive
+literal traversal access only, and every package/native content root remains
+exactly bound to c4j/c4i identities.
+
+The staging root separates `allowed/` and `denied/` siblings. The Apple profile
+names the allowed input, worker, source, runtime, output, and scratch boundary
+but never names the denied vault or forbidden-output tree, repository source,
+or a network allowance. Six sandbox invocations cover normal qualification,
+synthetic-vault read, repository read, denied-root write, parent-secret
+visibility, and `/bin/cat`. Normal qualification succeeds; the other five
+actions fail in their prescribed classes, and no outside file is created.
+
+The first exact-object rerun exposed locale as a hidden reproduction input:
+`LC_ALL=C` sorted the control-character-delimited object-rater factor
+differently from c4j. c4k now seals `C.UTF-8`; all four complete b1 fit objects,
+both complete parity objects, route/pair registries, package/native closures,
+and non-process receipt fields then reproduce exactly. A second representation
+audit canonicalizes staged-runtime row names before evidence hashing.
+
+Ten c4k tests and 61 expectations pass without failure, error, warning, or
+skip. `ProcessCapabilityIsolationReady=TRUE`, `TrustedReceiptProduced=TRUE`,
+`QualificationEvidenceReady=TRUE`, `BackendQualificationReady=TRUE`, and the
+narrow backend-evidence `OperationallyAdmissible=TRUE` state are now supported
+for this exact runtime. Diagnostic override remains prohibited.
+
+This closes only the repaired four-route backend-qualification prerequisite.
+Planned execution, recovery evidence, coefficients, estimation, inference,
+decision use, ConQuest comparison, and public support remain false. The next
+ordered slice is a non-executing integration receipt that projects the c4k
+trusted route/pair identities into the c4e/c3 admission model. It must not
+manufacture the still-missing external freeze, clean-source, truth-blind
+planned-study adapter, lane authority, candidate-completion, or independent
+accuracy-rule prerequisites.
+
+Draft.85c4l now performs that non-executing projection. It revalidates the
+canonical c3, c4e, c4f, c4i, c4j, and c4k objects before constructing a new
+successor receipt; neither the historical c3 manifest nor the c4e empty-lane
+manifest is modified. The six c4e repair rows are reproduced in their original
+order with distinct evidence hashes. The first five bind the c4i isolated
+overlay, pinned sources, TMB install, glmmTMB rebuild, and fresh-process ABI
+identity. The sixth binds the c4j complete-object receipt and both c4k trusted
+registries. Every row records that the original R libraries were not mutated.
+
+The c4e four-route template is materialized as a successor registry rather
+than backdated. Each lme4/glmmTMB ML/REML row keeps the old c4e environment hash
+as historical lineage, separately binds the repaired-environment receipt,
+and carries c4j specification/semantic/result identities plus the c4k sandbox
+full-object and capability-profile identities. Both ML and REML pair rows
+retain the trusted pair receipt, sandbox parity object, tolerance identity,
+all numerical differences, and every parity gate. This keeps the integration
+receipt auditable without weakening the complete-object hash chain.
+
+The c3 projection records prior and projected values for all eight
+prerequisites. Exactly `all_four_matched_backends_qualified` changes from false
+to true; `no_diagnostic_override` remains true. The total is therefore 2 of 8,
+not a general execution admission. External freeze, clean source,
+truth-blindness, lane authority, candidate completion before truth release,
+and the independently frozen confirmation threshold remain false, and partial
+execution remains prohibited.
+
+The c4l receipt consequently supports
+`BackendQualificationAdmissionReady=TRUE` and
+`BackendQualificationReady=TRUE`, while
+`AllExecutionPrerequisitesReady=FALSE`,
+`StudyOperationallyAdmissible=FALSE`, and `ExecutionGateClosed=TRUE`.
+Qualification backend execution is recorded separately from planned-study
+backend execution. ConQuest was not called, and no seed, response, truth,
+coefficient, recovery output, or public capability was introduced.
+
+Ten c4l tests and 64 expectations pass without failure, error, warning, or
+skip. The final receipt was regenerated after adding explicit semantic-model,
+tolerance, and numerical-difference columns; its retained path is
+`/private/tmp/mfrmr-c4l-integration-receipt-0.2.4.rds`. This file is ephemeral
+validation state, not a package artifact.
+
+The next actionable slice is a non-executing truth-blind planned-study adapter
+preflight. It should bind the c1 stage/unit identities and c4l receipt into a
+candidate request/receipt schema whose worker cannot read scenario identity,
+data seed, reference identity, truth, or accuracy thresholds. This slice may
+prove schema and refusal boundaries only; it must not self-issue external
+freeze, clean-source identity, lane authority, candidate completion, or pilot
+execution.
+
+Draft.85c4m now implements that preflight by reusing the existing canonical c1
+handoff projections rather than defining a second denominator. The controller
+retains the lane names, while the worker receives only an opaque lane ID,
+opaque unit/dataset IDs, method and coordinate identities, expected count, and
+the c4l qualification hashes. The three requests contain 960 pilot, 19,200
+confirmation, and 8 negative-control candidate units, exactly matching the c1
+candidate-unit manifest.
+
+The standalone worker source hash and four-function `baseenv()` namespace are
+bound. Each lane produces a typed non-attempt receipt: no candidate data is
+received, no backend is invoked, and no candidate completion or truth release
+is claimed. An eleven-call static audit rejects source, file/connection,
+download, and system discovery primitives. The final manifest retains request
+and receipt schemas plus per-lane hashes, not the large request objects.
+
+All five c3 access questions are false at the request boundary. `StageId`,
+scenario identity, replicate, seed, assignment, reference identity, expected
+pre-fit state, truth/generating fields, and accuracy thresholds are absent from
+the exact allowlist. This proves `PayloadTruthBlindReady=TRUE`; it does not
+prove host-resource denial. Every access row therefore records that a process-
+capability recheck is required.
+
+Accordingly, c4m transitions no c3 prerequisite. Backend qualification and no
+diagnostic override remain the same 2 of 8 satisfied rows inherited from c4l.
+`ProcessCapabilityIsolationAssessed`,
+`TruthBlindProcessBoundaryReady`, and every execution/recovery/public state
+remain false. ConQuest is not called and no protected planned material is
+introduced.
+
+Ten c4m tests and 68 expectations pass without failure, error, warning, or
+skip. The retained manifest is
+`/private/tmp/mfrmr-c4m-planned-adapter-manifest-0.2.4.rds`; it is ephemeral
+validation state and not a package artifact.
+
+The next ordered slice is c4n capability isolation for the exact c4m worker
+and all three canonical requests. It must reproduce the three non-attempt
+receipts under a default-deny fresh-process profile and independently deny
+synthetic protected-vault reads, repository discovery, outside writes, parent
+environment inheritance, unlisted execution, and network access. Only that
+new evidence may be considered for the c3 truth-blind process prerequisite;
+c4m schema evidence alone cannot transition it.
+
+Draft.85c4n now completes that exact limited-capability run. A five-function
+wrapper executes the unchanged four-function c4m adapter in nine separate
+fresh macOS processes. Three normal modes reproduce the canonical pilot,
+confirmation, and negative-control receipts. Six negative modes deny a
+synthetic protected-vault read, repository read, outside write, inherited
+parent secret, unlisted executable, and external-network connection.
+
+The runtime identity binds Darwin, direct R, sandbox and environment launchers,
+the system profile, both workers, `C.UTF-8`, and a verified physical staged copy
+of digest. The 21-row policy audit keeps default deny, omits all denied and
+repository content paths, and grants only the exact metadata traversal needed
+for R to canonicalize the staged library. No real seed, scenario, reference,
+truth, threshold, or candidate response data is staged.
+
+The three expected/observed counts remain 960, 19,200, and 8. All wrapper
+results are controller-validated and every worker self-readiness field remains
+false. The retained evidence hash is
+`c1a848be7defca729d3f849bb154c80d507a10291f61095d30daf2fd551f19dd`.
+Ten c4n tests and 59 expectations pass without failure, error, warning, or
+skip. The retained evidence path is
+`/private/tmp/mfrmr-c4n-planned-adapter-capability-evidence-0.2.4.rds`; it is
+ephemeral validation state, not a package artifact.
+
+Metacognitive scope review prevents an otherwise tempting over-promotion.
+c4n proves that the non-attempt c4m program cannot reach the six denied
+capabilities. That program cannot read blinded candidate responses or invoke a
+backend, whereas a future operational candidate process must do both. Its
+capability surface is therefore materially narrower. `ProcessCapabilityIsolationReady`
+is true only under the c4n adapter contract;
+`TruthBlindProcessBoundaryReady` remains false. Exactly zero c3 prerequisites
+transition and the satisfied count remains 2 of 8.
+
+The next ordered slice is c4o: a non-executing, fit-capable candidate-data
+envelope and worker contract. It must separate data-generation authority from
+candidate-fitting authority, bind the qualified backend route, retain the c1
+denominator ledger, and exclude scenario, seed, reference, truth, and threshold
+material. c4o must not execute planned candidates or transition c3. Its exact
+fit-capable worker will require a successor default-deny capability run before
+the truth-blind process prerequisite can change.
+
+Draft.85c4o now completes that interface-only slice. The first c2 nonreserved
+fixture is opened inside the controller. A subsequent b1-oriented review
+corrected the initial release transform: c2 `Replicate` is a within-cell
+observation ordinal, not the planned dataset replicate, and deleting it
+outright makes the two observations in each Object-by-Rater-by-Stratum cell
+ambiguous. The revised seven-column release is `RowId`, `Stratum`, `Object`,
+`Rater`, `ObjectRater`, `ObservationLink`, and `Score`. The raw ordinal is
+removed after a stable opaque cross-stratum observation link is derived.
+Scenario, assignment, planned replicate, seed, reference, truth, expected
+state, boundary class, and threshold fields remain absent.
+
+Four envelopes bind the c1 lme4/glmmTMB x ML/REML method and control identities
+to the exact c4l trusted routes. The five-function contract worker independently
+recomputes data, schema, opaque-envelope, route, grouping, stratum, and
+coordinate identities. It rejects a stale opaque ID, a self-consistently
+rehashed invalid `ObjectRater`, and a collapsed observation link. Its 13-call
+static audit contains no file, connection, process, lme4, or glmmTMB dispatch
+primitive.
+
+All four receipts accept the envelope but record `Attempted=FALSE`,
+`BackendInvoked=FALSE`, `FitReturned=FALSE`, and
+`FitCapableWorkerImplemented=FALSE`. The planned topology is projected, not
+regenerated: pilot has 240 datasets/960 method units, confirmation has
+4,800/19,200, and negative control has 2/8, for the original 5,042/20,168
+totals. The 720-row fixture exercise enters no planned denominator.
+
+Ten c4o tests and 87 expectations pass without failure, error, warning, or
+skip. The retained manifest hash is
+`e904377914952dbc2de3c76ddc446f1dccd101c7776a34b066985c93517219bf`;
+the retained path is
+`/private/tmp/mfrmr-c4o-fit-candidate-envelope-manifest-0.2.4.rds`. It is
+ephemeral validation state, not a package artifact.
+
+The scope remains intentionally narrow. c4o proves candidate release and
+route-dispatch contracts, not the program that performs a fit. Fit-capable
+worker implementation and fit-process capability isolation are false,
+`TruthBlindProcessBoundaryReady` remains false, exactly zero c3 prerequisites
+transition, and the satisfied count remains 2 of 8. All planned execution,
+completion, truth release, recovery, decision, ConQuest, and public states stay
+closed.
+
+Draft.85c4p now implements and executes that fit-capable worker on the revised
+nonreserved envelope. The exact b1 model uses stratum-specific fixed means,
+global unstructured Object, Rater, and Object:Rater covariance matrices, a
+common independent residual variance, and `Rater` plus `ObservationLink` as
+the explicit observation identity. The specification reports zero duplicate
+within-stratum keys and 360 shared A/B links.
+
+Four separately launched processes run lme4/glmmTMB by ML/REML with the c1
+default controls and c4i repaired overlay. Every process exits zero without
+output; every normalized fit has `identified_point_fit`, no captured warning
+or message, and a passed point gate. Each returns the exact ten-coordinate
+T2 layout. Backend comparison passes for both criteria: maximum covariance
+absolute differences are about `8.71e-6` for REML and `3.88e-5` for ML;
+log-likelihood differences are about `1.02e-9` and `2.33e-8`.
+
+The worker's package observation is route-minimal: lme4 processes record only
+digest/lme4, while glmmTMB processes record digest/glmmTMB/TMB. The controller
+independently revalidates each full b1 fit and receipt. Eight c4p tests and 48
+expectations pass without failure, error, warning, or skip. The retained
+manifest hash is
+`25ec52dd17e91768fe58a2720af25b05c71660d8d5813273c1edd6ce7dc9bf43`;
+the retained path is
+`/private/tmp/mfrmr-c4p-fit-candidate-execution-manifest-0.2.4.rds`.
+
+c4p is still outside every c1 denominator and sees no planned identity,
+reference, truth, or accuracy threshold. It proves implementation and fresh
+process execution, not default-deny capability isolation. Exactly zero c3
+prerequisites transition, the satisfied count remains 2 of 8, and every
+planned execution, completion, truth-release, recovery, inference, decision,
+ConQuest, and public state remains closed.
+
+The next ordered slice is c4q: run this unchanged fit-capable worker and exact
+request semantics under default deny, reproduce all four receipts, and pass
+denial controls for protected-vault/repository reads, outside writes, inherited
+environment values, unlisted execution, network access, and the wider backend
+runtime closure. Only that separate evidence can be considered for the c3
+truth-blind process row.
 
 ### Release horizon
 

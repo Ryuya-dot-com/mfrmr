@@ -136,7 +136,7 @@ test_that("semantic identity is direct and never requires a hash", {
   expect_true(all(c(
     "schema", "model_family_estimator", "facet_order_roles_levels_signs",
     "response_map", "parameter_coordinates", "typed_anchors",
-    "scoring_prior", "quadrature"
+    "scoring_prior", "scoring_algorithm", "quadrature"
   ) %in% identity$Component))
 })
 

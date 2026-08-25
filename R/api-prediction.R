@@ -576,6 +576,20 @@ prepare_mfrm_prediction_data <- function(fit,
     suppressWarnings(as.numeric(raw_weight))
   }
 
+  if (!is.null(raw_weight)) {
+    invalid_weight <- is.na(weight_num) | !is.finite(weight_num) |
+      weight_num <= 0
+    if (any(invalid_weight)) {
+      stop(
+        "Scoring weights must be finite and strictly positive. Invalid ",
+        "value(s) were found at row(s): ",
+        paste(utils::head(which(invalid_weight), 10L), collapse = ", "),
+        ".",
+        call. = FALSE
+      )
+    }
+  }
+
   df$Person <- blank_to_na(df$Person)
   for (facet in names(facet_map)) {
     df[[facet]] <- blank_to_na(df[[facet]])
@@ -1000,6 +1014,119 @@ prediction_resolve_fit_method <- function(fit) {
   method
 }
 
+prediction_source_scoring_readiness <- function(fit) {
+  state <- mfrm_convergence_state(fit)
+  record <- mfrmr_get_readiness_record(fit)
+  readiness <- as.data.frame(record$fit %||% data.frame(),
+                             stringsAsFactors = FALSE)
+  value <- function(field, default = "") {
+    if (nrow(readiness) == 1L && field %in% names(readiness)) {
+      as.character(readiness[[field]][1])
+    } else {
+      as.character(default)
+    }
+  }
+
+  contract_ready <- nrow(readiness) == 1L && identical(
+    value("ReadinessContractVersion"),
+    mfrmr_readiness_contract_version()
+  )
+
+  input_state <- value("InputState", "legacy_unknown")
+  preparation_notes <- as.data.frame(
+    fit$prep$preparation_notes %||%
+      fit$data_review$preparation_notes %||%
+      data.frame(),
+    stringsAsFactors = FALSE
+  )
+  review_conditions <- if (
+    nrow(preparation_notes) > 0L &&
+      all(c("Condition", "Severity") %in% names(preparation_notes))
+  ) {
+    review_rows <- tolower(as.character(preparation_notes$Severity)) %in%
+      c("review", "warning", "warn", "error")
+    unique(as.character(preparation_notes$Condition[review_rows]))
+  } else {
+    character(0)
+  }
+  review_conditions <- review_conditions[
+    !is.na(review_conditions) & nzchar(trimws(review_conditions))
+  ]
+  # A recorded, deterministic score recoding is part of the scoring schema and
+  # does not by itself invalidate fixed-parameter scoring. Other input review
+  # states remain fail-closed.
+  input_ready <- identical(input_state, "pass") ||
+    (identical(input_state, "review") &&
+       length(review_conditions) > 0L &&
+       all(review_conditions %in% "score_categories_recoded"))
+
+  population_active <- isTRUE(fit$config$population_spec$active) ||
+    isTRUE(fit$config$population_active)
+  estimability_state <- value("EstimabilityState", "legacy_unknown")
+  estimability_ready <- estimability_state %in%
+    c("identified", "population_assumption_linked") ||
+    (population_active && identical(estimability_state, "not_evaluated"))
+  category_state <- value("CategoryState", "legacy_unknown")
+  category_ready <- category_state %in% c("adequate", "not_applicable")
+  boundary_state <- value("BoundaryState", "legacy_unknown")
+  boundary_ready <- boundary_state %in% c("finite", "not_applicable")
+  numerical_state <- value("NumericalState", "legacy_unknown")
+  numerical_ready <- identical(numerical_state, "ready")
+
+  sizes <- tryCatch(build_param_sizes(fit$config), error = function(e) NULL)
+  par <- fit$opt$par %||% NULL
+  parameter_ready <- is.numeric(par) && length(par) > 0L &&
+    all(is.finite(par)) && !is.null(sizes) &&
+    length(par) == sum(as.integer(unlist(sizes, use.names = FALSE)))
+
+  ready <- contract_ready && input_ready && estimability_ready &&
+    category_ready && boundary_ready && numerical_ready && parameter_ready
+  reason_codes <- character(0)
+  if (!contract_ready) {
+    reason_codes <- c(reason_codes, "readiness_contract_not_current")
+  }
+  if (!input_ready) {
+    reason_codes <- c(
+      reason_codes, paste0("input_not_scoring_ready:", input_state)
+    )
+  }
+  if (!estimability_ready) {
+    reason_codes <- c(
+      reason_codes,
+      paste0("estimability_not_scoring_ready:", estimability_state)
+    )
+  }
+  if (!category_ready) {
+    reason_codes <- c(
+      reason_codes, paste0("category_not_scoring_ready:", category_state)
+    )
+  }
+  if (!boundary_ready) {
+    reason_codes <- c(
+      reason_codes, paste0("boundary_not_scoring_ready:", boundary_state)
+    )
+  }
+  if (!numerical_ready) {
+    reason_codes <- c(
+      reason_codes, paste0("numerical_not_scoring_ready:", numerical_state)
+    )
+  }
+  if (!parameter_ready) {
+    reason_codes <- c(reason_codes, "calibration_parameter_layout_invalid")
+  }
+  list(
+    ready = isTRUE(ready),
+    status = if (isTRUE(ready)) "ready" else "review_only",
+    policy_basis = "scoring_readiness_components_and_parameter_layout_v1",
+    reason_codes = unique(reason_codes),
+    fit_readiness = as.character(state$fit_readiness %||% "unknown"),
+    inference_ready = isTRUE(state$inference_ready),
+    readiness_contract_version = as.character(
+      state$readiness_contract_version %||% ""
+    )
+  )
+}
+
 #' Score future or partially observed units under the fitted scoring basis
 #'
 #' @param fit Output from [fit_mfrm()] estimated with `method = "MML"` or
@@ -1020,7 +1147,7 @@ prediction_resolve_fit_method <- function(fit) {
 #'   column recorded in `fit`, if any.
 #' @param person_data Optional one-row-per-person data.frame with the
 #'   background variables required by a latent-regression fit. Ignored for
-#'   ordinary fixed-calibration scoring. For intercept-only latent-regression
+#'   ordinary fitted-object posterior scoring. For intercept-only latent-regression
 #'   fits (`population_formula = ~ 1`), `mfrmr` reconstructs the minimal
 #'   one-row-per-person table internally from the scored person IDs. This is the
 #'   scoring-time table for `new_data`, not the fit object's replay/export
@@ -1036,6 +1163,13 @@ prediction_resolve_fit_method <- function(fit) {
 #'   scored persons lacking complete covariates and records that omission in
 #'   `population_review`.
 #' @param interval_level Posterior interval level returned in `Lower`/`Upper`.
+#' @param scoring_quad_points Number of Gauss-Hermite nodes used only for this
+#'   scoring call. It is independent of the quadrature order used while fitting
+#'   `fit`; the default is 31 and values below 2 are refused.
+#' @param readiness_policy How a source fit that is not scoring-ready is
+#'   handled. `"error"` (default) refuses scoring. `"review"` permits an
+#'   explicitly review-only fitted-object calculation and labels the returned
+#'   estimates and settings accordingly; it does not make the source fit ready.
 #' @param n_draws Optional number of quadrature-grid posterior draws to return
 #'   per scored person. Use 0 to skip draws.
 #' @param seed Optional seed for reproducible posterior draws.
@@ -1055,7 +1189,7 @@ prediction_resolve_fit_method <- function(fit) {
 #' population-model-aware posterior EAP estimates. When the original fit uses
 #' `method = "JML"`, `mfrmr` applies the fitted facet/step parameters with a
 #' standard normal reference prior on the quadrature grid, so the returned
-#' person scores remain fixed-calibration EAP summaries rather than direct JML
+#' person scores remain fitted-object EAP summaries rather than direct JML
 #' estimates from the fitting step.
 #'
 #' When the fitted population model is intercept-only (`population_formula = ~
@@ -1064,7 +1198,7 @@ prediction_resolve_fit_method <- function(fit) {
 #' background covariates are needed beyond the person IDs in `new_data`.
 #'
 #' The current bounded `GPCM` branch is included in this scoring layer,
-#' so fitted `GPCM` objects can be used for the same fixed-calibration
+#' so fitted `GPCM` objects can be used for the same fitted-object
 #' posterior summaries. This does not imply that every downstream diagnostic or
 #' reporting helper has already been generalized to `GPCM`.
 #'
@@ -1088,7 +1222,7 @@ prediction_resolve_fit_method <- function(fit) {
 #' the fitted facet and step parameters from the joint-likelihood fit, then
 #' adds a standard normal reference prior only for the scoring layer so that
 #' new or partially observed units can be summarized on a quadrature grid.
-#' This is a practical fixed-calibration EAP procedure, not a claim that the
+#' This is a practical fitted-object EAP procedure, not a claim that the
 #' original `JML` fit itself estimated a population model.
 #'
 #' @section Interpreting output:
@@ -1176,6 +1310,8 @@ predict_mfrm_units <- function(fit,
                                person_id = NULL,
                                population_policy = c("error", "omit"),
                                interval_level = 0.95,
+                               scoring_quad_points = 31L,
+                               readiness_policy = c("error", "review"),
                                n_draws = 0,
                                seed = NULL) {
   if (!inherits(fit, "mfrm_fit")) {
@@ -1186,11 +1322,33 @@ predict_mfrm_units <- function(fit,
     stop("`predict_mfrm_units()` currently supports only fits estimated with method = 'MML' or 'JML'.",
          call. = FALSE)
   }
+  readiness_policy <- match.arg(readiness_policy)
+  source_readiness <- prediction_source_scoring_readiness(fit)
+  if (!isTRUE(source_readiness$ready) &&
+      identical(readiness_policy, "error")) {
+    stop(
+      "`fit` is not ready for fitted-object scoring (FitReadiness = '",
+      source_readiness$fit_readiness, "'; reason codes: ",
+      paste(source_readiness$reason_codes, collapse = "; "),
+      "). Resolve the source fit or use `readiness_policy = \"review\"` ",
+      "for an explicitly review-only calculation.",
+      call. = FALSE
+    )
+  }
   interval_level <- as.numeric(interval_level[1])
   if (!is.finite(interval_level) || interval_level <= 0 || interval_level >= 1) {
     stop("`interval_level` must be a single number in (0, 1).", call. = FALSE)
   }
   n_draws <- prediction_validate_integer(n_draws[1] %||% 0L, "n_draws", min_value = 0L, positive = FALSE)
+  scoring_quad_points <- prediction_validate_integer(
+    scoring_quad_points[1] %||% 31L,
+    "scoring_quad_points",
+    positive = TRUE
+  )
+  if (scoring_quad_points < 2L) {
+    stop("`scoring_quad_points` must be an integer greater than or equal to 2.",
+         call. = FALSE)
+  }
 
   prepared <- prepare_mfrm_prediction_data(
     fit = fit,
@@ -1217,8 +1375,8 @@ predict_mfrm_units <- function(fit,
   )
   sizes <- build_param_sizes(fit$config)
   params <- expand_params(fit$opt$par, sizes, fit$config)
-  quad_points <- fit$config$estimation_control$quad_points %||% 15L
-  quad <- gauss_hermite_normal(as.integer(quad_points))
+  quad_points <- as.integer(scoring_quad_points)
+  quad <- gauss_hermite_normal(quad_points)
 
   scored <- compute_person_posterior_summary(
     idx = idx,
@@ -1231,6 +1389,12 @@ predict_mfrm_units <- function(fit,
     n_draws = n_draws,
     seed = seed
   )
+  scored$estimates$SourceScoringReady <- isTRUE(source_readiness$ready)
+  scored$estimates$EstimateUse <- if (isTRUE(source_readiness$ready)) {
+    "fitted_object_scoring"
+  } else {
+    "review_only_nonready_source"
+  }
 
   calibration_note <- if (isTRUE(population_ready$active)) {
     "Posterior summaries are computed under the fitted MML calibration together with the fitted conditional normal population model for the scored persons."
@@ -1245,10 +1409,20 @@ predict_mfrm_units <- function(fit,
     "Non-person facets in `new_data` must already exist in the fitted calibration.",
     "Overlapping person IDs are treated as labels in `new_data`; the original fitted person estimates are not updated."
   )
+  if (!isTRUE(source_readiness$ready)) {
+    notes <- c(
+      notes,
+      paste0(
+        "The source fit is not scoring-ready; this result was requested with ",
+        "`readiness_policy = \"review\"` and is review-only. Reason codes: ",
+        paste(source_readiness$reason_codes, collapse = "; "), "."
+      )
+    )
+  }
   if (identical(fit_method, "JML")) {
     notes <- c(
       notes,
-      "For JML fits, the returned person scores are post hoc fixed-calibration EAP summaries rather than direct JML estimates from the original fit."
+      "For JML fits, the returned person scores are post hoc fitted-object EAP summaries rather than direct JML estimates from the original fit."
     )
   }
   if (isTRUE(population_ready$active)) {
@@ -1298,6 +1472,17 @@ predict_mfrm_units <- function(fit,
         interval_level = interval_level,
         n_draws = n_draws,
         quad_points = as.integer(quad_points),
+        scoring_quad_points = as.integer(quad_points),
+        scoring_algorithm = "quadrature_eap_v1",
+        readiness_policy = readiness_policy,
+        source_scoring_ready = isTRUE(source_readiness$ready),
+        source_scoring_status = source_readiness$status,
+        source_scoring_policy_basis = source_readiness$policy_basis,
+        source_scoring_reason_codes = source_readiness$reason_codes,
+        source_fit_readiness = source_readiness$fit_readiness,
+        source_inference_ready = source_readiness$inference_ready,
+        source_readiness_contract_version =
+          source_readiness$readiness_contract_version,
         seed = seed,
         method = fit_method,
         source_columns = prepared$prep$source_columns,
@@ -1443,7 +1628,7 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'   column recorded in `fit`, if any.
 #' @param person_data Optional one-row-per-person data.frame with the
 #'   background variables required by a latent-regression fit. Ignored for
-#'   ordinary fixed-calibration scoring. Intercept-only latent-regression fits
+#'   ordinary fitted-object posterior scoring. Intercept-only latent-regression fits
 #'   can reconstruct the minimal scored-person table internally. This is the
 #'   scoring-time table for `new_data`, not the fit object's replay/export
 #'   provenance table. For categorical background variables, supply values on
@@ -1458,11 +1643,16 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'   integer.
 #' @param interval_level Posterior interval level passed to
 #'   [predict_mfrm_units()] for the accompanying EAP summary table.
+#' @param scoring_quad_points Number of Gauss-Hermite nodes used only for this
+#'   scoring call. Passed to [predict_mfrm_units()] and independent of the
+#'   fit-time quadrature order.
+#' @param readiness_policy Source-fit readiness policy passed to
+#'   [predict_mfrm_units()].
 #' @param seed Optional seed for reproducible posterior draws.
 #'
 #' @details
 #' `sample_mfrm_plausible_values()` is a thin public wrapper around
-#' [predict_mfrm_units()] that exposes the fixed-calibration posterior draws as
+#' [predict_mfrm_units()] that exposes the fitted-object posterior draws as
 #' a standalone object. It is useful when downstream workflows want repeated
 #' latent-value imputations rather than just one posterior EAP summary.
 #'
@@ -1492,14 +1682,14 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' @section What this does not justify:
 #' This helper does not update the calibration, estimate new non-person facet
 #' levels, or provide exact future true values. It samples from the fixed-grid
-#' posterior implied by the existing fixed calibration.
+#' posterior implied by the existing fitted-model scoring basis.
 #'
 #' @section References:
 #' The underlying posterior scoring follows the usual quadrature-based EAP
 #' framework of Bock and Aitkin (1981). The interpretation of multiple
 #' posterior draws as plausible-value-style summaries follows the general logic
 #' discussed by Mislevy (1991), while the current implementation remains a
-#' practical fixed-calibration approximation rather than a full published
+#' practical fitted-object posterior approximation rather than a full published
 #' many-facet plausible-values method. For `JML` source fits, the quadrature
 #' posterior uses a package-level standard normal reference prior for this
 #' post hoc scoring layer.
@@ -1552,6 +1742,8 @@ sample_mfrm_plausible_values <- function(fit,
                                          population_policy = c("error", "omit"),
                                          n_draws = 5,
                                          interval_level = 0.95,
+                                         scoring_quad_points = 31L,
+                                         readiness_policy = c("error", "review"),
                                          seed = NULL) {
   n_draws <- prediction_validate_integer(n_draws[1] %||% 0L, "n_draws", positive = TRUE)
 
@@ -1566,6 +1758,8 @@ sample_mfrm_plausible_values <- function(fit,
     person_id = person_id,
     population_policy = population_policy,
     interval_level = interval_level,
+    scoring_quad_points = scoring_quad_points,
+    readiness_policy = readiness_policy,
     n_draws = n_draws,
     seed = seed
   )
@@ -1576,7 +1770,7 @@ sample_mfrm_plausible_values <- function(fit,
   } else if (identical(fit_method, "MML")) {
     "These draws are sampled from the fixed quadrature-grid posterior under the existing MML calibration."
   } else {
-    "These draws are sampled from a fixed-calibration quadrature-grid posterior built from the fitted JML parameters and a standard normal reference prior."
+    "These draws are sampled from a fitted-object quadrature-grid posterior built from the fitted JML parameters and a standard normal reference prior."
   }
 
   notes <- c(

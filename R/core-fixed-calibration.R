@@ -796,6 +796,7 @@ mfrmr_calibration_semantic_components <- function(x) {
     identification_constraints = x$constraints$identification,
     typed_anchors = x$constraints$anchors,
     scoring_prior = x$scoring_basis[c("type", "prior_mean", "prior_sd")],
+    scoring_algorithm = x$scoring_basis$scoring_algorithm,
     quadrature = x$scoring_basis[c(
       "quadrature_rule", "quadrature_order", "nodes", "weights"
     )],
@@ -805,7 +806,8 @@ mfrmr_calibration_semantic_components <- function(x) {
 
 mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
                                             source_fit_id = NULL,
-                                            created_at_utc = NULL) {
+                                            created_at_utc = NULL,
+                                            scoring_quad_points = 31L) {
   if (!inherits(fit, "mfrm_fit")) {
     mfrmr_calibration_abort(
       "PROVENANCE_SOURCE_ID_INVALID", "fit",
@@ -843,14 +845,24 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
     )
   }
 
-  quad_points <- fit$config$estimation_control$quad_points
-  if (is.null(quad_points) || length(quad_points) != 1L ||
-      !is.finite(quad_points) || quad_points < 1 || quad_points != as.integer(quad_points)) {
+  fit_quad_points <- fit$config$estimation_control$quad_points
+  if (is.null(fit_quad_points) || length(fit_quad_points) != 1L ||
+      !is.finite(fit_quad_points) || fit_quad_points < 1 ||
+      fit_quad_points != as.integer(fit_quad_points)) {
     mfrmr_calibration_abort(
       "QUADRATURE_ORDER_INVALID", "scoring_basis.quadrature_order",
       "the source fit must store one positive integer quadrature order"
     )
   }
+  if (!is.numeric(scoring_quad_points) || length(scoring_quad_points) != 1L ||
+      !is.finite(scoring_quad_points) || scoring_quad_points < 2 ||
+      scoring_quad_points != as.integer(scoring_quad_points)) {
+    mfrmr_calibration_abort(
+      "QUADRATURE_ORDER_INVALID", "scoring_basis.quadrature_order",
+      "operational scoring requires one integer quadrature order of at least 2"
+    )
+  }
+  quad_points <- as.integer(scoring_quad_points)
 
   sizes <- build_param_sizes(fit$config)
   params <- expand_params(fit$opt$par, sizes, fit$config)
@@ -958,6 +970,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       type = "fixed_standard_normal",
       prior_mean = 0,
       prior_sd = 1,
+      scoring_algorithm = "quadrature_eap_v1",
       quadrature_rule = "gauss_hermite_standard_normal_golub_welsch_v1",
       quadrature_order = as.integer(quad_points),
       nodes = as.numeric(quad$nodes),
@@ -1023,7 +1036,7 @@ mfrmr_calibration_expected_sections <- function() {
     parameters = "coordinates",
     constraints = c("identification", "anchors"),
     scoring_basis = c(
-      "type", "prior_mean", "prior_sd", "quadrature_rule",
+      "type", "prior_mean", "prior_sd", "scoring_algorithm", "quadrature_rule",
       "quadrature_order", "nodes", "weights"
     ),
     eligibility = c(
@@ -1383,6 +1396,12 @@ mfrmr_review_calibration <- function(x) {
       !identical(x$scoring_basis$prior_sd, 1)) {
     add("SCORING_PRIOR_INVALID", "scoring_basis.prior_mean", "core prior must be exactly N(0,1)")
   }
+  if (!identical(x$scoring_basis$scoring_algorithm, "quadrature_eap_v1")) {
+    add(
+      "SCORING_BASIS_UNSUPPORTED", "scoring_basis.scoring_algorithm",
+      "core scoring algorithm must be exactly quadrature_eap_v1"
+    )
+  }
   if (!identical(
     x$scoring_basis$quadrature_rule,
     "gauss_hermite_standard_normal_golub_welsch_v1"
@@ -1392,8 +1411,8 @@ mfrmr_review_calibration <- function(x) {
   order <- x$scoring_basis$quadrature_order
   nodes <- x$scoring_basis$nodes
   weights <- x$scoring_basis$weights
-  if (!scalar_integer(order) || order < 1L || length(nodes) != order || length(weights) != order) {
-    add("QUADRATURE_ORDER_INVALID", "scoring_basis.quadrature_order", "order must equal stored node and weight lengths")
+  if (!scalar_integer(order) || order < 2L || length(nodes) != order || length(weights) != order) {
+    add("QUADRATURE_ORDER_INVALID", "scoring_basis.quadrature_order", "order must be at least 2 and equal stored node and weight lengths")
   }
   if (!is.numeric(nodes) || any(!is.finite(nodes)) ||
       length(nodes) > 1L && any(diff(nodes) <= 0)) {
@@ -2426,6 +2445,7 @@ mfrmr_score_calibration <- function(calibration,
         family = calibration$model$family,
         estimator = calibration$model$estimator,
         scoring_basis = calibration$scoring_basis$type,
+        scoring_algorithm = calibration$scoring_basis$scoring_algorithm,
         quadrature_order = calibration$scoring_basis$quadrature_order,
         interval_level = interval_level,
         missing_response_policy = missing_response,

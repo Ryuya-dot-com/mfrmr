@@ -726,6 +726,257 @@ run_mfrm_direct_optimization <- function(start,
   opt
 }
 
+mfrm_checkpoint_schema_id <- function() {
+  "mfrmr_mml_em_checkpoint"
+}
+
+mfrm_checkpoint_schema_version <- function() {
+  2L
+}
+
+mfrm_checkpoint_parameter_names <- function(sizes) {
+  unlist(lapply(names(sizes), function(block) {
+    size <- as.integer(sizes[[block]])
+    if (size <= 0L) return(character(0))
+    sprintf("%s[%d]", block, seq_len(size))
+  }), use.names = FALSE)
+}
+
+mfrm_checkpoint_fingerprint <- function(object) {
+  path <- tempfile("mfrmr-checkpoint-fingerprint-", fileext = ".bin")
+  on.exit(unlink(path), add = TRUE)
+  writeBin(serialize(object, NULL, version = 3), path)
+  as.character(unname(tools::md5sum(path)))
+}
+
+mfrm_checkpoint_objective_components <- function(idx, config) {
+  list(
+    observations = list(
+      person = as.integer(idx$person),
+      facets = lapply(idx$facets %||% list(), as.integer),
+      interactions = lapply(idx$interactions %||% list(), as.integer),
+      step_idx = as.integer(idx$step_idx %||% integer(0)),
+      slope_idx = as.integer(idx$slope_idx %||% integer(0)),
+      score_k = as.integer(idx$score_k),
+      weight = as.numeric(idx$weight)
+    ),
+    model = list(
+      family = as.character(config$model),
+      method = as.character(config$method),
+      n_person = as.integer(config$n_person),
+      n_cat = as.integer(config$n_cat),
+      rating_min = as.integer(config$rating_min),
+      rating_max = as.integer(config$rating_max),
+      score_map = config$score_map,
+      facet_names = as.character(config$facet_names),
+      facet_levels = config$facet_levels,
+      facet_signs = config$facet_signs,
+      step_facet = config$step_facet,
+      slope_facet = config$slope_facet,
+      noncenter_facet = config$noncenter_facet,
+      dummy_facets = config$dummy_facets,
+      theta_spec = config$theta_spec,
+      facet_specs = config$facet_specs,
+      step_specs = config$step_specs,
+      interaction_specs = config$interaction_specs,
+      population_spec = config$population_spec,
+      anchor_summary = config$anchor_summary,
+      source_columns = config$source_columns
+    )
+  )
+}
+
+mfrm_checkpoint_identity <- function(idx, config, sizes, quad_points,
+                                     engine_stage, reltol, optimizer) {
+  parameter_names <- mfrm_checkpoint_parameter_names(sizes)
+  quadrature <- gauss_hermite_normal(as.integer(quad_points))
+  objective_components <- mfrm_checkpoint_objective_components(idx, config)
+  constraint_components <- objective_components$model[c(
+    "facet_signs", "step_facet", "slope_facet", "noncenter_facet",
+    "dummy_facets", "theta_spec", "facet_specs", "step_specs",
+    "anchor_summary"
+  )]
+  list(
+    schema_id = mfrm_checkpoint_schema_id(),
+    schema_version = mfrm_checkpoint_schema_version(),
+    package_version = as.character(utils::packageVersion("mfrmr")),
+    engine = "mml_em",
+    engine_stage = as.character(engine_stage),
+    model = as.character(config$model),
+    method = as.character(config$method),
+    parameter_layout = list(
+      block_sizes = as.integer(unlist(sizes, use.names = FALSE)),
+      block_names = names(sizes),
+      parameter_names = parameter_names
+    ),
+    facet_names = as.character(config$facet_names),
+    facet_levels = config$facet_levels,
+    score_map = config$score_map,
+    anchor_and_constraint_identity =
+      mfrm_checkpoint_fingerprint(constraint_components),
+    interaction_identity =
+      mfrm_checkpoint_fingerprint(config$interaction_specs %||% list()),
+    population_identity =
+      mfrm_checkpoint_fingerprint(config$population_spec %||% list()),
+    quadrature_identity = list(
+      rule = "gauss_hermite_standard_normal_golub_welsch_v1",
+      order = as.integer(quad_points),
+      nodes = as.numeric(quadrature$nodes),
+      weights = as.numeric(quadrature$weights)
+    ),
+    data_objective_fingerprint =
+      mfrm_checkpoint_fingerprint(objective_components),
+    reltol = as.numeric(reltol),
+    optimizer = as.character(normalize_mfrm_optimizer(optimizer))
+  )
+}
+
+mfrm_checkpoint_scalar_integer <- function(value, minimum = 0L) {
+  is.numeric(value) && length(value) == 1L && !is.na(value) &&
+    is.finite(value) && value <= .Machine$integer.max &&
+    value == floor(value) && value >= minimum
+}
+
+mfrm_validate_checkpoint_control <- function(checkpoint) {
+  if (!is.list(checkpoint) || !is.character(checkpoint$file) ||
+      length(checkpoint$file) != 1L || is.na(checkpoint$file) ||
+      !nzchar(checkpoint$file)) {
+    stop("`checkpoint` must be a list with one non-empty character `file` path.",
+         call. = FALSE)
+  }
+  every_iter <- checkpoint$every_iter %||% 1L
+  if (!mfrm_checkpoint_scalar_integer(every_iter, minimum = 1L)) {
+    stop("`checkpoint$every_iter` must be one finite positive integer.",
+         call. = FALSE)
+  }
+  list(file = checkpoint$file, every_iter = as.integer(every_iter))
+}
+
+mfrm_validate_checkpoint_payload <- function(saved, expected_identity) {
+  if (!is.list(saved) ||
+      !identical(saved$.mfrm_checkpoint_kind %||% "", "mml_em") ||
+      !identical(saved$schema_id %||% "", mfrm_checkpoint_schema_id()) ||
+      !identical(saved$schema_version %||% NA_integer_,
+                 mfrm_checkpoint_schema_version())) {
+    stop(
+      "The checkpoint uses an unsupported or legacy MML EM schema. Remove ",
+      "it and start a new 0.2.4 checkpoint.",
+      call. = FALSE
+    )
+  }
+  if (!identical(saved$identity, expected_identity)) {
+    stop(
+      "The checkpoint identity does not match the current data, model, ",
+      "parameter layout, engine stage, quadrature, or optimization contract.",
+      call. = FALSE
+    )
+  }
+  parameter_names <- expected_identity$parameter_layout$parameter_names
+  if (!is.numeric(saved$par) || length(saved$par) != length(parameter_names) ||
+      !identical(names(saved$par), parameter_names) ||
+      any(!is.finite(saved$par))) {
+    stop("The checkpoint parameter vector is non-finite or incompatible with the registered layout.",
+         call. = FALSE)
+  }
+  if (!is.numeric(saved$ll_trace) || length(saved$ll_trace) == 0L ||
+      any(!is.finite(saved$ll_trace)) ||
+      !is.numeric(saved$prev_loglik) || length(saved$prev_loglik) != 1L ||
+      !is.finite(saved$prev_loglik)) {
+    stop("The checkpoint likelihood state is missing or non-finite.",
+         call. = FALSE)
+  }
+  if (!mfrm_checkpoint_scalar_integer(saved$last_completed_iter, 0L) ||
+      !mfrm_checkpoint_scalar_integer(saved$next_iter, 1L) ||
+      saved$next_iter != saved$last_completed_iter + 1L) {
+    stop("The checkpoint iteration boundary is invalid.", call. = FALSE)
+  }
+  if (!mfrm_checkpoint_scalar_integer(saved$total_fn, 0L) ||
+      !mfrm_checkpoint_scalar_integer(saved$total_gr, 0L) ||
+      !mfrm_checkpoint_scalar_integer(saved$maxit, 1L) ||
+      saved$last_completed_iter > saved$maxit ||
+      !mfrm_checkpoint_scalar_integer(saved$quad_points, 1L) ||
+      !identical(as.integer(saved$quad_points),
+                 expected_identity$quadrature_identity$order) ||
+      !is.numeric(saved$reltol) || length(saved$reltol) != 1L ||
+      !is.finite(saved$reltol) || saved$reltol <= 0 ||
+      !identical(as.numeric(saved$reltol), expected_identity$reltol) ||
+      !is.numeric(saved$rel_change) || length(saved$rel_change) != 1L ||
+      !(is.na(saved$rel_change) || is.finite(saved$rel_change))) {
+    stop("The checkpoint optimization state is invalid.", call. = FALSE)
+  }
+  if (!is.logical(saved$completed) || length(saved$completed) != 1L ||
+      is.na(saved$completed) || !is.logical(saved$converged) ||
+      length(saved$converged) != 1L || is.na(saved$converged)) {
+    stop("The checkpoint completion state is invalid.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+mfrm_atomic_save_checkpoint <- function(object, path) {
+  directory <- dirname(path)
+  if (!dir.exists(directory)) {
+    stop("Checkpoint directory does not exist: ", directory, ".", call. = FALSE)
+  }
+  temporary <- tempfile(
+    paste0(".", basename(path), ".partial-"), tmpdir = directory
+  )
+  backup <- tempfile(
+    paste0(".", basename(path), ".previous-"), tmpdir = directory
+  )
+  on.exit(unlink(c(temporary, backup)), add = TRUE)
+  saveRDS(object, temporary, version = 3)
+  had_target <- file.exists(path)
+  # A same-directory rename replaces atomically on platforms that permit
+  # replacement of an existing destination. Windows may refuse that form, so
+  # retain a checked backup-and-restore fallback there.
+  if (isTRUE(file.rename(temporary, path))) {
+    return(invisible(path))
+  }
+  if (!had_target) {
+    stop("Could not atomically install the new checkpoint.", call. = FALSE)
+  }
+  if (had_target && !isTRUE(file.rename(path, backup))) {
+    stop("Could not stage the previous checkpoint for atomic replacement.",
+         call. = FALSE)
+  }
+  if (!isTRUE(file.rename(temporary, path))) {
+    if (had_target && file.exists(backup)) {
+      file.rename(backup, path)
+    }
+    stop("Could not atomically install the new checkpoint.", call. = FALSE)
+  }
+  if (had_target && file.exists(backup)) unlink(backup)
+  invisible(path)
+}
+
+mfrm_checkpoint_payload <- function(par, prev_loglik, ll_trace, total_fn,
+                                    total_gr, last_completed_iter,
+                                    completed, converged, rel_change,
+                                    quad_points, maxit, reltol, identity) {
+  parameter_names <- identity$parameter_layout$parameter_names
+  par <- stats::setNames(as.numeric(par), parameter_names)
+  list(
+    .mfrm_checkpoint_kind = "mml_em",
+    schema_id = mfrm_checkpoint_schema_id(),
+    schema_version = mfrm_checkpoint_schema_version(),
+    identity = identity,
+    par = par,
+    prev_loglik = as.numeric(prev_loglik),
+    ll_trace = as.numeric(ll_trace),
+    total_fn = as.integer(total_fn),
+    total_gr = as.integer(total_gr),
+    last_completed_iter = as.integer(last_completed_iter),
+    next_iter = as.integer(last_completed_iter + 1L),
+    completed = isTRUE(completed),
+    converged = isTRUE(converged),
+    rel_change = as.numeric(rel_change),
+    quad_points = as.integer(quad_points),
+    maxit = as.integer(maxit),
+    reltol = as.numeric(reltol),
+    timestamp = format(Sys.time(), tz = "UTC", usetz = TRUE)
+  )
+}
+
 run_mfrm_mml_em_optimization <- function(start,
                                          idx,
                                          config,
@@ -737,7 +988,8 @@ run_mfrm_mml_em_optimization <- function(start,
                                          m_step_reltol = NULL,
                                          optimizer = "auto",
                                          suppress_convergence_warning = FALSE,
-                                         checkpoint = NULL) {
+                                         checkpoint = NULL,
+                                         engine_stage = "pure_em") {
   quad <- gauss_hermite_normal(quad_points)
   par <- as.numeric(start)
   prev_loglik <- -Inf
@@ -752,41 +1004,71 @@ run_mfrm_mml_em_optimization <- function(start,
     prefer_limited_memory = TRUE
   )
 
-  # Resumable-fit checkpoint scaffolding. `checkpoint` is a list with
-  # `file` (path) and `every_iter` (integer >= 1). When set, the
-  # current EM state is `saveRDS()`-ed every `every_iter` outer EM
-  # iterations so a long fit can resume after a crash via
-  # `resume_mfrm_fit()`. We also try to load an existing checkpoint
-  # before the first iteration; when found, `par` and `it` are
-  # reseeded. The checkpoint format is intentionally tied to this
-  # function's local state -- it should not be hand-edited.
+  # Resumable-fit checkpoints fail closed against a versioned identity that
+  # binds the prepared objective, parameter layout, constraints, quadrature,
+  # package version, and engine stage. Only `maxit` may increase across a
+  # pure-EM resume; changing data or model semantics requires a new file.
   ckpt_file <- NULL
   ckpt_every <- 1L
   start_it <- 1L
+  last_completed_it <- 0L
+  skip_em_loop <- FALSE
+  checkpoint_identity <- mfrm_checkpoint_identity(
+    idx = idx,
+    config = config,
+    sizes = sizes,
+    quad_points = quad_points,
+    engine_stage = engine_stage,
+    reltol = reltol,
+    optimizer = optimizer
+  )
   if (!is.null(checkpoint)) {
-    if (!is.list(checkpoint) || is.null(checkpoint$file) ||
-        !nzchar(as.character(checkpoint$file))) {
-      stop("`checkpoint` must be a list with a non-empty `file` path.",
-           call. = FALSE)
-    }
-    ckpt_file <- as.character(checkpoint$file)
-    ckpt_every <- max(1L, as.integer(checkpoint$every_iter %||% 1L))
+    checkpoint_control <- mfrm_validate_checkpoint_control(checkpoint)
+    ckpt_file <- checkpoint_control$file
+    ckpt_every <- checkpoint_control$every_iter
     if (file.exists(ckpt_file)) {
-      saved <- tryCatch(readRDS(ckpt_file), error = function(e) NULL)
-      if (is.list(saved) && identical(saved$.mfrm_checkpoint_kind %||% "",
-                                       "mml_em")) {
-        par <- as.numeric(saved$par)
-        prev_loglik <- as.numeric(saved$prev_loglik %||% -Inf)
-        ll_trace <- as.numeric(saved$ll_trace %||% numeric(0))
-        total_fn <- as.integer(saved$total_fn %||% 0L)
-        total_gr <- as.integer(saved$total_gr %||% 0L)
-        start_it <- as.integer(saved$next_iter %||% 1L)
+      saved <- tryCatch(
+        readRDS(ckpt_file),
+        error = function(error) {
+          stop(
+            "Could not read MML EM checkpoint '", ckpt_file, "': ",
+            conditionMessage(error), ".",
+            call. = FALSE
+          )
+        }
+      )
+      mfrm_validate_checkpoint_payload(saved, checkpoint_identity)
+      par <- unname(as.numeric(saved$par))
+      prev_loglik <- as.numeric(saved$prev_loglik)
+      ll_trace <- as.numeric(saved$ll_trace)
+      total_fn <- as.integer(saved$total_fn)
+      total_gr <- as.integer(saved$total_gr)
+      last_completed_it <- as.integer(saved$last_completed_iter)
+      start_it <- as.integer(saved$next_iter)
+      converged <- isTRUE(saved$converged)
+      rel_change <- as.numeric(saved$rel_change)
+      if (isTRUE(saved$completed) &&
+          identical(engine_stage, "hybrid_em_warm_start")) {
+        skip_em_loop <- TRUE
+        message("Loaded completed hybrid EM warm-start checkpoint (",
+                ckpt_file, ").")
+      } else {
+        if (isTRUE(saved$completed) && isTRUE(saved$converged)) {
+          stop(
+            "The checkpoint already contains a converged completed EM run. ",
+            "Remove it to start a new fit.",
+            call. = FALSE
+          )
+        }
+        if (start_it > maxit) {
+          stop(
+            "The checkpoint has already reached the requested `maxit`. ",
+            "Increase `maxit` or remove the checkpoint.",
+            call. = FALSE
+          )
+        }
         message("Resumed MML EM from checkpoint at iteration ",
                 start_it, " (", ckpt_file, ").")
-      } else {
-        warning("Existing checkpoint file '", ckpt_file, "' did not look ",
-                "like an mfrmr MML EM checkpoint; starting from scratch.",
-                call. = FALSE)
       }
     }
   }
@@ -801,7 +1083,7 @@ run_mfrm_mml_em_optimization <- function(start,
     as.numeric(m_step_reltol)
   }
 
-  for (it in seq.int(start_it, maxit)) {
+  if (!skip_em_loop && start_it <= maxit) for (it in seq.int(start_it, maxit)) {
     state <- build_mfrm_mml_em_state(par, idx, config, sizes, quad)
     ll_trace <- c(ll_trace, state$marginal_loglik)
 
@@ -851,28 +1133,29 @@ run_mfrm_mml_em_optimization <- function(start,
     par <- m_opt$par
     total_fn <- total_fn + as.integer(unname(m_opt$counts[["function"]] %||% 0L))
     total_gr <- total_gr + as.integer(unname(m_opt$counts[["gradient"]] %||% 0L))
+    last_completed_it <- as.integer(it)
 
-    # Periodic checkpoint write. We snapshot the post-M-step state so
-    # `resume_mfrm_fit()` continues at the next iteration with the
-    # same `par` and accumulated trace. tryCatch shields the fit from
-    # transient I/O failures (full disk, permission flap).
+    # Periodic checkpoint writes snapshot the post-M-step state to a temporary
+    # file in the destination directory and install it by checked rename.
     if (!is.null(ckpt_file) && (it %% ckpt_every == 0L)) {
       tryCatch(
-        saveRDS(
-          list(
-            .mfrm_checkpoint_kind = "mml_em",
+        mfrm_atomic_save_checkpoint(
+          mfrm_checkpoint_payload(
             par = par,
             prev_loglik = prev_loglik,
             ll_trace = ll_trace,
             total_fn = total_fn,
             total_gr = total_gr,
-            next_iter = it + 1L,
+            last_completed_iter = last_completed_it,
+            completed = FALSE,
+            converged = converged,
+            rel_change = rel_change,
             quad_points = quad_points,
             maxit = maxit,
             reltol = reltol,
-            timestamp = format(Sys.time(), tz = "UTC", usetz = TRUE)
+            identity = checkpoint_identity
           ),
-          file = ckpt_file
+          ckpt_file
         ),
         error = function(e) {
           warning("MML EM checkpoint write to '", ckpt_file,
@@ -884,6 +1167,7 @@ run_mfrm_mml_em_optimization <- function(start,
     }
   }
 
+  checkpoint_resume_trace <- ll_trace
   final_state <- build_mfrm_mml_em_state(par, idx, config, sizes, quad)
   final_loglik <- final_state$marginal_loglik
   if (length(ll_trace) == 0L ||
@@ -995,6 +1279,36 @@ run_mfrm_mml_em_optimization <- function(start,
     MStepOptimizer = optimizer_plan$Used
   )
 
+  if (!is.null(ckpt_file)) {
+    tryCatch(
+      mfrm_atomic_save_checkpoint(
+        mfrm_checkpoint_payload(
+          par = par,
+          prev_loglik = prev_loglik,
+          ll_trace = checkpoint_resume_trace,
+          total_fn = total_fn,
+          total_gr = total_gr,
+          last_completed_iter = last_completed_it,
+          completed = TRUE,
+          converged = converged,
+          rel_change = rel_change,
+          quad_points = quad_points,
+          maxit = maxit,
+          reltol = reltol,
+          identity = checkpoint_identity
+        ),
+        ckpt_file
+      ),
+      error = function(error) {
+        warning(
+          "Final MML EM checkpoint write to '", ckpt_file,
+          "' failed: ", conditionMessage(error), ".",
+          call. = FALSE
+        )
+      }
+    )
+  }
+
   if (!identical(opt$optimizer_diagnostics$ConvergenceSeverity, "pass") &&
       !isTRUE(suppress_convergence_warning)) {
     warning("EM did not produce an inference-ready numerical solution (status = ",
@@ -1058,7 +1372,8 @@ run_mfrm_optimization <- function(start,
       reltol = reltol,
       optimizer = optimizer,
       suppress_convergence_warning = suppress_convergence_warning,
-      checkpoint = checkpoint
+      checkpoint = checkpoint,
+      engine_stage = "pure_em"
     )
   } else {
     em_maxit <- compute_hybrid_em_maxit(maxit)
@@ -1074,7 +1389,9 @@ run_mfrm_optimization <- function(start,
       m_step_maxit = compute_hybrid_em_mstep_maxit(em_maxit),
       m_step_reltol = em_reltol,
       optimizer = optimizer,
-      suppress_convergence_warning = TRUE
+      suppress_convergence_warning = TRUE,
+      checkpoint = checkpoint,
+      engine_stage = "hybrid_em_warm_start"
     )
     opt <- run_mfrm_direct_optimization(
       start = em_opt$par,

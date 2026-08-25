@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-22.
+Status: public roadmap, updated 2026-08-24.
 
 This file is the single source of truth for mfrmr's public release direction.
 It describes intended outcomes and support boundaries, not promises about exact
@@ -1651,15 +1651,50 @@ silently substituted for one another:
 
 ### 0.2.4 release control board
 
-Overall status: **G0 through G4 complete; G5 optional-lane qualification is
-next, while public 0.2.4 API promotion remains closed**.
+Overall status: **G0 through G3 and G5 remain complete; G4 has been reopened
+for the current hardened source, G6 is held, and public 0.2.4 API promotion
+remains closed**.
 The 0.2.3 baseline is bound to
 the CRAN source artifact,
 the internal core artifact passes freeze--persist--load--score evidence, its
 typed direct/group/shared-step/owned-step constraints share one parameter-
 count, expansion, gradient, category-support, and rank contract, and its pure
 RSM/PCM scorer now returns explicit row/Person dispositions and scoring-basis
-identities. No optional lane or public 0.2.4 API is promoted by those facts.
+identities. The 2026-08-22 G4 record remains valid historical evidence for its
+exact source and explicit nine-node payload, but later scoring, replay, and
+checkpoint hardening changed production code and calibration identity. A new
+disjoint confirmation and platform matrix are therefore required. No optional
+lane or public 0.2.4 API is promoted by those facts.
+
+### 2026-08-24 boundary-hardening disposition
+
+A source-level comparison of CRAN 0.2.3 and `development/0.2.4` identified
+eight defects at the replay, fitted-object scoring, checkpoint, and release-
+metadata boundaries. The fixes are being integrated directly into 0.2.4; no
+0.2.3.1 release line will be created. The ordinary RSM/PCM likelihood and
+gradient core was not changed by this disposition.
+
+| Boundary | 0.2.4 disposition | Required evidence consequence |
+| --- | --- | --- |
+| Interaction replay | Emit interaction specification, minimum support, and policy; enforce registry completeness and round-trip equivalence. | Re-run additive and interaction replay from a built source package. |
+| Fitted-object scoring grid | Give scoring its own explicit quadrature order, default 31, refuse orders below 2, and preserve it in replay. | Confirm JML and MML scoring do not inherit a one-node fit grid and remain numerically non-degenerate. |
+| Fitted-object scoring readiness | Use a purpose-specific fail-closed scoring contract; permit non-ready calculations only through an explicitly labelled review route. | Exercise numerical, support, boundary, latent-regression, recoded-score, and legacy-object cases. |
+| Scoring weights | Refuse non-finite and non-positive weights before posterior evaluation. | Cover `Inf`, `-Inf`, `NaN`, `NA`, and zero in fitted-object and artifact-only paths. |
+| EM checkpoint identity | Introduce a versioned checkpoint schema binding prepared data, model, parameter layout, constraints, interactions, population, quadrature, package version, and engine stage. | Reject same-dimension but semantically different objectives and corrupt or legacy payloads. |
+| Hybrid checkpoint | Pass checkpoints through the hybrid EM warm start and keep its stage identity distinct from pure EM. | Demonstrate write, load, and direct-polish continuation without cross-stage reuse. |
+| Checkpoint iteration boundary | Validate iteration/control scalars and refuse completed pure-EM re-entry at the same `maxit`; write through checked same-directory replacement. | Test interrupted continuation, increased `maxit`, completed-state refusal, and fresh-session persistence. |
+| Release metadata | Mark the branch as version 0.2.4.9000, development status, public predecessor 0.2.3, with no release date. | Make source-truth and release preflight enforce the version/status/date combination. |
+
+The audit also exposed the same one-node inheritance risk in the new portable
+calibration draft path. The calibration schema now records
+`quadrature_eap_v1`, uses an explicit scoring grid independent of source-fit
+integration, and refuses a scoring grid below two nodes. Because this changes a
+semantic-identity component, the earlier G4 platform result cannot be carried
+forward to the current source merely because its explicit nine-node numerical
+fixture still passes locally.
+
+The detailed implementation and evidence disposition is retained in the
+repository-only boundary-hardening record.
 
 Checkboxes track repository evidence, not confidence or effort. `[x]` means
 that the stated decision or exit condition is present and reviewable in the
@@ -1700,9 +1735,9 @@ calibration claim:
   coordinates pass conflict, identification, and reduction gates.
 - [x] **CORE-04 — Pure scoring:** new-Person scoring is fail-closed, reason-
   coded, conditional on the declared frozen basis, and performs no refit.
-- [x] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
+- [ ] **CORE-05 — Independent evidence:** mathematical oracles, mutation and
   metamorphic tests, and disjoint confirmation pass frozen rules.
-- [x] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
+- [ ] **CORE-06 — Reproducible operation:** fresh-session, save/load, row/
   chunk-order, locale, encoding, platform, R-version, and bounded performance
   checks pass.
 - [ ] **CORE-07 — Public-surface agreement:** code, help, README, vignette,
@@ -1712,14 +1747,25 @@ calibration claim:
   closed, no no-go condition remains, and optional-lane failures have been
   removed from or labelled accurately in the public claim.
 
-Optional promotion gates do not block the smaller core release. Each remains
-unchecked until its own evidence closes; an unchecked box must appear as
-`caveated`, `experimental`, `blocked`, or unavailable in the public matrix.
+Optional promotion gates do not block the smaller core release. G5 has now
+adjudicated each lane against the implemented artifact schema and scorer; none
+is promoted for portable operational calibration in 0.2.4. This decision does
+not remove the existing fitted-object analysis routes.
 
-- [ ] **OPT-01 — Estimated-population/latent-regression MML.**
-- [ ] **OPT-02 — Bounded GPCM MML.**
-- [ ] **OPT-03 — JML with an explicit post-hoc scoring prior.**
-- [ ] **OPT-04 — Bounded GPCM JML with both boundary and scoring-prior gates.**
+- [x] **OPT-01 — Estimated-population/latent-regression MML:** unavailable for
+  0.2.4 portable calibration; the schema and scorer intentionally admit only
+  the fixed-standard-normal core basis.
+- [x] **OPT-02 — Bounded GPCM MML:** unavailable for 0.2.4 portable
+  calibration; fitted-object GPCM estimation, diagnostics, plots, comparisons,
+  and posterior scoring remain available under their existing boundaries, but
+  the artifact schema does not yet carry relative-slope ownership and the pure
+  artifact scorer does not yet reconstruct the GPCM kernel.
+- [x] **OPT-03 — JML with an explicit post-hoc scoring prior:** unavailable for
+  0.2.4 portable calibration; the artifact extractor accepts MML only and does
+  not promote a post-hoc JML scoring prior into an operational contract.
+- [x] **OPT-04 — Bounded GPCM JML with both boundary and scoring-prior gates:**
+  unavailable for 0.2.4 portable calibration because both parent lanes remain
+  outside the release scope.
 
 ### Minimum public scope and promotion lanes
 
@@ -1732,25 +1778,31 @@ complete freeze--persist--load--score contract.
 
 Existing fitted-object support for latent-regression MML, JML, and bounded
 GPCM must remain regression-tested, but callability does not automatically
-promote those routes to the 0.2.4 operational claim. They are independent
-promotion lanes:
+promote those routes to the 0.2.4 operational claim. G5 assigns the portable-
+calibration dispositions below:
 
-| Candidate lane | Additional question that must be closed |
-| --- | --- |
-| Estimated-population/latent-regression MML | Are the intercept/variance, covariate schema where applicable, factor levels, contrasts, missing-data policy, conditional population parameters, and population-transport caveat fully frozen? |
-| JML | Is the scoring-time prior explicit and reviewable, given that the source fit did not estimate a population distribution, and are boundary Persons excluded from the calibration payload? |
-| Bounded GPCM MML | Are slope owner, step owner, slope centering, population scale, score map, and probability-level reconstruction preserved exactly? |
-| Bounded GPCM JML | Do both the GPCM boundary/readiness contract and the explicit post-hoc scoring-prior contract pass independently? |
+| Candidate lane | 0.2.4 portable status | Requirement before a later promotion |
+| --- | --- | --- |
+| Estimated-population/latent-regression MML | Unavailable | Freeze intercept/variance, covariate schema, factor levels, contrasts, missing-data policy, conditional population parameters, and the population-transport caveat. |
+| JML | Unavailable | Freeze an explicit scoring-time prior and exclude boundary Persons from the calibration payload without describing posterior EAP as an original JML maximum. |
+| Bounded GPCM MML | Unavailable | Preserve slope owner, step owner, slope centering, population scale, score map, readiness, and probability-level reconstruction in the artifact-only route. |
+| Bounded GPCM JML | Unavailable | Close both the GPCM artifact contract and the explicit JML scoring-prior contract independently. |
 
-Each table row receives its own status: `validated`, `caveated`,
-`experimental`, or `blocked`. A failed optional lane narrows 0.2.4; it does not
-weaken the core gate or force unrelated research into the release. Public
-documentation and runtime messages must use the same matrix.
+A later release may reopen one of these lanes under its own evidence. For
+0.2.4, public documentation states the smaller RSM/PCM MML portable envelope
+and separately describes the existing fitted-object capabilities.
 
 This release remains limited to one response family, one category map, one
 observed score scale, and one latent dimension per calibration. It does not
 add new facet levels during scoring, online updating, automatic equating,
 multiple-scale routing, mixed response families, or a new estimator.
+
+The phrase *fitted-object posterior scoring* is used for
+`predict_mfrm_units()` and `sample_mfrm_plausible_values()`: those functions
+consume an `mfrm_fit` and hold its non-Person parameters fixed. The phrase
+*portable calibration scoring* is reserved for the 0.2.4 artifact-only route.
+This distinction prevents existing GPCM prediction support from being read as
+support for a saved, versioned GPCM calibration artifact.
 
 ### Calibration object contract
 
@@ -2056,7 +2108,7 @@ required children are checked.
     dispositions, a direct hand-enumerated posterior oracle, and fitted-object
     parity as secondary evidence. The functions and optional lanes remain
     unexported/unpromoted.
-- [x] **G4 — Independent and operational evidence**
+- [ ] **G4 — Independent and operational evidence**
   - [x] Freeze numerical rules, denominators, resource budgets, and disjoint
     confirmation identities before opening confirmation results.
   - [x] Run independent probability/posterior and constraint/rank oracles that
@@ -2075,8 +2127,31 @@ required children are checked.
     medium, and operationally plausible budgets.
   - [x] Retain failed cells and require a new disjoint confirmation whenever a
     result changes code or rules.
-  - [x] **G4 exit:** CORE-05 and CORE-06 pass without pooling away failures or
-    relying on historical/skipped evidence.
+  - [x] Retain the 2026-08-22 result as historical evidence for commit
+    `f492fb9f0ee977777d03f0255de008af33860db5` and the explicit nine-node
+    payload; do not relabel it as current-source confirmation.
+  - [x] Add local regressions for interaction replay, explicit scoring
+    quadrature, scoring readiness, invalid weights, checkpoint identity,
+    hybrid resume, completed-iteration refusal, and development metadata.
+  - [x] Freeze an amended current-source confirmation contract covering the
+    new scoring-algorithm identity, default 31-node basis, one-node source-fit
+    adversary, and the fitted-object replay/scoring/checkpoint boundaries.
+  - [x] Implement a fail-closed candidate-binding preflight that requires one
+    live clean commit, a matching source-tarball file registry, the production
+    boundary registry, and exact contract/worker/test identities before any
+    current confirmation result can be opened.
+  - [x] Classify every live source change into release, repository-evidence,
+    and deferred-research commit lanes; fail on unknown paths and confirm that
+    deferred G-theory and Rater-assignment material is excluded from the
+    package payload and user-facing release language.
+  - [ ] Run the amended denominator from an isolated current source-tarball
+    install, retaining every failure and using a new disjoint confirmation
+    identity after any evaluated production change.
+  - [ ] Re-run hosted macOS release first, followed by Windows release and
+    Linux devel/release/oldrel, on one current commit.
+  - [ ] **G4 exit:** CORE-05 and CORE-06 pass for the current hardened source
+    without pooling away failures or relying on the historical 2026-08-22
+    result.
   - Evidence: the repository-only prospective contract froze two
     disjoint RSM/PCM fixtures, six numerical rules, nineteen adversarial cells,
     five platform cells, and three resource scales before confirmation. The
@@ -2098,21 +2173,32 @@ required children are checked.
     repository release-readiness, and all 121 G4 expectations with zero
     failures, errors, warnings, or skips in hosted macOS release, Windows
     release, and Ubuntu devel/release/oldrel-1. No failed cell was pooled into
-    that result. CORE-05, CORE-06, and G4 therefore close for the exact
-    fixed-N(0,1) RSM/PCM core. Node-runtime deprecation annotations from the
+    that result. CORE-05, CORE-06, and G4 therefore closed for that exact
+    fixed-N(0,1) RSM/PCM source. Node-runtime deprecation annotations from the
     Actions platform are non-blocking workflow-maintenance signals, not G4
-    evidence. Public API and optional-lane authorization remain closed; G5,
-    including OPT-02 bounded GPCM MML, is next and inherits no core pass.
-- [ ] **G5 — Optional-lane qualification**
-  - [ ] Adjudicate OPT-01 estimated-population/latent-regression MML.
-  - [ ] Adjudicate OPT-02 bounded GPCM MML.
-  - [ ] Adjudicate OPT-03 JML scoring-prior support.
-  - [ ] Adjudicate OPT-04 bounded GPCM JML only after its two parent gates.
-  - [ ] Project each result into the public support matrix as `validated`,
-    `caveated`, `experimental`, `blocked`, or unavailable.
-  - [ ] **G5 exit:** every optional lane has an evidence-backed disposition;
-    none inherits the core pass or blocks a deliberately smaller release.
+    evidence. At G4 close, public API and optional-lane authorization remained
+    closed and G5 inherited no core pass; the subsequent G5 disposition is
+    recorded below. The 2026-08-24 boundary-hardening changes supersede that
+    close for the current source; the historical result remains intact, but
+    CORE-05, CORE-06, and G4 are open until the amended confirmation above.
+- [x] **G5 — Optional-lane qualification**
+  - [x] Adjudicate OPT-01 estimated-population/latent-regression MML as
+    unavailable for portable calibration in 0.2.4.
+  - [x] Adjudicate OPT-02 bounded GPCM MML as unavailable for portable
+    calibration in 0.2.4 while preserving existing fitted-object GPCM routes.
+  - [x] Adjudicate OPT-03 JML scoring-prior support as unavailable for portable
+    calibration in 0.2.4.
+  - [x] Adjudicate OPT-04 bounded GPCM JML as unavailable because both parent
+    requirements remain outside the portable-calibration scope.
+  - [x] Record the four dispositions in the internal release record and reserve
+    user-facing documentation for actionable availability and alternatives.
+  - [x] **G5 exit:** every optional lane has an evidence-backed disposition;
+    none inherits the core pass or blocks the deliberately smaller release.
+  - Evidence: the repository-only G5 lane-disposition record, executable
+    fail-closed extractor/schema behavior, and the fitted-object versus
+    portable-calibration terminology boundary.
 - [ ] **G6 — Release-candidate hardening**
+  - [ ] Start only after the reopened current-source G4 exit is complete.
   - [ ] Add one fresh-session end-to-end operational vignette using synthetic
     data and the installed public API only.
   - [ ] Add schema compatibility and explicit migration/refusal fixtures.
@@ -2128,6 +2214,21 @@ required children are checked.
     optional claim.
   - [ ] **G6 exit:** CORE-07 passes and CORE-08 is decided from the complete
     claim ledger rather than from schedule or version pressure.
+
+### Public-document audience boundary
+
+Help pages, README examples, vignettes, runtime messages, and `NEWS.md` describe
+only what users can do, the conditions under which results may be interpreted,
+important migration notes, and a practical alternative when a route is not
+available. They do not reproduce gate identifiers, claim-ledger rows, CI run
+IDs, hashes, prospective denominators, authorization mechanics, or internal
+function names. `NEWS.md` records completed user-visible changes rather than
+development chronology.
+
+Repository-only validation records retain the engineering decisions,
+falsifiers, negative results, and release evidence. G6 checks consistency of
+the user-visible support envelope across public surfaces; it does not require
+those surfaces to repeat internal evidence prose.
 
 ### No-go conditions and scope fallback
 
@@ -2214,6 +2315,228 @@ The following are research tracks rather than committed near-term features:
 A callable experimental helper is not by itself a public support claim. A
 feature becomes supported only after its estimand, identification, failure
 behavior, recovery evidence, documentation, and compatibility contract agree.
+
+### Rater-assignment and direct-anchor evidence track
+
+Status: **source synthesis complete; successor design pending; all execution
+closed**.
+
+This is a repository-only research track. It does not block G6, change the
+0.2.4 public scope, reopen the G5 GPCM dispositions, or promote an operational
+Rater-anchor percentage. It asks a different question from portable fixed
+calibration: given a fixed rating budget, how should common ratings be
+distributed before direct Rater anchors are compared?
+
+The evidence base currently has two complementary sources:
+
+- McEwen (2018), *The Effects of Incomplete Rating Designs on Results from
+  Many-Facets-Rasch Model Analyses*, compares 20 incomplete designs and four
+  Rater orders in one fully crossed eight-Rater/24-essay data set. Its retained
+  implications are coverage sensitivity, non-binary linkage, critical-edge
+  loss, assignment-order sensitivity, dual graph projections, and instability
+  of relative decisions.
+- DeMars, Shapovalov, and Hathcoat (2023), *Many-Facet Rasch Designs: How
+  Should Raters be Assigned to Examinees?*, compares rotating pairs, fixed
+  pairs, random pairs, and a universal linking subset in clean PCM simulation
+  with 16 or 31 Raters. Its retained implications are link-breadth versus
+  link-strength contrasts, observation-regime dependence, Rater-severity
+  variance as a moderator, and the gap between empirical and model-based SE.
+
+The DeMars source is adjudicated from the complete 21-page paper rather than
+its abstract alone. The abstract reverses the Study 1 direction reported in
+the method, results, Figures 1--3, and conclusion; the retained result is that
+rotating and random pairs have slightly smaller empirical Rater and Person SE
+than fixed pairs when every Person is double-rated. Table 3 also reports `806`
+single-rated Persons in one cell whose workload arithmetic gives `896`; this is
+treated as a source-table error, not a design target. One disconnected random-
+pair replication was regenerated in the source study. A mfrmr successor must
+instead retain that planned identity as a structural failure, or prospectively
+declare a distinct generator conditional on connectivity.
+
+#### Layered scenario accounting
+
+Unlike denominators are not added together:
+
+| Layer | Count | Current status |
+|---|---:|---|
+| Typed fixed-calibration scenarios | 9 | completed semantic contract |
+| Direct-Rater-anchor configurations | 8 | frozen 0.2.3 prospective contract |
+| Assignment-network scenarios | 7 | frozen 0.2.3 prospective contract |
+| McEwen incomplete-design catalog | 20 | source catalog only |
+| McEwen Rater orders | 4 | source perturbations only |
+| DeMars design archetypes | 4 | source archetypes A--D only |
+
+The nine typed scenarios remain the answer to the fixed-anchor semantic count.
+The eight direct-anchor configurations remain rate/composition/value-error
+arms. The seven networks remain the frozen feasibility denominator. Neither
+source catalog is an executable successor manifest.
+
+#### Research questions and estimands
+
+The successor design must answer these questions separately:
+
+1. At equal rating workload, does broad distribution across many weak direct
+   Rater links outperform concentration in a few strong links?
+2. Does that answer change between universal double-rating and a design in
+   which most Persons receive one rating?
+3. How does the answer change as the true Rater-severity SD moves from `0.1`
+   through `0.5` to `0.8` logits?
+4. How much assignment and Rater-estimation uncertainty is absent from the
+   model-based Person SE returned by the fitted model?
+5. Conditional on a qualified network, do direct anchors improve recovery and
+   substantive decisions for free Raters and Persons, at what separate costs?
+
+The primary topology estimand is paired recovery under a fixed response truth
+and fixed rating workload. Total response-plus-assignment variability and
+assignment-only variability are different estimands and must not be pooled.
+Bias, empirical SE, and RMSE remain separate; an empirical SE that subtracts
+bias cannot replace RMSE. A model-SE comparison reports calibration error and
+interval coverage rather than treating the model SE as ground truth.
+
+#### RDA-0 -- completed source and scope adjudication
+
+- [x] Read and visually inspect every page of the two retained sources.
+- [x] Record the DeMars abstract/result reversal, Table 3 arithmetic issue,
+  and replacement of a disconnected random-pair replication.
+- [x] Preserve direct fixed anchors, common linking Persons, repeated ratings,
+  and link topology as distinct resources.
+- [x] Keep 25% exact range-spanning direct Rater anchors as a feasibility
+  candidate only; neither source selects or tests a direct-anchor percentage.
+- [x] Keep this research track outside the 0.2.4 release-critical path and
+  outside Help, vignettes, and `NEWS.md` until a public capability changes.
+
+#### RDA-1 -- successor network catalog
+
+The frozen seven-network contract is not mutated. A successor catalog must add
+at least four explicit network rows:
+
+- [ ] `double_rotating_pairs`: every Person has two Raters and each Rater is
+  linked once or a few times to many different Raters;
+- [ ] `double_random_pairs`: the same double-rating workload with random pair
+  allocation and an explicit connectivity disposition;
+- [ ] `single_fixed_pair_links`: most Persons have one Rater and the common
+  rating budget is concentrated in a fixed-pair chain; and
+- [ ] `single_random_pair_links`: most Persons have one Rater and the common
+  rating budget is distributed through random pairs.
+
+Together with existing `sparse_pair_cycle` as the double-rated fixed-pair arm
+and `sparse_link05_range` as the single-rated universal-link arm, these create
+two three-way, equal-workload comparison sets. The minimum successor catalog
+would therefore contain 11 networks, but that count remains proposed until
+exact incidence matrices and invariants are frozen.
+
+#### RDA-2 -- assignment generator and graph contract
+
+- [ ] Freeze exact Person-by-Rater incidence matrices or deterministic
+  construction algorithms for every non-random network.
+- [ ] Define rotating pairs by co-Rater breadth and per-edge common-Person
+  strength, not by a nickname alone.
+- [ ] Provide two random lanes: an unconditional generator that retains
+  disconnected draws, and, only if scientifically needed, a separately named
+  generator conditional on connectivity.
+- [ ] Freeze graph invariants before fitting: component count, minimum and
+  median co-Rater degree, missing Rater pairs, minimum/median/CV of common-
+  Person edge weights, articulation points, and weighted algebraic
+  connectivity.
+- [ ] Audit both Rater-centric and Person-centric projections and retain exact
+  Rater workload, workload CV, unique-Person count, assignment count, and
+  assignment density.
+- [ ] Reject post-result rewiring, regenerated failure identities, and silent
+  substitution of a nearby connected network.
+
+#### RDA-3 -- data-generating profiles
+
+- [ ] Freeze Rater-severity SD profiles `0.1`, `0.5`, and `0.8`; topology
+  conclusions must be conditional on this moderator.
+- [ ] Use 16 Raters for the program-relevant core and reserve 31 Raters as a
+  separately identified scale-sensitivity profile.
+- [ ] Separate 30- and 60-ratings-per-Rater workload profiles from Person-count
+  and density effects.
+- [ ] Retain common-link counts as counts and rates. The current 0/8/20-Person
+  gradient may assess program relevance; an exact DeMars replication profile
+  may add 4/8 without replacing it.
+- [ ] Keep the source-replication PCM profile with five Tasks and five ordered
+  categories separate from the existing four-Criterion/four-category direct-
+  anchor profile.
+- [ ] Add a well-specified baseline first. DRF, Rater-by-Task interaction,
+  local dependence, misfit, skewed Person distributions, and unplanned missing
+  ratings are later adversarial profiles and cannot inherit baseline results.
+
+#### RDA-4 -- measures and denominators
+
+- [ ] Retain fit return, inference readiness, structural failure, and metric
+  availability over every planned identity.
+- [ ] Report free-Rater bias/RMSE/empirical SE, Person bias/RMSE/empirical SE,
+  Criterion recovery, and score reliability.
+- [ ] Add model-based SE, empirical-to-model SE ratio and difference, nominal
+  interval coverage, and coverage error for Raters and Persons.
+- [ ] Retain McEwen-informed rank correlation, matched-rank, top-n, cut-score,
+  and fully-crossed-reference deviation rather than declaring small mean-SE
+  differences operationally negligible.
+- [ ] Stratify all measures by observation regime, network, Rater-severity SD,
+  workload, connectivity state, and direct-anchor configuration where active.
+- [ ] Treat DRF detection as a separate estimand with its own simulated truth,
+  false-positive rate, power, and network eligibility; DeMars cites but does
+  not itself establish the DRF result.
+
+#### RDA-5 -- staged execution and precision
+
+- [ ] **P0 no-fit contract:** freeze source identities, six core comparison
+  arms, matrices/generators, graph invariants, metrics, failures, seeds, and
+  result schemas. P0 cannot execute or select a topology.
+- [ ] **P1 smoke:** one identity per core arm at Rater SD `0.5` checks only
+  generation, resource equality, fit routing, failure capture, and metric
+  production. Six returned fits would not be scientific evidence.
+- [ ] **P2 feasibility candidate:** six arms by three Rater-SD profiles by ten
+  paired seeds gives 180 candidate fits at the 16-Rater core workload. This is
+  planning arithmetic only until a P0 contract authorizes it; ten seeds assess
+  runtime, failure modes, and dispersion, not topology selection.
+- [ ] **P3 confirmation:** freeze independent seeds and metric-specific Monte
+  Carlo precision after P2 without changing scenarios, tolerances, failure
+  handling, or primary outcomes. DeMars's 200 replications are context, not an
+  automatically inherited sample-size rule.
+- [ ] Run the 31-Rater and 60-rating workload sensitivities only after the core
+  generator and denominator contract pass; do not create an unreviewed full
+  factorial.
+
+#### RDA-6 -- direct-anchor interaction and decision authority
+
+- [ ] Qualify topology before crossing networks with all eight direct-anchor
+  configurations. The qualifying rule and selected topology subset must be
+  frozen before anchor results are opened.
+- [ ] Compare anchor configurations within a network and paired response
+  identity; never pool networks to select an anchor percentage.
+- [ ] Report a Pareto frontier over readiness, recovery, direct anchor units,
+  added ratings, co-Rater breadth, and link strength. Assignment count alone
+  does not encode the value of its topology.
+- [ ] Require independently supplied operational costs before converting that
+  frontier into a deployment recommendation.
+- [ ] Preserve separate conclusions for absolute recovery, relative standing,
+  classification, DRF, and uncertainty calibration.
+
+#### RDA exit conditions and current authority
+
+The research track becomes execution-ready only when RDA-1 through RDA-5 are
+complete and independently testable. It becomes anchor-comparison-ready only
+after the topology qualification rule in RDA-6 is prospectively frozen. It can
+select an operational design only after confirmation and an external cost/use
+function. Completion of this track does not itself promote a public API.
+
+`Frozen0_2_3ContractMutated = FALSE`
+
+`SuccessorManifestFrozen = FALSE`
+
+`SmokeExecutionAuthorized = FALSE`
+
+`FeasibilityExecutionAuthorized = FALSE`
+
+`ConfirmationAuthorized = FALSE`
+
+`AppropriateAnchorRateSelected = FALSE`
+
+`OperationalAssignmentDesignSelected = FALSE`
+
+`PublicApiChanged = FALSE`
 
 ## Permanent principles
 

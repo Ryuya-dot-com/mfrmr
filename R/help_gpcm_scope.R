@@ -125,7 +125,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
     Area = c(
       "Core fitting and summaries",
       "Exploratory diagnostics and residual follow-up",
-      "Fixed-calibration scoring and information",
+      "Fitted-object posterior scoring and information",
       "Core curve and category views",
       "Checklist and summary-table appendix route",
       "Operational misfit casebook",
@@ -215,8 +215,10 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "unavailability status when the underlying fit is GPCM."
       ),
       paste(
-        "Covers fixed-calibration posterior scoring and information only;",
-        "population forecasting is a separate layer outside this row."
+        "`predict_mfrm_units()` and `sample_mfrm_plausible_values()` consume",
+        "the fitted model and hold its non-Person parameters fixed. This is",
+        "not scoring from a saved, versioned calibration artifact; population",
+        "forecasting is a separate layer outside this row."
       ),
       paste(
         "Limited to the slope-aware probability kernel that is already",
@@ -339,8 +341,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "unexpected-response, displacement, and category tables before writing claims."
       ),
       paste(
-        "Use fixed-calibration scoring and `compute_information()` /",
-        "`plot_information()`; keep population forecasting on a separate route."
+        "Use fitted-object posterior scoring and `compute_information()` /",
+        "`plot_information()`; keep portable calibration and population",
+        "forecasting on their separately documented routes."
       ),
       paste(
         "Use draw-free plot objects and category reports for GPCM sensitivity",
@@ -399,7 +402,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "`plot_dif_summary()` before writing claims."
       ),
       paste(
-        "Use the current MML fitting and fixed-calibration scoring routes, or",
+        "Use the current MML fitting and fitted-object posterior scoring routes, or",
         "use external Bayesian software when posterior sampling is required."
       ),
       paste(

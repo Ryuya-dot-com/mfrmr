@@ -279,9 +279,13 @@ preserves the minimal \code{Facet} / \code{Level} / \code{Estimate} layout.}
 
 \item{checkpoint}{Optional \code{list(file = ..., every_iter = ...)}.
 When supplied, the MML EM engine writes its state to \code{file}
-every \code{every_iter} outer EM iterations using \code{saveRDS()}.
-If the file already exists when the fit starts, the engine
-resumes from the recorded iteration. Only the EM engine
+every \code{every_iter} outer EM iterations using checked same-directory
+replacement. If the file already exists when the fit starts, the engine
+resumes only when its versioned identity exactly matches the current data,
+model, parameter layout, constraints, quadrature, package version, and
+engine stage. Legacy, corrupt, or incompatible files fail closed. A
+non-converged pure-EM run may resume with a larger \code{maxit}; a completed
+checkpoint cannot re-enter the same iteration boundary. Only the EM engine
 (\code{mml_engine = "em"} or the EM warm-start step of
 \code{mml_engine = "hybrid"}) honours the checkpoint; the direct
 \code{optim()} engine ignores it. Use this to make long MML EM
@@ -707,7 +711,7 @@ Supported model/estimation combinations:
 two-way non-person facet interactions
 \item \code{model = "GPCM"} is currently implemented only for the narrow bounded
 branch with \code{slope_facet == step_facet}; \code{MML} and \code{JML} fitting, core
-summaries, fixed-calibration posterior scoring, \code{\link[=compute_information]{compute_information()}},
+summaries, fitted-object posterior scoring, \code{\link[=compute_information]{compute_information()}},
 Wright/pathway/CCC fit plots, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, residual-PCA follow-up,
 \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}},
 \code{\link[=displacement_table]{displacement_table()}}, \code{\link[=measurable_summary_table]{measurable_summary_table()}},

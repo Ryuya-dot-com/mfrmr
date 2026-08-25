@@ -185,7 +185,7 @@ Function families:
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} (including
 fit-derived empirical / resampled / skeleton-based simulation
-specifications; fixed-calibration unit scoring supports \code{MML} fits
+specifications; fitted-object posterior scoring supports \code{MML} fits
 directly, latent-regression \code{MML} fits through the fitted population
 model when scored units also provide one-row-per-person background data,
 and \code{JML} fits through a post hoc reference-prior EAP layer;
@@ -303,7 +303,7 @@ not the latent-regression estimator.
 \item For future-unit scoring, retain an \code{MML} calibration when you want the
 fitted marginal model directly, use an active latent-regression \code{MML}
 fit when scored units also provide one-row-per-person background data, or
-use a \code{JML} calibration when a post hoc fixed-calibration EAP layer is
+use a \code{JML} calibration when a post hoc fitted-object EAP layer is
 acceptable; then score with
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.
 \item For bounded \code{GPCM}, use \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},

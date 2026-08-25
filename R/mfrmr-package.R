@@ -165,7 +165,7 @@
 #'   [evaluate_mfrm_signal_detection()], [predict_mfrm_population()],
 #'   [predict_mfrm_units()], [sample_mfrm_plausible_values()] (including
 #'   fit-derived empirical / resampled / skeleton-based simulation
-#'   specifications; fixed-calibration unit scoring supports `MML` fits
+#'   specifications; fitted-object posterior scoring supports `MML` fits
 #'   directly, latent-regression `MML` fits through the fitted population
 #'   model when scored units also provide one-row-per-person background data,
 #'   and `JML` fits through a post hoc reference-prior EAP layer;
@@ -273,7 +273,7 @@
 #' 7. For future-unit scoring, retain an `MML` calibration when you want the
 #'    fitted marginal model directly, use an active latent-regression `MML`
 #'    fit when scored units also provide one-row-per-person background data, or
-#'    use a `JML` calibration when a post hoc fixed-calibration EAP layer is
+#'    use a `JML` calibration when a post hoc fitted-object EAP layer is
 #'    acceptable; then score with
 #'    [predict_mfrm_units()] or [sample_mfrm_plausible_values()].
 #' 8. For bounded `GPCM`, use [summary.mfrm_fit()],

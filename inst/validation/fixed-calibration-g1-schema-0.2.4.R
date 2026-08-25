@@ -109,12 +109,16 @@ mfrmr_fc_g1_field_schema <- function() {
     row("scoring_basis.prior_sd", "numeric", "scalar", TRUE, "scoring_basis",
         "1", "required_exact", "finite, positive, and exactly one",
         "SCORING_PRIOR_INVALID", "CORE-04"),
+    row("scoring_basis.scoring_algorithm", "character", "scalar", TRUE,
+        "scoring_basis", "quadrature_eap_v1", "required_exact",
+        "registered EAP algorithm identity",
+        "SCORING_BASIS_UNSUPPORTED", "CORE-04"),
     row("scoring_basis.quadrature_rule", "character", "scalar", TRUE, "scoring_basis",
         "explicit registered rule identity", "required_explicit",
         "rule identity agrees with stored nodes and weights",
         "QUADRATURE_RULE_INVALID", "CORE-02"),
     row("scoring_basis.quadrature_order", "integer", "scalar", TRUE, "scoring_basis",
-        "positive stored order", "required_explicit", "equals node and weight lengths",
+        "stored order of at least 2", "required_explicit", "equals node and weight lengths",
         "QUADRATURE_ORDER_INVALID", "CORE-02"),
     row("scoring_basis.nodes", "numeric", "ordered vector", TRUE, "scoring_basis",
         "full-precision transformed nodes", "required_explicit",
@@ -401,7 +405,7 @@ mfrmr_fc_g1_identity_components <- function() {
       "schema", "model_family_estimator", "scale_dimension_counts",
       "facet_order_roles_levels_signs", "interaction_map", "response_map",
       "parameter_coordinates", "identification_constraints", "typed_anchors",
-      "scoring_prior", "quadrature", "eligibility_lane"
+      "scoring_prior", "scoring_algorithm", "quadrature", "eligibility_lane"
     ),
     SourcePaths = c(
       "header.schema_id;header.schema_version;header.semantic_identity_version",
@@ -411,11 +415,12 @@ mfrmr_fc_g1_identity_components <- function() {
       "model.interactions", "response.*", "parameters.coordinates",
       "constraints.identification", "constraints.anchors",
       "scoring_basis.type;scoring_basis.prior_mean;scoring_basis.prior_sd",
+      "scoring_basis.scoring_algorithm",
       "scoring_basis.quadrature_rule;scoring_basis.quadrature_order;scoring_basis.nodes;scoring_basis.weights",
       "eligibility.lane_id"
     ),
     EqualityRule = c(
-      rep("typed exact equality in canonical declared order", 12)
+      rep("typed exact equality in canonical declared order", 13)
     ),
     HashRequired = FALSE,
     stringsAsFactors = FALSE

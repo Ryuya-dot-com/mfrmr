@@ -71,3 +71,4 @@
 ^tests/testthat/test-fixed-calibration-g2-anchors[.]R$
 ^tests/testthat/test-fixed-calibration-g3-scoring[.]R$
 ^tests/testthat/test-fixed-calibration-g4-evidence[.]R$
+^tests/testthat/test-fixed-calibration-g5-disposition[.]R$

@@ -16,6 +16,8 @@ sample_mfrm_plausible_values(
   population_policy = c("error", "omit"),
   n_draws = 5,
   interval_level = 0.95,
+  scoring_quad_points = 31L,
+  readiness_policy = c("error", "review"),
   seed = NULL
 )
 }
@@ -42,7 +44,7 @@ column recorded in \code{fit}, if any.}
 
 \item{person_data}{Optional one-row-per-person data.frame with the
 background variables required by a latent-regression fit. Ignored for
-ordinary fixed-calibration scoring. Intercept-only latent-regression fits
+ordinary fitted-object posterior scoring. Intercept-only latent-regression fits
 can reconstruct the minimal scored-person table internally. This is the
 scoring-time table for \code{new_data}, not the fit object's replay/export
 provenance table. For categorical background variables, supply values on
@@ -61,6 +63,13 @@ integer.}
 
 \item{interval_level}{Posterior interval level passed to
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for the accompanying EAP summary table.}
+
+\item{scoring_quad_points}{Number of Gauss-Hermite nodes used only for this
+scoring call. Passed to \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and independent of the
+fit-time quadrature order.}
+
+\item{readiness_policy}{Source-fit readiness policy passed to
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.}
 
 \item{seed}{Optional seed for reproducible posterior draws.}
 }
@@ -84,7 +93,7 @@ Sample approximate plausible values under fitted posterior scoring
 }
 \details{
 \code{sample_mfrm_plausible_values()} is a thin public wrapper around
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} that exposes the fixed-calibration posterior draws as
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} that exposes the fitted-object posterior draws as
 a standalone object. It is useful when downstream workflows want repeated
 latent-value imputations rather than just one posterior EAP summary.
 
@@ -119,7 +128,7 @@ many-facet plausible-values system with all ConQuest-style extensions.
 
 This helper does not update the calibration, estimate new non-person facet
 levels, or provide exact future true values. It samples from the fixed-grid
-posterior implied by the existing fixed calibration.
+posterior implied by the existing fitted-model scoring basis.
 }
 
 \section{References}{
@@ -128,7 +137,7 @@ The underlying posterior scoring follows the usual quadrature-based EAP
 framework of Bock and Aitkin (1981). The interpretation of multiple
 posterior draws as plausible-value-style summaries follows the general logic
 discussed by Mislevy (1991), while the current implementation remains a
-practical fixed-calibration approximation rather than a full published
+practical fitted-object posterior approximation rather than a full published
 many-facet plausible-values method. For \code{JML} source fits, the quadrature
 posterior uses a package-level standard normal reference prior for this
 post hoc scoring layer.

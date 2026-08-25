@@ -10,6 +10,65 @@ load_fixed_calibration_g4_contract <- function() {
   list(root = root, validation = validation, script = script, env = env)
 }
 
+load_fixed_calibration_g4_current_contract <- function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  script <- file.path(
+    validation, "fixed-calibration-g4-current-source-contract-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(script), "Amended fixed-calibration G4 contract is excluded."
+  )
+  env <- new.env(parent = globalenv())
+  sys.source(script, envir = env)
+  list(root = root, validation = validation, script = script, env = env)
+}
+
+load_fixed_calibration_g4_candidate_binding <- function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  script <- file.path(
+    validation,
+    "fixed-calibration-g4-candidate-binding-preflight-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(script), "Fixed-calibration candidate binding is excluded."
+  )
+  skip_if_not_installed("digest")
+  env <- new.env(parent = globalenv())
+  env$`%||%` <- function(x, y) if (is.null(x)) y else x
+  sys.source(script, envir = env)
+  list(root = root, validation = validation, script = script, env = env)
+}
+
+load_fixed_calibration_g4_candidate_inventory <- function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  script <- file.path(
+    validation, "fixed-calibration-g4-candidate-source-inventory-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(script), "Fixed-calibration candidate inventory is excluded."
+  )
+  env <- new.env(parent = globalenv())
+  sys.source(script, envir = env)
+  list(root = root, validation = validation, script = script, env = env)
+}
+
+g4b_rehash_git_identity <- function(env, identity) {
+  payload_names <- c(
+    "Contract", "RepositoryRoot", "HeadCommit", "HeadTree", "Branch",
+    "StatusRegistry", "StatusRegistryHash", "StatusEntryCount",
+    "StagedEntryCount", "UnstagedEntryCount", "UntrackedEntryCount"
+  )
+  identity$IdentityHash <- env$mfrmr_fc_g4b_hash(identity[payload_names])
+  identity$GitAvailable <- grepl("^[0-9a-f]{40}$", identity$HeadCommit) &&
+    grepl("^[0-9a-f]{40}$", identity$HeadTree)
+  identity$Clean <- identity$GitAvailable &&
+    nrow(identity$StatusRegistry) == 0L
+  identity
+}
+
 g4_deterministic_data <- function(n_person, prefix, offset) {
   persons <- sprintf(paste0(prefix, "%03d"), seq_len(n_person))
   raters <- paste0("Judge_", c("A", "B", "C", "D"))
@@ -67,7 +126,8 @@ g4_confirmation_fixture <- local({
       fit,
       calibration_id = design$CalibrationId,
       source_fit_id = design$SourceFixtureId,
-      created_at_utc = "2026-08-22T04:00:00Z"
+      created_at_utc = "2026-08-22T04:00:00Z",
+      scoring_quad_points = design$QuadratureOrder
     )
     validated <- mfrmr:::mfrmr_validate_calibration_draft(
       draft, validated_at_utc = "2026-08-22T04:01:00Z"
@@ -259,6 +319,304 @@ test_that("G4 rules freeze disjoint identities and complete denominators", {
   ))
   expect_true(all(platforms$EvidenceStatus ==
                     "pending_unrun_for_current_g4_payload"))
+})
+
+test_that("amended G4 freezes current scoring and boundary identities unopened", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  review <- ctx$env$mfrmr_fc_g4_current_review()
+  identity <- ctx$env$mfrmr_fc_g4_current_scoring_identity()
+  design <- ctx$env$mfrmr_fc_g4_current_confirmation_design()
+  denominator <- ctx$env$mfrmr_fc_g4_current_denominator()
+  binding <- ctx$env$mfrmr_fc_g4_current_candidate_binding()
+  platforms <- ctx$env$mfrmr_fc_g4_current_platform_matrix()
+
+  expect_identical(
+    review$status,
+    "G4_current_rules_frozen_candidate_unbound_confirmation_unopened"
+  )
+  expect_true(review$rules_frozen)
+  expect_true(review$current_identities_disjoint_and_frozen)
+  expect_true(review$historical_control_non_authorizing)
+  expect_true(review$denominator_frozen)
+  expect_false(review$candidate_binding_complete)
+  expect_false(review$current_execution_opened)
+  expect_false(review$CORE_05_complete)
+  expect_false(review$CORE_06_complete)
+  expect_false(review$G4_exit_complete)
+  expect_false(review$G6_authorized)
+  expect_false(review$public_api_authorized)
+
+  expect_identical(
+    identity$Value[identity$Field == "ScoringAlgorithm"],
+    "quadrature_eap_v1"
+  )
+  expect_identical(
+    identity$Value[identity$Field == "DefaultScoringQuadratureOrder"], "31"
+  )
+  expect_identical(
+    identity$Value[identity$Field == "MinimumScoringQuadratureOrder"], "2"
+  )
+  current <- design[design$DisjointCurrentConfirmationAuthority, ]
+  control <- design[
+    design$EvidenceRole == "historical_explicit9_regression_control", ,
+    drop = FALSE
+  ]
+  expect_identical(current$FitQuadratureOrder, c(13L, 13L, 1L, 1L))
+  expect_identical(current$ScoringQuadratureOrder, rep(31L, 4L))
+  expect_false(any(current$PreviouslyUsedFixture))
+  expect_false(any(current$CurrentExecutionOpened))
+  expect_true(all(control$PreviouslyUsedFixture))
+  expect_identical(control$ScoringQuadratureOrder, c(9L, 9L))
+  expect_false(any(control$DisjointCurrentConfirmationAuthority))
+  expect_false(any(control$ControlMayAuthorizeCurrentG4))
+
+  expect_identical(nrow(denominator), 49L)
+  expect_identical(anyDuplicated(denominator$CellId), 0L)
+  expect_true(all(denominator$Required))
+  expect_false(any(denominator$CurrentExecutionOpened))
+  expect_true(all(c(
+    "JML_SOURCE1_DEFAULT31_NONDEGENERATE",
+    "INTERACTION_REPLAY_FULL_ROUNDTRIP",
+    "REPLAY_SCORING_SETTING_PRESERVATION",
+    "CHECKPOINT_WEIGHT_MUTATION_SAME_LAYOUT_REFUSAL",
+    "CHECKPOINT_CROSS_STAGE_REFUSAL",
+    "CHECKPOINT_CHECKED_ATOMIC_REPLACEMENT"
+  ) %in% denominator$CellId))
+  expect_identical(nrow(binding), 9L)
+  expect_true(all(binding$RequiredBeforeExecution))
+  expect_true(all(is.na(binding$BoundValue)))
+  expect_identical(
+    platforms$ExecutionOrder,
+    c("prerequisite_first", rep("after_macos_release_pass", 4L))
+  )
+  expect_true(all(
+    platforms$EvidenceStatus ==
+      "pending_unrun_for_bound_current_candidate"
+  ))
+})
+
+test_that("amended G4 contract is prospective and binds its unopened record", {
+  ctx <- load_fixed_calibration_g4_current_contract()
+  source <- paste(readLines(ctx$script, warn = FALSE), collapse = "\n")
+  expect_false(grepl("fit_mfrm\\s*\\(", source, perl = TRUE))
+  expect_false(grepl("mfrmr_score_calibration\\s*\\(", source, perl = TRUE))
+  expect_false(grepl("saveRDS\\s*\\(|readRDS\\s*\\(", source, perl = TRUE))
+  expect_false(grepl("system2\\s*\\(|system\\s*\\(", source, perl = TRUE))
+
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-current-source-contract-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  roadmap <- paste(
+    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
+    collapse = "\n"
+  )
+  hardening <- paste(readLines(file.path(
+    ctx$validation, "fixed-calibration-boundary-hardening-0.2.4.md"
+  ), warn = FALSE), collapse = "\n")
+  expect_match(
+    record, ctx$env$mfrmr_fc_g4_current_specification, fixed = TRUE
+  )
+  expect_match(record, "`AmendedG4ContractFrozen=TRUE`", fixed = TRUE)
+  expect_match(
+    record, "`AmendedG4CurrentExecutionOpened=FALSE`", fixed = TRUE
+  )
+  expect_match(record, "`AmendedG4CandidateBound=FALSE`", fixed = TRUE)
+  expect_match(record, "`AmendedG4DenominatorCells=49`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(
+    hardening, "`AmendedG4ContractFrozen=TRUE`", fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "  - [x] Freeze an amended current-source confirmation contract",
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "  - [ ] Run the amended denominator from an isolated current source-tarball",
+    fixed = TRUE
+  )
+})
+
+test_that("G4 candidate binding observes source identities and stays closed", {
+  ctx <- load_fixed_calibration_g4_candidate_binding()
+  manifest <- ctx$env$mfrmr_fc_g4b_manifest(ctx$root)
+  expect_s3_class(manifest, "mfrmr_fc_g4b_manifest")
+  expect_silent(ctx$env$mfrmr_fc_g4b_assert_manifest(manifest, ctx$root))
+  expect_identical(manifest$ProspectiveContract,
+                   "mfrmr_fixed_calibration_g4_current_source_evidence_v2")
+  expect_true(manifest$ObservedGitIdentity$GitAvailable)
+  expect_true(manifest$GitIdentityMatchesLive)
+  expect_identical(nrow(manifest$ProductionRegistry), 5L)
+  expect_identical(manifest$ProductionRegistry$Path, c(
+    "R/core-fixed-calibration.R", "R/api-prediction.R",
+    "R/api-export-bundles.R", "R/core-optimizer.R", "DESCRIPTION"
+  ))
+  expect_true(all(nchar(manifest$ProductionRegistry$SHA256) == 64L))
+  expect_identical(nrow(manifest$SupportRegistry), 4L)
+  expect_true(all(nchar(manifest$SupportRegistry$SHA256) == 64L))
+  expect_identical(nrow(manifest$Binding), 9L)
+  expect_false(manifest$CandidateBindingComplete)
+  expect_false(manifest$IsolatedExecutionAdmissionReady)
+  expect_false(manifest$CurrentExecutionOpened)
+  expect_false(manifest$ConfirmationResultObserved)
+  expect_false(manifest$CORE05Complete)
+  expect_false(manifest$CORE06Complete)
+  expect_false(manifest$G4ExitComplete)
+  expect_true("TARBALL_ABSENT" %in% manifest$Refusals$Code)
+  expect_true("BINDING_FIELD_INCOMPLETE" %in% manifest$Refusals$Code)
+  if (!manifest$ObservedGitIdentity$Clean) {
+    expect_true("WORKTREE_DIRTY_OR_UNBOUND" %in% manifest$Refusals$Code)
+  }
+  expect_error(
+    ctx$env$mfrmr_fc_g4b_require_bound_candidate(manifest, ctx$root),
+    "candidate binding is incomplete", fixed = TRUE
+  )
+})
+
+test_that("G4 candidate binding rejects caller-forged live Git identity", {
+  ctx <- load_fixed_calibration_g4_candidate_binding()
+  live <- ctx$env$mfrmr_fc_g4b_git_identity(ctx$root)
+  forged <- live
+  forged$HeadCommit <- paste(rep(if (
+    identical(substr(live$HeadCommit, 1L, 1L), "0")
+  ) "1" else "0", 40L), collapse = "")
+  forged <- g4b_rehash_git_identity(ctx$env, forged)
+  expect_silent(ctx$env$mfrmr_fc_g4b_assert_git_identity(forged))
+  manifest <- ctx$env$mfrmr_fc_g4b_manifest(
+    ctx$root, git_identity = forged
+  )
+  expect_false(manifest$GitIdentityMatchesLive)
+  expect_false(manifest$CandidateBindingComplete)
+  expect_true("GIT_IDENTITY_NOT_CURRENT" %in% manifest$Refusals$Code)
+  expect_true("WORKTREE_DIRTY_OR_UNBOUND" %in% manifest$Refusals$Code)
+})
+
+test_that("G4 candidate binding rejects tampering and invalid tarballs", {
+  ctx <- load_fixed_calibration_g4_candidate_binding()
+  invalid <- tempfile(fileext = ".tar.gz")
+  on.exit(unlink(invalid), add = TRUE)
+  writeLines("not a source tarball", invalid)
+  manifest <- ctx$env$mfrmr_fc_g4b_manifest(ctx$root, invalid)
+  expect_false(manifest$CandidateBindingComplete)
+  expect_true("TARBALL_INVALID" %in% manifest$Refusals$Code)
+  expect_false(manifest$TarballObservation$Safe)
+
+  changed <- ctx$env$mfrmr_fc_g4b_manifest(ctx$root)
+  changed$CandidateBindingComplete <- TRUE
+  expect_error(
+    ctx$env$mfrmr_fc_g4b_assert_manifest(changed, ctx$root),
+    "manifest or readiness was altered", fixed = TRUE
+  )
+})
+
+test_that("G4 candidate-binding record retains the live refusal boundary", {
+  ctx <- load_fixed_calibration_g4_candidate_binding()
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-candidate-binding-preflight-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  source <- paste(readLines(ctx$script, warn = FALSE), collapse = "\n")
+  roadmap <- paste(
+    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
+    collapse = "\n"
+  )
+  expect_match(
+    record, "`CandidateBindingPreflightImplemented=TRUE`", fixed = TRUE
+  )
+  expect_match(record, "`LiveCandidateBindingComplete=FALSE`", fixed = TRUE)
+  expect_match(record, "`CurrentExecutionOpened=FALSE`", fixed = TRUE)
+  expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "  - [x] Implement a fail-closed candidate-binding preflight",
+    fixed = TRUE
+  )
+  expect_false(grepl("fit_mfrm\\s*\\(", source, perl = TRUE))
+  expect_false(grepl("mfrmr_score_calibration\\s*\\(", source, perl = TRUE))
+  expect_false(grepl("R CMD check|R CMD build", source, fixed = TRUE))
+})
+
+test_that("G4 candidate inventory classifies every live path fail closed", {
+  ctx <- load_fixed_calibration_g4_candidate_inventory()
+  review <- ctx$env$mfrmr_fc_g4i_review(ctx$root)
+  inventory <- review$Inventory
+  expect_identical(
+    review$Status, "all_live_changes_classified_commit_lanes_unexecuted"
+  )
+  expect_true(review$AllChangesClassified)
+  expect_true(review$ResearchExcludedFromPackagePayload)
+  expect_true(review$PublicInternalLanguageClean)
+  expect_true(review$CommitPlanReady)
+  expect_false(review$WorkingTreeClean)
+  expect_false(review$CandidateBindingComplete)
+  expect_false(review$CurrentExecutionOpened)
+  expect_false(review$G4ExitComplete)
+  expect_identical(
+    sum(inventory$Classification == "unclassified_fail_closed"), 0L
+  )
+  expect_identical(anyDuplicated(inventory$Path), 0L)
+  allowed <- c(
+    "release_production_code_and_metadata",
+    "release_public_and_user_facing_surface",
+    "release_build_test_and_repository_evidence",
+    "deferred_multivariate_gtheory_research",
+    "deferred_rater_anchor_design_research"
+  )
+  expect_true(all(inventory$Classification %in% allowed))
+  expect_true(all(allowed[1:3] %in% inventory$Classification))
+})
+
+test_that("G4 candidate inventory keeps deferred research outside payload", {
+  ctx <- load_fixed_calibration_g4_candidate_inventory()
+  paths <- c(
+    "inst/validation/gtheory-multivariate-example-0.2.4.R",
+    "tests/testthat/test-gtheory-multivariate-example.R",
+    "inst/validation/rater-anchor-example-0.2.4.R",
+    "tests/testthat/test-rater-anchor-example.R"
+  )
+  classification <- vapply(
+    paths, ctx$env$mfrmr_fc_g4i_classify_path, character(1L)
+  )
+  expect_identical(unname(classification), c(
+    rep("deferred_multivariate_gtheory_research", 2L),
+    rep("deferred_rater_anchor_design_research", 2L)
+  ))
+  research <- classification %in% c(
+    "deferred_multivariate_gtheory_research",
+    "deferred_rater_anchor_design_research"
+  )
+  payload <- vapply(seq_along(paths), function(index) {
+    ctx$env$mfrmr_fc_g4i_package_payload_expected(
+      paths[index], classification[index]
+    )
+  }, logical(1L))
+  expect_true(all(research))
+  expect_false(any(payload))
+  ignore <- ctx$env$mfrmr_fc_g4i_buildignore_contract(ctx$root)
+  expect_true(all(ignore$PresentExactly))
+  expect_identical(nrow(ignore), 5L)
+})
+
+test_that("G4 candidate inventory keeps internal mechanics out of public help", {
+  ctx <- load_fixed_calibration_g4_candidate_inventory()
+  hits <- ctx$env$mfrmr_fc_g4i_public_internal_language_audit(ctx$root)
+  expect_identical(nrow(hits), 0L)
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-g4-candidate-source-inventory-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expect_match(record, "`AllLiveChangesClassified=TRUE`", fixed = TRUE)
+  expect_match(record, "`UnknownPathCount=0`", fixed = TRUE)
+  expect_match(record, "`PublicInternalLanguageClean=TRUE`", fixed = TRUE)
+  expect_match(record, "`WorkingTreeClean=FALSE`", fixed = TRUE)
 })
 
 test_that("disjoint RSM and PCM probability/posterior oracles pass frozen rules", {
@@ -674,7 +1032,7 @@ test_that("macOS release gates the four remaining workflow cells", {
   expect_true(status$CIWorkflowOK)
 })
 
-test_that("record and roadmap close CORE-05, CORE-06, and G4", {
+test_that("historical G4 close is retained while current-source G4 is reopened", {
   ctx <- load_fixed_calibration_g4_contract()
   record_path <- file.path(
     ctx$validation, "fixed-calibration-g4-evidence-record-0.2.4.md"
@@ -687,6 +1045,13 @@ test_that("record and roadmap close CORE-05, CORE-06, and G4", {
   expect_true(file.exists(macos_record_path))
   macos_record <- paste(
     readLines(macos_record_path, warn = FALSE), collapse = "\n"
+  )
+  hardening_record_path <- file.path(
+    ctx$validation, "fixed-calibration-boundary-hardening-0.2.4.md"
+  )
+  expect_true(file.exists(hardening_record_path))
+  hardening_record <- paste(
+    readLines(hardening_record_path, warn = FALSE), collapse = "\n"
   )
   roadmap <- paste(
     readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
@@ -735,18 +1100,24 @@ test_that("record and roadmap close CORE-05, CORE-06, and G4", {
   expect_match(
     macos_record, "`HostedMacOSAttempt1DenominatorOpened=FALSE`", fixed = TRUE
   )
-  expect_match(roadmap, "- [x] **CORE-05 — Independent evidence:**",
+  expect_match(
+    hardening_record, "`HistoricalG4CurrentSourceEvidence=FALSE`", fixed = TRUE
+  )
+  expect_match(hardening_record, "`CORE05Complete=FALSE`", fixed = TRUE)
+  expect_match(hardening_record, "`CORE06Complete=FALSE`", fixed = TRUE)
+  expect_match(hardening_record, "`G4ExitComplete=FALSE`", fixed = TRUE)
+  expect_match(roadmap, "- [ ] **CORE-05 — Independent evidence:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [x] **CORE-06 — Reproducible operation:**",
+  expect_match(roadmap, "- [ ] **CORE-06 — Reproducible operation:**",
                fixed = TRUE)
-  expect_match(roadmap, "- [x] **G4 — Independent and operational evidence**",
+  expect_match(roadmap, "- [ ] **G4 — Independent and operational evidence**",
                fixed = TRUE)
   expect_match(
     roadmap,
     "  - [x] Run the prospectively required hosted macOS release workflow cell",
     fixed = TRUE
   )
-  expect_match(roadmap, "  - [x] **G4 exit:**", fixed = TRUE)
-  expect_match(roadmap, "- [ ] **G5 — Optional-lane qualification**",
+  expect_match(roadmap, "  - [ ] **G4 exit:**", fixed = TRUE)
+  expect_match(roadmap, "- [x] **G5 — Optional-lane qualification**",
                fixed = TRUE)
 })

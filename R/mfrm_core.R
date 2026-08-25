@@ -300,7 +300,7 @@ stop_gpcm_scope_error <- function(message,
 
 stop_if_gpcm_out_of_scope <- function(fit,
                                       helper,
-                                      supported = "fitting, core summary output, fixed-calibration posterior scoring, compute_information(), direct simulation and recovery checks, residual-based diagnostics, the curve/report helpers, and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)",
+                                      supported = "fitting, core summary output, fitted-object posterior scoring, compute_information(), direct simulation and recovery checks, residual-based diagnostics, the curve/report helpers, and the slope-aware element-conditional fair_average_table() and estimate_bias() (with the SE caveats documented in their help pages)",
                                       area = NULL) {
   if (!inherits(fit, "mfrm_fit")) return(invisible(NULL))
   model <- as.character(fit$config$model %||% fit$summary$Model[1] %||% NA_character_)
