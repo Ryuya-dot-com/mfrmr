@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 development: score UX hosted pass · accessible help/visual locally complete",
+    "0.2.4 development: accessible score UX validated 5/5",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1964,8 +1964,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 32L)
-  expect_identical(count_token("data-state=\"open\""), 43L)
+  expect_identical(count_token("data-state=\"done\""), 33L)
+  expect_identical(count_token("data-state=\"open\""), 42L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
