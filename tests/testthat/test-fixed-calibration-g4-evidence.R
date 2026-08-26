@@ -1965,7 +1965,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 20L)
+  expect_identical(count_token("data-state=\"done\""), 21L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2668,6 +2668,49 @@ test_that("0.2.4 public-language schema amendment preserves numeric results", {
     "SubmissionAuthorized=FALSE",
     "CRANSubmissionPerformed=FALSE",
     "NextAction=complete-public-language-schema-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 final public-language pass has an exact local receipt", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-public-language-final-pass-local-check-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "ReviewContract=mfrmr_public_language_final_pass_v1",
+    "EvidenceRole=package_check_and_delta_classification_only",
+    "PriorCheckedCommitSHA40=96068c9a16d48e7011a321f40ef125d8ab621418",
+    "CheckedCommitSHA40=772ada581c37ebab4c42e932abac32d373bef938",
+    "CheckedTreeSHA40=2acf9d32d2857dd71aa22f9a7aa3f5002f9d3065",
+    "DistributedChangedPaths=9",
+    "ExecutableRExpressionsIdentical=TRUE",
+    "StatisticalCodeChanged=FALSE",
+    "ScoringKernelChanged=FALSE",
+    "CalibrationSchemaChanged=FALSE",
+    "SourceTarballSHA256=b975104f73ca7de378a9aee523836213a1cc683369317facdf0efa4a57e43b37",
+    "CheckLogSHA256=736a597848b08d5803038cf48abdf7f4e99a93070883b6184276f40045488719",
+    "Errors=0",
+    "Warnings=0",
+    "Notes=0",
+    "DistributedTestsPassed=435",
+    "DistributedTestsSkipped=3",
+    "PriorNumericalParityStillApplicable=TRUE",
+    "G4Reissued=FALSE",
+    "G6Revalidated=FALSE",
+    "HostedRunId=32922730035",
+    "HostedRunComplete=FALSE",
+    "PriorHostedRunReusableForFinalPayload=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=complete-final-public-language-five-platform-matrix"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
