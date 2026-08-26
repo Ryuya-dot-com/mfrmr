@@ -1917,8 +1917,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 13L)
-  expect_identical(count_token("data-state=\"open\""), 47L)
+  expect_identical(count_token("data-state=\"done\""), 14L)
+  expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -1979,10 +1979,16 @@ test_that("0.2.4 candidate transition admits metadata but refuses payload drift"
   expect_true(review$ChangedPathsAllowed)
   expect_true(review$ProductionPayloadUnchanged)
   expect_true(review$G6DecisionBound)
-  expect_true(review$Metadata$DevelopmentMetadataOK)
-  expect_identical(review$Metadata$Stage, "development")
-  expect_true(review$DevelopmentTransitionReady)
-  expect_false(review$CandidateReady)
+  expect_true(review$Metadata$MetadataTransitionOK)
+  expect_true(review$Metadata$Stage %in% c("development", "candidate"))
+  if (identical(review$Metadata$Stage, "development")) {
+    expect_true(review$Metadata$DevelopmentMetadataOK)
+    expect_true(review$DevelopmentTransitionReady)
+    expect_false(review$CandidateReady)
+  } else {
+    expect_true(review$Metadata$CandidateMetadataOK)
+    expect_false(review$DevelopmentTransitionReady)
+  }
   expect_false(review$SubmissionAuthorized)
   expect_false(any(
     review$Inventory$Classification == "package_payload_change_forbidden"
@@ -2121,4 +2127,63 @@ test_that("0.2.4 candidate metadata transition is exact and adversarial", {
     "2026-08-26", "2026-08-27", candidate_cff, fixed = TRUE
   ))
   expect_false(mismatched_date$CandidateMetadataOK)
+})
+
+test_that("0.2.4 transition record binds the clean contract review", {
+  transition <- load_fixed_calibration_release_candidate_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-release-candidate-transition-record-0.2.4.md"
+  )
+  roadmap_path <- file.path(
+    transition$validation, "mfrmr-internal-strategic-roadmap.html"
+  )
+  expect_true(file.exists(record_path))
+  expect_true(file.exists(roadmap_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  roadmap <- paste(readLines(roadmap_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "TransitionContractId=mfrmr_release_candidate_transition_0_2_4_v1",
+    "TransitionContractCommitSHA40=02c216100b1637036c486c0038625924cdd8a59f",
+    "G6ValidatedCommitSHA40=cf20dd0167db3f39224cea7d1c70998b1142f81f",
+    "G6HostedRunId=32906087561",
+    "ReviewBranch=development/0.2.4",
+    "G6BaselineAncestor=TRUE",
+    "WorkingTreeCleanAtReview=TRUE",
+    "ChangedPathCount=6",
+    "CandidatePackageMetadataPathCount=0",
+    "CandidateRepositoryRoadmapPathCount=1",
+    "CandidateInternalEvidencePathCount=5",
+    "ForbiddenPayloadPathCount=0",
+    "ChangedPathsAllowed=TRUE",
+    "ProductionPayloadUnchanged=TRUE",
+    "MetadataStage=development",
+    "DevelopmentMetadataOK=TRUE",
+    "DevelopmentTransitionReady=TRUE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateReady=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CandidateChecksRun=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "ReleaseDiffAllowlistFrozen=TRUE",
+    "NextAction=apply-0.2.4-candidate-metadata-under-frozen-allowlist"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+  expect_match(
+    roadmap,
+    '<div class="task" data-state="done" data-horizon="now" data-priority="p0">',
+    fixed = TRUE
+  )
+  expect_match(
+    roadmap, "release差分allowlistを事前固定", fixed = TRUE
+  )
+  expect_match(
+    roadmap,
+    "fixed-calibration-release-candidate-transition-record-0.2.4.md",
+    fixed = TRUE
+  )
 })

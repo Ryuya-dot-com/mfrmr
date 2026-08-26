@@ -695,9 +695,9 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>G6後の記録commitがpayloadを変えないことを確認</strong><p>展開比較の差は自動<code>Packaged</code>時刻のみ。</p></div><span class="chip done">done</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>release差分allowlistを事前固定</strong><p>Version、status、public-version、日付、NEWS、cran-comments以外のproduction差分を原則拒否。</p></div><span class="chip open">open</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>release差分allowlistを事前固定</strong><p>Version、status、日付、NEWS heading、cran-comments以外を拒否し、candidateのpublic-versionは0.2.3.1に固定。</p></div><span class="chip done">done</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1010,7 +1010,7 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>0.2.4 release差分allowlistとmetadata遷移規則をfreezeする。</strong></li>
+              <li><strong>frozen allowlist内で0.2.4 candidate metadataとcran-commentsを適用する。</strong></li>
               <li><strong>最終candidate commit/tagを作り、clean source tarballを固定する。</strong></li>
               <li><strong>候補tagのlocal＋5-platform＋public claim差分を再検証する。</strong></li>
               <li><strong>人間sign-off後にCRAN投稿を行う。</strong></li>
@@ -1036,6 +1036,7 @@
         <p>
           Internal source of direction: <a href="../../ROADMAP.md">ROADMAP.md</a> ·
           G6 decision: <a href="fixed-calibration-g6-release-decision-record-0.2.4.md">release record</a> ·
+          candidate transition: <a href="fixed-calibration-release-candidate-transition-record-0.2.4.md">transition record</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
