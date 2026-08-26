@@ -187,8 +187,8 @@ than turning a screening/review grid into automatic selection.}
 \code{400}. This is not a convergence criterion or a model-selection control:
 a fit that reaches the ceiling remains non-ready until the common
 convergence and terminal-gradient checks pass. Smaller values used in
-executable examples shorten package checks and should not be copied into
-a final analysis without an explicit computational protocol.}
+brief examples are for demonstration only and should not be copied into a
+substantive analysis without an explicit computational protocol.}
 
 \item{reltol}{Portable tolerance setting for the initial optimizer stage.
 The default is \code{1e-9}. For BFGS this is passed as \code{reltol}; for L-BFGS-B
@@ -1076,10 +1076,9 @@ problems in multivariate analysis}. Psychometrika, 52(3), 333-343.
 }
 
 \examples{
-# Lightweight executable mechanics example on the connected teaching data.
-# The small quadrature grid keeps CRAN example time short; the tighter
-# portable tolerance setting keeps this reduced example numerically stable.
-# Use the documented default grid and a sensitivity check for final work.
+# Short demonstration on the connected teaching data. The tighter portable
+# tolerance keeps this reduced example numerically stable. Use the documented
+# default grid and a sensitivity check for substantive work.
 toy <- load_mfrmr_data("example_operational")
 fit_quick <- fit_mfrm(
   toy, "Person", c("Rater", "Criterion"), "Score",

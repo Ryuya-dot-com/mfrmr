@@ -335,7 +335,7 @@ mfrmr_jml_gpcm_saturated_response_envelope <- function(
   if (!isTRUE(face_chart$response_image_face_chart_classified)) {
     return(finish(
       "not_evaluated_face_chart", TRUE, FALSE,
-      "The saturated target P2j face chart was not classified.",
+      "The saturated-target simplex-face chart was not classified.",
       "saturated_envelope_face_chart_unclassified",
       independent_adjacent,
       independent_cumulative,

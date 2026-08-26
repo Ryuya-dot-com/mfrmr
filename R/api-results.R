@@ -6323,11 +6323,11 @@ mfrm_results_render_code <- function(person, facets, score, weight, include, out
 #' columns, prints reproducible code for the selected roles, then fits the
 #' documented `RSM`/`MML` starting route before calling
 #' [mfrm_results()]. Use explicit [fit_mfrm()] calls in scripts, Quarto
-#' documents, tests, and reproducible analyses.
+#' documents, batch workflows, and reproducible analyses.
 #'
 #' @section Why this helper is opt-in:
 #' Interactive prompts are useful at the console but are unsafe defaults for
-#' reproducible analysis, package checks, batch scripts, and manuscripts. The
+#' reproducible analysis, unattended workflows, and manuscripts. The
 #' helper therefore prints replay code and leaves the scripted route explicit.
 #'
 #' @return The selected [mfrm_results()] output.

@@ -145,7 +145,7 @@ mfrmr_jml_gpcm_response_quotient_closure_obstruction <- function(
       detail = detail,
       limitations = paste(
         "The certificate proves that one finite response-contrast target is",
-        "missing from the finite image although it is approached by a P2g",
+        "missing from the finite image although it is approached by a bounded response-image",
         "path. It refutes a fibre-collapse-only shortcut. It neither",
         "classifies every design nor proves that this target is competitive,",
         "that a finite JMLE fails to exist, or that the boundary envelope is",
@@ -176,7 +176,7 @@ mfrmr_jml_gpcm_response_quotient_closure_obstruction <- function(
     return(finish(
       "not_evaluated_source", FALSE, FALSE,
       paste(
-        "A classified P2g bounded-response-image parameter escape with no",
+        "A classified bounded-response-image parameter escape with no",
         "positive contrast exponent is required."
       ),
       "response_quotient_source_invalid"
@@ -238,7 +238,7 @@ mfrmr_jml_gpcm_response_quotient_closure_obstruction <- function(
   if (!valid_path) {
     return(finish(
       "not_evaluated_path", FALSE, FALSE,
-      "The P2g affine design, slope map, or finite contrast target was invalid.",
+      "The response-image affine design, slope map, or finite contrast target was invalid.",
       "response_quotient_path_invalid"
     ))
   }
@@ -349,7 +349,7 @@ mfrmr_jml_gpcm_response_quotient_closure_obstruction <- function(
   finish(
     "finite_response_image_not_closed_certified", TRUE, TRUE,
     paste(
-      "The P2g path approaches the finite target. Exact zero target rows",
+      "The bounded response-image path approaches the finite target. Exact zero target rows",
       "force their unscaled affine utilities to zero at every hypothetical",
       "finite representative. Their declared affine relation then forces a",
       "common-slope witness combination to zero, contradicting its nonzero",

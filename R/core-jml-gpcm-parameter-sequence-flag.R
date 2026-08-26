@@ -590,7 +590,7 @@ mfrmr_jml_gpcm_parameter_sequence_contrast_image <- function(
   )) {
     return(finish(
       "not_evaluated_source_contract", FALSE,
-      "The current fit-level P2e contract was unavailable.",
+      "The required fit-level finite-sequence classification was unavailable.",
       "parameter_sequence_contrast_source_mismatch"
     ))
   }
@@ -858,7 +858,7 @@ audit_mfrm_jml_gpcm_parameter_sequence_flag_scope <- function(
   if (!compactification_matches || !sequence_diagnostic_matches) {
     return(finish(
       "not_evaluated_source_contract", FALSE,
-      "Current P1z compactification and P2d finite-sequence contracts are required.",
+      "Current rate compactification and finite-sequence classifications are required.",
       "parameter_sequence_flag_source_mismatch"
     ))
   }

@@ -5,8 +5,8 @@
 # additive coordinates give an exact finite exponential sum in every GPCM
 # category-logit contrast. Terms with the same combined exponent are added
 # before any comparison. Positive combined exponents form a scale-separated
-# P2e flag, exponent zero forms the finite base, and negative exponents are a
-# uniformly vanishing contrast remainder.
+# divergent contrast group, exponent zero forms the finite base, and negative
+# exponents form a uniformly vanishing contrast remainder.
 #
 # This catches a boundary class which a parameter-space direction alone cannot:
 # log slopes can diverge while utilities vanish at the inverse exponential rate,
@@ -455,7 +455,7 @@ mfrmr_jml_gpcm_exponential_balance_limit <- function(
   if (!isTRUE(flag_limit$declared_contrast_flag_limit_classified)) {
     return(finish(
       "not_evaluated_contrast_flag", isTRUE(flag_limit$evaluated), FALSE,
-      "The exact combined-exponent response path did not satisfy the P2e oracle.",
+      "The exact combined-exponent response path did not satisfy the finite-limit contrast rule.",
       flag_limit$reason_codes,
       reachability = reachability,
       rate_table = rate_table,
@@ -501,7 +501,7 @@ mfrmr_jml_gpcm_exponential_balance_limit <- function(
     TRUE, TRUE,
     paste(
       "The exact slope-times-utility product was grouped by combined",
-      "exponent. Positive groups were classified as a P2e flag, the zero",
+      "exponent. Positive groups were classified as divergent contrast groups, the zero",
       "group as its finite base, and all negative groups as a uniformly",
       "vanishing finite exponential remainder."
     ),
@@ -703,7 +703,7 @@ mfrmr_jml_gpcm_fit_exponential_balance_limit <- function(
   if (!source_matches) {
     return(finish(
       "not_evaluated_source_contract", FALSE,
-      "The current fit-level P2g source contract was unavailable.",
+      "The required fit-level response-image escape source was unavailable.",
       "exponential_balance_source_mismatch"
     ))
   }
@@ -866,14 +866,14 @@ audit_mfrm_jml_gpcm_exponential_balance_scope <- function(
   if (!valid_control) {
     return(finish(
       "not_evaluated_control", FALSE, FALSE,
-      "The P2g scope dimension or workload control was invalid.",
+      "The response-image escape scope dimension or workload control was invalid.",
       "exponential_balance_scope_control_invalid"
     ))
   }
   if (!identical(model, "GPCM")) {
     out <- finish(
       "not_applicable_model", FALSE, FALSE,
-      "The P2g exponential balance scope applies only to GPCM.",
+      "The exponential-balance response-image scope applies only to GPCM.",
       "exponential_balance_scope_not_applicable_model"
     )
     out$estimator_identity <- "not_applicable"
@@ -883,7 +883,7 @@ audit_mfrm_jml_gpcm_exponential_balance_scope <- function(
   if (!identical(method, "JML")) {
     out <- finish(
       "not_applicable_estimator", FALSE, FALSE,
-      "The conditional P2g scope is not reused for MML.",
+      "The conditional response-image escape scope is not reused for MML.",
       "exponential_balance_scope_not_applicable_estimator"
     )
     out$estimator_identity <- "not_applicable"
@@ -900,7 +900,7 @@ audit_mfrm_jml_gpcm_exponential_balance_scope <- function(
   if (!p2e_matches || !p2f_matches) {
     return(finish(
       "not_evaluated_source_contract", FALSE, FALSE,
-      "Current P2e and P2f source contracts are required.",
+      "Current finite-limit and global-existence results are required.",
       "exponential_balance_scope_source_mismatch"
     ))
   }
@@ -917,7 +917,7 @@ audit_mfrm_jml_gpcm_exponential_balance_scope <- function(
     paste(
       "Finite exponential sums in retained additive coordinates and affine",
       "sum-zero log-slope paths can be expanded exactly by combined exponent",
-      "and handed to the P2e contrast-flag oracle. When the retained affine",
+      "and handed to the finite-limit contrast analysis. When the retained affine",
       "additive offset is exactly zero, the all-zero free-additive path leaves",
       "every response contrast identically zero while a nonzero sum-zero log-",
       "slope direction escapes to infinity, refuting properness."

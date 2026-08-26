@@ -121,7 +121,7 @@ mfrmr_jml_gpcm_finite_sequence_diagnostic <- function(
         "Euclidean basis. It does not establish an asymptotic direction, an",
         "exact coefficient zero or tie, a power law, a vanishing remainder,",
         "optimizer-iteration history, a competitive path, or a global",
-        "boundary. Estimated directions and exponents cannot enter P2b."
+        "boundary. Estimated directions and exponents cannot enter the finite lexicographic-limit check."
       )
     )
   }
@@ -424,7 +424,7 @@ mfrmr_jml_gpcm_decaying_logit_remainder <- function(
   if (!path_valid) {
     return(finish(
       "not_evaluated_source_path", FALSE, FALSE,
-      "A completed P2c parameter-reachable limit is required.",
+      "A completed reachable-parameter limit classification is required.",
       "decaying_logit_remainder_source_invalid"
     ))
   }
@@ -660,7 +660,7 @@ audit_mfrm_jml_gpcm_optimizer_sequence_scope <- function(
   if (!source_matches) {
     return(finish(
       "not_evaluated_source_contract", FALSE,
-      "The current P2c parameter-path contract was unavailable.",
+      "The required parameter-path classification was unavailable.",
       "optimizer_sequence_parameter_path_source_mismatch"
     ))
   }

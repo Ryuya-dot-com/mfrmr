@@ -455,7 +455,7 @@ mfrmr_jml_gpcm_fit_parameter_hierarchy_limit <- function(
   )) {
     return(finish(
       "not_evaluated_source_contract", FALSE,
-      "The fit did not retain the current P2b lexicographic-limit contract.",
+      "The fit did not retain the required lexicographic-limit result.",
       "parameter_path_lexicographic_source_mismatch"
     ))
   }
@@ -544,7 +544,7 @@ mfrmr_jml_gpcm_fit_parameter_hierarchy_limit <- function(
   if (!isTRUE(limit$declared_path_limit_classified)) {
     return(finish(
       "not_evaluated_lexicographic_limit", isTRUE(limit$evaluated),
-      "The reachable parameter path did not satisfy the P2b limit contract.",
+      "The reachable parameter path did not satisfy the lexicographic-limit conditions.",
       limit$reason_codes,
       reachability = reachability,
       limit = limit
@@ -558,7 +558,7 @@ mfrmr_jml_gpcm_fit_parameter_hierarchy_limit <- function(
     paste0("parameter_reachable_", limit$state), TRUE,
     paste(
       "The caller-declared free-coordinate path was mapped through the",
-      "retained constrained additive operator and classified by P2b."
+      "retained constrained additive operator and classified by the lexicographic-limit analysis."
     ),
     paste(
       "parameter_path_reachable_by_forward_construction",
@@ -690,7 +690,7 @@ audit_mfrm_jml_gpcm_parameter_path_scope <- function(
   if (!isTRUE(source_matches)) {
     return(finish(
       "not_evaluated_source_contract", FALSE,
-      "The current P2b lexicographic-limit contract was unavailable.",
+      "The required lexicographic-limit result was unavailable.",
       "parameter_path_lexicographic_source_mismatch"
     ))
   }

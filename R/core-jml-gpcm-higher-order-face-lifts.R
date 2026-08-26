@@ -481,7 +481,7 @@ mfrmr_jml_gpcm_higher_order_face_lifts <- function(
   if (!valid_source) {
     return(finish(
       "not_evaluated_source", FALSE, FALSE,
-      "A classified zero-offset P2j face chart is required.",
+      "A classified zero-offset simplex-face chart is required.",
       "higher_order_lift_source_invalid"
     ))
   }
@@ -496,7 +496,7 @@ mfrmr_jml_gpcm_higher_order_face_lifts <- function(
   if (isTRUE(source_record$finite_response_image_certified)) {
     return(finish(
       "finite_source_response_image_closure_certified", TRUE, TRUE,
-      "The P2j source already supplies a finite full-support representative.",
+      "The source face chart already supplies a finite full-support representative.",
       "higher_order_lift_finite_source",
       finite_image = TRUE,
       closure_member = TRUE
@@ -506,7 +506,7 @@ mfrmr_jml_gpcm_higher_order_face_lifts <- function(
     return(finish(
       "outside_closure_certified_by_source_simplex_outer_bound", TRUE, TRUE,
       paste(
-        "The complete necessary P2j simplex-face chart has no nonnegative",
+        "The complete necessary simplex-face chart has no nonnegative",
         "witness, so no owner-rate hierarchy can exist."
       ),
       "higher_order_lift_source_outer_exclusion",
@@ -679,7 +679,7 @@ mfrmr_jml_gpcm_higher_order_face_lifts <- function(
       if (source_closure) {
         paste(
           "The higher-order hierarchy margin is numerically open, but the",
-          "source P2j first-order finite path remains a closure certificate."
+          "source first-order finite path remains a closure certificate."
         )
       } else {
         paste(
@@ -711,7 +711,7 @@ mfrmr_jml_gpcm_higher_order_face_lifts <- function(
     return(finish(
       "not_certified_source_hierarchy_conflict", TRUE, FALSE,
       paste(
-        "Every hierarchy was numerically excluded although the source P2j",
+        "Every hierarchy was numerically excluded although the source simplex-face",
         "record contains an explicit finite path; source evidence is retained."
       ),
       "higher_order_lift_source_hierarchy_conflict",

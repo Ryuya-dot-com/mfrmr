@@ -368,7 +368,7 @@ mfrmr_jml_gpcm_binary_closure_envelope <- function(
   if (!source_matches) {
     return(finish(
       "not_evaluated_source", FALSE, FALSE,
-      "The exact P2h binary response-quotient source was unavailable.",
+      "The exact binary response-quotient source was unavailable.",
       "binary_closure_envelope_source_invalid"
     ))
   }
@@ -826,7 +826,7 @@ mfrmr_jml_gpcm_fit_binary_closure_envelope <- function(
   if (!exact_operator) {
     return(finish(
       "not_evaluated_exact_operator", TRUE, TRUE,
-      "The grouped retained adjacent operator did not match the P2i fixture.",
+      "The grouped retained adjacent operator did not match the required binary-closure structure.",
       "binary_closure_exact_operator_mismatch",
       operator_rows = operator_rows
     ))
@@ -870,7 +870,7 @@ mfrmr_jml_gpcm_fit_binary_closure_envelope <- function(
   if (!isTRUE(result_record$binary_closure_envelope_classified)) {
     return(finish(
       "not_evaluated_response_envelope", TRUE, TRUE,
-      "The exact retained response masses did not yield a P2i envelope.",
+      "The exact retained response masses did not yield a finite binary-closure envelope.",
       result_record$reason_codes,
       result = result_record,
       success = success,
@@ -884,7 +884,7 @@ mfrmr_jml_gpcm_fit_binary_closure_envelope <- function(
     paste0("current_fit_", result_record$state), TRUE, TRUE,
     paste(
       "The exact retained binary operator and four expanded response-cell",
-      "masses were reconstructed before applying the complete P2i envelope."
+      "masses were reconstructed before applying the complete binary-closure envelope."
     ),
     result_record$reason_codes,
     result = result_record,

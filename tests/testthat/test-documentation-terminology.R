@@ -247,7 +247,11 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "repository audit",
     "candidate-linked evidence contract",
     "optional local execution",
-    "for final evidence"
+    "for final evidence",
+    "executable examples shorten package checks",
+    "keeps CRAN example time short",
+    "reproducible analysis, package checks",
+    "documents, tests, and reproducible analyses"
   )
 
   hits <- character(0)
@@ -343,7 +347,21 @@ test_that("the shipped source excludes development-stage contract names", {
     "coverage-boost",
     "coverage-gaps",
     "final-coverage",
-    "remaining-coverage"
+    "remaining-coverage",
+    "P1z compactification",
+    "P2b lexicographic-limit",
+    "P2c parameter",
+    "P2d finite-sequence",
+    "P2e contract",
+    "P2e oracle",
+    "P2e flag",
+    "P2f global-existence",
+    "P2g source contract",
+    "P2g scope",
+    "P2h binary",
+    "P2i fixture",
+    "P2i envelope",
+    "P2j face chart"
   )
   hits <- character(0)
   for (path in names(source_text)) {

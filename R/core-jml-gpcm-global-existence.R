@@ -94,7 +94,7 @@ mfrmr_jml_gpcm_reachable_supremum_zero <- function(parameter_path) {
       detail = detail,
       limitations = paste(
         "This adjudicator uses only an already completed, parameter-reachable",
-        "P2c path. A limit below zero does not classify the global supremum.",
+        "reachable parameter path. A limit below zero does not classify the global supremum.",
         "The result does not apply to MML and does not create uncertainty,",
         "readiness, recovery, simulation, or external-comparison eligibility."
       )
@@ -108,7 +108,7 @@ mfrmr_jml_gpcm_reachable_supremum_zero <- function(parameter_path) {
   if (!source_valid) {
     return(finish(
       "not_evaluated_source_contract", FALSE, FALSE,
-      "A current P2c parameter-path result is required.",
+      "A current reachable parameter-path result is required.",
       "global_existence_parameter_path_source_invalid"
     ))
   }
@@ -120,7 +120,7 @@ mfrmr_jml_gpcm_reachable_supremum_zero <- function(parameter_path) {
   if (!reachable || !classified) {
     return(finish(
       "not_evaluated_parameter_path", FALSE, FALSE,
-      "The P2c path was not both reachable and limit-classified.",
+      "The parameter path was not both reachable and limit-classified.",
       "global_existence_parameter_path_incomplete"
     ))
   }
@@ -134,7 +134,7 @@ mfrmr_jml_gpcm_reachable_supremum_zero <- function(parameter_path) {
       slope_stages < 0L || additive_stages < 0L) {
     return(finish(
       "not_evaluated_parameter_path", FALSE, FALSE,
-      "The P2c divergent-stage count was malformed.",
+      "The divergent-stage count for the parameter path was malformed.",
       "global_existence_parameter_path_stage_invalid"
     ))
   }
@@ -268,7 +268,7 @@ mfrmr_jml_gpcm_finite_attainment_gap_theorem <- function(
       "The strict complete-boundary gap conditions for finite attainment were not supplied."
     },
     limitations = paste(
-      "P2e classifies further-subsequence limits but does not enumerate the",
+      "The further-subsequence analysis classifies finite limits but does not enumerate the",
       "complete boundary envelope. Caller declaration of completeness is not",
       "an independent certificate, so this implication cannot promote a fit",
       "to finite-JMLE existence, readiness, inference, or comparison."
@@ -382,7 +382,7 @@ audit_mfrm_jml_gpcm_global_existence <- function(
   if (!identical(model, "GPCM")) {
     out <- finish(
       "not_applicable_model", FALSE, FALSE, FALSE,
-      "The P2f global-existence adjudicator applies only to GPCM.",
+      "The global-existence analysis applies only to GPCM.",
       "global_existence_not_applicable_model"
     )
     out$estimator_identity <- "not_applicable"
@@ -409,7 +409,7 @@ audit_mfrm_jml_gpcm_global_existence <- function(
   if (!source_matches) {
     return(finish(
       "not_evaluated_source_contract", FALSE, FALSE, FALSE,
-      "The current P2e further-subsequence contract is required.",
+      "The current further-subsequence limit classification is required.",
       "global_existence_parameter_sequence_flag_source_mismatch"
     ))
   }
@@ -532,7 +532,7 @@ audit_mfrm_jml_gpcm_global_existence <- function(
     "global_finite_jmle_existence_open_complete_boundary_envelope_unavailable",
     TRUE, FALSE, FALSE,
     paste(
-      "No production strict recession certificate was present. P2e ensures",
+      "No strict recession certificate was present. The finite-limit analysis ensures",
       "further-subsequence limit classification, but the package has not",
       "constructed a complete upper envelope over every reachable boundary",
       "flag, so a finite optimizer trace cannot be promoted to a finite JMLE."
