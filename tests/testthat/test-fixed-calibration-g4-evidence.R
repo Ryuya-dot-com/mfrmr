@@ -860,24 +860,48 @@ test_that("G4 candidate-binding record retains the live refusal boundary", {
   expect_false(grepl("R CMD check|R CMD build", source, fixed = TRUE))
 })
 
-test_that("G4 candidate inventory classifies every live path fail closed", {
+test_that("historical G4 inventory hands candidate paths to the transition contract", {
   ctx <- load_fixed_calibration_g4_candidate_inventory()
   review <- ctx$env$mfrmr_fc_g4i_review(ctx$root)
   inventory <- review$Inventory
-  expect_identical(
-    review$Status, "all_live_changes_classified_commit_lanes_unexecuted"
+  transition <- load_fixed_calibration_release_candidate_transition()
+  current <- transition$env$mfrmr_rc04_review(transition$root)
+  historical_inventory_active <- identical(
+    current$Metadata$Stage, "development"
   )
-  expect_true(review$AllChangesClassified)
+  if (historical_inventory_active) {
+    expect_identical(
+      review$Status, "all_live_changes_classified_commit_lanes_unexecuted"
+    )
+    expect_true(review$AllChangesClassified)
+    expect_true(review$CommitPlanReady)
+    expect_identical(
+      sum(inventory$Classification == "unclassified_fail_closed"), 0L
+    )
+  } else {
+    expect_identical(current$Metadata$Stage, "candidate")
+    expect_identical(review$Status, "candidate_source_inventory_blocked")
+    expect_false(review$AllChangesClassified)
+    expect_false(review$CommitPlanReady)
+    handed_off <- inventory$Path[
+      inventory$Classification == "unclassified_fail_closed"
+    ]
+    expect_gt(length(handed_off), 0L)
+    expect_true(all(vapply(handed_off, function(path) {
+      !identical(
+        transition$env$mfrmr_rc04_classify_path(path),
+        "package_payload_change_forbidden"
+      )
+    }, logical(1L))))
+    expect_true(current$ChangedPathsAllowed)
+    expect_true(current$Metadata$CandidateMetadataOK)
+  }
   expect_true(review$ResearchExcludedFromPackagePayload)
   expect_true(review$PublicInternalLanguageClean)
-  expect_true(review$CommitPlanReady)
   expect_identical(review$WorkingTreeClean, nrow(inventory) == 0L)
   expect_false(review$CandidateBindingComplete)
   expect_false(review$CurrentExecutionOpened)
   expect_false(review$G4ExitComplete)
-  expect_identical(
-    sum(inventory$Classification == "unclassified_fail_closed"), 0L
-  )
   expect_identical(anyDuplicated(inventory$Path), 0L)
   allowed <- c(
     "release_production_code_and_metadata",
@@ -886,7 +910,10 @@ test_that("G4 candidate inventory classifies every live path fail closed", {
     "deferred_multivariate_gtheory_research",
     "deferred_rater_anchor_design_research"
   )
-  expect_true(all(inventory$Classification %in% allowed))
+  expect_true(all(inventory$Classification %in% c(
+    allowed,
+    if (historical_inventory_active) character() else "unclassified_fail_closed"
+  )))
   representative <- vapply(c(
     "R/api-prediction.R", "src/mml_backend.cpp", "NEWS.md",
     "inst/validation/fixed-calibration-example-0.2.4.md",
@@ -1617,21 +1644,33 @@ test_that("historical reopening is retained while v5 closes current-source G4", 
 test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
   admission <- load_fixed_calibration_g4_maintenance_admission()
   review <- admission$env$mfrmr_fc_g4m_review(admission$root)
+  transition <- load_fixed_calibration_release_candidate_transition()
+  current <- transition$env$mfrmr_rc04_review(transition$root)
 
   expect_identical(
     review$Contract,
     "mfrmr_fixed_calibration_g4_maintenance_admission_v1"
   )
-  expect_identical(
-    review$Status,
-    "maintenance_bridge_complete_v6_contract_frozen_execution_required"
-  )
+  if (identical(current$Metadata$Stage, "development")) {
+    expect_identical(
+      review$Status,
+      "maintenance_bridge_complete_v6_contract_frozen_execution_required"
+    )
+    expect_true(review$DevelopmentMetadataAligned)
+    expect_true(review$MaintenanceBridgeComplete)
+  } else {
+    expect_identical(current$Metadata$Stage, "candidate")
+    expect_identical(review$Status, "maintenance_bridge_blocked")
+    expect_false(review$DevelopmentMetadataAligned)
+    expect_false(review$MaintenanceBridgeComplete)
+    expect_true(current$Metadata$CandidateMetadataOK)
+    expect_true(current$G6DecisionBound)
+  }
   expect_true(review$RequiredPathsPresent)
   expect_true(review$PublicBaselineMatched)
   expect_true(all(review$IntegratedCommitsAreAncestors))
   expect_true(review$CompiledHeaderOverrideAbsent)
   expect_length(review$InvalidDocumentationTargets, 0L)
-  expect_true(review$DevelopmentMetadataAligned)
   expect_true(review$V5ExactSourceChanged)
   expect_true(review$V5EvidenceRetainedAsHistorical)
   expect_true(review$LegacyV5AutomaticIssuanceDisabled)
@@ -1639,7 +1678,6 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
   expect_true(review$V6ConfirmationContractFrozen)
   expect_false(review$PostMaintenanceG4Complete)
   expect_false(review$G6Authorized)
-  expect_true(review$MaintenanceBridgeComplete)
   expect_setequal(
     review$ProductionBoundary$Path,
     c(
