@@ -866,43 +866,21 @@ test_that("historical G4 inventory hands candidate paths to the transition contr
   inventory <- review$Inventory
   transition <- load_fixed_calibration_release_candidate_transition()
   current <- transition$env$mfrmr_rc04_review(transition$root)
-  historical_inventory_active <- identical(
-    current$Metadata$Stage, "development"
-  )
-  if (historical_inventory_active) {
+  handed_off <- inventory$Path[
+    inventory$Classification == "unclassified_fail_closed"
+  ]
+  if (length(handed_off) == 0L) {
     expect_identical(
       review$Status, "all_live_changes_classified_commit_lanes_unexecuted"
     )
     expect_true(review$AllChangesClassified)
     expect_true(review$CommitPlanReady)
-    expect_identical(
-      sum(inventory$Classification == "unclassified_fail_closed"), 0L
-    )
   } else {
-    expect_identical(current$Metadata$Stage, "candidate")
-    handed_off <- inventory$Path[
-      inventory$Classification == "unclassified_fail_closed"
-    ]
-    if (length(handed_off) == 0L) {
-      expect_identical(
-        review$Status, "all_live_changes_classified_commit_lanes_unexecuted"
-      )
-      expect_true(review$AllChangesClassified)
-      expect_true(review$CommitPlanReady)
-    } else {
-      expect_identical(review$Status, "candidate_source_inventory_blocked")
-      expect_false(review$AllChangesClassified)
-      expect_false(review$CommitPlanReady)
-    }
-    expect_true(all(vapply(handed_off, function(path) {
-      !identical(
-        transition$env$mfrmr_rc04_classify_path(path),
-        "package_payload_change_forbidden"
-      )
-    }, logical(1L))))
-    expect_true(current$ChangedPathsAllowed)
-    expect_true(current$Metadata$CandidateMetadataOK)
+    expect_identical(review$Status, "candidate_source_inventory_blocked")
+    expect_false(review$AllChangesClassified)
+    expect_false(review$CommitPlanReady)
   }
+  expect_true(current$Metadata$Stage %in% c("development", "candidate"))
   expect_true(review$ResearchExcludedFromPackagePayload)
   expect_true(review$PublicInternalLanguageClean)
   expect_identical(review$WorkingTreeClean, nrow(inventory) == 0L)
@@ -918,8 +896,7 @@ test_that("historical G4 inventory hands candidate paths to the transition contr
     "deferred_rater_anchor_design_research"
   )
   expect_true(all(inventory$Classification %in% c(
-    allowed,
-    if (historical_inventory_active) character() else "unclassified_fail_closed"
+    allowed, "unclassified_fail_closed"
   )))
   representative <- vapply(c(
     "R/api-prediction.R", "src/mml_backend.cpp", "NEWS.md",
@@ -1948,7 +1925,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
     fixed = TRUE
   )
   expect_match(
-    roadmap, "0.2.4: candidate metadata ready / checks pending", fixed = TRUE
+    roadmap, "0.2.4: candidate invalidated / development reopened", fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
   expect_match(
@@ -1964,8 +1941,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 15L)
-  expect_identical(count_token("data-state=\"open\""), 45L)
+  expect_identical(count_token("data-state=\"done\""), 14L)
+  expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -2023,23 +2000,36 @@ test_that("0.2.4 candidate transition admits metadata but refuses payload drift"
   expect_false(contract$SubmissionAuthorized)
 
   expect_true(review$G6BaselineAncestor)
-  expect_true(review$ChangedPathsAllowed)
-  expect_true(review$ProductionPayloadUnchanged)
   expect_true(review$G6DecisionBound)
   expect_true(review$Metadata$MetadataTransitionOK)
   expect_true(review$Metadata$Stage %in% c("development", "candidate"))
-  if (identical(review$Metadata$Stage, "development")) {
+  forbidden <- review$Inventory[
+    review$Inventory$Classification == "package_payload_change_forbidden",
+    , drop = FALSE
+  ]
+  if (nrow(forbidden) > 0L) {
+    expect_identical(review$Metadata$Stage, "development")
+    expect_true(review$Metadata$DevelopmentMetadataOK)
+    expect_false(review$ChangedPathsAllowed)
+    expect_false(review$ProductionPayloadUnchanged)
+    expect_false(review$DevelopmentTransitionReady)
+    expect_false(review$CandidateReady)
+    expect_setequal(
+      forbidden$Path, "tests/testthat/test-vignette-artifacts.R"
+    )
+  } else if (identical(review$Metadata$Stage, "development")) {
+    expect_true(review$ChangedPathsAllowed)
+    expect_true(review$ProductionPayloadUnchanged)
     expect_true(review$Metadata$DevelopmentMetadataOK)
     expect_true(review$DevelopmentTransitionReady)
     expect_false(review$CandidateReady)
   } else {
+    expect_true(review$ChangedPathsAllowed)
+    expect_true(review$ProductionPayloadUnchanged)
     expect_true(review$Metadata$CandidateMetadataOK)
     expect_false(review$DevelopmentTransitionReady)
   }
   expect_false(review$SubmissionAuthorized)
-  expect_false(any(
-    review$Inventory$Classification == "package_payload_change_forbidden"
-  ))
 
   classify <- transition$env$mfrmr_rc04_classify_path
   expect_identical(
@@ -2266,6 +2256,41 @@ test_that("0.2.4 candidate metadata record binds readiness without submission", 
   expect_match(
     record,
     "The metadata transition does not inherit a final-candidate check result",
+    fixed = TRUE
+  )
+})
+
+test_that("0.2.4 candidate invalidation record preserves the failed denominator", {
+  transition <- load_fixed_calibration_release_candidate_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-release-candidate-invalidation-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "InvalidatedCandidateCommitSHA40=93d92604ed96bf7ea098b6ff52042106f44acd6b",
+    "RecoveryDevelopmentCommitSHA40=499c2d510f57c7d89c9263866c6265f9b124ed1e",
+    "FailedTestFile=tests/testthat/test-vignette-artifacts.R",
+    "FailedExpectations=1",
+    "CandidateAuditPassed=FALSE",
+    "CandidateMetadataDryRunInvalidated=TRUE",
+    "ReleaseTransitionContractReusable=FALSE",
+    "ReturnedToDevelopment=TRUE",
+    "ProductionChangeRequired=TRUE",
+    "CandidateTagCreated=FALSE",
+    "FinalCandidateChecksRun=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=run-new-development-payload-regression"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+  expect_match(
+    record,
+    "Changing the manifest to 0.2.4 would have falsified its generation provenance",
     fixed = TRUE
   )
 })

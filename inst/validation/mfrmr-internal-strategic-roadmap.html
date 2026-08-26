@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: candidate metadata ready / checks pending</span>
+          <span class="pill">0.2.4: candidate invalidated / development reopened</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">candidate checks pending</span>
+              <span class="chip open">revalidation required</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -638,8 +638,8 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>最終release candidateを作成</strong><p>0.2.4 candidate metadataは適用済み。candidate identity、最終source check、tagは未実施。</p></div>
-                <span class="chip open">checks pending</span>
+                <div><strong>最終release candidateを作成</strong><p>metadata dry runはartifact来歴テスト不整合で無効化。developmentへ戻し、再検証が必要。</p></div>
+                <span class="chip open">reopened</span>
               </div>
             </div>
           </article>
@@ -699,9 +699,9 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>release差分allowlistを事前固定</strong><p>Version、status、日付、NEWS heading、cran-comments以外を拒否し、candidateのpublic-versionは0.2.3.1に固定。</p></div><span class="chip done">done</span>
               </div>
-              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
-                <input type="checkbox" checked disabled aria-label="完了">
-                <div><strong>release metadataを0.2.4 candidateへ遷移</strong><p><code>e1fda82…</code>でVersion、日付、status、NEWS heading、CFF、cran-commentsを契約どおり固定。</p></div><span class="chip done">done</span>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>release metadataを0.2.4 candidateへ再遷移</strong><p><code>e1fda82…</code>のdry runは来歴テスト不整合で無効化。新payload検証後に再実施。</p></div><span class="chip open">invalidated</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1010,9 +1010,9 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>公開文面の最終claim diffを監査する。</strong></li>
-              <li><strong>clean source tarballを構築・検査し、candidate identityを固定する。</strong></li>
-              <li><strong>候補identityのlocal＋5-platform検証後にtag可否を判断する。</strong></li>
+              <li><strong>artifact来歴テスト修正を含む新development payloadを完全回帰検証する。</strong></li>
+              <li><strong>新payloadを5-platformで再確認し、G6を再度固定する。</strong></li>
+              <li><strong>frozen規則を再発行してcandidate metadataを再適用する。</strong></li>
               <li><strong>人間sign-off後にCRAN投稿を行う。</strong></li>
               <li><strong>公開artifactを再取得して候補と照合し、30日monitoringを開始する。</strong></li>
               <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
@@ -1038,6 +1038,7 @@
           G6 decision: <a href="fixed-calibration-g6-release-decision-record-0.2.4.md">release record</a> ·
           candidate transition: <a href="fixed-calibration-release-candidate-transition-record-0.2.4.md">transition record</a> ·
           candidate metadata: <a href="fixed-calibration-release-candidate-metadata-record-0.2.4.md">metadata record</a> ·
+          candidate invalidation: <a href="fixed-calibration-release-candidate-invalidation-record-0.2.4.md">invalidation record</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
