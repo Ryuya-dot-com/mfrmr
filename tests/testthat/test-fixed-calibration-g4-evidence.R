@@ -69,6 +69,28 @@ load_fixed_calibration_release_candidate_transition <- function() {
   list(root = root, validation = validation, script = script, env = env)
 }
 
+load_fixed_calibration_release_candidate_recovery_transition <- function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  implementation <- file.path(
+    validation, "fixed-calibration-release-candidate-transition-0.2.4.R"
+  )
+  contract <- file.path(
+    validation,
+    "fixed-calibration-release-candidate-transition-recovery-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(implementation) && file.exists(contract),
+    "Recovery release-candidate transition contract is excluded."
+  )
+  env <- new.env(parent = globalenv())
+  sys.source(implementation, envir = env)
+  sys.source(contract, envir = env)
+  list(
+    root = root, validation = validation, script = contract, env = env
+  )
+}
+
 load_fixed_calibration_g4_maintenance_admission <- function() {
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   validation <- file.path(root, "inst", "validation")
@@ -1925,7 +1947,9 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
     fixed = TRUE
   )
   expect_match(
-    roadmap, "0.2.4: development reopened / local check passed", fixed = TRUE
+    roadmap,
+    "0.2.4: recovery G6 rebound / candidate metadata pending",
+    fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
   expect_match(
@@ -1941,7 +1965,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 16L)
+  expect_identical(count_token("data-state=\"done\""), 17L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2325,4 +2349,122 @@ test_that("0.2.4 candidate recovery local check is exact and non-authorizing", {
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
   }
+})
+
+test_that("0.2.4 recovery hosted matrix is complete and non-authorizing", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-candidate-recovery-hosted-run-",
+      "32915301113-record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "RecoveryHostedRunId=32915301113",
+    "RecoveryHostedHeadSHA40=e39571974f70da0db90444732b5719c187a004d2",
+    "HostedWorkflowConclusion=success",
+    "HostedPlatformCells=5",
+    "HostedPassedCells=5",
+    "HostedFailedCells=0",
+    "CheckArtifactCount=5",
+    "ExpiredArtifactCount=0",
+    "OldCandidateInvalidated=TRUE",
+    "OldTransitionContractReusable=FALSE",
+    "G6Revalidated=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=bind-recovery-g6-and-freeze-new-transition"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 recovery G6 decision binds the delta and fresh denominator", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-g6-candidate-recovery-decision-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "RecoveryG6DecisionId=mfrmr_fixed_calibration_g6_recovery_0_2_4_v1",
+    "PriorG6ValidatedCommitSHA40=cf20dd0167db3f39224cea7d1c70998b1142f81f",
+    "RecoveryValidatedPayloadCommitSHA40=e39571974f70da0db90444732b5719c187a004d2",
+    "ValidatedPayloadCommitSHA40=e39571974f70da0db90444732b5719c187a004d2",
+    "HostedRunId=32915301113",
+    "HostedWorkflowConclusion=success",
+    "HostedPlatformCells=5",
+    "HostedPassedCells=5",
+    "HostedFailedCells=0",
+    "CheckArtifactCount=5",
+    "LocalSourceCheckStatus=OK",
+    "PathsChangedFromPriorG6=11",
+    "DistributedPackageChangedPaths=1",
+    "DistributedPackageChangedPath=tests/testthat/test-vignette-artifacts.R",
+    "ProductionCodeChanged=FALSE",
+    "CalibrationSchemaChanged=FALSE",
+    "ScoringKernelChanged=FALSE",
+    "StatisticalModelChanged=FALSE",
+    "PublicClaimChanged=FALSE",
+    "G4Reissued=FALSE",
+    "G4StatisticalEvidenceStillApplicable=TRUE",
+    "OldCandidateInvalidated=TRUE",
+    "OldTransitionContractReusable=FALSE",
+    "G6Revalidated=TRUE",
+    "G6ExitComplete=TRUE",
+    "PublicAPIAuthorizedForRelease=TRUE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=freeze-recovery-transition-boundary"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 recovery transition is independent of invalidated v1", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  contract <- transition$env$mfrmr_rc04_contract()
+  review <- transition$env$mfrmr_rc04_review(transition$root)
+
+  expect_identical(
+    contract$ContractId,
+    "mfrmr_release_candidate_transition_0_2_4_v2_recovery"
+  )
+  expect_identical(
+    contract$G6ValidatedCommit,
+    "e39571974f70da0db90444732b5719c187a004d2"
+  )
+  expect_identical(contract$G6HostedRunId, "32915301113")
+  expect_identical(
+    contract$G6DecisionRecord,
+    "fixed-calibration-g6-candidate-recovery-decision-record-0.2.4.md"
+  )
+  expect_false(contract$PriorCandidateReusable)
+  expect_false(contract$PriorTransitionContractReusable)
+  expect_false(contract$SubmissionAuthorized)
+
+  expect_true(review$G6BaselineAncestor)
+  expect_true(review$G6DecisionBound)
+  expect_true(review$ChangedPathsAllowed)
+  expect_true(review$ProductionPayloadUnchanged)
+  expect_identical(review$Metadata$Stage, "development")
+  expect_true(review$Metadata$DevelopmentMetadataOK)
+  expect_true(review$DevelopmentTransitionReady)
+  expect_false(review$CandidateReady)
+  expect_false(review$SubmissionAuthorized)
+  expect_false(any(
+    review$Inventory$Classification == "package_payload_change_forbidden"
+  ))
 })

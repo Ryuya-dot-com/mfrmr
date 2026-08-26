@@ -17,8 +17,11 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
   can preserve the truthful 0.2.4.9000 generation identity while accepting it
   only for the matching 0.2.4 release line. Revalidation remains; no 0.2.4
   CRAN submission has been performed. The clean recovery development source
-  package has passed a local `R CMD check --no-manual`; hosted revalidation is
-  still pending.
+  package passed a local `R CMD check --no-manual` and a fresh ordinary
+  five-platform workflow (5/5). G6 has been rebound to that exact recovery
+  payload; the invalidated candidate and its v1 transition contract remain
+  non-reusable, and a new frozen transition boundary is required before
+  candidate metadata is applied again.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.

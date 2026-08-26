@@ -13,6 +13,8 @@ mfrmr_rc04_contract <- function() {
     G6ValidatedCommit =
       "cf20dd0167db3f39224cea7d1c70998b1142f81f",
     G6HostedRunId = "32906087561",
+    G6DecisionRecord =
+      "fixed-calibration-g6-release-decision-record-0.2.4.md",
     CandidatePackagePaths = c("DESCRIPTION", "NEWS.md"),
     CandidateRepositoryPaths = c(
       "CITATION.cff", "cran-comments.md", "ROADMAP.md"
@@ -312,7 +314,7 @@ mfrmr_rc04_review <- function(repo_root = ".") {
 
   g6_record <- paste(mfrmr_rc04_read_lines(file.path(
     repo_root, "inst", "validation",
-    "fixed-calibration-g6-release-decision-record-0.2.4.md"
+    contract$G6DecisionRecord
   )), collapse = "\n")
   g6_decision_bound <- all(vapply(c(
     paste0("ValidatedPayloadCommitSHA40=", baseline),

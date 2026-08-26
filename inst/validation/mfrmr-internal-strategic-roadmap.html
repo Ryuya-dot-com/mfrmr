@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: development reopened / local check passed</span>
+          <span class="pill">0.2.4: recovery G6 rebound / candidate metadata pending</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">hosted revalidation required</span>
+              <span class="chip open">new transition boundary</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -638,8 +638,8 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>最終release candidateを作成</strong><p>metadata dry runはartifact来歴テスト不整合で無効化。developmentへ戻し、再検証が必要。</p></div>
-                <span class="chip open">hosted pending</span>
+                <div><strong>最終release candidateを作成</strong><p>旧candidateは無効のまま。回復G6と新しいfrozen transition boundaryから再作成する。</p></div>
+                <span class="chip open">metadata pending</span>
               </div>
             </div>
           </article>
@@ -707,9 +707,13 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>回復development payloadをローカル検査</strong><p><code>76b4d65…</code>のexact source checkは0 errors・0 warnings・0 notes。</p></div><span class="chip done">local pass</span>
               </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>回復payloadを5環境で再検証しG6を再束縛</strong><p><code>e395719…</code>、run <code>32915301113</code>は5/5成功。旧candidateとv1 contractは再利用しない。</p></div><span class="chip done">G6 rebound</span>
+              </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>release metadataを0.2.4 candidateへ再遷移</strong><p><code>e1fda82…</code>のdry runは来歴テスト不整合で無効化。新payload検証後に再実施。</p></div><span class="chip open">invalidated</span>
+                <div><strong>release metadataを0.2.4 candidateへ再遷移</strong><p>回復payload専用のv2 contractを先に固定し、そのallowlistだけで再実施する。</p></div><span class="chip open">next</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1018,11 +1022,12 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>新development payloadを通常5-platformで再確認する。</strong></li>
-              <li><strong>成功分母を新G6として固定し、旧candidateとの関係を記録する。</strong></li>
-              <li><strong>frozen規則を再発行してcandidate metadataを再適用する。</strong></li>
-              <li><strong>人間sign-off後にCRAN投稿を行う。</strong></li>
-              <li><strong>公開artifactを再取得して候補と照合し、30日monitoringを開始する。</strong></li>
+              <li><strong>回復payload専用のv2 transition reviewを固定する。</strong></li>
+              <li><strong>v2 allowlistだけでcandidate metadataを再適用する。</strong></li>
+              <li><strong>候補の公開claim diffと最終package checksを実施する。</strong></li>
+              <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
+              <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
+              <li><strong>公開後にのみartifact照合と30日monitoringを開始する。</strong></li>
               <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
               <li><strong>0.2.5について実利用problem discoveryを行い、着工／延期を判断する。</strong></li>
               <li><strong>GPCM、G-theory、anchor研究は各1つのdecision-changing probeだけを選ぶ。</strong></li>
@@ -1048,6 +1053,8 @@
           candidate metadata: <a href="fixed-calibration-release-candidate-metadata-record-0.2.4.md">metadata record</a> ·
           candidate invalidation: <a href="fixed-calibration-release-candidate-invalidation-record-0.2.4.md">invalidation record</a> ·
           recovery local check: <a href="fixed-calibration-candidate-recovery-local-check-record-0.2.4.md">local check</a> ·
+          recovery hosted run: <a href="fixed-calibration-candidate-recovery-hosted-run-32915301113-record-0.2.4.md">5-platform record</a> ·
+          recovery G6: <a href="fixed-calibration-g6-candidate-recovery-decision-record-0.2.4.md">G6 rebound</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
