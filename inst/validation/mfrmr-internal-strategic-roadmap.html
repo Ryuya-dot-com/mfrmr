@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: public-language 5-platform pass / v3 boundary frozen</span>
+          <span class="pill">0.2.4 candidate: local pass / 5-platform running</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">v3 frozen · metadata held</span>
+              <span class="chip open">candidate checks running</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -638,8 +638,8 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>最終release candidateを作成</strong><p>旧candidateは無効のまま。回復G6と新しいfrozen transition boundaryから再作成する。</p></div>
-                <span class="chip open">metadata pending</span>
+                <div><strong>最終release candidateを作成</strong><p>v3境界からcandidate commit <code>8b40808…</code>を作成。local checkはOK、5-platform確認中。</p></div>
+                <span class="chip open">hosted running</span>
               </div>
             </div>
           </article>
@@ -739,13 +739,13 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>公開語彙payloadのv3 transition boundaryを固定</strong><p><code>fd21f8e…</code>のclean reviewはchanged path 7、forbidden payload 0、development ready。candidate metadataは未適用。</p></div><span class="chip done">v3 frozen</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>release metadataを0.2.4 candidateへ再遷移</strong><p>公開語彙とschemaのfresh validation後にv3境界を固定し、そのallowlistだけで再実施する。</p></div><span class="chip open">blocked by validation</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>release metadataを0.2.4 candidateへ再遷移</strong><p><code>8b40808…</code>はv3 allowlist上の4ファイルだけを変更。clean reviewでcandidate ready、submission false。</p></div><span class="chip done">metadata exact</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>公開文面の最終claim diffを監査</strong><p>help、README、vignette、NEWS、capability matrixが同じ限定範囲を述べる。</p></div><span class="chip open">open</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>公開文面の最終claim diffを監査</strong><p>候補tarballの公開語彙hitは0。開発tarballとの差はDESCRIPTIONとNEWS先頭だけ。</p></div><span class="chip done">claim diff clean</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -753,7 +753,7 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>候補tagで最終 package checks</strong><p>local source check、5-platform、source contents、fresh-process scoringを再確認。</p></div><span class="chip open">open</span>
+                <div><strong>候補commitで最終 package checks</strong><p>local source checkは0/0/0。run <code>32936425346</code>の5-platform完了を待つ。</p></div><span class="chip open">hosted running</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1050,9 +1050,8 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>candidate metadata適用は明示的な別判断まで保留する。</strong></li>
-              <li><strong>再開する場合もv3 allowlistだけを使用する。</strong></li>
-              <li><strong>候補の公開claim diffと最終package checksを実施する。</strong></li>
+              <li><strong>run 32936425346のexact candidate 5-platform matrixを完了する。</strong></li>
+              <li><strong>候補commitとhosted結果を一対一に記録する。</strong></li>
               <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
               <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
@@ -1092,6 +1091,7 @@
           runtime-message hosted run: <a href="fixed-calibration-public-language-runtime-message-hosted-run-32923607662-record-0.2.4.md">5-platform record</a> ·
           public-language G6: <a href="fixed-calibration-g6-public-language-final-decision-record-0.2.4.md">G6 rebound</a> ·
           public-language transition: <a href="fixed-calibration-release-candidate-transition-public-language-record-0.2.4.md">v3 boundary</a> ·
+          public-language candidate metadata: <a href="fixed-calibration-release-candidate-metadata-public-language-record-0.2.4.md">candidate local check</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>

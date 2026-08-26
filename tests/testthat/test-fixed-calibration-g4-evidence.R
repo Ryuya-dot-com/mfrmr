@@ -1639,7 +1639,9 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
     expect_identical(review$Status, "maintenance_bridge_blocked")
     expect_false(review$DevelopmentMetadataAligned)
     expect_false(review$MaintenanceBridgeComplete)
-    expect_true(current$Metadata$CandidateMetadataOK)
+    expect_false(current$Metadata$CandidateMetadataOK)
+    expect_false(current$ChangedPathsAllowed)
+    expect_false(current$CandidateReady)
     expect_true(current$G6DecisionBound)
   }
   expect_true(review$RequiredPathsPresent)
@@ -1903,7 +1905,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4: public-language 5-platform pass / v3 boundary frozen",
+    "0.2.4 candidate: local pass / 5-platform running",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1920,8 +1922,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 24L)
-  expect_identical(count_token("data-state=\"open\""), 46L)
+  expect_identical(count_token("data-state=\"done\""), 26L)
+  expect_identical(count_token("data-state=\"open\""), 44L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -1986,7 +1988,6 @@ test_that("0.2.4 candidate transition admits metadata but refuses payload drift"
     , drop = FALSE
   ]
   if (nrow(forbidden) > 0L) {
-    expect_identical(review$Metadata$Stage, "development")
     expect_false(review$Metadata$DevelopmentMetadataOK)
     expect_false(review$Metadata$MetadataTransitionOK)
     expect_false(review$ChangedPathsAllowed)
@@ -2414,8 +2415,9 @@ test_that("0.2.4 recovery transition fails closed after public schema change", {
   expect_true(review$G6DecisionBound)
   expect_false(review$ChangedPathsAllowed)
   expect_false(review$ProductionPayloadUnchanged)
-  expect_identical(review$Metadata$Stage, "development")
+  expect_identical(review$Metadata$Stage, "candidate")
   expect_false(review$Metadata$DevelopmentMetadataOK)
+  expect_false(review$Metadata$CandidateMetadataOK)
   expect_false(review$DevelopmentTransitionReady)
   expect_false(review$CandidateReady)
   expect_false(review$SubmissionAuthorized)
@@ -2824,7 +2826,7 @@ test_that("0.2.4 public-language G6 decision binds scope and denominator", {
   }
 })
 
-test_that("0.2.4 public-language transition v3 fails closed", {
+test_that("0.2.4 public-language transition v3 admits exact metadata only", {
   transition <-
     load_fixed_calibration_release_candidate_public_language_transition()
   contract <- transition$env$mfrmr_rc04_contract()
@@ -2850,11 +2852,11 @@ test_that("0.2.4 public-language transition v3 fails closed", {
   expect_true(review$G6BaselineAncestor)
   expect_true(review$ChangedPathsAllowed)
   expect_true(review$ProductionPayloadUnchanged)
-  expect_identical(review$Metadata$Stage, "development")
-  expect_true(review$Metadata$DevelopmentMetadataOK)
+  expect_identical(review$Metadata$Stage, "candidate")
+  expect_true(review$Metadata$CandidateMetadataOK)
   expect_true(review$G6DecisionBound)
-  expect_true(review$DevelopmentTransitionReady)
-  expect_false(review$CandidateReady)
+  expect_false(review$DevelopmentTransitionReady)
+  expect_identical(review$CandidateReady, review$WorkingTreeClean)
   expect_false(review$SubmissionAuthorized)
 })
 
@@ -2901,6 +2903,68 @@ test_that("0.2.4 public-language transition record freezes clean v3", {
     "CRANSubmissionPerformed=FALSE",
     "ReleaseDiffAllowlistFrozen=TRUE",
     "NextAction=hold-candidate-metadata-pending-explicit-decision"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public-language candidate metadata has a local receipt", {
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-release-candidate-metadata-public-language-",
+      "record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "TransitionContractId=mfrmr_release_candidate_transition_0_2_4_v3_public_language",
+    "CandidateMetadataCommitSHA40=8b408083c0277dabe7c71450bd8b53dcbde0853e",
+    "G6ValidatedCommitSHA40=0dd03dd9830371dd13159db68f00d14ada0cb0ba",
+    "G6HostedRunId=32923607662",
+    "WorkingTreeCleanAtReview=TRUE",
+    "ChangedPathCount=12",
+    "CandidatePackageMetadataPathCount=2",
+    "CandidateRepositoryMetadataOrRoadmapPathCount=3",
+    "CandidateInternalEvidencePathCount=7",
+    "ForbiddenPayloadPathCount=0",
+    "ChangedPathsAllowed=TRUE",
+    "ProductionPayloadUnchanged=TRUE",
+    "MetadataStage=candidate",
+    "CandidateVersion=0.2.4",
+    "CandidateDate=2026-08-26",
+    "CandidateReleaseStatus=candidate",
+    "CandidatePublicVersion=0.2.3.1",
+    "CandidateCffVersion=0.2.4",
+    "CandidateCffDate=2026-08-26",
+    "CandidateNewsHeading=# mfrmr 0.2.4",
+    "CandidateMetadataOK=TRUE",
+    "CranCommentsReady=TRUE",
+    "CandidateReady=TRUE",
+    "CandidateSourcePackageChangedPaths=2",
+    "CandidateSourcePackageChangedPath1=DESCRIPTION",
+    "CandidateSourcePackageChangedPath2=NEWS.md",
+    "CandidateSourceTarballSHA256=6570b98e0335de3862a5c2f12355b59c2e681dc5f3ed31d03238bc6c730836a5",
+    "CandidateCheckLogSHA256=8574d99765e1b29a74dc4a435f099c33e032835e39c86576176eb6963deedd33",
+    "CandidateLocalSourceCheckStatus=OK",
+    "CandidateLocalErrors=0",
+    "CandidateLocalWarnings=0",
+    "CandidateLocalNotes=0",
+    "CandidateDistributedTestsPassed=435",
+    "CandidateDistributedTestsSkipped=3",
+    "PublicDocumentationBlockedPhraseHits=0",
+    "PublicRuntimeBoundaryCodeHits=0",
+    "CandidateHostedRunId=32936425346",
+    "CandidateHostedRunComplete=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=complete-exact-candidate-five-platform-matrix"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
