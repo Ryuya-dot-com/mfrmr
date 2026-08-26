@@ -1903,7 +1903,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4: public-language 5-platform pass / v3 boundary pending",
+    "0.2.4: public-language 5-platform pass / v3 boundary frozen",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1920,7 +1920,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 23L)
+  expect_identical(count_token("data-state=\"done\""), 24L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2856,4 +2856,53 @@ test_that("0.2.4 public-language transition v3 fails closed", {
   expect_true(review$DevelopmentTransitionReady)
   expect_false(review$CandidateReady)
   expect_false(review$SubmissionAuthorized)
+})
+
+test_that("0.2.4 public-language transition record freezes clean v3", {
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-release-candidate-transition-public-language-",
+      "record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "TransitionContractId=mfrmr_release_candidate_transition_0_2_4_v3_public_language",
+    "TransitionContractCommitSHA40=fd21f8e81a92a3481e688c049697420097fa6f1d",
+    "ReviewCommitSHA40=fd21f8e81a92a3481e688c049697420097fa6f1d",
+    "G6ValidatedCommitSHA40=0dd03dd9830371dd13159db68f00d14ada0cb0ba",
+    "G6HostedRunId=32923607662",
+    "ReviewBranch=development/0.2.4",
+    "G6BaselineAncestor=TRUE",
+    "WorkingTreeCleanAtReview=TRUE",
+    "ChangedPathCount=7",
+    "CandidatePackageMetadataPathCount=0",
+    "CandidateRepositoryRoadmapPathCount=1",
+    "CandidateInternalEvidencePathCount=6",
+    "ForbiddenPayloadPathCount=0",
+    "ChangedPathsAllowed=TRUE",
+    "ProductionPayloadUnchanged=TRUE",
+    "MetadataStage=development",
+    "DevelopmentMetadataOK=TRUE",
+    "G6DecisionBound=TRUE",
+    "DevelopmentTransitionReady=TRUE",
+    "PriorCandidateReusable=FALSE",
+    "PriorTransitionContractReusable=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateReady=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CandidateChecksRun=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "ReleaseDiffAllowlistFrozen=TRUE",
+    "NextAction=hold-candidate-metadata-pending-explicit-decision"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
 })

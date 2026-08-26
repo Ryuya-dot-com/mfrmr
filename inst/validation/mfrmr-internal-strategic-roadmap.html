@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: public-language 5-platform pass / v3 boundary pending</span>
+          <span class="pill">0.2.4: public-language 5-platform pass / v3 boundary frozen</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">fresh matrix complete · v3 pending</span>
+              <span class="chip open">v3 frozen · metadata held</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -734,6 +734,10 @@
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>公開語彙payloadを5環境で再検証しG6を再束縛</strong><p><code>0dd03dd…</code>、run <code>32923607662</code>は5/5成功。G4の統計証拠は数値不変性により継続し、v1/v2 transitionは再利用しない。</p></div><span class="chip done">G6 rebound</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>公開語彙payloadのv3 transition boundaryを固定</strong><p><code>fd21f8e…</code>のclean reviewはchanged path 7、forbidden payload 0、development ready。candidate metadataは未適用。</p></div><span class="chip done">v3 frozen</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1046,8 +1050,8 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>公開語彙payloadに対するv3 transition boundaryを固定する。</strong></li>
-              <li><strong>candidate metadata適用は別判断として保留する。</strong></li>
+              <li><strong>candidate metadata適用は明示的な別判断まで保留する。</strong></li>
+              <li><strong>再開する場合もv3 allowlistだけを使用する。</strong></li>
               <li><strong>候補の公開claim diffと最終package checksを実施する。</strong></li>
               <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
@@ -1087,6 +1091,7 @@
           runtime-message local check: <a href="fixed-calibration-public-language-runtime-message-local-check-record-0.2.4.md">source and parity check</a> ·
           runtime-message hosted run: <a href="fixed-calibration-public-language-runtime-message-hosted-run-32923607662-record-0.2.4.md">5-platform record</a> ·
           public-language G6: <a href="fixed-calibration-g6-public-language-final-decision-record-0.2.4.md">G6 rebound</a> ·
+          public-language transition: <a href="fixed-calibration-release-candidate-transition-public-language-record-0.2.4.md">v3 boundary</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
