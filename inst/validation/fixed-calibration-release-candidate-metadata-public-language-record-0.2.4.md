@@ -1,6 +1,6 @@
 # mfrmr 0.2.4 public-language candidate-metadata record
 
-Status: `candidate_metadata_v3_applied_local_check_pass_hosted_retry_required`,
+Status: `candidate_metadata_v3_applied_local_check_pass_second_hosted_retry_required`,
 2026-08-26.
 
 ## Result
@@ -69,6 +69,23 @@ warnings, zero notes, 435 distributed expectations passed, and three explicit
 bounded-GPCM design skips. A fresh hosted matrix is required. No candidate tag
 was created and no CRAN submission was authorized or performed.
 
+The first fresh retry, run `32938041192`, confirmed that the source-truth
+repair passes. Its exact source-package check also passed. The next repository
+assertion then exposed a separate lifecycle defect: the historical maintenance
+bridge admitted only development metadata (`0.2.4.9000`) and therefore rejected
+the valid 0.2.4 candidate metadata. The other four matrix cells were skipped.
+This second failed run also remains in the denominator.
+
+Commit `a4790789a5fb7f1869ae7e5eeb225e2290a6b820` replaced that development-only
+predicate with an explicit two-state contract. It admits either the exact
+undated 0.2.4.9000 development identity or the exact dated 0.2.4 candidate
+identity, while rejecting missing dates, stale public predecessors, mixed
+version/status pairs, and released metadata. The maintenance bridge now reports
+candidate stage, release metadata aligned, and bridge complete. The complete
+fixed-calibration evidence test passes. These changes are excluded from the
+source package, so the candidate payload is unchanged. A second fresh hosted
+matrix is required.
+
 ## Exact fields
 
 - `TransitionContractId=mfrmr_release_candidate_transition_0_2_4_v3_public_language`
@@ -128,8 +145,23 @@ was created and no CRAN submission was authorized or performed.
 - `SourceTruthRepairDistributedTestsPassed=435`
 - `SourceTruthRepairDistributedTestsSkipped=3`
 - `SourceTruthRepairPriorCandidatePayloadDiff=DESCRIPTION_PACKAGED_TIMESTAMP_ONLY`
-- `CandidateHostedRetryRunId=PENDING`
+- `CandidateHostedRetryRunId=32938041192`
+- `CandidateHostedRetryRunComplete=TRUE`
+- `CandidateHostedRetryRunSuccess=FALSE`
+- `CandidateHostedRetryPackageCheckPassed=TRUE`
+- `CandidateHostedRetrySourceTruthPassed=TRUE`
+- `CandidateHostedRetryMaintenanceBridgePassed=FALSE`
+- `CandidateHostedRetryMatrixCellsPassed=0`
+- `CandidateHostedRetryMatrixCellsSkipped=4`
+- `CandidateHostedSecondRetryRequired=TRUE`
+- `MaintenanceBridgeRepairCommitSHA40=a4790789a5fb7f1869ae7e5eeb225e2290a6b820`
+- `MaintenanceBridgeContractId=mfrmr_fixed_calibration_g4_maintenance_admission_v2_lifecycle_aware`
+- `MaintenanceBridgeMetadataStage=candidate`
+- `MaintenanceBridgeReleaseMetadataAligned=TRUE`
+- `MaintenanceBridgeComplete=TRUE`
+- `MaintenanceBridgeProductionPayloadUnchanged=TRUE`
+- `CandidateHostedSecondRetryRunId=PENDING`
 - `CandidateTagCreated=FALSE`
 - `SubmissionAuthorized=FALSE`
 - `CRANSubmissionPerformed=FALSE`
-- `NextAction=run-fresh-exact-candidate-five-platform-matrix`
+- `NextAction=run-second-fresh-exact-candidate-five-platform-matrix`

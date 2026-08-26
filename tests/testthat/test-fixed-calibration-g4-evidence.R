@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 candidate: local pass / 5-platform retry pending",
+    "0.2.4 candidate: local pass / second 5-platform retry pending",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1964,7 +1964,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 27L)
+  expect_identical(count_token("data-state=\"done\""), 28L)
   expect_identical(count_token("data-state=\"open\""), 44L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -3019,11 +3019,26 @@ test_that("0.2.4 public-language candidate metadata has a local receipt", {
     "SourceTruthRepairDistributedTestsPassed=435",
     "SourceTruthRepairDistributedTestsSkipped=3",
     "SourceTruthRepairPriorCandidatePayloadDiff=DESCRIPTION_PACKAGED_TIMESTAMP_ONLY",
-    "CandidateHostedRetryRunId=PENDING",
+    "CandidateHostedRetryRunId=32938041192",
+    "CandidateHostedRetryRunComplete=TRUE",
+    "CandidateHostedRetryRunSuccess=FALSE",
+    "CandidateHostedRetryPackageCheckPassed=TRUE",
+    "CandidateHostedRetrySourceTruthPassed=TRUE",
+    "CandidateHostedRetryMaintenanceBridgePassed=FALSE",
+    "CandidateHostedRetryMatrixCellsPassed=0",
+    "CandidateHostedRetryMatrixCellsSkipped=4",
+    "CandidateHostedSecondRetryRequired=TRUE",
+    "MaintenanceBridgeRepairCommitSHA40=a4790789a5fb7f1869ae7e5eeb225e2290a6b820",
+    "MaintenanceBridgeContractId=mfrmr_fixed_calibration_g4_maintenance_admission_v2_lifecycle_aware",
+    "MaintenanceBridgeMetadataStage=candidate",
+    "MaintenanceBridgeReleaseMetadataAligned=TRUE",
+    "MaintenanceBridgeComplete=TRUE",
+    "MaintenanceBridgeProductionPayloadUnchanged=TRUE",
+    "CandidateHostedSecondRetryRunId=PENDING",
     "CandidateTagCreated=FALSE",
     "SubmissionAuthorized=FALSE",
     "CRANSubmissionPerformed=FALSE",
-    "NextAction=run-fresh-exact-candidate-five-platform-matrix"
+    "NextAction=run-second-fresh-exact-candidate-five-platform-matrix"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
