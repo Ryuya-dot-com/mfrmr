@@ -1965,7 +1965,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 19L)
+  expect_identical(count_token("data-state=\"done\""), 20L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2623,6 +2623,48 @@ test_that("0.2.4 public-language schema local check is exact", {
     "HostedRunComplete=FALSE",
     "CandidateMetadataApplied=FALSE",
     "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=complete-public-language-schema-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public-language schema amendment preserves numeric results", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-public-language-schema-numerical-parity-",
+      "record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "ParityContract=mfrmr_public_language_schema_numerical_parity_v1",
+    "OldCheckedCommitSHA40=76b4d65722cf82cc082717750ea14340571918a1",
+    "NewCheckedCommitSHA40=96068c9a16d48e7011a321f40ef125d8ab621418",
+    "SeparateInstalledLibraries=TRUE",
+    "ComparedModels=RSM,PCM",
+    "Estimator=MML",
+    "ScoringQuadratureOrder=31",
+    "RngUsed=FALSE",
+    "RsmResultSHA256=d0dbbb2b8b2a531f595afe4eca3825b8e214e4bd12a03cfd2462792f315ebb7d",
+    "PcmResultSHA256=bd3c80b90a037ec3e678148f93e5f55d635787f5174f72dba0917ef20a9d462f",
+    "RsmOldNewObjectIdentical=TRUE",
+    "PcmOldNewObjectIdentical=TRUE",
+    "MaxFitParameterDifference=0",
+    "MaxCalibrationCoordinateDifference=0",
+    "MaxPersonEstimateDifference=0",
+    "NumericalScoringAlgorithmChanged=FALSE",
+    "StatisticalModelChanged=FALSE",
+    "G4Reissued=FALSE",
+    "G6Revalidated=FALSE",
+    "CandidateMetadataApplied=FALSE",
     "SubmissionAuthorized=FALSE",
     "CRANSubmissionPerformed=FALSE",
     "NextAction=complete-public-language-schema-five-platform-matrix"

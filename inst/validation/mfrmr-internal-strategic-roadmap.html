@@ -719,6 +719,10 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>公開語彙・schema payloadをローカル検査</strong><p><code>96068c9…</code>のexact source checkは0 errors・0 warnings・0 notes、distributed tests 435 pass。</p></div><span class="chip done">local pass</span>
               </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>旧/new tarballのRSM・PCM数値同一性を確認</strong><p>別libraryでfit→freeze→scoreを再実行し、parameter・coordinate・score objectは完全一致、最大差0。</p></div><span class="chip done">exact parity</span>
+              </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
                 <div><strong>release metadataを0.2.4 candidateへ再遷移</strong><p>公開語彙とschemaのfresh validation後にv3境界を固定し、そのallowlistだけで再実施する。</p></div><span class="chip open">blocked by validation</span>
@@ -1067,6 +1071,7 @@
           v2 invalidation: <a href="fixed-calibration-release-candidate-transition-recovery-invalidation-record-0.2.4.md">public-language correction</a> ·
           language/schema amendment: <a href="fixed-calibration-public-language-schema-amendment-record-0.2.4.md">targeted regression</a> ·
           language/schema local check: <a href="fixed-calibration-public-language-schema-local-check-record-0.2.4.md">source check</a> ·
+          language/schema parity: <a href="fixed-calibration-public-language-schema-numerical-parity-record-0.2.4.md">RSM/PCM exact comparison</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
