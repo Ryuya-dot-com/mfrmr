@@ -1,6 +1,6 @@
 # mfrmr 0.2.4 public-language candidate-metadata record
 
-Status: `candidate_metadata_v3_applied_local_check_pass_hosted_running`,
+Status: `candidate_metadata_v3_applied_local_check_pass_hosted_retry_required`,
 2026-08-26.
 
 ## Result
@@ -46,9 +46,28 @@ messages.
 
 `Config/mfrmr/public-version` remains `0.2.3.1`.
 
-Ordinary five-platform workflow run `32936425346` is running on the exact
-candidate commit. This record does not infer its result. No candidate tag was
-created and no CRAN submission was authorized or performed.
+Ordinary five-platform workflow run `32936425346` completed unsuccessfully.
+Its exact source-tarball package check on macOS passed before the subsequent
+repository validation review failed. The remaining four matrix cells were
+skipped. This failed run remains part of the denominator and is not reused as
+candidate evidence.
+
+The failure was traced to a legacy source-truth predicate that required the
+literal phrase `single source of truth` in the public roadmap. That phrase had
+correctly been removed with other internal process language. Commit
+`7a0e042ba4a0d07f0b6756d3409d1b06ad89e801` replaced the literal-string rule
+with a reader-facing section contract, a release-lifecycle match, and an
+explicit rejection of internal process phrases. It also aligned the README
+scope predicate with the current portable-calibration wording. The complete
+repository release-readiness test and the fixed-calibration evidence test pass
+under the repaired contract.
+
+A fresh source tarball built after that repair differs from the exact candidate
+tarball only in the automatically generated `Packaged` timestamp. Its local
+`R CMD check --no-manual` completed with `Status: OK`, zero errors, zero
+warnings, zero notes, 435 distributed expectations passed, and three explicit
+bounded-GPCM design skips. A fresh hosted matrix is required. No candidate tag
+was created and no CRAN submission was authorized or performed.
 
 ## Exact fields
 
@@ -92,8 +111,25 @@ created and no CRAN submission was authorized or performed.
 - `PublicDocumentationBlockedPhraseHits=0`
 - `PublicRuntimeBoundaryCodeHits=0`
 - `CandidateHostedRunId=32936425346`
-- `CandidateHostedRunComplete=FALSE`
+- `CandidateHostedRunComplete=TRUE`
+- `CandidateHostedRunSuccess=FALSE`
+- `CandidateHostedPackageCheckPassed=TRUE`
+- `CandidateHostedRepositoryValidationPassed=FALSE`
+- `CandidateHostedMatrixCellsPassed=0`
+- `CandidateHostedMatrixCellsSkipped=4`
+- `CandidateHostedRetryRequired=TRUE`
+- `SourceTruthRepairCommitSHA40=7a0e042ba4a0d07f0b6756d3409d1b06ad89e801`
+- `SourceTruthRepairSourceTarballSHA256=fa3b13f1d179e34838bce8f8b457b7552965a7cedad3528aa3b6f206a981cf47`
+- `SourceTruthRepairCheckLogSHA256=52a65160fb4b49fce01d7651e9bda8a7c053518b9bc889418e6659dcf1856d24`
+- `SourceTruthRepairLocalSourceCheckStatus=OK`
+- `SourceTruthRepairLocalErrors=0`
+- `SourceTruthRepairLocalWarnings=0`
+- `SourceTruthRepairLocalNotes=0`
+- `SourceTruthRepairDistributedTestsPassed=435`
+- `SourceTruthRepairDistributedTestsSkipped=3`
+- `SourceTruthRepairPriorCandidatePayloadDiff=DESCRIPTION_PACKAGED_TIMESTAMP_ONLY`
+- `CandidateHostedRetryRunId=PENDING`
 - `CandidateTagCreated=FALSE`
 - `SubmissionAuthorized=FALSE`
 - `CRANSubmissionPerformed=FALSE`
-- `NextAction=complete-exact-candidate-five-platform-matrix`
+- `NextAction=run-fresh-exact-candidate-five-platform-matrix`

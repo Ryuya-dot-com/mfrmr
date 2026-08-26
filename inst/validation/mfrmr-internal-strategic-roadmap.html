@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4 candidate: local pass / 5-platform running</span>
+          <span class="pill">0.2.4 candidate: local pass / 5-platform retry pending</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -747,13 +747,17 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>公開文面の最終claim diffを監査</strong><p>候補tarballの公開語彙hitは0。開発tarballとの差はDESCRIPTIONとNEWS先頭だけ。</p></div><span class="chip done">claim diff clean</span>
               </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>候補CIで露呈したsource-truth契約を修正</strong><p>run <code>32936425346</code>はpackage check通過後に旧定型句依存で失敗。公開文面へ内部語を戻さず、section・lifecycle・禁止語の意味契約へ置換し、local source check 0/0/0を再確認。</p></div><span class="chip done">contract repaired</span>
+              </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
                 <div><strong>clean source tarballと候補tagを一対一に固定</strong><p>dirty tree、未追跡production file、生成物混入を拒否。</p></div><span class="chip open">open</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>候補commitで最終 package checks</strong><p>local source checkは0/0/0。run <code>32936425346</code>の5-platform完了を待つ。</p></div><span class="chip open">hosted running</span>
+                <div><strong>候補commitで最終 package checks</strong><p>local source checkは0/0/0。失敗済みrun <code>32936425346</code>を保持したままfresh 5-platform runを完了する。</p></div><span class="chip open">retry required</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1050,7 +1054,7 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>run 32936425346のexact candidate 5-platform matrixを完了する。</strong></li>
+              <li><strong>source-truth修正後のfresh exact candidate 5-platform matrixを完了する。</strong></li>
               <li><strong>候補commitとhosted結果を一対一に記録する。</strong></li>
               <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
