@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 development: score UX hosted pass · help index locally complete",
+    "0.2.4 development: score UX hosted pass · accessible help/visual locally complete",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -3142,6 +3142,11 @@ test_that("score UX review invalidates the previous candidate before human sign-
   ), collapse = "\n")
   expect_match(article, "summary(scores)", fixed = TRUE)
   expect_match(article, 'type = "interval"', fixed = TRUE)
+  expect_match(
+    article,
+    'fig.alt = "Posterior EAP intervals for two newly scored Persons.',
+    fixed = TRUE
+  )
   expect_match(
     article, "excludes calibration-parameter uncertainty", fixed = TRUE
   )

@@ -411,7 +411,8 @@ plot.mfrm_calibration_score <- function(
   ))
   subtitle <- paste0(
     nrow(plotted), " of ", nrow(full), " scored Persons shown; ",
-    review_plotted, " review disposition(s) shown"
+    review_plotted, " review disposition",
+    if (review_plotted == 1L) "" else "s", " shown"
   )
   uncertainty_note <- paste(
     "Posterior uncertainty is conditional on the frozen point calibration",

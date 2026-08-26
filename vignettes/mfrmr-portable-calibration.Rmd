@@ -92,7 +92,7 @@ new response rows. The following chunk removes the fit, draft, validation
 object, and training data before loading the artifact, so none can influence
 the score.
 
-```{r score-from-artifact}
+```{r score-from-artifact, fig.alt = "Posterior EAP intervals for two newly scored Persons. A blue circle marks a conditionally ready score, an orange triangle marks a score requiring review, and a dashed vertical line marks the zero-logit scale origin."}
 new_rows <- synthetic[
   as.character(synthetic$Person) %in% person_ids[19:20],
   c("Person", "Rater", "Criterion", "Score"),

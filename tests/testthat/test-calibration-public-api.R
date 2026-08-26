@@ -221,6 +221,10 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   ) %in% names(interval$data)))
   expect_true("NEW_LOW" %in% interval$data$unplotted_dispositions$Person)
   expect_identical(interval$data$selection_summary$NotScoredPersons, 1L)
+  expect_identical(
+    interval$data$subtitle,
+    "1 of 1 scored Persons shown; 1 review disposition shown"
+  )
   expect_true(all(c(
     "ReviewFlag", "QuadratureEdgeMass", "QuadratureEdgeThreshold",
     "DisplayOrder"
