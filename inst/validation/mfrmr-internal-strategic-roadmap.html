@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: G6 complete / candidate prep</span>
+          <span class="pill">0.2.4: candidate metadata ready / checks pending</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">candidate prep</span>
+              <span class="chip open">candidate checks pending</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -638,8 +638,8 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>最終release candidateを作成</strong><p>0.2.4 metadata、candidate identity、最終source checkは未実施。</p></div>
-                <span class="chip open">next</span>
+                <div><strong>最終release candidateを作成</strong><p>0.2.4 candidate metadataは適用済み。candidate identity、最終source check、tagは未実施。</p></div>
+                <span class="chip open">checks pending</span>
               </div>
             </div>
           </article>
@@ -699,9 +699,9 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>release差分allowlistを事前固定</strong><p>Version、status、日付、NEWS heading、cran-comments以外を拒否し、candidateのpublic-versionは0.2.3.1に固定。</p></div><span class="chip done">done</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>release metadataを0.2.4へ遷移</strong><p><code>development</code>から正式状態へ。意味のない日付先行はしない。</p></div><span class="chip open">open</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>release metadataを0.2.4 candidateへ遷移</strong><p><code>e1fda82…</code>でVersion、日付、status、NEWS heading、CFF、cran-commentsを契約どおり固定。</p></div><span class="chip done">done</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1010,9 +1010,9 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>frozen allowlist内で0.2.4 candidate metadataとcran-commentsを適用する。</strong></li>
-              <li><strong>最終candidate commit/tagを作り、clean source tarballを固定する。</strong></li>
-              <li><strong>候補tagのlocal＋5-platform＋public claim差分を再検証する。</strong></li>
+              <li><strong>公開文面の最終claim diffを監査する。</strong></li>
+              <li><strong>clean source tarballを構築・検査し、candidate identityを固定する。</strong></li>
+              <li><strong>候補identityのlocal＋5-platform検証後にtag可否を判断する。</strong></li>
               <li><strong>人間sign-off後にCRAN投稿を行う。</strong></li>
               <li><strong>公開artifactを再取得して候補と照合し、30日monitoringを開始する。</strong></li>
               <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
@@ -1037,6 +1037,7 @@
           Internal source of direction: <a href="../../ROADMAP.md">ROADMAP.md</a> ·
           G6 decision: <a href="fixed-calibration-g6-release-decision-record-0.2.4.md">release record</a> ·
           candidate transition: <a href="fixed-calibration-release-candidate-transition-record-0.2.4.md">transition record</a> ·
+          candidate metadata: <a href="fixed-calibration-release-candidate-metadata-record-0.2.4.md">metadata record</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>

@@ -880,13 +880,20 @@ test_that("historical G4 inventory hands candidate paths to the transition contr
     )
   } else {
     expect_identical(current$Metadata$Stage, "candidate")
-    expect_identical(review$Status, "candidate_source_inventory_blocked")
-    expect_false(review$AllChangesClassified)
-    expect_false(review$CommitPlanReady)
     handed_off <- inventory$Path[
       inventory$Classification == "unclassified_fail_closed"
     ]
-    expect_gt(length(handed_off), 0L)
+    if (length(handed_off) == 0L) {
+      expect_identical(
+        review$Status, "all_live_changes_classified_commit_lanes_unexecuted"
+      )
+      expect_true(review$AllChangesClassified)
+      expect_true(review$CommitPlanReady)
+    } else {
+      expect_identical(review$Status, "candidate_source_inventory_blocked")
+      expect_false(review$AllChangesClassified)
+      expect_false(review$CommitPlanReady)
+    }
     expect_true(all(vapply(handed_off, function(path) {
       !identical(
         transition$env$mfrmr_rc04_classify_path(path),
@@ -1940,7 +1947,9 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
     "同じ測定尺度を、意味を変えず、失敗を隠さず、独立に再現・保存・適用できること。",
     fixed = TRUE
   )
-  expect_match(roadmap, "0.2.4: G6 complete / candidate prep", fixed = TRUE)
+  expect_match(
+    roadmap, "0.2.4: candidate metadata ready / checks pending", fixed = TRUE
+  )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
   expect_match(
     roadmap, "Public scope: RSM · PCM · MML · fixed N(0,1)", fixed = TRUE
@@ -1955,8 +1964,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 14L)
-  expect_identical(count_token("data-state=\"open\""), 46L)
+  expect_identical(count_token("data-state=\"done\""), 15L)
+  expect_identical(count_token("data-state=\"open\""), 45L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -2222,6 +2231,41 @@ test_that("0.2.4 transition record binds the clean contract review", {
   expect_match(
     roadmap,
     "fixed-calibration-release-candidate-transition-record-0.2.4.md",
+    fixed = TRUE
+  )
+})
+
+test_that("0.2.4 candidate metadata record binds readiness without submission", {
+  transition <- load_fixed_calibration_release_candidate_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-release-candidate-metadata-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "CandidateMetadataCommitSHA40=e1fda8274579d8de6e7931148c3c59fad7d2d469",
+    "CandidateVersion=0.2.4",
+    "CandidateDate=2026-08-26",
+    "CandidateReleaseStatus=candidate",
+    "CandidatePublicVersion=0.2.3.1",
+    "CandidateNewsHeading=# mfrmr 0.2.4",
+    "CandidateMetadataOK=TRUE",
+    "CranCommentsReady=TRUE",
+    "CandidateReady=TRUE",
+    "CandidateTagCreated=FALSE",
+    "CandidateChecksRun=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=audit-final-public-claim-diff"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+  expect_match(
+    record,
+    "The metadata transition does not inherit a final-candidate check result",
     fixed = TRUE
   )
 })

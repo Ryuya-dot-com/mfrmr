@@ -12,8 +12,9 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
   G0 maintenance addendum binds its exact source payload and its two
   patch-equivalent 0.2.4 integration commits independently of lagging binary
   and secondary distribution channels.
-- Development is focused on the deliberately bounded 0.2.4 fixed-calibration
-  release described below.
+- The deliberately bounded 0.2.4 fixed-calibration release now has candidate
+  metadata. Exact candidate-tarball checks and maintainer sign-off remain; no
+  0.2.4 CRAN submission has been performed.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.
