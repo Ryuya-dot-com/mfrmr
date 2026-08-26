@@ -2468,3 +2468,48 @@ test_that("0.2.4 recovery transition is independent of invalidated v1", {
     review$Inventory$Classification == "package_payload_change_forbidden"
   ))
 })
+
+test_that("0.2.4 recovery transition record freezes the clean v2 review", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-release-candidate-transition-recovery-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "TransitionContractId=mfrmr_release_candidate_transition_0_2_4_v2_recovery",
+    "TransitionContractCommitSHA40=e49903255fb728bf4cc631ad66077700840c043b",
+    "ReviewCommitSHA40=e49903255fb728bf4cc631ad66077700840c043b",
+    "G6ValidatedCommitSHA40=e39571974f70da0db90444732b5719c187a004d2",
+    "G6HostedRunId=32915301113",
+    "ReviewBranch=development/0.2.4",
+    "G6BaselineAncestor=TRUE",
+    "WorkingTreeCleanAtReview=TRUE",
+    "ChangedPathCount=7",
+    "CandidatePackageMetadataPathCount=0",
+    "CandidateRepositoryRoadmapPathCount=1",
+    "CandidateInternalEvidencePathCount=6",
+    "ForbiddenPayloadPathCount=0",
+    "ChangedPathsAllowed=TRUE",
+    "ProductionPayloadUnchanged=TRUE",
+    "MetadataStage=development",
+    "DevelopmentMetadataOK=TRUE",
+    "G6DecisionBound=TRUE",
+    "DevelopmentTransitionReady=TRUE",
+    "PriorCandidateReusable=FALSE",
+    "PriorTransitionContractReusable=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateReady=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CandidateChecksRun=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "ReleaseDiffAllowlistFrozen=TRUE",
+    "NextAction=apply-0.2.4-candidate-metadata-under-recovery-v2-allowlist"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})

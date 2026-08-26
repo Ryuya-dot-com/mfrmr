@@ -20,8 +20,8 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
   package passed a local `R CMD check --no-manual` and a fresh ordinary
   five-platform workflow (5/5). G6 has been rebound to that exact recovery
   payload; the invalidated candidate and its v1 transition contract remain
-  non-reusable, and a new frozen transition boundary is required before
-  candidate metadata is applied again.
+  non-reusable. A new v2 transition boundary is now frozen against the
+  recovery payload; candidate metadata has not yet been applied.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.
