@@ -35,6 +35,11 @@
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.
 #'
+#' Portable fixed-calibration score batches have a separate review route.
+#' Use `summary(scores)` and `plot(scores)` as described in
+#' [mfrm_calibration_score_methods]. Those displays review returned scores;
+#' they do not replace source-fit diagnostics or establish calibration fit.
+#'
 #' @section Start with the question:
 #' - "Do persons and facet levels overlap on the same logit scale?"
 #'   Use `plot(fit, type = "wright")` or [plot_wright_unified()].
@@ -97,6 +102,12 @@
 #'   branch can also call [plot_qc_dashboard()], but its fair-average
 #'   panel reports an explicit unavailability indicator because that
 #'   panel's score-metric semantics are limited to the Rasch-family branch.
+#' - "I scored new Persons from a frozen portable calibration; which scores
+#'    require review and how wide are their conditional intervals?"
+#'   Use `summary(scores)` followed by
+#'   `plot(scores, type = "interval")`. Continue with `type = "precision"`
+#'   or `type = "edge_mass"` when response-count precision or quadrature-edge
+#'   behavior needs follow-up.
 #' - "Which figures are already supported by my current run?"
 #'   Use [reporting_checklist()] and review the `"Visual Displays"` rows before
 #'   choosing the next plot.
@@ -125,10 +136,13 @@
 #'    follow-up.
 #' 6. Use `plot(..., draw = FALSE)` when you want reusable plot data instead
 #'    of immediate graphics.
-#' 7. Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you need
+#' 7. For an artifact-scored batch, use `summary(scores)` and `plot(scores)`;
+#'    keep its conditional-uncertainty note with the figure and inspect every
+#'    `scored_review` or `not_scored` disposition.
+#' 8. Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you need
 #'    3D-ready category-probability data; `mfrmr` intentionally does not add a
 #'    package-native plotly/rgl renderer for this route.
-#' 8. Use `preset = "publication"` when you want the package's cleaner
+#' 9. Use `preset = "publication"` when you want the package's cleaner
 #'    manuscript-oriented styling, or `preset = "monochrome"` when journals,
 #'    accessibility requirements, or print workflows require grayscale output.
 #'
@@ -170,6 +184,10 @@
 #'   `mfrm_plot_data` objects for downstream review and export. When step
 #'   estimates are available, `build_visual_summaries()` also exposes
 #'   `$plot_payloads$category_probability_surface`.
+#' - Portable score-batch review:
+#'   `plot(scores, type = "interval")`, `"precision"`, or `"edge_mass"`
+#'   after [score_mfrm_calibration()]. These views retain selection accounting,
+#'   review dispositions, and Persons that could not be scored.
 #' - 3D-ready exploratory handoff:
 #'   `plot(fit, type = "ccc_surface", draw = FALSE)` returns a
 #'   theta-by-category-by-probability `mfrm_plot_data` object. This is not a
@@ -260,6 +278,10 @@
 #'   funnel showing raw versus shrunken facet estimates. Best on fits
 #'   produced via [apply_empirical_bayes_shrinkage()] for reviewing how
 #'   much each level moved under the prior.}
+#'   \item{`plot(scores, type = "interval")`}{Posterior EAP intervals for a
+#'   portable fixed-calibration score batch, with review dispositions
+#'   highlighted. The intervals are conditional on the frozen point
+#'   calibration and exclude calibration-parameter uncertainty.}
 #' }
 #'
 #' @section Cross-reference to FACETS / Winsteps tables:
@@ -318,6 +340,10 @@
 #'   whether facet elements are statistically distinguishable.
 #' - Residual PCA and bias plots should be interpreted as follow-up layers
 #'   after the main fit screen, not as first-pass diagnostics.
+#' - Portable score plots review returned score batches only. Inspect the
+#'   source calibration separately, retain `not_scored` Persons in the audit
+#'   trail, and do not interpret conditional intervals as including
+#'   calibration-parameter uncertainty.
 #' - DFF residual- and refit-method plots are screening visuals. Current refit
 #'   rows do not receive ETS A/B/C labels because their plug-in uncertainty
 #'   omits baseline-anchor uncertainty and cross-refit covariance.

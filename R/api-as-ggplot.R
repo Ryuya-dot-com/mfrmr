@@ -22,9 +22,13 @@
 .mfrmr_gg_labs <- function(p, payload, x = NULL, y = NULL, fallback = NULL) {
   title <- as.character(payload$title %||% fallback %||% "")
   subtitle <- as.character(payload$subtitle %||% "")
+  caption <- as.character(payload$caption %||% "")
   title <- title[!is.na(title) & nzchar(title)][1] %||% NULL
   subtitle <- subtitle[!is.na(subtitle) & nzchar(subtitle)][1] %||% NULL
-  p + ggplot2::labs(title = title, subtitle = subtitle, x = x, y = y)
+  caption <- caption[!is.na(caption) & nzchar(caption)][1] %||% NULL
+  p + ggplot2::labs(
+    title = title, subtitle = subtitle, caption = caption, x = x, y = y
+  )
 }
 
 .mfrmr_gg_add_references <- function(p, reference_lines) {
@@ -644,6 +648,108 @@
   )
 }
 
+.mfrmr_gg_calibration_score <- function(payload, type) {
+  df <- as.data.frame(payload$data %||% data.frame(), stringsAsFactors = FALSE)
+  required <- switch(
+    type,
+    interval = c("Person", "Estimate", "Lower", "Upper", "ReviewFlag"),
+    precision = c("Person", "Observations", "SD", "ReviewFlag"),
+    edge_mass = c(
+      "Person", "Estimate", "QuadratureEdgeMass", "ReviewFlag"
+    )
+  )
+  missing <- setdiff(required, names(df))
+  if (length(missing) > 0L) {
+    stop(
+      "Portable-score conversion is missing field(s): ",
+      paste(missing, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+  df$ReviewStatus <- ifelse(df$ReviewFlag, "Review", "Scored")
+  colors <- c(Scored = "#1F78B4", Review = "#B65E16")
+  if (identical(type, "interval")) {
+    display_order <- suppressWarnings(as.numeric(
+      df$DisplayOrder %||% seq_len(nrow(df))
+    ))
+    df$PersonFactor <- factor(
+      as.character(df$Person),
+      levels = as.character(df$Person[order(display_order)])
+    )
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(y = .data$PersonFactor, colour = .data$ReviewStatus)
+    ) +
+      ggplot2::geom_segment(
+        ggplot2::aes(
+          x = .data$Lower, xend = .data$Upper,
+          yend = .data$PersonFactor
+        ),
+        linewidth = 0.65
+      ) +
+      ggplot2::geom_point(ggplot2::aes(x = .data$Estimate), size = 2.2) +
+      ggplot2::scale_colour_manual(values = colors) +
+      .mfrmr_gg_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    p <- .mfrmr_gg_add_references(p, payload$reference_lines)
+    return(.mfrmr_gg_labs(
+      p, payload, x = "Posterior EAP (logits)", y = NULL,
+      fallback = "Portable calibration score intervals"
+    ))
+  }
+  if (identical(type, "precision")) {
+    p <- ggplot2::ggplot(
+      df,
+      ggplot2::aes(
+        x = .data$Observations, y = .data$SD,
+        colour = .data$ReviewStatus
+      )
+    ) +
+      ggplot2::geom_point(size = 2.4) +
+      ggplot2::scale_colour_manual(values = colors) +
+      .mfrmr_gg_theme() +
+      ggplot2::theme(legend.position = "bottom")
+    labels <- df[df$ReviewFlag & nzchar(as.character(df$Person)), , drop = FALSE]
+    if (isTRUE(payload$settings$label_review %||% TRUE) && nrow(labels) > 0L) {
+      p <- p + ggplot2::geom_text(
+        data = labels,
+        ggplot2::aes(label = .data$Person),
+        vjust = -0.6, show.legend = FALSE, check_overlap = TRUE
+      )
+    }
+    return(.mfrmr_gg_labs(
+      p, payload, x = "Valid response rows", y = "Posterior SD (logits)",
+      fallback = "Conditional score precision"
+    ))
+  }
+
+  p <- ggplot2::ggplot(
+    df,
+    ggplot2::aes(
+      x = .data$Estimate, y = .data$QuadratureEdgeMass,
+      colour = .data$ReviewStatus
+    )
+  ) +
+    ggplot2::geom_point(size = 2.4) +
+    ggplot2::scale_colour_manual(values = colors) +
+    .mfrmr_gg_theme() +
+    ggplot2::theme(legend.position = "bottom")
+  labels <- df[df$ReviewFlag & nzchar(as.character(df$Person)), , drop = FALSE]
+  if (isTRUE(payload$settings$label_review %||% TRUE) && nrow(labels) > 0L) {
+    p <- p + ggplot2::geom_text(
+      data = labels,
+      ggplot2::aes(label = .data$Person),
+      vjust = -0.6, show.legend = FALSE, check_overlap = TRUE
+    )
+  }
+  p <- .mfrmr_gg_add_references(p, payload$reference_lines)
+  .mfrmr_gg_labs(
+    p, payload, x = "Posterior EAP (logits)",
+    y = "Posterior mass at outer quadrature nodes",
+    fallback = "Quadrature edge-mass review"
+  )
+}
+
 .mfrmr_gg_tabular <- function(component, payload) {
   value <- component$value
   if (is.matrix(value)) return(.mfrmr_gg_matrix(value, payload))
@@ -728,9 +834,10 @@
 #'
 #' Dedicated conversions are provided for Wright maps, theta-to-expected-score
 #' pathways, fit-statistic-to-measure pathways, category characteristic curves,
-#' bubble charts, and DIF/DFF summaries and heatmaps. Other draw-free payloads
-#' use a conservative tabular fallback; inspect [plot_data_components()] when
-#' automatic inference is not appropriate.
+#' bubble charts, DIF/DFF summaries and heatmaps, and portable-calibration
+#' score review plots. Other draw-free payloads use a conservative tabular
+#' fallback; inspect [plot_data_components()] when automatic inference is not
+#' appropriate.
 #'
 #' @param x An `mfrm_plot_data` object, or an mfrmr object with a draw-free
 #'   plot method.
@@ -828,6 +935,13 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   }
   if (is.null(component) && identical(x$name, "bubble")) {
     return(.mfrmr_gg_bubble(payload))
+  }
+  calibration_score_type <- sub(
+    "^calibration_score_", "", as.character(x$name %||% "")
+  )
+  if (is.null(component) &&
+      calibration_score_type %in% c("interval", "precision", "edge_mass")) {
+    return(.mfrmr_gg_calibration_score(payload, calibration_score_type))
   }
   if (is.null(component) && x$name %in% c(
     "category_characteristic_curves", "category_characteristic_curves_overlay"

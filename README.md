@@ -115,7 +115,8 @@ save_mfrm_calibration(calibration, "reviewed-calibration.rds")
 # This can run in a new R session.
 calibration <- load_mfrm_calibration("reviewed-calibration.rds")
 scores <- score_mfrm_calibration(calibration, new_responses)
-scores$estimates
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
 ```
 
 Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
@@ -125,7 +126,10 @@ remain fitted-object-only routes; they do not create portable calibration
 artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
 frozen point calibration and recorded prior. Their intervals exclude
 calibration-parameter uncertainty, and loading validates consistency rather
-than authenticating files from untrusted sources.
+than authenticating files from untrusted sources. Review every
+`scored_review` or `not_scored` disposition before using estimates. The score
+plot is a batch-review display, not evidence that the source calibration fits
+or transports to a new population.
 
 ## Data format
 

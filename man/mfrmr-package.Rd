@@ -90,7 +90,9 @@ A saved, versioned calibration artifact can be created from an eligible
 one-scale \code{RSM} or \code{PCM} MML fit under the fixed standard-normal scoring
 basis. Use \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} before extraction, then follow
 \link{mfrm_calibration_workflow} to review, validate, freeze, save, load, and
-score the artifact. Estimated-population or latent-regression MML, JML, and
+score the artifact. Review the returned batch with
+\link{mfrm_calibration_score_methods} before using its estimates. Estimated-
+population or latent-regression MML, JML, and
 bounded \code{GPCM} remain fitted-object-only scoring routes in 0.2.4. Artifact
 score uncertainty is conditional on the frozen point calibration and its
 recorded prior; loading validates consistency but does not authenticate an

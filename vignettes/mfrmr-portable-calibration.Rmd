@@ -12,8 +12,11 @@ is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
   eval = !is_cran_check
 )
+options(width = 78)
 ```
 
 This workflow creates a portable calibration from an eligible fitted model,
@@ -101,17 +104,49 @@ new_ids <- stats::setNames(
 new_rows$Person <- unname(new_ids[as.character(new_rows$Person)])
 rownames(new_rows) <- NULL
 
+# Create one explicit review case for the tutorial figure. In operational
+# scoring, never alter observed responses to manufacture a disposition.
+new_rows$Score[new_rows$Person == "NEW_PERSON_2"] <- max(training$Score)
+
 rm(fit, draft, validated, frozen, training, synthetic)
 invisible(gc())
 
 calibration <- load_mfrm_calibration(artifact_file)
 scores <- score_mfrm_calibration(calibration, new_rows)
-scores$estimates
-scores$row_review
-scores$person_dispositions
+summary(scores)
+
+plot(
+  scores,
+  type = "interval",
+  preset = "publication"
+)
 
 unlink(artifact_file)
 ```
+
+The interval figure is the first score-batch review. Orange triangles identify
+Persons whose `Disposition` is `scored_review`; inspect their `ReasonCodes`
+before using the estimate. A Person with no valid response has no score
+coordinate and therefore appears in `summary(scores)$review` and in the
+draw-free plot payload's `unplotted_dispositions`, not as an artificial point.
+
+Two focused follow-up views use the same score object without consulting the
+source fit:
+
+```{r score-review-payload, eval = FALSE}
+# Valid response rows versus posterior SD.
+plot(scores, type = "precision", preset = "publication")
+
+# Posterior mass on the outer quadrature nodes versus the recorded threshold.
+edge_review <- plot(scores, type = "edge_mass", draw = FALSE)
+edge_review$data$selection_summary
+edge_review$data$unplotted_dispositions
+```
+
+These displays review a returned score batch. They do not establish source-fit
+quality, reliability, calibration transport, or validity. Every interval and
+posterior SD remains conditional on the frozen point calibration and excludes
+calibration-parameter uncertainty.
 
 For a separate scoring script, the essential code is:
 
@@ -121,6 +156,8 @@ library(mfrmr)
 calibration <- load_mfrm_calibration("reviewed-calibration.rds")
 new_rows <- read.csv("new-responses.csv", stringsAsFactors = FALSE)
 scores <- score_mfrm_calibration(calibration, new_rows)
+print(scores)
+plot(scores, type = "interval", preset = "publication")
 write.csv(scores$estimates, "person-scores.csv", row.names = FALSE)
 ```
 

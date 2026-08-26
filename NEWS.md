@@ -22,6 +22,10 @@
   a scoring grid independent of the source fit's integration grid.
 * Portable calibration artifacts record an explicit `support_profile_id`, and
   calibration summaries label it as `Support profile`.
+* Portable calibration score batches now have concise `print()` and structured
+  `summary()` methods plus interval, precision, and quadrature-edge review
+  plots. The displays retain review and not-scored dispositions and state that
+  posterior uncertainty excludes calibration-parameter uncertainty.
 * Latent-regression reference benchmarks no longer attempt Person scoring when
   their fitted model is not scoring-ready. The posterior-shift check is kept as
   an explicit unevaluated warning instead of using a review-only score.

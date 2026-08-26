@@ -81,7 +81,9 @@
 #' one-scale `RSM` or `PCM` MML fit under the fixed standard-normal scoring
 #' basis. Use [mfrm_calibration_capabilities()] before extraction, then follow
 #' [mfrm_calibration_workflow] to review, validate, freeze, save, load, and
-#' score the artifact. Estimated-population or latent-regression MML, JML, and
+#' score the artifact. Review the returned batch with
+#' [mfrm_calibration_score_methods] before using its estimates. Estimated-
+#' population or latent-regression MML, JML, and
 #' bounded `GPCM` remain fitted-object-only scoring routes in 0.2.4. Artifact
 #' score uncertainty is conditional on the frozen point calibration and its
 #' recorded prior; loading validates consistency but does not authenticate an

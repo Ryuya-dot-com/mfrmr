@@ -84,7 +84,7 @@ test_that("public capability matrix states the bounded artifact envelope", {
   expect_true(all(nzchar(capabilities$Limitation)))
 
   guide <- mfrmr_output_guide("calibration")
-  expect_identical(nrow(guide), 4L)
+  expect_identical(nrow(guide), 5L)
   expect_true(all(guide$Scope == "calibration"))
   expect_true(all(guide$RecommendedEntry))
   expect_true(any(grepl(
@@ -94,10 +94,18 @@ test_that("public capability matrix states the bounded artifact envelope", {
     "score_mfrm_calibration()", guide$MainFunction, fixed = TRUE
   )))
   expect_true(any(grepl(
+    "plot(scores, type = \"interval\")", guide$MainFunction, fixed = TRUE
+  )))
+  expect_true(any(grepl(
     "does not construct typed step anchors", guide$Notes, fixed = TRUE
   )))
   expect_true(any(grepl(
     "excludes calibration-parameter uncertainty",
+    guide$DecisionBoundary,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "does not establish source-fit quality",
     guide$DecisionBoundary,
     fixed = TRUE
   )))
@@ -146,6 +154,112 @@ test_that("public lifecycle is explicit and artifact scoring performs no refit",
   )
   expect_s3_class(error, "mfrm_calibration_error")
   expect_identical(error$code, "LIFECYCLE_NOT_FROZEN")
+})
+
+test_that("portable score methods foreground review and conditional uncertainty", {
+  fixture <- calibration_public_fixture()
+  scored <- score_mfrm_calibration(fixture$frozen, fixture$rows)
+
+  printed <- capture.output(print(scored))
+  summarized <- summary(scored, digits = 2)
+  summary_printed <- capture.output(print(summarized))
+
+  expect_s3_class(summarized, "summary.mfrm_calibration_score")
+  expect_identical(
+    names(summarized),
+    c("overview", "estimates", "review", "row_review", "settings", "notes", "digits")
+  )
+  expect_identical(summarized$overview$Persons, 2L)
+  expect_identical(summarized$overview$Scored, 2L)
+  expect_identical(summarized$overview$Review, 2L)
+  expect_identical(summarized$overview$NotScored, 0L)
+  expect_true(all(c(
+    "Person", "Estimate", "SD", "Lower", "Upper", "Observations",
+    "Disposition", "ReasonCodes"
+  ) %in% names(summarized$estimates)))
+  expect_true(all(summarized$review$Disposition == "scored_review"))
+  expect_true(any(grepl("<mfrm_calibration_score>", printed, fixed = TRUE)))
+  expect_true(any(grepl(
+    "2 scored (2 requiring review); 0 not scored", printed, fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "2 scored (2 requiring review); 0 not scored", summary_printed,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "calibration-parameter uncertainty excluded", printed, fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Interpretation boundary", summary_printed, fixed = TRUE
+  )))
+  public_output <- paste(c(printed, summary_printed), collapse = "\n")
+  expect_false(grepl("CORE-[0-9]|G[0-6] exit|internal", public_output, perl = TRUE))
+})
+
+test_that("portable score plots preserve selection and non-scored dispositions", {
+  fixture <- calibration_public_fixture()
+  rows <- fixture$rows
+  rows$Score[rows$Person == "NEW_LOW"] <- NA_real_
+  scored <- score_mfrm_calibration(
+    fixture$frozen, rows, missing_response = "omit"
+  )
+
+  summarized <- summary(scored)
+  expect_identical(summarized$overview$NotScored, 1L)
+  expect_true("NEW_LOW" %in% summarized$review$Person)
+
+  interval <- plot(scored, type = "interval", draw = FALSE)
+  precision <- plot(scored, type = "precision", draw = FALSE)
+  edge_mass <- plot(scored, type = "edge_mass", draw = FALSE)
+  expect_s3_class(interval, "mfrm_plot_data")
+  expect_identical(interval$name, "calibration_score_interval")
+  expect_identical(precision$name, "calibration_score_precision")
+  expect_identical(edge_mass$name, "calibration_score_edge_mass")
+  expect_true(all(c(
+    "data", "selection_summary", "unplotted_dispositions",
+    "interpretation", "settings", "legend", "reference_lines"
+  ) %in% names(interval$data)))
+  expect_true("NEW_LOW" %in% interval$data$unplotted_dispositions$Person)
+  expect_identical(interval$data$selection_summary$NotScoredPersons, 1L)
+  expect_true(all(c(
+    "ReviewFlag", "QuadratureEdgeMass", "QuadratureEdgeThreshold",
+    "DisplayOrder"
+  ) %in% names(interval$data$data)))
+  expect_match(
+    interval$data$interpretation$Guidance[3L],
+    "excludes calibration-parameter uncertainty",
+    fixed = TRUE
+  )
+  expect_match(
+    interval$data$caption,
+    "excludes calibration-parameter uncertainty",
+    fixed = TRUE
+  )
+
+  mixed_rows <- fixture$rows[fixture$rows$Person == "NEW_LOW", , drop = FALSE]
+  mixed_rows$Person <- "NEW_MIXED"
+  mixed_rows$Score <- rep(c(2, 3), length.out = nrow(mixed_rows))
+  prioritized <- score_mfrm_calibration(
+    fixture$frozen, rbind(fixture$rows, mixed_rows)
+  )
+  truncated <- plot(prioritized, top_n = 1L, draw = FALSE)
+  expect_true(truncated$data$data$ReviewFlag)
+  expect_identical(truncated$data$selection_summary$PlottedPersons, 1L)
+  expect_identical(truncated$data$selection_summary$OmittedFromPlot, 2L)
+  expect_true(truncated$data$selection_summary$ReviewRowsPrioritized)
+
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_error(plot(scored, type = "interval", draw = TRUE))
+  expect_no_error(plot(scored, type = "precision", draw = TRUE))
+  expect_no_error(plot(scored, type = "edge_mass", draw = TRUE))
+
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_no_error(ggplot2::ggplot_build(as_ggplot(interval)))
+    expect_no_error(ggplot2::ggplot_build(as_ggplot(precision)))
+    expect_no_error(ggplot2::ggplot_build(as_ggplot(edge_mass)))
+  }
+  expect_error(plot(scored, top_n = 0, draw = FALSE), "top_n")
 })
 
 test_that("public loader explicitly refuses incompatible schema fixtures", {

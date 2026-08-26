@@ -120,3 +120,7 @@ standard-normal prior. They do not include calibration-parameter
 uncertainty. Loading validates structure and semantic consistency, but does
 not authenticate an artifact from an untrusted source.
 }
+\seealso{
+\link{mfrm_calibration_score_methods} for concise review and
+visualization of returned score batches.
+}

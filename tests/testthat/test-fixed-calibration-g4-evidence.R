@@ -1632,15 +1632,15 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
     review$Status,
     "maintenance_bridge_complete_v6_contract_frozen_execution_required"
   )
-  expect_identical(current$Metadata$Stage, "candidate")
-  expect_identical(review$MetadataStage, "candidate")
-  expect_false(review$DevelopmentMetadataAligned)
-  expect_true(review$CandidateMetadataAligned)
+  expect_identical(current$Metadata$Stage, "development")
+  expect_identical(review$MetadataStage, "development")
+  expect_true(review$DevelopmentMetadataAligned)
+  expect_false(review$CandidateMetadataAligned)
   expect_true(review$ReleaseMetadataAligned)
   expect_true(review$MaintenanceBridgeComplete)
-  expect_true(current$Metadata$CandidateMetadataOK)
-  expect_true(current$ChangedPathsAllowed)
-  expect_identical(current$CandidateReady, current$WorkingTreeClean)
+  expect_false(current$Metadata$CandidateMetadataOK)
+  expect_false(current$ChangedPathsAllowed)
+  expect_false(current$CandidateReady)
   expect_true(current$G6DecisionBound)
   expect_true(review$RequiredPathsPresent)
   expect_true(review$PublicBaselineMatched)
@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 candidate: local pass / 5-platform pass / human sign-off pending",
+    "0.2.4 development: score UX / help / visual QA locally complete",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1964,7 +1964,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 29L)
+  expect_identical(count_token("data-state=\"done\""), 32L)
   expect_identical(count_token("data-state=\"open\""), 43L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2457,7 +2457,7 @@ test_that("0.2.4 recovery transition fails closed after public schema change", {
   expect_true(review$G6DecisionBound)
   expect_false(review$ChangedPathsAllowed)
   expect_false(review$ProductionPayloadUnchanged)
-  expect_identical(review$Metadata$Stage, "candidate")
+  expect_identical(review$Metadata$Stage, "development")
   expect_false(review$Metadata$DevelopmentMetadataOK)
   expect_false(review$Metadata$CandidateMetadataOK)
   expect_false(review$DevelopmentTransitionReady)
@@ -2868,7 +2868,7 @@ test_that("0.2.4 public-language G6 decision binds scope and denominator", {
   }
 })
 
-test_that("0.2.4 public-language transition v3 admits exact metadata only", {
+test_that("0.2.4 public-language transition v3 rejects later payload drift", {
   transition <-
     load_fixed_calibration_release_candidate_public_language_transition()
   contract <- transition$env$mfrmr_rc04_contract()
@@ -2892,13 +2892,13 @@ test_that("0.2.4 public-language transition v3 admits exact metadata only", {
   expect_false(contract$SubmissionAuthorized)
 
   expect_true(review$G6BaselineAncestor)
-  expect_true(review$ChangedPathsAllowed)
-  expect_true(review$ProductionPayloadUnchanged)
-  expect_identical(review$Metadata$Stage, "candidate")
-  expect_true(review$Metadata$CandidateMetadataOK)
+  expect_false(review$ChangedPathsAllowed)
+  expect_false(review$ProductionPayloadUnchanged)
+  expect_identical(review$Metadata$Stage, "development")
+  expect_false(review$Metadata$CandidateMetadataOK)
   expect_true(review$G6DecisionBound)
   expect_false(review$DevelopmentTransitionReady)
-  expect_identical(review$CandidateReady, review$WorkingTreeClean)
+  expect_false(review$CandidateReady)
   expect_false(review$SubmissionAuthorized)
 })
 
@@ -3096,4 +3096,107 @@ test_that("0.2.4 candidate hosted validation binds the successful five-platform 
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
   }
+})
+
+test_that("score UX review invalidates the previous candidate before human sign-off", {
+  ctx <- load_fixed_calibration_g4_contract()
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-release-candidate-ux-invalidation-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expected <- c(
+    "PreviousCandidateAutomatedChecksPassed=TRUE",
+    "PreviousCandidateHumanSignOffComplete=FALSE",
+    "FreshPkgdownBuildComplete=TRUE",
+    "DesktopRenderInspected=TRUE",
+    "NarrowRenderInspected=TRUE",
+    "ProductionPayloadChangeRequired=TRUE",
+    "PreviousCandidateReusable=FALSE",
+    "ReturnedToDevelopment=TRUE",
+    "CandidateTagCreated=FALSE",
+    "CRANSubmissionPerformed=FALSE"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+
+  description <- read.dcf(file.path(ctx$root, "DESCRIPTION"))
+  expect_identical(unname(description[1L, "Version"]), "0.2.4.9000")
+  expect_identical(
+    unname(description[1L, "Config/mfrmr/release-status"]), "development"
+  )
+  expect_false("Date" %in% colnames(description))
+
+  expected_surface <- c(
+    "R/api-calibration-methods.R",
+    "man/mfrm_calibration_score_methods.Rd",
+    "vignettes/mfrmr-portable-calibration.Rmd",
+    "vignettes/mfrmr-visual-diagnostics.Rmd"
+  )
+  expect_true(all(file.exists(file.path(ctx$root, expected_surface))))
+  article <- paste(readLines(
+    file.path(ctx$root, "vignettes/mfrmr-portable-calibration.Rmd"),
+    warn = FALSE
+  ), collapse = "\n")
+  expect_match(article, "summary(scores)", fixed = TRUE)
+  expect_match(article, 'type = "interval"', fixed = TRUE)
+  expect_match(
+    article, "excludes calibration-parameter uncertainty", fixed = TRUE
+  )
+})
+
+test_that("score UX local validation closes repair but not release gates", {
+  ctx <- load_fixed_calibration_g4_contract()
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-score-ux-local-validation-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expected <- c(
+    "DevelopmentVersion=0.2.4.9000",
+    "ReleaseStatus=development",
+    "PortableScorePrintAvailable=TRUE",
+    "PortableScoreSummaryAvailable=TRUE",
+    "PortableScoreIntervalPlotAvailable=TRUE",
+    "PortableScorePrecisionPlotAvailable=TRUE",
+    "PortableScoreEdgeMassPlotAvailable=TRUE",
+    "DrawFreePlotDataAvailable=TRUE",
+    "NotScoredDispositionRetained=TRUE",
+    "CalibrationParameterUncertaintyExcludedAndDisclosed=TRUE",
+    "FreshPkgdownBuildComplete=TRUE",
+    "DesktopArticleRenderInspected=TRUE",
+    "NarrowArticleRenderInspected=TRUE",
+    "DesktopHelpRenderInspected=TRUE",
+    "NarrowHelpRenderInspected=TRUE",
+    "NarrowWholePageOverflowDetected=FALSE",
+    "ExactSourcePackageCheckStatus=OK",
+    "ExactSourcePackageErrors=0",
+    "ExactSourcePackageWarnings=0",
+    "ExactSourcePackageNotes=0",
+    "PackagedTestsPassed=15866",
+    "PackagedTestsFailed=0",
+    "PackagedTestsSkipped=43",
+    "RepositoryWideResearchSuitePassed=FALSE",
+    "PreviousCandidateReusable=FALSE",
+    "FreshHostedMatrixComplete=FALSE",
+    "HumanSignOffComplete=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=commit-development-payload-and-run-fresh-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+
+  roadmap <- paste(readLines(
+    file.path(ctx$validation, "mfrmr-internal-strategic-roadmap.html"),
+    warn = FALSE
+  ), collapse = "\n")
+  expect_match(roadmap, "portable scoreの要約・3図・help・記事を統合", fixed = TRUE)
+  expect_match(roadmap, "fresh development payloadを5環境で再検証", fixed = TRUE)
+  expect_match(roadmap, "candidate metadataとexact headを再形成", fixed = TRUE)
 })

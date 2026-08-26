@@ -46,9 +46,10 @@ the default; the returned \code{ggplot} can be restyled or composed downstream.
 \details{
 Dedicated conversions are provided for Wright maps, theta-to-expected-score
 pathways, fit-statistic-to-measure pathways, category characteristic curves,
-bubble charts, and DIF/DFF summaries and heatmaps. Other draw-free payloads
-use a conservative tabular fallback; inspect \code{\link[=plot_data_components]{plot_data_components()}} when
-automatic inference is not appropriate.
+bubble charts, DIF/DFF summaries and heatmaps, and portable-calibration
+score review plots. Other draw-free payloads use a conservative tabular
+fallback; inspect \code{\link[=plot_data_components]{plot_data_components()}} when automatic inference is not
+appropriate.
 }
 \examples{
 \donttest{

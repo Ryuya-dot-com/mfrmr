@@ -29,6 +29,7 @@ reference:
     contents:
       - mfrm_calibration_capabilities
       - mfrm_calibration_workflow
+      - mfrm_calibration_score_methods
 
   - title: "Bounded GPCM boundary"
     desc: "Supported, caveated, blocked, and deferred bounded-GPCM routes."

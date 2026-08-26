@@ -478,14 +478,15 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   )
 
   calibration_rows <- data.frame(
-    Scope = rep("calibration", 4L),
+    Scope = rep("calibration", 5L),
     Question = c(
       "Check whether a fitted route can create a portable calibration",
       "Extract, review, validate, and freeze an eligible calibration",
       "Save and load the reviewed calibration artifact",
-      "Score new Persons from the frozen artifact without the source fit"
+      "Score new Persons from the frozen artifact without the source fit",
+      "Review score dispositions, conditional uncertainty, and numerical edge flags"
     ),
-    OutputFamily = c("guide", "review", "export", "review"),
+    OutputFamily = c("guide", "review", "export", "review", "review"),
     MainFunction = c(
       "mfrm_calibration_capabilities()",
       paste0(
@@ -493,37 +494,43 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
         "validate_mfrm_calibration(); freeze_mfrm_calibration()"
       ),
       "save_mfrm_calibration(); load_mfrm_calibration()",
-      "score_mfrm_calibration()"
+      "score_mfrm_calibration()",
+      "summary(scores); plot(scores, type = \"interval\")"
     ),
     UseWhen = c(
       "You need to distinguish the narrow portable-artifact envelope from fitted-object scoring.",
       "A ready one-scale RSM/PCM MML fit uses the fixed standard-normal scoring basis.",
       "A frozen artifact must move to a separate scoring session or controlled storage location.",
-      "New response rows use only known facet levels and the calibration's recorded score map."
+      "New response rows use only known facet levels and the calibration's recorded score map.",
+      "A score batch must be reviewed before estimates are used in reporting or decisions."
     ),
     TypicalInput = c(
       "none",
       "eligible mfrm_fit",
       "validated or frozen mfrm_calibration and an .rds path",
-      "frozen mfrm_calibration plus new response rows"
+      "frozen mfrm_calibration plus new response rows",
+      "mfrm_calibration_score"
     ),
     NextStep = c(
       "Use an available portable row or follow its fitted-object alternative.",
       "Resolve every structured refusal before freezing; do not bypass lifecycle states.",
       "Load the artifact in the scoring session and retain its calibration identity with outputs.",
-      "Review row and Person dispositions before using posterior EAP estimates."
+      "Review row and Person dispositions before using posterior EAP estimates.",
+      "Inspect every scored_review or not_scored Person and retain the interval-basis note with exported results."
     ),
     GPCMStatus = c(
       "portable_gpcm_unavailable; fitted_object_route_available",
       "rsm_pcm_mml_fixed_normal_only",
       "rsm_pcm_mml_fixed_normal_only",
+      "portable_gpcm_unavailable; fitted_object_route_available",
       "portable_gpcm_unavailable; fitted_object_route_available"
     ),
     Notes = c(
       "The matrix is authoritative for portable artifacts and does not narrow fitted-object capabilities.",
       "Public 0.2.4 extraction preserves stored direct/group facet anchors; it does not construct typed step anchors.",
       "Loading validates schema and semantics but does not authenticate untrusted files.",
-      "Intervals are conditional on the frozen point calibration and exclude calibration-parameter uncertainty."
+      "Intervals are conditional on the frozen point calibration and exclude calibration-parameter uncertainty.",
+      "The plots review one score batch; they do not establish calibration fit, reliability, or validity."
     ),
     stringsAsFactors = FALSE
   )
@@ -1100,6 +1107,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
   out$ObjectRole[grepl("extract_mfrm_calibration", out$MainFunction, fixed = TRUE)] <- "portable calibration lifecycle"
   out$ObjectRole[grepl("save_mfrm_calibration", out$MainFunction, fixed = TRUE)] <- "calibration persistence"
   out$ObjectRole[grepl("score_mfrm_calibration", out$MainFunction, fixed = TRUE)] <- "artifact-only posterior scoring"
+  out$ObjectRole[grepl("summary(scores)", out$MainFunction, fixed = TRUE)] <- "portable score-batch review"
   out$ObjectRole[grepl("mfrm_results_interactive", out$MainFunction, fixed = TRUE)] <- "explicit opt-in interactive entry"
   out$ObjectRole[grepl('summary(fit, profile = "fit"', out$MainFunction, fixed = TRUE)] <- "fit summary surface"
   out$ObjectRole[grepl('summary(fit, profile = "facets"', out$MainFunction, fixed = TRUE)] <- "comprehensive result object"
@@ -1132,6 +1140,11 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "Returns posterior EAP uncertainty conditional on the frozen point",
       "calibration and recorded prior, excludes calibration-parameter",
       "uncertainty, and performs no refit."
+    )
+  out$DecisionBoundary[out$ObjectRole %in% "portable score-batch review"] <-
+    paste(
+      "Reviews score dispositions and conditional uncertainty; it does not",
+      "establish source-fit quality, reliability, transport, or validity."
     )
   out$DecisionBoundary[grepl("precision", out$MainFunction, ignore.case = TRUE)] <-
     "Precision and separation evidence are not inter-rater agreement or standalone validity proof."

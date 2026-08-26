@@ -38,6 +38,11 @@ stay outside the documented \code{GPCM} boundary.
 
 Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
 before choosing a \code{GPCM} follow-up plot route.
+
+Portable fixed-calibration score batches have a separate review route.
+Use \code{summary(scores)} and \code{plot(scores)} as described in
+\link{mfrm_calibration_score_methods}. Those displays review returned scores;
+they do not replace source-fit diagnostics or establish calibration fit.
 }
 \section{Start with the question}{
 
@@ -103,6 +108,12 @@ Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code
 branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average
 panel reports an explicit unavailability indicator because that
 panel's score-metric semantics are limited to the Rasch-family branch.
+\item "I scored new Persons from a frozen portable calibration; which scores
+require review and how wide are their conditional intervals?"
+Use \code{summary(scores)} followed by
+\code{plot(scores, type = "interval")}. Continue with \code{type = "precision"}
+or \code{type = "edge_mass"} when response-count precision or quadrature-edge
+behavior needs follow-up.
 \item "Which figures are already supported by my current run?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
 choosing the next plot.
@@ -135,6 +146,9 @@ interaction, differential-functioning, linking, or precision
 follow-up.
 \item Use \code{plot(..., draw = FALSE)} when you want reusable plot data instead
 of immediate graphics.
+\item For an artifact-scored batch, use \code{summary(scores)} and \code{plot(scores)};
+keep its conditional-uncertainty note with the figure and inspect every
+\code{scored_review} or \code{not_scored} disposition.
 \item Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} only when you need
 3D-ready category-probability data; \code{mfrmr} intentionally does not add a
 package-native plotly/rgl renderer for this route.
@@ -186,6 +200,10 @@ fitted object contains the required data:
 \code{mfrm_plot_data} objects for downstream review and export. When step
 estimates are available, \code{build_visual_summaries()} also exposes
 \verb{$plot_payloads$category_probability_surface}.
+\item Portable score-batch review:
+\code{plot(scores, type = "interval")}, \code{"precision"}, or \code{"edge_mass"}
+after \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}. These views retain selection accounting,
+review dispositions, and Persons that could not be scored.
 \item 3D-ready exploratory handoff:
 \code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
 theta-by-category-by-probability \code{mfrm_plot_data} object. This is not a
@@ -281,6 +299,10 @@ the residual sign and magnitude matter, not just the response code.}
 funnel showing raw versus shrunken facet estimates. Best on fits
 produced via \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} for reviewing how
 much each level moved under the prior.}
+\item{\code{plot(scores, type = "interval")}}{Posterior EAP intervals for a
+portable fixed-calibration score batch, with review dispositions
+highlighted. The intervals are conditional on the frozen point
+calibration and exclude calibration-parameter uncertainty.}
 }
 }
 
@@ -344,6 +366,10 @@ agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.
 \item Residual PCA and bias plots should be interpreted as follow-up layers
 after the main fit screen, not as first-pass diagnostics.
+\item Portable score plots review returned score batches only. Inspect the
+source calibration separately, retain \code{not_scored} Persons in the audit
+trail, and do not interpret conditional intervals as including
+calibration-parameter uncertainty.
 \item DFF residual- and refit-method plots are screening visuals. Current refit
 rows do not receive ETS A/B/C labels because their plug-in uncertainty
 omits baseline-anchor uncertainty and cross-refit covariance.

@@ -436,6 +436,28 @@ Interpretation:
 - Wide raw whiskers that narrow after pooling indicate estimation instability, not automatic rater-quality failure.
 - Report the shrinkage method and keep this display separate from bias, fit, or validity claims.
 
+## Portable score-batch review
+
+A batch returned by `score_mfrm_calibration()` is not a fitted-model diagnostic
+object. Review it through its own methods:
+
+```{r eval = FALSE}
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
+plot(scores, type = "precision", preset = "publication")
+plot(scores, type = "edge_mass", preset = "publication")
+```
+
+The interval view highlights `scored_review` Persons. The precision view shows
+valid response rows against posterior SD, and the edge-mass view compares
+outer-node posterior mass with the artifact's recorded review threshold.
+Persons with no valid responses remain in the summary and draw-free plot
+payload rather than being assigned an artificial coordinate. These displays
+do not replace source-fit diagnostics, and their uncertainty is conditional on
+the frozen point calibration. See
+`vignette("mfrmr-portable-calibration", package = "mfrmr")` for the complete
+fresh-session workflow.
+
 ## Recommended sequence
 
 For a compact visual workflow:
@@ -447,7 +469,9 @@ For a compact visual workflow:
 5. `plot_residual_pca()`, `plot_bias_interaction()`, and `plot_information()` for deeper structural review.
 6. `response_time_review()` and `plot_response_time_review()` when response-time metadata are available.
 7. `plot_shrinkage_funnel(show_ci = TRUE)` when empirical-Bayes shrinkage was applied.
-8. `plot_guttman_scalogram()`, `plot_residual_qq()`,
+8. `summary(scores)` and `plot(scores)` for a separately created portable
+   score batch; do not use these as source-fit diagnostics.
+9. `plot_guttman_scalogram()`, `plot_residual_qq()`,
    `plot_rater_trajectory()`, and `plot_rater_agreement_heatmap()` as
    the teaching / drift / agreement-heatmap follow-up layer.
 

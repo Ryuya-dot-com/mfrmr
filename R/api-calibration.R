@@ -134,6 +134,9 @@ mfrmr_public_calibration_extraction_error <- function(error) {
 #'   `score_mfrm_calibration()` returns an `mfrm_calibration_score` containing
 #'   estimates plus row and Person dispositions and scoring identities.
 #'
+#' @seealso [mfrm_calibration_score_methods] for concise review and
+#'   visualization of returned score batches.
+#'
 #' @name mfrm_calibration_workflow
 NULL
 
