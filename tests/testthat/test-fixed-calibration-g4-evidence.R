@@ -91,6 +91,29 @@ load_fixed_calibration_release_candidate_recovery_transition <- function() {
   )
 }
 
+load_fixed_calibration_release_candidate_public_language_transition <-
+    function() {
+  root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
+  validation <- file.path(root, "inst", "validation")
+  implementation <- file.path(
+    validation, "fixed-calibration-release-candidate-transition-0.2.4.R"
+  )
+  contract <- file.path(
+    validation,
+    "fixed-calibration-release-candidate-transition-public-language-0.2.4.R"
+  )
+  skip_if_not(
+    file.exists(implementation) && file.exists(contract),
+    "Public-language release-candidate transition contract is excluded."
+  )
+  env <- new.env(parent = globalenv())
+  sys.source(implementation, envir = env)
+  sys.source(contract, envir = env)
+  list(
+    root = root, validation = validation, script = contract, env = env
+  )
+}
+
 load_fixed_calibration_g4_maintenance_admission <- function() {
   root <- normalizePath(testthat::test_path("..", ".."), mustWork = TRUE)
   validation <- file.path(root, "inst", "validation")
@@ -1880,7 +1903,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4: public-language local pass / hosted running",
+    "0.2.4: public-language 5-platform pass / v3 boundary pending",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1897,7 +1920,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 22L)
+  expect_identical(count_token("data-state=\"done\""), 23L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2703,4 +2726,134 @@ test_that("0.2.4 public runtime messages have an exact local receipt", {
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
   }
+})
+
+test_that("0.2.4 public-language payload has a complete hosted receipt", {
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-public-language-runtime-message-hosted-run-",
+      "32923607662-record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "PublicLanguageHostedRunId=32923607662",
+    "PublicLanguageHostedHeadSHA40=0dd03dd9830371dd13159db68f00d14ada0cb0ba",
+    "HostedWorkflowConclusion=success",
+    "HostedPlatformCells=5",
+    "HostedPassedCells=5",
+    "HostedFailedCells=0",
+    "CheckArtifactCount=5",
+    "ExpiredArtifactCount=0",
+    "LocalCheckedCommitSHA40=0dd03dd9830371dd13159db68f00d14ada0cb0ba",
+    "InterveningSourcePackagePaths=0",
+    "SourceTarballSHA256=4876a1c247109567399e74101f3bfd5b69b7e911e310f0a6ea31589e79a37241",
+    "CheckLogSHA256=2f40ab9aab06d7982883f77bf85ed53f34f4db5444c800fb9afa6f3b2698b810",
+    "LocalSourceCheckStatus=OK",
+    "G4Reissued=FALSE",
+    "G6Revalidated=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=bind-public-language-g6-and-freeze-transition-v3"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public-language G6 decision binds scope and denominator", {
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-g6-public-language-final-decision-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "FinalPublicLanguageG6DecisionId=mfrmr_fixed_calibration_g6_public_language_0_2_4_v1",
+    "PriorG6ValidatedCommitSHA40=e39571974f70da0db90444732b5719c187a004d2",
+    "ValidatedPayloadCommitSHA40=0dd03dd9830371dd13159db68f00d14ada0cb0ba",
+    "HostedRunId=32923607662",
+    "HostedWorkflowConclusion=success",
+    "HostedPlatformCells=5",
+    "HostedPassedCells=5",
+    "HostedFailedCells=0",
+    "CheckArtifactCount=5",
+    "LocalSourceCheckStatus=OK",
+    "PathsChangedFromPriorG6=62",
+    "DistributedPackageChangedPaths=49",
+    "DistributedRChangedPaths=27",
+    "DistributedManChangedPaths=11",
+    "DistributedVignetteChangedPaths=7",
+    "DistributedTestChangedPaths=3",
+    "CalibrationSchemaChanged=TRUE",
+    "ScoringKernelChanged=FALSE",
+    "LikelihoodChanged=FALSE",
+    "OptimizerNumericalLogicChanged=FALSE",
+    "PublicWordingChanged=TRUE",
+    "PublicScopeChanged=FALSE",
+    "RuntimeBoundaryMessageChanged=TRUE",
+    "DirectRsmPcmNumericalParity=TRUE",
+    "PublicDocumentationBlockedPhraseHits=0",
+    "PublicRuntimeBoundaryCodeHits=0",
+    "G4Reissued=FALSE",
+    "G4StatisticalEvidenceStillApplicable=TRUE",
+    "PriorCandidateReusable=FALSE",
+    "PriorTransitionV1Reusable=FALSE",
+    "PriorTransitionV2Reusable=FALSE",
+    "G6Revalidated=TRUE",
+    "G6ExitComplete=TRUE",
+    "PublicAPIAuthorizedForRelease=TRUE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=freeze-public-language-transition-boundary-v3"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public-language transition v3 fails closed", {
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
+  contract <- transition$env$mfrmr_rc04_contract()
+  review <- transition$env$mfrmr_rc04_review(transition$root)
+
+  expect_identical(
+    contract$ContractId,
+    "mfrmr_release_candidate_transition_0_2_4_v3_public_language"
+  )
+  expect_identical(
+    contract$G6ValidatedCommit,
+    "0dd03dd9830371dd13159db68f00d14ada0cb0ba"
+  )
+  expect_identical(contract$G6HostedRunId, "32923607662")
+  expect_identical(
+    contract$G6DecisionRecord,
+    "fixed-calibration-g6-public-language-final-decision-record-0.2.4.md"
+  )
+  expect_false(contract$PriorCandidateReusable)
+  expect_false(contract$PriorTransitionContractReusable)
+  expect_false(contract$SubmissionAuthorized)
+
+  expect_true(review$G6BaselineAncestor)
+  expect_true(review$ChangedPathsAllowed)
+  expect_true(review$ProductionPayloadUnchanged)
+  expect_identical(review$Metadata$Stage, "development")
+  expect_true(review$Metadata$DevelopmentMetadataOK)
+  expect_true(review$G6DecisionBound)
+  expect_true(review$DevelopmentTransitionReady)
+  expect_false(review$CandidateReady)
+  expect_false(review$SubmissionAuthorized)
 })
