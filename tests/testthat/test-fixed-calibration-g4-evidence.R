@@ -1912,7 +1912,7 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
 
   expect_match(
     roadmap,
-    "mfrmr 0.2.4 is a release candidate and has not been released",
+    "mfrmr 0.2.4.9000 is under development and has not been released",
     fixed = TRUE
   )
   expect_match(roadmap, "## Not part of the 0.2.4 promise", fixed = TRUE)
@@ -3199,4 +3199,38 @@ test_that("score UX local validation closes repair but not release gates", {
   expect_match(roadmap, "portable scoreの要約・3図・help・記事を統合", fixed = TRUE)
   expect_match(roadmap, "fresh development payloadを5環境で再検証", fixed = TRUE)
   expect_match(roadmap, "candidate metadataとexact headを再形成", fixed = TRUE)
+})
+
+test_that("first score UX hosted retry retains its source-truth failure", {
+  ctx <- load_fixed_calibration_g4_contract()
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-score-ux-hosted-run-32961641396-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expected <- c(
+    "WorkflowRunId=32961641396",
+    "SourceCommit=e51a632478e3142bb28cfb1ee41417022d3dd618",
+    "WorkflowConclusion=failure",
+    "ExactSourcePackageCheckStatus=OK",
+    "RepositoryValidationReviewPassed=FALSE",
+    "SourceTruthOK=FALSE",
+    "RoadmapLifecycleMatches=FALSE",
+    "DependentPlatformJobsSkipped=TRUE",
+    "HostedPlatformMatrixComplete=FALSE",
+    "FailureRetainedInDenominator=TRUE",
+    "CorrectiveChange=roadmap-development-lifecycle-alignment",
+    "ReleaseReadinessParserWeakened=FALSE",
+    "CorrectedSourceTruthLocalCheck=TRUE",
+    "PreviousCandidateReusable=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "HumanSignOffComplete=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=commit-source-truth-correction-and-run-new-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
 })

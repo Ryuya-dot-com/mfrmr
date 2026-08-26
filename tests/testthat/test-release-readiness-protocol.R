@@ -59,7 +59,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   }
   expect_match(
     public,
-    "mfrmr 0.2.4 is a release candidate and has not been released",
+    "mfrmr 0.2.4.9000 is under development and has not been released",
     fixed = TRUE
   )
   expect_match(public, "GPCM", fixed = TRUE)
