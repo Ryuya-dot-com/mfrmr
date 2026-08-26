@@ -1948,7 +1948,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4: development / public-language revalidation",
+    "0.2.4: public-language local pass / hosted running",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1965,7 +1965,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 18L)
+  expect_identical(count_token("data-state=\"done\""), 19L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2590,6 +2590,42 @@ test_that("0.2.4 public-language schema amendment remains non-authorizing", {
     "SubmissionAuthorized=FALSE",
     "CRANSubmissionPerformed=FALSE",
     "NextAction=run-clean-source-package-check"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public-language schema local check is exact", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-public-language-schema-local-check-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "CheckedCommitSHA40=96068c9a16d48e7011a321f40ef125d8ab621418",
+    "CheckedTreeSHA40=7569b4b84dc0182b22fc7d9c5582c17cb606f920",
+    "PackageVersion=0.2.4.9000",
+    "SourceTarballSHA256=ad901c65751ffc9974f1ea2ab2739058d8e9f5c672833e3792a85932784c5956",
+    "CheckLogSHA256=2fda34c792dcc83301699b1bfc44a530933648d09d8fdc07883e0aeff619147e",
+    "Errors=0",
+    "Warnings=0",
+    "Notes=0",
+    "DistributedTestsPassed=435",
+    "DistributedTestsSkipped=3",
+    "SourceCheckStatus=OK",
+    "G4EvidenceIssued=FALSE",
+    "G6Revalidated=FALSE",
+    "HostedRunId=32920882662",
+    "HostedRunComplete=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=complete-public-language-schema-five-platform-matrix"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)

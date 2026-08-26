@@ -24,7 +24,9 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
   terminology in the portable artifact schema and printed summaries. The v2
   transition boundary was therefore invalidated before candidate metadata was
   applied. Development now uses a user-facing support-profile vocabulary and
-  requires fresh package and hosted validation.
+  has passed a clean local source-package check with zero errors, warnings, or
+  notes. Fresh five-platform validation is running; candidate metadata remains
+  unapplied.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.

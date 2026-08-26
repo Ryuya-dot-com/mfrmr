@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: development / public-language revalidation</span>
+          <span class="pill">0.2.4: public-language local pass / hosted running</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -714,6 +714,10 @@
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>公開語彙監査でv2境界を無効化</strong><p>artifactとprintに残った<code>Lane</code>・<code>core_*</code>・開発codeを検出。candidate metadata適用前にdevelopmentへ戻した。</p></div><span class="chip done">fail closed</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>公開語彙・schema payloadをローカル検査</strong><p><code>96068c9…</code>のexact source checkは0 errors・0 warnings・0 notes、distributed tests 435 pass。</p></div><span class="chip done">local pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1026,8 +1030,7 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>公開語彙・schema・lifecycle・artifact round-trip回帰を完了する。</strong></li>
-              <li><strong>clean source package checkとfresh 5-platform matrixを実行する。</strong></li>
+              <li><strong>run 32920882662のfresh 5-platform matrixを完了する。</strong></li>
               <li><strong>回復G6を再束縛しv3 transition boundaryを固定する。</strong></li>
               <li><strong>v3 allowlistだけでcandidate metadataを再適用する。</strong></li>
               <li><strong>候補の公開claim diffと最終package checksを実施する。</strong></li>
@@ -1063,6 +1066,7 @@
           recovery transition: <a href="fixed-calibration-release-candidate-transition-recovery-record-0.2.4.md">v2 boundary</a> ·
           v2 invalidation: <a href="fixed-calibration-release-candidate-transition-recovery-invalidation-record-0.2.4.md">public-language correction</a> ·
           language/schema amendment: <a href="fixed-calibration-public-language-schema-amendment-record-0.2.4.md">targeted regression</a> ·
+          language/schema local check: <a href="fixed-calibration-public-language-schema-local-check-record-0.2.4.md">source check</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
