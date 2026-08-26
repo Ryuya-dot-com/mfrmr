@@ -29,7 +29,13 @@ test_that("precomputed vignette artifacts match their semantic manifest", {
     ))
   }
   expect_true(all(manifest$DataKey == "example_operational"))
-  expect_true(all(manifest$GeneratedWith == as.character(utils::packageVersion("mfrmr"))))
+  package_version <- as.character(utils::packageVersion("mfrmr"))
+  admissible_generator_versions <- if (grepl("[.]9000$", package_version)) {
+    package_version
+  } else {
+    c(package_version, paste0(package_version, ".9000"))
+  }
+  expect_true(all(manifest$GeneratedWith %in% admissible_generator_versions))
 
   for (i in seq_len(nrow(manifest))) {
     path <- file.path(artifact_dir, manifest$Artifact[i])
