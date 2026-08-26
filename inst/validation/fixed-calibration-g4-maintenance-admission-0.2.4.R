@@ -92,6 +92,39 @@ mfrmr_fc_g4m_baseline_value <- function(baseline, field) {
   as.character(baseline$Value[hit])
 }
 
+mfrmr_fc_g4m_release_metadata_status <- function(description) {
+  value <- function(field) {
+    if (nrow(description) == 1L && field %in% colnames(description)) {
+      as.character(description[1L, field])
+    } else {
+      NA_character_
+    }
+  }
+  version <- value("Version")
+  release_status <- tolower(value("Config/mfrmr/release-status"))
+  public_version <- value("Config/mfrmr/public-version")
+  release_date <- value("Date")
+  development_ok <- identical(version, "0.2.4.9000") &&
+    identical(release_status, "development") &&
+    identical(public_version, "0.2.3.1") && is.na(release_date)
+  candidate_ok <- identical(version, "0.2.4") &&
+    identical(release_status, "candidate") &&
+    identical(public_version, "0.2.3.1") && !is.na(release_date) &&
+    grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", release_date)
+  list(
+    Stage = if (development_ok) {
+      "development"
+    } else if (candidate_ok) {
+      "candidate"
+    } else {
+      "invalid"
+    },
+    DevelopmentMetadataAligned = development_ok,
+    CandidateMetadataAligned = candidate_ok,
+    ReleaseMetadataAligned = development_ok || candidate_ok
+  )
+}
+
 mfrmr_fc_g4m_review <- function(repo_root = ".") {
   repo_root <- normalizePath(repo_root, winslash = "/", mustWork = TRUE)
   production <- mfrmr_fc_g4m_required_production_boundary()
@@ -211,10 +244,7 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     "--", "src/mml_backend.cpp", "tests/testthat.R",
     "tests/testthat/test-compiled-header-contract.R"
   ))
-  metadata_ok <- identical(description_value("Version"), "0.2.4.9000") &&
-    identical(tolower(description_value("Config/mfrmr/release-status")),
-              "development") &&
-    identical(description_value("Config/mfrmr/public-version"), "0.2.3.1")
+  metadata <- mfrmr_fc_g4m_release_metadata_status(description)
   v6_path <- file.path(
     repo_root, "inst", "validation",
     "fixed-calibration-g4-post-maintenance-v6-contract-0.2.4.R"
@@ -240,11 +270,13 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     !isTRUE(v6_review$G4_exit_complete)
   bridge_complete <- all(required_present) && baseline_ok && all(integrated) &&
     length(scanned) > 0L && !any(header_override) &&
-    length(invalid_hits) == 0L && metadata_ok && v5_change$Status == 1L &&
+    length(invalid_hits) == 0L && metadata$ReleaseMetadataAligned &&
+    v5_change$Status == 1L &&
     legacy_v5_automatic_issuance_disabled && v6_contract_frozen
 
   list(
-    Contract = "mfrmr_fixed_calibration_g4_maintenance_admission_v1",
+    Contract =
+      "mfrmr_fixed_calibration_g4_maintenance_admission_v2_lifecycle_aware",
     Status = if (bridge_complete) {
       "maintenance_bridge_complete_v6_contract_frozen_execution_required"
     } else {
@@ -261,7 +293,10 @@ mfrmr_fc_g4m_review <- function(repo_root = ".") {
     CompiledHeaderOverrideAbsent = length(scanned) > 0L &&
       !any(header_override),
     InvalidDocumentationTargets = invalid_hits,
-    DevelopmentMetadataAligned = metadata_ok,
+    MetadataStage = metadata$Stage,
+    DevelopmentMetadataAligned = metadata$DevelopmentMetadataAligned,
+    CandidateMetadataAligned = metadata$CandidateMetadataAligned,
+    ReleaseMetadataAligned = metadata$ReleaseMetadataAligned,
     V5ExactSourceChanged = identical(v5_change$Status, 1L),
     V5EvidenceRetainedAsHistorical = TRUE,
     LegacyV5AutomaticIssuanceDisabled =

@@ -1620,30 +1620,28 @@ test_that("historical reopening is retained while v5 closes current-source G4", 
 test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
   admission <- load_fixed_calibration_g4_maintenance_admission()
   review <- admission$env$mfrmr_fc_g4m_review(admission$root)
-  transition <- load_fixed_calibration_release_candidate_transition()
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
   current <- transition$env$mfrmr_rc04_review(transition$root)
 
   expect_identical(
     review$Contract,
-    "mfrmr_fixed_calibration_g4_maintenance_admission_v1"
+    "mfrmr_fixed_calibration_g4_maintenance_admission_v2_lifecycle_aware"
   )
-  if (identical(current$Metadata$Stage, "development")) {
-    expect_identical(
-      review$Status,
-      "maintenance_bridge_complete_v6_contract_frozen_execution_required"
-    )
-    expect_true(review$DevelopmentMetadataAligned)
-    expect_true(review$MaintenanceBridgeComplete)
-  } else {
-    expect_identical(current$Metadata$Stage, "candidate")
-    expect_identical(review$Status, "maintenance_bridge_blocked")
-    expect_false(review$DevelopmentMetadataAligned)
-    expect_false(review$MaintenanceBridgeComplete)
-    expect_false(current$Metadata$CandidateMetadataOK)
-    expect_false(current$ChangedPathsAllowed)
-    expect_false(current$CandidateReady)
-    expect_true(current$G6DecisionBound)
-  }
+  expect_identical(
+    review$Status,
+    "maintenance_bridge_complete_v6_contract_frozen_execution_required"
+  )
+  expect_identical(current$Metadata$Stage, "candidate")
+  expect_identical(review$MetadataStage, "candidate")
+  expect_false(review$DevelopmentMetadataAligned)
+  expect_true(review$CandidateMetadataAligned)
+  expect_true(review$ReleaseMetadataAligned)
+  expect_true(review$MaintenanceBridgeComplete)
+  expect_true(current$Metadata$CandidateMetadataOK)
+  expect_true(current$ChangedPathsAllowed)
+  expect_identical(current$CandidateReady, current$WorkingTreeClean)
+  expect_true(current$G6DecisionBound)
   expect_true(review$RequiredPathsPresent)
   expect_true(review$PublicBaselineMatched)
   expect_true(all(review$IntegratedCommitsAreAncestors))
@@ -1665,6 +1663,46 @@ test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
       "src/cpp11.cpp"
     )
   )
+})
+
+test_that("maintenance admission distinguishes development and candidate metadata", {
+  admission <- load_fixed_calibration_g4_maintenance_admission()
+  make_description <- function(version, status, public_version, date = NULL) {
+    fields <- c(
+      Version = version,
+      `Config/mfrmr/release-status` = status,
+      `Config/mfrmr/public-version` = public_version
+    )
+    if (!is.null(date)) fields <- c(fields, Date = date)
+    matrix(fields, nrow = 1L, dimnames = list(NULL, names(fields)))
+  }
+
+  development <- admission$env$mfrmr_fc_g4m_release_metadata_status(
+    make_description("0.2.4.9000", "development", "0.2.3.1")
+  )
+  expect_identical(development$Stage, "development")
+  expect_true(development$DevelopmentMetadataAligned)
+  expect_false(development$CandidateMetadataAligned)
+  expect_true(development$ReleaseMetadataAligned)
+
+  candidate <- admission$env$mfrmr_fc_g4m_release_metadata_status(
+    make_description("0.2.4", "candidate", "0.2.3.1", "2026-08-26")
+  )
+  expect_identical(candidate$Stage, "candidate")
+  expect_false(candidate$DevelopmentMetadataAligned)
+  expect_true(candidate$CandidateMetadataAligned)
+  expect_true(candidate$ReleaseMetadataAligned)
+
+  for (invalid in list(
+    make_description("0.2.4", "candidate", "0.2.3.1"),
+    make_description("0.2.4", "candidate", "0.2.3", "2026-08-26"),
+    make_description("0.2.4.9000", "candidate", "0.2.3.1", "2026-08-26"),
+    make_description("0.2.4", "released", "0.2.4", "2026-08-26")
+  )) {
+    status <- admission$env$mfrmr_fc_g4m_release_metadata_status(invalid)
+    expect_identical(status$Stage, "invalid")
+    expect_false(status$ReleaseMetadataAligned)
+  }
 })
 
 test_that("post-maintenance v6 execution closes G4 only for its bound core", {
