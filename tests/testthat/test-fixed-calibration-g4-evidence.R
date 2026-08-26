@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 development: API consistency local pass · hosted recheck pending",
+    "0.2.4 development: API consistency validated 5/5",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1964,8 +1964,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 34L)
-  expect_identical(count_token("data-state=\"open\""), 43L)
+  expect_identical(count_token("data-state=\"done\""), 35L)
+  expect_identical(count_token("data-state=\"open\""), 42L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -3310,4 +3310,54 @@ test_that("API consistency local record keeps hosted validation open", {
   expect_match(
     roadmap, "API整合性payloadを5環境で再検証", fixed = TRUE
   )
+})
+
+test_that("API consistency hosted run validates the unchanged production tree", {
+  ctx <- load_fixed_calibration_g4_contract()
+  record_path <- file.path(
+    ctx$validation,
+    paste0(
+      "fixed-calibration-api-consistency-hosted-run-32990152654-",
+      "record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expected <- c(
+    "WorkflowRunId=32990152654",
+    "WorkflowConclusion=success",
+    "ValidatedPayloadCommitSHA40=036565f583d441c599d6650391dc0523c36d0210",
+    "CurrentHeadSHA40=322f1880aabab20724294d0b92d144a24cecc1f3",
+    "ValidatedTreeSHA40=755dc77cd398f12f12438e43bc440b847216c336",
+    "CurrentTreeSHA40=755dc77cd398f12f12438e43bc440b847216c336",
+    "ProductionPayloadUnchanged=TRUE",
+    "GitHubActionsOutageDelayedRunCreation=TRUE",
+    "PlatformCells=5",
+    "CompletePlatformCells=5",
+    "SuccessfulPlatformCells=5",
+    "FailedPlatformCells=0",
+    "SkippedPlatformCells=0",
+    "EachExactSourcePackageCheckPassed=TRUE",
+    "EachRepositoryValidationReviewPassed=TRUE",
+    "APIConsistencyPayloadValidated=TRUE",
+    "InfrastructureDeprecationAnnotations=5",
+    "InfrastructureAnnotationsArePackageWarnings=FALSE",
+    "CurrentPayloadHostedMatrixComplete=TRUE",
+    "HumanSignOffComplete=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "PublicationPerformed=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=hold-for-human-api-review-before-candidate-transition"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+
+  roadmap <- paste(readLines(
+    file.path(ctx$validation, "mfrmr-internal-strategic-roadmap.html"),
+    warn = FALSE
+  ), collapse = "\n")
+  expect_match(roadmap, "run <code>32990152654</code>", fixed = TRUE)
+  expect_match(roadmap, "hosted 5/5 pass", fixed = TRUE)
 })

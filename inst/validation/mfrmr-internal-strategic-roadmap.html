@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4 development: API consistency local pass · hosted recheck pending</span>
+          <span class="pill">0.2.4 development: API consistency validated 5/5</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">API-consistency payload · hosted recheck pending</span>
+              <span class="chip done">API-consistency payload · hosted 5/5 pass</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -775,9 +775,9 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>summary・print・plotのAPI整合性を局所監査</strong><p>登録済み181メソッドのgeneric signatureを照合し、DFF summaryのclass dispatch、portable scoreの80列console表示、base/ggplotの色・形・凡例順、precision/edge label配置、直接helpと索引を修正。artifact自体には誤解を招くparameter plotを追加せず、score batchを可視化対象として維持した。pkgdown desktop/390px確認とsource check 0/0/0を完了。</p></div><span class="chip done">local API pass</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>API整合性payloadを5環境で再検証</strong><p>以前のrun <code>32976019984</code>は旧headの証拠として保持するが、今回のsummary・print・plot・help変更には流用しない。current development headのsource-tarball checkとrepository reviewを5環境で再実行する。</p></div><span class="chip open">fresh hosted matrix</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>API整合性payloadを5環境で再検証</strong><p>run <code>32990152654</code>は実装head <code>036565f…</code>で5/5成功し、各cellのexact source checkとrepository reviewを完了。GitHub Actions障害時の空trigger commit <code>322f188…</code>とはtree <code>755dc77…</code>が一致し、production payloadは不変。旧run <code>32976019984</code>は今回の証拠へ流用していない。</p></div><span class="chip done">hosted 5/5 pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1078,7 +1078,6 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>API整合性payloadをcurrent headとして固定し、fresh 5-platform matrixを完了する。</strong></li>
               <li><strong>candidate source identityとsign-off対象commitの一対一対応を固定する。</strong></li>
               <li><strong>人間sign-offを機械的5/5 passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
@@ -1128,6 +1127,7 @@
           score help-index hosted run: <a href="fixed-calibration-score-help-index-hosted-run-32969632558-record-0.2.4.md">five-platform pass and accessibility supersession boundary</a> ·
           accessible score UX hosted run: <a href="fixed-calibration-score-accessible-ux-hosted-run-32976019984-record-0.2.4.md">final pre-human five-platform UX boundary</a> ·
           API consistency local validation: <a href="fixed-calibration-api-consistency-local-validation-record-0.2.4.md">summary, print, plot, help, and render record</a> ·
+          API consistency hosted run: <a href="fixed-calibration-api-consistency-hosted-run-32990152654-record-0.2.4.md">five-platform payload validation</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
