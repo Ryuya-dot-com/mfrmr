@@ -3956,7 +3956,7 @@ review_conquest_overlap <- function(bundle,
 #' package review thresholds can be reported without turning them into
 #' universal recovery criteria.
 #' Fit-measure and FACETS fit-review summaries keep df/ZSTD sensitivity and
-#' optional external FACETS matching tables in the same precision-review lane.
+#' optional external FACETS matching tables in the same precision-review section.
 #'
 #' Parameter-recovery studies can be exported by passing
 #' [evaluate_mfrm_recovery()] or [assess_mfrm_recovery()] output directly. The

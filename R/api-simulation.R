@@ -3552,7 +3552,7 @@ recovery_assessment_diagnostic_reporting_notes <- function(diagnostic_review) {
         row,
         attention = "reporting_review",
         finding = "abs_zstd_flags_present",
-        implication = "At least one replication produced absolute fit-ZSTD flags for this facet; this is a diagnostic signal rather than a recovery gate.",
+        implication = "At least one replication produced absolute fit-ZSTD flags for this facet; this is a diagnostic signal rather than a recovery criterion.",
         next_action = "Review the corresponding fit rows before making strong fit-language claims for this simulated condition."
       )
     }
@@ -3659,7 +3659,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' values are adequate, and those rows do not enter the recovery adequacy
 #' status. `diagnostic_reporting_notes` should be read first when drafting
 #' fit/separation language because it separates zero separation/reliability,
-#' absolute fit-ZSTD flags, and df-sensitive ZSTD flags from recovery gates.
+#' absolute fit-ZSTD flags, and df-sensitive ZSTD flags from recovery criteria.
 #'
 #' `plot.mfrm_recovery_assessment()` is a user-facing review aid. Use
 #' `type = "status"` first to see where checklist attention is needed, then
@@ -3683,7 +3683,7 @@ recovery_assessment_next_actions <- function(checklist, metric_review, max_n = 6
 #' - `condition_reporting_notes`: reporter-facing generator-condition caveats
 #'   separated from parameter-recovery conclusions.
 #' - `diagnostic_reporting_notes`: reporter-facing fit/separation caveats
-#'   retained as diagnostic context rather than recovery gates.
+#'   retained as diagnostic context rather than recovery criteria.
 #' - `diagnostic_review`: optional fit/separation operating-characteristic
 #'   context when retained by [evaluate_mfrm_recovery()].
 #' - `metric_review`: parameter-group metric checks.
@@ -7679,7 +7679,7 @@ diagnostic_screening_figure_recipes <- function(include_report = FALSE) {
     ),
     InterpretationBoundary = c(
       "Rates are simulation summaries and should not be read as calibrated inferential test results.",
-      "Counts are presentation summaries over the same simulation evidence and should not define pass/fail gates.",
+      "Counts are presentation summaries over the same simulation evidence and should not define pass/fail criteria.",
       "Report-review signals are prompts for text and evidence review, not additional diagnostic tests.",
       "Contrasts are descriptive and conditional on scenarios, baseline, design grid, and replication count.",
       "Runtime evidence describes this implementation and settings, not a general computational guarantee."
@@ -7841,7 +7841,7 @@ summary.mfrm_diagnostic_screening <- function(object, digits = 3, ...) {
     digits = digits,
     notes = unique(c(
       as.character(object$notes %||% character(0)),
-      "Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail gates."
+      "Draw-free diagnostic-screening plot tables are exported as operating-characteristic readouts, not validation pass/fail criteria."
     ))
   )
   scope_note <- simulation_planning_scope_note(out$planning_scope)

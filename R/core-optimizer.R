@@ -622,7 +622,7 @@ run_mfrm_direct_optimization <- function(start,
 
     # A limited BFGS fallback can recover a small or moderate parameter vector
     # when L-BFGS-B's relative-objective stop remains ahead of the common
-    # gradient gate. Avoid the quadratic-memory method for large JML vectors.
+    # gradient criterion. Avoid the quadratic-memory method for large JML vectors.
     fallback_limit <- 600L
     if (!identical(selected$diagnostics$ConvergenceSeverity, "pass") &&
         identical(optimizer_plan$Used, "L-BFGS-B") &&

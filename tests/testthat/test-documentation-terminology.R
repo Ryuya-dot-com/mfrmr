@@ -255,6 +255,20 @@ test_that("CRAN-facing documentation excludes development-process language", {
     if (length(idx) > 0L) {
       hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
     }
+    idx <- grep(
+      "\\b(lane|lanes|gate|gates|preflight)\\b",
+      lines, ignore.case = TRUE, perl = TRUE
+    )
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
+    }
+    idx <- grep(
+      "(CORE-[0-9]+|OPT-[0-9]+|Draft[.][0-9]+|(?<![[:alnum:]-])G[0-9](?![[:alnum:]]))",
+      lines, perl = TRUE
+    )
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
+    }
   }
   expect_identical(hits, character(0))
 })

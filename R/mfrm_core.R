@@ -4175,7 +4175,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
   # part of the statistical result. When enabled, timings are attached only
   # after every estimate, audit, and readiness decision has been assembled.
   # Consequently, no phase duration can feed back into optimization or alter a
-  # reporting gate.
+  # reporting criterion.
   phase_timing_enabled <- isTRUE(getOption("mfrmr.phase_timing", FALSE))
   phase_timing_rows <- list()
   phase_clock <- function() {

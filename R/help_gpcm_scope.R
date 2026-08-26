@@ -282,14 +282,14 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "screening evidence for the current role-based person x rater-like x",
         "criterion-like design layer. The summaries are Type I proxy,",
         "sensitivity proxy, DIF target-flag, and bias-screening readouts,",
-        "not calibrated inferential tests, operational screening gates, or",
+        "not calibrated inferential tests, operational screening criteria, or",
         "arbitrary-facet planning validation."
       ),
       paste(
         "Supported with caveat as direct DFF/DIF screening over the fitted",
         "bounded-GPCM expected-score and residual scale. Residual-method",
         "contrasts and interaction cells remain screening evidence; refit",
-        "contrasts must retain explicit linking and precision gates before",
+        "contrasts must retain explicit linking and precision requirements before",
         "any stronger subgroup-comparison wording is used."
       ),
       paste(

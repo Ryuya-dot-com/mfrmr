@@ -129,7 +129,7 @@ Start with \code{summary(res)}. The most useful fields are:
 \item \code{overview}: input mode, model, method, table count, and plot-route count
 \item \code{decision}: plain-language interpretation, formal-inference, reason, and
 next-action text derived from the source-fit readiness record
-\item \code{readiness}: separate analysis and plot-interpretation gates
+\item \code{readiness}: separate analysis and plot-interpretation checks
 \item \code{fit_readiness}, \code{fit_readiness_components}, and
 \code{fit_readiness_parameters}: the exact source-fit readiness record retained
 separately from the workflow-level \code{readiness} table

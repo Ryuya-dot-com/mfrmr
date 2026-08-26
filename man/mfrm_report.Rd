@@ -103,7 +103,7 @@ stored precision review and \code{diagnostics$reliability}. The
 \code{bias_reporting_templates} table is
 available when the source result was built with \code{include = "bias"} and keeps
 facet-level screens, interaction-bias contrasts, DFF follow-up, and fairness
-conclusions in separate lanes. The \code{misfit_reporting_templates} table is
+conclusions in separate sections. The \code{misfit_reporting_templates} table is
 available when the source result was built with \code{include = "misfit_review"}
 and keeps unexpected responses, displacement, pathway-map evidence, and
 case-review actions separate. The \code{linking_reporting_templates} table is

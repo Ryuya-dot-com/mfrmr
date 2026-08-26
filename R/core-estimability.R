@@ -2816,7 +2816,7 @@ audit_mfrm_fitted_information <- function(opt,
     base$status <- "not_evaluated_nonstationary"
     base$detail <- paste(
       "Fitted information was not evaluated because the retained optimizer",
-      "state did not pass the terminal numerical stationarity gate."
+      "state did not satisfy the terminal numerical stationarity criterion."
     )
     return(base)
   }

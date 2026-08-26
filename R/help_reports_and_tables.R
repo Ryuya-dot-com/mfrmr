@@ -617,7 +617,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     NextStep = c(
       "Read the Overview and Status tabs first; then use Tables, Plots, and Replay for drill-down.",
       "Treat report text as a draft template and reconcile it with the fitted model, diagnostics, and study design.",
-      "Use precision and separation evidence as reporting context, not as automatic pass/fail gates.",
+      "Use precision and separation evidence as reporting context, not as automatic pass/fail criteria.",
       "Choose the substantive facet pair explicitly before running bias_interaction_report() or bias_pairwise_report().",
       "Treat unexpected rows as case-review prompts; document any exclusion or adjudication rule outside the viewer.",
       "Use detect_anchor_drift() or build_equating_chain() only after assembling an explicit list of fitted waves or forms.",

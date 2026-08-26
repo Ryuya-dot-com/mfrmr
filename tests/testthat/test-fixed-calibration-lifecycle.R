@@ -176,7 +176,10 @@ test_that("PCM draft stores every owner-specific step at full precision", {
 
   expect_identical(draft$model$family, "PCM")
   expect_identical(draft$model$step_owner, "Criterion")
-  expect_identical(draft$eligibility$lane_id, "core_pcm_mml_fixed_normal")
+  expect_identical(
+    draft$eligibility$support_profile_id,
+    "pcm_mml_fixed_standard_normal_v1"
+  )
   expect_identical(nrow(mfrmr:::mfrmr_review_calibration(draft)), 0L)
   expect_identical(
     nrow(owned),
@@ -470,13 +473,52 @@ test_that("calibration print and summary expose scope without source Persons", {
 
   expect_s3_class(s, "summary.mfrm_calibration")
   expect_identical(s$state, "frozen")
-  expect_identical(s$lane, "core_rsm_mml_fixed_normal")
+  expect_identical(
+    s$support_profile, "rsm_mml_fixed_standard_normal_v1"
+  )
   expect_true(any(grepl("<mfrm_calibration>", printed, fixed = TRUE)))
   expect_true(any(grepl("mfrmr Calibration Summary", summary_printed, fixed = TRUE)))
+  expect_true(any(grepl("Support profile:", printed, fixed = TRUE)))
+  expect_true(any(grepl("Support profile:", summary_printed, fixed = TRUE)))
+  public_print <- paste(c(printed, summary_printed), collapse = "\n")
+  expect_false(grepl("\\bLane\\b|core_|G1|OPT-[0-9]+", public_print,
+                     perl = TRUE))
   expect_false(any(grepl(fixed_calibration_fit_fixture("RSM")$data$Person[1], printed, fixed = TRUE)))
 })
 
-test_that("fixed-calibration lifecycle remains internal", {
+test_that("portable artifacts use a user-facing support profile contract", {
+  draft <- fixed_calibration_draft_fixture("PCM")$draft
+
+  expect_identical(
+    names(draft$eligibility),
+    c(
+      "support_profile_id", "source_readiness_contract",
+      "source_readiness_status", "parameter_class_status"
+    )
+  )
+  expect_false("lane_id" %in% names(draft$eligibility))
+  expect_identical(
+    draft$integrity$semantic_components$support_profile,
+    "pcm_mml_fixed_standard_normal_v1"
+  )
+  expect_false(
+    "eligibility_lane" %in% names(draft$integrity$semantic_components)
+  )
+  expect_identical(
+    draft$provenance$created_by, "mfrmr::extract_mfrm_calibration"
+  )
+
+  malformed <- draft
+  malformed$eligibility$support_profile_id <-
+    "rsm_mml_fixed_standard_normal_v1"
+  refusals <- mfrmr:::mfrmr_review_calibration(malformed)
+  expect_true("SUPPORT_PROFILE_INVALID" %in% refusals$Code)
+  expect_true(
+    "eligibility.support_profile_id" %in% refusals$FieldPath
+  )
+})
+
+test_that("fixed-calibration implementation helpers remain unexported", {
   exports <- getNamespaceExports("mfrmr")
   expect_false(any(c(
     "mfrmr_extract_calibration_draft", "mfrmr_validate_calibration_draft",

@@ -2228,7 +2228,7 @@ network_review_reporting_map <- function() {
     Boundary = c(
       "Primary measurement model.",
       "Design diagnostic; not person ability, rater quality, or formal fit.",
-      "Design diagnostic; not a recovery, fit, or separation gate.",
+      "Design diagnostic; not a recovery, fit, or separation criterion.",
       "Design diagnostic; not peer quality, reviewer fairness, or a universal common-link adequacy threshold.",
       "Descriptive network diagnostic; not a Rasch logit estimate or causal halo conclusion."
     ),
@@ -2259,7 +2259,7 @@ network_review_reporting_map <- function() {
 #' @details
 #' `build_mfrm_network_review()` is a synthesis layer over
 #' [mfrm_network_analysis()]. It keeps the measurement model and graph view in
-#' separate lanes: MFRM estimates remain the measurement results, while the
+#' separate sections: MFRM estimates remain the measurement results, while the
 #' network review summarizes co-observation connectedness and linking
 #' vulnerability in the observed design. This is especially useful for sparse
 #' or incomplete rater-mediated designs, where common-person links, connected
@@ -8217,7 +8217,7 @@ summary_table_bundle_appendix_role_registry <- function() {
       "Recommended checklist table for reviewer-facing recovery adequacy decisions.",
       "Recommended reporter-facing table for generator-condition caveats kept separate from recovery metrics.",
       "Recommended generator-condition table for interpreting GPCM slope-regime recovery evidence.",
-      "Recommended reporter-facing table for fit/separation diagnostic caveats kept separate from recovery gates.",
+      "Recommended reporter-facing table for fit/separation diagnostic caveats kept separate from recovery criteria.",
       "Recommended diagnostic-only fit/separation review table for recovery assessment handoff.",
       "Recommended parameter-group review table for recovery adequacy follow-up.",
       "Recommended uncertainty-evidence table separating coverage availability, SE availability, and coverage decision status."
@@ -13664,7 +13664,7 @@ run_qc_pipeline <- function(fit,
       paste(
         "The fit reached its iteration ceiling and is not inference-ready.",
         "Do not interpret or select its estimates; refit the same specification",
-        "with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical gate passes."
+        "with the next ceiling in a prespecified `maxit` sequence and accept it only after the numerical-readiness criteria are satisfied."
       )
     } else {
       paste(

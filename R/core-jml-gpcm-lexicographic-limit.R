@@ -731,7 +731,7 @@ audit_mfrm_jml_gpcm_lexicographic_limit_scope <- function(
       reason_codes = reason_codes,
       detail = detail,
       limitations = paste(
-        "The fit-level object advertises an internal declared-path oracle; it",
+        "The fit-level object advertises a non-public diagnostic path; it",
         "does not derive a path from the fit or classify the production",
         "likelihood boundary. The v1 oracle is limited to exact coefficients",
         "and two positive power scales per block. Parameter-space reachability",

@@ -628,7 +628,7 @@
 #' - all other facets are treated as `-1`
 #' This affects interpretation of reported facet measures.
 #'
-#' @section Estimator-specific estimability preflight:
+#' @section Estimator-specific checks before fitting:
 #' Before optimization, mfrmr builds a sparse adjacent-category-logit design
 #' in the same constrained free coordinates used by the optimizer. The check
 #' includes Person coordinates for JML, integrates them out for MML, and
@@ -656,7 +656,7 @@
 #' `fit$data_review$estimability$fitted_information`. Nonstationary or larger
 #' fits retain an explicit not-evaluated status. This fitted-information layer
 #' is diagnostic only: it does not yet classify weak information, make the
-#' nonlinear preflight complete, or turn full additive rank into a full-model
+#' nonlinear check complete, or turn full additive rank into a full-model
 #' estimability claim. Eligible nonlinear MML fits also receive bounded
 #' observed-pattern and all-response-pattern score checks. The latter operates
 #' on each Person's retained observation design under unit row weights and
@@ -701,7 +701,8 @@
 #'    400, 800, then 1600. Do not choose among runs by coefficient size,
 #'    statistical significance, fit statistics, or agreement with an expected
 #'    answer.
-#' 4. The first run in that sequence that clears the numerical gate becomes
+#' 4. The first run in that sequence that satisfies the numerical-readiness
+#'    criteria becomes
 #'    eligible for interpretation. If separately ready runs differ materially,
 #'    treat the difference as numerical instability and review the model,
 #'    identification, data support, and optimizer rather than selecting the
@@ -920,7 +921,7 @@
 #'   a compatibility alias of `inference_ready`; its basis is recorded in
 #'   `population$converged_basis`.
 #' - `data_review`: pre-fit Data, Design, Stability, and Reporting readiness
-#'   evidence propagated into summaries and plot-interpretation gates
+#'   evidence propagated into summaries and plot-interpretation checks
 #' - `config`: resolved model configuration used for estimation, including
 #'   `config$anchor_review` and the recorded estimation controls
 #' - `prep`: preprocessed data/level metadata

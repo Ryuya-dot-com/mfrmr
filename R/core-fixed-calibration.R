@@ -1,8 +1,8 @@
-# Internal fixed-calibration lifecycle for the bounded 0.2.4 core.
+# Fixed-calibration implementation for the supported portable workflow.
 #
-# These functions are deliberately unexported while the G1 evidence gates are
-# open. They support only one-scale, one-dimensional RSM/PCM MML fits with an
-# unconditional fixed-standard-normal scoring basis.
+# Helper functions remain unexported. The public workflow supports only
+# one-scale, one-dimensional RSM/PCM MML fits with an unconditional
+# fixed-standard-normal scoring basis.
 
 mfrmr_calibration_schema_id <- function() "mfrmr.fixed_calibration"
 
@@ -184,7 +184,7 @@ mfrmr_normalize_typed_anchors <- function(config, anchors) {
   if (anyNA(anchors$AnchorType) || any(!anchors$AnchorType %in% valid_types)) {
     mfrmr_typed_anchor_abort(
       "ANCHOR_DECLARATION_INVALID", "constraints.anchors.AnchorType",
-      "anchor type is not registered for the core lane"
+      "anchor type is not supported by this calibration workflow"
     )
   }
 
@@ -800,7 +800,7 @@ mfrmr_calibration_semantic_components <- function(x) {
     quadrature = x$scoring_basis[c(
       "quadrature_rule", "quadrature_order", "nodes", "weights"
     )],
-    eligibility_lane = x$eligibility$lane_id
+    support_profile = x$eligibility$support_profile_id
   )
 }
 
@@ -819,13 +819,13 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   if (!model %in% c("RSM", "PCM")) {
     mfrmr_calibration_abort(
       "MODEL_FAMILY_UNSUPPORTED", "model.family",
-      "the 0.2.4 core draft extractor accepts only RSM or PCM fits"
+      "portable calibration accepts only RSM or PCM fits"
     )
   }
   if (!identical(method, "MML")) {
     mfrmr_calibration_abort(
       "MODEL_ESTIMATOR_UNSUPPORTED", "model.estimator",
-      "the 0.2.4 core draft extractor accepts only MML fits"
+      "portable calibration accepts only MML fits"
     )
   }
   population <- fit$config$population_spec %||% list()
@@ -833,7 +833,10 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
   if (isTRUE(population$active) || identical(posterior_basis, "population_model")) {
     mfrmr_calibration_abort(
       "SCORING_BASIS_UNSUPPORTED", "scoring_basis.type",
-      "estimated-population and latent-regression fits belong to OPT-01"
+      paste(
+        "estimated-population and latent-regression fits are not supported",
+        "by portable calibration; use fitted-object scoring"
+      )
     )
   }
   if (identical(model, "PCM") &&
@@ -977,10 +980,10 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       weights = as.numeric(quad$weights)
     ),
     eligibility = list(
-      lane_id = if (identical(model, "RSM")) {
-        "core_rsm_mml_fixed_normal"
+      support_profile_id = if (identical(model, "RSM")) {
+        "rsm_mml_fixed_standard_normal_v1"
       } else {
-        "core_pcm_mml_fixed_normal"
+        "pcm_mml_fixed_standard_normal_v1"
       },
       source_readiness_contract = readiness_contract,
       source_readiness_status = if (source_ready) "eligible" else "ineligible",
@@ -1001,7 +1004,7 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       source_fit_id = source_fit_id,
       source_package_version = as.character(utils::packageVersion("mfrmr")),
       created_at_utc = created_at_utc,
-      created_by = "mfrmr:::mfrmr_extract_calibration_draft_v1",
+      created_by = "mfrmr::extract_mfrm_calibration",
       parent_calibration_id = NULL
     ),
     integrity = list(
@@ -1040,7 +1043,8 @@ mfrmr_calibration_expected_sections <- function() {
       "quadrature_order", "nodes", "weights"
     ),
     eligibility = c(
-      "lane_id", "source_readiness_contract", "source_readiness_status",
+      "support_profile_id", "source_readiness_contract",
+      "source_readiness_status",
       "parameter_class_status"
     ),
     validation = c(
@@ -1423,13 +1427,18 @@ mfrmr_review_calibration <- function(x) {
     add("QUADRATURE_WEIGHTS_INVALID", "scoring_basis.weights", "weights must be finite, positive, aligned, and normalized")
   }
 
-  expected_lane <- if (identical(x$model$family, "RSM")) {
-    "core_rsm_mml_fixed_normal"
+  expected_support_profile <- if (identical(x$model$family, "RSM")) {
+    "rsm_mml_fixed_standard_normal_v1"
   } else {
-    "core_pcm_mml_fixed_normal"
+    "pcm_mml_fixed_standard_normal_v1"
   }
-  if (!identical(x$eligibility$lane_id, expected_lane)) {
-    add("ELIGIBILITY_LANE_INVALID", "eligibility.lane_id", "lane does not agree with the model family")
+  if (!identical(
+      x$eligibility$support_profile_id, expected_support_profile
+  )) {
+    add(
+      "SUPPORT_PROFILE_INVALID", "eligibility.support_profile_id",
+      "support profile does not agree with the model family"
+    )
   }
   if (!identical(
     x$eligibility$source_readiness_contract,
@@ -1505,7 +1514,7 @@ mfrmr_review_calibration <- function(x) {
   }
   if (!identical(
     x$provenance$created_by,
-    "mfrmr:::mfrmr_extract_calibration_draft_v1"
+    "mfrmr::extract_mfrm_calibration"
   )) {
     add("PROVENANCE_CREATOR_INVALID", "provenance.created_by", "creator identity is not registered")
   }
@@ -2498,7 +2507,7 @@ summary.mfrm_calibration <- function(object, ...) {
     state = object$lifecycle$state,
     model = object$model$family,
     estimator = object$model$estimator,
-    lane = object$eligibility$lane_id,
+    support_profile = object$eligibility$support_profile_id,
     facets = length(object$model$facet_names),
     coordinates = nrow(coordinates),
     anchors = nrow(object$constraints$anchors),
@@ -2516,7 +2525,7 @@ print.mfrm_calibration <- function(x, ...) {
   cat("<mfrm_calibration>", "\n", sep = "")
   cat("  State: ", s$state, "\n", sep = "")
   cat("  Model: ", s$model, " / ", s$estimator, "\n", sep = "")
-  cat("  Lane: ", s$lane, "\n", sep = "")
+  cat("  Support profile: ", s$support_profile, "\n", sep = "")
   cat("  Facets: ", s$facets, "; coordinates: ", s$coordinates,
       "; anchors: ", s$anchors, "\n", sep = "")
   cat("  Validation refusals: ", nrow(s$refusals), "\n", sep = "")
@@ -2529,7 +2538,8 @@ print.summary.mfrm_calibration <- function(x, ...) {
   cat("  Calibration: ", x$calibration_id, "\n", sep = "")
   cat("  Schema: ", x$schema_id, " v", x$schema_version, "\n", sep = "")
   cat("  State: ", x$state, "\n", sep = "")
-  cat("  Model/lane: ", x$model, " / ", x$estimator, " / ", x$lane, "\n", sep = "")
+  cat("  Model / estimator: ", x$model, " / ", x$estimator, "\n", sep = "")
+  cat("  Support profile: ", x$support_profile, "\n", sep = "")
   cat("  Scoring basis: ", x$scoring_basis, "\n", sep = "")
   cat("  Validation refusals: ", nrow(x$refusals), "\n", sep = "")
   invisible(x)

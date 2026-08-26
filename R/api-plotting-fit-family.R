@@ -91,7 +91,7 @@
   )
   detail <- if (interpretation_ready) {
     paste0(
-      "Stored fit readiness plus numerical, data-support, connectivity, and stability gates ",
+      "Stored fit readiness plus numerical, data-support, connectivity, and stability checks ",
       "passed. Treat this display as diagnostic evidence, not automatic ",
       "publication approval."
     )
@@ -2905,7 +2905,7 @@ draw_facet_plot <- function(facet_tbl,
 #' Every fit-derived payload also carries `data$fit_readiness`,
 #' `data$interpretation_status`, and `data$interpretation_note`. Availability
 #' and interpretability are separate: when a numerical, data, design, or
-#' stability gate requires review, the coordinates remain available for
+#' stability status requires review, the coordinates remain available for
 #' diagnosis, but the call warns and marks the returned subtitle and drawn
 #' title `REVIEW ONLY`.
 #' A prior-regularized extreme MML EAP remains in `fit$facets$person`. If its

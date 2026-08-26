@@ -925,7 +925,7 @@ plot_dif_summary <- function(x,
 #' canonical MML IC panel or an explicit ineligibility/legacy label, and the
 #' largest non-Person facet's separation /
 #' reliability if available. A fit that has not passed its numerical, data,
-#' design, and stability gates produces one warning and a visible
+#' design, and stability checks produce one warning and a visible
 #' `"REVIEW ONLY"` label. Resolve that review before treating the composite as
 #' report-ready evidence.
 #'

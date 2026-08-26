@@ -359,7 +359,7 @@ test_that("facets_feature_coverage keeps future 0.2.3 routes fail closed", {
   expect_true(any(
     future$FACETSFeature == "FACETS free-slope polytomous GPCM comparison" &
       grepl("post-fit diagnostic", future$Limitation, fixed = TRUE) &
-      grepl("PCM/JML lane", future$Alternative, fixed = TRUE)
+      grepl("PCM/JML comparison", future$Alternative, fixed = TRUE)
   ))
 })
 

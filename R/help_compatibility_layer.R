@@ -158,7 +158,7 @@ NULL
 #' 1. Which old names are still accepted?
 #' 2. Which package-native names should new code use instead?
 #'
-#' Internal soft-deprecated helpers are deliberately excluded here. This table
+#' Non-exported soft-deprecated helpers are deliberately excluded here. This table
 #' is only for retained user-facing aliases that remain part of the public
 #' surface.
 #'

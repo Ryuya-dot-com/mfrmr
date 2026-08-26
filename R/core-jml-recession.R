@@ -11,7 +11,7 @@
 # constraints, interactions, and steps enter without being reconstructed from
 # response totals.
 #
-# The result is deliberately an internal certificate instrument.  It does not
+# The result is a non-exported diagnostic certificate. It does not
 # yet overwrite the finite optimizer iterate in public facet, interaction, or
 # step tables.  That promotion belongs to the cross-surface propagation work
 # after the certificate and target mapping have been stress-tested.

@@ -273,7 +273,7 @@ are incidental parameters; structural JML estimates can retain finite-test-
 length bias as the number of persons grows (Hessen 2025). An extreme response
 pattern can additionally make the ordinary finite JML maximum unattained.
 mfrmr therefore keeps recovery/bias evidence, boundary handling, numerical
-convergence, and cross-software agreement as separate gates.
+convergence, and cross-software agreement as separate checks.
 Under JML, the geometric-mean constraint resolves the scale of the jointly
 estimated person coordinates and slopes.
 
@@ -375,7 +375,7 @@ threshold convention, slope grouping, category map, and retained observations
 before computing differences. `sirt::rm.facets()` provides a useful second MML
 reference: it estimates item and/or rater slopes under product-one centering and
 an estimated normal trait spread. Its item-only GPCM and equal-discrimination
-many-facet reductions are candidate matched lanes after category, threshold,
+many-facet reductions are candidate matched comparisons after category, threshold,
 quadrature, and centering conventions are aligned. Its general free-slope rater
 kernel is not the current mfrmr kernel: sirt uses the product of item and rater
 slopes on the trait term while rater severity remains a separate location term,
@@ -590,7 +590,7 @@ operational score-side summaries. Specifically:
 - Caveated reporting, export, linking, design-forecast, and screening helpers
   must keep their `gpcm_boundary` wording visible and must not imply
   FACETS-equivalent score-side uncertainty, operational scoring, calibrated
-  screening gates, or arbitrary-facet planning validation.
+  screening criteria, or arbitrary-facet planning validation.
 
 ## Recommended substitutes
 

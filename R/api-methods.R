@@ -7370,7 +7370,7 @@ summary.mfrm_diagnostics <- function(object,
   } else if (!fit_readiness_known) {
     key_warnings <- c(
       key_warnings,
-      "Source-fit readiness is unavailable; do not use diagnostics to infer that the fit passed its numerical and identification gates."
+      "Source-fit readiness is unavailable; do not use diagnostics to infer that the fit satisfied its numerical and identification criteria."
     )
   }
   if (nrow(precision_review_tbl) > 0 && "Status" %in% names(precision_review_tbl)) {
@@ -9622,10 +9622,10 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
       paste(
         "Do not interpret or select estimates from this iteration-limited fit.",
         "Refit the same data, model, method, anchors, optimizer, tolerance, and quadrature rule",
-        "with the next ceiling in a prespecified `maxit` sequence; accept a result only after the Numerical gate passes."
+        "with the next ceiling in a prespecified `maxit` sequence; accept a result only after the Numerical criteria are satisfied."
       )
     } else {
-      "Inspect `fit$opt$optimizer_polish$Stages` before changing controls; compare the retained objective, terminal gradient, and maximum parameter change, and keep the fit on review if bounded polishing did not clear the numerical gate."
+      "Inspect `fit$opt$optimizer_polish$Stages` before changing controls; compare the retained objective, terminal gradient, and maximum parameter change, and keep the fit on review if bounded polishing did not satisfy the numerical-readiness criteria."
     }
     next_actions <- c(numerical_action, next_actions)
   }
@@ -9661,7 +9661,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
           identical(numerical_status, "pass") &&
           !mfrm_inference_ready(object)) {
         paste(
-          "The optimizer already passed its numerical gate; inspect",
+          "The optimizer already satisfied its numerical-readiness criteria; inspect",
           "`summary(fit)$inference_evidence` and",
           "`diagnose_mfrm(fit)$parameter_uncertainty` before changing",
           "optimizer controls. Optimizer*SE remains diagnostic until",
@@ -10053,7 +10053,7 @@ mfrm_fit_summary_workflow <- function(out, fit, profile, detail,
           out$readiness$Status[readiness_reporting_row] <-
             "review_diagnostics_before_reporting"
           out$readiness$Detail[readiness_reporting_row] <-
-            "Numerical and design gates passed, but diagnostic findings require follow-up."
+            "Numerical and design criteria were satisfied, but diagnostic findings require follow-up."
         }
       }
     }

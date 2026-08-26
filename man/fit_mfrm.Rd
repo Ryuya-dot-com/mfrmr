@@ -384,7 +384,7 @@ readiness decision. The older \code{population$converged} field is retained as
 a compatibility alias of \code{inference_ready}; its basis is recorded in
 \code{population$converged_basis}.
 \item \code{data_review}: pre-fit Data, Design, Stability, and Reporting readiness
-evidence propagated into summaries and plot-interpretation gates
+evidence propagated into summaries and plot-interpretation checks
 \item \code{config}: resolved model configuration used for estimation, including
 \code{config$anchor_review} and the recorded estimation controls
 \item \code{prep}: preprocessed data/level metadata
@@ -833,7 +833,7 @@ This affects interpretation of reported facet measures.
 }
 }
 
-\section{Estimator-specific estimability preflight}{
+\section{Estimator-specific checks before fitting}{
 
 Before optimization, mfrmr builds a sparse adjacent-category-logit design
 in the same constrained free coordinates used by the optimizer. The check
@@ -862,7 +862,7 @@ recorded eigenvalue-tolerance ladder in
 \code{fit$data_review$estimability$fitted_information}. Nonstationary or larger
 fits retain an explicit not-evaluated status. This fitted-information layer
 is diagnostic only: it does not yet classify weak information, make the
-nonlinear preflight complete, or turn full additive rank into a full-model
+nonlinear check complete, or turn full additive rank into a full-model
 estimability claim. Eligible nonlinear MML fits also receive bounded
 observed-pattern and all-response-pattern score checks. The latter operates
 on each Person's retained observation design under unit row weights and
@@ -909,7 +909,8 @@ quadrature rule with the next ceiling in a prespecified sequence, such as
 400, 800, then 1600. Do not choose among runs by coefficient size,
 statistical significance, fit statistics, or agreement with an expected
 answer.
-\item The first run in that sequence that clears the numerical gate becomes
+\item The first run in that sequence that satisfies the numerical-readiness
+criteria becomes
 eligible for interpretation. If separately ready runs differ materially,
 treat the difference as numerical instability and review the model,
 identification, data support, and optimizer rather than selecting the

@@ -1948,7 +1948,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4: recovery G6 rebound / candidate metadata pending",
+    "0.2.4: development / public-language revalidation",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1965,7 +1965,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 17L)
+  expect_identical(count_token("data-state=\"done\""), 18L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2025,7 +2025,6 @@ test_that("0.2.4 candidate transition admits metadata but refuses payload drift"
 
   expect_true(review$G6BaselineAncestor)
   expect_true(review$G6DecisionBound)
-  expect_true(review$Metadata$MetadataTransitionOK)
   expect_true(review$Metadata$Stage %in% c("development", "candidate"))
   forbidden <- review$Inventory[
     review$Inventory$Classification == "package_payload_change_forbidden",
@@ -2033,21 +2032,22 @@ test_that("0.2.4 candidate transition admits metadata but refuses payload drift"
   ]
   if (nrow(forbidden) > 0L) {
     expect_identical(review$Metadata$Stage, "development")
-    expect_true(review$Metadata$DevelopmentMetadataOK)
+    expect_false(review$Metadata$DevelopmentMetadataOK)
+    expect_false(review$Metadata$MetadataTransitionOK)
     expect_false(review$ChangedPathsAllowed)
     expect_false(review$ProductionPayloadUnchanged)
     expect_false(review$DevelopmentTransitionReady)
     expect_false(review$CandidateReady)
-    expect_setequal(
-      forbidden$Path, "tests/testthat/test-vignette-artifacts.R"
-    )
+    expect_true("tests/testthat/test-vignette-artifacts.R" %in% forbidden$Path)
   } else if (identical(review$Metadata$Stage, "development")) {
+    expect_true(review$Metadata$MetadataTransitionOK)
     expect_true(review$ChangedPathsAllowed)
     expect_true(review$ProductionPayloadUnchanged)
     expect_true(review$Metadata$DevelopmentMetadataOK)
     expect_true(review$DevelopmentTransitionReady)
     expect_false(review$CandidateReady)
   } else {
+    expect_true(review$Metadata$MetadataTransitionOK)
     expect_true(review$ChangedPathsAllowed)
     expect_true(review$ProductionPayloadUnchanged)
     expect_true(review$Metadata$CandidateMetadataOK)
@@ -2433,7 +2433,7 @@ test_that("0.2.4 recovery G6 decision binds the delta and fresh denominator", {
   }
 })
 
-test_that("0.2.4 recovery transition is independent of invalidated v1", {
+test_that("0.2.4 recovery transition fails closed after public schema change", {
   transition <- load_fixed_calibration_release_candidate_recovery_transition()
   contract <- transition$env$mfrmr_rc04_contract()
   review <- transition$env$mfrmr_rc04_review(transition$root)
@@ -2457,16 +2457,23 @@ test_that("0.2.4 recovery transition is independent of invalidated v1", {
 
   expect_true(review$G6BaselineAncestor)
   expect_true(review$G6DecisionBound)
-  expect_true(review$ChangedPathsAllowed)
-  expect_true(review$ProductionPayloadUnchanged)
+  expect_false(review$ChangedPathsAllowed)
+  expect_false(review$ProductionPayloadUnchanged)
   expect_identical(review$Metadata$Stage, "development")
-  expect_true(review$Metadata$DevelopmentMetadataOK)
-  expect_true(review$DevelopmentTransitionReady)
+  expect_false(review$Metadata$DevelopmentMetadataOK)
+  expect_false(review$DevelopmentTransitionReady)
   expect_false(review$CandidateReady)
   expect_false(review$SubmissionAuthorized)
-  expect_false(any(
+  expect_true(any(
     review$Inventory$Classification == "package_payload_change_forbidden"
   ))
+  forbidden <- review$Inventory$Path[
+    review$Inventory$Classification == "package_payload_change_forbidden"
+  ]
+  expect_true(all(c(
+    "R/core-fixed-calibration.R",
+    "tests/testthat/test-fixed-calibration-lifecycle.R"
+  ) %in% forbidden))
 })
 
 test_that("0.2.4 recovery transition record freezes the clean v2 review", {
@@ -2508,6 +2515,81 @@ test_that("0.2.4 recovery transition record freezes the clean v2 review", {
     "CRANSubmissionPerformed=FALSE",
     "ReleaseDiffAllowlistFrozen=TRUE",
     "NextAction=apply-0.2.4-candidate-metadata-under-recovery-v2-allowlist"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 recovery v2 invalidation precedes candidate metadata", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-release-candidate-transition-recovery-",
+      "invalidation-record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "InvalidatedTransitionContractId=mfrmr_release_candidate_transition_0_2_4_v2_recovery",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateCommitCreated=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CandidateChecksRun=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "ProductionPayloadChanged=TRUE",
+    "PublicArtifactSchemaChanged=TRUE",
+    "NumericalScoringAlgorithmChanged=FALSE",
+    "StatisticalModelChanged=FALSE",
+    "OldCandidateReusable=FALSE",
+    "TransitionV1Reusable=FALSE",
+    "TransitionV2Reusable=FALSE",
+    "ReturnedToDevelopment=TRUE",
+    "NextAction=run-public-language-and-schema-regression"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public-language schema amendment remains non-authorizing", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-public-language-schema-amendment-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "AmendmentId=mfrmr_public_language_schema_amendment_0_2_4_v1",
+    "PreviousEligibilityField=eligibility.lane_id",
+    "CurrentEligibilityField=eligibility.support_profile_id",
+    "RsmSupportProfileId=rsm_mml_fixed_standard_normal_v1",
+    "PcmSupportProfileId=pcm_mml_fixed_standard_normal_v1",
+    "CurrentCreatorIdentity=mfrmr::extract_mfrm_calibration",
+    "PublicPrintLabel=Support profile",
+    "SemanticComponentName=support_profile",
+    "InvalidProfileCode=SUPPORT_PROFILE_INVALID",
+    "PublicDocumentationInternalProcessTermHits=0",
+    "TargetedRegressionFiles=7",
+    "TargetedRegressionPassed=TRUE",
+    "TargetedRegressionFailures=0",
+    "NumericalScoringAlgorithmChanged=FALSE",
+    "StatisticalModelChanged=FALSE",
+    "SupportedEnvelopeChanged=FALSE",
+    "LocalSourceCheckPassed=FALSE",
+    "HostedFivePlatformPassed=FALSE",
+    "G6Revalidated=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=run-clean-source-package-check"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)

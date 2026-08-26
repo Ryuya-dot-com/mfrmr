@@ -577,10 +577,10 @@ facets_feature_coverage <- function(status = c("all", "implemented",
     row("Current scope boundary",
         "FACETS free-slope polytomous GPCM comparison",
         "t7menu.htm",
-        "none as a direct common-estimand lane", "not_implemented",
+        "none as a direct common-estimand comparison", "not_implemented",
         "FACETS PCM/JMLE can serve as the direct equal-discrimination comparison after the full estimation contract is aligned.",
         "FACETS Table 7 Estimated Discrimination is a post-fit diagnostic that does not update other Rasch estimates, so it is not the jointly estimated bounded-GPCM slope from mfrmr.",
-        "Use FACETS for the matched PCM/JML lane or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.")
+        "Use FACETS for the matched PCM/JML comparison or as a deliberately misspecified equal-discrimination control; use a genuinely slope-estimating program only after the GPCM kernel and identification are matched.")
   ))
 
   row.names(out) <- NULL

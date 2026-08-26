@@ -213,7 +213,7 @@ immediately.
 Every fit-derived payload also carries \code{data$fit_readiness},
 \code{data$interpretation_status}, and \code{data$interpretation_note}. Availability
 and interpretability are separate: when a numerical, data, design, or
-stability gate requires review, the coordinates remain available for
+stability status requires review, the coordinates remain available for
 diagnosis, but the call warns and marks the returned subtitle and drawn
 title \verb{REVIEW ONLY}.
 A prior-regularized extreme MML EAP remains in \code{fit$facets$person}. If its

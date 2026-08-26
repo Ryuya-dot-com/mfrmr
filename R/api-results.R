@@ -2168,7 +2168,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
   add(
     "Fit, separation, and precision",
     mfrm_report_component_status(x, "precision_review", available = "review"),
-    "Precision review keeps fit size, standardized fit, separation, and reliability in separate lanes.",
+    "Precision review keeps fit size, standardized fit, separation, and reliability as separate quantities.",
     "summary(res$components$precision_review); precision_review_report(fit, diagnostics)",
     "Use for cautious wording about fit, precision, and separation.",
     "Do not collapse fit, separation, reliability, and ZSTD into one pass/fail rule."
@@ -3242,7 +3242,7 @@ mfrm_report_precision_reporting_templates <- function(style,
       " under the Wright/Masters G/R/H convention."
     ),
     "diagnostics$reliability$Strata; precision_basis",
-    "Use strata as a precision-spread summary; do not turn it into an independent quality gate.",
+    "Use strata as a precision-spread summary; do not turn it into an independent quality criterion.",
     "report$precision_basis"
   )
 
@@ -5287,7 +5287,7 @@ mfrm_report_html <- function(report) {
 #' `bias_reporting_templates` table is
 #' available when the source result was built with `include = "bias"` and keeps
 #' facet-level screens, interaction-bias contrasts, DFF follow-up, and fairness
-#' conclusions in separate lanes. The `misfit_reporting_templates` table is
+#' conclusions in separate sections. The `misfit_reporting_templates` table is
 #' available when the source result was built with `include = "misfit_review"`
 #' and keeps unexpected responses, displacement, pathway-map evidence, and
 #' case-review actions separate. The `linking_reporting_templates` table is
@@ -6054,7 +6054,7 @@ export_mfrm_results <- function(x,
 #' - `overview`: input mode, model, method, table count, and plot-route count
 #' - `decision`: plain-language interpretation, formal-inference, reason, and
 #'   next-action text derived from the source-fit readiness record
-#' - `readiness`: separate analysis and plot-interpretation gates
+#' - `readiness`: separate analysis and plot-interpretation checks
 #' - `fit_readiness`, `fit_readiness_components`, and
 #'   `fit_readiness_parameters`: the exact source-fit readiness record retained
 #'   separately from the workflow-level `readiness` table
