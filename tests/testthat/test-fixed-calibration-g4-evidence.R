@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 candidate: local pass / second 5-platform retry pending",
+    "0.2.4 candidate: local pass / 5-platform pass / human sign-off pending",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1964,8 +1964,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 28L)
-  expect_identical(count_token("data-state=\"open\""), 44L)
+  expect_identical(count_token("data-state=\"done\""), 29L)
+  expect_identical(count_token("data-state=\"open\""), 43L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -3034,11 +3034,64 @@ test_that("0.2.4 public-language candidate metadata has a local receipt", {
     "MaintenanceBridgeReleaseMetadataAligned=TRUE",
     "MaintenanceBridgeComplete=TRUE",
     "MaintenanceBridgeProductionPayloadUnchanged=TRUE",
-    "CandidateHostedSecondRetryRunId=PENDING",
+    "CandidateHostedSecondRetryRunId=32938822686",
+    "CandidateHostedSecondRetryHeadSHA40=356d0fd4149ae275f8cfbf23c59928f37d829555",
+    "CandidateHostedSecondRetryRunComplete=TRUE",
+    "CandidateHostedSecondRetryRunSuccess=TRUE",
+    "CandidateHostedSecondRetryPlatformCells=5",
+    "CandidateHostedSecondRetryPlatformCellsPassed=5",
+    "CandidateHostedSecondRetryPlatformCellsFailed=0",
+    "CandidateHostedSecondRetryPlatformCellsSkipped=0",
+    "CandidateHostedSecondRetryEachPackageCheckPassed=TRUE",
+    "CandidateHostedSecondRetryEachRepositoryReviewPassed=TRUE",
+    "CandidateHostedFurtherRetryRequired=FALSE",
+    "CandidateValidationHostedComplete=TRUE",
     "CandidateTagCreated=FALSE",
     "SubmissionAuthorized=FALSE",
     "CRANSubmissionPerformed=FALSE",
-    "NextAction=run-second-fresh-exact-candidate-five-platform-matrix"
+    "NextAction=hold-for-explicit-human-sign-off-no-submission"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 candidate hosted validation binds the successful five-platform run", {
+  transition <-
+    load_fixed_calibration_release_candidate_public_language_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-release-candidate-hosted-run-32938822686-",
+      "public-language-record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expected <- c(
+    "CandidateHostedRunId=32938822686",
+    "CandidateHostedHeadSHA40=356d0fd4149ae275f8cfbf23c59928f37d829555",
+    "WorkflowConclusion=success",
+    "PlatformCells=5",
+    "CompletePlatformCells=5",
+    "SuccessfulPlatformCells=5",
+    "FailedPlatformCells=0",
+    "SkippedPlatformCells=0",
+    "EachExactSourcePackageCheckPassed=TRUE",
+    "EachRepositoryValidationReviewPassed=TRUE",
+    "SourceTruthOK=TRUE",
+    "MaintenanceBridgeComplete=TRUE",
+    "CandidateReadyAtHostedHead=TRUE",
+    "ProductionPayloadUnchanged=TRUE",
+    "FirstFailedRunId=32936425346",
+    "SecondFailedRunId=32938041192",
+    "FailedRunsRetainedInDenominator=TRUE",
+    "CandidateTagCreated=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "PublicationPerformed=FALSE",
+    "FurtherHostedRetryRequired=FALSE",
+    "NextAction=hold-for-explicit-human-sign-off-no-submission"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)

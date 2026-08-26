@@ -1,6 +1,6 @@
 # mfrmr 0.2.4 public-language candidate-metadata record
 
-Status: `candidate_metadata_v3_applied_local_check_pass_second_hosted_retry_required`,
+Status: `candidate_metadata_v3_applied_local_and_hosted_checks_pass`,
 2026-08-26.
 
 ## Result
@@ -86,6 +86,20 @@ fixed-calibration evidence test passes. These changes are excluded from the
 source package, so the candidate payload is unchanged. A second fresh hosted
 matrix is required.
 
+The second fresh matrix, run `32938822686`, completed successfully on exact
+head `356d0fd4149ae275f8cfbf23c59928f37d829555`. All five platform cells
+passed: macOS release prerequisite, Ubuntu release, Ubuntu devel, Ubuntu
+oldrel-1, and Windows release. Every cell passed both the exact source-tarball
+package check and the repository validation review. The macOS prerequisite
+therefore confirmed both source truth and the lifecycle-aware maintenance
+bridge before the remaining matrix opened.
+
+Runs `32936425346` and `32938041192` remain recorded as failed attempts and are
+not counted as successful evidence. No further hosted retry is required for
+the current candidate payload. The remaining boundary is an explicit human
+decision; no tag, CRAN submission, or publication is authorized by these
+machine checks.
+
 ## Exact fields
 
 - `TransitionContractId=mfrmr_release_candidate_transition_0_2_4_v3_public_language`
@@ -160,8 +174,24 @@ matrix is required.
 - `MaintenanceBridgeReleaseMetadataAligned=TRUE`
 - `MaintenanceBridgeComplete=TRUE`
 - `MaintenanceBridgeProductionPayloadUnchanged=TRUE`
-- `CandidateHostedSecondRetryRunId=PENDING`
+- `CandidateHostedSecondRetryRunId=32938822686`
+- `CandidateHostedSecondRetryHeadSHA40=356d0fd4149ae275f8cfbf23c59928f37d829555`
+- `CandidateHostedSecondRetryRunComplete=TRUE`
+- `CandidateHostedSecondRetryRunSuccess=TRUE`
+- `CandidateHostedSecondRetryPlatformCells=5`
+- `CandidateHostedSecondRetryPlatformCellsPassed=5`
+- `CandidateHostedSecondRetryPlatformCellsFailed=0`
+- `CandidateHostedSecondRetryPlatformCellsSkipped=0`
+- `CandidateHostedSecondRetryEachPackageCheckPassed=TRUE`
+- `CandidateHostedSecondRetryEachRepositoryReviewPassed=TRUE`
+- `CandidateHostedSecondRetryMacOSJobId=98085368909`
+- `CandidateHostedSecondRetryUbuntuReleaseJobId=98086404242`
+- `CandidateHostedSecondRetryUbuntuDevelJobId=98086404271`
+- `CandidateHostedSecondRetryUbuntuOldrelJobId=98086404295`
+- `CandidateHostedSecondRetryWindowsReleaseJobId=98086404330`
+- `CandidateHostedFurtherRetryRequired=FALSE`
+- `CandidateValidationHostedComplete=TRUE`
 - `CandidateTagCreated=FALSE`
 - `SubmissionAuthorized=FALSE`
 - `CRANSubmissionPerformed=FALSE`
-- `NextAction=run-second-fresh-exact-candidate-five-platform-matrix`
+- `NextAction=hold-for-explicit-human-sign-off-no-submission`

@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4 candidate: local pass / second 5-platform retry pending</span>
+          <span class="pill">0.2.4 candidate: local pass / 5-platform pass / human sign-off pending</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -759,9 +759,9 @@
                 <input type="checkbox" disabled aria-label="未完了">
                 <div><strong>clean source tarballと候補tagを一対一に固定</strong><p>dirty tree、未追跡production file、生成物混入を拒否。</p></div><span class="chip open">open</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>候補commitで最終 package checks</strong><p>local source checkは0/0/0。失敗済みrun <code>32936425346</code>・<code>32938041192</code>を保持したままsecond fresh 5-platform runを完了する。</p></div><span class="chip open">second retry required</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>候補commitで最終 package checks</strong><p>run <code>32938822686</code>はexact head <code>356d0fd…</code>で5/5成功。各cellのsource checkとrepository reviewが通過。失敗済み2 runはdenominatorに保持。</p></div><span class="chip done">hosted 5/5 pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1058,9 +1058,8 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>maintenance lifecycle修正後のsecond fresh exact candidate 5-platform matrixを完了する。</strong></li>
-              <li><strong>候補commitとhosted結果を一対一に記録する。</strong></li>
-              <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
+              <li><strong>人間sign-offを機械的5/5 passと分離して記録する。</strong></li>
+              <li><strong>candidate source identityとsign-off対象commitの一対一対応を固定する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
               <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
               <li><strong>0.2.5について実利用problem discoveryを行い、着工／延期を判断する。</strong></li>
@@ -1100,6 +1099,7 @@
           public-language G6: <a href="fixed-calibration-g6-public-language-final-decision-record-0.2.4.md">G6 rebound</a> ·
           public-language transition: <a href="fixed-calibration-release-candidate-transition-public-language-record-0.2.4.md">v3 boundary</a> ·
           public-language candidate metadata: <a href="fixed-calibration-release-candidate-metadata-public-language-record-0.2.4.md">candidate local check</a> ·
+          public-language candidate hosted run: <a href="fixed-calibration-release-candidate-hosted-run-32938822686-public-language-record-0.2.4.md">candidate 5-platform record</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>
