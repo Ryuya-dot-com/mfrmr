@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4: candidate invalidated / development reopened</span>
+          <span class="pill">0.2.4: development reopened / local check passed</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">revalidation required</span>
+              <span class="chip open">hosted revalidation required</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -639,7 +639,7 @@
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
                 <div><strong>最終release candidateを作成</strong><p>metadata dry runはartifact来歴テスト不整合で無効化。developmentへ戻し、再検証が必要。</p></div>
-                <span class="chip open">reopened</span>
+                <span class="chip open">hosted pending</span>
               </div>
             </div>
           </article>
@@ -698,6 +698,14 @@
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>release差分allowlistを事前固定</strong><p>Version、status、日付、NEWS heading、cran-comments以外を拒否し、candidateのpublic-versionは0.2.3.1に固定。</p></div><span class="chip done">done</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>candidate dry runをfail-closedで無効化</strong><p>allowlist外のartifact来歴テスト修正を検出し、規則を広げずdevelopmentへ復帰。</p></div><span class="chip done">done</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>回復development payloadをローカル検査</strong><p><code>76b4d65…</code>のexact source checkは0 errors・0 warnings・0 notes。</p></div><span class="chip done">local pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1010,8 +1018,8 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>artifact来歴テスト修正を含む新development payloadを完全回帰検証する。</strong></li>
-              <li><strong>新payloadを5-platformで再確認し、G6を再度固定する。</strong></li>
+              <li><strong>新development payloadを通常5-platformで再確認する。</strong></li>
+              <li><strong>成功分母を新G6として固定し、旧candidateとの関係を記録する。</strong></li>
               <li><strong>frozen規則を再発行してcandidate metadataを再適用する。</strong></li>
               <li><strong>人間sign-off後にCRAN投稿を行う。</strong></li>
               <li><strong>公開artifactを再取得して候補と照合し、30日monitoringを開始する。</strong></li>
@@ -1039,6 +1047,7 @@
           candidate transition: <a href="fixed-calibration-release-candidate-transition-record-0.2.4.md">transition record</a> ·
           candidate metadata: <a href="fixed-calibration-release-candidate-metadata-record-0.2.4.md">metadata record</a> ·
           candidate invalidation: <a href="fixed-calibration-release-candidate-invalidation-record-0.2.4.md">invalidation record</a> ·
+          recovery local check: <a href="fixed-calibration-candidate-recovery-local-check-record-0.2.4.md">local check</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>

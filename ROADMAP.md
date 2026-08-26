@@ -16,7 +16,9 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
   provenance test. Candidate preparation returned to development so the rule
   can preserve the truthful 0.2.4.9000 generation identity while accepting it
   only for the matching 0.2.4 release line. Revalidation remains; no 0.2.4
-  CRAN submission has been performed.
+  CRAN submission has been performed. The clean recovery development source
+  package has passed a local `R CMD check --no-manual`; hosted revalidation is
+  still pending.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.

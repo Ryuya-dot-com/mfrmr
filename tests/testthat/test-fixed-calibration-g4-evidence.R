@@ -1925,7 +1925,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
     fixed = TRUE
   )
   expect_match(
-    roadmap, "0.2.4: candidate invalidated / development reopened", fixed = TRUE
+    roadmap, "0.2.4: development reopened / local check passed", fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
   expect_match(
@@ -1941,7 +1941,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 14L)
+  expect_identical(count_token("data-state=\"done\""), 16L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2293,4 +2293,36 @@ test_that("0.2.4 candidate invalidation record preserves the failed denominator"
     "Changing the manifest to 0.2.4 would have falsified its generation provenance",
     fixed = TRUE
   )
+})
+
+test_that("0.2.4 candidate recovery local check is exact and non-authorizing", {
+  transition <- load_fixed_calibration_release_candidate_transition()
+  record_path <- file.path(
+    transition$validation,
+    "fixed-calibration-candidate-recovery-local-check-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "CheckedCommitSHA40=76b4d65722cf82cc082717750ea14340571918a1",
+    "CheckedTreeSHA40=5f34a0c205e9d4338b549b031c13c90b52cbfdc7",
+    "PackageVersion=0.2.4.9000",
+    "SourceTarballSHA256=ff7ea0878cef0d6ee4a6ada10db95ea43d7265452070a05be57b61005e6c9dfe",
+    "CheckLogSHA256=079faf2555105ff56d98037b00b1796d5fd08b227fe746c5be2c7fd0b74325d9",
+    "Errors=0",
+    "Warnings=0",
+    "Notes=0",
+    "DistributedTestsPassed=435",
+    "DistributedTestsSkipped=3",
+    "G4EvidenceIssued=FALSE",
+    "G6Revalidated=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=run-recovery-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
 })
