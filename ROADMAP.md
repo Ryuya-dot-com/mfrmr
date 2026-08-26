@@ -12,21 +12,12 @@ dates. Completed user-visible changes are recorded in `NEWS.md`.
   G0 maintenance addendum binds its exact source payload and its two
   patch-equivalent 0.2.4 integration commits independently of lagging binary
   and secondary distribution channels.
-- A 0.2.4 candidate-metadata dry run exposed an overly strict static-artifact
-  provenance test. Candidate preparation returned to development so the rule
-  can preserve the truthful 0.2.4.9000 generation identity while accepting it
-  only for the matching 0.2.4 release line. Revalidation remains; no 0.2.4
-  CRAN submission has been performed. The clean recovery development source
-  package passed a local `R CMD check --no-manual` and a fresh ordinary
-  five-platform workflow (5/5). G6 has been rebound to that exact recovery
-  payload; the invalidated candidate and its v1 transition contract remain
-  non-reusable. A subsequent public-language audit found development
-  terminology in the portable artifact schema and printed summaries. The v2
-  transition boundary was therefore invalidated before candidate metadata was
-  applied. Development now uses a user-facing support-profile vocabulary and
-  has passed a clean local source-package check with zero errors, warnings, or
-  notes. Fresh five-platform validation is running; candidate metadata remains
-  unapplied.
+- mfrmr 0.2.4 remains under development. Its portable RSM/PCM calibration and
+  scoring workflow now uses reader-facing terminology throughout artifacts,
+  printed summaries, help, vignettes, and rare boundary messages. The current
+  development source has passed a clean local package check and exact RSM/PCM
+  numerical comparisons; fresh cross-platform checks are running. Release
+  metadata remains unapplied, and no 0.2.4 CRAN submission has been performed.
 - The package currently supports one observed rating scale per fit and a
   unidimensional latent trait, with RSM, PCM, and bounded GPCM routes under the
   documented JML and MML contracts.

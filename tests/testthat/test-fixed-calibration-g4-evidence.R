@@ -1965,7 +1965,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 21L)
+  expect_identical(count_token("data-state=\"done\""), 22L)
   expect_identical(count_token("data-state=\"open\""), 46L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
@@ -2711,6 +2711,62 @@ test_that("0.2.4 final public-language pass has an exact local receipt", {
     "SubmissionAuthorized=FALSE",
     "CRANSubmissionPerformed=FALSE",
     "NextAction=complete-final-public-language-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+})
+
+test_that("0.2.4 public runtime messages have an exact local receipt", {
+  transition <- load_fixed_calibration_release_candidate_recovery_transition()
+  record_path <- file.path(
+    transition$validation,
+    paste0(
+      "fixed-calibration-public-language-runtime-message-",
+      "local-check-record-0.2.4.md"
+    )
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+
+  expected <- c(
+    "ReviewContract=mfrmr_public_language_runtime_message_review_v1",
+    "EvidenceRole=package_check_content_audit_and_numerical_parity",
+    "PriorCheckedCommitSHA40=772ada581c37ebab4c42e932abac32d373bef938",
+    "CheckedCommitSHA40=0dd03dd9830371dd13159db68f00d14ada0cb0ba",
+    "CheckedTreeSHA40=1697a7df6b2bd9d9b2540ac7036975f5d9921d83",
+    "DistributedChangedPaths=14",
+    "ControlFlowChanged=FALSE",
+    "NumericExpressionChanged=FALSE",
+    "StatisticalModelChanged=FALSE",
+    "ScoringKernelChanged=FALSE",
+    "CalibrationSchemaChanged=FALSE",
+    "SourceTarballSHA256=4876a1c247109567399e74101f3bfd5b69b7e911e310f0a6ea31589e79a37241",
+    "CheckLogSHA256=2f40ab9aab06d7982883f77bf85ed53f34f4db5444c800fb9afa6f3b2698b810",
+    "Errors=0",
+    "Warnings=0",
+    "Notes=0",
+    "DistributedTestsPassed=435",
+    "DistributedTestsSkipped=3",
+    "RsmOldNewObjectIdentical=TRUE",
+    "PcmOldNewObjectIdentical=TRUE",
+    "RsmResultSHA256=d0dbbb2b8b2a531f595afe4eca3825b8e214e4bd12a03cfd2462792f315ebb7d",
+    "PcmResultSHA256=bd3c80b90a037ec3e678148f93e5f55d635787f5174f72dba0917ef20a9d462f",
+    "MaxFitParameterDifference=0",
+    "MaxCalibrationCoordinateDifference=0",
+    "MaxPersonEstimateDifference=0",
+    "InternalValidationPathsInTarball=0",
+    "PublicDocumentationBlockedPhraseHits=0",
+    "PublicRuntimeBoundaryCodeHits=0",
+    "G4Reissued=FALSE",
+    "G6Revalidated=FALSE",
+    "HostedRunId=32923607662",
+    "HostedRunComplete=FALSE",
+    "PriorHostedRunReusableForFinalPayload=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "SubmissionAuthorized=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=complete-public-language-runtime-message-five-platform-matrix"
   )
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
