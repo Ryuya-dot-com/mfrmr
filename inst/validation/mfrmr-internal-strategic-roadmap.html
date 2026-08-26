@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4 candidate: local pass / 5-platform pass / human sign-off pending</span>
+          <span class="pill">0.2.4 development: score UX / help / visual QA active</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">candidate checks running</span>
+              <span class="chip open">development repair active</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -636,10 +636,10 @@
                 <div><strong>公開範囲をRSM/PCM MML fixed N(0,1)に限定</strong><p>stored direct/group anchors、frozen artifact scoringのみ。</p></div>
                 <span class="chip done">done</span>
               </div>
-              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
-                <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>最終release candidateを作成</strong><p>v3境界からcandidate commit <code>8b40808…</code>を作成。local checkはOK、5-platform確認中。</p></div>
-                <span class="chip open">hosted running</span>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>前candidateの機械検査を完了</strong><p>run <code>32938822686</code>は5/5成功したが、後続のUX・help・visual監査で公開payload改善が必要と判定したためcandidateとしては再利用しない。</p></div>
+                <span class="chip done">historical pass</span>
               </div>
             </div>
           </article>
@@ -762,6 +762,14 @@
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>候補commitで最終 package checks</strong><p>run <code>32938822686</code>はexact head <code>356d0fd…</code>で5/5成功。各cellのsource checkとrepository reviewが通過。失敗済み2 runはdenominatorに保持。</p></div><span class="chip done">hosted 5/5 pass</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>UX・help・visual監査で前candidateを無効化</strong><p>最新pkgdownは全生成できたが、portable scoreに専用summary/plotがなく、生の広い表が狭幅で読みにくいことを確認。規則どおりdevelopmentへ復帰。</p></div><span class="chip done">fail closed</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>portable scoreの要約・区間図・help・記事を統合</strong><p>review優先表示、conditional uncertainty、not-scored disposition、draw-free plot data、desktop/狭幅レンダリングを同じ公開契約に束縛する。</p></div><span class="chip open">active</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
