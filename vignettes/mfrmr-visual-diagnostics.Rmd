@@ -183,9 +183,9 @@ Interpretation:
 
 When you need the package's latent-integrated follow-up path, switch to `MML`
 and request `diagnostic_mode = "both"` so the legacy and strict branches stay
-visible side by side. The chunk below uses compact quadrature for optional
-local execution; final reporting should be refit with the package default or a
-higher quadrature setting.
+visible side by side. The chunk below uses compact quadrature for a shorter
+runtime; final reporting should be based on a refit with the package default or
+a higher quadrature setting.
 
 ```{r strict-marginal}
 fit_strict <- fit_mfrm(

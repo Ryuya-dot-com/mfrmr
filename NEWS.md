@@ -114,9 +114,9 @@ before this release. No existing exported function has been removed.
 * FACETS table import retains the reported numeric text and displayed decimal
   precision so rounded output is not silently treated as hidden full-precision
   data.
-* The Infit-versus-measure pathway now has a regression-tested default: Infit
-  is on the horizontal axis and the fitted measure remains on the vertical
-  axis. GPCM category curves retain estimated step-facet slopes and now state
+* The Infit-versus-measure pathway now places Infit on the horizontal axis and
+  the fitted measure on the vertical axis by default. GPCM category curves
+  retain estimated step-facet slopes and now state
   explicitly that additive facet effects and interactions are fixed at zero.
   Multiple GPCM curve groups are shown in separate panels with category
   legends instead of as unlabelled overlaid traces.
@@ -201,7 +201,7 @@ before this release. No existing exported function has been removed.
   threshold anchoring, and fixed-calibration scoring remain outside 0.2.2.
 - Corrected the `interrater_agreement_table()` documentation: `ExpectedExact`
   is computed from fitted category-probability vectors, not marginal-frequency
-  chance agreement. A focused regression test now guards that definition.
+  chance agreement.
 - Clarified that exact Person-by-facet duplicate rows are retained but place
   Data readiness under review; legitimate repeated ratings should carry a
   distinguishing event or occasion facet.

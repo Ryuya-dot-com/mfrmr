@@ -55,7 +55,8 @@ plot data over exact FACETS line-printer output.
 The current software reference target is FACETS 64-bit 4.5.1 (July 2026).
 Bibliographic references retain the title and edition of the consulted
 manual rather than silently relabelling a 4.5.0 manual as 4.5.1. External
-numerical validation is a separate evidence contract.
+numerical agreement must be evaluated separately for a matched model and
+estimand.
 
 Status meanings:
 \itemize{
@@ -79,8 +80,8 @@ familiar visual grammar belongs only to this axis.
 \item \code{StatisticalContract} records the package-native statistical scope and
 never implies a FACETS-matched estimand.
 \item \code{ValidationEvidence} records whether this table establishes matched
-external numerical evidence. It currently does not; validation belongs to
-a separate candidate-linked evidence contract.
+external numerical evidence. It currently does not; that conclusion
+requires a separate comparison using a matched model and estimand.
 \item \code{OperationalStatus} records route availability. A package route being
 available does not make \code{mfrmr} operationally interchangeable with
 FACETS.

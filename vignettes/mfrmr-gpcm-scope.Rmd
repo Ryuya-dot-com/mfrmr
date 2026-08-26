@@ -61,8 +61,8 @@ use multiplicative task and rater slope blocks,
 By contrast, mfrmr 0.2.3 requires one facet to own both the slope and step
 blocks: `slope_facet == step_facet`. It does not jointly estimate task and
 rater slopes, decouple the slope owner from the step owner, or introduce a
-multidimensional ability vector. The precise name used in the 0.2.3 evidence
-map is therefore **aligned single-owner relative-slope GPCM**.
+multidimensional ability vector. The implementation is therefore described as
+an **aligned single-owner relative-slope GPCM**.
 
 A rater-owned fit is close to a restricted Uto--Ueno form after suppressing the
 task-slope block, provided the remaining step and identification contracts are
@@ -417,9 +417,9 @@ retains marginal slope and intercept SEs, but not the joint slope covariance or
 slope--intercept cross-covariance required by the nonlinear transformation to
 mfrmr's relative slopes, thresholds, and free population scale. Two positive-
 definite covariance matrices can preserve exactly those reported marginal SEs
-while producing different transformed SEs. The repository audit demonstrates
-this explicitly and withholds the comparison rather than assuming zero
-covariance. TAM's documented `tam.se()` route also ignores parameter
+while producing different transformed SEs. This non-identification means the
+comparison must be withheld rather than completed by assuming zero covariance.
+TAM's documented `tam.se()` route also ignores parameter
 covariances, so it does not close this gap.
 
 These distinctions also govern diagnostics. FACETS' discrimination, `mfrmr`
@@ -623,8 +623,8 @@ downstream route.
 
 The `example_core` dataset includes a small synthetic block that supports a
 bounded `GPCM` fit. This example uses compact quadrature and iteration settings
-to keep optional local execution short; for final evidence, rerun with the
-package default or a higher quadrature setting and a larger recovery design.
+for a shorter runtime; for substantive analysis, rerun with the package default
+or a higher quadrature setting and a larger recovery design.
 
 ```r
 library(mfrmr)

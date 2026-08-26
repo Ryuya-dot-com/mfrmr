@@ -48,8 +48,9 @@ For a plot-first companion guide, see the separate
 
 For a faster preliminary run without changing the final analysis target:
 
-- test code mechanics on a small deterministic subset or, for an MML workflow,
-  a temporary `quad_points = 7` grid; that grid is screening-only and cannot
+- check data preparation and output structure on a small deterministic subset
+  or, for an MML workflow, a temporary `quad_points = 7` grid; that grid is
+  screening-only and cannot
   support automatic IC ranking or LRT. Restore the prespecified final MML grid
   (31 points by default) and check a denser common grid when a comparison is
   close or consequential

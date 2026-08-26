@@ -39,7 +39,7 @@ library(mfrmr)
 
 toy <- load_mfrmr_data("example_operational")
 
-# The vignette uses compact quadrature so optional local execution stays fast.
+# This example uses compact quadrature for a shorter runtime.
 # For final manuscript reporting, refit with the package default or a higher
 # quadrature setting and record that setting in the analysis log.
 fit <- fit_mfrm(

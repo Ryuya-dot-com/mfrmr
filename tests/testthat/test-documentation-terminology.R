@@ -239,7 +239,15 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "predeclared deterministic challenge",
     "roadmap_only",
     "schema-only future branch",
-    "future-branch active planning scaffold"
+    "future-branch active planning scaffold",
+    "regression-tested default",
+    "focused regression test",
+    "test code mechanics",
+    "0.2.3 evidence map",
+    "repository audit",
+    "candidate-linked evidence contract",
+    "optional local execution",
+    "for final evidence"
   )
 
   hits <- character(0)
