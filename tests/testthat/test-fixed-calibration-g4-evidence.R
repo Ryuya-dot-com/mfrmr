@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 development: accessible score UX validated 5/5",
+    "0.2.4 development: API consistency local pass · hosted recheck pending",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1964,8 +1964,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 33L)
-  expect_identical(count_token("data-state=\"open\""), 42L)
+  expect_identical(count_token("data-state=\"done\""), 34L)
+  expect_identical(count_token("data-state=\"open\""), 43L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
@@ -3251,4 +3251,63 @@ test_that("first score UX hosted retry retains its source-truth failure", {
   for (field in expected) {
     expect_match(record, paste0("`", field, "`"), fixed = TRUE)
   }
+})
+
+test_that("API consistency local record keeps hosted validation open", {
+  ctx <- load_fixed_calibration_g4_contract()
+  record_path <- file.path(
+    ctx$validation,
+    "fixed-calibration-api-consistency-local-validation-record-0.2.4.md"
+  )
+  expect_true(file.exists(record_path))
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  expected <- c(
+    "DevelopmentVersion=0.2.4.9000",
+    "ReleaseStatus=development",
+    "RegisteredS3MethodsAudited=181",
+    "GenericSignatureMismatches=0",
+    "DFFSummaryClassPreserved=TRUE",
+    "CalibrationArtifactMethodHelpAvailable=TRUE",
+    "CalibrationScoreMethodHelpAvailable=TRUE",
+    "DFFMethodHelpAvailable=TRUE",
+    "CalibrationArtifactPlotMethodAvailable=FALSE",
+    "CalibrationArtifactPlotOmissionIntentional=TRUE",
+    "DirectPrintMaxWidth=69",
+    "SummaryPrintMaxWidth=79",
+    "CompleteSummaryTablesRetained=TRUE",
+    "OverlongIdentifierWrappedWithoutTruncation=TRUE",
+    "BaseAndGgplotStatusEncodingAligned=TRUE",
+    "PlotEncodingUsesColourAndShape=TRUE",
+    "PrecisionReviewLabelsNonoverlapping=TRUE",
+    "EdgeReviewLabelsClipped=FALSE",
+    "FreshPkgdownBuildComplete=TRUE",
+    "DesktopRenderInspected=TRUE",
+    "NarrowRenderInspected=TRUE",
+    "NarrowWholePageOverflowDetected=FALSE",
+    "ExactSourcePackageCheckStatus=OK",
+    "ExactSourcePackageErrors=0",
+    "ExactSourcePackageWarnings=0",
+    "ExactSourcePackageNotes=0",
+    "PreviousHostedRunAppliesToCurrentPayload=FALSE",
+    "CurrentPayloadHostedMatrixComplete=FALSE",
+    "HumanSignOffComplete=FALSE",
+    "CandidateMetadataApplied=FALSE",
+    "CandidateTagCreated=FALSE",
+    "CRANSubmissionPerformed=FALSE",
+    "NextAction=commit-api-consistency-payload-and-run-fresh-five-platform-matrix"
+  )
+  for (field in expected) {
+    expect_match(record, paste0("`", field, "`"), fixed = TRUE)
+  }
+
+  roadmap <- paste(readLines(
+    file.path(ctx$validation, "mfrmr-internal-strategic-roadmap.html"),
+    warn = FALSE
+  ), collapse = "\n")
+  expect_match(
+    roadmap, "summary・print・plotのAPI整合性を局所監査", fixed = TRUE
+  )
+  expect_match(
+    roadmap, "API整合性payloadを5環境で再検証", fixed = TRUE
+  )
 })

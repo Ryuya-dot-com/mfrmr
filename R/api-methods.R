@@ -10331,9 +10331,29 @@ print_wrapped_line <- function(line, prefix = "  ") {
   if (!length(line)) return(invisible(NULL))
   console_width <- mfrm_console_width()
   content_width <- max(30L, console_width - nchar(prefix))
+  split_overlong <- function(value) {
+    pieces <- character(0)
+    remaining <- value
+    while (nzchar(remaining)) {
+      piece <- strtrim(remaining, content_width)
+      if (!nzchar(piece)) piece <- substr(remaining, 1L, 1L)
+      pieces <- c(pieces, piece)
+      remaining <- substring(
+        remaining, nchar(piece, type = "chars") + 1L
+      )
+    }
+    pieces
+  }
   for (value in line) {
     wrapped <- strwrap(value, width = content_width)
     if (!length(wrapped)) next
+    wrapped <- unlist(lapply(wrapped, function(part) {
+      if (nchar(part, type = "width") > content_width) {
+        split_overlong(part)
+      } else {
+        part
+      }
+    }), use.names = FALSE)
     for (part in wrapped) cat(prefix, part, "\n", sep = "")
   }
   invisible(NULL)

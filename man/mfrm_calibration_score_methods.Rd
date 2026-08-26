@@ -81,6 +81,11 @@ and its recorded prior. They exclude calibration-parameter uncertainty.
 Persons with no valid responses have no score coordinate and are retained
 in \code{summary(x)$review} and in the plot payload's
 \code{unplotted_dispositions} component.
+
+The summary object retains every returned score and review disposition.
+Its print method shows at most ten rows from each table so routine console
+output stays compact. Base and ggplot2 renderers distinguish scored and
+review states by shape as well as colour.
 }
 \examples{
 \donttest{

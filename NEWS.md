@@ -20,6 +20,10 @@
   writes use checked same-directory replacement.
 * Portable calibration artifacts now record an explicit scoring algorithm and
   a scoring grid independent of the source fit's integration grid.
+* Portable score `print()` and `summary()` output now stays compact at ordinary
+  console widths, direct calibration-method help is available, and base and
+  ggplot2 score displays both distinguish review states by colour and shape.
+  Differential-functioning summaries also retain their DFF-specific display.
 * Portable calibration artifacts record an explicit `support_profile_id`, and
   calibration summaries label it as `Support profile`.
 * Portable calibration score batches now have concise `print()` and structured

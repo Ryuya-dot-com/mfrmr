@@ -2497,8 +2497,84 @@ mfrmr_score_calibration <- function(calibration,
   )
 }
 
+mfrmr_validate_calibration_method_input <- function(x, arg = "object") {
+  if (!inherits(x, "mfrm_calibration")) {
+    stop(
+      "`", arg, "` must be a portable calibration artifact.",
+      call. = FALSE
+    )
+  }
+  expected <- mfrmr_calibration_expected_sections()
+  nested_incomplete <- if (is.list(x) &&
+      length(setdiff(expected$top, names(x))) == 0L) {
+    any(vapply(names(expected)[-1L], function(section) {
+      !is.list(x[[section]]) ||
+        length(setdiff(expected[[section]], names(x[[section]]))) > 0L
+    }, logical(1)))
+  } else {
+    TRUE
+  }
+  if (!is.list(x) || nested_incomplete ||
+      !is.data.frame(x$parameters$coordinates) ||
+      !is.data.frame(x$constraints$anchors)) {
+    stop(
+      "`", arg, "` is not a complete portable calibration artifact.",
+      call. = FALSE
+    )
+  }
+  invisible(x)
+}
+
+mfrmr_validate_calibration_summary <- function(x) {
+  if (!inherits(x, "summary.mfrm_calibration")) {
+    stop(
+      "`x` must be output from summary() on a portable calibration artifact.",
+      call. = FALSE
+    )
+  }
+  required <- c(
+    "calibration_id", "schema_id", "schema_version", "state", "model",
+    "estimator", "support_profile", "facets", "coordinates", "anchors",
+    "scoring_basis", "source_readiness", "refusals"
+  )
+  if (length(setdiff(required, names(x))) > 0L ||
+      !is.data.frame(x$refusals)) {
+    stop(
+      "`x` is not a complete portable calibration summary.",
+      call. = FALSE
+    )
+  }
+  invisible(x)
+}
+
+#' Inspect a portable fixed calibration
+#'
+#' `print()` gives a compact lifecycle and scope overview. `summary()` returns
+#' the same identifiers together with coordinate and anchor counts and the
+#' structured validation refusals, if any. Both methods inspect the stored
+#' artifact and do not refit a model or consult training responses.
+#'
+#' A calibration artifact intentionally has no `plot()` method. Its coordinate
+#' table mixes facet, step, and interaction parameter roles, and the artifact
+#' does not contain calibration-parameter uncertainty. Plot returned score
+#' batches with [mfrm_calibration_score_methods] instead; inspect
+#' `calibration$parameters$coordinates` when auditing stored point coordinates.
+#'
+#' @param object,x An `mfrm_calibration` returned by the portable calibration
+#'   workflow.
+#' @param ... Reserved for generic compatibility.
+#'
+#' @return `summary()` returns a `summary.mfrm_calibration`. `print()` returns
+#'   its input invisibly.
+#' @seealso [mfrm_calibration_workflow], [mfrm_calibration_score_methods]
+#' @name mfrm_calibration_methods
+NULL
+
+#' @rdname mfrm_calibration_methods
+#' @method summary mfrm_calibration
 #' @export
 summary.mfrm_calibration <- function(object, ...) {
+  mfrmr_validate_calibration_method_input(object)
   coordinates <- object$parameters$coordinates
   out <- list(
     calibration_id = object$header$calibration_id,
@@ -2519,6 +2595,8 @@ summary.mfrm_calibration <- function(object, ...) {
   out
 }
 
+#' @rdname mfrm_calibration_methods
+#' @method print mfrm_calibration
 #' @export
 print.mfrm_calibration <- function(x, ...) {
   s <- summary.mfrm_calibration(x)
@@ -2532,10 +2610,13 @@ print.mfrm_calibration <- function(x, ...) {
   invisible(x)
 }
 
+#' @rdname mfrm_calibration_methods
+#' @method print summary.mfrm_calibration
 #' @export
 print.summary.mfrm_calibration <- function(x, ...) {
+  mfrmr_validate_calibration_summary(x)
   cat("mfrmr Calibration Summary\n")
-  cat("  Calibration: ", x$calibration_id, "\n", sep = "")
+  print_wrapped_line(paste0("Calibration: ", x$calibration_id))
   cat("  Schema: ", x$schema_id, " v", x$schema_version, "\n", sep = "")
   cat("  State: ", x$state, "\n", sep = "")
   cat("  Model / estimator: ", x$model, " / ", x$estimator, "\n", sep = "")

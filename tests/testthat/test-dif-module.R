@@ -108,6 +108,15 @@ test_that("analyze_dff residual method returns expected structure", {
   expect_true(all(dif$dif_table$ReportingUse == "screening_only"))
   expect_true(all(!dif$dif_table$PrimaryReportingEligible))
   expect_equal(dif$config$method, "residual")
+
+  summarized <- summary(dif)
+  expect_s3_class(summarized, "summary.mfrm_dff")
+  expect_s3_class(summarized, "summary.mfrm_dif")
+  printed <- NULL
+  lines <- capture.output(printed <- withVisible(print(summarized)))
+  expect_false(printed$visible)
+  expect_identical(printed$value, summarized)
+  expect_true(any(grepl("Analysis", lines, fixed = TRUE)))
 })
 
 test_that("analyze_dff alias is backward compatible with analyze_dif", {

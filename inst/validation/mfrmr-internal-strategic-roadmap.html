@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4 development: accessible score UX validated 5/5</span>
+          <span class="pill">0.2.4 development: API consistency local pass · hosted recheck pending</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip open">help-index exact head · hosted recheck pending</span>
+              <span class="chip open">API-consistency payload · hosted recheck pending</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -770,6 +770,14 @@
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>portable scoreの要約・3図・help・記事を統合</strong><p>review優先表示、conditional uncertainty、not-scored disposition、draw-free plot dataを公開契約化。score/summary printを直接検索できるhelp alias、主要図のsemantic alt text、色と形の二重符号化、自然な単複表示も追加。公式pkgdown条件で全生成、desktop/390px画像確認、390px DOM overflow 0、exact source check Status: OK。</p></div><span class="chip done">local UX pass</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>summary・print・plotのAPI整合性を局所監査</strong><p>登録済み181メソッドのgeneric signatureを照合し、DFF summaryのclass dispatch、portable scoreの80列console表示、base/ggplotの色・形・凡例順、precision/edge label配置、直接helpと索引を修正。artifact自体には誤解を招くparameter plotを追加せず、score batchを可視化対象として維持した。pkgdown desktop/390px確認とsource check 0/0/0を完了。</p></div><span class="chip done">local API pass</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>API整合性payloadを5環境で再検証</strong><p>以前のrun <code>32976019984</code>は旧headの証拠として保持するが、今回のsummary・print・plot・help変更には流用しない。current development headのsource-tarball checkとrepository reviewを5環境で再実行する。</p></div><span class="chip open">fresh hosted matrix</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1070,8 +1078,9 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>人間sign-offを機械的5/5 passと分離して記録する。</strong></li>
+              <li><strong>API整合性payloadをcurrent headとして固定し、fresh 5-platform matrixを完了する。</strong></li>
               <li><strong>candidate source identityとsign-off対象commitの一対一対応を固定する。</strong></li>
+              <li><strong>人間sign-offを機械的5/5 passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
               <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
               <li><strong>0.2.5について実利用problem discoveryを行い、着工／延期を判断する。</strong></li>
@@ -1118,6 +1127,7 @@
           score help/visual local validation: <a href="fixed-calibration-score-help-index-local-validation-record-0.2.4.md">help aliases, semantic alt text, pkgdown, and narrow render</a> ·
           score help-index hosted run: <a href="fixed-calibration-score-help-index-hosted-run-32969632558-record-0.2.4.md">five-platform pass and accessibility supersession boundary</a> ·
           accessible score UX hosted run: <a href="fixed-calibration-score-accessible-ux-hosted-run-32976019984-record-0.2.4.md">final pre-human five-platform UX boundary</a> ·
+          API consistency local validation: <a href="fixed-calibration-api-consistency-local-validation-record-0.2.4.md">summary, print, plot, help, and render record</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
         </p>

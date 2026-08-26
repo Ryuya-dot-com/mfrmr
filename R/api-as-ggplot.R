@@ -666,8 +666,24 @@
       call. = FALSE
     )
   }
-  df$ReviewStatus <- ifelse(df$ReviewFlag, "Review", "Scored")
-  colors <- c(Scored = "#1F78B4", Review = "#B65E16")
+  df$ReviewStatus <- factor(
+    ifelse(df$ReviewFlag, "Review", "Scored"),
+    levels = c("Scored", "Review")
+  )
+  encoding <- as.data.frame(
+    payload$display_encoding %||% data.frame(), stringsAsFactors = FALSE
+  )
+  required_encoding <- c("Status", "Colour", "Shape")
+  if (nrow(encoding) >= 2L &&
+      all(required_encoding %in% names(encoding)) &&
+      all(c("Scored", "Review") %in% encoding$Status)) {
+    encoding <- encoding[match(c("Scored", "Review"), encoding$Status), ]
+    colors <- stats::setNames(as.character(encoding$Colour), encoding$Status)
+    shapes <- stats::setNames(as.numeric(encoding$Shape), encoding$Status)
+  } else {
+    colors <- c(Scored = "#1F78B4", Review = "#B65E16")
+    shapes <- c(Scored = 16, Review = 17)
+  }
   if (identical(type, "interval")) {
     display_order <- suppressWarnings(as.numeric(
       df$DisplayOrder %||% seq_len(nrow(df))
@@ -678,7 +694,10 @@
     )
     p <- ggplot2::ggplot(
       df,
-      ggplot2::aes(y = .data$PersonFactor, colour = .data$ReviewStatus)
+      ggplot2::aes(
+        y = .data$PersonFactor, colour = .data$ReviewStatus,
+        shape = .data$ReviewStatus
+      )
     ) +
       ggplot2::geom_segment(
         ggplot2::aes(
@@ -689,8 +708,11 @@
       ) +
       ggplot2::geom_point(ggplot2::aes(x = .data$Estimate), size = 2.2) +
       ggplot2::scale_colour_manual(values = colors) +
+      ggplot2::scale_shape_manual(values = shapes) +
       .mfrmr_gg_theme() +
-      ggplot2::theme(legend.position = "bottom")
+      ggplot2::theme(
+        legend.position = "bottom", legend.title = ggplot2::element_blank()
+      )
     p <- .mfrmr_gg_add_references(p, payload$reference_lines)
     return(.mfrmr_gg_labs(
       p, payload, x = "Posterior EAP (logits)", y = NULL,
@@ -702,19 +724,35 @@
       df,
       ggplot2::aes(
         x = .data$Observations, y = .data$SD,
-        colour = .data$ReviewStatus
+        colour = .data$ReviewStatus, shape = .data$ReviewStatus
       )
     ) +
       ggplot2::geom_point(size = 2.4) +
       ggplot2::scale_colour_manual(values = colors) +
+      ggplot2::scale_shape_manual(values = shapes) +
       .mfrmr_gg_theme() +
-      ggplot2::theme(legend.position = "bottom")
+      ggplot2::theme(
+        legend.position = "bottom", legend.title = ggplot2::element_blank()
+      )
     labels <- df[df$ReviewFlag & nzchar(as.character(df$Person)), , drop = FALSE]
     if (isTRUE(payload$settings$label_review %||% TRUE) && nrow(labels) > 0L) {
-      p <- p + ggplot2::geom_text(
+      if (!"LabelX" %in% names(labels)) labels$LabelX <- labels$Observations
+      if (!"LabelY" %in% names(labels)) labels$LabelY <- labels$SD
+      p <- p + ggplot2::geom_segment(
         data = labels,
-        ggplot2::aes(label = .data$Person),
-        vjust = -0.6, show.legend = FALSE, check_overlap = TRUE
+        ggplot2::aes(
+          x = .data$Observations, y = .data$SD,
+          xend = .data$LabelX, yend = .data$LabelY
+        ),
+        inherit.aes = FALSE, colour = unname(colors["Review"]),
+        linewidth = 0.3
+      ) + ggplot2::geom_text(
+        data = labels,
+        ggplot2::aes(
+          x = .data$LabelX, y = .data$LabelY, label = .data$Person
+        ),
+        inherit.aes = FALSE, colour = unname(colors["Review"]),
+        vjust = -0.5, show.legend = FALSE, check_overlap = FALSE
       )
     }
     return(.mfrmr_gg_labs(
@@ -727,19 +765,31 @@
     df,
     ggplot2::aes(
       x = .data$Estimate, y = .data$QuadratureEdgeMass,
-      colour = .data$ReviewStatus
+      colour = .data$ReviewStatus, shape = .data$ReviewStatus
     )
   ) +
     ggplot2::geom_point(size = 2.4) +
     ggplot2::scale_colour_manual(values = colors) +
+    ggplot2::scale_shape_manual(values = shapes) +
     .mfrmr_gg_theme() +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme(
+      legend.position = "bottom", legend.title = ggplot2::element_blank()
+    )
   labels <- df[df$ReviewFlag & nzchar(as.character(df$Person)), , drop = FALSE]
   if (isTRUE(payload$settings$label_review %||% TRUE) && nrow(labels) > 0L) {
+    if (!"LabelPosition" %in% names(labels)) labels$LabelPosition <- 3L
+    if (!"LabelX" %in% names(labels)) labels$LabelX <- labels$Estimate
+    labels$LabelHjust <- ifelse(
+      labels$LabelPosition == 2L, 1,
+      ifelse(labels$LabelPosition == 4L, 0, 0.5)
+    )
     p <- p + ggplot2::geom_text(
       data = labels,
-      ggplot2::aes(label = .data$Person),
-      vjust = -0.6, show.legend = FALSE, check_overlap = TRUE
+      ggplot2::aes(
+        x = .data$LabelX, label = .data$Person,
+        hjust = .data$LabelHjust
+      ),
+      vjust = -0.7, show.legend = FALSE, check_overlap = FALSE
     )
   }
   p <- .mfrmr_gg_add_references(p, payload$reference_lines)

@@ -1497,6 +1497,22 @@ analyze_dif <- function(...) {
   out
 }
 
+#' Review differential-functioning results
+#'
+#' `summary()` returns the contrast, cell, summary, and configuration tables
+#' without refitting. A summary from [analyze_dff()] keeps its DFF label when
+#' printed; a summary from [analyze_dif()] keeps its DIF label.
+#'
+#' @param object,x An `mfrm_dff` or `mfrm_dif` result, or its summary.
+#' @param ... Reserved for generic compatibility.
+#' @return `summary()` returns a structured differential-functioning summary.
+#'   `print()` returns its input invisibly.
+#' @seealso [analyze_dff()], [analyze_dif()]
+#' @name mfrm_dff_methods
+NULL
+
+#' @rdname mfrm_dff_methods
+#' @method summary mfrm_dif
 #' @export
 summary.mfrm_dif <- function(object, ...) {
   out <- list(
@@ -1510,11 +1526,17 @@ summary.mfrm_dif <- function(object, ...) {
   out
 }
 
+#' @rdname mfrm_dff_methods
+#' @method summary mfrm_dff
 #' @export
 summary.mfrm_dff <- function(object, ...) {
-  summary.mfrm_dif(object, ...)
+  out <- summary.mfrm_dif(object, ...)
+  class(out) <- c("summary.mfrm_dff", class(out))
+  out
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print summary.mfrm_dif
 #' @export
 print.summary.mfrm_dif <- function(x, ...) {
   label <- x$config$functioning_label %||% "DFF"
@@ -1563,17 +1585,24 @@ print.summary.mfrm_dif <- function(x, ...) {
   invisible(x)
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print summary.mfrm_dff
 #' @export
 print.summary.mfrm_dff <- function(x, ...) {
   print.summary.mfrm_dif(x, ...)
+  invisible(x)
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print mfrm_dif
 #' @export
 print.mfrm_dif <- function(x, ...) {
   .print_dif_overview(x, label = "DIF")
   invisible(x)
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print mfrm_dff
 #' @export
 print.mfrm_dff <- function(x, ...) {
   .print_dif_overview(x, label = "DFF")

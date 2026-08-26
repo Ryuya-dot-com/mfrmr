@@ -124,6 +124,10 @@ plot(
 unlink(artifact_file)
 ```
 
+The base and optional ggplot2 renderers distinguish scored and review states
+by shape as well as colour. The complete score and review tables remain in the
+summary object even though its console printout shows only a compact preview.
+
 The interval figure is the first score-batch review. Orange triangles identify
 Persons whose `Disposition` is `scored_review`; inspect their `ReasonCodes`
 before using the estimate. A Person with no valid response has no score

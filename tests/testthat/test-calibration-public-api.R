@@ -194,6 +194,32 @@ test_that("portable score methods foreground review and conditional uncertainty"
   )))
   public_output <- paste(c(printed, summary_printed), collapse = "\n")
   expect_false(grepl("CORE-[0-9]|G[0-6] exit|internal", public_output, perl = TRUE))
+
+  old_width <- options(width = 80L)
+  on.exit(options(old_width), add = TRUE)
+  direct_visibility <- NULL
+  direct_lines <- capture.output(
+    direct_visibility <- withVisible(print(scored))
+  )
+  summary_visibility <- NULL
+  summary_lines <- capture.output(
+    summary_visibility <- withVisible(print(summarized))
+  )
+  expect_false(direct_visibility$visible)
+  expect_identical(direct_visibility$value, scored)
+  expect_false(summary_visibility$visible)
+  expect_identical(summary_visibility$value, summarized)
+  expect_lte(max(nchar(c(direct_lines, summary_lines))), 80L)
+  expect_true(withVisible(summary(scored))$visible)
+
+  long_id <- scored
+  long_id$settings$calibration_id <- paste(rep("LONG-CALIBRATION-ID", 12L),
+                                           collapse = "-")
+  long_lines <- capture.output({
+    print(long_id)
+    print(summary(long_id))
+  })
+  expect_lte(max(nchar(long_lines)), 80L)
 })
 
 test_that("portable score plots preserve selection and non-scored dispositions", {
@@ -217,8 +243,16 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   expect_identical(edge_mass$name, "calibration_score_edge_mass")
   expect_true(all(c(
     "data", "selection_summary", "unplotted_dispositions",
-    "interpretation", "settings", "legend", "reference_lines"
+    "interpretation", "display_encoding", "settings", "legend",
+    "reference_lines"
   ) %in% names(interval$data)))
+  expect_identical(
+    interval$data$display_encoding$Status, c("Scored", "Review")
+  )
+  expect_identical(interval$data$display_encoding$Shape, c(16L, 17L))
+  expect_true(all(
+    interval$data$legend$aesthetic == "colour and shape"
+  ))
   expect_true("NEW_LOW" %in% interval$data$unplotted_dispositions$Person)
   expect_identical(interval$data$selection_summary$NotScoredPersons, 1L)
   expect_identical(
@@ -227,7 +261,7 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   )
   expect_true(all(c(
     "ReviewFlag", "QuadratureEdgeMass", "QuadratureEdgeThreshold",
-    "DisplayOrder"
+    "DisplayOrder", "LabelPosition", "LabelX", "LabelY"
   ) %in% names(interval$data$data)))
   expect_match(
     interval$data$interpretation$Guidance[3L],
@@ -246,6 +280,34 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   prioritized <- score_mfrm_calibration(
     fixture$frozen, rbind(fixture$rows, mixed_rows)
   )
+  precision_prioritized <- plot(
+    prioritized, type = "precision", draw = FALSE
+  )
+  edge_prioritized <- plot(
+    prioritized, type = "edge_mass", draw = FALSE
+  )
+  expect_true(all(
+    precision_prioritized$data$data$LabelPosition[
+      precision_prioritized$data$data$ReviewFlag
+    ] == 3L
+  ))
+  precision_review <- precision_prioritized$data$data[
+    precision_prioritized$data$data$ReviewFlag, , drop = FALSE
+  ]
+  expect_true(all(is.finite(precision_review$LabelX)))
+  expect_true(all(is.finite(precision_review$LabelY)))
+  expect_true(all(precision_review$LabelY > precision_review$SD))
+  expect_identical(length(unique(precision_review$LabelY)),
+                   nrow(precision_review))
+  edge_review <- edge_prioritized$data$data[
+    edge_prioritized$data$data$ReviewFlag, , drop = FALSE
+  ]
+  expect_true(all(
+    edge_review$LabelPosition[edge_review$Estimate < 0] == 4L
+  ))
+  expect_true(all(
+    edge_review$LabelPosition[edge_review$Estimate > 0] == 2L
+  ))
   truncated <- plot(prioritized, top_n = 1L, draw = FALSE)
   expect_true(truncated$data$data$ReviewFlag)
   expect_identical(truncated$data$selection_summary$PlottedPersons, 1L)
@@ -259,11 +321,52 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   expect_no_error(plot(scored, type = "edge_mass", draw = TRUE))
 
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    expect_no_error(ggplot2::ggplot_build(as_ggplot(interval)))
-    expect_no_error(ggplot2::ggplot_build(as_ggplot(precision)))
-    expect_no_error(ggplot2::ggplot_build(as_ggplot(edge_mass)))
+    ggplots <- lapply(
+      list(interval, precision, edge_mass), as_ggplot
+    )
+    for (gg in ggplots) {
+      expect_no_error(ggplot2::ggplot_build(gg))
+      expect_identical(
+        levels(gg$data$ReviewStatus), c("Scored", "Review")
+      )
+      shape_scales <- vapply(
+        gg$scales$scales,
+        function(scale) "shape" %in% scale$aesthetics,
+        logical(1)
+      )
+      expect_true(any(shape_scales))
+    }
   }
   expect_error(plot(scored, top_n = 0, draw = FALSE), "top_n")
+  expect_error(plot(scored, main = character(), draw = FALSE), "main")
+  expect_error(plot(scored, main = NA_character_, draw = FALSE), "main")
+})
+
+test_that("portable score print handles a batch with no score coordinates", {
+  fixture <- calibration_public_fixture()
+  rows <- fixture$rows
+  rows$Score <- NA_real_
+  scored <- score_mfrm_calibration(
+    fixture$frozen, rows, missing_response = "omit"
+  )
+
+  printed <- capture.output(print(scored))
+  expect_true(any(grepl(
+    "No score coordinate is available", printed, fixed = TRUE
+  )))
+  expect_false(any(grepl("plot(x)", printed, fixed = TRUE)))
+  expect_error(
+    print(structure(list(), class = "summary.mfrm_calibration_score")),
+    "not a complete portable calibration score summary",
+    fixed = TRUE
+  )
+  malformed_summary <- summary(scored)
+  malformed_summary$estimates$Person <- NULL
+  expect_error(
+    print(malformed_summary),
+    "not a complete portable calibration score summary",
+    fixed = TRUE
+  )
 })
 
 test_that("public loader explicitly refuses incompatible schema fixtures", {

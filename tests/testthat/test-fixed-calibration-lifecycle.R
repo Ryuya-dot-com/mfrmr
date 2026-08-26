@@ -480,6 +480,35 @@ test_that("calibration print and summary expose scope without source Persons", {
   expect_true(any(grepl("mfrmr Calibration Summary", summary_printed, fixed = TRUE)))
   expect_true(any(grepl("Support profile:", printed, fixed = TRUE)))
   expect_true(any(grepl("Support profile:", summary_printed, fixed = TRUE)))
+  frozen_visibility <- NULL
+  summary_visibility <- NULL
+  capture.output(frozen_visibility <- withVisible(print(frozen)))
+  capture.output(summary_visibility <- withVisible(print(s)))
+  expect_false(frozen_visibility$visible)
+  expect_false(summary_visibility$visible)
+  expect_true(withVisible(summary(frozen))$visible)
+  expect_error(
+    mfrmr:::summary.mfrm_calibration(list()),
+    "must be a portable calibration artifact",
+    fixed = TRUE
+  )
+  expect_error(
+    summary(structure(list(), class = "mfrm_calibration")),
+    "not a complete portable calibration artifact",
+    fixed = TRUE
+  )
+  malformed_artifact <- frozen
+  malformed_artifact$parameters$coordinates <- NULL
+  expect_error(
+    summary(malformed_artifact),
+    "not a complete portable calibration artifact",
+    fixed = TRUE
+  )
+  expect_error(
+    print(structure(list(), class = "summary.mfrm_calibration")),
+    "not a complete portable calibration summary",
+    fixed = TRUE
+  )
   public_print <- paste(c(printed, summary_printed), collapse = "\n")
   expect_false(grepl("\\bLane\\b|core_|G1|OPT-[0-9]+", public_print,
                      perl = TRUE))

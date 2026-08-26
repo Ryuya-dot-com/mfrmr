@@ -29,6 +29,7 @@ reference:
     contents:
       - mfrm_calibration_capabilities
       - mfrm_calibration_workflow
+      - mfrm_calibration_methods
       - mfrm_calibration_score_methods
 
   - title: "Bounded GPCM boundary"
@@ -115,6 +116,7 @@ reference:
       - analyze_dif
       - dif_interaction_table
       - dif_report
+      - mfrm_dff_methods
       - mfrmr_linking_and_dff
 
   - title: "FACETS and related-package migration"

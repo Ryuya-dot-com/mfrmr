@@ -121,7 +121,10 @@ plot(scores, type = "interval", preset = "publication")
 
 Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
 and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
-example. Estimated-population and latent-regression MML, JML, and bounded GPCM
+example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
+artifact display contract and `help("mfrm_calibration_score_methods",
+package = "mfrmr")` for score summaries and plots. Estimated-population and
+latent-regression MML, JML, and bounded GPCM
 remain fitted-object-only routes; they do not create portable calibration
 artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
 frozen point calibration and recorded prior. Their intervals exclude

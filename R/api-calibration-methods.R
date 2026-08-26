@@ -30,6 +30,96 @@ mfrmr_calibration_score_digits <- function(digits) {
   as.integer(digits)
 }
 
+mfrmr_validate_calibration_score_summary <- function(x) {
+  if (!inherits(x, "summary.mfrm_calibration_score")) {
+    stop(
+      "`x` must be output from summary() on a portable calibration score.",
+      call. = FALSE
+    )
+  }
+  required <- c(
+    "overview", "estimates", "review", "row_review", "settings", "notes",
+    "digits"
+  )
+  required_columns <- list(
+    overview = c(
+      "CalibrationId", "Model", "Estimator", "Scored", "Review",
+      "NotScored"
+    ),
+    estimates = c(
+      "Person", "Estimate", "SD", "Lower", "Upper", "Disposition"
+    ),
+    review = c("Person", "Disposition", "ReasonCodes"),
+    row_review = c(
+      "InputRows", "ScoredRows", "OmittedRows", "RefusedRows",
+      "MissingResponsePolicy"
+    )
+  )
+  missing <- setdiff(required, names(x))
+  missing_columns <- if (length(missing) == 0L) {
+    any(vapply(names(required_columns), function(name) {
+      !all(required_columns[[name]] %in% names(x[[name]]))
+    }, logical(1)))
+  } else {
+    TRUE
+  }
+  if (length(missing) > 0L ||
+      !is.data.frame(x$overview) || nrow(x$overview) != 1L ||
+      !is.data.frame(x$estimates) || !is.data.frame(x$review) ||
+      !is.data.frame(x$row_review) || !is.list(x$settings) ||
+      missing_columns) {
+    stop(
+      "`x` is not a complete portable calibration score summary.",
+      call. = FALSE
+    )
+  }
+  invisible(x)
+}
+
+mfrmr_calibration_score_print_value <- function(value) {
+  value <- value[1L]
+  if (length(value) == 0L || is.na(value)) return("NA")
+  format(value, trim = TRUE, scientific = FALSE)
+}
+
+mfrmr_calibration_score_print_preview <- function(data, kind, limit = 10L) {
+  data <- as.data.frame(data, stringsAsFactors = FALSE)
+  if (nrow(data) == 0L) return(invisible(NULL))
+  shown <- utils::head(data, limit)
+  cat("\n", kind, " (", nrow(shown), " of ", nrow(data), ")\n", sep = "")
+  for (i in seq_len(nrow(shown))) {
+    person <- as.character(shown$Person[i] %||% "<unknown>")
+    if (identical(kind, "Posterior estimates")) {
+      line <- paste0(
+        person,
+        ": estimate ", mfrmr_calibration_score_print_value(shown$Estimate[i]),
+        ", SD ", mfrmr_calibration_score_print_value(shown$SD[i]),
+        ", interval [", mfrmr_calibration_score_print_value(shown$Lower[i]),
+        ", ", mfrmr_calibration_score_print_value(shown$Upper[i]), "], ",
+        as.character(shown$Disposition[i] %||% "unknown")
+      )
+    } else {
+      reasons <- as.character(shown$ReasonCodes[i] %||% "")
+      if (is.na(reasons) || !nzchar(reasons)) reasons <- "none recorded"
+      reasons <- gsub(";", ", ", reasons, fixed = TRUE)
+      line <- paste0(
+        person, ": ", as.character(shown$Disposition[i] %||% "unknown"),
+        "; reasons: ", reasons
+      )
+    }
+    print_wrapped_line(line)
+  }
+  if (nrow(data) > nrow(shown)) {
+    print_wrapped_line(
+      paste0(
+        nrow(data) - nrow(shown),
+        " additional row(s) remain in the summary object."
+      )
+    )
+  }
+  invisible(NULL)
+}
+
 mfrmr_calibration_score_overview <- function(x) {
   dispositions <- as.data.frame(
     x$person_dispositions, stringsAsFactors = FALSE
@@ -84,6 +174,11 @@ mfrmr_calibration_score_overview <- function(x) {
 #' Persons with no valid responses have no score coordinate and are retained
 #' in `summary(x)$review` and in the plot payload's
 #' `unplotted_dispositions` component.
+#'
+#' The summary object retains every returned score and review disposition.
+#' Its print method shows at most ten rows from each table so routine console
+#' output stays compact. Base and ggplot2 renderers distinguish scored and
+#' review states by shape as well as colour.
 #'
 #' @param object,x An `mfrm_calibration_score` returned by
 #'   [score_mfrm_calibration()].
@@ -213,10 +308,9 @@ print.mfrm_calibration_score <- function(x, ...) {
   summary_object <- summary.mfrm_calibration_score(x)
   overview <- summary_object$overview[1L, , drop = FALSE]
   cat("<mfrm_calibration_score>\n")
-  cat("  Calibration: ", overview$CalibrationId, "\n", sep = "")
-  cat(
-    "  Model / estimator: ", overview$Model, " / ", overview$Estimator,
-    "\n", sep = ""
+  print_wrapped_line(paste0("Calibration: ", overview$CalibrationId))
+  print_wrapped_line(
+    paste0("Model / estimator: ", overview$Model, " / ", overview$Estimator)
   )
   cat(
     "  Persons: ", overview$Scored, " scored (", overview$Review,
@@ -226,11 +320,19 @@ print.mfrm_calibration_score <- function(x, ...) {
     "  Rows: ", overview$ScoredRows, " scored; ", overview$OmittedRows,
     " omitted\n", sep = ""
   )
-  cat(
-    "  Intervals: conditional on frozen point calibration; calibration-",
-    "parameter uncertainty excluded\n", sep = ""
-  )
-  cat("Use `summary(x)` for review tables and `plot(x)` for score intervals.\n")
+  print_wrapped_line("Intervals: conditional on frozen point calibration;")
+  print_wrapped_line("calibration-parameter uncertainty excluded")
+  if (overview$Scored > 0L) {
+    print_wrapped_line(
+      "Use `summary(x)` for review tables and `plot(x)` for score intervals.",
+      prefix = ""
+    )
+  } else {
+    print_wrapped_line(
+      "No score coordinate is available; inspect `summary(x)$review`.",
+      prefix = ""
+    )
+  }
   invisible(x)
 }
 
@@ -238,38 +340,43 @@ print.mfrm_calibration_score <- function(x, ...) {
 #' @method print summary.mfrm_calibration_score
 #' @export
 print.summary.mfrm_calibration_score <- function(x, ...) {
-  if (!inherits(x, "summary.mfrm_calibration_score")) {
-    stop(
-      "`x` must be output from summary() on a portable calibration score.",
-      call. = FALSE
-    )
-  }
+  mfrmr_validate_calibration_score_summary(x)
   overview <- x$overview[1L, , drop = FALSE]
   cat("mfrmr Portable Calibration Score Summary\n")
-  cat(
-    "  Calibration: ", overview$CalibrationId, "\n",
-    "  Model / estimator: ", overview$Model, " / ", overview$Estimator, "\n",
-    "  Persons: ", overview$Scored, " scored (", overview$Review,
-    " requiring review); ", overview$NotScored, " not scored\n",
-    sep = ""
+  print_wrapped_line(paste0("Calibration: ", overview$CalibrationId))
+  print_wrapped_line(
+    paste0("Model / estimator: ", overview$Model, " / ", overview$Estimator)
   )
-  if (nrow(x$estimates) > 0L) {
-    cat("\nPosterior estimates (first 10)\n")
-    print(utils::head(x$estimates, 10L), row.names = FALSE)
-  }
-  if (nrow(x$review) > 0L) {
-    cat("\nPersons requiring review or not scored\n")
-    print(x$review, row.names = FALSE)
-  }
+  print_wrapped_line(
+    paste0(
+      "Persons: ", overview$Scored, " scored (", overview$Review,
+      " requiring review); ", overview$NotScored, " not scored"
+    )
+  )
+  mfrmr_calibration_score_print_preview(
+    x$estimates, "Posterior estimates"
+  )
+  mfrmr_calibration_score_print_preview(
+    x$review, "Persons requiring review or not scored"
+  )
   if (nrow(x$row_review) > 0L) {
     cat("\nResponse-row disposition\n")
-    print(x$row_review, row.names = FALSE)
+    row <- x$row_review[1L, , drop = FALSE]
+    print_wrapped_line(paste0(
+      mfrmr_calibration_score_print_value(row$InputRows), " input; ",
+      mfrmr_calibration_score_print_value(row$ScoredRows), " scored; ",
+      mfrmr_calibration_score_print_value(row$OmittedRows), " omitted; ",
+      mfrmr_calibration_score_print_value(row$RefusedRows), " refused; ",
+      "missing-response policy: ",
+      as.character(row$MissingResponsePolicy %||% "not recorded")
+    ))
   }
-  cat(
-    "\nInterpretation boundary\n",
-    "  Posterior SDs and intervals are conditional on the frozen point ",
-    "calibration and exclude calibration-parameter uncertainty.\n",
-    sep = ""
+  cat("\nInterpretation boundary\n")
+  print_wrapped_line(
+    paste(
+      "Posterior SDs and intervals are conditional on the frozen point",
+      "calibration and exclude calibration-parameter uncertainty."
+    )
   )
   invisible(x)
 }
@@ -389,10 +496,49 @@ plot.mfrm_calibration_score <- function(
   if (!is.logical(draw) || length(draw) != 1L || is.na(draw)) {
     stop("`draw` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
+  if (!is.null(main) &&
+      (!is.character(main) || length(main) != 1L || is.na(main) ||
+       !nzchar(main))) {
+    stop("`main` must be `NULL` or one non-empty string.", call. = FALSE)
+  }
   style <- resolve_plot_preset(preset)
   tables <- mfrmr_calibration_score_plot_table(x, top_n, sort_by)
   plotted <- tables$selected
   full <- tables$full
+  plotted$LabelPosition <- 3L
+  plotted$LabelX <- NA_real_
+  plotted$LabelY <- NA_real_
+  review_index <- which(plotted$ReviewFlag)
+  if (length(review_index) > 0L && identical(type, "precision")) {
+    plotted$LabelX[review_index] <- plotted$Observations[review_index]
+    sd_span <- diff(range(plotted$SD, finite = TRUE))
+    if (!is.finite(sd_span) || sd_span <= 0) sd_span <- 0.1
+    label_spacing <- max(sd_span * 0.07, 0.01)
+    label_order <- review_index[order(
+      plotted$SD[review_index], as.character(plotted$Person[review_index]),
+      method = "radix"
+    )]
+    previous <- -Inf
+    for (row in label_order) {
+      label_y <- max(plotted$SD[row] + label_spacing,
+                     previous + label_spacing)
+      plotted$LabelY[row] <- label_y
+      previous <- label_y
+    }
+  }
+  if (length(review_index) > 0L && identical(type, "edge_mass")) {
+    midpoint <- mean(range(plotted$Estimate, finite = TRUE))
+    plotted$LabelPosition[review_index] <- ifelse(
+      plotted$Estimate[review_index] <= midpoint, 4L, 2L
+    )
+    estimate_span <- diff(range(plotted$Estimate, finite = TRUE))
+    if (!is.finite(estimate_span) || estimate_span <= 0) estimate_span <- 1
+    label_nudge <- estimate_span * 0.015
+    plotted$LabelX[review_index] <- plotted$Estimate[review_index] +
+      ifelse(plotted$LabelPosition[review_index] == 4L,
+             label_nudge, -label_nudge)
+    plotted$LabelY[review_index] <- plotted$QuadratureEdgeMass[review_index]
+  }
   dispositions <- as.data.frame(
     x$person_dispositions, stringsAsFactors = FALSE
   )
@@ -429,11 +575,20 @@ plot.mfrm_calibration_score <- function(
     SelectionPriority = sort_by,
     stringsAsFactors = FALSE
   )
+  display_encoding <- data.frame(
+    Status = c("Scored", "Review"),
+    ReviewFlag = c(FALSE, TRUE),
+    Colour = c(style$accent_primary, style$warn),
+    Shape = c(16L, 17L),
+    stringsAsFactors = FALSE
+  )
   legend <- new_plot_legend(
     label = c("Scored", "Review"),
     role = c("conditional score ready", "inspect disposition and reason codes"),
-    aesthetic = c("color", "color"),
-    value = c(style$accent_primary, style$warn)
+    aesthetic = c("colour and shape", "colour and shape"),
+    value = paste0(
+      display_encoding$Colour, "; pch=", display_encoding$Shape
+    )
   )
   edge_threshold <- unique(plotted$QuadratureEdgeThreshold[
     is.finite(plotted$QuadratureEdgeThreshold)
@@ -494,7 +649,7 @@ plot.mfrm_calibration_score <- function(
         padding <- max(1, abs(x_range[1L]) * 0.06)
         x_range <- x_range + c(-padding, padding)
       }
-      y_range <- range(plotted$SD, finite = TRUE)
+      y_range <- range(c(plotted$SD, plotted$LabelY), finite = TRUE)
       if (diff(y_range) <= 0) y_range <- y_range + c(-0.05, 0.05)
       y_padding <- max(diff(y_range) * 0.14, 0.01)
       y_range <- y_range + c(-y_padding * 0.2, y_padding)
@@ -505,16 +660,19 @@ plot.mfrm_calibration_score <- function(
         main = title, pch = point_shape, col = point_color
       )
       if (isTRUE(label_review) && any(plotted$ReviewFlag)) {
-        review_index <- which(plotted$ReviewFlag)
-        label_position <- rep(c(2L, 4L, 3L), length.out = length(review_index))
-        for (i in seq_along(review_index)) {
-          row <- review_index[i]
-          graphics::text(
-            plotted$Observations[row], plotted$SD[row],
-            labels = plotted$Person[row],
-            pos = label_position[i], cex = 0.75, col = style$warn
-          )
-        }
+        graphics::segments(
+          plotted$Observations[plotted$ReviewFlag],
+          plotted$SD[plotted$ReviewFlag],
+          plotted$LabelX[plotted$ReviewFlag],
+          plotted$LabelY[plotted$ReviewFlag],
+          col = style$warn, lwd = 0.7
+        )
+        graphics::text(
+          plotted$LabelX[plotted$ReviewFlag],
+          plotted$LabelY[plotted$ReviewFlag],
+          labels = plotted$Person[plotted$ReviewFlag],
+          pos = 3, offset = 0.35, cex = 0.75, col = style$warn
+        )
       }
     } else {
       edge_mass <- plotted$QuadratureEdgeMass
@@ -536,7 +694,8 @@ plot.mfrm_calibration_score <- function(
           plotted$Estimate[plotted$ReviewFlag],
           edge_mass[plotted$ReviewFlag],
           labels = plotted$Person[plotted$ReviewFlag],
-          pos = 3, cex = 0.75, col = style$warn
+          pos = plotted$LabelPosition[plotted$ReviewFlag],
+          offset = 0.6, cex = 0.75, col = style$warn
         )
       }
     }
@@ -569,6 +728,7 @@ plot.mfrm_calibration_score <- function(
       selection_summary = selection_summary,
       unplotted_dispositions = not_scored,
       interpretation = interpretation,
+      display_encoding = display_encoding,
       settings = list(
         type = type,
         top_n = top_n,
