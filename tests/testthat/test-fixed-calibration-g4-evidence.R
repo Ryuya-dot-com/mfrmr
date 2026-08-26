@@ -504,10 +504,6 @@ test_that("amended G4 v5 contract remains immutable historical evidence", {
   )
   expect_true(file.exists(record_path))
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
-  roadmap <- paste(
-    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
-    collapse = "\n"
-  )
   hardening <- paste(readLines(file.path(
     ctx$validation, "fixed-calibration-boundary-hardening-0.2.4.md"
   ), warn = FALSE), collapse = "\n")
@@ -530,21 +526,6 @@ test_that("amended G4 v5 contract remains immutable historical evidence", {
   )
   expect_match(
     hardening, "`PostMaintenanceG4ContractFrozen=TRUE`", fixed = TRUE
-  )
-  expect_match(
-    roadmap,
-    "  - [x] Freeze an amended current-source confirmation contract",
-    fixed = TRUE
-  )
-  expect_match(
-    roadmap,
-    "  - [x] Run the amended denominator from an isolated current source-tarball",
-    fixed = TRUE
-  )
-  expect_match(
-    roadmap,
-    "  - [x] **Post-maintenance G4 exit:**",
-    fixed = TRUE
   )
 })
 
@@ -862,21 +843,12 @@ test_that("G4 candidate-binding record retains the live refusal boundary", {
   expect_true(file.exists(record_path))
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
   source <- paste(readLines(ctx$script, warn = FALSE), collapse = "\n")
-  roadmap <- paste(
-    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
-    collapse = "\n"
-  )
   expect_match(
     record, "`CandidateBindingPreflightImplemented=TRUE`", fixed = TRUE
   )
   expect_match(record, "`LiveCandidateBindingComplete=FALSE`", fixed = TRUE)
   expect_match(record, "`CurrentExecutionOpened=FALSE`", fixed = TRUE)
   expect_match(record, "`G4ExitComplete=FALSE`", fixed = TRUE)
-  expect_match(
-    roadmap,
-    "  - [x] Implement a fail-closed candidate-binding preflight",
-    fixed = TRUE
-  )
   expect_false(grepl("fit_mfrm\\s*\\(", source, perl = TRUE))
   expect_false(grepl("mfrmr_score_calibration\\s*\\(", source, perl = TRUE))
   expect_false(grepl("R CMD check|R CMD build", source, fixed = TRUE))
@@ -1550,10 +1522,6 @@ test_that("historical reopening is retained while v5 closes current-source G4", 
   current_record <- paste(
     readLines(current_record_path, warn = FALSE), collapse = "\n"
   )
-  roadmap <- paste(
-    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
-    collapse = "\n"
-  )
   expect_match(record, ctx$env$mfrmr_fc_g4_specification, fixed = TRUE)
   expect_match(record, "`CORE05Complete=TRUE`", fixed = TRUE)
   expect_match(record, "`CORE06Complete=TRUE`", fixed = TRUE)
@@ -1624,27 +1592,6 @@ test_that("historical reopening is retained while v5 closes current-source G4", 
   expect_match(current_record, "`G4ExitComplete=TRUE`", fixed = TRUE)
   expect_match(current_record, "`G6Authorized=FALSE`", fixed = TRUE)
   expect_match(current_record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
-  expect_match(roadmap, "- [x] **CORE-05 — Independent evidence:**",
-               fixed = TRUE)
-  expect_match(roadmap, "- [x] **CORE-06 — Reproducible operation:**",
-               fixed = TRUE)
-  expect_match(roadmap, "- [x] **G4 — Independent and operational evidence**",
-               fixed = TRUE)
-  expect_match(
-    roadmap,
-    "  - [x] Run the prospectively required hosted macOS release workflow cell",
-    fixed = TRUE
-  )
-  expect_match(roadmap, "  - [x] **v5 G4 exit:**", fixed = TRUE)
-  expect_match(roadmap, "- [x] **G5 — Optional-lane qualification**",
-               fixed = TRUE)
-  expect_match(roadmap, "- [x] **G6 — Release-candidate hardening**",
-               fixed = TRUE)
-  expect_match(
-    roadmap,
-    "  - [x] Start only after the post-maintenance current-source G4 exit is",
-    fixed = TRUE
-  )
 })
 
 test_that("post-maintenance G4 admission binds 0.2.3.1 and stays closed", {
@@ -1768,25 +1715,9 @@ test_that("G6 public-surface slice closes CORE-07 before final decision", {
   expect_match(
     record, "`PublicAPIAuthorizedForRelease=FALSE`", fixed = TRUE
   )
-  expect_match(
-    roadmap,
-    "  - [x] Add one fresh-session end-to-end operational vignette",
-    fixed = TRUE
-  )
-  expect_match(
-    roadmap,
-    "  - [x] Add schema compatibility and explicit migration/refusal fixtures.",
-    fixed = TRUE
-  )
-  expect_match(
-    roadmap, "  - [x] Resolve the public step-anchor boundary:", fixed = TRUE
-  )
-  expect_match(
-    roadmap,
-    "  - [x] Reconcile code, help, README, vignette, NEWS, capability matrix,",
-    fixed = TRUE
-  )
-  expect_match(roadmap, "- [x] **G6 — Release-candidate hardening**",
+  expect_match(roadmap, "## What 0.2.4 is intended to support", fixed = TRUE)
+  expect_match(roadmap, "explicit rejection of incompatible data", fixed = TRUE)
+  expect_match(roadmap, "Portable GPCM calibration is not part of 0.2.4",
                fixed = TRUE)
 
   pkgdown <- file.path(ctx$root, "_pkgdown.yml")
@@ -1916,13 +1847,14 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
   )
   expect_match(record, "`CRANSubmissionPerformed=FALSE`", fixed = TRUE)
 
-  expect_match(roadmap, "- [x] **CORE-08 — Final release decision:**",
-               fixed = TRUE)
-  expect_match(roadmap, "- [x] **G6 — Release-candidate hardening**",
-               fixed = TRUE)
-  expect_match(roadmap, "  - [x] **G6 exit:**", fixed = TRUE)
-  expect_match(roadmap, "No 0.2.4 CRAN submission has been performed.",
-               fixed = TRUE)
+  expect_match(roadmap, "mfrmr 0.2.4 is under development", fixed = TRUE)
+  expect_match(roadmap, "## Not part of the 0.2.4 promise", fixed = TRUE)
+  expect_false(grepl(
+    "CORE-[0-9]|G[0-6] exit|candidate metadata|preflight|submission",
+    roadmap,
+    perl = TRUE,
+    ignore.case = TRUE
+  ))
 })
 
 test_that("internal strategic roadmap preserves the long-horizon decision axis", {
