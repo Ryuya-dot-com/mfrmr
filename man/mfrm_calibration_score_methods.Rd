@@ -3,10 +3,16 @@
 \name{mfrm_calibration_score_methods}
 \alias{mfrm_calibration_score_methods}
 \alias{summary.mfrm_calibration_score}
+\alias{print.mfrm_calibration_score}
+\alias{print.summary.mfrm_calibration_score}
 \alias{plot.mfrm_calibration_score}
 \title{Review and plot portable fixed-calibration scores}
 \usage{
 \method{summary}{mfrm_calibration_score}(object, digits = 3L, ...)
+
+\method{print}{mfrm_calibration_score}(x, ...)
+
+\method{print}{summary.mfrm_calibration_score}(x, ...)
 
 \method{plot}{mfrm_calibration_score}(
   x,
@@ -48,7 +54,8 @@ edge-mass views. Interval plots always label the displayed Persons.}
 or \code{"monochrome"}.}
 }
 \value{
-\code{summary()} returns a \code{summary.mfrm_calibration_score} containing
+\code{print()} returns its input invisibly. \code{summary()} returns a
+\code{summary.mfrm_calibration_score} containing
 \code{overview}, \code{estimates}, \code{review}, \code{row_review}, \code{settings}, and \code{notes}.
 \code{plot()} returns an \code{mfrm_plot_data} with the selected plotting table,
 selection accounting, unplotted Person dispositions, interpretation

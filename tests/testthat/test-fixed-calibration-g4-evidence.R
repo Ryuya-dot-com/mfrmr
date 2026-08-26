@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 development: score UX / help / visual QA locally complete",
+    "0.2.4 development: score UX hosted pass · help index locally complete",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -3144,6 +3144,19 @@ test_that("score UX review invalidates the previous candidate before human sign-
   expect_match(article, 'type = "interval"', fixed = TRUE)
   expect_match(
     article, "excludes calibration-parameter uncertainty", fixed = TRUE
+  )
+
+  score_help <- paste(readLines(
+    file.path(ctx$root, "man/mfrm_calibration_score_methods.Rd"),
+    warn = FALSE
+  ), collapse = "\n")
+  expect_match(
+    score_help, "\\alias{print.mfrm_calibration_score}", fixed = TRUE
+  )
+  expect_match(
+    score_help,
+    "\\alias{print.summary.mfrm_calibration_score}",
+    fixed = TRUE
   )
 })
 

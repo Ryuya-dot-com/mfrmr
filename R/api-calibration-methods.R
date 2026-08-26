@@ -102,7 +102,8 @@ mfrmr_calibration_score_overview <- function(x) {
 #'   or `"monochrome"`.
 #' @param ... Reserved for generic compatibility.
 #'
-#' @return `summary()` returns a `summary.mfrm_calibration_score` containing
+#' @return `print()` returns its input invisibly. `summary()` returns a
+#'   `summary.mfrm_calibration_score` containing
 #'   `overview`, `estimates`, `review`, `row_review`, `settings`, and `notes`.
 #'   `plot()` returns an `mfrm_plot_data` with the selected plotting table,
 #'   selection accounting, unplotted Person dispositions, interpretation
@@ -205,6 +206,8 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
   out
 }
 
+#' @rdname mfrm_calibration_score_methods
+#' @method print mfrm_calibration_score
 #' @export
 print.mfrm_calibration_score <- function(x, ...) {
   summary_object <- summary.mfrm_calibration_score(x)
@@ -231,6 +234,8 @@ print.mfrm_calibration_score <- function(x, ...) {
   invisible(x)
 }
 
+#' @rdname mfrm_calibration_score_methods
+#' @method print summary.mfrm_calibration_score
 #' @export
 print.summary.mfrm_calibration_score <- function(x, ...) {
   if (!inherits(x, "summary.mfrm_calibration_score")) {
