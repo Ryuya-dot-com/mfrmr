@@ -1872,7 +1872,11 @@ test_that("G6 final decision binds the successful matrix and bounded scope", {
   )
   expect_match(record, "`CRANSubmissionPerformed=FALSE`", fixed = TRUE)
 
-  expect_match(roadmap, "mfrmr 0.2.4 is under development", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "mfrmr 0.2.4 is a release candidate and has not been released",
+    fixed = TRUE
+  )
   expect_match(roadmap, "## Not part of the 0.2.4 promise", fixed = TRUE)
   expect_false(grepl(
     "CORE-[0-9]|G[0-6] exit|candidate metadata|preflight|submission",

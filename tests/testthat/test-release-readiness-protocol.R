@@ -30,7 +30,8 @@ test_that("public roadmap and current NEWS exclude internal release operations",
     "WP[0-9]-", "ReadinessContractVersion",
     "population_assumption_linked", "metric_specific_comparison_eligibility",
     "ready_with_exclusions", "legacy_contract_missing",
-    "mfrmr-internal-readiness"
+    "mfrmr-internal-readiness", "single source of truth", "frozen gate",
+    "preflight", "denominator"
   )
   for (pattern in forbidden) {
     expect_false(grepl(pattern, public, perl = TRUE), info = pattern)
@@ -43,15 +44,27 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   for (pattern in news_forbidden) {
     expect_false(grepl(pattern, current_news, fixed = TRUE), info = pattern)
   }
-  expect_match(public, "single source of truth for mfrmr's public release direction",
-               fixed = TRUE)
-  expect_match(public,
-               "does not\\s+imply that the two estimators have identical statistical maturity")
-  expect_match(public, "CML or CCML as current\\s+mfrmr fitting methods")
-  expect_match(public, "Hierarchical rater models address a different",
-               fixed = TRUE)
-  expect_match(public, "The 0.2.3 exit decision is claim-based", fixed = TRUE)
-  expect_match(public, "a caveat cannot be", fixed = TRUE)
+  required_public_markers <- c(
+    "Status: public roadmap",
+    "## Current releases",
+    "## Model scope",
+    "## Generalizability theory",
+    "## Rater assignment and anchors",
+    "## External comparison",
+    "## Compatibility principles",
+    "## Not part of the 0.2.4 promise"
+  )
+  for (marker in required_public_markers) {
+    expect_match(public, marker, fixed = TRUE)
+  }
+  expect_match(
+    public,
+    "mfrmr 0.2.4 is a release candidate and has not been released",
+    fixed = TRUE
+  )
+  expect_match(public, "GPCM", fixed = TRUE)
+  expect_match(public, "multivariate designs", fixed = TRUE)
+  expect_match(public, "complete and incomplete rating designs", fixed = TRUE)
   expect_match(internal, "internal development and validation roadmap",
                fixed = TRUE)
 
@@ -2685,8 +2698,14 @@ test_that("release-readiness protocol checks source-truth alignment", {
   ), file.path(root, "CITATION.cff"))
   writeLines("^ROADMAP\\.md$", file.path(root, ".Rbuildignore"))
   writeLines(c(
-    "# Roadmap",
-    "This file is the single source of truth."
+    "# mfrmr roadmap",
+    "Status: public roadmap",
+    "## Current releases",
+    "mfrmr 0.2.2 is a release candidate and has not been released.",
+    "## Model scope",
+    "RSM and PCM.",
+    "## Compatibility principles",
+    "Incompatible objects fail clearly."
   ), file.path(root, "ROADMAP.md"))
   writeLines(
     "Current contract: gpcm_capability_matrix().",
@@ -2707,7 +2726,10 @@ test_that("release-readiness protocol checks source-truth alignment", {
   expect_true(status$ReleaseDatePolicyOK)
   expect_true(status$RoadmapAvailable)
   expect_true(status$RoadmapExcludedFromTarball)
-  expect_true(status$RoadmapAuthoritative)
+  expect_true(status$RoadmapRequiredSectionsPresent)
+  expect_true(status$RoadmapReaderFacing)
+  expect_true(status$RoadmapLifecycleMatches)
+  expect_identical(status$RoadmapInternalLanguage, "")
   expect_identical(status$DevelopmentOnlyCurrentClaims, "")
   expect_true(status$SourceTruthOK)
 
@@ -2753,6 +2775,16 @@ test_that("release-readiness protocol checks source-truth alignment", {
     "Current contract: gpcm_capability_matrix().",
     paths$gpcm_roadmap
   )
+  writeLines(c(
+    "# mfrmr roadmap",
+    "Status: public roadmap",
+    "## Current releases",
+    "mfrmr 0.2.3 is under development and has not been released.",
+    "## Model scope",
+    "RSM and PCM.",
+    "## Compatibility principles",
+    "Incompatible objects fail clearly."
+  ), paths$roadmap)
   development <- env$mfrmr_release_readiness_source_truth_status(paths)
   expect_identical(development$ReleaseStatus, "development")
   expect_identical(development$PublicVersion, "0.2.2")
@@ -2904,7 +2936,7 @@ test_that("release-readiness protocol reviews the source tree shape", {
       review$prose_count_status$ProseCountStatus[1],
       "ok"
     )
-    if (grepl("\\.9000$", description_version)) {
+    if (!identical(description_version, "0.2.3")) {
       expect_identical(
         review$claim_disposition_status$ClaimDispositionStatus[1],
         "concern"

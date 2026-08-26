@@ -50,7 +50,7 @@ mfrmr_release_readiness_prompt_steps <- function(target_version = NULL) {
       "Do cran-comments and NEWS give a concise user-facing account of release scope, caveats, and deferred features while validation artifacts retain the internal decision history?"
     ),
     Evidence = c(
-      "DESCRIPTION release lifecycle, public baseline, version, and date policy; CITATION version and release date; authoritative roadmap; first NEWS heading; source-package identity and check provenance in repository-only records; absence of development labels or internal gate mechanics in public release files",
+      "DESCRIPTION release lifecycle, public baseline, version, and date policy; CITATION version and release date; reader-facing roadmap and lifecycle statement; first NEWS heading; source-package identity and check provenance in repository-only records; absence of development labels or internal gate mechanics in public release files",
       "release-evidence-checklist blocker rows; targeted mathematical tests; recovery-validation summary",
       "gpcm_capability_matrix(); README; vignettes; NEWS deferred-work section; post-0.2.2 GPCM roadmap",
       "facets_positioning_guide(); facets_fit_review(); read_facets_fit_table(); output guide",
@@ -1588,11 +1588,38 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   roadmap_excluded <- roadmap_available &&
     mfrmr_release_readiness_path_is_ignored("ROADMAP.md", patterns)
   roadmap_lines <- mfrmr_release_readiness_read_lines(paths$roadmap)
-  roadmap_authoritative <- any(grepl(
-    "single source of truth",
-    roadmap_lines,
+  roadmap_text <- tolower(paste(roadmap_lines, collapse = "\n"))
+  roadmap_required_markers <- c(
+    "# mfrmr roadmap",
+    "status: public roadmap",
+    "## current releases",
+    "## model scope",
+    "## compatibility principles"
+  )
+  roadmap_required_sections_present <- all(vapply(
+    roadmap_required_markers,
+    grepl,
+    logical(1),
+    x = roadmap_text,
     fixed = TRUE
   ))
+  roadmap_internal_phrases <- c(
+    "single source of truth",
+    "inst/validation",
+    "candidate manifest",
+    "frozen gate",
+    "preflight",
+    "denominator"
+  )
+  roadmap_internal_hits <- roadmap_internal_phrases[vapply(
+    roadmap_internal_phrases,
+    grepl,
+    logical(1),
+    x = roadmap_text,
+    fixed = TRUE
+  )]
+  roadmap_reader_facing <- roadmap_available &&
+    roadmap_required_sections_present && length(roadmap_internal_hits) == 0L
   supplement_lines <- mfrmr_release_readiness_read_lines(paths$gpcm_roadmap)
   forbidden_current_api <- c(
     "mfrmr_model_family_scope()",
@@ -1622,6 +1649,33 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   } else {
     FALSE
   }
+  roadmap_lifecycle_matches <- if (
+      !roadmap_reader_facing || is.na(description_version)) {
+    FALSE
+  } else if (identical(release_status, "development")) {
+    grepl(
+      paste0("mfrmr ", tolower(description_version), " is under development"),
+      roadmap_text,
+      fixed = TRUE
+    ) && grepl("has not been released", roadmap_text, fixed = TRUE)
+  } else if (identical(release_status, "candidate")) {
+    grepl(
+      paste0("mfrmr ", tolower(description_version), " is a release candidate"),
+      roadmap_text,
+      fixed = TRUE
+    ) && grepl("has not been released", roadmap_text, fixed = TRUE)
+  } else if (identical(release_status, "released")) {
+    grepl(
+      paste0(
+        "mfrmr ", tolower(description_version),
+        " is the current cran source release"
+      ),
+      roadmap_text,
+      fixed = TRUE
+    )
+  } else {
+    FALSE
+  }
   public_version_matches_baseline <-
     !is.na(public_version) && !is.na(baseline_public_version) &&
     identical(public_version, baseline_public_version)
@@ -1641,7 +1695,8 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
   date_match <- release_date_policy_ok
   ok <- version_match && lifecycle_status_ok && public_version_ok &&
     release_date_policy_ok && roadmap_available &&
-    roadmap_excluded && roadmap_authoritative && length(forbidden_hits) == 0L
+    roadmap_excluded && roadmap_reader_facing && roadmap_lifecycle_matches &&
+    length(forbidden_hits) == 0L
   data.frame(
     DescriptionVersion = description_version,
     CFFVersion = cff_version,
@@ -1663,7 +1718,10 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
     ReleaseDatePolicyOK = release_date_policy_ok,
     RoadmapAvailable = roadmap_available,
     RoadmapExcludedFromTarball = roadmap_excluded,
-    RoadmapAuthoritative = roadmap_authoritative,
+    RoadmapRequiredSectionsPresent = roadmap_required_sections_present,
+    RoadmapReaderFacing = roadmap_reader_facing,
+    RoadmapLifecycleMatches = roadmap_lifecycle_matches,
+    RoadmapInternalLanguage = paste(roadmap_internal_hits, collapse = " | "),
     DevelopmentOnlyCurrentClaims = paste(forbidden_hits, collapse = " | "),
     SourceTruthOK = ok,
     stringsAsFactors = FALSE
@@ -1772,7 +1830,7 @@ mfrmr_release_readiness_public_scope_status <- function(
       "unidimensional many-facet ordered-response models",
       "one observed score scale",
       "documented bounded `gpcm` extension",
-      "imported versioned frozen-calibration bundle",
+      "portable fixed-calibration artifacts are available only",
       "posterior scoring from an existing fitted object is a separate"
     ),
     grepl,
@@ -2559,7 +2617,9 @@ mfrmr_release_readiness_gate_summary <- function(version_status,
           source_truth_status$ReleaseDatePolicyOK[1],
           "; roadmap=", source_truth_status$RoadmapAvailable[1],
           "; roadmap_excluded=", source_truth_status$RoadmapExcludedFromTarball[1],
-          "; roadmap_authoritative=", source_truth_status$RoadmapAuthoritative[1],
+          "; roadmap_reader_facing=", source_truth_status$RoadmapReaderFacing[1],
+          "; roadmap_lifecycle_matches=",
+          source_truth_status$RoadmapLifecycleMatches[1],
           "; development_only_current_claims=",
           source_truth_status$DevelopmentOnlyCurrentClaims[1]
         )
