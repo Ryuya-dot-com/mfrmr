@@ -8,10 +8,10 @@ a promise of release dates. Completed changes are documented in `NEWS.md`.
 ## Current releases
 
 - mfrmr 0.2.3.1 is the current CRAN source release.
-- mfrmr 0.2.4.9000 is under development and has not been released.
+- mfrmr 0.2.4 is a release candidate and has not been released.
 
-The 0.2.4 development version retains the established MFRM fitting workflow
-and adds portable calibration objects for supported RSM and PCM analyses. These
+The 0.2.4 candidate retains the established MFRM fitting workflow and adds
+portable calibration objects for supported RSM and PCM analyses. These
 objects are designed to preserve the model, scale, category mapping, facet
 levels, anchors, and scoring settings needed to score new Persons consistently.
 
