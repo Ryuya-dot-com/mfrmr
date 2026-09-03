@@ -39,8 +39,9 @@
   unrounded variance components, so their values no longer depend on score
   units through premature rounding.
 * Corrected the G/Phi ordering in the generalizability example, made its PDF
-  equations fit the page, clarified MML readiness wording, and added an
-  executable portable-calibration lifecycle example to the shared help page.
+  equations fit the page, aligned the roadmap with the exported univariate
+  G-theory scope, clarified MML readiness wording, and added an executable
+  portable-calibration lifecycle example to the shared help page.
 
 # mfrmr 0.2.3.1
 

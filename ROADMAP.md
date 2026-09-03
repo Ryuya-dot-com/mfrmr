@@ -50,8 +50,14 @@ stronger contract than the RSM/PCM workflow currently provides.
 
 ## Generalizability theory
 
-mfrmr does not currently offer a stable exported G-theory workflow. A possible
-future direction includes multivariate designs, with separate handling of:
+mfrmr currently exports a deliberately simplified univariate G-theory adapter
+and D-study projection. The model uses random main effects plus a collapsed
+residual, reports singular or boundary fits as identification warnings, and is
+planning evidence rather than a fully crossed interaction decomposition.
+
+mfrmr does not currently offer a stable multivariate G-theory workflow. A
+possible future direction includes multivariate designs, with separate handling
+of:
 
 - universe-score covariance across outcomes;
 - outcome-specific and cross-outcome error components;

@@ -529,7 +529,7 @@
         </p>
         <div class="meta-row">
           <span class="pill">0.2.3.1: CRAN public baseline</span>
-          <span class="pill">0.2.4 development: API consistency validated 5/5</span>
+          <span class="pill">0.2.4 development: reopened after candidate v4 audit</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
         </div>
@@ -618,7 +618,7 @@
           <article class="card">
             <div class="card-head">
               <div><h3>リリース本線</h3><p>0.2.3.1 → 0.2.4</p></div>
-              <span class="chip done">API-consistency payload · hosted 5/5 pass</span>
+              <span class="chip open">development reopened · candidate v4 historical</span>
             </div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
@@ -638,8 +638,13 @@
               </div>
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
-                <div><strong>前candidateの機械検査を完了</strong><p>run <code>32938822686</code>は5/5成功したが、後続のUX・help・visual監査で公開payload改善が必要と判定したためcandidateとしては再利用しない。</p></div>
-                <span class="chip done">historical pass</span>
+                <div><strong>candidate v4の機械検査を完了</strong><p>run <code>33679189963</code>は5/5成功し、<code>CandidateReady=TRUE</code>、<code>SubmissionAuthorized=FALSE</code>を記録した。</p></div>
+                <span class="chip done">historical 5/5 pass</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>候補後の関数・help・manual監査でdevelopmentへ復帰</strong><p><code>a5899aa</code>で非構文列名、G/Phi・D-studyの早すぎる分散丸め、説明逆転、欠落example、readiness文面を修正。候補v4の証拠は保存するがrelease payloadとして再利用しない。</p></div>
+                <span class="chip done">fail closed</span>
               </div>
             </div>
           </article>
@@ -687,7 +692,7 @@
         <div class="grid-2">
           <article class="card">
             <div class="card-head">
-              <div><h3>R0 · Release candidate freeze</h3><p>最優先。研究レーンより先に閉じる。</p></div>
+              <div><h3>R0 · Release candidate freeze</h3><p>D5完遂・一括判定と監査修正統合後に再形成する。</p></div>
               <span class="chip open">P0</span>
             </div>
             <div class="card-body">
@@ -779,9 +784,21 @@
                 <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>API整合性payloadを5環境で再検証</strong><p>run <code>32990152654</code>は実装head <code>036565f…</code>で5/5成功し、各cellのexact source checkとrepository reviewを完了。GitHub Actions障害時の空trigger commit <code>322f188…</code>とはtree <code>755dc77…</code>が一致し、production payloadは不変。旧run <code>32976019984</code>は今回の証拠へ流用していない。</p></div><span class="chip done">hosted 5/5 pass</span>
               </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>candidate v4のmetadata・exact head・5環境証拠を固定</strong><p><code>17b6b3a…</code>をrun <code>33679189963</code>で5/5検査し、証拠commit <code>b601c3a…</code>を保存。後続監査によりhistorical candidateへ移行した。</p></div><span class="chip done">historical v4</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>敵対的API・help・manual監査の局所修正</strong><p><code>a5899aa</code>で修正し、180 exportsのalias/example網羅、対象回帰テスト、全tests/examples/vignette code、469ページPDF描画を確認。重い新規分析は追加していない。</p></div><span class="chip done">local audit pass</span>
+              </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>candidate metadataとexact headを再形成</strong><p>fresh 5環境pass後にだけdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。旧candidate hashとtagは再利用しない。</p></div><span class="chip open">after hosted pass</span>
+                <div><strong>D5-SHARDを完遂し封印解除後に一括判定</strong><p><code>D5-SHARD-001</code>–<code>050</code>の完全分母が揃うまで結果値を読まず、途中結果で公開範囲・閾値・candidate判断を変更しない。</p></div><span class="chip open">execution in progress</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>candidate metadataとexact headを再形成（v5）</strong><p>D5の一括判定と<code>a5899aa</code>の統合後、fresh 5環境passに限ってdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。v4 hash・tag・CIは流用しない。</p></div><span class="chip open">after D5 adjudication</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1078,12 +1095,12 @@
         <article class="card">
           <div class="card-body">
             <ol class="priority-list">
-              <li><strong>candidate source identityとsign-off対象commitの一対一対応を固定する。</strong></li>
-              <li><strong>人間sign-offを機械的5/5 passと分離して記録する。</strong></li>
-              <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
-              <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
-              <li><strong>0.2.5について実利用problem discoveryを行い、着工／延期を判断する。</strong></li>
-              <li><strong>GPCM、G-theory、anchor研究は各1つのdecision-changing probeだけを選ぶ。</strong></li>
+              <li><strong>D5-SHARD-001–050を途中結果非閲覧のまま完遂する。</strong></li>
+              <li><strong>D5の完全分母を封印解除後に一括判定し、0.2.4へ影響する範囲だけを決める。</strong></li>
+              <li><strong>監査修正<code>a5899aa</code>をdevelopmentへ統合し、API・help・manualを再検証する。</strong></li>
+              <li><strong>candidate v5のsource identityとsign-off対象commitを一対一で固定し、fresh 5環境検査を行う。</strong></li>
+              <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
+              <li><strong>CRAN投稿はさらに後の明示的判断まで行わない。</strong></li>
             </ol>
           </div>
         </article>
@@ -1091,7 +1108,8 @@
         <div class="truth warning" style="margin-top: 1rem;">
           <strong>今は行わない</strong>
           <p>
-            0.2.4への新機能追加、portable GPCMの便宜的昇格、multivariate G-theoryのexport、
+            D5完遂前のcandidate v5形成、candidate v4の再利用、0.2.4への新機能追加、
+            portable GPCMの便宜的昇格、multivariate G-theoryのexport、
             単一anchor率の選定、ConQuest完全模倣、意思決定のない大規模simulation、
             将来のmultiple-scale fieldを0.2.4 schemaへ先回りして追加すること。
           </p>
@@ -1120,6 +1138,7 @@
           public-language transition: <a href="fixed-calibration-release-candidate-transition-public-language-record-0.2.4.md">v3 boundary</a> ·
           public-language candidate metadata: <a href="fixed-calibration-release-candidate-metadata-public-language-record-0.2.4.md">candidate local check</a> ·
           public-language candidate hosted run: <a href="fixed-calibration-release-candidate-hosted-run-32938822686-public-language-record-0.2.4.md">candidate 5-platform record</a> ·
+          candidate v4 hosted run: <a href="fixed-calibration-release-candidate-hosted-run-33679189963-record-0.2.4.md">historical v4 5-platform record</a> ·
           score UX local validation: <a href="fixed-calibration-score-ux-local-validation-record-0.2.4.md">summary, plots, help, and render record</a> ·
           score UX hosted retry 1: <a href="fixed-calibration-score-ux-hosted-run-32961641396-record-0.2.4.md">source-truth lifecycle failure record</a> ·
           score UX hosted retry 2: <a href="fixed-calibration-score-ux-hosted-run-32962886137-record-0.2.4.md">five-platform pass and exact-head boundary</a> ·

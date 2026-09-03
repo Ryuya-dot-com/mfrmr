@@ -1947,7 +1947,7 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   )
   expect_match(
     roadmap,
-    "0.2.4 development: API consistency validated 5/5",
+    "0.2.4 development: reopened after candidate v4 audit",
     fixed = TRUE
   )
   expect_match(roadmap, "CRAN submission: not performed", fixed = TRUE)
@@ -1958,14 +1958,16 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   expect_match(roadmap, "multivariate G-theory public support", fixed = TRUE)
   expect_match(roadmap, "public unsupported", fixed = TRUE)
   expect_match(roadmap, "今は行わない", fixed = TRUE)
+  expect_match(roadmap, "D5-SHARD-001", fixed = TRUE)
+  expect_match(roadmap, "candidate v5", fixed = TRUE)
   expect_match(roadmap, "停止条件", fixed = TRUE)
   expect_match(roadmap, "同時進行は release-critical 1本", fixed = TRUE)
 
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 35L)
-  expect_identical(count_token("data-state=\"open\""), 42L)
+  expect_identical(count_token("data-state=\"done\""), 38L)
+  expect_identical(count_token("data-state=\"open\""), 43L)
   expect_identical(count_token("data-state=\"hold\""), 6L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
