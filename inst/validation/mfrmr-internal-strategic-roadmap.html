@@ -798,7 +798,7 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>matched MMLの最小外部照合を完了</strong><p>既存80名×6評価者×5基準データで、共有step RSMはmfrmr–TAM、基準別step PCMはmfrmr–TAM–sirtを比較する。カテゴリ、人物分布、制約、符号・原点、積分、EAPを可能な限り固定し、optimizer収束と<code>InferenceReady</code>を分離する。共通解がない全140×80×10結果は適用可能性としてのみ保持し、数値互換性を判定しない。</p></div><span class="chip open">after D5 adjudication</span>
+                <div><strong>matched MMLの最小外部照合を完了</strong><p><code>MML-MATCH-PREEXEC-v1</code>で実行前契約を固定済み。既存80名×6評価者×5基準データで、共有step RSMはmfrmr–TAM、基準別step PCMはmfrmr–TAM–sirtを比較する。カテゴリ、人物分布、制約、符号・原点、実際の積分点・重み、EAPを記録し、TAM WLEは一次人物比較から除外する。optimizer収束と<code>InferenceReady</code>を分離し、共通解がない全140×80×10結果は適用可能性としてのみ保持する。</p></div><span class="chip open">protocol frozen · execution after D5</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1113,7 +1113,7 @@
             <ol class="priority-list">
               <li><strong>D5-SHARD-001–050を途中結果非閲覧のまま完遂する。</strong></li>
               <li><strong>D5の完全分母を封印解除後に一括判定し、0.2.4へ影響する範囲だけを決める。</strong></li>
-              <li><strong>共有step RSMのmfrmr–TAM、基準別step PCMのmfrmr–TAM–sirtについてmatched MML最小照合を実行する。</strong></li>
+              <li><strong><code>MML-MATCH-PREEXEC-v1</code>に従い、共有step RSMのmfrmr–TAM、基準別step PCMのmfrmr–TAM–sirtについてmatched MML最小照合を実行する。</strong></li>
               <li><strong>D5判定で0.2.4 evidenceに必要とされたstress sentinelだけを実行し、残りは研究レーンに維持する。</strong></li>
               <li><strong>監査修正<code>a5899aa</code>・<code>f57f6a3</code>をdevelopmentへ統合し、API・help・manualを再検証する。</strong></li>
               <li><strong>candidate v5のsource identityとsign-off対象commitを一対一で固定し、fresh 5環境検査を行う。</strong></li>
@@ -1167,7 +1167,8 @@
           API consistency local validation: <a href="fixed-calibration-api-consistency-local-validation-record-0.2.4.md">summary, print, plot, help, and render record</a> ·
           API consistency hosted run: <a href="fixed-calibration-api-consistency-hosted-run-32990152654-record-0.2.4.md">five-platform payload validation</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
-          anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
+          anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a> ·
+          matched MML protocol: <a href="matched-mml-tutorial-preexecution-contract-0.2.4.md">pre-execution contract</a>
         </p>
         <p>
           このHTMLは内部意思決定用であり、package source・help・NEWS・public websiteには含めない。

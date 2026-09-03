@@ -2545,6 +2545,13 @@ identify whether the opt-in layer ran and retain its test log.
   values inform a future prospective TAM tolerance only; no TAM tolerance,
   candidate, comparison pass, free-slope GPCM extension, or release decision
   is frozen.
+- `matched-mml-tutorial-preexecution-contract-0.2.4.md`: execution-locked
+  protocol for the already-inspected public 80-Person x 6-Rater x 5-Criterion
+  tutorial fixture. It fixes the RSM mfrmr--TAM and PCM
+  mfrmr--TAM--sirt denominators, estimated-normal population basis, coordinate
+  audit, q31/q61 integration disclosure, EAP-only primary Person comparison,
+  failure retention, and descriptive-only evidence role. It reuses the
+  existing TAM/oracle machinery and authorizes no fit before D5 adjudication.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural
