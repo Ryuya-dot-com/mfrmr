@@ -84,9 +84,11 @@ visible.
 \itemize{
 \item \code{overview}: one-row reference-case summary.
 \item \code{case_summary}: pass/warn/fail triage by reference case.
-\item \code{fit_runs}: fitted-run metadata (fit, precision tier, convergence, and
-latent-regression population-model/posterior-basis fields, including
-categorical-coding details when present).
+\item \code{fit_runs}: fitted-run metadata. \code{Converged} and \code{OptimizerCodeZero}
+record optimizer return-code convergence; \code{InferenceReady} records the
+stricter readiness-contract decision. They need not agree. The table also
+records precision-tier and latent-regression population-model/posterior-
+basis fields, including categorical-coding details when present.
 \item \code{design_checks}: exact design recovery checks for each dataset.
 \item \code{recovery_checks}: known-truth recovery metrics for the synthetic cases,
 including the latent-regression reference case. If a benchmark fit is not

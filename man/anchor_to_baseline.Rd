@@ -134,6 +134,10 @@ drift study on unanchored common elements.
 \item \verb{$diagnostics}: pre-computed diagnostics for the anchored calibration.
 \item \verb{$baseline_anchors}: the anchor table fed to \code{\link[=fit_mfrm]{fit_mfrm()}}, useful for
 reviewing which elements were constrained.
+\item In \code{summary(res)}, \code{estimation_converged} records optimizer return-code
+convergence. \code{inference_ready} records the stricter readiness-contract
+decision. The older \code{converged} field is retained as an explicitly
+labelled alias of \code{inference_ready}.
 }
 }
 

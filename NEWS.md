@@ -33,6 +33,10 @@
 * Latent-regression reference benchmarks no longer attempt Person scoring when
   their fitted model is not scoring-ready. The posterior-shift check is kept as
   an explicit unevaluated warning instead of using a review-only score.
+* Reference-benchmark and anchored-fit summaries now distinguish optimizer
+  convergence from inference readiness. Compatibility aliases remain labelled
+  explicitly instead of allowing a readiness hold to look like optimizer
+  failure.
 * Generalizability and facet-ICC helpers now quote non-syntactic column names
   safely, and the generalizability `data` override recognizes the source person
   and score names recorded on the fit. G/Phi and D-study calculations retain

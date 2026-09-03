@@ -355,6 +355,7 @@ collect_reference_fit_run <- function(case_id, fit_obj) {
   fit <- fit_obj$fit
   diag <- fit_obj$diagnostics
   design <- fit_obj$design
+  convergence <- mfrm_convergence_state(fit)
   population <- fit$population %||% list()
   population_formula <- population$formula %||% fit$config$population_formula %||% NULL
   population_formula_label <- if (is.null(population_formula)) {
@@ -376,9 +377,10 @@ collect_reference_fit_run <- function(case_id, fit_obj) {
     Raters = as.integer(design$Raters[1]),
     Criteria = as.integer(design$Criteria[1]),
     Tasks = if ("Tasks" %in% names(design)) as.integer(design$Tasks[1]) else NA_integer_,
-    Converged = mfrm_inference_ready(fit),
-    OptimizerCodeZero = mfrm_convergence_state(fit)$code_converged,
-    ConvergenceSeverity = mfrm_convergence_state(fit)$severity,
+    Converged = convergence$code_converged,
+    InferenceReady = convergence$inference_ready,
+    OptimizerCodeZero = convergence$code_converged,
+    ConvergenceSeverity = convergence$severity,
     LogLik = suppressWarnings(as.numeric(fit$summary$LogLik %||% NA_real_)),
     MMLEngineRequested = as.character(fit$summary$MMLEngineRequested[1] %||% NA_character_),
     MMLEngineUsed = as.character(fit$summary$MMLEngineUsed[1] %||% NA_character_),
@@ -403,7 +405,7 @@ collect_reference_fit_run <- function(case_id, fit_obj) {
     Infit = suppressWarnings(as.numeric(diag$overall_fit$Infit[1] %||% NA_real_)),
     Outfit = suppressWarnings(as.numeric(diag$overall_fit$Outfit[1] %||% NA_real_)),
     PrecisionTier = as.character(diag$precision_profile$PrecisionTier[1] %||% NA_character_),
-    SupportsFormalInference = isTRUE(mfrm_inference_ready(fit)) &&
+    SupportsFormalInference = isTRUE(convergence$inference_ready) &&
       isTRUE(diag$precision_profile$SupportsFormalInference[1] %||% FALSE)
   )
 }
@@ -1124,7 +1126,7 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
     character(0)
   } else {
     ifelse(
-      case_fit$Converged %in% TRUE,
+      case_fit$InferenceReady %in% TRUE,
       "Pass",
       ifelse(
         case_fit$OptimizerCodeZero %in% TRUE &
@@ -1310,9 +1312,11 @@ summarize_reference_benchmark_case <- function(case_id, case_type, fit_runs, des
 #' @section Interpreting output:
 #' - `overview`: one-row reference-case summary.
 #' - `case_summary`: pass/warn/fail triage by reference case.
-#' - `fit_runs`: fitted-run metadata (fit, precision tier, convergence, and
-#'   latent-regression population-model/posterior-basis fields, including
-#'   categorical-coding details when present).
+#' - `fit_runs`: fitted-run metadata. `Converged` and `OptimizerCodeZero`
+#'   record optimizer return-code convergence; `InferenceReady` records the
+#'   stricter readiness-contract decision. They need not agree. The table also
+#'   records precision-tier and latent-regression population-model/posterior-
+#'   basis fields, including categorical-coding details when present.
 #' - `design_checks`: exact design recovery checks for each dataset.
 #' - `recovery_checks`: known-truth recovery metrics for the synthetic cases,
 #'   including the latent-regression reference case. If a benchmark fit is not

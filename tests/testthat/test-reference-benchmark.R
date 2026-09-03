@@ -29,8 +29,10 @@ test_that("reference_case_benchmark returns package-native benchmark bundle", {
   expect_false(isTRUE(bench$settings$external_validation))
   expect_true(all(c(
     "MMLEngineRequested", "MMLEngineUsed", "EMIterations",
-    "PosteriorBasis", "PopulationModelActive", "PopulationDesignColumns"
+    "PosteriorBasis", "PopulationModelActive", "PopulationDesignColumns",
+    "Converged", "InferenceReady", "OptimizerCodeZero"
   ) %in% names(bench$fit_runs)))
+  expect_identical(bench$fit_runs$Converged, bench$fit_runs$OptimizerCodeZero)
 
   expect_equal(nrow(bench$case_summary), 3)
   expect_true(all(c("synthetic_truth", "synthetic_bias_contract", "study1_itercal_pair") %in% bench$case_summary$Case))
@@ -40,7 +42,8 @@ test_that("reference_case_benchmark returns package-native benchmark bundle", {
 test_that("reference case status treats code-zero optimizer review as Warn", {
   fit_runs <- tibble::tibble(
     Case = "review_case",
-    Converged = FALSE,
+    Converged = TRUE,
+    InferenceReady = FALSE,
     OptimizerCodeZero = TRUE,
     ConvergenceSeverity = "review"
   )
@@ -69,6 +72,7 @@ test_that("reference case status treats code-zero optimizer review as Warn", {
   )
   expect_identical(as.character(review$Status[1]), "Warn")
 
+  fit_runs$Converged <- FALSE
   fit_runs$OptimizerCodeZero <- FALSE
   fit_runs$ConvergenceSeverity <- "fail"
   failed <- mfrmr:::summarize_reference_benchmark_case(
@@ -123,7 +127,7 @@ test_that("reference_case_benchmark includes latent-regression omission contract
     drop = FALSE
   ]
   expect_equal(nrow(row), 1)
-  if (isTRUE(run$Converged[1])) {
+  if (isTRUE(run$InferenceReady[1])) {
     expect_identical(as.character(row$Status[1]), "Pass")
   } else {
     expect_true(isTRUE(run$OptimizerCodeZero[1]))
@@ -167,7 +171,7 @@ test_that("reference_case_benchmark includes ConQuest-overlap package-side check
     ,
     drop = FALSE
   ]
-  if (isTRUE(run$Converged[1])) {
+  if (isTRUE(run$InferenceReady[1])) {
     expect_identical(as.character(row$Status[1]), "Pass")
   } else {
     expect_true(isTRUE(run$OptimizerCodeZero[1]))
@@ -265,7 +269,7 @@ test_that("reference_case_benchmark includes latent-regression benchmark case", 
     bench$recovery_checks$Facet == "Population:posterior_shift", , drop = FALSE
   ]
   expect_identical(nrow(shift_row), 1L)
-  fit_ready <- isTRUE(as.logical(bench$fit_runs$Converged[1]))
+  fit_ready <- isTRUE(as.logical(bench$fit_runs$InferenceReady[1]))
   expect_identical(
     as.character(shift_row$Status[1]), if (fit_ready) "Pass" else "Warn"
   )
@@ -276,10 +280,10 @@ test_that("reference_case_benchmark includes latent-regression benchmark case", 
   }, fixed = TRUE)
   expect_identical(
     as.logical(bench$fit_runs$SupportsFormalInference),
-    as.logical(bench$fit_runs$Converged)
+    as.logical(bench$fit_runs$InferenceReady)
   )
   expect_false(any(
-    bench$fit_runs$SupportsFormalInference[!bench$fit_runs$Converged]
+    bench$fit_runs$SupportsFormalInference[!bench$fit_runs$InferenceReady]
   ))
   expect_true(all(bench$fit_runs$PopulationModelActive))
   expect_identical(as.character(bench$fit_runs$PosteriorBasis[1]), "population_model")
@@ -307,10 +311,10 @@ test_that("reference_case_benchmark recovers synthetic truth under MML", {
   expect_true(max(bench$recovery_checks$MeanAbsoluteDeviation, na.rm = TRUE) < 0.30)
   expect_identical(
     as.logical(bench$fit_runs$SupportsFormalInference),
-    as.logical(bench$fit_runs$Converged)
+    as.logical(bench$fit_runs$InferenceReady)
   )
   expect_false(any(
-    bench$fit_runs$SupportsFormalInference[!bench$fit_runs$Converged]
+    bench$fit_runs$SupportsFormalInference[!bench$fit_runs$InferenceReady]
   ))
   expect_true(all(!bench$fit_runs$PopulationModelActive))
   expect_identical(as.character(bench$fit_runs$PosteriorBasis[1]), "legacy_mml")
@@ -341,7 +345,7 @@ test_that("reference_case_benchmark recovers latent-regression synthetic case un
   expect_true(slope_row$MeanAbsoluteDeviation[1] < 0.35)
   expect_true(sigma_row$MeanAbsoluteDeviation[1] < 0.35)
   expect_true(crit_row$Correlation[1] > 0.95)
-  fit_ready <- isTRUE(as.logical(bench$fit_runs$Converged[1]))
+  fit_ready <- isTRUE(as.logical(bench$fit_runs$InferenceReady[1]))
   expect_identical(
     as.character(shift_row$Status[1]), if (fit_ready) "Pass" else "Warn"
   )

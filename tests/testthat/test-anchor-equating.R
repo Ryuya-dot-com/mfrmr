@@ -120,6 +120,9 @@ test_that("anchor_to_baseline S3 methods produce output", {
   expect_true(is.numeric(s$n_anchored))
   expect_true(is.numeric(s$n_common))
   expect_true(is.numeric(s$n_flagged))
+  expect_identical(s$estimation_converged, s$optimizer_code_zero)
+  expect_identical(s$inference_ready, s$converged)
+  expect_identical(s$converged_basis, "legacy_alias_of_inference_ready")
 
   # print methods produce output without error
   expect_output(print(res), "Anchored Fit Summary")

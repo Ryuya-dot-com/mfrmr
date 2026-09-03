@@ -853,14 +853,14 @@ Inspect \code{fit$data_review$estimability}. RSM and PCM use the full linear
 free-coordinate check. For bounded GPCM and an active latent-regression
 residual variance, the additive block is audited before fitting. A retained
 vector also records the analytic free-to-expanded log/natural-scale
-transformation Jacobians and a central-difference check in
-\code{fit$data_review$estimability$nonlinear_transformation}. This verifies the
-parameterization only; it is not a response-likelihood Jacobian or a
-structural-identification result. A stationary retained solution of modest
-free dimension also receives a local observed-information Hessian and a
-recorded eigenvalue-tolerance ladder in
-\code{fit$data_review$estimability$fitted_information}. Nonstationary or larger
-fits retain an explicit not-evaluated status. This fitted-information layer
+transformation Jacobians and a central-difference check in its
+\code{nonlinear_transformation} component. This verifies the parameterization
+only; it is not a response-likelihood Jacobian or a structural-identification
+result. A stationary retained solution of modest free dimension also
+receives a local observed-information Hessian and a recorded
+eigenvalue-tolerance ladder in the \code{fitted_information} component.
+Nonstationary or larger fits retain an explicit not-evaluated status. This
+fitted-information layer
 is diagnostic only: it does not yet classify weak information, make the
 nonlinear check complete, or turn full additive rank into a full-model
 estimability claim. Eligible nonlinear MML fits also receive bounded
@@ -875,6 +875,10 @@ covariate rows are part of this identity. Only conceptual and evaluated
 workload summaries are retained. These retained-point diagnostics do not
 by themselves establish global structural identification, weak-information
 status, or readiness.
+Consequently, a nonlinear fit whose full design rank is not yet certified
+is retained with \code{FitReadiness = "review"} and reason code
+\code{design_rank_not_evaluated}. This is an estimability-evidence hold, not an
+optimizer-failure statement; inspect \code{Converged} separately.
 
 \code{fit$data_review$estimability$nonlinear_local_estimability} interprets only
 the first-order local rank that these maps support. For JML GPCM, full

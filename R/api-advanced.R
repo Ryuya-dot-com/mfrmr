@@ -3602,6 +3602,10 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' - `$diagnostics`: pre-computed diagnostics for the anchored calibration.
 #' - `$baseline_anchors`: the anchor table fed to [fit_mfrm()], useful for
 #'   reviewing which elements were constrained.
+#' - In `summary(res)`, `estimation_converged` records optimizer return-code
+#'   convergence. `inference_ready` records the stricter readiness-contract
+#'   decision. The older `converged` field is retained as an explicitly
+#'   labelled alias of `inference_ready`.
 #'
 #' @section Typical workflow:
 #' 1. Fit the baseline model: `fit1 <- fit_mfrm(...)`.
@@ -3708,6 +3712,7 @@ summary.mfrm_anchored_fit <- function(object, ...) {
   n_anchored <- nrow(object$baseline_anchors)
   n_common <- nrow(drift)
   n_flagged <- sum(drift$Flag, na.rm = TRUE)
+  convergence <- mfrm_convergence_state(object$fit)
 
   out <- list(
     n_anchored = n_anchored, n_common = n_common, n_flagged = n_flagged,
@@ -3721,9 +3726,12 @@ summary.mfrm_anchored_fit <- function(object, ...) {
       tibble::tibble()
     },
     flagged = drift |> dplyr::filter(.data$Flag),
-    converged = mfrm_inference_ready(object$fit),
-    optimizer_code_zero = mfrm_convergence_state(object$fit)$code_converged,
-    convergence_status = mfrm_convergence_state(object$fit)$status
+    estimation_converged = convergence$code_converged,
+    inference_ready = convergence$inference_ready,
+    converged = convergence$inference_ready,
+    converged_basis = "legacy_alias_of_inference_ready",
+    optimizer_code_zero = convergence$code_converged,
+    convergence_status = convergence$status
   )
   class(out) <- "summary.mfrm_anchored_fit"
   out
@@ -3733,7 +3741,7 @@ summary.mfrm_anchored_fit <- function(object, ...) {
 #' @export
 print.summary.mfrm_anchored_fit <- function(x, ...) {
   cat("--- Anchored Fit Summary ---\n")
-  cat("Inference-ready:", x$converged, "\n")
+  cat("Inference-ready:", x$inference_ready, "\n")
   cat("Optimizer returned code 0:", x$optimizer_code_zero,
       "| Status:", x$convergence_status, "\n")
   cat("Anchors used:", x$n_anchored, "| Common elements:", x$n_common,
