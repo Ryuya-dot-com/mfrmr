@@ -643,7 +643,7 @@
               </div>
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
-                <div><strong>候補後の関数・help・manual監査でdevelopmentへ復帰</strong><p><code>a5899aa</code>で非構文列名、G/Phi・D-studyの早すぎる分散丸め、説明逆転、欠落example、readiness文面を修正。候補v4の証拠は保存するがrelease payloadとして再利用しない。</p></div>
+                <div><strong>候補後の関数・help・manual監査でdevelopmentへ復帰</strong><p><code>a5899aa</code>で非構文列名、G/Phi・D-studyの早すぎる分散丸め、説明逆転、欠落exampleを修正し、<code>f57f6a3</code>でMMLの最適化収束と推論可能性を公開要約上も分離。候補v4の証拠は保存するがrelease payloadとして再利用しない。</p></div>
                 <span class="chip done">fail closed</span>
               </div>
             </div>
@@ -790,7 +790,7 @@
               </div>
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
-                <div><strong>敵対的API・help・manual監査の局所修正</strong><p><code>a5899aa</code>で修正し、180 exportsのalias/example網羅、対象回帰テスト、全tests/examples/vignette code、469ページPDF描画を確認。重い新規分析は追加していない。</p></div><span class="chip done">local audit pass</span>
+                <div><strong>敵対的API・help・manual監査の局所修正</strong><p><code>a5899aa</code>と<code>f57f6a3</code>で修正し、180 exportsのalias/example網羅、対象回帰テスト、全tests/examples/vignette code、470ページPDF描画を確認。参照benchmarkは<code>Converged</code>をoptimizer、<code>InferenceReady</code>をreadinessとして保持し、<code>design_rank_not_evaluated</code>をoptimizer失敗と誤読させない。重い新規分析は追加していない。</p></div><span class="chip done">local audit pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -798,7 +798,7 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>candidate metadataとexact headを再形成（v5）</strong><p>D5の一括判定と<code>a5899aa</code>の統合後、fresh 5環境passに限ってdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。v4 hash・tag・CIは流用しない。</p></div><span class="chip open">after D5 adjudication</span>
+                <div><strong>candidate metadataとexact headを再形成（v5）</strong><p>D5の一括判定と監査修正<code>a5899aa</code>・<code>f57f6a3</code>の統合後、fresh 5環境passに限ってdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。v4 hash・tag・CIは流用しない。</p></div><span class="chip open">after D5 adjudication</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -1097,7 +1097,7 @@
             <ol class="priority-list">
               <li><strong>D5-SHARD-001–050を途中結果非閲覧のまま完遂する。</strong></li>
               <li><strong>D5の完全分母を封印解除後に一括判定し、0.2.4へ影響する範囲だけを決める。</strong></li>
-              <li><strong>監査修正<code>a5899aa</code>をdevelopmentへ統合し、API・help・manualを再検証する。</strong></li>
+              <li><strong>監査修正<code>a5899aa</code>・<code>f57f6a3</code>をdevelopmentへ統合し、API・help・manualを再検証する。</strong></li>
               <li><strong>candidate v5のsource identityとsign-off対象commitを一対一で固定し、fresh 5環境検査を行う。</strong></li>
               <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿はさらに後の明示的判断まで行わない。</strong></li>
