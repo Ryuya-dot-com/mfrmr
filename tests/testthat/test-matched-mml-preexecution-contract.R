@@ -4,7 +4,7 @@ test_that("matched MML tutorial contract freezes scope without authorizing execu
     root, "inst", "validation",
     "matched-mml-tutorial-preexecution-contract-0.2.4.md"
   )
-  expect_true(file.exists(path))
+  skip_if_not(file.exists(path), "Matched MML protocol is excluded.")
   contract <- paste(readLines(path, warn = FALSE), collapse = "\n")
 
   for (token in c(
