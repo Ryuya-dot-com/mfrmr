@@ -1960,15 +1960,20 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   expect_match(roadmap, "今は行わない", fixed = TRUE)
   expect_match(roadmap, "D5-SHARD-001", fixed = TRUE)
   expect_match(roadmap, "candidate v5", fixed = TRUE)
+  expect_match(roadmap, "共有step RSMはmfrmr–TAM", fixed = TRUE)
+  expect_match(roadmap, "基準別step PCMはmfrmr–TAM–sirt", fixed = TRUE)
+  expect_match(roadmap, "評価者SD <code>.55→1.10</code>", fixed = TRUE)
+  expect_match(roadmap, "評価者×カテゴリの観測数対期待数", fixed = TRUE)
+  expect_match(roadmap, "評価者別GPCMを先回りして実装しない", fixed = TRUE)
   expect_match(roadmap, "停止条件", fixed = TRUE)
   expect_match(roadmap, "同時進行は release-critical 1本", fixed = TRUE)
 
   count_token <- function(token) {
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 38L)
-  expect_identical(count_token("data-state=\"open\""), 43L)
-  expect_identical(count_token("data-state=\"hold\""), 6L)
+  expect_identical(count_token("data-state=\"done\""), 39L)
+  expect_identical(count_token("data-state=\"open\""), 47L)
+  expect_identical(count_token("data-state=\"hold\""), 7L)
   expect_identical(count_token("data-state=\"recurring\""), 13L)
 
   ignore <- readLines(file.path(ctx$root, ".Rbuildignore"), warn = FALSE)

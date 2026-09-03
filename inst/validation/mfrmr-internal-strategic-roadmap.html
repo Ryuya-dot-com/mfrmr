@@ -495,7 +495,7 @@
     <aside>
       <div class="brand">
         <strong>mfrmr / internal</strong>
-        <small>Strategic roadmap · truth snapshot 2026-08-26</small>
+        <small>Strategic roadmap · truth snapshot 2026-09-03</small>
       </div>
       <nav aria-label="ロードマップ内ナビゲーション">
         <a href="#charter">01 · 軸と非目標</a>
@@ -798,7 +798,11 @@
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>candidate metadataとexact headを再形成（v5）</strong><p>D5の一括判定と監査修正<code>a5899aa</code>・<code>f57f6a3</code>の統合後、fresh 5環境passに限ってdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。v4 hash・tag・CIは流用しない。</p></div><span class="chip open">after D5 adjudication</span>
+                <div><strong>matched MMLの最小外部照合を完了</strong><p>既存80名×6評価者×5基準データで、共有step RSMはmfrmr–TAM、基準別step PCMはmfrmr–TAM–sirtを比較する。カテゴリ、人物分布、制約、符号・原点、積分、EAPを可能な限り固定し、optimizer収束と<code>InferenceReady</code>を分離する。共通解がない全140×80×10結果は適用可能性としてのみ保持し、数値互換性を判定しない。</p></div><span class="chip open">after D5 adjudication</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>candidate metadataとexact headを再形成（v5）</strong><p>D5の一括判定、matched MML最小照合、監査修正<code>a5899aa</code>・<code>f57f6a3</code>の統合後、fresh 5環境passに限ってdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。v4 hash・tag・CIは流用しない。</p></div><span class="chip open">after D5 and matched MML</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -944,6 +948,17 @@
               <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>「最適anchor率」の公開</strong><p>Pareto frontierとnetwork-conditioned evidenceが揃うまで単一率を選ばない。</p></div><span class="chip hold">not selected</span></div>
             </div>
           </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>MML robustness / Rater scale use</h3><p>ソフトウェア互換性、情報量、尺度連結、応答スタイルを別の問いとして扱う。</p></div><span class="chip open">staged after D5</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>severity・尺度圧縮・GPCMを分離</strong><p>評価者SDは位置の分散、端点回避は評価者固有のカテゴリ使用、通常のGPCMは主にowner別slope/stepの一般化であり、同一現象とみなさない。</p></div><span class="chip done">question separated</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>最小stress sentinelを事前固定</strong><p>密な基準条件、スパースのみ、評価者SD <code>.55→1.10</code>のみ、スパース×SD増大の4条件で、bias/RMSE、収束、readiness、fit、separation、reliabilityを見る。完全要因化はしない。</p></div><span class="chip open">robustness</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>anchor運用を独立レーンで検証</strong><p>anchorなし、正しいanchor、スパースな接続下のanchor、少数の摂動anchorを分け、原点調整後の回復、非anchor推定値への伝播、失敗分母を保持する。</p></div><span class="chip open">linking</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>端点回避の二つのsentinelを追加</strong><p>10カテゴリで一部評価者が1・2・9・10を3・8へ寄せる条件を密／スパースで評価する。単純度数だけで回避と断定せず、担当人物の尺度範囲を踏まえた評価者×カテゴリの観測数対期待数を確認する。</p></div><span class="chip open">response style</span></div>
+              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>評価者別GPCMを先回りして実装しない</strong><p>RSM違反と実害を確認した後に、rating-scale group、評価者固有step、slope、応答スタイルモデルを共通estimandで比較する。未使用カテゴリを持つ完全自由モデルは識別可能性を先に示す。</p></div><span class="chip hold">evidence first</span></div>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -1007,6 +1022,7 @@
               <tr><td>CI green fallacy</td><td><span class="chip open">high</span></td><td>pass数のみで統計的claimを閉じる</td><td>claim ledger、独立oracle、decision consequence、人間sign-off</td></tr>
               <tr><td>証拠recordの過剰増殖</td><td><span class="chip open">high</span></td><td>最新blockerが複数recordで矛盾／探索に時間</td><td>append-only history＋一つのcurrent-state index、superseded表示</td></tr>
               <tr><td>external comparator権威化</td><td><span class="chip open">high</span></td><td>相関や名前だけで等価と主張</td><td>estimand署名、version identity、独立normalizer、非主張</td></tr>
+              <tr><td>評価者固有の尺度圧縮</td><td><span class="chip open">high</span></td><td>担当範囲を無視して未使用端カテゴリをseverityまたはGPCM差と解釈</td><td>機会調整した評価者×カテゴリ残差、密／スパースsentinel、モデル拡張前の識別監査</td></tr>
               <tr><td>研究compute sink</td><td><span class="chip open">high</span></td><td>fit行数が独立dataset数や判断価値を上回る</td><td>precision design、sequential stop、代数・microcase優先、WIP制限</td></tr>
               <tr><td>release後の互換性負債</td><td><span class="chip open">high</span></td><td>old artifactが黙って読める／意味が変わる</td><td>schema/version refusal、migration fixtures、公開artifact再取得試験</td></tr>
               <tr><td>high-stakes misuse</td><td><span class="chip open">high</span></td><td>conditional intervalを総不確実性や妥当性と解釈</td><td>明示non-claims、output labeling、deployment reviewをpackage外に置く</td></tr>
@@ -1097,6 +1113,8 @@
             <ol class="priority-list">
               <li><strong>D5-SHARD-001–050を途中結果非閲覧のまま完遂する。</strong></li>
               <li><strong>D5の完全分母を封印解除後に一括判定し、0.2.4へ影響する範囲だけを決める。</strong></li>
+              <li><strong>共有step RSMのmfrmr–TAM、基準別step PCMのmfrmr–TAM–sirtについてmatched MML最小照合を実行する。</strong></li>
+              <li><strong>D5判定で0.2.4 evidenceに必要とされたstress sentinelだけを実行し、残りは研究レーンに維持する。</strong></li>
               <li><strong>監査修正<code>a5899aa</code>・<code>f57f6a3</code>をdevelopmentへ統合し、API・help・manualを再検証する。</strong></li>
               <li><strong>candidate v5のsource identityとsign-off対象commitを一対一で固定し、fresh 5環境検査を行う。</strong></li>
               <li><strong>人間sign-offを機械的passと分離して記録する。</strong></li>
@@ -1110,7 +1128,8 @@
           <p>
             D5完遂前のcandidate v5形成、candidate v4の再利用、0.2.4への新機能追加、
             portable GPCMの便宜的昇格、multivariate G-theoryのexport、
-            単一anchor率の選定、ConQuest完全模倣、意思決定のない大規模simulation、
+            単一anchor率の選定、ConQuest完全模倣、端点回避を根拠とする評価者別GPCMの先行実装、
+            stress要因の無制限な完全要因化、意思決定のない大規模simulation、
             将来のmultiple-scale fieldを0.2.4 schemaへ先回りして追加すること。
           </p>
         </div>
