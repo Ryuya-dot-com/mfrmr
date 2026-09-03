@@ -99,6 +99,40 @@ test_that("compute_facet_icc works when lme4 is available", {
   expect_true(all(is.na(icc$ICC) | (icc$ICC >= 0 & icc$ICC <= 1)))
 })
 
+test_that("random-effects helpers accept non-syntactic column names", {
+  skip_if_not_installed("lme4")
+  toy <- load_mfrmr_data("example_core")
+  names(toy)[names(toy) == "Rater"] <- "Rater ID"
+  names(toy)[names(toy) == "Score"] <- "Rating Score"
+
+  icc <- suppressMessages(compute_facet_icc(
+    toy, facets = c("Rater ID", "Criterion"),
+    score = "Rating Score", person = "Person"
+  ))
+  expect_s3_class(icc, "mfrm_facet_icc")
+
+  names(toy)[names(toy) == "Person"] <- "Candidate ID"
+  prepared <- toy
+  names(prepared)[names(prepared) == "Candidate ID"] <- "Person"
+  names(prepared)[names(prepared) == "Rating Score"] <- "Score"
+  fit <- structure(
+    list(
+      config = list(
+        facet_names = c("Rater ID", "Criterion"),
+        source_columns = list(
+          person = "Candidate ID", score = "Rating Score"
+        )
+      ),
+      prep = list(data = prepared)
+    ),
+    class = "mfrm_fit"
+  )
+  expect_s3_class(
+    suppressMessages(mfrm_generalizability(fit, data = toy)),
+    "mfrm_generalizability"
+  )
+})
+
 test_that("compute_facet_design_effect computes Kish deff", {
   skip_if_not_installed("lme4")
   toy <- load_mfrmr_data("example_core")

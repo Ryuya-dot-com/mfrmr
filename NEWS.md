@@ -1,4 +1,4 @@
-# mfrmr 0.2.4
+# mfrmr 0.2.4.9000 (development version)
 
 ## Reliability and reproducibility
 
@@ -33,6 +33,14 @@
 * Latent-regression reference benchmarks no longer attempt Person scoring when
   their fitted model is not scoring-ready. The posterior-shift check is kept as
   an explicit unevaluated warning instead of using a review-only score.
+* Generalizability and facet-ICC helpers now quote non-syntactic column names
+  safely, and the generalizability `data` override recognizes the source person
+  and score names recorded on the fit. G/Phi and D-study calculations retain
+  unrounded variance components, so their values no longer depend on score
+  units through premature rounding.
+* Corrected the G/Phi ordering in the generalizability example, made its PDF
+  equations fit the page, clarified MML readiness wording, and added an
+  executable portable-calibration lifecycle example to the shared help page.
 
 # mfrmr 0.2.3.1
 

@@ -100,10 +100,13 @@ EM retains its relative log-likelihood stopping result but must also pass the
 same terminal-gradient check; use the direct engine for bounded gradient
 polishing when an EM fit remains under numerical review.
 
-Read `summary(fit)$readiness` as separate criteria. `InferenceReady` and the
-Numerical row describe numerical optimization, not the design, stability,
-diagnostic, or reporting decision. A small gradient cannot repair a
-disconnected measurement graph or a boundary-separated facet level.
+Read `summary(fit)$readiness` as separate criteria. The Numerical row describes
+numerical optimization. `InferenceReady` is the conservative fit-level stop
+signal and is `TRUE` only when all stored input, estimability, category,
+boundary, and numerical components pass. Design, Stability, Diagnostics, and
+Reporting are separate, purpose-specific workflow reviews. A small gradient
+cannot repair a disconnected measurement graph or a boundary-separated facet
+level.
 
 ### Choosing the iteration ceiling
 
@@ -112,12 +115,13 @@ disconnected measurement graph or a boundary-separated facet level.
 uses another value. A fit that stops at `ConvergenceStatus = "iteration_limit"`
 is review-only regardless of whether its estimates look plausible. Keep the
 data, model, method, anchors, optimizer, tolerance, and quadrature rule fixed,
-then use the next ceiling from a prespecified sequence. Accept a result only
-after `Converged`, `InferenceReady`, and the Numerical readiness row all pass.
-Do not select a run because its coefficients, fit statistics, significance, or
-agreement with an expected result are more favorable. Material differences
-between separately ready runs are evidence of numerical instability, not a
-choice among equally acceptable answers.
+then use the next ceiling from a prespecified sequence. Do not select a run
+because its coefficients, fit statistics, significance, or agreement with an
+expected result are more favorable. Accept a result only after `Converged` and
+`InferenceReady` are both true, then require the purpose-specific workflow rows
+needed for the intended use. Material differences between separately ready
+runs are evidence of numerical instability, not a choice among equally
+acceptable answers.
 
 ## Strict Marginal Diagnostic Target
 

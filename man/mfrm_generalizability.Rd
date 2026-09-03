@@ -16,7 +16,8 @@ mfrm_generalizability(
 \item{fit}{An \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{data}{Optional data frame. When \code{NULL}, the rating data
-stored on \code{fit$prep$data} is used.}
+stored on \code{fit$prep$data} is used. A supplied original input table may use
+the person and score column names recorded on \code{fit}.}
 
 \item{object_facet}{Facet that plays the role of the "object of
 measurement" -- typically \code{"Person"} (default).}
@@ -54,10 +55,11 @@ already emits.
 \section{Interpretation}{
 
 \itemize{
-\item \code{G} is appropriate for \strong{relative} decisions (rank-ordering
-persons): \code{G = sigma2(p) / (sigma2(p) + sigma2(Residual))}.
+\item \code{G} is appropriate for \strong{relative} decisions (rank-ordering persons):
+\deqn{G = \sigma_p^2 / (\sigma_p^2 + \sigma_e^2)}
 \item The reported \code{Phi} is appropriate for \strong{absolute} decisions (cut-score
-classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}, before D-study scaling.
+classification), before D-study scaling:
+\deqn{\Phi = \sigma_p^2 / (\sigma_p^2 + \sum_j \sigma_j^2 + \sigma_e^2)}
 \item Use \code{\link[=mfrm_d_study]{mfrm_d_study()}} to project \code{G} / \code{Phi} under planned numbers of
 raters, items, criteria, or other random measurement facets.
 \item Values of 0.70 and 0.80 are displayed as familiar planning references,
@@ -111,7 +113,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   #   relative to person spread.
   gt$coefficients
   # Compare G and Phi with study-specific requirements; 0.70 and 0.80
-  #   are reference guides only. G < Phi means absolute decisions are noisier than relative
+  #   are reference guides only. Phi < G means absolute decisions are noisier than relative
   #   decisions; review whether facet main effects need anchoring.
   # Always check IdentificationStatus before using the bands:
   gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",

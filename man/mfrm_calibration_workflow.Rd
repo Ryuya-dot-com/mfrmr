@@ -120,6 +120,25 @@ standard-normal prior. They do not include calibration-parameter
 uncertainty. Loading validates structure and semantic consistency, but does
 not authenticate an artifact from an untrusted source.
 }
+\examples{
+\donttest{
+toy <- load_mfrmr_data("example_core")
+ids <- unique(as.character(toy$Person))
+training <- toy[as.character(toy$Person) \%in\% ids[1:18], ]
+fit <- suppressWarnings(fit_mfrm(
+  training, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", quad_points = 5, maxit = 20
+))
+if (isTRUE(fit$summary$InferenceReady[1])) {
+  draft <- extract_mfrm_calibration(fit)
+  review_mfrm_calibration(draft)
+  frozen <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+  new_rows <- toy[as.character(toy$Person) \%in\% ids[19:20], ]
+  scores <- score_mfrm_calibration(frozen, new_rows)
+  scores$estimates
+}
+}
+}
 \seealso{
 \link{mfrm_calibration_score_methods} for concise review and
 visualization of returned score batches.

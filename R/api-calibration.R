@@ -138,6 +138,24 @@ mfrmr_public_calibration_extraction_error <- function(error) {
 #'   visualization of returned score batches.
 #'
 #' @name mfrm_calibration_workflow
+#' @examples
+#' \donttest{
+#' toy <- load_mfrmr_data("example_core")
+#' ids <- unique(as.character(toy$Person))
+#' training <- toy[as.character(toy$Person) %in% ids[1:18], ]
+#' fit <- suppressWarnings(fit_mfrm(
+#'   training, "Person", c("Rater", "Criterion"), "Score",
+#'   method = "MML", quad_points = 5, maxit = 20
+#' ))
+#' if (isTRUE(fit$summary$InferenceReady[1])) {
+#'   draft <- extract_mfrm_calibration(fit)
+#'   review_mfrm_calibration(draft)
+#'   frozen <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+#'   new_rows <- toy[as.character(toy$Person) %in% ids[19:20], ]
+#'   scores <- score_mfrm_calibration(frozen, new_rows)
+#'   scores$estimates
+#' }
+#' }
 NULL
 
 #' @rdname mfrm_calibration_workflow

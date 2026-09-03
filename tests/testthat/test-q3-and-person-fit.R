@@ -257,6 +257,24 @@ test_that("mfrm_generalizability returns variance components and G/Phi", {
   ) %in% names(gt$design)))
 })
 
+test_that("G/Phi and D-study projections are invariant to score units", {
+  if (!requireNamespace("lme4", quietly = TRUE)) {
+    skip("lme4 (Suggests) not installed.")
+  }
+  scaled <- .toy
+  scaled$Score <- scaled$Score * 0.001
+  gt <- mfrm_generalizability(.fit)
+  gt_scaled <- mfrm_generalizability(.fit, data = scaled)
+
+  expect_equal(gt_scaled$coefficients[c("G", "Phi")],
+               gt$coefficients[c("G", "Phi")], tolerance = 1e-4)
+  expect_equal(
+    mfrm_d_study(gt_scaled, data.frame(Rater = 2, Criterion = 2))[, c("G", "Phi")],
+    mfrm_d_study(gt, data.frame(Rater = 2, Criterion = 2))[, c("G", "Phi")],
+    tolerance = 1e-4
+  )
+})
+
 test_that("mfrm_generalizability records singular boundary fits", {
   if (!requireNamespace("lme4", quietly = TRUE)) {
     skip("lme4 (Suggests) not installed.")

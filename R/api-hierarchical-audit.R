@@ -703,8 +703,8 @@ compute_facet_icc <- function(data, facets, score,
 
   re_terms <- c(if (!is.null(person)) person else NULL, facets)
   formula <- stats::as.formula(paste0(
-    score, " ~ 1 + ",
-    paste0("(1 | ", re_terms, ")", collapse = " + ")
+    mfrmr_formula_name(score), " ~ 1 + ",
+    paste0("(1 | ", mfrmr_formula_name(re_terms), ")", collapse = " + ")
   ))
   # Capture lme4 convergence warnings so users know when the variance
   # decomposition rests on a near-singular fit. Silently refitting under

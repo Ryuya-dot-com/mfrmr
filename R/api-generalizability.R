@@ -90,7 +90,8 @@ mfrmr_gt_classify_coef <- function(value,
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param data Optional data frame. When `NULL`, the rating data
-#'   stored on `fit$prep$data` is used.
+#'   stored on `fit$prep$data` is used. A supplied original input table may use
+#'   the person and score column names recorded on `fit`.
 #' @param object_facet Facet that plays the role of the "object of
 #'   measurement" -- typically `"Person"` (default).
 #' @param random_facets Character vector of non-person facets to
@@ -112,11 +113,11 @@ mfrmr_gt_classify_coef <- function(value,
 #' }
 #'
 #' @section Interpretation:
-#' - `G` is appropriate for **relative** decisions (rank-ordering
-#'   persons): `G = sigma2(p) / (sigma2(p) + sigma2(Residual))`.
+#' - `G` is appropriate for **relative** decisions (rank-ordering persons):
+#' \deqn{G = \sigma_p^2 / (\sigma_p^2 + \sigma_e^2)}
 #' - The reported `Phi` is appropriate for **absolute** decisions (cut-score
-#'   classification): `Phi = sigma2(p) / (sigma2(p) + sigma2(facet
-#'   main effects) + sigma2(Residual))`, before D-study scaling.
+#'   classification), before D-study scaling:
+#' \deqn{\Phi = \sigma_p^2 / (\sigma_p^2 + \sum_j \sigma_j^2 + \sigma_e^2)}
 #' - Use [mfrm_d_study()] to project `G` / `Phi` under planned numbers of
 #'   raters, items, criteria, or other random measurement facets.
 #' - Values of 0.70 and 0.80 are displayed as familiar planning references,
@@ -163,7 +164,7 @@ mfrmr_gt_classify_coef <- function(value,
 #'   #   relative to person spread.
 #'   gt$coefficients
 #'   # Compare G and Phi with study-specific requirements; 0.70 and 0.80
-#'   #   are reference guides only. G < Phi means absolute decisions are noisier than relative
+#'   #   are reference guides only. Phi < G means absolute decisions are noisier than relative
 #'   #   decisions; review whether facet main effects need anchoring.
 #'   # Always check IdentificationStatus before using the bands:
 #'   gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",
@@ -194,6 +195,18 @@ mfrm_generalizability <- function(fit,
     stop("`data` is empty or not a data frame.", call. = FALSE)
   }
 
+  source_columns <- fit$config$source_columns %||% list()
+  source_person <- as.character(source_columns$person %||% "")[1L]
+  source_score <- as.character(source_columns$score %||% "")[1L]
+  if (identical(object_facet, "Person") && !"Person" %in% names(data) &&
+      isTRUE(nzchar(source_person)) && source_person %in% names(data)) {
+    data$Person <- data[[source_person]]
+  }
+  if (!"Score" %in% names(data) && isTRUE(nzchar(source_score)) &&
+      source_score %in% names(data)) {
+    data$Score <- data[[source_score]]
+  }
+
   facet_names <- as.character(fit$config$facet_names %||% character(0))
   if (is.null(random_facets)) {
     random_facets <- setdiff(facet_names, object_facet)
@@ -218,7 +231,7 @@ mfrm_generalizability <- function(fit,
   data$Score <- suppressWarnings(as.numeric(data$Score))
   data <- data[is.finite(data$Score), , drop = FALSE]
 
-  random_terms <- c(object_facet, random_facets)
+  random_terms <- mfrmr_formula_name(c(object_facet, random_facets))
   formula_str <- paste0(
     "Score ~ 1 + ",
     paste0("(1 | ", random_terms, ")", collapse = " + ")
@@ -256,7 +269,7 @@ mfrm_generalizability <- function(fit,
   zero_tol <- sqrt(.Machine$double.eps)
   var_components <- data.frame(
     Source = as.character(vc$grp),
-    Variance = round(as.numeric(vc$vcov), 6),
+    Variance = as.numeric(vc$vcov),
     ProportionVariance = if (is.finite(total_var) && total_var > zero_tol) {
       round(vc$vcov / total_var, 4)
     } else {

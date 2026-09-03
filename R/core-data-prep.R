@@ -8,6 +8,13 @@
 # Functions are internal (no @export); they are called directly by
 # `mfrm_estimate()` and the surrounding orchestration helpers.
 
+# Quote a data-frame column name for safe use in a formula assembled as text.
+mfrmr_formula_name <- function(x) {
+  vapply(as.character(x), function(name) {
+    paste(deparse(as.name(name), backtick = TRUE), collapse = "")
+  }, character(1))
+}
+
 # ---- data preparation ----
 mfrm_preparation_note <- function(stage,
                                   condition,
