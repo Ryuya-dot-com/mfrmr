@@ -3499,12 +3499,13 @@ identify whether the opt-in layer ran and retain its test log.
   when representative q301 checks widened the range to `[-7,7]`/`[-8,8]`.
   This supports an integration-resolution mechanism but leaves the q31 default,
   RSM/PCM user sensitivity route, PCM stress, and release decision open.
-- `tam-pcm-mml-conditional-stress-contract-0.2.4.md` and
-  `tam-pcm-mml-conditional-stress-0.2.4.R`: prospectively frozen conditional
-  PCM lane after the RSM integration mechanism was isolated. It reuses the
-  five profiles and three seeds under the portable fixed-N(0,1) basis, adds no
-  estimated-population duplication, and retains q31/q61/q121/q181 evidence
-  before choosing the smallest 0.2.4 quadrature-sensitivity remedy.
+- `tam-pcm-mml-conditional-stress-contract-0.2.4.md`, its runner, six CSV
+  outputs, and companion record: prospectively frozen conditional PCM lane
+  after the RSM integration mechanism was isolated. All 60 fits returned;
+  q181 matched TAM in 15/15 and q121-to-q181 was stable in 15/15, whereas only
+  3/15 q31-to-q61 and 6/15 q61-to-q121 checks passed. The issue is therefore
+  not caused by RSM step sharing. A family-aware same-data sensitivity route
+  remains the 0.2.4 blocker; q181 is not promoted as a universal default.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural

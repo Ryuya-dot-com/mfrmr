@@ -70,3 +70,43 @@ test_that("TAM PCM conditional stress executes one matched fit", {
   expect_identical(nrow(result$surface), 90L)
   expect_identical(nrow(result$scores), 80L)
 })
+
+test_that("TAM PCM conditional-stress record retains the full denominator", {
+  ctx <- load_tam_pcm_mml_conditional_stress()
+  validation <- file.path(ctx$root, "inst", "validation")
+  summary_path <- file.path(
+    validation, "tam-pcm-mml-conditional-stress-summary-0.2.4.csv"
+  )
+  integration_path <- file.path(
+    validation, "tam-pcm-mml-conditional-stress-integration-0.2.4.csv"
+  )
+  record_path <- file.path(
+    validation, "tam-pcm-mml-conditional-stress-record-0.2.4.md"
+  )
+  skip_if_not(all(file.exists(c(summary_path, integration_path, record_path))))
+
+  summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
+  integration <- utils::read.csv(integration_path, stringsAsFactors = FALSE)
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  source_hash <- digest::digest(
+    file.path(validation, "tam-pcm-mml-conditional-stress-0.2.4.R"),
+    algo = "sha256", file = TRUE, serialize = FALSE
+  )
+
+  expect_identical(nrow(summary), 60L)
+  expect_identical(
+    as.integer(tapply(summary$PairPassed, summary$Nodes, sum)),
+    c(3L, 6L, 10L, 15L)
+  )
+  expect_true(all(is.na(summary$Error) | summary$Error == ""))
+  expect_identical(nrow(integration), 45L)
+  expect_identical(
+    as.integer(tapply(
+      integration$IntegrationPassed, integration$HighNodes, sum
+    )),
+    c(3L, 6L, 15L)
+  )
+  expect_match(record, source_hash, fixed = TRUE)
+  expect_match(record, "ConditionalStressComplete.*FALSE", ignore.case = TRUE)
+  expect_match(record, "ReleaseAuthorized.*FALSE", ignore.case = TRUE)
+})
