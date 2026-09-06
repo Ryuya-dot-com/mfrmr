@@ -3472,7 +3472,11 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 
 .compute_drift <- function(fit, anchor_tbl, diagnostics = NULL, baseline_diagnostics = NULL) {
   # Get new estimates
-  new_est <- make_anchor_table(fit, include_person = FALSE)
+  new_est <- make_anchor_table(
+    fit,
+    include_person = FALSE,
+    readiness_policy = "review"
+  )
 
   # Join with baseline anchors
   joined <- dplyr::inner_join(
@@ -3531,26 +3535,29 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #'
 #' Re-estimates a fitted many-facet model on new data while holding selected
 #' facet parameters fixed at the values from a previous (baseline) calibration.
-#' This is the standard workflow for placing new data onto an existing scale,
-#' linking test forms, or carrying a baseline calibration across
-#' administration windows.
+#' This transfers baseline coordinates into a new fit through direct equality
+#' constraints. Common-scale interpretation is conditional on a defensible
+#' baseline and invariant cross-run element identity.
 #' For bounded `GPCM`, treat this as direct exploratory anchor/drift support
 #' rather than as the package's formal linking-synthesis route.
 #'
 #' @param new_data Data frame in long format (one row per rating).
-#' @param baseline_fit An `mfrm_fit` object from a previous calibration.
+#' @param baseline_fit An inference-ready `mfrm_fit` object from a previous
+#'   calibration under the current readiness contract.
 #' @param person Character column name for person/examinee.
 #' @param facets Character vector of facet column names.
 #' @param score Character column name for the rating score.
 #' @param anchor_facets Character vector of facets to anchor (default: all
 #'   non-Person facets).
-#' @param include_person If `TRUE`, also anchor person estimates.
+#' @param include_person If `TRUE`, also anchor person estimates. Use only when
+#'   the same persons are intentionally constrained across runs.
 #' @param weight Optional character column name for observation weights.
 #' @param model Scale model override; defaults to baseline model.
 #' @param method Estimation method override; defaults to baseline method.
 #' @param anchor_policy How to handle anchor issues: `"warn"`, `"error"`,
 #'   `"silent"`.
-#' @param ... Additional arguments passed to [fit_mfrm()].
+#' @param ... For `anchor_to_baseline()`, additional arguments passed to
+#'   [fit_mfrm()]. Ignored by the S3 print and summary methods on this page.
 #'
 #' @details
 #' This function automates the baseline-anchored calibration workflow:
@@ -3561,6 +3568,14 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' 3. Runs [diagnose_mfrm()] on the anchored fit.
 #' 4. Computes element-level differences (new estimate minus baseline
 #'    estimate) for every common element.
+#'
+#' The helper refuses a baseline unless its current readiness record has
+#' `InferenceReady = TRUE`. Also confirm compatible model, score coding,
+#' orientation, and population conventions, and document that anchor labels
+#' denote the same elements with invariant meaning. The function checks object
+#' shape and receiving-data anchor compatibility, but does not establish those
+#' substantive conditions. Fixing parameters can identify coordinates; it does
+#' not create observed common-rating links.
 #'
 #' The `model` and `method` arguments default to the baseline fit's settings
 #' so the calibration framework remains consistent.  Elements present in the
@@ -3580,6 +3595,11 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' An element is **flagged** when \eqn{|\Delta_e| > 0.5} logits or
 #' \eqn{|\Delta_e / SE_{\Delta_e}| > 2.0}, where
 #' \eqn{SE_{\Delta_e} = \sqrt{SE_{\mathrm{base}}^2 + SE_{\mathrm{new}}^2}}.
+#' `SE_Diff` is a plug-in independence calculation. It does not propagate
+#' baseline-anchor uncertainty or cross-fit covariance, and anchored estimates
+#' in the new fit are constrained rather than independently re-estimated.
+#' Consequently, `Drift_SE_Ratio` and `Flag` are descriptive consistency
+#' screens, not formal z tests or calibrated error-rate decisions.
 #'
 #' @section Which function should I use?:
 #' - Use `anchor_to_baseline()` when you have one new dataset and want to place
@@ -3693,7 +3713,6 @@ anchor_to_baseline <- function(new_data, baseline_fit,
 
 #' @rdname anchor_to_baseline
 #' @param x An `mfrm_anchored_fit` object.
-#' @param ... Ignored.
 #' @export
 print.mfrm_anchored_fit <- function(x, ...) {
   print(summary(x))
@@ -3754,7 +3773,7 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' Detect anchor drift across multiple calibrations
 #'
 #' Compares facet estimates across two or more calibration waves to identify
-#' elements whose difficulty/severity has shifted beyond acceptable thresholds.
+#' elements whose difficulty/severity has shifted beyond supplied screening thresholds.
 #' Useful for monitoring rater drift over time or checking the stability of
 #' item banks.
 #'
@@ -3762,11 +3781,13 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'   `list(Year1 = fit1, Year2 = fit2)`).
 #' @param facets Character vector of facets to compare (default: all
 #'   non-Person facets).
-#' @param drift_threshold Absolute drift threshold for flagging (logits,
+#' @param drift_threshold Absolute screening threshold for flagging (logits,
 #'   default 0.5).
-#' @param flag_se_ratio Drift/SE ratio threshold for flagging (default 2.0).
+#' @param flag_se_ratio Drift/SE ratio screening threshold for flagging
+#'   (default 2.0).
 #' @param reference Index or name of the reference fit (default: first).
-#' @param include_person Include person estimates in comparison.
+#' @param include_person Include person estimates in comparison. Use only when
+#'   the person identifiers refer to the same persons across fitted waves.
 #'
 #' @details
 #' For each non-reference wave, the function extracts facet-level estimates
@@ -3779,13 +3800,33 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' overall shift between calibrations. The function also records how many
 #' common elements survive the screening step within each linking facet and
 #' treats fewer than 5 retained common elements per facet as thin support.
+#' This count is a package screening convention, not a universal adequacy
+#' threshold.
+#'
+#' One `LinkOffset` is pooled across all selected common elements and facets.
+#' If at least one pair has finite positive SEs, only pairs with such SEs
+#' contribute to the inverse-variance weighted offset; rows without usable SEs
+#' can still appear in retained/support counts. If preliminary residual
+#' screening would retain no row, the current implementation falls back to all
+#' finite differences. Use a single substantively coherent facet when a common
+#' shift across facet blocks is not defensible, and inspect `drift_table` rather
+#' than treating `LinkSupportAdequate` as sufficient evidence.
+#'
+#' Matching `Facet` and `Level` labels are treated as common elements; the
+#' helper cannot verify that they have invariant meaning across waves. The
+#' input fits must therefore use compatible model, score, orientation, and
+#' population conventions and must be independently reviewed for fit readiness.
+#' Offset removal aligns coordinates conditionally on those assumptions; it is
+#' not proof of scale equivalence.
 #'
 #' An element is **flagged** when either condition is met:
 #' \deqn{|\Delta_e| > \texttt{drift\_threshold}}
 #' \deqn{|\Delta_e / SE_{\Delta_e}| > \texttt{flag\_se\_ratio}}
-#' The dual-criterion approach guards against flagging elements with large
-#' but imprecise estimates, and against missing small but precisely estimated
-#' shifts.
+#' The two criteria are joined by `OR`: a large absolute residual is flagged
+#' even when imprecise, while a smaller residual can be flagged by its SE ratio.
+#' The ratio uses only the two element SEs and omits uncertainty in the
+#' estimated `LinkOffset` and any cross-fit covariance. It is therefore a
+#' descriptive screen, not a formal z test with a calibrated error rate.
 #'
 #' When `facets` is `NULL`, all non-Person facets are compared.  Providing a
 #' subset (e.g., `facets = "Criterion"`) restricts comparison to those facets
@@ -3832,8 +3873,8 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'     \item{summary}{Drift summary aggregated by facet and wave.}
 #'     \item{common_elements}{Tibble of pairwise common-element counts.}
 #'     \item{common_vs_reference}{Tibble of common-element counts
-#'       between each wave and the reference wave (i.e., which
-#'       elements remain comparable across the entire chain).}
+#'       between each wave and the reference wave (i.e., which labels remain
+#'       available as candidate common elements).}
 #'     \item{n_common_all_waves}{Integer count of elements that are
 #'       common across every wave; used by `summary()` to gauge how
 #'       robust the chain is to chained linking error.}
@@ -3878,7 +3919,12 @@ detect_anchor_drift <- function(fits,
 
   # Extract estimates from each fit
   est_list <- lapply(fits, function(f) {
-    make_anchor_table(f, facets = facets, include_person = include_person)
+    make_anchor_table(
+      f,
+      facets = facets,
+      include_person = include_person,
+      readiness_policy = "review"
+    )
   })
 
   # Get SE from diagnostics$measures for each fit
@@ -4141,9 +4187,10 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' Links a series of calibration waves by computing mean offsets between
 #' adjacent pairs of fits. Common linking elements (e.g., raters or items
 #' that appear in consecutive administrations) are used to estimate the
-#' scale shift. Cumulative offsets place all waves on a common metric
-#' anchored to the first wave. The procedure is intended as a practical
-#' screened linking aid, not as a full general-purpose equating framework.
+#' scale shift. Cumulative offsets express all waves relative to the first
+#' wave, conditional on the common-element assumptions. The procedure is a
+#' practical screened linking aid, not a full general-purpose equating
+#' framework or proof of common-scale comparability.
 #'
 #' @param fits Named list of `mfrm_fit` objects in chain order.
 #' @param anchor_facets Character vector of facets to use as linking
@@ -4169,8 +4216,27 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' 6. Flags links with fewer than 5 retained common elements in any linking
 #'    facet as having thin support.
 #'
+#' The five-element rule is a package screening convention, not a universal
+#' adequacy threshold. Matching labels are assumed to identify the same
+#' invariant elements, and input fits are assumed to use compatible model,
+#' score, orientation, and population conventions. The helper does not verify
+#' those assumptions or source-fit readiness. In particular, adjacent label
+#' overlap and a finite offset do not by themselves establish a common scale.
+#'
+#' Each adjacent `Offset` is one value pooled across all selected facets. When
+#' any common rows have finite positive SEs, only those rows contribute to the
+#' inverse-variance weighted offset; retained/support counts can still include
+#' rows without usable SEs. If preliminary screening would remove every row,
+#' the implementation falls back to all finite differences. Prefer one
+#' substantively coherent `anchor_facets` block unless a common shift across
+#' facets is justified.
+#'
 #' Cumulative offsets are computed by chaining link offsets from Wave 1
 #' forward, placing all waves onto the metric of the first wave.
+#' `Offset_SD` is retained-element residual spread, not the standard error of
+#' `Offset`. No offset SE, confidence interval, cross-fit covariance, or
+#' cumulative uncertainty propagation is currently returned, so uncertainty
+#' can compound along the chain without appearing in `cumulative`.
 #'
 #' Elements whose per-link residual exceeds `drift_threshold` are flagged
 #' in `$element_detail$Flag`.  A high `Offset_SD`, many flagged elements, or a
@@ -4252,7 +4318,12 @@ build_equating_chain <- function(fits,
 
   # Extract estimates
   est_list <- lapply(fits, function(f) {
-    make_anchor_table(f, facets = anchor_facets, include_person = include_person)
+    make_anchor_table(
+      f,
+      facets = anchor_facets,
+      include_person = include_person,
+      readiness_policy = "review"
+    )
   })
   se_list <- lapply(fits, function(f) {
     measure_se_table(f, include_person = include_person)
@@ -5014,6 +5085,9 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' The helper keeps the current conservative interpretation policy:
 #' anchor drift and screened links are operational review tools, not automatic
 #' proofs of scale equivalence or score comparability.
+#' It also does not verify source-fit readiness, cross-wave element identity,
+#' invariance, or the external assumptions behind group anchors; these must be
+#' established before promoting the synthesized review.
 #'
 #' @section Recommended input route:
 #' Use existing package-native outputs in this order:

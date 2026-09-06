@@ -294,59 +294,23 @@ For a plot-selection guide and extended examples, see
 }
 
 \examples{
-toy <- load_mfrmr_data("example_operational")
-# Seven quadrature points keep this executable example short. For a final
-# analysis, restore the default or a prespecified grid and review sensitivity.
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy,
-  "Person",
-  c("Rater", "Criterion"),
-  "Score",
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML",
   model = "RSM",
   quad_points = 7,
-  maxit = 30
+  maxit = 30,
+  reltol = 1e-11
 )
-wright <- plot(fit, draw = FALSE)
+wright <- plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)
+wright$name
 head(wright$data$locations)
-# Look for: persons clustered against the facet / step rows on the
-#   shared logit axis. Large gaps between the person density and
-#   the step / facet rails indicate weak targeting; ceiling /
-#   floor stripes mean the test is too easy / hard.
-bundle <- plot(fit, type = "bundle", draw = FALSE)
-bundle$wright_map$data$group_summary
-# Look for: pathway curves rising in the expected order with
-#   visible dominant-category bands; CCC curves peaking sequentially
-#   without one category being completely overlapped by neighbours.
-surface <- plot(fit, type = "ccc_surface", draw = FALSE)
-head(surface$data$surface)
-surface$data$category_support
-# Look for: every retained category having `Observed > 0`; categories
-#   with zero observations are returned as a zero-observation slice and
-#   should not be interpreted as a real score region.
-surface$data$interpretation_guide
-if (interactive()) {
-  plot(
-    fit,
-    type = "wright",
-    preset = "publication",
-    title = "Customized Wright Map",
-    show_ci = TRUE,
-    label_angle = 45
-  )
-  plot(
-    fit,
-    type = "pathway",
-    title = "Customized Pathway Map",
-    palette = c("#1f78b4")
-  )
-  plot(
-    fit,
-    type = "ccc",
-    title = "Customized Category Characteristic Curves",
-    palette = c("#1b9e77", "#d95f02", "#7570b3")
-  )
-}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}}, \code{\link[=plot_bubble]{plot_bubble()}},

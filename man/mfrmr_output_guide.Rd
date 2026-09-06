@@ -68,7 +68,8 @@ Naming convention used by the guide:
 Use \code{mfrmr_output_guide("public")} or
 \code{mfrmr_output_guide("beginner")} for the shortest top-level API map:
 an explicit \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} check and \code{\link[=fit_mfrm]{fit_mfrm()}} MML fit, the lightweight fit summary, the
-comprehensive FACETS-organized summary, the required native Wright map
+comprehensive measurement review (whose historical profile name is
+\code{"facets"}; no FACETS software knowledge or installation is required), the native Wright map
 with SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
 and finally report/export. Use \code{mfrmr_output_guide("entry")} when you
 specifically need alternative first-screen creation routes, including
@@ -93,25 +94,12 @@ and the table that explains how out-of-scope routes are handled.
 }
 
 \examples{
-public <- mfrmr_output_guide("public")
-public[, c("Question", "APILayer", "ObjectRole", "MainFunction")]
+beginner <- mfrmr_output_guide("beginner")
+beginner[, c("Question", "MainFunction", "NextStep")]
 
-entry <- mfrmr_output_guide("entry")
-entry[, c("Question", "Lifecycle", "UserLevel", "MainFunction")]
-
-reviews <- mfrmr_output_guide("reviews")
-reviews[, c("Question", "MainFunction", "UseWhen")]
-
-mfrmr_output_guide("gpcm")[, c("Question", "MainFunction", "GPCMStatus")]
-mfrmr_output_guide("simulation")[, c("Question", "Lifecycle")]
-mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
-mfrmr_output_guide("calibration")[, c("Question", "MainFunction")]
-mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
-mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
-mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
-mfrmr_output_guide("response_time")[, c("Question", "MainFunction")]
-mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]
-mfrmr_output_guide("psychometric")[, c("Question", "DecisionBoundary")]
+# Ask for a specialist map only when that question arises.
+linking <- mfrmr_output_guide("linking")
+linking[, c("Question", "MainFunction", "UseWhen")]
 }
 \concept{GPCM boundaries}
 \concept{reporting workflow}

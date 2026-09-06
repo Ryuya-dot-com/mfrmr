@@ -788,7 +788,10 @@ test_that("descriptive and anchor-review helpers run", {
   expect_true("anchor_review" %in% names(fit$config))
   expect_false("anchor_audit" %in% names(fit$config))
 
-  anchor_tbl <- mfrmr::make_anchor_table(fit)
+  anchor_tbl <- mfrmr::make_anchor_table(
+    fit,
+    readiness_policy = "review"
+  )
   expect_true(is.data.frame(anchor_tbl))
   expect_true(all(c("Facet", "Level", "Anchor") %in% names(anchor_tbl)))
   expect_gt(nrow(anchor_tbl), 0)

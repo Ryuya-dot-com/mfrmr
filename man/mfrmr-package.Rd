@@ -20,7 +20,9 @@ bounded \code{GPCM}, simulation, and planning notes:
 as \code{expected_design} so absent rows are not confused with unassigned cells
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"}
 \item Read \code{summary(fit, profile = "fit")}, then request the comprehensive
-FACETS-organized view with \code{summary(fit, profile = "facets")}
+measurement review with \code{summary(fit, profile = "facets")}. The profile
+name describes a familiar organization; FACETS knowledge or software is
+not required
 \item Create the required native Wright map with
 \code{plot(fit, type = "wright", show_ci = TRUE)}; use the FACETS renderer
 only as an optional familiar presentation
@@ -263,6 +265,10 @@ in \code{Notes}, printed \code{Caveats}, and \verb{$caveats}; \code{summary(fit)
 structured rows into printed \code{Caveats} and \verb{$caveats}, with \verb{Key warnings}
 as a short triage subset. Summary-table exports route those rows through
 \code{score_category_caveats} or \code{analysis_caveats}.
+\item A category can be observed globally but unused by one rater or other facet
+level. Review that local pattern with \code{\link[=data_quality_report]{data_quality_report()}} rather than
+treating it as a globally missing step or an automatic reason to select
+\code{GPCM}.
 \item Optional columns such as \code{Subset}, \code{Weight}, and \code{Group} support linking,
 weighted analysis, and fairness-focused follow-up workflows.
 \item Packaged synthetic data is available via \code{\link[=load_mfrmr_data]{load_mfrmr_data()}} or \code{data()}.
@@ -772,22 +778,34 @@ incomplete, or arbitrary imported designs.
 }
 
 \examples{
-mfrm_threshold_profiles()
-list_mfrmr_data(details = TRUE)
-
-\donttest{
-toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(
-  toy,
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
+review <- describe_mfrm_data(
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1,
+  rating_max = 4
+)
+summary(review)$overview
+
+\donttest{
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML",
   model = "RSM",
-  quad_points = 7
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-summary(diag)
+summary(fit, profile = "fit", detail = "brief")$decision
+plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)$name
 }
 
 }

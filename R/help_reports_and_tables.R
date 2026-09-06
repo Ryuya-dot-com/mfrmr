@@ -156,16 +156,19 @@
 #'
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
+#' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
-#'   toy_small,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
 #'   method = "MML",
+#'   model = "RSM",
 #'   quad_points = 7,
-#'   maxit = 30
+#'   maxit = 30,
+#'   reltol = 1e-11
 #' )
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #'
@@ -222,7 +225,8 @@ NULL
 #' Use `mfrmr_output_guide("public")` or
 #' `mfrmr_output_guide("beginner")` for the shortest top-level API map:
 #' an explicit [describe_mfrm_data()] check and [fit_mfrm()] MML fit, the lightweight fit summary, the
-#' comprehensive FACETS-organized summary, the required native Wright map
+#' comprehensive measurement review (whose historical profile name is
+#' `"facets"`; no FACETS software knowledge or installation is required), the native Wright map
 #' with SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
 #' and finally report/export. Use `mfrmr_output_guide("entry")` when you
 #' specifically need alternative first-screen creation routes, including
@@ -261,25 +265,12 @@ NULL
 #' - `Notes`
 #'
 #' @examples
-#' public <- mfrmr_output_guide("public")
-#' public[, c("Question", "APILayer", "ObjectRole", "MainFunction")]
+#' beginner <- mfrmr_output_guide("beginner")
+#' beginner[, c("Question", "MainFunction", "NextStep")]
 #'
-#' entry <- mfrmr_output_guide("entry")
-#' entry[, c("Question", "Lifecycle", "UserLevel", "MainFunction")]
-#'
-#' reviews <- mfrmr_output_guide("reviews")
-#' reviews[, c("Question", "MainFunction", "UseWhen")]
-#'
-#' mfrmr_output_guide("gpcm")[, c("Question", "MainFunction", "GPCMStatus")]
-#' mfrmr_output_guide("simulation")[, c("Question", "Lifecycle")]
-#' mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("calibration")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("response_time")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]
-#' mfrmr_output_guide("psychometric")[, c("Question", "DecisionBoundary")]
+#' # Ask for a specialist map only when that question arises.
+#' linking <- mfrmr_output_guide("linking")
+#' linking[, c("Question", "MainFunction", "UseWhen")]
 #' @concept reporting workflow
 #' @concept route selection
 #' @concept GPCM boundaries
@@ -413,7 +404,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     Question = c(
       "1. Check score support and fit with explicit data roles",
       "2. Check convergence and fitted-model settings",
-      "3. Build the comprehensive FACETS-organized review",
+      "3. Build the comprehensive measurement review",
       "4. Create the required native Wright map with SE or CI",
       "5. Add optional FACETS-style and Infit pathway views",
       "6. Review, report, and export the completed results"
@@ -421,8 +412,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     OutputFamily = c("entry", "entry", "entry", "plot-data", "plot-data", "export"),
     MainFunction = c(
       paste0(
-        "describe_mfrm_data(data, person = ..., facets = ..., score = ...); ",
-        "fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., method = \"MML\")"
+        "describe_mfrm_data(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ...); ",
+        "fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., method = \"MML\")"
       ),
       "summary(fit, profile = \"fit\", detail = \"brief\")",
       "review <- summary(fit, profile = \"facets\", detail = \"brief\"); res <- review$results",
@@ -469,7 +460,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     Notes = c(
       "Use describe_mfrm_data() before an explicit fit_mfrm() call; do not rely on automatic data-frame role inference.",
       "This fit-only profile is intentionally lightweight and does not compute the comprehensive diagnostic sections.",
-      "FACETS describes the organization of this review; mfrmr estimated the model and numerical equivalence is not implied.",
+      "The historical profile name is facets, but no FACETS software knowledge or installation is required; mfrmr estimates the model.",
       "The native map retains mfrmr's facet uncertainty display and is the required first fitted-scale figure.",
       "The closest FACETS-style renderer uses show_ci = FALSE; show_ci = TRUE is a deliberate hybrid that adds mfrmr uncertainty intervals. The Infit pathway adds persons only when explicitly requested.",
       "Reporting and export organize existing evidence; they do not improve model fit or create an automatic acceptance rule."
@@ -855,8 +846,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     MainFunction = c(
       paste0(
-        "describe_mfrm_data(data, person = ..., facets = ..., score = ...); ",
-        "fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., method = \"MML\"); ",
+        "describe_mfrm_data(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ...); ",
+        "fit <- fit_mfrm(data, person = ..., facets = ..., score = ..., rating_min = ..., rating_max = ..., method = \"MML\"); ",
         "review <- summary(fit, profile = \"facets\", detail = \"brief\"); res <- review$results"
       ),
       "plot(res, type = \"wright\", renderer = \"native\", show_ci = TRUE, top_n = Inf, preset = \"publication\")",
@@ -1049,7 +1040,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     Notes = c(
       "mfrmr is not a FACETS numerical clone; familiar names help transition, but estimates remain package-native unless external output is supplied.",
-      "Direct anchors fix element logits; group anchors constrain a group mean, with direct anchors taking precedence.",
+      "Direct anchors fix element logits; group anchors constrain a group mean. Overlapping constraints are retained jointly and must be compatible.",
       "Operational linking conclusions remain RSM/PCM-scoped; bounded GPCM linking review is caveated exploratory synthesis.",
       "Closest current route for FACETS users who expect fit measures in one table.",
       "The guide explains engine df, FACETS-style df, Wilson-Hilferty ZSTD, and WHEXACT caveats.",
@@ -1057,7 +1048,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
       "GPCM fair averages are slope-aware direct outputs, not FACETS score-side equivalence.",
       "Bias outputs are conditional screening layers; use substantive review before fairness conclusions.",
       "Wright maps visualize fitted scale locations; under bounded GPCM, interpret step/threshold locations with slope-aware caveats.",
-      "Designed to catch user-visible data problems before fit interpretation.",
+      "Separates global score-support gaps from facet-level category restriction; neither local avoidance nor a near-zero severity estimate is by itself a reason to select GPCM.",
       "Residual and subset writers are package-native CSV/TSV handoff routes, not exact FACETS fixed-field command-file clones.",
       "ConQuest support is intentionally scoped to a documented comparison case.",
       "The helper reads extracted tables, not raw ConQuest report text.",
@@ -1182,9 +1173,7 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     return(out[keep, , drop = FALSE])
   }
   if (identical(scope, "gpcm")) {
-    keep <- out$GPCMStatus != "supported" |
-      grepl("GPCM|gpcm", out$Question, ignore.case = TRUE) |
-      grepl("GPCM|gpcm", out$Notes, ignore.case = TRUE)
+    keep <- out$GPCMStatus != "supported"
     return(out[keep, , drop = FALSE])
   }
   if (identical(scope, "response_time")) {

@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-08-26.
+Status: public roadmap, updated 2026-09-03.
 
 This roadmap describes the package's intended user-facing direction. It is not
 a promise of release dates. Completed changes are documented in `NEWS.md`.
@@ -84,6 +84,26 @@ FACETS, ConQuest, TAM, and other software may be used as independent
 comparators when model, parameterization, constraints, anchors, categories, and
 estimands can be aligned. Agreement with another program is useful evidence,
 but it is not the definition of correctness and does not imply feature parity.
+
+## Relationship to adjacent R packages
+
+`mfrmr` should own the many-facet analysis contract: long-format facet roles,
+score support, identification and anchor declarations, connectivity and
+readiness checks, fitted-scale diagnostics, and a reproducible route from fit
+to reporting. It should not reproduce mature estimators or simulation engines
+merely to offer another interface to the same estimand.
+
+| Package | Existing responsibility | Relationship to `mfrmr` | Non-goal for `mfrmr` |
+| --- | --- | --- | --- |
+| TAM | Broad MML/JML IRT, GPCM, multidimensional, latent-regression, plausible-value, and multifacet routes | Independent comparator or external analysis route after the measurement, estimation, and scoring specifications are matched | A TAM compatibility mode or clone of its solver and design-matrix engine |
+| mirt | Broad unidimensional/multidimensional IRT, GPCM/GRM, mixed-effects and stochastic estimation routes | First external oracle for response-family, slope, and multidimensional questions outside the bounded `mfrmr` core | Reimplementing MIRT, GRM, mixture, or stochastic engines without a named many-facet use case |
+| immer | Hierarchical rater models and CML/CCML/JML partial-credit models for multiple ratings | Alternative-estimand and sensitivity route for hierarchical-rater or conditional-likelihood questions | Calling an HRM, CML, or bias-corrected JML result numerically equivalent to the bounded `mfrmr` GPCM |
+| simr | Simulation-based power analysis for `lme4` mixed models | External route for power of a model-matched mixed-model hypothesis | Reusing GLMM power as MFRM recovery, anchor/link, fit-screening, or scoring evidence |
+
+The default order is documentation or export, then one matched external
+microcase, then a narrow adapter only if users repeatedly need the same
+translation. New dependencies and new package-native engines require evidence
+that these smaller routes cannot answer the intended decision.
 
 ## Version direction
 

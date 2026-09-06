@@ -53,12 +53,14 @@ fit is interpretable.
 }
 
 \examples{
-data("mfrmr_example_operational", package = "mfrmr")
-head(mfrmr_example_operational)
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
+names(ratings)
+table(ratings$Score)
 
-d <- load_mfrmr_data("example_operational")
-table(d$Rater)
-table(d$Criterion, d$Score)
+# Base R's data() loader returns the same packaged data.
+data("mfrmr_example_operational", package = "mfrmr")
+identical(ratings, mfrmr_example_operational)
 }
 \seealso{
 \code{\link[=list_mfrmr_data]{list_mfrmr_data()}}, \link{ej2021_data}

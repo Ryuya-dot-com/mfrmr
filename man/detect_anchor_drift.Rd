@@ -29,14 +29,16 @@ detect_anchor_drift(
 \item{facets}{Character vector of facets to compare (default: all
 non-Person facets).}
 
-\item{drift_threshold}{Absolute drift threshold for flagging (logits,
+\item{drift_threshold}{Absolute screening threshold for flagging (logits,
 default 0.5).}
 
-\item{flag_se_ratio}{Drift/SE ratio threshold for flagging (default 2.0).}
+\item{flag_se_ratio}{Drift/SE ratio screening threshold for flagging
+(default 2.0).}
 
 \item{reference}{Index or name of the reference fit (default: first).}
 
-\item{include_person}{Include person estimates in comparison.}
+\item{include_person}{Include person estimates in comparison. Use only when
+the person identifiers refer to the same persons across fitted waves.}
 
 \item{x}{An \code{mfrm_anchor_drift} object.}
 
@@ -51,8 +53,8 @@ Object of class \code{mfrm_anchor_drift} with components:
 \item{summary}{Drift summary aggregated by facet and wave.}
 \item{common_elements}{Tibble of pairwise common-element counts.}
 \item{common_vs_reference}{Tibble of common-element counts
-between each wave and the reference wave (i.e., which
-elements remain comparable across the entire chain).}
+between each wave and the reference wave (i.e., which labels remain
+available as candidate common elements).}
 \item{n_common_all_waves}{Integer count of elements that are
 common across every wave; used by \code{summary()} to gauge how
 robust the chain is to chained linking error.}
@@ -62,7 +64,7 @@ robust the chain is to chained linking error.}
 }
 \description{
 Compares facet estimates across two or more calibration waves to identify
-elements whose difficulty/severity has shifted beyond acceptable thresholds.
+elements whose difficulty/severity has shifted beyond supplied screening thresholds.
 Useful for monitoring rater drift over time or checking the stability of
 item banks.
 }
@@ -77,13 +79,33 @@ waves so that \code{Drift} represents residual instability rather than the
 overall shift between calibrations. The function also records how many
 common elements survive the screening step within each linking facet and
 treats fewer than 5 retained common elements per facet as thin support.
+This count is a package screening convention, not a universal adequacy
+threshold.
+
+One \code{LinkOffset} is pooled across all selected common elements and facets.
+If at least one pair has finite positive SEs, only pairs with such SEs
+contribute to the inverse-variance weighted offset; rows without usable SEs
+can still appear in retained/support counts. If preliminary residual
+screening would retain no row, the current implementation falls back to all
+finite differences. Use a single substantively coherent facet when a common
+shift across facet blocks is not defensible, and inspect \code{drift_table} rather
+than treating \code{LinkSupportAdequate} as sufficient evidence.
+
+Matching \code{Facet} and \code{Level} labels are treated as common elements; the
+helper cannot verify that they have invariant meaning across waves. The
+input fits must therefore use compatible model, score, orientation, and
+population conventions and must be independently reviewed for fit readiness.
+Offset removal aligns coordinates conditionally on those assumptions; it is
+not proof of scale equivalence.
 
 An element is \strong{flagged} when either condition is met:
 \deqn{|\Delta_e| > \texttt{drift\_threshold}}
 \deqn{|\Delta_e / SE_{\Delta_e}| > \texttt{flag\_se\_ratio}}
-The dual-criterion approach guards against flagging elements with large
-but imprecise estimates, and against missing small but precisely estimated
-shifts.
+The two criteria are joined by \code{OR}: a large absolute residual is flagged
+even when imprecise, while a smaller residual can be flagged by its SE ratio.
+The ratio uses only the two element SEs and omits uncertainty in the
+estimated \code{LinkOffset} and any cross-fit covariance. It is therefore a
+descriptive screen, not a formal z test with a calibrated error rate.
 
 When \code{facets} is \code{NULL}, all non-Person facets are compared.  Providing a
 subset (e.g., \code{facets = "Criterion"}) restricts comparison to those facets

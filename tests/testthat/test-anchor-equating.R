@@ -3,10 +3,16 @@
 # ---------- shared fixtures (computed once) ----------
 d1   <- load_mfrmr_data("study1")
 d2   <- load_mfrmr_data("study2")
-fit1 <- fit_mfrm(d1, person = "Person", facets = c("Rater", "Criterion"),
-                 score = "Score", method = "JML")
-fit2 <- fit_mfrm(d2, person = "Person", facets = c("Rater", "Criterion"),
-                 score = "Score", method = "JML")
+fit1 <- suppressWarnings(fit_mfrm(
+  d1, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", method = "MML", quad_points = 7,
+  maxit = 100, reltol = 1e-9
+))
+fit2 <- suppressWarnings(fit_mfrm(
+  d2, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", method = "MML", quad_points = 7,
+  maxit = 100, reltol = 1e-9
+))
 audit1 <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 
 # ================================================================
@@ -15,7 +21,7 @@ audit1 <- review_mfrm_anchors(d1, "Person", c("Rater", "Criterion"), "Score")
 
 test_that("anchor_to_baseline returns correct class and structure", {
   res <- suppressWarnings(
-    anchor_to_baseline(d2, fit1, person = "Person",
+    anchor_to_baseline(d2, fit2, person = "Person",
                        facets = c("Rater", "Criterion"),
                        score = "Score")
   )
@@ -41,8 +47,8 @@ test_that("anchor_to_baseline returns correct class and structure", {
 })
 
 test_that("anchor_to_baseline self-anchoring yields near-zero drift", {
-  # Anchor fit1 data to fit1 itself -> drift should be ~0
-  res <- anchor_to_baseline(d1, fit1, person = "Person",
+  # Anchor fit2 data to fit2 itself -> drift should be ~0
+  res <- anchor_to_baseline(d2, fit2, person = "Person",
                             facets = c("Rater", "Criterion"),
                             score = "Score")
 
@@ -59,6 +65,23 @@ test_that("anchor_to_baseline rejects non-mfrm_fit input", {
   expect_error(
     anchor_to_baseline(data.frame(), list(x = 1), "P", "F", "S"),
     "mfrm_fit"
+  )
+})
+
+test_that("anchor_to_baseline refuses a nonready baseline fit", {
+  nonready <- fit2
+  nonready$readiness$fit$FitReadiness[1] <- "review"
+  nonready$readiness$fit$InferenceReady[1] <- FALSE
+
+  expect_error(
+    anchor_to_baseline(
+      d2,
+      nonready,
+      person = "Person",
+      facets = c("Rater", "Criterion"),
+      score = "Score"
+    ),
+    "not eligible for anchor export or reuse"
   )
 })
 
@@ -109,7 +132,7 @@ test_that("fit_mfrm surfaces malformed anchor schemas instead of silently droppi
 
 test_that("anchor_to_baseline S3 methods produce output", {
   res <- suppressWarnings(
-    anchor_to_baseline(d2, fit1, person = "Person",
+    anchor_to_baseline(d2, fit2, person = "Person",
                        facets = c("Rater", "Criterion"),
                        score = "Score")
   )

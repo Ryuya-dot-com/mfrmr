@@ -5305,28 +5305,25 @@ mfrm_report_html <- function(report) {
 #'   [mfrmr_output_guide()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
-#' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' results <- mfrm_results(fit)
 #'
-#' report <- mfrm_report(res, style = "qc")
-#' summary(report)
-#' report$first_screen
-#' report$report_index[, c("Area", "Readiness", "PrimaryTable",
-#'                         "TemplateTable", "PlotRoute")]
-#' report$template_index[, c("Area", "Topic", "BoundaryType",
-#'                           "ClaimStrength", "EvidenceRoute")]
-#'
-#' # Open detailed evidence only after the index points to it.
-#' fit_primary <- report$report_index$PrimaryTable[
-#'   report$report_index$Area == "Fit"
-#' ][1]
-#' report$tables[[fit_primary]]
-#'
-#' mfrm_report(res, output = "markdown")
-#' mfrm_report(res, output = "html")
+#' report <- mfrm_report(results)
+#' summary(report, view = "reader")
+#' report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 #' }
 #' @export
 mfrm_report <- function(x,
@@ -5609,18 +5606,29 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   [export_mfrm_bundle()], [export_summary_appendix()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
-#' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' results <- mfrm_results(fit)
 #'
 #' exported <- export_mfrm_results(
-#'   res,
+#'   results,
 #'   output_dir = tempdir(),
 #'   prefix = "mfrmr_results_example",
 #'   preset = "starter",
-#'   overwrite = TRUE
+#'   overwrite = TRUE,
+#'   acknowledge_sensitive = TRUE # The packaged example is synthetic.
 #' )
 #' exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
 #' }
@@ -6145,36 +6153,26 @@ export_mfrm_results <- function(x,
 #'   [launch_mfrmr_viewer()], [mfrmr_output_guide()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' results <- mfrm_results(fit)
 #'
-#' # JML keeps the help example fast; use the recommended workflow settings
-#' # for final analyses.
-#' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' res <- mfrm_results(fit)
-#'
-#' wright <- plot(res, draw = FALSE)
-#' wright$name
-#' fit_bundle <- plot(res, type = "fit", draw = FALSE)
-#'
-#' sx <- summary(res)
-#' sx$overview
-#' sx$readiness
-#' sx$triage
-#' sx$plot_map
-#' sx$next_actions
-#' mfrm_results(fit, include = "validation", output = "summary")$status
-#'
-#' plot(res, type = "qc", draw = FALSE)
-#'
-#' # Direct data-frame input is available only after selecting unambiguous
-#' # measurement columns. Extra study/group columns require an explicit fit.
-#' mfrm_results(
-#'   toy_small[, c("Person", "Rater", "Criterion", "Score")],
-#'   include = c("fit", "diagnostics"),
-#'   output = "summary"
-#' )$mapping
+#' results_review <- summary(results, view = "brief")
+#' results_review$decision
+#' results_review$next_actions
+#' plot(results, type = "wright", draw = FALSE)$name
 #' }
 #' @export
 mfrm_results <- function(fit,

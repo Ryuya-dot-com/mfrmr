@@ -175,8 +175,11 @@ anchors <- data.frame(
 fit <- fit_mfrm(..., anchors = anchors)
 ```
 
-`review_mfrm_anchors()` validates and reports on the anchor block before the
-fit runs, surfacing connectivity, overlap, and minimum-sample issues.
+`review_mfrm_anchors()` normalizes and reports on the constraint block before
+the fit runs, surfacing duplicate/direct-group overlap and local support-count
+issues. It does not evaluate assignment connectedness, source-fit readiness,
+or cross-run element invariance; use the design-network route and substantive
+identity evidence separately.
 
 ### Bias and interaction
 
@@ -289,6 +292,10 @@ fit_g <- fit_mfrm(..., group_anchors = group_anchors)
 dff <- analyze_dff(fit_g, diag, facet = "Criterion",
                    group = "FirstLanguage", method = "refit")
 ```
+
+A group-anchor target is an external mean constraint, not an empirical link.
+Its use requires a defensible equal-mean or known-target assumption for the
+declared elements and does not connect otherwise unobserved rating subsets.
 
 ## Reviewing output contracts and fit tables
 

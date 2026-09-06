@@ -285,45 +285,26 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 
 \examples{
 \donttest{
-# Diagnostic example without residual PCA.
-toy <- load_mfrmr_data("example_operational")
-# Seven quadrature points keep this example short; use the prespecified
-# final grid and a denser sensitivity grid for substantive analysis.
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
 )
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-s_diag <- summary(diag)
-s_diag$overview[, c("Observations", "Facets", "Categories")]
-s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+s_diag <- summary(diag, top_n = 3)
+s_diag$decision
 s_diag$key_warnings
-# Look for: lines starting with "MnSq misfit:" name the element +
-#   Infit / Outfit values outside the configured heuristic review band.
-#   Review those signals in context; an empty warning list is not an
-#   automatic all-clear decision.
-s_diag$facets_chisq
-# Look for: `FixedProb` < 0.05 is evidence against the fixed-effect
-#   "all elements equal" null under the reported chi-square approximation.
-#   Interpret the magnitude and precision as well; a non-significant result
-#   does not demonstrate homogeneous elements or negligible facet spread.
-s_diag$interrater
-# Look for: ExactAgreement >= ExpectedExactAgreement and
-#   AgreementMinusExpected >= 0 indicate raters agree at least as
-#   often as the model expects. Negative values warrant a closer
-#   look at `diag$interrater$pairs`.
-p_qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE)
-p_qc$data$plot
-
-# Optional: include residual PCA in the diagnostic bundle
-diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
-pca <- analyze_residual_pca(diag_pca, mode = "overall")
-head(pca$overall_table)
-
-# Reporting route:
-prec <- precision_review_report(fit, diagnostics = diag)
-summary(prec)
-
+s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+s_diag$top_fit
 }
 }
 \seealso{

@@ -133,6 +133,15 @@ If equal contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
 
+Category avoidance is a separate decision. For example, a rater who uses only
+3--8 on a declared 1--10 scale shows local restriction of range if the omitted
+categories are used elsewhere. Start with `data_quality_report()` and inspect
+`category_usage_by_facet` and `category_usage_summary`; also examine assignment
+and case mix, fit, and unexpected responses. Do not move to `GPCM` merely
+because a rater avoids extreme categories. A rater-owned PCM/GPCM may expose
+owner-specific threshold or slope support problems, but it changes the model
+being estimated and does not by itself explain or repair the scoring practice.
+
 ### Comparing PCM and bounded GPCM
 
 The package provides three complementary comparison layers:

@@ -136,16 +136,36 @@ test_that("make_anchor_table error guard and facets filter", {
 
   expect_error(mfrmr::make_anchor_table(list()), "mfrm_fit")
 
-  anchor_tbl <- mfrmr::make_anchor_table(fit)
+  nonready_fit <- fit
+  nonready_fit$readiness$fit$FitReadiness[1] <- "review"
+  nonready_fit$readiness$fit$InferenceReady[1] <- FALSE
+  expect_error(
+    mfrmr::make_anchor_table(nonready_fit),
+    "not eligible for anchor export or reuse"
+  )
+
+  ready_fit <- fit
+  ready_fit$readiness$fit$FitReadiness[1] <- "ready"
+  ready_fit$readiness$fit$InferenceReady[1] <- TRUE
+  anchor_tbl <- mfrmr::make_anchor_table(ready_fit)
   expect_true(nrow(anchor_tbl) > 0)
+  expect_true(isTRUE(attr(anchor_tbl, "source_inference_ready")))
+  expect_identical(attr(anchor_tbl, "readiness_policy"), "error")
 
   # Filter by specific facets (line 1344-1346)
-  anchor_sub <- mfrmr::make_anchor_table(fit, facets = "Rater")
+  anchor_sub <- mfrmr::make_anchor_table(ready_fit, facets = "Rater")
   expect_true(all(anchor_sub$Facet == "Rater"))
 
   # Include person estimates
-  anchor_person <- mfrmr::make_anchor_table(fit, include_person = TRUE)
+  anchor_person <- mfrmr::make_anchor_table(ready_fit, include_person = TRUE)
   expect_true("Person" %in% anchor_person$Facet)
+
+  review_only <- mfrmr::make_anchor_table(
+    nonready_fit,
+    readiness_policy = "review"
+  )
+  expect_false(isTRUE(attr(review_only, "source_inference_ready")))
+  expect_identical(attr(review_only, "readiness_policy"), "review")
 })
 
 # ---------------------------------------------------------------------------
@@ -279,7 +299,11 @@ test_that("anchor review print and summary cover lines 970-1076", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
 
   # Create review with anchors that trigger issues
-  anchor_tbl <- mfrmr::make_anchor_table(fit, facets = "Rater")
+  anchor_tbl <- mfrmr::make_anchor_table(
+    fit,
+    facets = "Rater",
+    readiness_policy = "review"
+  )
   aud <- mfrmr::review_mfrm_anchors(
     data = d, person = "Person",
     facets = c("Rater", "Task", "Criterion"), score = "Score",

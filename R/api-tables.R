@@ -1018,8 +1018,20 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
 #' t8 <- rating_scale_table(fit)
 #' summary(t8)
 #' summary(t8)$summary

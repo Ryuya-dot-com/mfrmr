@@ -79,9 +79,16 @@ unstable downstream facet estimates.
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-ds <- describe_mfrm_data(toy, "Person", c("Rater", "Criterion"), "Score")
-summary(ds)
+ratings <- load_mfrmr_data("example_operational")
+data_review <- describe_mfrm_data(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4
+)
+summary(data_review)
 }
 \seealso{
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}

@@ -68,18 +68,33 @@ Interpretation:
 
 - Sparse rows or columns indicate weaker design coverage.
 - Weak coverage should lower confidence in subgroup comparisons.
+- Use the co-observation design graph, not rater agreement,
+  severity-direction, or halo response networks, to assess empirical
+  connectedness. Response-network correlations do not create a common scale.
 
 ## 2. Export anchor candidates
 
-`make_anchor_table()` is the shortest route when you need reusable anchor
-elements from an existing calibration.
+`make_anchor_table()` mechanically exports fitted values in the direct-anchor
+schema. Its output is a candidate table, not a validated anchor set.
 
 ```{r anchors}
 anchors <- make_anchor_table(fit, facets = "Criterion")
 head(anchors)
 ```
 
-Use `review_mfrm_anchors()` when you want a stricter review of anchor quality.
+By default, `make_anchor_table()` refuses a source whose current readiness
+record does not have `InferenceReady = TRUE`. Use
+`readiness_policy = "review"` only to inspect review-only candidate values, not
+to reuse them as anchors. For a ready reference fit, also document cross-run
+element identity and invariance and confirm compatible model, score,
+orientation, and population conventions. Then use `review_mfrm_anchors()` to
+check table syntax and receiving-data support. That review does not certify the
+substantive link.
+
+Keep the roles distinct: common ratings or common elements supply observed
+design overlap; `anchors` fix individual parameters; `group_anchors` constrain
+a group mean under an externally justified target or equal-mean assumption.
+Neither constraint type manufactures empirical overlap.
 
 ## 3. Residual DFF as a screening layer
 
@@ -228,6 +243,14 @@ fit2 <- fit_mfrm(
 drift <- detect_anchor_drift(list(Wave1 = fit1, Wave2 = fit2))
 plot_anchor_drift(drift, type = "drift", preset = "publication")
 ```
+
+The current drift and chain helpers estimate one pooled offset across every
+selected common element and facet. Their SE ratios do not include uncertainty
+from estimating that offset or cross-fit covariance, and cumulative chain
+offsets have no propagated SE. `Offset_SD` is residual spread rather than an
+offset standard error. Use one coherent linking facet unless a common shift
+across facet blocks is defensible, and treat flags and support counts as review
+screens rather than formal tests or proof of scale equivalence.
 
 ## Recommended sequence
 

@@ -2,6 +2,17 @@
 
 ## Reliability and reproducibility
 
+* Generalizability-study and D-study results now state explicitly that their
+  G/Phi coefficients are estimated on the observed numeric score scale, not on
+  the fitted MFRM latent scale. Ordered scores continue to use the documented
+  Gaussian linear mixed-model approximation in this complementary analysis.
+* `evaluate_mfrm_design(parallel = "future")` now dispatches replications
+  through the active future plan while preserving the same preallocated
+  design-replication seeds and stochastic inputs as serial execution.
+* Corrected the G/Phi interpretation example: under the implemented
+  nonnegative main-effect decomposition, `Phi <= G`; `Phi < G`, not `G < Phi`,
+  indicates that absolute decisions carry additional facet-main-effect error.
+  A D-study regression check now preserves this ordering.
 * Added a public portable-calibration workflow for eligible one-scale RSM/PCM
   MML fits under the fixed standard-normal scoring basis. Draft extraction,
   review, validation, freezing, persistence, and artifact-only scoring are
@@ -12,6 +23,10 @@
   than inheriting the fit-time grid. It refuses a one-point grid, rejects
   invalid weights, and fails closed when the source is not scoring-ready unless
   the user explicitly requests a labelled review-only calculation.
+* Anchor candidate export and baseline reuse now fail closed unless the source
+  fit is inference-ready under the current readiness contract. Explicit
+  `readiness_policy = "review"` extraction remains available for inspection,
+  while anchor application and anchor CSV export retain the strict default.
 * Replay scripts now preserve facet-interaction specifications and their
   support policy.
 * MML EM checkpoints now bind the data, model, parameter layout, quadrature,
@@ -33,6 +48,17 @@
 * Latent-regression reference benchmarks no longer attempt Person scoring when
   their fitted model is not scoring-ready. The posterior-shift check is kept as
   an explicit unevaluated warning instead of using a review-only score.
+* Facet-level category avoidance is now documented separately from global
+  score support and from GPCM model choice. The legacy facet-dashboard
+  `CentralTendencyFlag` is disabled by default because proximity of a severity
+  estimate to the fitted origin does not diagnose restricted category use;
+  `data_quality_report()` remains the response-based screening route.
+* Front-door and first diagnostic help examples now follow one explicit,
+  inference-ready workflow: the applied synthetic data, named column roles and
+  score support, RSM-MML fitting, fit review, Wright map, diagnostic summary,
+  data/rating-scale/precision review, results, and report/export handoff. The
+  historical `profile = "facets"` name no longer assumes experience with
+  FACETS, TAM, or sirt, and examples no longer choose JML merely for speed.
 
 # mfrmr 0.2.3.1
 

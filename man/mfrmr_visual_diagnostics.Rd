@@ -61,9 +61,10 @@ Use \code{\link[=plot_unexpected]{plot_unexpected()}} and \code{\link[=plot_disp
 Use \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}.
 \item "Which level pairs drive strict local-dependence follow-up?"
 Use \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
-\item "Do raters agree and do facets separate meaningfully?"
-Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=rater_network_analysis]{rater_network_analysis()}}, and
-\code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+\item "Do raters agree within observed shared scoring contexts?"
+Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} and \code{\link[=rater_network_analysis]{rater_network_analysis()}}.
+\item "Do facet levels separate meaningfully?"
+Use \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
 \item "Do criteria within the same rater move together in a halo-like way?"
 Use \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} and
 \code{plot(..., type = "edge_distribution")}.
@@ -126,6 +127,19 @@ theta-by-category-by-probability plot data for exploratory teaching or
 downstream interactive rendering. Keep 2D pathway/CCC plots as the
 default reporting figures.
 }
+}
+
+\section{Keep the network questions separate}{
+
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} describes the assignment/co-observation graph and
+is the relevant network route for disconnected measurement subsets.
+\code{\link[=rater_network_analysis]{rater_network_analysis()}} describes pairwise score agreement,
+disagreement, or severity direction, while \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}
+describes rater-by-criterion score-profile correlations. The latter two do
+not establish assignment connectedness or a common scale. In all three,
+degree, strength, betweenness, and closeness are graph-theoretic quantities;
+they are not rating-scale central tendency, MFRM severity logits, or causal
+halo evidence.
 }
 
 \section{Recommended visual route}{

@@ -42,25 +42,34 @@ criterion facets.}
 relationship.}
 
 \item{alpha}{Adjusted p-value threshold for retaining edges. Set to \code{1} to
-retain all finite correlations after \code{min_abs_weight} filtering.}
+retain all finite correlations after \code{min_abs_weight} filtering. This
+changes retained-edge counts, graph topology, and graph centrality, but
+not the full-pair halo/non-halo distribution summaries.}
 
 \item{p_adjust}{Multiple-comparison adjustment passed to \code{\link[stats:p.adjust]{stats::p.adjust()}}.
 The default \code{"bonferroni"} follows the conservative screening used in
 Lamprianou's halo-network example.}
 
-\item{min_abs_weight}{Minimum absolute correlation retained as a graph edge.}
+\item{min_abs_weight}{Minimum absolute correlation retained as a graph edge.
+Like \code{alpha}, this is an analysis filter for the retained graph, not merely
+a display filter.}
 
 \item{halo_weight_review}{Same-rater cross-criterion mean absolute
-correlation at or above which a rater is marked for review.}
+correlation at or above which a rater is marked for review. This is a
+package screening default, not a validated halo cut point.}
 
 \item{halo_contrast_review}{Minimum difference between a rater's mean halo
-edge weight and incident non-halo edge weight for a stronger review flag.}
+edge weight and incident non-halo edge weight for a stronger review flag.
+This is a package screening default, not a validated halo cut point.}
 
 \item{min_retained_halo_edges}{Minimum retained halo edges required before a
 strong \code{"warning"} status is assigned.}
 
 \item{positive_only}{If \code{TRUE}, negative correlations are kept in
-\code{pair_metrics} but excluded from the graph edge table.}
+\code{pair_metrics} but excluded from the graph edge table and retained-edge
+counts. Unfiltered distribution and per-rater summaries use absolute
+correlations regardless of this setting; inspect \code{MeanSignedHaloWeight}
+before interpreting a review flag.}
 
 \item{include_graph}{If \code{TRUE}, include the underlying \code{igraph} object.}
 }
@@ -68,10 +77,11 @@ strong \code{"warning"} status is assigned.}
 A bundle of class \code{mfrm_halo_network} containing:
 \describe{
 \item{\code{summary}}{One-row halo-network summary and halo/non-halo contrast.}
-\item{\code{node_metrics}}{Rater-by-criterion node strength and centrality.}
+\item{\code{node_metrics}}{Rater-by-criterion node strength and
+graph-theoretic centrality.}
 \item{\code{edge_metrics}}{Retained graph edges.}
-\item{\code{pair_metrics}}{All estimated node-pair correlations before edge
-filtering.}
+\item{\code{pair_metrics}}{All estimated node-pair correlations with explicit
+retention flags for each graph filter.}
 \item{\code{halo_summary_by_rater}}{Per-rater summaries of same-rater
 criterion-pair edges, including \code{ReviewStatus} and \code{ReviewReason}.}
 \item{\code{caveats}}{Interpretation notes.}
@@ -87,17 +97,29 @@ those node score vectors across shared contexts. Edges connecting two nodes
 from the same rater but different criteria are labelled \code{"halo"}; all other
 retained edges are labelled \code{"non_halo"}.
 
+This response-profile network does not evaluate assignment connectedness or
+establish a common scale. Its degree, strength, betweenness, and closeness
+columns are graph-theoretic centrality summaries after adjusted-p,
+\code{min_abs_weight}, and sign filters are applied.
+
 Per-rater \code{ReviewStatus} combines same-rater cross-criterion mean weight,
 incident non-halo comparison weight, and the number of retained halo edges.
 A \code{"warning"} means these criteria converge strongly enough to prioritize
 follow-up; \code{"review"} means at least one screening criterion is elevated.
-Neither label is a causal halo diagnosis.
+Neither label is a causal halo diagnosis, and the default review thresholds
+are package conventions rather than validated decision rules. Strong
+negative same-rater correlations are anomalous but are not evidence of a
+positive halo pattern; consult signed correlations in \code{pair_metrics} and
+\code{MeanSignedHaloWeight}.
 
 The key descriptive comparison is the distribution of halo-edge weights
 versus non-halo-edge weights. A larger halo-edge distribution is consistent
 with a halo pattern, but this function deliberately reports it as a
-screening diagnostic. The included Welch test is descriptive only because
-edge weights are clustered by rater and node.
+screening diagnostic. \code{MeanHaloWeight}, \code{MeanNonHaloWeight}, and the Welch
+comparison use all finite absolute correlations meeting \code{min_pair_n}, before
+adjusted-p, \code{min_abs_weight}, and sign filtering; the corresponding
+\verb{MeanRetained*} columns describe the filtered graph. The Welch test is
+descriptive only because edge weights are clustered by rater and node.
 }
 \examples{
 \donttest{

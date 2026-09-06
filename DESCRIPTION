@@ -57,6 +57,7 @@ Suggests:
     lme4,
     kableExtra,
     flextable,
+    future,
     future.apply,
     shiny,
     ggplot2 (>= 3.4.0),

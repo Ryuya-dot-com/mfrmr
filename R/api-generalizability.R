@@ -88,6 +88,9 @@ mfrmr_gt_classify_coef <- function(value,
 #' separation / reliability statistics that `diagnose_mfrm()`
 #' already emits.
 #'
+#' The decomposition is on the observed numeric `Score` scale. It does not use
+#' the fitted MFRM latent scale or estimate a latent ordinal G/Phi coefficient.
+#'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param data Optional data frame. When `NULL`, the rating data
 #'   stored on `fit$prep$data` is used.
@@ -123,6 +126,8 @@ mfrmr_gt_classify_coef <- function(value,
 #'   not as universal decision rules. Required dependability depends on the
 #'   decision, consequences, population, and evidence beyond a single
 #'   coefficient.
+#' - For ordered categories, `Score` is treated as a numeric observed response
+#'   in a Gaussian linear mixed model; thresholding is not modeled.
 #'
 #' @section Limitations:
 #' This helper formulates the random-effects model with main effects
@@ -163,7 +168,7 @@ mfrmr_gt_classify_coef <- function(value,
 #'   #   relative to person spread.
 #'   gt$coefficients
 #'   # Compare G and Phi with study-specific requirements; 0.70 and 0.80
-#'   #   are reference guides only. G < Phi means absolute decisions are noisier than relative
+#'   #   are reference guides only. Phi < G means absolute decisions are noisier than relative
 #'   #   decisions; review whether facet main effects need anchoring.
 #'   # Always check IdentificationStatus before using the bands:
 #'   gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",
@@ -312,6 +317,7 @@ mfrm_generalizability <- function(fit,
         c(object_facet, random_facets)
       ),
       formula = format(formula),
+      estimand_scale = "observed_numeric_score",
       reml = isTRUE(reml),
       lmer_warnings = lmer_warnings,
       lmer_messages = lmer_messages,
@@ -374,6 +380,8 @@ mfrm_generalizability <- function(fit,
 #' metric family. They should not be interpreted as coefficient alpha, omega,
 #' KR-20, or IRT marginal/separation reliability, even though all of those
 #' summaries may be displayed on a 0--1 scale in broader reporting dashboards.
+#' They remain on the observed numeric score scale inherited from
+#' [mfrm_generalizability()], not the fitted MFRM latent scale.
 #'
 #' @return An object of class `mfrm_d_study`, a data.frame with one row per
 #'   design scenario and columns for planned facet counts, variance terms,
@@ -549,6 +557,8 @@ mfrm_d_study <- function(x,
   attr(out, "random_facets") <- random_facets
   attr(out, "residual_scaling") <- residual_scaling
   attr(out, "source") <- "mfrm_generalizability"
+  attr(out, "estimand_scale") <- x$design$estimand_scale %||%
+    "observed_numeric_score"
   attr(out, "identification_status") <- identification_status
   attr(out, "identification_note") <- identification_note
   attr(out, "boundary_fit") <- boundary_fit
@@ -561,6 +571,7 @@ print.mfrm_d_study <- function(x, ...) {
   cat("mfrmr D-study projection\n")
   cat("  Object of measurement:", attr(x, "object_facet") %||% NA_character_, "\n")
   cat("  Random facets:", paste(attr(x, "random_facets") %||% character(0), collapse = ", "), "\n\n")
+  cat("  Estimand scale: observed numeric score\n")
   cat("  Residual scaling:", attr(x, "residual_scaling") %||% paste(unique(x$ResidualScaling), collapse = ", "), "\n\n")
   if (!identical(attr(x, "identification_status") %||% "identified", "identified")) {
     cat("  Identification status:", attr(x, "identification_status"), "\n")
@@ -1000,6 +1011,7 @@ print.mfrm_generalizability <- function(x, ...) {
               x$design$object_facet))
   cat(sprintf("  Random facets: %s\n",
               paste(x$design$random_facets, collapse = ", ")))
+  cat("  Estimand scale: observed numeric score\n")
   cat("\nVariance components\n")
   print(x$variance_components, row.names = FALSE)
   cat(sprintf("\nG (relative): %.3f | Phi (absolute): %.3f\n",

@@ -53,6 +53,22 @@ test_that("facet_quality_dashboard constructs a dashboard bundle with inferred f
   expect_true(all(c("summary", "detail", "flagged", "settings") %in% names(facet_dashboard_fixture$dashboard_single)))
   expect_true(is.data.frame(facet_dashboard_fixture$dashboard_single$overview))
   expect_true(is.data.frame(facet_dashboard_fixture$dashboard_single$summary))
+  expect_false(any(facet_dashboard_fixture$dashboard_single$detail$CentralTendencyFlag))
+  expect_true(any(grepl("disabled by default", facet_dashboard_fixture$dashboard_single$notes, fixed = TRUE)))
+})
+
+test_that("legacy central-tendency cutoff is labelled as origin proximity", {
+  dash <- mfrmr::facet_quality_dashboard(
+    facet_dashboard_fixture$fit,
+    diagnostics = facet_dashboard_fixture$diagnostics,
+    central_tendency_max = 0.25
+  )
+
+  expect_identical(
+    dash$detail$CentralTendencyFlag,
+    is.finite(abs(dash$detail$Estimate)) & abs(dash$detail$Estimate) <= 0.25
+  )
+  expect_true(any(grepl("origin-proximity marker only", dash$notes, fixed = TRUE)))
 })
 
 test_that("facet_quality_dashboard handles single and named-list bias bundles", {

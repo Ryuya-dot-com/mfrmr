@@ -173,6 +173,42 @@ test_that("data_quality_report flags facet-level category usage gaps", {
   expect_equal(p$data$top_n, 5L)
 })
 
+test_that("data_quality_report separates local range restriction from global score support", {
+  d <- mfrmr:::sample_mfrm_data(seed = 42)
+  r1 <- which(d$Rater == "R1")
+  other <- which(d$Rater != "R1")
+  d$Score[r1] <- rep(3:8, length.out = length(r1))
+  d$Score[other] <- rep(1:10, length.out = length(other))
+
+  fit <- suppressWarnings(
+    fit_mfrm(
+      d, "Person", c("Rater", "Task", "Criterion"), "Score",
+      method = "JML", maxit = 8,
+      rating_min = 1, rating_max = 10,
+      keep_original = TRUE
+    )
+  )
+  dq <- data_quality_report(
+    fit,
+    data = d,
+    person = "Person",
+    facets = c("Rater", "Task", "Criterion"),
+    score = "Score"
+  )
+  r1_summary <- dq$category_usage_summary[
+    dq$category_usage_summary$Facet == "Rater" &
+      dq$category_usage_summary$Level == "R1",
+    ,
+    drop = FALSE
+  ]
+
+  expect_false(any(dq$category_counts$ZeroCount))
+  expect_equal(r1_summary$ObservedCategories, 6L)
+  expect_equal(r1_summary$ZeroCategories, 4L)
+  expect_equal(r1_summary$IntermediateZeroCategories, 2L)
+  expect_identical(r1_summary$ReviewStatus, "warning")
+})
+
 test_that("data_quality_report flags facet levels with restricted response patterns", {
   d <- mfrmr:::sample_mfrm_data(seed = 42)
   d$Score[d$Rater == "R1"] <- 1L
@@ -1295,13 +1331,17 @@ test_that("plot_qc_dashboard returns a plot bundle", {
 # ---- make_anchor_table ----
 
 test_that("make_anchor_table extracts anchors from fitted model", {
-  at <- make_anchor_table(.fit)
+  at <- make_anchor_table(.fit, readiness_policy = "review")
   expect_true(is.data.frame(at))
   expect_true(all(c("Facet", "Level") %in% names(at)))
 })
 
 test_that("make_anchor_table includes persons when requested", {
-  at <- make_anchor_table(.fit, include_person = TRUE)
+  at <- make_anchor_table(
+    .fit,
+    include_person = TRUE,
+    readiness_policy = "review"
+  )
   expect_true("Person" %in% at$Facet || nrow(at) > 0)
 })
 

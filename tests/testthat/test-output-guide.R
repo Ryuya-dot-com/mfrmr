@@ -61,13 +61,15 @@ test_that("mfrmr_output_guide supports focused scopes", {
     c(
       "1. Check score support and fit with explicit data roles",
       "2. Check convergence and fitted-model settings",
-      "3. Build the comprehensive FACETS-organized review",
+      "3. Build the comprehensive measurement review",
       "4. Create the required native Wright map with SE or CI",
       "5. Add optional FACETS-style and Infit pathway views",
       "6. Review, report, and export the completed results"
     )
   )
   expect_match(public$MainFunction[1], "describe_mfrm_data", fixed = TRUE)
+  expect_match(public$MainFunction[1], "rating_min", fixed = TRUE)
+  expect_match(public$MainFunction[1], "rating_max", fixed = TRUE)
   expect_match(public$MainFunction[1], 'method = "MML"', fixed = TRUE)
   expect_match(public$MainFunction[2], 'profile = "fit"', fixed = TRUE)
   expect_match(public$MainFunction[3], 'profile = "facets"', fixed = TRUE)

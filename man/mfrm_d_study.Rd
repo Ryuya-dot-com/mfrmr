@@ -69,6 +69,8 @@ The \code{G} and \code{Phi} values returned here belong to the generalizability-
 metric family. They should not be interpreted as coefficient alpha, omega,
 KR-20, or IRT marginal/separation reliability, even though all of those
 summaries may be displayed on a 0--1 scale in broader reporting dashboards.
+They remain on the observed numeric score scale inherited from
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}}, not the fitted MFRM latent scale.
 }
 \examples{
 \donttest{

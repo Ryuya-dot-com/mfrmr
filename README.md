@@ -399,7 +399,7 @@ call warns before substantive or cross-subset interpretation. The remaining
 tables describe the fitted scale; they do not create universal acceptance
 thresholds.
 
-### 4. Request the comprehensive FACETS-organized summary
+### 4. Request the comprehensive measurement summary
 
 Use the `facets` profile for the main review:
 
@@ -423,12 +423,12 @@ res$plot_map[, c(
 ```
 
 This profile organizes model information, measures, uncertainty, fit evidence,
-precision, category/step information, and plot routes in a reading order that
-will be familiar to FACETS users. It computes the documented diagnostics when
-they are needed and returns the resulting `mfrm_results` object in
-`facets_summary$results`.
+precision, category/step information, and plot routes in one reading order. No
+experience with FACETS, TAM, or sirt is required. It computes the documented
+diagnostics when they are needed and returns the resulting `mfrm_results`
+object in `facets_summary$results`.
 
-The profile name describes organization, not software execution:
+The historical profile name describes organization, not software execution:
 
 - FACETS is not called;
 - all estimates remain `mfrmr` estimates;

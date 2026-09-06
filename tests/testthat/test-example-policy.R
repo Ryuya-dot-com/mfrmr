@@ -250,6 +250,52 @@ test_that("CRAN testthat surface is an explicit representative whitelist", {
   }
 })
 
+test_that("front-door examples use one explicit beginner workflow", {
+  pkg_root <- example_policy_source_root()
+  testthat::skip_if(is.na(pkg_root), "source files are not available")
+
+  rd_text <- function(page) {
+    paste(
+      readLines(file.path(pkg_root, "man", page), warn = FALSE),
+      collapse = "\n"
+    )
+  }
+
+  load_text <- rd_text("load_mfrmr_data.Rd")
+  expect_true(grepl('load_mfrmr_data("example_operational")', load_text, fixed = TRUE))
+
+  data_text <- rd_text("describe_mfrm_data.Rd")
+  for (snippet in c(
+    'load_mfrmr_data("example_operational")',
+    'person = "Person"', 'facets = c("Rater", "Criterion")',
+    'score = "Score"', 'rating_min = 1', 'rating_max = 4'
+  )) {
+    expect_true(grepl(snippet, data_text, fixed = TRUE), info = snippet)
+  }
+
+  fit_pages <- c(
+    "fit_mfrm.Rd", "summary.mfrm_fit.Rd", "mfrm_results.Rd",
+    "mfrm_report.Rd", "export_mfrm_results.Rd",
+    "mfrmr_workflow_methods.Rd", "mfrmr_reports_and_tables.Rd",
+    "mfrmr-package.Rd", "diagnose_mfrm.Rd",
+    "summary.mfrm_diagnostics.Rd", "plot.mfrm_fit.Rd",
+    "data_quality_report.Rd", "rating_scale_table.Rd",
+    "precision_review_report.Rd"
+  )
+  for (page in fit_pages) {
+    text <- rd_text(page)
+    for (snippet in c(
+      'load_mfrmr_data("example_operational")',
+      'person = "Person"', 'facets = c("Rater", "Criterion")',
+      'score = "Score"', 'rating_min = 1', 'rating_max = 4',
+      'method = "MML"', 'model = "RSM"', 'quad_points = 7'
+    )) {
+      expect_true(grepl(snippet, text, fixed = TRUE), info = paste(page, snippet))
+    }
+    expect_false(grepl("JML keeps the help example fast", text, fixed = TRUE), info = page)
+  }
+})
+
 test_that("roxygen examples keep expensive demonstrations conditional", {
   pkg_root <- example_policy_source_root()
   testthat::skip_if(is.na(pkg_root), "source files are not available")

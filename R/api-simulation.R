@@ -4926,6 +4926,249 @@ design_eval_result_prototype <- function() {
   )
 }
 
+simulation_evaluate_design_cell <- function(design,
+                                            rep,
+                                            cell_seed,
+                                            rng_kind,
+                                            row_spec,
+                                            row_score_levels,
+                                            row_facet_names,
+                                            score_levels,
+                                            theta_sd,
+                                            rater_sd,
+                                            criterion_sd,
+                                            noise_sd,
+                                            step_span,
+                                            fit_method,
+                                            model,
+                                            fit_step_facet,
+                                            fit_slope_facet,
+                                            slopes,
+                                            assignment,
+                                            sparse_controls,
+                                            maxit,
+                                            quad_points,
+                                            residual_pca,
+                                            generator_model,
+                                            generator_step_facet,
+                                            recovery_contract) {
+  old_rng_kind <- RNGkind()
+  had_rng_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (had_rng_seed) {
+    old_rng_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+  on.exit({
+    do.call(RNGkind, as.list(old_rng_kind))
+    if (had_rng_seed) {
+      assign(".Random.seed", old_rng_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+  do.call(RNGkind, as.list(rng_kind))
+
+  with_preserved_rng_seed(cell_seed, {
+    sim <- if (is.null(row_spec)) {
+      simulate_mfrm_data(
+        n_person = design$n_person,
+        n_rater = design$n_rater,
+        n_criterion = design$n_criterion,
+        raters_per_person = design$raters_per_person,
+        score_levels = score_levels,
+        theta_sd = theta_sd,
+        rater_sd = rater_sd,
+        criterion_sd = criterion_sd,
+        noise_sd = noise_sd,
+        step_span = step_span,
+        seed = cell_seed,
+        model = model,
+        step_facet = if (identical(model, "RSM")) "Criterion" else fit_step_facet,
+        slope_facet = if (identical(model, "GPCM")) fit_slope_facet else NULL,
+        slopes = if (identical(model, "GPCM")) slopes else NULL,
+        assignment = assignment,
+        sparse_controls = sparse_controls
+      )
+    } else {
+      simulate_mfrm_data(sim_spec = row_spec, seed = cell_seed)
+    }
+
+    t0 <- proc.time()[["elapsed"]]
+    fit_args <- list(
+      data = sim,
+      person = "Person",
+      facets = row_facet_names,
+      score = "Score",
+      method = fit_method,
+      model = model,
+      maxit = maxit
+    )
+    if (identical(model, "PCM") || identical(model, "GPCM")) {
+      fit_args$step_facet <- fit_step_facet
+    }
+    if (identical(model, "GPCM")) fit_args$slope_facet <- fit_slope_facet
+    if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
+    if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
+    sim_population <- attr(sim, "mfrm_population_data")
+    if (is.list(sim_population) && isTRUE(sim_population$active)) {
+      fit_args$population_formula <- sim_population$population_formula
+      fit_args$person_data <- sim_population$person_data
+      fit_args$person_id <- sim_population$person_id
+      fit_args$population_policy <- sim_population$population_policy
+    }
+    fit_args <- simulation_add_fit_score_support(
+      fit_args,
+      sim,
+      fallback_score_levels = row_score_levels
+    )
+
+    fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
+    diag <- if (inherits(fit, "error")) fit else {
+      tryCatch(
+        diagnose_mfrm(fit, residual_pca = residual_pca),
+        error = function(e) e
+      )
+    }
+    elapsed <- proc.time()[["elapsed"]] - t0
+    truth <- attr(sim, "mfrm_truth")
+    min_category_count <- min(tabulate(sim$Score, nbins = row_score_levels))
+    sparse_fields <- simulation_sparse_overview_fields(sim)
+
+    rep_row <- tibble::tibble(
+      design_id = design$design_id,
+      rep = rep,
+      n_person = design$n_person,
+      n_rater = design$n_rater,
+      n_criterion = design$n_criterion,
+      raters_per_person = design$raters_per_person,
+      Observations = nrow(sim),
+      MinCategoryCount = min_category_count,
+      SparseDesignActive = sparse_fields$SparseDesignActive,
+      DesignDensity = sparse_fields$DesignDensity,
+      PlannedMissingRate = sparse_fields$PlannedMissingRate,
+      LinkPersons = sparse_fields$LinkPersons,
+      LinkFractionActual = sparse_fields$LinkFractionActual,
+      LinkRatersPerPerson = sparse_fields$LinkRatersPerPerson,
+      MinCommonPersonsPerRaterPair = sparse_fields$MinCommonPersonsPerRaterPair,
+      ZeroCommonRaterPairs = sparse_fields$ZeroCommonRaterPairs,
+      RaterPairsBelowTarget = sparse_fields$RaterPairsBelowTarget,
+      TargetCommonPersonsPerRaterPair = sparse_fields$TargetCommonPersonsPerRaterPair,
+      ElapsedSec = elapsed,
+      RunOK = FALSE,
+      Converged = FALSE,
+      Error = NA_character_,
+      ErrorClass = NA_character_,
+      ErrorComponent = NA_character_,
+      CategoryState = NA_character_,
+      CategoryReasonCodes = NA_character_
+    )
+    cell_result_rows <- list()
+
+    if (inherits(fit, "error")) {
+      rep_row$Error <- conditionMessage(fit)
+      rep_row$ErrorClass <- class(fit)[1]
+      rep_row$ErrorComponent <- "fit"
+      if (inherits(fit, "mfrmr_category_readiness_error")) {
+        rep_row$CategoryState <- as.character(
+          fit$readiness$CategoryState[1] %||% NA_character_
+        )
+        rep_row$CategoryReasonCodes <- as.character(
+          fit$readiness$ReasonCodes[1] %||% NA_character_
+        )
+      }
+    } else if (inherits(diag, "error")) {
+      rep_row$Error <- conditionMessage(diag)
+      rep_row$ErrorClass <- class(diag)[1]
+      rep_row$ErrorComponent <- "diagnostics"
+    } else {
+      converged <- mfrm_inference_ready(fit)
+      rep_row$RunOK <- TRUE
+      rep_row$Converged <- converged
+
+      reliability_tbl <- tibble::as_tibble(diag$reliability)
+      fit_tbl <- tibble::as_tibble(diag$fit)
+      measure_tbl <- tibble::as_tibble(diag$measures)
+      reliability_split <- split(reliability_tbl, reliability_tbl$Facet)
+      fit_split <- split(fit_tbl, fit_tbl$Facet)
+      measure_split <- split(measure_tbl, measure_tbl$Facet)
+
+      cell_result_rows <- lapply(names(reliability_split), function(facet) {
+        rel_row <- tibble::as_tibble(reliability_split[[facet]])
+        facet_fit <- tibble::as_tibble(fit_split[[facet]] %||% tibble::tibble())
+        facet_meas <- tibble::as_tibble(measure_split[[facet]] %||% tibble::tibble())
+        truth_vec <- design_eval_extract_truth(truth, facet)
+
+        severity_rmse <- NA_real_
+        severity_bias <- NA_real_
+        severity_rmse_raw <- NA_real_
+        severity_bias_raw <- NA_real_
+        if (isTRUE(recovery_contract$comparable) &&
+            !is.null(truth_vec) && nrow(facet_meas) > 0 &&
+            "Level" %in% names(facet_meas) && "Estimate" %in% names(facet_meas)) {
+          recovery <- design_eval_recovery_metrics(
+            est_levels = facet_meas$Level,
+            est_values = suppressWarnings(as.numeric(facet_meas$Estimate)),
+            truth_vec = truth_vec
+          )
+          severity_rmse <- recovery$aligned_rmse
+          severity_bias <- recovery$aligned_bias
+          severity_rmse_raw <- recovery$raw_rmse
+          severity_bias_raw <- recovery$raw_bias
+        }
+
+        misfit_rate <- NA_real_
+        if (nrow(facet_fit) > 0) {
+          z_in <- suppressWarnings(as.numeric(facet_fit$InfitZSTD))
+          z_out <- suppressWarnings(as.numeric(facet_fit$OutfitZSTD))
+          misfit_rate <- mean(abs(z_in) > 2 | abs(z_out) > 2, na.rm = TRUE)
+        }
+
+        tibble::tibble(
+          design_id = design$design_id,
+          rep = rep,
+          Facet = facet,
+          n_person = design$n_person,
+          n_rater = design$n_rater,
+          n_criterion = design$n_criterion,
+          raters_per_person = design$raters_per_person,
+          Observations = nrow(sim),
+          MinCategoryCount = min_category_count,
+          SparseDesignActive = sparse_fields$SparseDesignActive,
+          DesignDensity = sparse_fields$DesignDensity,
+          PlannedMissingRate = sparse_fields$PlannedMissingRate,
+          LinkPersons = sparse_fields$LinkPersons,
+          LinkFractionActual = sparse_fields$LinkFractionActual,
+          LinkRatersPerPerson = sparse_fields$LinkRatersPerPerson,
+          MinCommonPersonsPerRaterPair = sparse_fields$MinCommonPersonsPerRaterPair,
+          ZeroCommonRaterPairs = sparse_fields$ZeroCommonRaterPairs,
+          RaterPairsBelowTarget = sparse_fields$RaterPairsBelowTarget,
+          TargetCommonPersonsPerRaterPair = sparse_fields$TargetCommonPersonsPerRaterPair,
+          ElapsedSec = elapsed,
+          Converged = converged,
+          GeneratorModel = generator_model,
+          GeneratorStepFacet = generator_step_facet,
+          FitModel = model,
+          FitStepFacet = fit_step_facet,
+          RecoveryComparable = recovery_contract$comparable,
+          RecoveryBasis = recovery_contract$basis,
+          Levels = suppressWarnings(as.integer(rel_row$Levels[1])),
+          Separation = suppressWarnings(as.numeric(rel_row$Separation[1])),
+          Strata = suppressWarnings(as.numeric(rel_row$Strata[1])),
+          Reliability = suppressWarnings(as.numeric(rel_row$Reliability[1])),
+          MeanInfit = suppressWarnings(as.numeric(rel_row$MeanInfit[1])),
+          MeanOutfit = suppressWarnings(as.numeric(rel_row$MeanOutfit[1])),
+          MisfitRate = misfit_rate,
+          SeverityRMSE = severity_rmse,
+          SeverityBias = severity_bias,
+          SeverityRMSERaw = severity_rmse_raw,
+          SeverityBiasRaw = severity_bias_raw
+        )
+      })
+    }
+
+    list(rep_row = rep_row, result_rows = cell_result_rows)
+  })
+}
+
 #' Evaluate MFRM design conditions by repeated simulation
 #'
 #' @param n_person Vector of person counts to evaluate.
@@ -4991,7 +5234,11 @@ design_eval_result_prototype <- function() {
 #'   `future::plan()` is currently active. The Suggests package
 #'   `future.apply` must be installed for the parallel path to
 #'   activate; otherwise the call falls back to serial execution with a single
-#'   message. Parallel execution applies to replications within each design row.
+#'   message. A fixed explicit `seed` preallocates the same per-cell simulation
+#'   seeds before either route, so serial and future execution receive identical
+#'   stochastic inputs for the same ordered design grid. Parallel dispatch
+#'   applies to replications within each design row; actual worker concurrency
+#'   depends on the active future plan.
 #'
 #' @details
 #' This helper runs a compact Monte Carlo design study for common rater-by-item
@@ -5193,11 +5440,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
   if (!is.logical(progress) || length(progress) != 1L || is.na(progress)) {
     stop("`progress` must be a single TRUE/FALSE value.", call. = FALSE)
   }
-  # `parallel = "future"` requires the `future.apply` Suggests to be
-  # installed AND a `future::plan()` to be active. We honour the
-  # request when both are satisfied; otherwise we fall back to the
-  # serial implementation with a single message so the run still
-  # completes.
+  # `parallel = "future"` requires the `future.apply` Suggests. The active
+  # `future::plan()` controls whether dispatch is sequential or concurrent.
+  # Without future.apply we fall back to serial execution with one message.
   if (identical(parallel, "future") &&
       !requireNamespace("future.apply", quietly = TRUE)) {
     message("`evaluate_mfrm_design(parallel = 'future')` requires the ",
@@ -5206,9 +5451,10 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
     parallel <- "no"
   }
   if (identical(parallel, "future")) {
-    message("`evaluate_mfrm_design(parallel = 'future')` parallelises ",
-            "replications within each design row; design rows are processed ",
-            "sequentially.")
+    message("`evaluate_mfrm_design(parallel = 'future')` dispatches ",
+            "replications within each design row through `future.apply`; ",
+            "actual concurrency follows the active `future::plan()`. ",
+            "Design rows are processed sequentially.")
   }
   residual_pca <- match.arg(residual_pca)
   if (!is.null(sim_spec) && !inherits(sim_spec, "mfrm_sim_spec")) {
@@ -5286,16 +5532,13 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
   gpcm_boundary <- simulation_gpcm_design_boundary(gpcm_route_active)
   gpcm_notes <- simulation_gpcm_design_notes(gpcm_route_active)
 
+  evaluation_rng_kind <- RNGkind()
   seeds <- with_preserved_rng_seed(
     seed,
     sample.int(.Machine$integer.max, size = nrow(design_grid) * reps, replace = FALSE)
   )
-  seed_idx <- 0L
-
-  result_rows <- vector("list", nrow(design_grid) * reps * 3L)
-  rep_rows <- vector("list", nrow(design_grid) * reps)
-  result_idx <- 0L
-  rep_idx <- 0L
+  result_rows <- list()
+  rep_rows <- list()
 
   # Design-evaluation runs a full fit + diagnose per (design, rep) cell, so
   # the wall-clock can reach tens of seconds. Show a progress bar only when
@@ -5330,223 +5573,80 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         raters_per_person = design$raters_per_person
       )
     }
-    row_score_levels <- if (is.null(row_spec)) score_levels else row_spec$score_levels
-    row_facet_names <- if (is.null(row_spec)) simulation_default_output_facet_names() else simulation_spec_output_facet_names(row_spec)
-    for (rep in seq_len(reps)) {
-      if (!is.null(design_progress_id)) {
-        cli::cli_progress_update(id = design_progress_id,
-                                  set = (i - 1L) * reps + rep - 1L)
-      }
-      seed_idx <- seed_idx + 1L
-      sim <- if (is.null(row_spec)) {
-        simulate_mfrm_data(
-          n_person = design$n_person,
-          n_rater = design$n_rater,
-          n_criterion = design$n_criterion,
-          raters_per_person = design$raters_per_person,
-          score_levels = score_levels,
-          theta_sd = theta_sd,
-          rater_sd = rater_sd,
-          criterion_sd = criterion_sd,
-          noise_sd = noise_sd,
-          step_span = step_span,
-          seed = seeds[seed_idx],
-          model = model,
-          step_facet = if (identical(model, "RSM")) "Criterion" else fit_step_facet,
-          slope_facet = if (identical(model, "GPCM")) fit_slope_facet else NULL,
-          slopes = if (identical(model, "GPCM")) slopes else NULL,
-          assignment = assignment,
-          sparse_controls = sparse_controls
-        )
-      } else {
-        simulate_mfrm_data(sim_spec = row_spec, seed = seeds[seed_idx])
-      }
-
-      t0 <- proc.time()[["elapsed"]]
-      fit_args <- list(
-        data = sim,
-        person = "Person",
-        facets = row_facet_names,
-        score = "Score",
-        method = fit_method,
-        model = model,
-        maxit = maxit
-      )
-      if (identical(model, "PCM") || identical(model, "GPCM")) fit_args$step_facet <- fit_step_facet
-      if (identical(model, "GPCM")) fit_args$slope_facet <- fit_slope_facet
-      if ("Weight" %in% names(sim)) fit_args$weight <- "Weight"
-      if (identical(fit_method, "MML")) fit_args$quad_points <- quad_points
-      sim_population <- attr(sim, "mfrm_population_data")
-      if (is.list(sim_population) && isTRUE(sim_population$active)) {
-        fit_args$population_formula <- sim_population$population_formula
-        fit_args$person_data <- sim_population$person_data
-        fit_args$person_id <- sim_population$person_id
-        fit_args$population_policy <- sim_population$population_policy
-      }
-      fit_args <- simulation_add_fit_score_support(
-        fit_args,
-        sim,
-        fallback_score_levels = row_score_levels
-      )
-
-      fit <- tryCatch(do.call(fit_mfrm, fit_args), error = function(e) e)
-      diag <- if (inherits(fit, "error")) fit else {
-        tryCatch(
-          diagnose_mfrm(fit, residual_pca = residual_pca),
-          error = function(e) e
-        )
-      }
-      elapsed <- proc.time()[["elapsed"]] - t0
-      truth <- attr(sim, "mfrm_truth")
-      min_category_count <- min(tabulate(sim$Score, nbins = row_score_levels))
-      sparse_fields <- simulation_sparse_overview_fields(sim)
-
-      rep_idx <- rep_idx + 1L
-      rep_row <- tibble::tibble(
-        design_id = design$design_id,
-        rep = rep,
-        n_person = design$n_person,
-        n_rater = design$n_rater,
-        n_criterion = design$n_criterion,
-        raters_per_person = design$raters_per_person,
-        Observations = nrow(sim),
-        MinCategoryCount = min_category_count,
-        SparseDesignActive = sparse_fields$SparseDesignActive,
-        DesignDensity = sparse_fields$DesignDensity,
-        PlannedMissingRate = sparse_fields$PlannedMissingRate,
-        LinkPersons = sparse_fields$LinkPersons,
-        LinkFractionActual = sparse_fields$LinkFractionActual,
-        LinkRatersPerPerson = sparse_fields$LinkRatersPerPerson,
-        MinCommonPersonsPerRaterPair = sparse_fields$MinCommonPersonsPerRaterPair,
-        ZeroCommonRaterPairs = sparse_fields$ZeroCommonRaterPairs,
-        RaterPairsBelowTarget = sparse_fields$RaterPairsBelowTarget,
-        TargetCommonPersonsPerRaterPair = sparse_fields$TargetCommonPersonsPerRaterPair,
-        ElapsedSec = elapsed,
-        RunOK = FALSE,
-        Converged = FALSE,
-        Error = NA_character_,
-        ErrorClass = NA_character_,
-        ErrorComponent = NA_character_,
-        CategoryState = NA_character_,
-        CategoryReasonCodes = NA_character_
-      )
-
-      if (inherits(fit, "error")) {
-        rep_row$Error <- conditionMessage(fit)
-        rep_row$ErrorClass <- class(fit)[1]
-        rep_row$ErrorComponent <- "fit"
-        if (inherits(fit, "mfrmr_category_readiness_error")) {
-          rep_row$CategoryState <- as.character(
-            fit$readiness$CategoryState[1] %||% NA_character_
-          )
-          rep_row$CategoryReasonCodes <- as.character(
-            fit$readiness$ReasonCodes[1] %||% NA_character_
-          )
-        }
-        rep_rows[[rep_idx]] <- rep_row
-        next
-      }
-      if (inherits(diag, "error")) {
-        rep_row$Error <- conditionMessage(diag)
-        rep_row$ErrorClass <- class(diag)[1]
-        rep_row$ErrorComponent <- "diagnostics"
-        rep_rows[[rep_idx]] <- rep_row
-        next
-      }
-
-      converged <- mfrm_inference_ready(fit)
-      rep_row$RunOK <- TRUE
-      rep_row$Converged <- converged
-      rep_rows[[rep_idx]] <- rep_row
-
-      reliability_tbl <- tibble::as_tibble(diag$reliability)
-      fit_tbl <- tibble::as_tibble(diag$fit)
-      measure_tbl <- tibble::as_tibble(diag$measures)
-      reliability_split <- split(reliability_tbl, reliability_tbl$Facet)
-      fit_split <- split(fit_tbl, fit_tbl$Facet)
-      measure_split <- split(measure_tbl, measure_tbl$Facet)
-
-      for (facet in names(reliability_split)) {
-        rel_row <- tibble::as_tibble(reliability_split[[facet]])
-        facet_fit <- tibble::as_tibble(fit_split[[facet]] %||% tibble::tibble())
-        facet_meas <- tibble::as_tibble(measure_split[[facet]] %||% tibble::tibble())
-        truth_vec <- design_eval_extract_truth(truth, facet)
-
-        severity_rmse <- NA_real_
-        severity_bias <- NA_real_
-        severity_rmse_raw <- NA_real_
-        severity_bias_raw <- NA_real_
-        if (isTRUE(recovery_contract$comparable) &&
-            !is.null(truth_vec) && nrow(facet_meas) > 0 &&
-            "Level" %in% names(facet_meas) && "Estimate" %in% names(facet_meas)) {
-          recovery <- design_eval_recovery_metrics(
-            est_levels = facet_meas$Level,
-            est_values = suppressWarnings(as.numeric(facet_meas$Estimate)),
-            truth_vec = truth_vec
-          )
-          severity_rmse <- recovery$aligned_rmse
-          severity_bias <- recovery$aligned_bias
-          severity_rmse_raw <- recovery$raw_rmse
-          severity_bias_raw <- recovery$raw_bias
-        }
-
-        misfit_rate <- NA_real_
-        if (nrow(facet_fit) > 0) {
-          z_in <- suppressWarnings(as.numeric(facet_fit$InfitZSTD))
-          z_out <- suppressWarnings(as.numeric(facet_fit$OutfitZSTD))
-          misfit_rate <- mean(abs(z_in) > 2 | abs(z_out) > 2, na.rm = TRUE)
-        }
-
-        result_idx <- result_idx + 1L
-        result_rows[[result_idx]] <- tibble::tibble(
-          design_id = design$design_id,
-          rep = rep,
-          Facet = facet,
-          n_person = design$n_person,
-          n_rater = design$n_rater,
-          n_criterion = design$n_criterion,
-          raters_per_person = design$raters_per_person,
-          Observations = nrow(sim),
-          MinCategoryCount = min_category_count,
-          SparseDesignActive = sparse_fields$SparseDesignActive,
-          DesignDensity = sparse_fields$DesignDensity,
-          PlannedMissingRate = sparse_fields$PlannedMissingRate,
-          LinkPersons = sparse_fields$LinkPersons,
-          LinkFractionActual = sparse_fields$LinkFractionActual,
-          LinkRatersPerPerson = sparse_fields$LinkRatersPerPerson,
-          MinCommonPersonsPerRaterPair = sparse_fields$MinCommonPersonsPerRaterPair,
-          ZeroCommonRaterPairs = sparse_fields$ZeroCommonRaterPairs,
-          RaterPairsBelowTarget = sparse_fields$RaterPairsBelowTarget,
-          TargetCommonPersonsPerRaterPair = sparse_fields$TargetCommonPersonsPerRaterPair,
-          ElapsedSec = elapsed,
-          Converged = converged,
-          GeneratorModel = generator_model,
-          GeneratorStepFacet = generator_step_facet,
-          FitModel = model,
-          FitStepFacet = fit_step_facet,
-          RecoveryComparable = recovery_contract$comparable,
-          RecoveryBasis = recovery_contract$basis,
-          Levels = suppressWarnings(as.integer(rel_row$Levels[1])),
-          Separation = suppressWarnings(as.numeric(rel_row$Separation[1])),
-          Strata = suppressWarnings(as.numeric(rel_row$Strata[1])),
-          Reliability = suppressWarnings(as.numeric(rel_row$Reliability[1])),
-          MeanInfit = suppressWarnings(as.numeric(rel_row$MeanInfit[1])),
-          MeanOutfit = suppressWarnings(as.numeric(rel_row$MeanOutfit[1])),
-          MisfitRate = misfit_rate,
-          SeverityRMSE = severity_rmse,
-          SeverityBias = severity_bias,
-          SeverityRMSERaw = severity_rmse_raw,
-          SeverityBiasRaw = severity_bias_raw
-        )
-      }
+    row_score_levels <- if (is.null(row_spec)) {
+      score_levels
+    } else {
+      row_spec$score_levels
     }
+    row_facet_names <- if (is.null(row_spec)) {
+      simulation_default_output_facet_names()
+    } else {
+      simulation_spec_output_facet_names(row_spec)
+    }
+    cell_indices <- (i - 1L) * reps + seq_len(reps)
+    run_rep <- function(rep) {
+      cell_index <- cell_indices[rep]
+      simulation_evaluate_design_cell(
+        design = design,
+        rep = rep,
+        cell_seed = seeds[cell_index],
+        rng_kind = evaluation_rng_kind,
+        row_spec = row_spec,
+        row_score_levels = row_score_levels,
+        row_facet_names = row_facet_names,
+        score_levels = score_levels,
+        theta_sd = theta_sd,
+        rater_sd = rater_sd,
+        criterion_sd = criterion_sd,
+        noise_sd = noise_sd,
+        step_span = step_span,
+        fit_method = fit_method,
+        model = model,
+        fit_step_facet = fit_step_facet,
+        fit_slope_facet = fit_slope_facet,
+        slopes = slopes,
+        assignment = assignment,
+        sparse_controls = sparse_controls,
+        maxit = maxit,
+        quad_points = quad_points,
+        residual_pca = residual_pca,
+        generator_model = generator_model,
+        generator_step_facet = generator_step_facet,
+        recovery_contract = recovery_contract
+      )
+    }
+
+    row_results <- if (identical(parallel, "future")) {
+      future.apply::future_lapply(
+        seq_len(reps),
+        run_rep,
+        # Each design-replication cell sets and restores its own preallocated
+        # scalar seed. Letting future.apply also install L'Ecuyer streams would
+        # change the meaning of those seeds relative to the serial route.
+        future.seed = NULL
+      )
+    } else {
+      lapply(seq_len(reps), function(rep) {
+        if (!is.null(design_progress_id)) {
+          cli::cli_progress_update(
+            id = design_progress_id,
+            set = (i - 1L) * reps + rep - 1L
+          )
+        }
+        run_rep(rep)
+      })
+    }
+    if (identical(parallel, "future") && !is.null(design_progress_id)) {
+      cli::cli_progress_update(id = design_progress_id, set = i * reps)
+    }
+
+    rep_rows <- c(rep_rows, lapply(row_results, `[[`, "rep_row"))
+    row_result_rows <- lapply(row_results, `[[`, "result_rows")
+    result_rows <- c(result_rows, unlist(row_result_rows, recursive = FALSE))
   }
 
-  results <- dplyr::bind_rows(
-    design_eval_result_prototype(),
-    result_rows[seq_len(result_idx)]
-  )
-  rep_overview <- dplyr::bind_rows(rep_rows[seq_len(rep_idx)])
+  results <- dplyr::bind_rows(design_eval_result_prototype(), result_rows)
+  rep_overview <- dplyr::bind_rows(rep_rows)
   results <- simulation_append_design_alias_columns(results, design_variable_aliases)
   rep_overview <- simulation_append_design_alias_columns(rep_overview, design_variable_aliases)
   ademp <- simulation_build_ademp(
@@ -5609,6 +5709,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
         residual_pca = residual_pca,
         sim_spec = sim_spec,
         progress = isTRUE(progress),
+        parallel = parallel,
+        parallel_seed_policy = "preallocated_design_rep_cell_v1",
+        parallel_rng_kind = evaluation_rng_kind,
         facet_names = stats::setNames(base_facet_names, c("rater", "criterion")),
         design_variable_aliases = design_variable_aliases,
         design_descriptor = design_descriptor,

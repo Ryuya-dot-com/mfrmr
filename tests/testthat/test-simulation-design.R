@@ -3551,6 +3551,81 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_equal(p$metric_col, "MeanSeparation")
 })
 
+test_that("evaluate_mfrm_design future route matches serial stochastic inputs", {
+  skip_if_not_installed("future")
+  skip_if_not_installed("future.apply")
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+  future::plan(future::sequential)
+
+  old_rng_kind <- RNGkind()
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (had_seed) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+  on.exit({
+    do.call(RNGkind, as.list(old_rng_kind))
+    if (had_seed) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  RNGkind(kind = "L'Ecuyer-CMRG")
+  set.seed(90210)
+  ambient_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  args <- list(
+    n_person = 12,
+    n_rater = 2,
+    n_criterion = 2,
+    raters_per_person = 2,
+    reps = 2,
+    maxit = 5,
+    seed = 17,
+    progress = FALSE
+  )
+
+  serial <- suppressWarnings(
+    do.call(evaluate_mfrm_design, c(args, list(parallel = "no")))
+  )
+  expect_identical(
+    get(".Random.seed", envir = .GlobalEnv, inherits = FALSE),
+    ambient_seed
+  )
+
+  expect_message(
+    future_result <- suppressWarnings(
+      do.call(evaluate_mfrm_design, c(args, list(parallel = "future")))
+    ),
+    "dispatches replications"
+  )
+  expect_identical(
+    get(".Random.seed", envir = .GlobalEnv, inherits = FALSE),
+    ambient_seed
+  )
+
+  without_elapsed <- function(x) {
+    x[, setdiff(names(x), "ElapsedSec"), drop = FALSE]
+  }
+  expect_identical(serial$design_grid, future_result$design_grid)
+  expect_equal(
+    without_elapsed(serial$results),
+    without_elapsed(future_result$results)
+  )
+  expect_equal(
+    without_elapsed(serial$rep_overview),
+    without_elapsed(future_result$rep_overview)
+  )
+  expect_identical(future_result$settings$parallel, "future")
+  expect_identical(
+    future_result$settings$parallel_seed_policy,
+    "preallocated_design_rep_cell_v1"
+  )
+  expect_identical(future_result$settings$parallel_rng_kind, RNGkind())
+})
+
 test_that("recommend_mfrm_design returns threshold tables", {
   sim_eval <- suppressWarnings(
     evaluate_mfrm_design(

@@ -241,6 +241,14 @@ Interpretation:
 - Sparse rows or columns indicate weak subset coverage.
 - Facets with low overlap are weaker anchors for cross-subset comparisons.
 
+Keep three uses of *network* separate. `mfrm_network_analysis()` analyzes the
+assignment/co-observation graph and can expose disconnected measurement
+subsets. `rater_network_analysis()` analyzes pairwise score relations, and
+`rater_halo_network_analysis()` analyzes rater-by-criterion score-profile
+correlations. The latter two do not establish assignment connectedness or a
+common scale. Their centrality statistics are graph-theoretic quantities, not
+rating-scale central tendency, MFRM severity logits, or causal halo evidence.
+
 If you are working across administrations, follow up with anchor-drift plots:
 
 ```{r eval = FALSE}

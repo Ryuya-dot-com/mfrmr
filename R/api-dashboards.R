@@ -13,8 +13,11 @@
 #'   outliers.
 #' @param misfit_warn Mean-square cutoff used to flag misfit. Values above
 #'   this cutoff or below its reciprocal are flagged.
-#' @param central_tendency_max Absolute estimate cutoff used to flag central
-#'   tendency. Levels near zero are marked.
+#' @param central_tendency_max Legacy opt-in absolute estimate cutoff for
+#'   marking facet estimates near the fitted origin. The default `NULL`
+#'   disables this flag because origin proximity is not evidence that a rater
+#'   avoids extreme score categories. Use [data_quality_report()] for observed
+#'   category-use and restriction-of-range screening.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
 #'   level.
 #' @param bias_abs_t_warn Absolute `t` cutoff used when deriving bias-row
@@ -36,15 +39,17 @@
 #'   pass `misfit_warn = 1.5` to keep the older symmetric
 #'   \eqn{[1/}\code{misfit_warn}\eqn{,\;}\code{misfit_warn}\eqn{]}
 #'   form (0.67-1.5).
-#' - **Central tendency**: elements with
-#'   \eqn{|\mathrm{Estimate}| <} `central_tendency_max` logits
-#'   are flagged.  Near-zero estimates may indicate a rater who avoids
-#'   extreme categories, producing artificially narrow score ranges.
+#' - **Reference proximity (legacy `CentralTendencyFlag` label)**: when
+#'   `central_tendency_max` is supplied, elements with
+#'   \eqn{|\mathrm{Estimate}| <} `central_tendency_max` logits are marked.
+#'   This only describes proximity to the fitted origin and must not be
+#'   interpreted as central-category use or restriction of range. Those are
+#'   response-pattern questions handled by [data_quality_report()].
 #' - **Bias**: elements involved in \eqn{\ge} `bias_count_warn`
 #'   screen-positive interaction cells (from [estimate_bias()]) are flagged.
 #'
-#' A **flag density** score counts how many of the four criteria each
-#' element triggers. Elements flagged on multiple criteria warrant priority
+#' A **flag density** score counts how many enabled criteria each element
+#' triggers. Elements flagged on multiple criteria warrant priority
 #' review and may motivate training or a documented data-quality review; the
 #' dashboard does not justify automatic row, person, or rater exclusion.
 #'
@@ -100,7 +105,7 @@ facet_quality_dashboard <- function(fit,
                                     bias_results = NULL,
                                     severity_warn = 1.0,
                                     misfit_warn = NULL,
-                                    central_tendency_max = 0.25,
+                                    central_tendency_max = NULL,
                                     bias_count_warn = 1L,
                                     bias_abs_t_warn = 2,
                                     bias_abs_size_warn = 0.5,
@@ -178,7 +183,16 @@ facet_quality_dashboard <- function(fit,
   detail$MisfitFlag <- is.finite(fit_hi) & (
     fit_hi >= abs(misfit_warn) | fit_lo <= misfit_lower_band
   )
-  detail$CentralTendencyFlag <- is.finite(detail$AbsEstimate) & detail$AbsEstimate <= abs(central_tendency_max)
+  central_tendency_value <- suppressWarnings(as.numeric(central_tendency_max[1]))
+  central_tendency_enabled <- length(central_tendency_value) == 1L &&
+    is.finite(central_tendency_value)
+  central_tendency_value <- if (isTRUE(central_tendency_enabled)) {
+    abs(central_tendency_value)
+  } else {
+    NA_real_
+  }
+  detail$CentralTendencyFlag <- isTRUE(central_tendency_enabled) &
+    is.finite(detail$AbsEstimate) & detail$AbsEstimate <= central_tendency_value
   detail$BiasCount <- 0L
   detail$BiasSources <- 0L
 
@@ -207,7 +221,7 @@ facet_quality_dashboard <- function(fit,
     labs <- character(0)
     if (isTRUE(detail$SeverityFlag[i])) labs <- c(labs, "severity")
     if (isTRUE(detail$MisfitFlag[i])) labs <- c(labs, "misfit")
-    if (isTRUE(detail$CentralTendencyFlag[i])) labs <- c(labs, "central")
+    if (isTRUE(detail$CentralTendencyFlag[i])) labs <- c(labs, "reference proximity")
     if (isTRUE(detail$BiasFlag[i])) labs <- c(labs, "bias")
     if (length(labs) == 0) "" else paste(labs, collapse = ", ")
   }, character(1))
@@ -260,7 +274,7 @@ facet_quality_dashboard <- function(fit,
     facet_source = overview$FacetSource[1],
     severity_warn = abs(severity_warn),
     misfit_warn = abs(misfit_warn),
-    central_tendency_max = abs(central_tendency_max),
+    central_tendency_max = central_tendency_value,
     bias_count_warn = as.integer(bias_count_warn),
     bias_abs_t_warn = abs(bias_abs_t_warn),
     bias_abs_size_warn = abs(bias_abs_size_warn),
@@ -269,6 +283,20 @@ facet_quality_dashboard <- function(fit,
   ))
 
   notes <- character(0)
+  notes <- c(
+    notes,
+    if (isTRUE(central_tendency_enabled)) {
+      paste(
+        "Legacy CentralTendencyFlag is an origin-proximity marker only;",
+        "use data_quality_report() for observed category avoidance or range restriction."
+      )
+    } else {
+      paste(
+        "Legacy CentralTendencyFlag is disabled by default because origin proximity",
+        "does not diagnose observed category avoidance or range restriction."
+      )
+    }
+  )
   if (sum(detail$AnyFlag, na.rm = TRUE) == 0L) {
     notes <- c(notes, "No level-level flags were triggered under the current thresholds.")
   }
@@ -653,8 +681,9 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @param severity_warn Absolute estimate cutoff used to flag severity
 #'   outliers.
 #' @param misfit_warn Mean-square cutoff used to flag misfit.
-#' @param central_tendency_max Absolute estimate cutoff used to flag central
-#'   tendency.
+#' @param central_tendency_max Legacy opt-in absolute estimate cutoff for
+#'   marking facet estimates near the fitted origin. Default `NULL`; use
+#'   [data_quality_report()] for observed category-use screening.
 #' @param bias_count_warn Minimum flagged-bias row count required to flag a
 #'   level.
 #' @param bias_abs_t_warn Absolute `t` cutoff used when deriving bias-row
@@ -688,7 +717,7 @@ plot_facet_quality_dashboard <- function(x,
                                          bias_results = NULL,
                                          severity_warn = 1.0,
                                          misfit_warn = 1.5,
-                                         central_tendency_max = 0.25,
+                                         central_tendency_max = NULL,
                                          bias_count_warn = 1L,
                                          bias_abs_t_warn = 2,
                                          bias_abs_size_warn = 0.5,

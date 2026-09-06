@@ -51,6 +51,10 @@ for a generalizability-theory complement to the Rasch-style
 separation / reliability statistics that \code{diagnose_mfrm()}
 already emits.
 }
+\details{
+The decomposition is on the observed numeric \code{Score} scale. It does not use
+the fitted MFRM latent scale or estimate a latent ordinal G/Phi coefficient.
+}
 \section{Interpretation}{
 
 \itemize{
@@ -64,6 +68,8 @@ raters, items, criteria, or other random measurement facets.
 not as universal decision rules. Required dependability depends on the
 decision, consequences, population, and evidence beyond a single
 coefficient.
+\item For ordered categories, \code{Score} is treated as a numeric observed response
+in a Gaussian linear mixed model; thresholding is not modeled.
 }
 }
 
@@ -111,7 +117,7 @@ if (requireNamespace("lme4", quietly = TRUE)) {
   #   relative to person spread.
   gt$coefficients
   # Compare G and Phi with study-specific requirements; 0.70 and 0.80
-  #   are reference guides only. G < Phi means absolute decisions are noisier than relative
+  #   are reference guides only. Phi < G means absolute decisions are noisier than relative
   #   decisions; review whether facet main effects need anchoring.
   # Always check IdentificationStatus before using the bands:
   gt$coefficients[, c("G", "Phi", "GStatus", "PhiStatus",

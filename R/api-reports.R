@@ -1160,6 +1160,24 @@ fit_measures_table <- function(x,
 #'   recoded.
 #' - `unknown_elements`: facet levels in raw data but not in fitted design.
 #'
+#' @section Local category avoidance is not automatically a GPCM problem:
+#' Suppose a declared 1--10 scale is observed globally, but one rater uses only
+#' scores 3--8. If other raters use 1, 2, 9, and 10, the shared score support is
+#' not globally missing. The affected rater instead has local zero-category use:
+#' inspect `category_usage_by_facet`, `category_usage_summary`, and
+#' `plot(out, type = "facet_category_usage")`. This pattern can reflect range
+#' restriction, assignment/case mix, sparse information, or operational scoring
+#' practice; the table alone does not identify the cause.
+#'
+#' Do not select `GPCM` merely to absorb category avoidance. `GPCM` changes the
+#' designated step/slope owner's threshold and discrimination structure; it does
+#' not repair a rater's restricted use of the rubric. When the affected rater is
+#' itself the `step_facet`/`slope_facet` owner, local category gaps can also
+#' weaken owner-specific PCM/GPCM parameter support and the fit-readiness result
+#' must be checked. Under RSM, or when another facet owns the steps, the same
+#' local pattern remains important response-use evidence without automatically
+#' becoming a distinct response model.
+#'
 #' @section Typical workflow:
 #' 1. Run `data_quality_report(...)` with raw data.
 #' 2. Check `summary(out)` and `plot(out, type = "dashboard")`, then inspect
@@ -1172,15 +1190,26 @@ fit_measures_table <- function(x,
 #' @seealso [fit_mfrm()], [describe_mfrm_data()], [specifications_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' toy <- load_mfrmr_data("example_operational")
+#' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", quad_points = 7, maxit = 30
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
 #' )
 #' out <- data_quality_report(
 #'   fit,
-#'   data = toy, person = "Person",
-#'   facets = c("Rater", "Criterion"), score = "Score"
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score"
 #' )
 #' summary(out)
 #' p_dq <- plot(out, draw = FALSE)
@@ -1351,7 +1380,11 @@ subset_connectivity_report <- function(fit,
 #' an undirected weighted graph. Nodes are person or facet levels; edges connect
 #' levels that co-occur in at least one observed rating; edge weights are
 #' co-observation counts. The resulting network metrics are design diagnostics,
-#' not psychometric measures of person ability or rater quality.
+#' not psychometric measures of person ability or rater quality. This is the
+#' package's assignment/co-observation network: unlike the score-relation
+#' networks returned by [rater_network_analysis()] and
+#' [rater_halo_network_analysis()], it can expose disconnected measurement
+#' subsets relevant to common-scale interpretation.
 #' `plot(net, type = "centrality")`, `plot(net, type = "facet_summary")`, and
 #' `plot(net, type = "network")` provide immediate visual checks; use
 #' `draw = FALSE` to extract reusable plot data.
@@ -1377,7 +1410,8 @@ subset_connectivity_report <- function(fit,
 #'
 #' @return A bundle of class `mfrm_network_analysis` containing:
 #' - `summary`: graph-level connectedness and vulnerability metrics
-#' - `node_metrics`: node-level degree, strength, centrality, and cutpoint flags
+#' - `node_metrics`: node-level degree, strength, graph-theoretic centrality,
+#'   and cutpoint flags
 #' - `edge_metrics`: edge-level weights, betweenness, and bridge flags
 #' - `facet_summary`: facet-level aggregation of node/bridge indicators
 #' - `cut_nodes`: articulation-point rows from `node_metrics`
@@ -2613,14 +2647,19 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #'   `Corr`, `MAD`, `OneMinusExact`, and `AbsMeanDiff`.
 #' @param min_pair_n Minimum number of shared contexts required for a rater
 #'   pair to contribute an edge.
-#' @param min_weight Minimum edge weight retained in the graph.
+#' @param min_weight Minimum edge weight retained in the graph. This is an
+#'   analysis threshold: it changes graph topology and all graph-derived
+#'   centrality summaries, not only the displayed edges.
 #' @param score_diff_tolerance Score-difference tolerance for directed
 #'   severity networks. With the default `0`, any higher score contributes to
-#'   the outgoing leniency edge. Larger values reproduce thresholded
-#'   disagreement displays such as "only differences greater than 3 marks".
+#'   the outgoing leniency edge. This is an analysis tolerance: increasing it
+#'   changes directional counts, strengths, and `SeverityIndex`; it is not a
+#'   plot-only filter.
 #' @param severity_continuity Continuity constant added to incoming and
 #'   outgoing strengths before computing the finite severity index
-#'   `-log((OutStrength + c) / (InStrength + c))`.
+#'   `-log((OutStrength + c) / (InStrength + c))`. The default `0.5` is a
+#'   package finite-value correction. Setting `c = 0` gives the uncorrected
+#'   published form but can produce non-finite values for zero strengths.
 #' @param exact_warn,corr_warn Passed to [interrater_agreement_table()] to keep
 #'   pair flags consistent with the tabular agreement view.
 #' @param include_graph If `TRUE`, include the underlying `igraph` object in the
@@ -2633,7 +2672,15 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' pairwise relationships among raters in shared scoring contexts, and directed
 #' disagreement edges can be interpreted as relative leniency/severity
 #' indicators. These network summaries are descriptive diagnostics, not Rasch
-#' logit estimates and not formal fit statistics.
+#' logit estimates and not formal fit statistics. They describe score
+#' relationships conditional on observed shared contexts; they do not test the
+#' assignment graph's connectedness or establish a common measurement scale.
+#'
+#' `Degree`, `Strength`, `Betweenness`, and `Closeness` are graph-theoretic
+#' quantities computed after `min_pair_n`, `min_weight`, and (for directed
+#' networks) `score_diff_tolerance` are applied. They are not rating-scale
+#' central tendency or restriction-of-range measures. Use
+#' [mfrm_network_analysis()] for assignment/co-observation connectedness.
 #'
 #' For `mode = "severity_direction"`, outgoing strength means the rater more
 #' often assigned higher scores than comparison raters; incoming strength means
@@ -2645,11 +2692,12 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' @return A bundle of class `mfrm_rater_network` containing:
 #' \describe{
 #'   \item{`summary`}{One-row graph summary.}
-#'   \item{`node_metrics`}{Rater-level degree, strength, centrality, and
-#'     severity-direction summaries.}
+#'   \item{`node_metrics`}{Rater-level degree, strength, graph-theoretic
+#'     centrality, and severity-direction summaries.}
 #'   \item{`edge_metrics`}{Retained rater-pair network edges.}
-#'   \item{`pair_metrics`}{All eligible pairwise agreement and directional
-#'     comparison metrics before edge thresholding.}
+#'   \item{`pair_metrics`}{All estimated pairwise agreement and directional
+#'     comparison metrics, including `EligiblePair`, before `min_weight`
+#'     filtering.}
 #'   \item{`caveats`}{Interpretation notes and sparse-design warnings.}
 #'   \item{`source_interrater`}{The underlying [interrater_agreement_table()]
 #'     output used for agreement statistics.}
@@ -3275,19 +3323,28 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
 #' @param min_pair_n Minimum shared contexts required to estimate a node-pair
 #'   relationship.
 #' @param alpha Adjusted p-value threshold for retaining edges. Set to `1` to
-#'   retain all finite correlations after `min_abs_weight` filtering.
+#'   retain all finite correlations after `min_abs_weight` filtering. This
+#'   changes retained-edge counts, graph topology, and graph centrality, but
+#'   not the full-pair halo/non-halo distribution summaries.
 #' @param p_adjust Multiple-comparison adjustment passed to [stats::p.adjust()].
 #'   The default `"bonferroni"` follows the conservative screening used in
 #'   Lamprianou's halo-network example.
 #' @param min_abs_weight Minimum absolute correlation retained as a graph edge.
+#'   Like `alpha`, this is an analysis filter for the retained graph, not merely
+#'   a display filter.
 #' @param halo_weight_review Same-rater cross-criterion mean absolute
-#'   correlation at or above which a rater is marked for review.
+#'   correlation at or above which a rater is marked for review. This is a
+#'   package screening default, not a validated halo cut point.
 #' @param halo_contrast_review Minimum difference between a rater's mean halo
 #'   edge weight and incident non-halo edge weight for a stronger review flag.
+#'   This is a package screening default, not a validated halo cut point.
 #' @param min_retained_halo_edges Minimum retained halo edges required before a
 #'   strong `"warning"` status is assigned.
 #' @param positive_only If `TRUE`, negative correlations are kept in
-#'   `pair_metrics` but excluded from the graph edge table.
+#'   `pair_metrics` but excluded from the graph edge table and retained-edge
+#'   counts. Unfiltered distribution and per-rater summaries use absolute
+#'   correlations regardless of this setting; inspect `MeanSignedHaloWeight`
+#'   before interpreting a review flag.
 #' @param include_graph If `TRUE`, include the underlying `igraph` object.
 #'
 #' @details
@@ -3297,25 +3354,38 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
 #' from the same rater but different criteria are labelled `"halo"`; all other
 #' retained edges are labelled `"non_halo"`.
 #'
+#' This response-profile network does not evaluate assignment connectedness or
+#' establish a common scale. Its degree, strength, betweenness, and closeness
+#' columns are graph-theoretic centrality summaries after adjusted-p,
+#' `min_abs_weight`, and sign filters are applied.
+#'
 #' Per-rater `ReviewStatus` combines same-rater cross-criterion mean weight,
 #' incident non-halo comparison weight, and the number of retained halo edges.
 #' A `"warning"` means these criteria converge strongly enough to prioritize
 #' follow-up; `"review"` means at least one screening criterion is elevated.
-#' Neither label is a causal halo diagnosis.
+#' Neither label is a causal halo diagnosis, and the default review thresholds
+#' are package conventions rather than validated decision rules. Strong
+#' negative same-rater correlations are anomalous but are not evidence of a
+#' positive halo pattern; consult signed correlations in `pair_metrics` and
+#' `MeanSignedHaloWeight`.
 #'
 #' The key descriptive comparison is the distribution of halo-edge weights
 #' versus non-halo-edge weights. A larger halo-edge distribution is consistent
 #' with a halo pattern, but this function deliberately reports it as a
-#' screening diagnostic. The included Welch test is descriptive only because
-#' edge weights are clustered by rater and node.
+#' screening diagnostic. `MeanHaloWeight`, `MeanNonHaloWeight`, and the Welch
+#' comparison use all finite absolute correlations meeting `min_pair_n`, before
+#' adjusted-p, `min_abs_weight`, and sign filtering; the corresponding
+#' `MeanRetained*` columns describe the filtered graph. The Welch test is
+#' descriptive only because edge weights are clustered by rater and node.
 #'
 #' @return A bundle of class `mfrm_halo_network` containing:
 #' \describe{
 #'   \item{`summary`}{One-row halo-network summary and halo/non-halo contrast.}
-#'   \item{`node_metrics`}{Rater-by-criterion node strength and centrality.}
+#'   \item{`node_metrics`}{Rater-by-criterion node strength and
+#'     graph-theoretic centrality.}
 #'   \item{`edge_metrics`}{Retained graph edges.}
-#'   \item{`pair_metrics`}{All estimated node-pair correlations before edge
-#'     filtering.}
+#'   \item{`pair_metrics`}{All estimated node-pair correlations with explicit
+#'     retention flags for each graph filter.}
 #'   \item{`halo_summary_by_rater`}{Per-rater summaries of same-rater
 #'     criterion-pair edges, including `ReviewStatus` and `ReviewReason`.}
 #'   \item{`caveats`}{Interpretation notes.}
@@ -4023,9 +4093,21 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' @seealso [diagnose_mfrm()], [facet_statistics_report()], [reporting_checklist()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' out <- precision_review_report(fit, diagnostics = diag)
 #' summary(out)
 #' }

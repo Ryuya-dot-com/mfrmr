@@ -547,7 +547,8 @@ build_mfrm_manifest <- function(fit,
   pv_settings <- plausible_values$settings %||% list()
   anchor_tbl <- make_anchor_table(
     fit = fit,
-    include_person = isTRUE(include_person_anchors)
+    include_person = isTRUE(include_person_anchors),
+    readiness_policy = "review"
   )
 
   cfg <- fit$config %||% list()

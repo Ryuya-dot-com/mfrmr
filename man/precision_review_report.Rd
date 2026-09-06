@@ -81,9 +81,21 @@ language or should remain in exploratory/screening mode.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
+)
+diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 out <- precision_review_report(fit, diagnostics = diag)
 summary(out)
 }

@@ -141,9 +141,13 @@ each interaction cell. Cells below this value are flagged in
 \item{interaction_policy}{How to handle sparse interaction cells:
 \code{"warn"} (default), \code{"error"}, or \code{"silent"}.}
 
-\item{anchors}{Optional anchor table.}
+\item{anchors}{Optional direct-anchor table with facet, level, and fixed
+logit value columns. Each retained row is a computational equality
+constraint; it is not merely a declaration that an element is common.}
 
-\item{group_anchors}{Optional group-anchor table.}
+\item{group_anchors}{Optional group-mean constraint table with facet, level,
+group, and target-value columns. Its use requires a defensible external
+assumption about the group target; it does not create observed overlap.}
 
 \item{noncenter_facet}{One facet to leave non-centered.}
 
@@ -154,8 +158,9 @@ each interaction cell. Cells below this value are flagged in
 \item{anchor_policy}{How to handle anchor-review issues: \code{"warn"} (default),
 \code{"error"}, or \code{"silent"}.}
 
-\item{min_common_anchors}{Minimum anchored levels per linking facet used in
-anchor-review recommendations.}
+\item{min_common_anchors}{Minimum directly anchored levels per non-Person
+facet used in the package's local count recommendation. This does not
+verify cross-run element identity, invariance, or empirical connectedness.}
 
 \item{min_obs_per_element}{Minimum weighted observations per facet level used
 in anchor-review recommendations.}
@@ -808,10 +813,16 @@ centers all non-Person facets). \code{fit_mfrm()} therefore rejects an active
 latent-regression model with a different \code{noncenter_facet} rather than
 returning a confounded intercept.
 
-Anchor inputs are optional:
+Anchor inputs are optional and have distinct roles:
 \itemize{
-\item \code{anchors} should contain facet/level/fixed-value information.
-\item \code{group_anchors} should contain facet/level/group/group-value information.
+\item \code{anchors} contains facet/level/fixed-value information and imposes direct
+equality constraints on selected parameters.
+\item \code{group_anchors} contains facet/level/group/group-value information and
+constrains each declared group mean. Its interpretation is conditional on
+the externally justified target or equal-mean assumption.
+\item Common Persons, raters, items, or rating events are properties of the
+observed design. Neither constraint type creates empirical overlap or
+proves that disconnected subsets are substantively comparable.
 Both are normalized internally, so column names can be flexible
 (\code{facet}, \code{level}, \code{anchor}, \code{group}, \code{groupvalue}, etc.).
 }
@@ -823,6 +834,9 @@ Anchor review behavior:
 \item duplicate rows keep the last occurrence for each key.
 \item \code{anchor_policy} controls whether detected issues are warned, treated as
 errors, or kept silent.
+\item the review checks table/data compatibility and local support counts; it
+does not establish source-fit readiness, cross-run identity, parameter
+invariance, or the validity of a group-mean assumption.
 }
 
 Facet sign orientation:
@@ -1076,112 +1090,27 @@ problems in multivariate analysis}. Psychometrika, 52(3), 333-343.
 }
 
 \examples{
-# Short demonstration on the connected teaching data. The tighter portable
-# tolerance keeps this reduced example numerically stable. Use the documented
-# default grid and a sensitivity check for substantive work.
-toy <- load_mfrmr_data("example_operational")
-fit_quick <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
+# Each quoted role below is a column name in the long-format data.
+ratings <- load_mfrmr_data("example_operational")
+names(ratings)
+
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
   reltol = 1e-11
 )
-fit_quick$summary[, c(
-  "Model", "Method", "N", "Converged", "FitReadiness",
-  "InferenceReady", "ConvergenceSeverity"
-)]
+fit_review <- summary(fit, profile = "fit", detail = "brief")
+fit_review$decision
+fit_review$overview[, c("Model", "Method", "FitReadiness", "InferenceReady")]
 
-\donttest{
-# Full run with the package default MML estimator. This route integrates
-# person parameters under an N(0, 1) population model, so its reporting
-# value depends on the response-model and population assumptions. The
-# default `quad_points = 31` is a practical starting value; compare a
-# larger grid when quadrature sensitivity matters.
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  model = "RSM",
-  quad_points = 31
-)
-fit$summary
-s_fit <- summary(fit)
-s_fit$overview[, c("Model", "Method", "Converged", "FitReadiness",
-                   "InferenceReady", "ConvergenceSeverity")]
-# `InferenceReady = FALSE` is a conservative fit-level stop signal. The
-# stored component states identify whether input, estimability, category,
-# boundary, or numerical review caused it.
-s_fit$person_overview
-# Compare the person distribution with the facet and step locations. The
-# scale identification does not create universal targeting thresholds.
-s_fit$targeting
-# Interpret targeting magnitude against the intended population and score
-# use rather than a universal pass/fail cutoff.
-p_fit <- plot(fit, draw = FALSE)
-p_fit$name
-head(p_fit$data$locations)
-# The bare plot route is the native Wright map and includes available
-# facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
-# Wright/pathway/category overview.
-
-# JML is a distinct fixed-person-effects route, not a drop-in speed setting:
-fit_jml <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "JML",
-  model = "RSM"
-)
-summary(fit_jml)$overview[, c(
-  "Model", "Method", "Converged", "InferenceReady",
-  "ConvergenceSeverity"
-)]
-
-# Latent regression (MML only) uses person-level background variables:
-person_tbl <- unique(toy[c("Person")])
-person_tbl$Grade <- seq_len(nrow(person_tbl))
-person_tbl$Group <- rep(c("A", "B"), length.out = nrow(person_tbl))
-fit_pop <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  population_formula = ~ Grade + Group,
-  person_data = person_tbl
-)
-summary(fit_pop)$population_overview
-summary(fit_pop)$population_coding
-
-# Binary responses are supported as ordered two-category scores:
-set.seed(1)
-binary_toy <- expand.grid(
-  Person = paste0("P", 1:30),
-  Item = paste0("I", 1:4),
-  stringsAsFactors = FALSE
-)
-theta <- stats::rnorm(length(unique(binary_toy$Person)))
-beta <- seq(-0.8, 0.8, length.out = length(unique(binary_toy$Item)))
-eta <- theta[match(binary_toy$Person, unique(binary_toy$Person))] -
-  beta[match(binary_toy$Item, unique(binary_toy$Item))]
-binary_toy$Score <- stats::rbinom(nrow(binary_toy), 1, stats::plogis(eta))
-fit_binary <- fit_mfrm(
-  data = binary_toy,
-  person = "Person",
-  facets = "Item",
-  score = "Score",
-  model = "RSM",
-  method = "JML",
-  maxit = 30
-)
-fit_binary$summary[, c("Model", "Categories", "Converged")]
-
-# Next steps after fitting:
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-chk <- reporting_checklist(fit, diagnostics = diag)
-head(chk$checklist[, c("Section", "Item", "DraftReady")])
-}
+# This seven-point grid keeps the example short. Use the default 31-point
+# grid, and a denser sensitivity check when needed, for substantive work.
+plot(fit, type = "wright", draw = FALSE)$name
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},

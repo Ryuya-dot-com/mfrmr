@@ -11,7 +11,7 @@ facet_quality_dashboard(
   bias_results = NULL,
   severity_warn = 1,
   misfit_warn = NULL,
-  central_tendency_max = 0.25,
+  central_tendency_max = NULL,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
   bias_abs_size_warn = 0.5,
@@ -35,8 +35,11 @@ outliers.}
 \item{misfit_warn}{Mean-square cutoff used to flag misfit. Values above
 this cutoff or below its reciprocal are flagged.}
 
-\item{central_tendency_max}{Absolute estimate cutoff used to flag central
-tendency. Levels near zero are marked.}
+\item{central_tendency_max}{Legacy opt-in absolute estimate cutoff for
+marking facet estimates near the fitted origin. The default \code{NULL}
+disables this flag because origin proximity is not evidence that a rater
+avoids extreme score categories. Use \code{\link[=data_quality_report]{data_quality_report()}} for observed
+category-use and restriction-of-range screening.}
 
 \item{bias_count_warn}{Minimum flagged-bias row count required to flag a
 level.}
@@ -77,16 +80,18 @@ pair returned by \code{\link[=mfrm_misfit_thresholds]{mfrm_misfit_thresholds()}}
 pass \code{misfit_warn = 1.5} to keep the older symmetric
 \eqn{[1/}\code{misfit_warn}\eqn{,\;}\code{misfit_warn}\eqn{]}
 form (0.67-1.5).
-\item \strong{Central tendency}: elements with
-\eqn{|\mathrm{Estimate}| <} \code{central_tendency_max} logits
-are flagged.  Near-zero estimates may indicate a rater who avoids
-extreme categories, producing artificially narrow score ranges.
+\item \strong{Reference proximity (legacy \code{CentralTendencyFlag} label)}: when
+\code{central_tendency_max} is supplied, elements with
+\eqn{|\mathrm{Estimate}| <} \code{central_tendency_max} logits are marked.
+This only describes proximity to the fitted origin and must not be
+interpreted as central-category use or restriction of range. Those are
+response-pattern questions handled by \code{\link[=data_quality_report]{data_quality_report()}}.
 \item \strong{Bias}: elements involved in \eqn{\ge} \code{bias_count_warn}
 screen-positive interaction cells (from \code{\link[=estimate_bias]{estimate_bias()}}) are flagged.
 }
 
-A \strong{flag density} score counts how many of the four criteria each
-element triggers. Elements flagged on multiple criteria warrant priority
+A \strong{flag density} score counts how many enabled criteria each element
+triggers. Elements flagged on multiple criteria warrant priority
 review and may motivate training or a documented data-quality review; the
 dashboard does not justify automatic row, person, or rater exclusion.
 

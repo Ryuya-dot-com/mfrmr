@@ -28,7 +28,9 @@ follow \code{...} must be supplied by name.}
 
 \item{profile}{Summary profile. \code{"fit"} preserves the lightweight fit-only
 contract and does not compute diagnostics. \code{"facets"} adds a
-FACETS-organized measurement review, while \code{"reporting"} adds the
+comprehensive measurement review using familiar FACETS-style section
+organization; it does not require FACETS knowledge or software.
+\code{"reporting"} adds the
 reporting-oriented results profile.}
 
 \item{detail}{Printed detail. When \code{NULL} (the default), the lightweight
@@ -204,7 +206,8 @@ relative directions under the fitted identification constraints.
 \item Review data and score support with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} and read \code{summary(fit, profile = "fit")}.
 \item Request \code{summary(fit, profile = "facets")} for the comprehensive
-FACETS-organized review.
+measurement review. The historical profile name does not mean that
+FACETS is run.
 \item Draw the required native Wright map with
 \code{plot(fit, type = "wright", show_ci = TRUE)}; add the FACETS renderer or
 Infit pathway only when they answer a specific follow-up question.
@@ -215,48 +218,31 @@ checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]
 }
 
 \examples{
-toy <- load_mfrmr_data("example_operational")
+ratings <- load_mfrmr_data("example_operational")
 # Seven quadrature points keep this executable example short. For a final
 # analysis, restore the default or a prespecified grid and review sensitivity.
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML", model = "RSM", quad_points = 7, maxit = 30,
+  reltol = 1e-11
 )
-s <- summary(fit)
-s$overview[, c(
-  "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
-  "ConvergenceSeverity"
-)]
-s$readiness
+fit_review <- summary(fit, profile = "fit", detail = "brief")
+fit_review$decision
 # `InferenceReady = TRUE` means all five stored fit components passed.
 # It does not, by itself, support formal SE/CI or reliability.
 diag <- diagnose_mfrm(fit, residual_pca = "none")
-summary(fit, diagnostics = diag)$decision
-# Design, Stability, Diagnostics, and Reporting remain purpose-specific
-# workflow reviews rather than alternative fit-readiness derivations.
-# If Numerical is not a pass, inspect the retained polish stages; increasing
-# `maxit` alone may not resolve the review.
-s$person_overview
-# Interpret location and spread on the fitted logit scale together with the
-# score distribution and extreme-score counts.
-s$targeting
-# Targeting and spread are descriptive. Their practical importance depends
-# on the assessment purpose, sample, and facet orientation.
-facets_summary <- summary(fit, profile = "facets", compute = "never")
-res <- facets_summary$results
-native_map <- plot(
+full_review <- summary(
+  fit, profile = "facets", detail = "brief", diagnostics = diag
+)
+full_review$decision
+plot(
   fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
-)
-facets_map <- plot(
-  fit, type = "wright", renderer = "facets", show_ci = FALSE,
-  category_labels = c(
-    `1` = "Beginning", `2` = "Developing",
-    `3` = "Secure", `4` = "Advanced"
-  ),
-  draw = FALSE
-)
-# For fit statistics and the optional person-inclusive pathway, rerun the
-# FACETS profile with diagnostics available, then use its `results` object.
+)$name
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

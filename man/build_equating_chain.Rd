@@ -70,9 +70,10 @@ Object of class \code{mfrm_equating_chain} with components:
 Links a series of calibration waves by computing mean offsets between
 adjacent pairs of fits. Common linking elements (e.g., raters or items
 that appear in consecutive administrations) are used to estimate the
-scale shift. Cumulative offsets place all waves on a common metric
-anchored to the first wave. The procedure is intended as a practical
-screened linking aid, not as a full general-purpose equating framework.
+scale shift. Cumulative offsets express all waves relative to the first
+wave, conditional on the common-element assumptions. The procedure is a
+practical screened linking aid, not a full general-purpose equating
+framework or proof of common-scale comparability.
 }
 \details{
 The screened linking chain uses a screened link-offset method.  For each pair of
@@ -93,8 +94,27 @@ indicators of link quality.
 facet as having thin support.
 }
 
+The five-element rule is a package screening convention, not a universal
+adequacy threshold. Matching labels are assumed to identify the same
+invariant elements, and input fits are assumed to use compatible model,
+score, orientation, and population conventions. The helper does not verify
+those assumptions or source-fit readiness. In particular, adjacent label
+overlap and a finite offset do not by themselves establish a common scale.
+
+Each adjacent \code{Offset} is one value pooled across all selected facets. When
+any common rows have finite positive SEs, only those rows contribute to the
+inverse-variance weighted offset; retained/support counts can still include
+rows without usable SEs. If preliminary screening would remove every row,
+the implementation falls back to all finite differences. Prefer one
+substantively coherent \code{anchor_facets} block unless a common shift across
+facets is justified.
+
 Cumulative offsets are computed by chaining link offsets from Wave 1
 forward, placing all waves onto the metric of the first wave.
+\code{Offset_SD} is retained-element residual spread, not the standard error of
+\code{Offset}. No offset SE, confidence interval, cross-fit covariance, or
+cumulative uncertainty propagation is currently returned, so uncertainty
+can compound along the chain without appearing in \code{cumulative}.
 
 Elements whose per-link residual exceeds \code{drift_threshold} are flagged
 in \verb{$element_detail$Flag}.  A high \code{Offset_SD}, many flagged elements, or a

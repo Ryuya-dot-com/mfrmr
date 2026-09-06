@@ -99,15 +99,20 @@
 #'   `interaction_effect_table()` and handled according to `interaction_policy`.
 #' @param interaction_policy How to handle sparse interaction cells:
 #'   `"warn"` (default), `"error"`, or `"silent"`.
-#' @param anchors Optional anchor table.
-#' @param group_anchors Optional group-anchor table.
+#' @param anchors Optional direct-anchor table with facet, level, and fixed
+#'   logit value columns. Each retained row is a computational equality
+#'   constraint; it is not merely a declaration that an element is common.
+#' @param group_anchors Optional group-mean constraint table with facet, level,
+#'   group, and target-value columns. Its use requires a defensible external
+#'   assumption about the group target; it does not create observed overlap.
 #' @param noncenter_facet One facet to leave non-centered.
 #' @param dummy_facets Facets to fix at zero.
 #' @param positive_facets Facets with positive orientation.
 #' @param anchor_policy How to handle anchor-review issues: `"warn"` (default),
 #'   `"error"`, or `"silent"`.
-#' @param min_common_anchors Minimum anchored levels per linking facet used in
-#'   anchor-review recommendations.
+#' @param min_common_anchors Minimum directly anchored levels per non-Person
+#'   facet used in the package's local count recommendation. This does not
+#'   verify cross-run element identity, invariance, or empirical connectedness.
 #' @param min_obs_per_element Minimum weighted observations per facet level used
 #'   in anchor-review recommendations.
 #' @param min_obs_per_category Minimum weighted observations per score category
@@ -610,9 +615,15 @@
 #' latent-regression model with a different `noncenter_facet` rather than
 #' returning a confounded intercept.
 #'
-#' Anchor inputs are optional:
-#' - `anchors` should contain facet/level/fixed-value information.
-#' - `group_anchors` should contain facet/level/group/group-value information.
+#' Anchor inputs are optional and have distinct roles:
+#' - `anchors` contains facet/level/fixed-value information and imposes direct
+#'   equality constraints on selected parameters.
+#' - `group_anchors` contains facet/level/group/group-value information and
+#'   constrains each declared group mean. Its interpretation is conditional on
+#'   the externally justified target or equal-mean assumption.
+#' - Common Persons, raters, items, or rating events are properties of the
+#'   observed design. Neither constraint type creates empirical overlap or
+#'   proves that disconnected subsets are substantively comparable.
 #' Both are normalized internally, so column names can be flexible
 #' (`facet`, `level`, `anchor`, `group`, `groupvalue`, etc.).
 #'
@@ -622,6 +633,9 @@
 #' - duplicate rows keep the last occurrence for each key.
 #' - `anchor_policy` controls whether detected issues are warned, treated as
 #'   errors, or kept silent.
+#' - the review checks table/data compatibility and local support counts; it
+#'   does not establish source-fit readiness, cross-run identity, parameter
+#'   invariance, or the validity of a group-mean assumption.
 #'
 #' Facet sign orientation:
 #' - facets listed in `positive_facets` are treated as `+1`
@@ -934,112 +948,27 @@
 #'   [gpcm_capability_matrix], [mfrmr_workflow_methods],
 #'   [mfrmr_reporting_and_apa]
 #' @examples
-#' # Short demonstration on the connected teaching data. The tighter portable
-#' # tolerance keeps this reduced example numerically stable. Use the documented
-#' # default grid and a sensitivity check for substantive work.
-#' toy <- load_mfrmr_data("example_operational")
-#' fit_quick <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
+#' # Each quoted role below is a column name in the long-format data.
+#' ratings <- load_mfrmr_data("example_operational")
+#' names(ratings)
+#'
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
 #'   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
 #'   reltol = 1e-11
 #' )
-#' fit_quick$summary[, c(
-#'   "Model", "Method", "N", "Converged", "FitReadiness",
-#'   "InferenceReady", "ConvergenceSeverity"
-#' )]
+#' fit_review <- summary(fit, profile = "fit", detail = "brief")
+#' fit_review$decision
+#' fit_review$overview[, c("Model", "Method", "FitReadiness", "InferenceReady")]
 #'
-#' \donttest{
-#' # Full run with the package default MML estimator. This route integrates
-#' # person parameters under an N(0, 1) population model, so its reporting
-#' # value depends on the response-model and population assumptions. The
-#' # default `quad_points = 31` is a practical starting value; compare a
-#' # larger grid when quadrature sensitivity matters.
-#' fit <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   model = "RSM",
-#'   quad_points = 31
-#' )
-#' fit$summary
-#' s_fit <- summary(fit)
-#' s_fit$overview[, c("Model", "Method", "Converged", "FitReadiness",
-#'                    "InferenceReady", "ConvergenceSeverity")]
-#' # `InferenceReady = FALSE` is a conservative fit-level stop signal. The
-#' # stored component states identify whether input, estimability, category,
-#' # boundary, or numerical review caused it.
-#' s_fit$person_overview
-#' # Compare the person distribution with the facet and step locations. The
-#' # scale identification does not create universal targeting thresholds.
-#' s_fit$targeting
-#' # Interpret targeting magnitude against the intended population and score
-#' # use rather than a universal pass/fail cutoff.
-#' p_fit <- plot(fit, draw = FALSE)
-#' p_fit$name
-#' head(p_fit$data$locations)
-#' # The bare plot route is the native Wright map and includes available
-#' # facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
-#' # Wright/pathway/category overview.
-#'
-#' # JML is a distinct fixed-person-effects route, not a drop-in speed setting:
-#' fit_jml <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "JML",
-#'   model = "RSM"
-#' )
-#' summary(fit_jml)$overview[, c(
-#'   "Model", "Method", "Converged", "InferenceReady",
-#'   "ConvergenceSeverity"
-#' )]
-#'
-#' # Latent regression (MML only) uses person-level background variables:
-#' person_tbl <- unique(toy[c("Person")])
-#' person_tbl$Grade <- seq_len(nrow(person_tbl))
-#' person_tbl$Group <- rep(c("A", "B"), length.out = nrow(person_tbl))
-#' fit_pop <- fit_mfrm(
-#'   data = toy,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   method = "MML",
-#'   population_formula = ~ Grade + Group,
-#'   person_data = person_tbl
-#' )
-#' summary(fit_pop)$population_overview
-#' summary(fit_pop)$population_coding
-#'
-#' # Binary responses are supported as ordered two-category scores:
-#' set.seed(1)
-#' binary_toy <- expand.grid(
-#'   Person = paste0("P", 1:30),
-#'   Item = paste0("I", 1:4),
-#'   stringsAsFactors = FALSE
-#' )
-#' theta <- stats::rnorm(length(unique(binary_toy$Person)))
-#' beta <- seq(-0.8, 0.8, length.out = length(unique(binary_toy$Item)))
-#' eta <- theta[match(binary_toy$Person, unique(binary_toy$Person))] -
-#'   beta[match(binary_toy$Item, unique(binary_toy$Item))]
-#' binary_toy$Score <- stats::rbinom(nrow(binary_toy), 1, stats::plogis(eta))
-#' fit_binary <- fit_mfrm(
-#'   data = binary_toy,
-#'   person = "Person",
-#'   facets = "Item",
-#'   score = "Score",
-#'   model = "RSM",
-#'   method = "JML",
-#'   maxit = 30
-#' )
-#' fit_binary$summary[, c("Model", "Categories", "Converged")]
-#'
-#' # Next steps after fitting:
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' chk <- reporting_checklist(fit, diagnostics = diag)
-#' head(chk$checklist[, c("Section", "Item", "DraftReady")])
-#' }
+#' # This seven-point grid keeps the example short. Use the default 31-point
+#' # grid, and a denser sensitivity check when needed, for substantive work.
+#' plot(fit, type = "wright", draw = FALSE)$name
 #' @export
 fit_mfrm <- function(data,
                      person,
@@ -2619,17 +2548,19 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'
 #' @seealso [fit_mfrm()], [review_mfrm_anchors()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' ds <- describe_mfrm_data(
-#'   data = toy,
+#' ratings <- load_mfrmr_data("example_operational")
+#' data_review <- describe_mfrm_data(
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
-#'   score = "Score"
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4
 #' )
-#' s_ds <- summary(ds)
-#' s_ds$overview
-#' p_ds <- plot(ds, draw = FALSE)
-#' p_ds$data$plot
+#' review <- summary(data_review)
+#' review$overview
+#' review$score_distribution
+#' review$design_connectivity
 #' @export
 describe_mfrm_data <- function(data,
                                person,
@@ -3213,9 +3144,16 @@ collect_mfrm_design_caveats <- function(object) {
 #'   `print(summary(ds))` shows a compact `Caveats` block when rows are present
 #' @seealso [describe_mfrm_data()], [summary.mfrm_fit()]
 #' @examples
-#' toy <- load_mfrmr_data("example_core")
-#' ds <- describe_mfrm_data(toy, "Person", c("Rater", "Criterion"), "Score")
-#' summary(ds)
+#' ratings <- load_mfrmr_data("example_operational")
+#' data_review <- describe_mfrm_data(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4
+#' )
+#' summary(data_review)
 #' @export
 summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
   digits <- max(0L, as.integer(digits))
@@ -3553,9 +3491,10 @@ plot.mfrm_data_description <- function(x,
 #' @param person Column name for person IDs.
 #' @param facets Character vector of facet column names.
 #' @param score Column name for observed score.
-#' @param anchors Optional anchor table (Facet, Level, Anchor).
+#' @param anchors Optional direct-anchor table (Facet, Level, Anchor). Retained
+#'   values are fixed during estimation.
 #' @param group_anchors Optional group-anchor table
-#'   (Facet, Level, Group, GroupValue).
+#'   (Facet, Level, Group, GroupValue) defining group-mean constraints.
 #' @param weight Optional weight/frequency column name.
 #' @param rating_min Optional minimum category value.
 #' @param rating_max Optional maximum category value.
@@ -3565,8 +3504,9 @@ plot.mfrm_data_description <- function(x,
 #'   set to `NA` on the score column before review while preserving person and
 #'   facet identifiers. Supply a character vector to apply a custom code set
 #'   across the person, facet, and score columns.
-#' @param min_common_anchors Minimum anchored levels per linking facet used in
-#'   recommendations (default `5`).
+#' @param min_common_anchors Minimum directly anchored levels per non-Person
+#'   facet used in the package count recommendation (default `5`). The function
+#'   cannot verify that those levels have invariant cross-run identity.
 #' @param min_obs_per_element Minimum weighted observations per facet level used
 #'   in recommendations (default `30`).
 #' @param min_obs_per_category Minimum weighted observations per score category
@@ -3575,32 +3515,38 @@ plot.mfrm_data_description <- function(x,
 #' @param dummy_facets Facets to fix at zero.
 #'
 #' @details
-#' **Anchoring** (also called "fixing" or scale linking) constrains selected
-#' parameter estimates to pre-specified values, placing the current
-#' analysis on a previously established scale.  This is essential when
-#' comparing results across administrations, linking test forms, or
-#' monitoring rater drift over time.
+#' This helper reviews computational constraints. A *direct anchor* fixes an
+#' individual parameter to a supplied value. A *group anchor* constrains the
+#' mean of declared elements to a supplied target. A *common-element link* is
+#' different: it is observed overlap among administrations or subsets. Direct
+#' or group constraints can transfer coordinates from a defensible reference,
+#' but they do not manufacture empirical overlap.
 #'
 #' This function applies the same preprocessing and key-resolution rules
 #' as `fit_mfrm()`, but returns a review object so constraints can be
-#' checked *before* estimation.  Running the review first helps avoid
+#' checked *before* estimation. Running the review first helps avoid
 #' estimation failures caused by misspecified or data-incompatible
-#' anchors.
+#' anchors. It does not inspect source-fit readiness or establish that labels
+#' denote the same invariant elements across runs. Those substantive checks
+#' remain the caller's responsibility.
 #'
 #' **Anchor types:**
 #' - *Direct anchors* fix individual element measures to specific logit
 #'   values (e.g., Rater R1 anchored at 0.35 logits).
 #' - *Group anchors* constrain the mean of a set of elements to a
 #'   target value, allowing individual elements to vary freely around
-#'   that mean.
-#' - When both types overlap for the same element, the direct anchor
-#'   takes precedence.
+#'   that mean. The target requires an external justification such as a
+#'   defensible equal-mean or known-scale assumption.
+#' - When both types include the same element, both constraints are retained:
+#'   the direct anchor fixes that element and the group constraint still fixes
+#'   the declared group mean. Incompatible combinations are rejected by the
+#'   constraint/estimability checks.
 #'
-#' **Design checks** verify that each anchored element has at least
+#' **Design checks** report whether each observed facet level has at least
 #' `min_obs_per_element` weighted observations (default 30) and each
 #' score category has at least `min_obs_per_category` (default 10).
-#' These thresholds follow standard Rasch sample-size recommendations
-#' (Linacre, 1994).
+#' These user-configurable counts are package screening recommendations, not
+#' universal adequacy thresholds and not tests of connectedness or invariance.
 #'
 #' @section Interpreting output:
 #' - `issue_counts`/`issues`: concrete data or specification problems.
@@ -3614,8 +3560,8 @@ plot.mfrm_data_description <- function(x,
 #' 3. Resolve issues, then fit with [fit_mfrm()].
 #'
 #' @return A list of class `mfrm_anchor_review` with:
-#' - `anchors`: cleaned anchor table used by estimation
-#' - `group_anchors`: cleaned group-anchor table used by estimation
+#' - `anchors`: cleaned direct constraints used by estimation
+#' - `group_anchors`: cleaned group-mean constraints used by estimation
 #' - `facet_summary`: counts of levels, constrained levels, and free levels
 #' - `design_checks`: observation-count checks by level/category
 #' - `thresholds`: active threshold settings used for recommendations
@@ -3974,25 +3920,33 @@ plot.mfrm_anchor_review <- function(x,
   ))
 }
 
-#' Build an anchor table from fitted estimates
+#' Build a candidate direct-anchor table from fitted estimates
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param facets Optional subset of facets to include.
-#' @param include_person Include person estimates as anchors.
+#' @param include_person Include person estimates as candidate anchors. Use only
+#'   when cross-run person identity and the intended longitudinal constraint
+#'   are substantively justified.
 #' @param digits Rounding digits for anchor values.
+#' @param readiness_policy How a source fit that is not inference-ready is
+#'   handled. `"error"` (default) refuses anchor export or reuse. `"review"`
+#'   permits explicit review-only extraction; those values must not be used as
+#'   operational anchors.
 #'
 #' @details
-#' This function exports estimated facet parameters as an anchor table
-#' for use in subsequent calibrations.  This is the standard approach
-#' for **linking** across administrations: a reference
-#' run establishes the measurement scale, and anchored re-analyses
-#' place new data on that same scale.
+#' This function performs a mechanical conversion from fitted estimates to the
+#' `Facet`/`Level`/`Anchor` schema accepted by `fit_mfrm()`. The returned rows
+#' are candidate direct constraints, not an approved anchor set.
 #'
-#' Anchor values should be exported from a well-fitting reference run
-#' with adequate sample size.  If the reference model has convergence
-#' issues or large misfit, the exported anchors may propagate
-#' instability.  Re-run [review_mfrm_anchors()] on the receiving data
-#' to verify compatibility before estimation.
+#' By default, the function refuses export when the source fit is not
+#' inference-ready under the current readiness contract. Set
+#' `readiness_policy = "review"` only to inspect candidate values; this does not
+#' make them eligible for reuse. The function cannot verify cross-run element
+#' identity or invariance. Before reuse, document why selected elements retain
+#' the same meaning, check the observed design's connectedness, and run
+#' [review_mfrm_anchors()] on the receiving data. That review checks schema and
+#' receiving-data support; it does not validate the source fit or the
+#' substantive invariance assumption.
 #'
 #' The `digits` parameter controls rounding precision.  Use at least 4
 #' digits for research applications; excessive rounding (e.g., 1 digit)
@@ -4004,9 +3958,10 @@ plot.mfrm_anchor_review <- function(x,
 #' - `Anchor`: fixed logit value (rounded by `digits`).
 #'
 #' @section Typical workflow:
-#' 1. Fit a reference run with [fit_mfrm()].
-#' 2. Export anchors with `make_anchor_table(fit)`.
-#' 3. Pass selected rows back into `fit_mfrm(..., anchors = ...)`.
+#' 1. Fit and diagnose a defensible reference run with [fit_mfrm()].
+#' 2. Confirm source readiness, element identity, and the intended link.
+#' 3. Export candidates with `make_anchor_table(fit)` and review them.
+#' 4. Pass selected rows back into `fit_mfrm(..., anchors = ...)`.
 #'
 #' @return A data.frame with `Facet`, `Level`, and `Anchor`.
 #' @seealso [fit_mfrm()], [review_mfrm_anchors()]
@@ -4023,9 +3978,30 @@ plot.mfrm_anchor_review <- function(x,
 make_anchor_table <- function(fit,
                               facets = NULL,
                               include_person = FALSE,
-                              digits = 6) {
+                              digits = 6,
+                              readiness_policy = c("error", "review")) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
+  }
+
+  readiness_policy <- match.arg(readiness_policy)
+  source_readiness <- mfrm_convergence_state(fit)
+  fit_readiness <- as.character(
+    source_readiness$fit_readiness %||% "legacy_unknown"
+  )[1]
+  if (is.na(fit_readiness) || !nzchar(fit_readiness)) {
+    fit_readiness <- "legacy_unknown"
+  }
+  if (!isTRUE(source_readiness$inference_ready) &&
+      identical(readiness_policy, "error")) {
+    stop(
+      "`fit` is not eligible for anchor export or reuse (FitReadiness = '",
+      fit_readiness,
+      "', InferenceReady = FALSE). Resolve the source fit or use ",
+      "`readiness_policy = \"review\"` only to inspect review-only ",
+      "candidate values.",
+      call. = FALSE
+    )
   }
 
   digits <- max(0L, as.integer(digits))
@@ -4065,8 +4041,13 @@ make_anchor_table <- function(fit,
       dplyr::filter(.data$Facet %in% keep)
   }
 
-  out |>
+  out <- out |>
     dplyr::arrange(.data$Facet, .data$Level)
+  attr(out, "source_fit_readiness") <- fit_readiness
+  attr(out, "source_inference_ready") <-
+    isTRUE(source_readiness$inference_ready)
+  attr(out, "readiness_policy") <- readiness_policy
+  out
 }
 
 #' Compute diagnostics for an `mfrm_fit` object
@@ -4284,45 +4265,26 @@ make_anchor_table <- function(fit,
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
 #' @examples
 #' \donttest{
-#' # Diagnostic example without residual PCA.
-#' toy <- load_mfrmr_data("example_operational")
-#' # Seven quadrature points keep this example short; use the prespecified
-#' # final grid and a denser sensitivity grid for substantive analysis.
+#' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
 #' )
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-#' s_diag <- summary(diag)
-#' s_diag$overview[, c("Observations", "Facets", "Categories")]
-#' s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+#' s_diag <- summary(diag, top_n = 3)
+#' s_diag$decision
 #' s_diag$key_warnings
-#' # Look for: lines starting with "MnSq misfit:" name the element +
-#' #   Infit / Outfit values outside the configured heuristic review band.
-#' #   Review those signals in context; an empty warning list is not an
-#' #   automatic all-clear decision.
-#' s_diag$facets_chisq
-#' # Look for: `FixedProb` < 0.05 is evidence against the fixed-effect
-#' #   "all elements equal" null under the reported chi-square approximation.
-#' #   Interpret the magnitude and precision as well; a non-significant result
-#' #   does not demonstrate homogeneous elements or negligible facet spread.
-#' s_diag$interrater
-#' # Look for: ExactAgreement >= ExpectedExactAgreement and
-#' #   AgreementMinusExpected >= 0 indicate raters agree at least as
-#' #   often as the model expects. Negative values warrant a closer
-#' #   look at `diag$interrater$pairs`.
-#' p_qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE)
-#' p_qc$data$plot
-#'
-#' # Optional: include residual PCA in the diagnostic bundle
-#' diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
-#' pca <- analyze_residual_pca(diag_pca, mode = "overall")
-#' head(pca$overall_table)
-#'
-#' # Reporting route:
-#' prec <- precision_review_report(fit, diagnostics = diag)
-#' summary(prec)
-#'
+#' s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+#' s_diag$top_fit
 #' }
 #' @section References:
 #' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.

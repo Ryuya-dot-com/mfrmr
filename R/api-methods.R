@@ -7077,21 +7077,25 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' s <- summary(diag, top_n = 3)
+#' s$decision
 #' s$key_warnings
-#' # Look for: lines beginning with "MnSq misfit:" name the worst
-#' #   element + Infit / Outfit values; "Unexpected responses flagged"
-#' #   counts how many cell-level surprises the screen returned.
 #' s$top_fit
-#' # Large absolute standardized values identify rows for follow-up; they do
-#' # not create a universal accept/reject rule.
-#' s$facets_chisq
-#' # Read the fixed-effect chi-square as a heterogeneity screen in the context
-#' # of the design and intended score use.
 #' }
 #' @export
 summary.mfrm_diagnostics <- function(object,
@@ -8174,7 +8178,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   follow `...` must be supplied by name.
 #' @param profile Summary profile. `"fit"` preserves the lightweight fit-only
 #'   contract and does not compute diagnostics. `"facets"` adds a
-#'   FACETS-organized measurement review, while `"reporting"` adds the
+#'   comprehensive measurement review using familiar FACETS-style section
+#'   organization; it does not require FACETS knowledge or software.
+#'   `"reporting"` adds the
 #'   reporting-oriented results profile.
 #' @param detail Printed detail. When `NULL` (the default), the lightweight
 #'   `"fit"` profile retains the legacy `"full"` print while expanded profiles
@@ -8262,7 +8268,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' 1. Review data and score support with [describe_mfrm_data()].
 #' 2. Fit with [fit_mfrm()] and read `summary(fit, profile = "fit")`.
 #' 3. Request `summary(fit, profile = "facets")` for the comprehensive
-#'    FACETS-organized review.
+#'    measurement review. The historical profile name does not mean that
+#'    FACETS is run.
 #' 4. Draw the required native Wright map with
 #'    `plot(fit, type = "wright", show_ci = TRUE)`; add the FACETS renderer or
 #'    Infit pathway only when they answer a specific follow-up question.
@@ -8341,48 +8348,31 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   `NULL` for the lightweight `"fit"` profile
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' toy <- load_mfrmr_data("example_operational")
+#' ratings <- load_mfrmr_data("example_operational")
 #' # Seven quadrature points keep this executable example short. For a final
 #' # analysis, restore the default or a prespecified grid and review sensitivity.
 #' fit <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
+#'   reltol = 1e-11
 #' )
-#' s <- summary(fit)
-#' s$overview[, c(
-#'   "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
-#'   "ConvergenceSeverity"
-#' )]
-#' s$readiness
+#' fit_review <- summary(fit, profile = "fit", detail = "brief")
+#' fit_review$decision
 #' # `InferenceReady = TRUE` means all five stored fit components passed.
 #' # It does not, by itself, support formal SE/CI or reliability.
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' summary(fit, diagnostics = diag)$decision
-#' # Design, Stability, Diagnostics, and Reporting remain purpose-specific
-#' # workflow reviews rather than alternative fit-readiness derivations.
-#' # If Numerical is not a pass, inspect the retained polish stages; increasing
-#' # `maxit` alone may not resolve the review.
-#' s$person_overview
-#' # Interpret location and spread on the fitted logit scale together with the
-#' # score distribution and extreme-score counts.
-#' s$targeting
-#' # Targeting and spread are descriptive. Their practical importance depends
-#' # on the assessment purpose, sample, and facet orientation.
-#' facets_summary <- summary(fit, profile = "facets", compute = "never")
-#' res <- facets_summary$results
-#' native_map <- plot(
+#' full_review <- summary(
+#'   fit, profile = "facets", detail = "brief", diagnostics = diag
+#' )
+#' full_review$decision
+#' plot(
 #'   fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
-#' )
-#' facets_map <- plot(
-#'   fit, type = "wright", renderer = "facets", show_ci = FALSE,
-#'   category_labels = c(
-#'     `1` = "Beginning", `2` = "Developing",
-#'     `3` = "Secure", `4` = "Advanced"
-#'   ),
-#'   draw = FALSE
-#' )
-#' # For fit statistics and the optional person-inclusive pathway, rerun the
-#' # FACETS profile with diagnostics available, then use its `results` object.
+#' )$name
 #' @export
 summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
                              profile = c("fit", "facets", "reporting"),
@@ -9614,7 +9604,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
 
   key_warnings <- clean_summary_lines(c(fit_caveat_messages, preparation_review_messages, notes), max_n = 4L)
   next_actions <- c(
-    "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface.",
+    "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive measurement review; FACETS software is not required.",
     "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."
   )
   if (!identical(numerical_status, "pass")) {
@@ -10765,7 +10755,7 @@ print.summary.mfrm_fit <- function(x, ...) {
         profile
       ))
     } else {
-      cat(" - Use `summary(fit, profile = \"facets\")` for the computed FACETS-organized review.\n")
+      cat(" - Use `summary(fit, profile = \"facets\")` for the comprehensive measurement review; FACETS software is not required.\n")
       cat(" - Use `summary(fit, detail = \"full\")` for legacy fit-level detail.\n")
     }
     return(invisible(x))

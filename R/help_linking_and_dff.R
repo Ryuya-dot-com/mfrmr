@@ -35,11 +35,38 @@
 #' 8. Run [analyze_dff()] only after checking connectivity and common-scale
 #'    evidence.
 #'
+#' @section Keep anchor roles separate:
+#' - A common-element or common-rating link is observed overlap in the design.
+#' - `anchors` are direct equality constraints on selected parameter values.
+#' - `group_anchors` constrain declared group means and require an externally
+#'   defensible target or equal-mean assumption.
+#' - [make_anchor_table()] exports candidate direct constraints mechanically;
+#'   by default it requires a current inference-ready source fit, but it does
+#'   not select invariant elements. `readiness_policy = "review"` is for
+#'   review-only extraction, not anchor reuse.
+#'
+#' Constraint-based coordinate transfer does not create empirical overlap.
+#' Before reuse, also verify consistent model/score/orientation/population
+#' conventions, cross-run element identity, and the relevant assignment
+#' connectedness. [review_mfrm_anchors()] checks syntax and receiving-data
+#' support, not those substantive assumptions.
+#'
+#' @section Drift and chain inference boundary:
+#' [detect_anchor_drift()] and [build_equating_chain()] currently estimate one
+#' pooled offset across all selected common elements and facets. Their
+#' element-level SE ratios omit estimated-offset uncertainty and cross-fit
+#' covariance, and chain output does not propagate uncertainty across adjacent
+#' links. `Offset_SD` is residual spread, not an offset SE. Treat flags,
+#' support counts, and cumulative offsets as review screens; when a common
+#' shift across facet blocks is not defensible, analyze one coherent linking
+#' facet at a time.
+#'
 #' @section Which helper answers which task:
 #' \describe{
 #'   \item{[subset_connectivity_report()]}{Summarizes connected subsets,
 #'   bottleneck facets, and design-matrix coverage.}
-#'   \item{[make_anchor_table()]}{Extracts reusable anchor candidates from a fit.}
+#'   \item{[make_anchor_table()]}{Extracts candidate direct-anchor values from a
+#'   fit without certifying them for reuse.}
 #'   \item{[anchor_to_baseline()]}{Anchors new raw data to a baseline fit and
 #'   returns anchored diagnostics plus a consistency check against the baseline
 #'   scale.}
@@ -56,6 +83,9 @@
 #'
 #' @section Practical linking rules:
 #' - Check connectedness before interpreting subgroup or wave differences.
+#' - Use [mfrm_network_analysis()] for assignment/co-observation connectedness.
+#'   Agreement, severity-direction, and halo networks describe score relations;
+#'   they do not establish an empirical link or a common measurement scale.
 #' - Use DFF outputs as screening results when common-scale linking is weak.
 #' - Always name the facet, facet level, and group pair involved in a DFF
 #'   contrast. A generic "DIF exists" statement is not interpretable in a

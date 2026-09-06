@@ -55,9 +55,10 @@
 #'   Use [plot_marginal_fit()].
 #' - "Which level pairs drive strict local-dependence follow-up?"
 #'   Use [plot_marginal_pairwise()].
-#' - "Do raters agree and do facets separate meaningfully?"
-#'   Use [plot_interrater_agreement()], [rater_network_analysis()], and
-#'   [plot_facets_chisq()].
+#' - "Do raters agree within observed shared scoring contexts?"
+#'   Use [plot_interrater_agreement()] and [rater_network_analysis()].
+#' - "Do facet levels separate meaningfully?"
+#'   Use [plot_facets_chisq()].
 #' - "Do criteria within the same rater move together in a halo-like way?"
 #'   Use [rater_halo_network_analysis()] and
 #'   `plot(..., type = "edge_distribution")`.
@@ -119,6 +120,17 @@
 #'   theta-by-category-by-probability plot data for exploratory teaching or
 #'   downstream interactive rendering. Keep 2D pathway/CCC plots as the
 #'   default reporting figures.
+#'
+#' @section Keep the network questions separate:
+#' [mfrm_network_analysis()] describes the assignment/co-observation graph and
+#' is the relevant network route for disconnected measurement subsets.
+#' [rater_network_analysis()] describes pairwise score agreement,
+#' disagreement, or severity direction, while [rater_halo_network_analysis()]
+#' describes rater-by-criterion score-profile correlations. The latter two do
+#' not establish assignment connectedness or a common scale. In all three,
+#' degree, strength, betweenness, and closeness are graph-theoretic quantities;
+#' they are not rating-scale central tendency, MFRM severity logits, or causal
+#' halo evidence.
 #'
 #' @section Recommended visual route:
 #' 1. If you are drafting a report, run [reporting_checklist()] first and read

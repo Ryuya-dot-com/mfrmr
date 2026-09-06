@@ -97,18 +97,29 @@ Wright-map first screen.
 }
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:6], , drop = FALSE]
-fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
+)
+results <- mfrm_results(fit)
 
 exported <- export_mfrm_results(
-  res,
+  results,
   output_dir = tempdir(),
   prefix = "mfrmr_results_example",
   preset = "starter",
-  overwrite = TRUE
+  overwrite = TRUE,
+  acknowledge_sensitive = TRUE # The packaged example is synthetic.
 )
 exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
 }

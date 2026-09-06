@@ -32,10 +32,11 @@ review_mfrm_anchors(
 
 \item{score}{Column name for observed score.}
 
-\item{anchors}{Optional anchor table (Facet, Level, Anchor).}
+\item{anchors}{Optional direct-anchor table (Facet, Level, Anchor). Retained
+values are fixed during estimation.}
 
 \item{group_anchors}{Optional group-anchor table
-(Facet, Level, Group, GroupValue).}
+(Facet, Level, Group, GroupValue) defining group-mean constraints.}
 
 \item{weight}{Optional weight/frequency column name.}
 
@@ -51,8 +52,9 @@ set to \code{NA} on the score column before review while preserving person and
 facet identifiers. Supply a character vector to apply a custom code set
 across the person, facet, and score columns.}
 
-\item{min_common_anchors}{Minimum anchored levels per linking facet used in
-recommendations (default \code{5}).}
+\item{min_common_anchors}{Minimum directly anchored levels per non-Person
+facet used in the package count recommendation (default \code{5}). The function
+cannot verify that those levels have invariant cross-run identity.}
 
 \item{min_obs_per_element}{Minimum weighted observations per facet level used
 in recommendations (default \code{30}).}
@@ -67,8 +69,8 @@ used in recommendations (default \code{10}).}
 \value{
 A list of class \code{mfrm_anchor_review} with:
 \itemize{
-\item \code{anchors}: cleaned anchor table used by estimation
-\item \code{group_anchors}: cleaned group-anchor table used by estimation
+\item \code{anchors}: cleaned direct constraints used by estimation
+\item \code{group_anchors}: cleaned group-mean constraints used by estimation
 \item \code{facet_summary}: counts of levels, constrained levels, and free levels
 \item \code{design_checks}: observation-count checks by level/category
 \item \code{thresholds}: active threshold settings used for recommendations
@@ -81,17 +83,20 @@ A list of class \code{mfrm_anchor_review} with:
 Review and normalize anchor/group-anchor tables
 }
 \details{
-\strong{Anchoring} (also called "fixing" or scale linking) constrains selected
-parameter estimates to pre-specified values, placing the current
-analysis on a previously established scale.  This is essential when
-comparing results across administrations, linking test forms, or
-monitoring rater drift over time.
+This helper reviews computational constraints. A \emph{direct anchor} fixes an
+individual parameter to a supplied value. A \emph{group anchor} constrains the
+mean of declared elements to a supplied target. A \emph{common-element link} is
+different: it is observed overlap among administrations or subsets. Direct
+or group constraints can transfer coordinates from a defensible reference,
+but they do not manufacture empirical overlap.
 
 This function applies the same preprocessing and key-resolution rules
 as \code{fit_mfrm()}, but returns a review object so constraints can be
-checked \emph{before} estimation.  Running the review first helps avoid
+checked \emph{before} estimation. Running the review first helps avoid
 estimation failures caused by misspecified or data-incompatible
-anchors.
+anchors. It does not inspect source-fit readiness or establish that labels
+denote the same invariant elements across runs. Those substantive checks
+remain the caller's responsibility.
 
 \strong{Anchor types:}
 \itemize{
@@ -99,16 +104,19 @@ anchors.
 values (e.g., Rater R1 anchored at 0.35 logits).
 \item \emph{Group anchors} constrain the mean of a set of elements to a
 target value, allowing individual elements to vary freely around
-that mean.
-\item When both types overlap for the same element, the direct anchor
-takes precedence.
+that mean. The target requires an external justification such as a
+defensible equal-mean or known-scale assumption.
+\item When both types include the same element, both constraints are retained:
+the direct anchor fixes that element and the group constraint still fixes
+the declared group mean. Incompatible combinations are rejected by the
+constraint/estimability checks.
 }
 
-\strong{Design checks} verify that each anchored element has at least
+\strong{Design checks} report whether each observed facet level has at least
 \code{min_obs_per_element} weighted observations (default 30) and each
 score category has at least \code{min_obs_per_category} (default 10).
-These thresholds follow standard Rasch sample-size recommendations
-(Linacre, 1994).
+These user-configurable counts are package screening recommendations, not
+universal adequacy thresholds and not tests of connectedness or invariance.
 }
 \section{Interpreting output}{
 
