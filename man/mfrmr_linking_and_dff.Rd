@@ -66,6 +66,22 @@ connectedness. \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} checks 
 support, not those substantive assumptions.
 }
 
+\section{Design the link, not only the anchor count}{
+
+There is no universal adequate anchor count or percentage. Linking quality
+also depends on where overlap occurs, whether links are distributed or rely
+on one critical bridge, the rating workload and coverage, and model--data
+fit within the linking set. Inspect both Rater-centered and Person/task-
+centered assignment graphs when the design is sparse. The package's
+five-element \code{LinkSupportAdequate} screen is therefore a local warning, not
+a design recommendation or proof of a common scale.
+
+Fixed anchor values also carry uncertainty from their source calibration.
+Current anchor, drift, and chain summaries do not propagate all source-fit,
+offset, or cross-fit covariance. Compare substantively defensible anchor
+sets and report sensitivity when conclusions depend on the selected set.
+}
+
 \section{Drift and chain inference boundary}{
 
 \code{\link[=detect_anchor_drift]{detect_anchor_drift()}} and \code{\link[=build_equating_chain]{build_equating_chain()}} currently estimate one
@@ -172,4 +188,23 @@ head(dff$dif_table[, c("Level", "Group1", "Group2",
                        "Classification", "ClassificationSystem")])
 }
 
+}
+\references{
+Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that bind:
+Improving the linking network in sparsely connected rating designs.
+\emph{ETS Research Report Series}, 2000(1).
+\doi{10.1002/j.2333-8504.2000.tb01832.x}
+
+Uto, M. (2021). Accuracy of performance-test linking based on a many-facet
+Rasch model. \emph{Behavior Research Methods}, 53(4), 1440--1454.
+\doi{10.3758/s13428-020-01498-x}
+
+Wind, S. A., & Jones, E. (2018). The stabilizing influences of linking set
+size and model--data fit in sparse rater-mediated assessment networks.
+\emph{Educational and Psychological Measurement}, 78(4), 679--707.
+\doi{10.1177/0013164417703733}
+
+Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+calibration. \emph{AppliedMath}, 4(3), 1181--1191.
+\doi{10.3390/appliedmath4030063}
 }

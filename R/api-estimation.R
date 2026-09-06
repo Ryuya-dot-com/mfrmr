@@ -177,7 +177,12 @@
 #'   latent-regression population model, for example `~ grade + ses`. Latent
 #'   regression is implemented only for
 #'   `method = "MML"` with a unidimensional conditional-normal population
-#'   model.
+#'   model. With `NULL`, RSM/PCM MML uses a fixed \eqn{N(0,1)} basis;
+#'   default GPCM MML instead estimates an intercept-only normal population.
+#'   Version 0.2.4 does not accept arbitrary fixed normal means or standard
+#'   deviations: portable RSM/PCM calibration and its anchors are defined on
+#'   the standard-normal basis, and a silent change of basis would change the
+#'   meaning of those stored values.
 #' @param person_data Optional one-row-per-person data.frame holding background
 #'   variables for `population_formula`. Numeric, logical, factor, ordered
 #'   factor, and character predictors are expanded through `stats::model.matrix()`;
@@ -3576,7 +3581,8 @@ plot.mfrm_data_description <- function(x,
 #' - `issues`: list of issue tables
 #' - `recommendations`: package-native anchor guidance strings
 #'
-#' @seealso [fit_mfrm()], [describe_mfrm_data()], [make_anchor_table()]
+#' @seealso [fit_mfrm()], [describe_mfrm_data()], [make_anchor_table()],
+#'   [mfrmr_linking_and_dff]
 #' @examples
 #' toy <- load_mfrmr_data("example_core")
 #'

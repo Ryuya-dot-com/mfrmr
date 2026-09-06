@@ -233,7 +233,12 @@ component passes.}
 latent-regression population model, for example \code{~ grade + ses}. Latent
 regression is implemented only for
 \code{method = "MML"} with a unidimensional conditional-normal population
-model.}
+model. With \code{NULL}, RSM/PCM MML uses a fixed \eqn{N(0,1)} basis;
+default GPCM MML instead estimates an intercept-only normal population.
+Version 0.2.4 does not accept arbitrary fixed normal means or standard
+deviations: portable RSM/PCM calibration and its anchors are defined on
+the standard-normal basis, and a silent change of basis would change the
+meaning of those stored values.}
 
 \item{person_data}{Optional one-row-per-person data.frame holding background
 variables for \code{population_formula}. Numeric, logical, factor, ordered

@@ -96,6 +96,26 @@ design overlap; `anchors` fix individual parameters; `group_anchors` constrain
 a group mean under an externally justified target or equal-mean assumption.
 Neither constraint type manufactures empirical overlap.
 
+### Design the link, not only the percentage
+
+No anchor percentage or count is universally adequate. In sparse designs,
+link quality also depends on coverage, the distribution and redundancy of the
+links, whether one articulation point or critical edge holds the network
+together, the location and model fit of the linking set, and the intended use
+of ranks or classifications. Inspect both Rater-centered and Person/task-
+centered assignment graphs rather than treating a minimum count as proof of a
+common scale. This distinction is consistent with work on sparse linking
+networks by [Myford and Wolfe (2000)](https://doi.org/10.1002/j.2333-8504.2000.tb01832.x),
+[Wind and Jones (2018)](https://doi.org/10.1177/0013164417703733), and
+[Uto (2021)](https://doi.org/10.3758/s13428-020-01498-x).
+
+Fixed anchor values also carry uncertainty from their source calibration.
+Current mfrmr drift and chain summaries do not propagate every source-fit,
+offset, and cross-fit covariance component. When results depend on the anchor
+set, compare defensible alternatives and report that sensitivity; fixed-
+parameter calibration error should not be mistaken for zero uncertainty
+([Robitzsch, 2024](https://doi.org/10.3390/appliedmath4030063)).
+
 ## 3. Residual DFF as a screening layer
 
 Residual DFF is the fast screening route. It is useful for triage, but it is
@@ -272,3 +292,16 @@ For a compact linking route:
 - `help("analyze_dff", package = "mfrmr")`
 - `help("interaction_effect_table", package = "mfrmr")`
 - `help("detect_anchor_drift", package = "mfrmr")`
+
+## References
+
+- Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that bind:
+  Improving the linking network in sparsely connected rating designs. *ETS
+  Research Report Series*, 2000(1).
+- Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+  calibration. *AppliedMath*, 4(3), 1181--1191.
+- Uto, M. (2021). Accuracy of performance-test linking based on a many-facet
+  Rasch model. *Behavior Research Methods*, 53(4), 1440--1454.
+- Wind, S. A., & Jones, E. (2018). The stabilizing influences of linking set
+  size and model--data fit in sparse rater-mediated assessment networks.
+  *Educational and Psychological Measurement*, 78(4), 679--707.

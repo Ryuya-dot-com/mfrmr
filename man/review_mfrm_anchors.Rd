@@ -159,5 +159,6 @@ p_review <- plot(review, draw = FALSE)
 p_review$data$plot
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=make_anchor_table]{make_anchor_table()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=make_anchor_table]{make_anchor_table()}},
+\link{mfrmr_linking_and_dff}
 }
