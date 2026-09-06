@@ -3506,6 +3506,13 @@ identify whether the opt-in layer ran and retain its test log.
   3/15 q31-to-q61 and 6/15 q61-to-q121 checks passed. The issue is therefore
   not caused by RSM step sharing. A family-aware same-data sensitivity route
   remains the 0.2.4 blocker; q181 is not promoted as a universal default.
+- `mml-quadrature-remedy-contract-0.2.4.md`: prospectively freezes the minimal
+  production response to the RSM/PCM result. A shared same-data diagnostic
+  reports continuous likelihood, coordinate/probability, EAP, and posterior-SD
+  movement without choosing a tolerance. Public portable extraction requires
+  the user-selected highest evaluated fit and its review object; adaptive
+  quadrature, a blanket q181 default, and automatic scientific decisions stay
+  out of scope.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural
