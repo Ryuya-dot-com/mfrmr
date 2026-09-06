@@ -26,3 +26,34 @@ test_that("TAM MML density diagnostic reuses all 21 failed-run identities", {
   expect_true(all(plan$EvidenceRole == "post_result_density_diagnostic_only"))
   expect_false(anyDuplicated(plan$FitId))
 })
+
+test_that("TAM MML density record preserves the post-result denominator", {
+  ctx <- load_tam_mml_density_diagnostic()
+  validation <- file.path(ctx$root, "inst", "validation")
+  summary_path <- file.path(
+    validation, "tam-mml-density-diagnostic-summary-0.2.4.csv"
+  )
+  integration_path <- file.path(
+    validation, "tam-mml-density-diagnostic-integration-0.2.4.csv"
+  )
+  record_path <- file.path(
+    validation, "tam-mml-density-diagnostic-record-0.2.4.md"
+  )
+  skip_if_not(all(file.exists(c(summary_path, integration_path, record_path))))
+
+  summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
+  integration <- utils::read.csv(integration_path, stringsAsFactors = FALSE)
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  source_hash <- digest::digest(
+    file.path(validation, "tam-mml-density-diagnostic-0.2.4.R"),
+    algo = "sha256", file = TRUE, serialize = FALSE
+  )
+
+  expect_identical(nrow(summary), 42L)
+  expect_identical(sum(summary$PairPassed[summary$Nodes == 121L]), 15L)
+  expect_identical(sum(summary$PairPassed[summary$Nodes == 181L]), 17L)
+  expect_identical(nrow(integration), 21L)
+  expect_true(all(integration$IntegrationPassed))
+  expect_match(record, source_hash, fixed = TRUE)
+  expect_match(record, "Release authorized.*FALSE", ignore.case = TRUE)
+})

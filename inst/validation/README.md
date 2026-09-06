@@ -3492,6 +3492,13 @@ identify whether the opt-in layer ran and retain its test log.
   and dense 24--30-response patterns remained unresolved at q61. A post-result
   baseline probe matched TAM inside `1e-6` at q181, locating the next review at
   finite-grid resolution rather than authorizing release or TAM parity.
+- `tam-mml-density-diagnostic-0.2.4.R`, its five CSV outputs, and companion
+  record: post-result q121/q181 replay of the same 21 dataset identities. All
+  21 high-grid movements passed `1e-3`; q181 matched 17/21. The four residual
+  differences were isolated to TAM's `[-6,6]` tail truncation and collapsed
+  when representative q301 checks widened the range to `[-7,7]`/`[-8,8]`.
+  This supports an integration-resolution mechanism but leaves the q31 default,
+  RSM/PCM user sensitivity route, PCM stress, and release decision open.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural
