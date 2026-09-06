@@ -90,7 +90,7 @@
 #' - Always name the facet, facet level, and group pair involved in a DFF
 #'   contrast. A generic "DIF exists" statement is not interpretable in a
 #'   many-facet design.
-#' - Residual and refit DFF classifications are screening labels in 0.2.3;
+#' - Residual and refit DFF classifications are currently screening labels;
 #'   current refit output does not assign ETS A/B/C labels.
 #' - Treat drift flags as prompts for review, not automatic evidence that an
 #'   anchor must be removed.

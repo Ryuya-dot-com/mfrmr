@@ -374,7 +374,8 @@
 #' marginalization. A weight also does not turn the score into a count outcome
 #' or model dependence among repeated ratings. Non-positive finite weights are
 #' excluded during preparation, and non-unit observation-weight fits are not
-#' eligible for the common MML information-criterion panel in version 0.2.3.
+#' eligible for the common MML information-criterion panel under the current
+#' package contract.
 #'
 #' The fitted many-facet ordered-response model assumes conditional
 #' independence of observations given the person and facet parameters
@@ -805,8 +806,8 @@
 #'
 #' `ResponseRows`, `WeightedResponseTotal`, `Persons`, and `ICSampleSize` are
 #' separate fields. The compatibility field `N` retains its earlier
-#' response-row or summed-observation-weight meaning and is not the 0.2.3 BIC
-#' sample size. Explicit all-unit weights remain eligible; every non-unit
+#' response-row or summed-observation-weight meaning and is not the BIC sample
+#' size. Explicit all-unit weights remain eligible; every non-unit
 #' observation-weight fit, JML fit, and object without the current contract
 #' identity is excluded from the common MML panel. Its canonical
 #' `AIC`/`BIC`/`SABIC` fields are `NA`, while any retained raw values are
@@ -4595,8 +4596,8 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #' `ICSampleSize` is the number of independent
 #' Persons and `ICSampleSizeBasis` is `"person_count"`; response rows and their
 #' weighted total are retained separately. Explicit all-unit weights are
-#' eligible, whereas every non-unit observation-weight fit fails closed in
-#' version 0.2.3.
+#' eligible, whereas every non-unit observation-weight fit fails closed under
+#' the current package contract.
 #'
 #' Canonical `AIC`, `BIC`, and `SABIC` are recomputed from the retained
 #' objective, optimizer-vector dimension, and Person count. A stale stored

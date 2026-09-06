@@ -555,7 +555,8 @@ pattern is not the same as replicating a complete Person pattern after
 marginalization. A weight also does not turn the score into a count outcome
 or model dependence among repeated ratings. Non-positive finite weights are
 excluded during preparation, and non-unit observation-weight fits are not
-eligible for the common MML information-criterion panel in version 0.2.3.
+eligible for the common MML information-criterion panel under the current
+package contract.
 
 The fitted many-facet ordered-response model assumes conditional
 independence of observations given the person and facet parameters
@@ -1030,8 +1031,8 @@ panel is \code{AIC = D + 2 * k}, \code{BIC = D + log(N_person) * k}, and
 
 \code{ResponseRows}, \code{WeightedResponseTotal}, \code{Persons}, and \code{ICSampleSize} are
 separate fields. The compatibility field \code{N} retains its earlier
-response-row or summed-observation-weight meaning and is not the 0.2.3 BIC
-sample size. Explicit all-unit weights remain eligible; every non-unit
+response-row or summed-observation-weight meaning and is not the BIC sample
+size. Explicit all-unit weights remain eligible; every non-unit
 observation-weight fit, JML fit, and object without the current contract
 identity is excluded from the common MML panel. Its canonical
 \code{AIC}/\code{BIC}/\code{SABIC} fields are \code{NA}, while any retained raw values are

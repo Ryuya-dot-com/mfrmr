@@ -19,6 +19,10 @@
   separate operations; `mfrm_calibration_capabilities()` reports the narrower
   portable support envelope and the fitted-object alternatives for unavailable
   routes.
+* FACETS-facing scope guidance now distinguishes the supported native
+  portable-calibration workflow from unsupported FACETS or third-party
+  calibration-file import, and removes stale version-number wording from
+  current capability statements.
 * Fitted-object scoring now uses an explicit scoring quadrature grid rather
   than inheriting the fit-time grid. It refuses a one-point grid, rejects
   invalid weights, and fails closed when the source is not scoring-ready unless

@@ -7387,7 +7387,7 @@ build_weighting_review <- function(rasch_fit,
       "The fitted slopes vary across levels of `", slope_facet,
       "`; other facets have no separate slope block."
     ),
-    "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together in 0.2.3.",
+    "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together by the current bounded-GPCM interface.",
     "FACETS is a direct JML comparator only for the aligned equal-discrimination PCM side; its reported discrimination is a post-fit diagnostic, not the fitted free-slope GPCM parameter.",
     "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."

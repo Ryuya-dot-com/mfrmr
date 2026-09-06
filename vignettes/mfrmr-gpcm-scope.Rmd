@@ -58,9 +58,9 @@ The phrase *generalized many-facet Rasch model* is broader and is not a unique
 synonym for this implementation. For example, Uto and Ueno (2020, equation 9)
 use multiplicative task and rater slope blocks,
 \(\alpha_i\alpha_r\), together with rater severity and rater-specific steps.
-By contrast, mfrmr 0.2.3 requires one facet to own both the slope and step
-blocks: `slope_facet == step_facet`. It does not jointly estimate task and
-rater slopes, decouple the slope owner from the step owner, or introduce a
+By contrast, the current mfrmr GPCM requires one facet to own both the slope
+and step blocks: `slope_facet == step_facet`. It does not jointly estimate task
+and rater slopes, decouple the slope owner from the step owner, or introduce a
 multidimensional ability vector. The implementation is therefore described as
 an **aligned single-owner relative-slope GPCM**.
 
@@ -84,8 +84,8 @@ to one.
 |---|---|---|
 | `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported bounded route. |
 | `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
-| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in 0.2.3. |
-| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in 0.2.3; this is closer to a multiplicative generalized-MFRM extension. |
+| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in the current package. |
+| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in the current package; this is closer to a multiplicative generalized-MFRM extension. |
 
 Every facet that is not selected remains an additive location term inside
 \(\eta\). For example, a criterion-owned GPCM can still estimate rater severity,
@@ -235,7 +235,7 @@ than an automatic selection rule.
 Every current `fit_mfrm()` likelihood is ordered categorical. The distinction
 between response values and observation frequencies is essential:
 
-| Input or estimand | 0.2.3 treatment |
+| Input or estimand | Current mfrmr treatment |
 |---|---|
 | Ordered binary response | Supported as a two-category ordered response. |
 | Ordered polytomous response | Supported through RSM, PCM, or bounded GPCM. |

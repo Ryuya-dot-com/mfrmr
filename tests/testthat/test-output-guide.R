@@ -316,10 +316,10 @@ test_that("facets_feature_coverage separates implemented and unsupported FACETS 
   expect_true(all(missing$Status == "not_implemented"))
 })
 
-test_that("facets_feature_coverage keeps future 0.2.3 routes fail closed", {
+test_that("facets_feature_coverage separates native calibration from unsupported routes", {
   coverage <- facets_feature_coverage()
   future_features <- c(
-    "Versioned frozen-calibration import and operational scoring",
+    "FACETS or third-party frozen-calibration import",
     "General threshold or step anchors and starting-value import",
     "Multiple observed scales and scale-specific PCM",
     "Nominal/multinomial response models",
@@ -342,9 +342,15 @@ test_that("facets_feature_coverage keeps future 0.2.3 routes fail closed", {
   expect_true(all(future$ValidationEvidence == "not_applicable"))
   expect_true(all(future$OperationalStatus == "blocked"))
   expect_true(any(
-    future$FACETSFeature == "Versioned frozen-calibration import and operational scoring" &
-      grepl("existing fitted object", future$Limitation, fixed = TRUE)
+    future$FACETSFeature == "FACETS or third-party frozen-calibration import" &
+      grepl("Native mfrmr portable", future$Capability, fixed = TRUE) &
+      grepl("FACETS or another program", future$Limitation, fixed = TRUE)
   ))
+  expect_false(any(vapply(
+    coverage,
+    function(x) any(grepl("0.2.3", x, fixed = TRUE)),
+    logical(1)
+  )))
   expect_true(any(
     future$FACETSFeature == "Unrestricted GPCM" &
       grepl("bounded", future$Capability, fixed = TRUE)
@@ -419,7 +425,7 @@ test_that("facets_positioning_guide prevents FACETS numerical-clone wording", {
   expect_true(any(grepl("not as a general FACETS operational-calibration replacement",
                         guide$RecommendedWording,
                         fixed = TRUE)))
-  expect_true(any(grepl("imported versioned frozen calibration",
+  expect_true(any(grepl("importing FACETS or third-party frozen calibrations",
                         guide$Position,
                         fixed = TRUE)))
   expect_true(any(grepl("existing fitted object",

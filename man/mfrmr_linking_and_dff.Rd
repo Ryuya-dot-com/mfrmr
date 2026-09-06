@@ -111,7 +111,7 @@ they do not establish an empirical link or a common measurement scale.
 \item Always name the facet, facet level, and group pair involved in a DFF
 contrast. A generic "DIF exists" statement is not interpretable in a
 many-facet design.
-\item Residual and refit DFF classifications are screening labels in 0.2.3;
+\item Residual and refit DFF classifications are currently screening labels;
 current refit output does not assign ETS A/B/C labels.
 \item Treat drift flags as prompts for review, not automatic evidence that an
 anchor must be removed.
