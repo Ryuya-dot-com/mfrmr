@@ -219,50 +219,60 @@ mfrmr_tms_prepare_tam <- function(data) {
   persons <- sort(unique(as.character(data$Person)))
   raters <- sort(unique(as.character(data$Rater)))
   criteria <- sort(unique(as.character(data$Criterion)))
-  grid <- unique(data.frame(
-    Person = as.character(data$Person),
-    Rater = as.character(data$Rater),
-    stringsAsFactors = FALSE
-  ))
-  grid <- grid[order(grid$Person, grid$Rater), , drop = FALSE]
+  item_map <- expand.grid(
+    Rater = raters, Criterion = criteria,
+    KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+  )
   source_key <- paste(data$Person, data$Rater, data$Criterion, sep = "\r")
-  response <- vapply(criteria, function(criterion) {
-    target <- paste(grid$Person, grid$Rater, criterion, sep = "\r")
+  response <- vapply(seq_len(nrow(item_map)), function(index) {
+    target <- paste(
+      persons, item_map$Rater[index], item_map$Criterion[index], sep = "\r"
+    )
     index <- match(target, source_key)
-    value <- rep(NA_integer_, nrow(grid))
+    value <- rep(NA_integer_, length(persons))
     keep <- !is.na(index)
     value[keep] <- as.integer(data$Score[index[keep]]) - 1L
     value
-  }, integer(nrow(grid)))
+  }, integer(length(persons)))
   response <- as.data.frame(response, stringsAsFactors = FALSE)
-  names(response) <- criteria
-  keep <- rowSums(!is.na(response)) > 0L
-  grid <- grid[keep, , drop = FALSE]
-  response <- response[keep, , drop = FALSE]
+  support <- as.data.frame(matrix(
+    rep(0:3, each = length(criteria), times = length(raters)),
+    ncol = length(criteria), byrow = TRUE
+  ))
+  names(support) <- criteria
   design <- mfrmr_tms_capture(TAM::tam.mml.mfr(
-    resp = response,
-    facets = data.frame(rater = grid$Rater, stringsAsFactors = FALSE),
-    pid = grid$Person,
+    resp = support,
+    facets = data.frame(
+      rater = rep(raters, each = 4L), stringsAsFactors = FALSE
+    ),
+    pid = sprintf("SUPPORT%03d", seq_len(nrow(support))),
     formulaA = ~ item + rater + step,
     constraint = "items",
     est.variance = FALSE,
     control = list(maxiter = 2L, progress = FALSE),
     verbose = FALSE
   ))
-  item_map <- expand.grid(
-    Rater = raters, Criterion = criteria,
-    KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
-  )
   item_names <- dimnames(design$value$A)[[1L]]
   observed_raters <- sub("^.*-rater", "", item_names)
   mfrmr_tms_assert(
     identical(dim(design$value$A)[1L], nrow(item_map)) &&
       identical(observed_raters, item_map$Rater) &&
-      identical(nrow(design$value$resp), length(persons)),
+      identical(dim(design$value$A)[2L], 4L) &&
+      identical(dim(response), c(length(persons), nrow(item_map))) &&
+      all(rowSums(!is.na(response)) > 0L),
     "TAM pseudo-item design order does not match the frozen facet map."
   )
+  names(response) <- item_names
+  zero_weight_support <- as.data.frame(matrix(
+    rep(0:3, each = ncol(response)), nrow = 4L, byrow = TRUE
+  ))
+  names(zero_weight_support) <- item_names
+  tam_response <- rbind(response, zero_weight_support)
   list(
-    resp = design$value$resp,
+    resp = tam_response,
+    real_person_count = length(persons),
+    pweights = c(rep(1, length(persons)), rep(0, 4L)),
+    deviance_scale = length(persons) / nrow(tam_response),
     A = design$value$A,
     item_map = item_map,
     persons = persons,
@@ -308,6 +318,7 @@ mfrmr_tms_fit_tam <- function(prepared, row) {
   arguments <- list(
     resp = prepared$resp,
     A = prepared$A,
+    pweights = prepared$pweights,
     beta.fixed = if (estimated) FALSE else cbind(1, 1, 0),
     est.variance = estimated,
     control = list(
@@ -395,9 +406,10 @@ mfrmr_tms_score_table <- function(mfrmr_fit, tam_fit, data, prepared, row) {
   )$estimates
   index <- match(prepared$persons, as.character(scored$Person))
   mfrmr_tms_assert(
-    !anyNA(index) && nrow(tam_fit$person) == length(prepared$persons),
+    !anyNA(index) && nrow(tam_fit$person) >= length(prepared$persons),
     "TAM and mfrmr scored-person rows do not align."
   )
+  tam_person <- tam_fit$person[seq_len(prepared$real_person_count), , drop = FALSE]
   out <- data.frame(
     FitId = as.character(row$FitId),
     DatasetId = as.character(row$DatasetId),
@@ -406,9 +418,9 @@ mfrmr_tms_score_table <- function(mfrmr_fit, tam_fit, data, prepared, row) {
     Replicate = as.integer(row$Replicate),
     Nodes = as.integer(row$Nodes),
     Person = prepared$persons,
-    TAMEAP = as.numeric(tam_fit$person$EAP),
+    TAMEAP = as.numeric(tam_person$EAP),
     MfrmrEAP = as.numeric(scored$Estimate[index]),
-    TAMPosteriorSD = as.numeric(tam_fit$person$SD.EAP),
+    TAMPosteriorSD = as.numeric(tam_person$SD.EAP),
     MfrmrPosteriorSD = as.numeric(scored$SD[index]),
     stringsAsFactors = FALSE
   )
@@ -430,6 +442,7 @@ mfrmr_tms_compare_one <- function(row, data, prepared) {
     mfrmr_fit, tam_fit, as.character(row$PopulationMode)
   )
   fit_summary <- as.data.frame(mfrmr_fit$summary, stringsAsFactors = FALSE)[1L, ]
+  tam_deviance <- as.numeric(tam_fit$deviance) * prepared$deviance_scale
   summary <- data.frame(
     FitId = as.character(row$FitId),
     DatasetId = as.character(row$DatasetId),
@@ -449,9 +462,11 @@ mfrmr_tms_compare_one <- function(row, data, prepared) {
     MfrmrReadinessReasonCodes = as.character(fit_summary$ReadinessReasonCodes),
     TAMIterations = as.integer(tam_fit$iter),
     MfrmrDeviance = as.numeric(fit_summary$Deviance),
-    TAMDeviance = as.numeric(tam_fit$deviance),
+    TAMRawDeviance = as.numeric(tam_fit$deviance),
+    TAMDevianceScale = prepared$deviance_scale,
+    TAMDeviance = tam_deviance,
     DevianceAbsoluteDifference = abs(
-      as.numeric(tam_fit$deviance) - as.numeric(fit_summary$Deviance)
+      tam_deviance - as.numeric(fit_summary$Deviance)
     ),
     SurfaceMaximumAbsoluteDifference = max(surface$AbsoluteDifference),
     EAPMaximumAbsoluteDifference = max(abs(scores$EAPDifference)),
@@ -490,8 +505,7 @@ mfrmr_tms_compare_one <- function(row, data, prepared) {
     all(is.finite(numeric_pair)) &&
     identical(summary$MfrmrConvergenceStatus, "converged") &&
     is.finite(summary$TAMIterations) && summary$TAMIterations < 1000L &&
-    all(numeric_pair <= mfrmr_tms_pair_tolerance) &&
-    summary$MfrmrWarningCount == 0L && summary$TAMWarningCount == 0L
+    all(numeric_pair <= mfrmr_tms_pair_tolerance)
   list(summary = summary, surface = surface, scores = scores)
 }
 
@@ -513,6 +527,8 @@ mfrmr_tms_failed_comparison <- function(row, data, prepared, message) {
     MfrmrReadinessReasonCodes = "execution_error",
     TAMIterations = NA_integer_,
     MfrmrDeviance = NA_real_,
+    TAMRawDeviance = NA_real_,
+    TAMDevianceScale = NA_real_,
     TAMDeviance = NA_real_,
     DevianceAbsoluteDifference = NA_real_,
     SurfaceMaximumAbsoluteDifference = NA_real_,

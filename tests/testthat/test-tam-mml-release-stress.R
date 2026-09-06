@@ -70,4 +70,11 @@ test_that("TAM MML release-stress generators realize frozen perturbations", {
   extreme <- split(generated$EXTREME_10$Score, generated$EXTREME_10$Person)
   expect_identical(sum(vapply(extreme, function(x) length(unique(x)) == 1L,
                                logical(1L))), 8L)
+
+  sparse <- ctx$env$mfrmr_tms_prepare_tam(generated$SPARSE_RATER)
+  expect_identical(dim(sparse$resp), c(84L, 30L))
+  expect_identical(dim(sparse$A)[1:2], c(30L, 4L))
+  expect_true(anyNA(sparse$resp))
+  expect_identical(sparse$pweights, c(rep(1, 80L), rep(0, 4L)))
+  expect_equal(sparse$deviance_scale, 80 / 84)
 })
