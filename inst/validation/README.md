@@ -3477,6 +3477,14 @@ identify whether the opt-in layer ran and retain its test log.
   comparison against the exact 0.2.4 development namespace. It verifies
   numerical continuity only; weak-information, sparse, missingness, extreme-
   score, and EAP stress remain untested against TAM MML.
+- `tam-mml-release-stress-contract-0.2.4.md`: prospectively frozen internal
+  release contract for the bounded TAM comparison required before 0.2.4 is
+  frozen. It matches the fixed standard-normal RSM estimand through a two-stage
+  TAM design-matrix route, separates multifacet from multidimensional meaning,
+  and fixes five profiles, three seeds, q31/q61, EAP/SD and cumulative-surface
+  metrics, denominators, and numerical review bounds before result inspection.
+  The estimated intercept-only population lane is a separate disposition
+  inside the same contract and cannot broaden portable-calibration scope.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural
