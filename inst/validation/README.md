@@ -40,6 +40,48 @@ identify whether the opt-in layer ran and retain its test log.
 
 ## Primary files
 
+- `measurement-model-extension-literature-roadmap-0.2.4.md` and
+  `measurement-model-extension-pdf-audit-0.2.4.csv`: preserve the page-audited
+  literature synthesis, source identities, semantic non-equivalences, and the
+  explicit rule that post-0.2.4 model ideas are conditional options rather than
+  a feature queue. They do not broaden the current public scope.
+- `measurement-model-extension-execution-gates-0.2.4.csv` and
+  `measurement-model-extension-traceability-0.2.4.csv`: are the two canonical
+  mutable control surfaces for that extension portfolio. The first owns stage,
+  entry/exit/stop, resource, reversibility, and build/integrate/no-build
+  dispositions; the second maps literature or source evidence through spec,
+  independent oracle, negative control, test target, and user decision. New
+  micro-roadmaps or authorization layers are not substitutes for updating these
+  ledgers. The current development tree has closed the previously nominal
+  `evaluate_mfrm_design(parallel = "future")` path for a fixed ordered grid:
+  replications now dispatch through `future.apply`, and a regression test fixes
+  serial/future semantic equality plus ambient-RNG preservation. This does not
+  close A3's stronger grid/method-order-independent replicate identity gate.
+  The same 2026-08-27 audit parks the A1 three-spec registry: existing semantic
+  choke points already cover the current core, no second production consumer
+  is admitted, and no post-registry branch-deletion set was identified. A2 is
+  consequently conditional, while A3 may reference existing fit/calibration
+  identities and must not be used to force A1. The subsequent Gate 0 review
+  admits none of portable GPCM calibration, B1 LLTM/LPCM, B2 GRM, or D1 joint
+  response time: the repository has no public issue or qualifying bundled data
+  packet for these decisions, and current fitted-object/refusal or available
+  mirt, eRm, TAM, and LNIRT routes are cheaper. B1, B2, and D1 are explicitly
+  `parked` in the execution ledger; portable GPCM remains parked under the
+  existing G5 optional-lane disposition. The bounded
+  `measurement-model-extension-gate05-grm-gpcm-probe-0.2.4.R` and its compact
+  pilot receipt then compare only GRM/GPCM response geometry through external
+  `mirt`: 240/240 attempts and 120/120 pairs were available, with matched-family
+  gains of 0.00108--0.00258 held-out log-score nats per response. This reopens
+  B2 problem discovery only. It does not authorize a GRM kernel, public API,
+  artifact, multifacet composition, or release claim. The follow-up
+  `measurement-model-extension-b2-data-eligibility-0.2.4.R` audit and its
+  ten-row receipt account for every packaged `.rda`: all are synthetic, one is
+  score-free, and every Person-by-Criterion structure repeats Raters. With no
+  owner-confirmed cumulative workflow, named action, or prespecified facet
+  handling, zero objects are eligible and zero model fits are executed. B2
+  remains parked pending one de-identified external problem packet; silent
+  averaging, voting, rating selection, pseudo-item construction, and treating
+  observed facets as latent dimensions are explicitly refused.
 - `fixed-calibration-g0-contract-0.2.4.R` and
   `fixed-calibration-g0-contract-record-0.2.4.md`: establish the 0.2.4
   fixed-calibration release with a machine-readable claim ledger, complete
@@ -2031,6 +2073,869 @@ identify whether the opt-in layer ran and retain its test log.
   Fit-process capability isolation is still unassessed; zero c3 prerequisites
   transition, the count remains 2 of 8, and every planned, recovery, and
   public lane stays closed.
+- `gtheory-multivariate-decision-simulation-contract-0.2.4.R`: the superseded
+  but immutable provisional v1 `D-SIM-0` decision rule. It fixed `Phi=0.80`
+  as the sole primary endpoint, retains `G` only as a secondary sensitivity,
+  uses fixed equal weights for two or three strata, and bounds the prospective
+  grid to six shared-rater allocations (2/3/4 raters by 1/2 repeats). Cost is
+  rating events per object, with a deterministic tie break favoring more
+  independent raters at equal cost. The artifact selects the minimum-cost
+  allocation and classifies exact agreement, false-safe, false-conservative,
+  safe cost regret, and no-feasible-allocation outcomes. Its target is
+  explicitly provisional rather than a universal adequacy threshold. Owner
+  sign-off, simulation execution, planned seed access, and public support all
+  remain false. It is retained to prove that the final-audit defects were not
+  silently rewritten.
+- `gtheory-multivariate-decision-simulation-contract-v2-0.2.4.R`: the corrected
+  technical `D-SIM-0` contract. V2 uses one `1e-12` tolerance for target and
+  false-safe comparisons, prohibits decision-making from displayed rounded
+  values, limits the estimand to absolute-score dependability rather than
+  cut-score classification, requires common-direction/common-unit fixed
+  strata, and freezes component-specific prospective operators: Object is
+  unscaled, Rater and Object:Rater use shared-rater `1/n_rater` diagonal and
+  off-diagonal scaling, and independent residuals use diagonal
+  `1/(n_rater*n_repeat)` with zero off-diagonal contribution. The comparator
+  selects the minimum-cost allocation for which every separately estimated
+  stratum Phi meets the target; it never averages univariate coefficients.
+  The fail-closed primary endpoint is `unsafe_or_unresolved_rate` over every
+  attempted dataset, so false-safe, fit/extraction/projection/metric failure,
+  and indeterminate outcomes cannot improve apparent safety. V2 also supplies
+  a ten-item owner-signoff schema and an externally anchored receipt validator.
+  All confirmations and execution/public flags remain false.
+- `gtheory-multivariate-decision-multiverse-contract-v3-0.2.4.R`: the
+  superseded but retained operational-decision `D-SIM-0` proposal. It retains
+  the exact v2 hash as ABS-PHI
+  reference profile P0 but no longer treats that profile as universal. ABS-PHI
+  and REL-G are separate decision families and cannot be pooled or made to
+  vote. Five preregistered policy axes (target, weights, rater sharing, cost,
+  comparator) define 108 Cartesian policies per family. All 108 are retained
+  as decision-bearing profiles because pairwise coverage cannot rule out
+  higher-order interactions in nonlinear thresholds, cost tie breaks, or
+  comparator actions. An outcome-blind, anchor-first greedy pairwise-covering
+  rule additionally selects 11 nondecision sentinel profiles per family and
+  covers all 67 axis-level pairs under a cap of 12; these are limited to smoke,
+  schema, and implementation-parity checks. The contract separately registers
+  eight primary data-generating worlds, four safety boundaries, two structural
+  controls, and seven analysis routes. A Zotero-grounded re-audit now makes
+  `glmmTMB` the conditional general multivariate primary route and limits
+  `lme4` to design-qualified sensitivity. The current `lme4 2.0.6` manual
+  documents `us`, `diag`, `cs`, and `ar1` random-effect structures, but its
+  level-1 residual remains one scale times a known diagonal inverse-weight
+  matrix. It therefore remains ineligible whenever a linked design requires
+  estimated cross-stratum residual covariance, even when its random blocks
+  are representable.
+  In the v3 proposal, three literature-derived covariance-design identities
+  were explicitly unbound and a fourth row recorded that the C1 candidate was
+  only the matched-backend overlap with unstructured nonresidual blocks and
+  one homoskedastic scalar residual independent across rows. V4 D-SIM-1 now
+  binds those identities at package scale. C1 remains only a design-specific
+  diagonal-residual sensitivity and is not a general mG-theory claim.
+  Profiles and backend implementations
+  never count as independent datasets or estimand votes. Every eligible
+  decision profile is reported without majority voting or post-outcome
+  weighting. Nominal owner weights are decision policy; effective and
+  data-optimized weights are diagnostic or exploratory only. Robust,
+  conditional, and unsupported actions are distinct. A
+  thirteen-row machine-readable owner-input schema is required for decision-
+  family enablement, target triplets, weights/scales, sharing feasibility,
+  condition/event incidence, random-block mappings, costs, status quo,
+  allocation feasibility, and action mapping. A typed
+  nested packet constructor and fail-closed validator now preserve the exact
+  coordinate identities, types, order, completion evidence, and packet hash;
+  the contract also binds the implementation identities of all 36 v3
+  functions. The backend qualifier derives necessary route eligibility from
+  the completed event and random-block mapping: `glmmTMB` uses a nonredundant
+  observation-event random block, `lme4` is eligible only for diagonal
+  level-1 residual designs, and explicit masks require a new custom contract.
+  Every qualification row keeps execution false. The contract separately
+  records response family, observed facets, fixed
+  multivariate strata, and IRT latent dimensions, and makes a future MFRM
+  rater audit a nonvoting complementary diagnostic with its own connectivity
+  gate. Only a complete packet's hash may enter the sign-off receipt. No
+  owner input, response generation, fit, execution authority, or public
+  support is present. V4 supersedes this owner-admission activation path; the
+  v3 contract and empty packets remain historical, nonpromoting provenance.
+- `gtheory-multivariate-package-capability-contract-v4-0.2.4.R` and
+  `gtheory-multivariate-package-capability-contract-v4-record-0.2.4.md`: the
+  active package-level `D-SIM-0` contract and its interpretation record. Both
+  ABS-PHI and REL-G are mandatory, separate, nonvoting validation estimands.
+  Fourteen axes with 44 levels cover estimand, design, event, information,
+  covariance, distribution, and route variation; ten criteria cover algebra,
+  closure, invariance, PSD, recovery, coverage, parity, negative controls,
+  attempt accounting, and resources. Package maturity progresses from
+  `specified` through `implemented`, `simulation_validated`, and
+  `reference_validated` to `stable`. Operational owner evidence, a workflow,
+  a substantive target, and an action consequence are user/project concerns,
+  not package admission requirements. D-SIM-0 specification is complete and
+  D-SIM-1 deterministic work was subsequently completed, while planned
+  responses, seeds, confirmation, and public-support promotion remain closed.
+- `gtheory-multivariate-dsim1-deterministic-qualification-0.2.4.R` and
+  `gtheory-multivariate-dsim1-deterministic-qualification-record-0.2.4.md`:
+  the v4 D-SIM-1 integration over five canonical design anchors. Seven
+  criteria, 39 unique evidence rows, and 43 criterion-to-evidence assignments
+  close algebra, public one-stratum D-study closure, label invariance, PSD
+  behavior, incidence,
+  observation-event identity, and 20 design-by-route eligibility decisions.
+  Disjoint/local, shared/linked, partial-explicit, and disconnected-control
+  identities remain distinct. `glmmTMB` is conditional, `lme4` is excluded for
+  linked level-1 residuals, explicit masks require a custom contract, and the
+  disconnected design is rejected. D-SIM-1 produced no stochastic response,
+  fit evidence, planned seed, or support claim; it subsequently admitted the
+  single bounded D-SIM-2 smoke.
+- `gtheory-multivariate-dsim2-plumbing-smoke-0.2.4.R` and
+  `gtheory-multivariate-dsim2-plumbing-smoke-record-0.2.4.md`: the v4 D-SIM-2
+  integration of exactly one 720-row nonreserved fixture and one lme4 REML
+  route through generator, fit, separate nonvoting G/Phi metric, and terminal
+  state. The shared-rater/distinct-event C1 cell completed and replayed exact
+  semantic hashes. It is a narrow matched-backend intersection, not a linked
+  residual result, truth recovery, backend comparison, or simulation
+  validation. No planned RNG stream or support claim opened. This admitted
+  D-SIM-3 coverage construction but did not admit multiverse responses.
+- `gtheory-multivariate-dsim3-coverage-manifest-0.2.4.R` and
+  `gtheory-multivariate-dsim3-coverage-manifest-record-0.2.4.md`: the frozen
+  outcome-blind D-SIM-3 coverage design. Twenty-one design cells cover all 44
+  v4 levels and all 603 feasible dataset-axis level pairs; 23 structurally
+  impossible one-stratum stress crossings retain explicit exclusion reasons.
+  The 21 rows are design cells, not generated datasets. G/Phi contribute 42
+  nonvoting estimand projections and the five routes contribute 105 shared-
+  dataset qualification projections. Three negative controls remain separate.
+  Generated datasets, responses, RNG streams, fits, recovery claims, and
+  support claims all remain zero/false. Only a separate D-SIM-3 execution
+  contract may be designed next.
+- `gtheory-multivariate-dsim3-exploratory-execution-contract-0.2.4.R` and
+  `gtheory-multivariate-dsim3-exploratory-execution-contract-record-0.2.4.md`:
+  the frozen but unopened D-SIM-3 exploratory execution plan. It assigns two
+  dedicated 855-band identities to each of the 21 coverage cells: 42 dataset
+  attempts, 210 shared-dataset route units, 84 dataset-estimand units, and 420
+  nonvoting route-estimand coordinates. Fifty route units are pre-execution
+  qualification candidates; 40 are planned negative-control rejections, eight
+  are not applicable, and 112 retain missing/custom-contract blocks. Resource
+  limits and typed terminal accounting prohibit replacement, success-only
+  denominators, partial execution, and adaptive expansion. No RNG stream,
+  response, backend call, or fit opened. Generator, adapter, receipt, and
+  resource-enforcement qualification was the next bounded task.
+- `gtheory-multivariate-dsim3-preexecution-qualification-0.2.4.R` and
+  `gtheory-multivariate-dsim3-preexecution-qualification-record-0.2.4.md`:
+  the completed, nonexecuting audit of whether existing assets are exactly
+  bound to the frozen D-SIM-3 semantics. Eighteen of 37 legacy generator
+  primitives are reusable, but exact binding remains 0/37 levels and 0/21
+  complete profiles; every profile lacks exact object- and rater-count
+  binding. Exact qualification is also 0/50 candidate route units, 0/13
+  terminal states, and 0/5 resource scopes; two of three deterministic
+  controls qualify. This is a complete gap map and an execution no-go, not
+  failed simulation evidence. It opens no 855 stream. The next task is one
+  shared typed design/generator/route/receipt/resource substrate rather than
+  scenario-specific patches.
+- `gtheory-multivariate-dsim3-semantic-design-compiler-0.2.4.R` and
+  `gtheory-multivariate-dsim3-semantic-design-compiler-record-0.2.4.md`: the
+  first qualified layer of that shared substrate. One 22-rule compiler maps
+  all 21 profiles through nine typed design axes into object, stratum,
+  condition, assignment, event, and missingness identities with zero scenario-
+  specific branches. It registers 147,948 structural rows, retains 130,694
+  scheduled observation rows, and marks 17,254 outcome-blind omissions without
+  generating a response. Deterministic MCAR masks qualify identity and
+  denominators, not stochastic MCAR generation. Variance regime, cross-stratum
+  covariance, and response distribution were deferred to the next shared
+  layer; at this layer stochastic generator semantics were 0/21 and 855 stayed
+  closed.
+- `gtheory-multivariate-dsim3-covariance-distribution-binding-0.2.4.R` and
+  `gtheory-multivariate-dsim3-covariance-distribution-binding-record-0.2.4.md`:
+  the second qualified shared-substrate layer. It binds all three deferred axes
+  over 21/21 compiled profiles, audits 84/84 PSD component covariance/factor
+  bindings without repair, and qualifies 21/21 Gaussian, standardized-t(5), or
+  five-score ordinal-aggregate kernel contracts. Cross-stratum component
+  covariance follows compiled object, condition, and event identities rather
+  than facet count. The ordinal aggregate is explicitly not an IRT model. No
+  RNG stream, stochastic MCAR, response, backend call, or fit is opened in
+  this binding layer; the next dependency was a generic response generator.
+- `gtheory-multivariate-dsim3-response-generator-adapter-0.2.4.R` and
+  `gtheory-multivariate-dsim3-response-generator-adapter-record-0.2.4.md`: the
+  third qualified shared-substrate layer. It generates and exactly replays one
+  nonpromoting fixture for every profile on seeds 854100001--854100021,
+  restoring caller RNG state. All 84 unit covariance blocks reproduce their
+  effective covariance after exact identity overlap, 130,694 of 147,948
+  structural rows retain a response, and all nine MCAR profiles use an
+  outcome-independent random fixed-count mask without support repair. The 855
+  band, backend calls, fits, and validation claims remain unopened.
+- `gtheory-multivariate-dsim3-route-receipt-adapter-0.2.4.R` and
+  `gtheory-multivariate-dsim3-route-receipt-adapter-record-0.2.4.md`: the
+  fourth qualified shared-substrate layer. It binds all 21 shadow fixtures to
+  50/50 frozen candidate route templates through one shared generated-data
+  identity per profile: eight restricted-lme4 and 42 separate-univariate
+  admissions. Admission is explicitly nonterminal. The current accounting
+  has exactly one receipt for 21 completed shadow generations and 160 frozen
+  no-call routes, and exactly zero for 42 unopened planned datasets and 50
+  admitted candidate routes. Twelve valid terminal schemas qualify and the
+  invalid thirteenth sentinel is rejected. No 855 stream, backend, fit, or
+  metric is opened; the five-scope resource controller was next.
+- `gtheory-multivariate-dsim3-resource-controller-0.2.4.R`,
+  `gtheory-multivariate-dsim3-resource-probe-worker-0.2.4.R`, and
+  `gtheory-multivariate-dsim3-resource-controller-record-0.2.4.md`: the fifth
+  qualified shared-substrate layer. One controller path binds all five frozen
+  production scopes and passes 15/15 isolated success, wall-time, and peak-RSS
+  probes plus one live-worker concurrency probe. Atomic exceedances project to
+  the existing generation, fit, or metric resource terminal states. Two
+  composite stop receipts deny later launches while retaining all six
+  registered probe units, creating zero unlaunched terminal receipts and zero
+  replacements. Exact host timing/RSS values are deliberately omitted from
+  the deterministic manifest, and the smaller probe budgets are mechanics
+  checks rather than production-capacity claims. No 855 stream, response,
+  backend, fit, or metric is opened; a final nonexecuting launch-readiness
+  reconciliation is next.
+- `gtheory-multivariate-dsim3-launch-readiness-reconciliation-0.2.4.R` and
+  `gtheory-multivariate-dsim3-launch-readiness-reconciliation-record-0.2.4.md`:
+  the completed, nonexecuting final prelaunch audit. Four of ten gates pass
+  and six block. Parent evidence and all five current dependencies are present,
+  but exact environment identity is not frozen; identity-bound generation,
+  backend, metric, and terminal-orchestration requests remain 0/42, 0/50,
+  0/100, and 0/92. Only the eight restricted-lme4 candidates identify their
+  backend and REML criterion; the 42 separate-univariate candidates do not.
+  The disposition is `no_go_missing_execution_bridge`. The next unit is one
+  shared request/worker/orchestrator bridge, first qualified on nonreserved
+  fixtures. No 855 stream, response, backend, fit, or metric is opened.
+- `gtheory-multivariate-dsim3-separate-univariate-semantics-audit-0.2.4.R` and
+  `gtheory-multivariate-dsim3-separate-univariate-semantics-audit-record-0.2.4.md`:
+  the nonexecuting upstream audit triggered by that reconciliation. It freezes
+  lme4/REML, per-stratum component representations, and named vector G/Phi
+  outputs for 42 route units and 94 planned stratum partitions, but does not
+  confuse backend feasibility with estimand recovery. Current truth roles are
+  recoverable for 15/21 profiles; the existing global-condition allocation
+  operator is correct for only the ten fully crossed profiles. In six nested
+  profiles the generated Rater and Object-by-Rater partitions are aliases with
+  different error roles, which no backend can identify. Partial and nested
+  profiles also need an object-incidence-averaged prospective operator based on
+  structural, not post-missingness, assignments. The resulting no-go requires
+  superseding truth/binding/plan identities before a fit worker; it does not
+  mutate the unopened 855 plan or authorize partial execution.
+- `gtheory-multivariate-dsim3-design-dependent-truth-projection-0.2.4.R` and
+  `gtheory-multivariate-dsim3-design-dependent-truth-projection-record-0.2.4.md`:
+  the nonexecuting correction of that upstream truth defect. It keeps the
+  qualified four-stream response generator and all parent payload hashes
+  unchanged, but separates generator components from estimand components. In
+  six nested profiles, aliased Rater and Object-by-Rater source effects map to
+  one relative-error `NestedCondition` target. The resulting 84/84 mappings,
+  78/78 PSD target bindings, 6/6 alias resolutions, 21/21 latent-distribution
+  equivalences, and 21/21 absolute-error partition equivalences qualify all 21
+  profile truth roles. Phi's unallocated total-error partition is invariant;
+  G's nested relative-error partition is corrected. No coefficient is computed
+  before the incidence-aware prospective operator, and the existing generator
+  manifest is referenced rather than replayed or relabelled.
+- `gtheory-multivariate-dsim3-incidence-allocation-operator-0.2.4.R` and
+  `gtheory-multivariate-dsim3-incidence-allocation-operator-record-0.2.4.md`:
+  the nonexecuting separate-univariate allocation operator. It averages the
+  squared equal-weight norm of each object's registered structural identities
+  within each stratum rather than dividing by global condition or event
+  counts. All 21 profiles, 78 target-component operators, and 173 component-
+  by-stratum diagonals match an independent scalar oracle; all operators are
+  PSD, exactly diagonal, and invariant to row order, identity relabelling, and
+  the outcome-independent missingness mask. The historical global-condition
+  expression agrees in 21 fully crossed partitions but not in 26 partial or
+  nested partitions; global EventId disagrees in all 47 partitions. Exact-zero
+  off-diagonals mean that the separate-univariate route does not recover cross-
+  stratum covariance, not that scientific covariance is zero. G/Phi values,
+  responses, reserved RNG streams, backend calls, and fits remain unopened.
+- `gtheory-multivariate-dsim3-separate-univariate-truth-coefficient-0.2.4.R`
+  and
+  `gtheory-multivariate-dsim3-separate-univariate-truth-coefficient-record-0.2.4.md`:
+  the deterministic per-stratum truth-metric adapter. It combines qualified
+  target unit variances with qualified incidence diagonals and returns 47/47
+  named G/Phi truth pairs across all 21 profiles. All 173 component
+  contributions and 235 independent scalar-oracle comparisons qualify. The
+  oracle does not call the operator implementation; it applies direct 1/k and
+  1/(k*r) rules. All 15 nested strata have Phi equal to G under the collapsed
+  NestedCondition estimand, while all 32 crossed strata have Phi below G.
+  Thirteen one-repeat strata use an identifiable combined Object-by-Condition
+  plus event-residual block rather than claiming separate component recovery.
+  These are generating-truth coefficients, not fitted estimates or recovery
+  evidence. The unopened 855 plan remains unchanged.
+- `gtheory-multivariate-dsim3-superseding-unopened-plan-0.2.4.R` and
+  `gtheory-multivariate-dsim3-superseding-unopened-plan-record-0.2.4.md`:
+  the replacement identity layer, still without execution. It exact-replays
+  the old plan, keeps the 42 dataset, 210 route, 84 dataset-estimand, and 420
+  coordinate scientific units one-to-one, and gives every attempt a disjoint
+  identity and unopened seed in band 856. Each profile binds its qualified
+  truth, operator, and truth-metric hashes. Direct coefficient applicability
+  is limited to the 42 separate-univariate routes; other routes receive only a
+  scenario reference. Nine of ten planning gates pass. All six downstream
+  interfaces require explicit rebinding, so no old receipt or shadow
+  qualification authorizes the new attempts.
+- `gtheory-multivariate-dsim3-execution-bridge-request-contract-0.2.4.R` and
+  `gtheory-multivariate-dsim3-execution-bridge-request-contract-record-0.2.4.md`:
+  the exact superseding request denominator. Both route families use
+  lme4/REML and return complete named per-stratum G/Phi vectors without scalar
+  pooling, package-selected decision weights, or voting. It compiles 42
+  generation, 50 backend, 100 metric, 92 terminal, and five resource requests
+  (289 total), all still unauthorized and unexecuted.
+- `gtheory-multivariate-dsim3-fit-metric-worker-0.2.4.R` and
+  `gtheory-multivariate-dsim3-fit-metric-worker-record-0.2.4.md`: the common
+  two-family worker qualified on 25 nonreserved scenario-route templates. Its
+  51/51 fits, 57/57 stratum coefficient rows, and 50/50 named nonpooled metric
+  vectors cover all 50 backend and 100 metric requests. Twelve singular or
+  convergence-message fits remain visible with no override and no recovery
+  interpretation.
+- `gtheory-multivariate-dsim3-terminal-resource-orchestrator-0.2.4.R` and
+  `gtheory-multivariate-dsim3-terminal-resource-orchestrator-record-0.2.4.md`:
+  the shadow-qualified terminal/resource bridge. It closes 25/25 success
+  templates, 4/4 fault probes, 13/13 terminal meanings, 92/92 exact terminal
+  requests, and 5/5 resource request identities. Qualification receipts do
+  not enter the 856 denominator. Resource enforcement mechanics are bound,
+  while integrated-workload capacity remains explicitly unclaimed.
+- `gtheory-multivariate-dsim3-superseding-launch-readiness-reconciliation-0.2.4.R`
+  and
+  `gtheory-multivariate-dsim3-superseding-launch-readiness-reconciliation-record-0.2.4.md`:
+  the completed static reconciliation over the new identity. Exact environment
+  identity is 8/8 and all 289 requests have identity-matched, shadow-qualified
+  implementation paths, but the result is a 9/10-gate
+  `no_go_planned_generation_adapter_missing`. The 42 registered 856 seeds all
+  lie outside the existing generator's 854-only guard. This technical gap,
+  rather than workload-capacity evidence or owner authorization, is the only
+  current launch blocker. The audit never initializes 856.
+- `gtheory-multivariate-dsim3-planned-seed-generation-adapter-0.2.4.R` and
+  `gtheory-multivariate-dsim3-planned-seed-generation-adapter-record-0.2.4.md`:
+  the qualified parameterized boundary around the existing stochastic core.
+  It dry-compiles all 42 exact 856 generation requests with exact seed
+  forwarding while opening zero planned RNG streams. On 21 nonreserved 854
+  fixtures it exactly reproduces the parent generated-data and missingness
+  hashes and restores caller RNG state. One stochastic core is reused, none is
+  copied, and all five resource operations are rebound without a capacity or
+  execution claim.
+- `gtheory-multivariate-dsim3-final-launch-readiness-reconciliation-0.2.4.R`
+  and
+  `gtheory-multivariate-dsim3-final-launch-readiness-reconciliation-record-0.2.4.md`:
+  the final static 10/10 reconciliation. It rechecks five frozen artifact
+  identities, eight current environment identities, all 289 exact request
+  paths, and the qualified planned-seed adapter. Its typed manifest marks a
+  later internal exploratory launch technically ready while recording that
+  the launch, 856 RNG, response generation, backend, fit, metric, process, and
+  planned receipts all remain unopened. Capacity, recovery, simulation
+  validation, and public support remain nonclaims.
+- `gtheory-multivariate-dsim3-bounded-exploratory-launch-controller-0.2.4.R`,
+  its isolated worker and runner, and
+  `gtheory-multivariate-dsim3-bounded-exploratory-launch-record-0.2.4.md`:
+  the separately observed 856 execution. It commits 42/42 dataset checkpoints,
+  attempts 50/50 candidate routes, and issues 92/92 exact terminal receipts.
+  Forty-nine routes and 98/100 metrics complete nonpromoting; the one
+  D3-S012 replicate-2 metric failure remains in every denominator without a
+  rerun or replacement seed. The controller preserves all 160 no-call routes,
+  210 total routes, and 420 coordinates. This launch artifact itself does not
+  compute recovery or establish confirmation, simulation validation, or public
+  support; the following read-only layer supplies the bounded descriptive
+  adjudication.
+- `gtheory-multivariate-dsim3-descriptive-recovery-adjudication-0.2.4.R` and
+  `gtheory-multivariate-dsim3-descriptive-recovery-adjudication-record-0.2.4.md`:
+  the read-only adjudication of those immutable launch artifacts. It preserves
+  all 420 coordinates and limits direct truth comparison to the 42 qualified
+  separate-univariate routes. Of 188 planned route-stratum-estimand scalar
+  comparisons, 184 are available; ABS-PHI and REL-G RMSE are `0.05240607` and
+  `0.05008863`, and the largest absolute error is `0.3240437` in boundary
+  profile D3-S010. The eight restricted-multivariate pairs provide 40/40
+  within-backend parity comparisons, not an independent reference. With only
+  two replicates per scenario, standardized-bias, MCSE, and coverage acceptance
+  remain unevaluated. D-SIM-4 is not automatically admitted, and simulation
+  validation, confirmation, and public support remain false.
+- `gtheory-multivariate-dsim4-admission-decision-0.2.4.R` and
+  `gtheory-multivariate-dsim4-admission-decision-record-0.2.4.md`: the
+  package-level decision that a separate confirmation contract is
+  scientifically warranted. Eight of eight admission criteria pass, but the
+  decision authorizes contract construction only. Its 0/14 state is historical;
+  the following freeze now closes those requirements without authorizing
+  D-SIM-5.
+- `gtheory-multivariate-dsim4-confirmation-freeze-0.2.4.R` and
+  `gtheory-multivariate-dsim4-confirmation-freeze-record-0.2.4.md`: freeze all
+  14/14 confirmation requirements. The outcome-independent selector retains
+  six parent profiles covering the four required roles and all 37 dataset-axis
+  levels without reading D-SIM-3 errors. The contract fixes 2,500 outer
+  replications per profile, a 95% 199-refit parametric-bootstrap interval on
+  the two regular-interior profiles, independent scalar-formula overlap,
+  exact source/environment identities, disjoint unopened 857/858 seed bands,
+  and complete failure/change accounting. Its 15,000 outer and 995,000 inner
+  bootstrap attempts are registered but unopened. D-SIM-5, response
+  generation, fitting, validation, and support remain closed.
+- `gtheory-multivariate-dsim4-worker-qualification-0.2.4.R` and
+  `gtheory-multivariate-dsim4-worker-qualification-record-0.2.4.md`: qualify
+  the exact frozen interval/attempt worker and pass 10/10 static gates. The
+  compact registry binds all 15,000 outer and 995,000 inner identities through
+  5,000 contiguous 199-attempt blocks, while deriving 32,500 primary fits and
+  1,990,000 inner refits. The only execution is the existing nonreserved
+  D3-S001 shadow: 199 route-level bootstrap attempts, 398 lme4 refits, and 796
+  finite nonpooled metrics preserve design/RNG identity and yield type-7
+  intervals. A failure probe keeps the failed attempt and makes the interval
+  unavailable. No 857/858 seed or D-SIM-5 attempt is opened; the next bounded
+  step is shardable launch packaging for the exact reconciled requests.
+- `gtheory-multivariate-dsim5-launch-input-0.2.4.R` and
+  `gtheory-multivariate-dsim5-launch-input-record-0.2.4.md`: partition that
+  exact denominator into 50 balanced replicate-block shards. Every shard
+  contains all six scenarios, 300 complete outer attempts, 19,900 inner
+  attempts, and 40,450 planned backend fits; no outer attempt or bootstrap
+  block is split. The input is content-addressed but authorizes no execution,
+  RNG access, response generation, validation, or public support.
+- `gtheory-multivariate-dsim5-execution-admission-0.2.4.R` and
+  `gtheory-multivariate-dsim5-execution-admission-record-0.2.4.md`: admit the
+  exact 50-shard set as one confirmation denominator on 8/8 response-free
+  criteria. Every shard identity is authorized together, while execution,
+  RNG access, and result viewing remain unstarted. Partial-set authorization,
+  interim outcome review, outcome-based cancellation, replacement, and
+  replenishment are prohibited; resource interruption permits exact resume,
+  not denominator revision.
+- `gtheory-multivariate-dsim5-shard-executor-0.2.4.R` and
+  `gtheory-multivariate-dsim5-shard-executor-record-0.2.4.md`: bind one thin
+  executor to every exact admitted shard. It reuses the qualified generator,
+  separate-univariate fits, D-study operators, 199-refit interval rule, and
+  failure semantics; writes one atomic terminal checkpoint per outer attempt;
+  and resumes only exact uncommitted identities. Every dependency-failed
+  eligible attempt still receives 199 terminal inner receipts. Preflight
+  qualifies all 50 jobs and sends the existing nonreserved D3-S001 fixture
+  through the same integrated executor path, completing 2 primary fits, 398
+  refits, 796 metrics, and 4 intervals. It opens no 857/858 identity, planned
+  response/backend call, or confirmation result. Planned execution requires
+  an explicit `execute` mode and has not started.
+- `gtheory-multivariate-dsim5-execution-start-record-0.2.4.md`: records the
+  later state transition in which `D5-SHARD-001` opens the planned 857/858
+  identities and commits the first outer checkpoint. It records only job,
+  shard, and checkpoint identity—not result values or terminal outcomes—and
+  keeps interim adjudication, denominator revision, validation, and public
+  support closed while all 50 admitted shards remain obligatory. A planned
+  pause after 100 checkpoints and restart at checkpoint 101 subsequently
+  verifies exact resume on real 857/858 execution without inspecting results.
+  A second identical restart validates 101 retained checkpoints, resumes at
+  102, and reaches the next fixed scenario boundary at 150/15,000. A later
+  interrupt requested after checkpoint 200 arrives after checkpoint 201 has
+  already committed; that valid planned identity is retained. Exact resume at
+  202 then reaches the next boundary at 250/15,000, with checkpoint 251
+  initially uncreated. A final identical invocation validates all 250 hashes
+  and completes the interval-enabled final block. `D5-SHARD-001` now has all
+  300 checkpoints, 50 in each scenario block, and an immutable shard receipt;
+  the full denominator is 300/15,000 and 1/50 shards complete. No partial
+  result value or terminal state is inspected. `D5-SHARD-002` subsequently
+  opens at replicate 51. An interrupt at its first scenario boundary arrives
+  after point-only checkpoint 51 has committed; that valid identity is
+  retained, exact resume starts at 52, and uninterrupted point-only execution
+  reaches 250/300. Its final interval block remains unopened, leaving the full
+  denominator at 550/15,000 with 1/50 shards complete and one shard active. A
+  final identical invocation validates all 250 hashes and completes the last
+  interval block without interruption. `D5-SHARD-002` now has all 300
+  checkpoints and an immutable receipt; the full denominator is 600/15,000
+  with 2/50 shards complete and adjudication still closed. `D5-SHARD-003`
+  subsequently runs its first interval block and all four point-only blocks
+  continuously through 250/300, then resumes exactly and completes its final
+  interval block without interruption. Its 300 checkpoints and immutable
+  receipt leave the full denominator at 900/15,000 with 3/50 shards complete;
+  no result value or terminal state has been read. `D5-SHARD-004` then runs all
+  six blocks continuously in one process and writes its receipt after all 300
+  checkpoints are present. The full denominator is now 1,200/15,000 with 4/50
+  shards complete. `D5-SHARD-005` likewise completes all six blocks in one
+  process and writes its receipt after all 300 checkpoints are present. The
+  full denominator is now 1,500/15,000 with 5/50 shards complete and scientific
+  adjudication still closed. `D5-SHARD-006` then completes all six blocks in
+  one process and writes its receipt after all 300 checkpoints are present.
+  The full denominator is now 1,800/15,000 with 6/50 shards complete; no result
+  value or terminal state has been read. `D5-SHARD-007` likewise completes all
+  six blocks in one process and writes its receipt after all 300 checkpoints
+  are present. The full denominator is now 2,100/15,000 with 7/50 shards
+  complete and scientific adjudication still closed. `D5-SHARD-008` likewise
+  completes all six blocks in one process and writes its receipt after all 300
+  checkpoints are present. The full denominator is now 2,400/15,000 with 8/50
+  shards complete; no result value or terminal state has been read.
+  `D5-SHARD-009` likewise completes all six blocks in one process and writes
+  its receipt after all 300 checkpoints are present. The full denominator is
+  now 2,700/15,000 with 9/50 shards complete and scientific adjudication still
+  closed. `D5-SHARD-010` likewise completes all six blocks in one process and
+  writes its receipt after all 300 checkpoints are present. The full
+  denominator is now 3,000/15,000 with 10/50 shards complete; no result value
+  or terminal state has been read. `D5-SHARD-011` likewise completes all six
+  blocks in one process and writes its receipt after all 300 checkpoints are
+  present. The full denominator is now 3,300/15,000 with 11/50 shards
+  complete; no result value or terminal state has been read. `D5-SHARD-012`
+  likewise completes all six blocks in one process and writes its receipt
+  after all 300 checkpoints are present. The full denominator is now
+  3,600/15,000 with 12/50 shards complete; no result value or terminal state
+  has been read. `D5-SHARD-013` likewise completes all six blocks in one
+  process and writes its receipt after all 300 checkpoints are present. The
+  full denominator is now 3,900/15,000 with 13/50 shards complete; no result
+  value or terminal state has been read. `D5-SHARD-014` likewise completes all
+  six blocks in one process and writes its receipt after all 300 checkpoints
+  are present. The full denominator is now 4,200/15,000 with 14/50 shards
+  complete; no result value or terminal state has been read. `D5-SHARD-015`
+  likewise completes all six blocks in one process and writes its receipt
+  after all 300 checkpoints are present. The full denominator is now
+  4,500/15,000 with 15/50 shards complete; no result value or terminal state
+  has been read. `D5-SHARD-016` is interrupted after three checkpoints and
+  exact-resumes from the fourth with the unchanged runner, then completes all
+  six blocks and writes its receipt after all 300 checkpoints are present. The
+  full denominator is now 4,800/15,000 with 16/50 shards complete; no result
+  value or terminal state has been read. `D5-SHARD-017` likewise completes all
+  six blocks in one process and writes its receipt after all 300 checkpoints
+  are present. The full denominator is now 5,100/15,000 with 17/50 shards
+  complete; no result value or terminal state has been read. `D5-SHARD-018`
+  also completes all six blocks in one process and writes its receipt after all
+  300 checkpoints are present. The full denominator is now 5,400/15,000 with
+  18/50 shards complete; no result value or terminal state has been read.
+  `D5-SHARD-019` also completes all six blocks in one process and writes its
+  receipt after all 300 checkpoints are present. The full denominator is now
+  5,700/15,000 with 19/50 shards complete; no result value or terminal state
+  has been read. `D5-SHARD-020` also completes all six blocks in one process
+  and writes its receipt after all 300 checkpoints are present. The full
+  denominator is now 6,000/15,000 with 20/50 shards complete; no result value
+  or terminal state has been read. `D5-SHARD-021` also completes all six blocks
+  in one process and writes its receipt after all 300 checkpoints are present.
+  The full denominator is now 6,300/15,000 with 21/50 shards complete; no
+  result value or terminal state has been read. `D5-SHARD-022` also completes
+  all six blocks in one process and writes its receipt after all 300
+  checkpoints are present. The full denominator is now 6,600/15,000 with
+  22/50 shards complete; no result value or terminal state has been read.
+  `D5-SHARD-023` also completes all six blocks in one process and writes its
+  receipt after all 300 checkpoints are present. The full denominator is now
+  6,900/15,000 with 23/50 shards complete; no result value or terminal state
+  has been read.
+  `D5-SHARD-024` was intentionally interrupted after `D5-A13671.rds`; the
+  unchanged runner exact-resumed at `D5-A13672.rds`, completed all six blocks,
+  and wrote its receipt after all 300 checkpoints were present. The full
+  denominator is now 7,200/15,000 with 24/50 shards complete; no result value
+  or terminal state has been read.
+  A subsequent capacity-only qualification ran two unchanged preflight
+  commands concurrently; both exited zero with the frozen contract and
+  manifest, opened no planned RNG identity, and used about 620 MiB combined RSS
+  in a concurrent sample on the 36-GiB host. Remaining acquisition is therefore
+  limited to two simultaneous processes for distinct shard IDs launched in
+  order; same-shard duplication and four-way execution are prohibited, and no
+  frozen scientific input or denominator changes.
+  `D5-SHARD-025` and `D5-SHARD-026` then complete concurrently under that
+  ceiling, each writing its receipt after all 300 checkpoints are present.
+  Filesystem-only verification advances the contiguous completed prefix to
+  7,800/15,000 with 26/50 shards complete; no result value or terminal state
+  has been read.
+  `D5-SHARD-027` and `D5-SHARD-028` subsequently complete under the same
+  two-process ceiling. Filesystem-only verification advances the contiguous
+  completed prefix to 8,400/15,000 with 28/50 shards complete; no result value
+  or terminal state has been read.
+  `D5-SHARD-029` and `D5-SHARD-030` subsequently complete under the same
+  two-process ceiling. Filesystem-only verification advances the contiguous
+  completed prefix to 9,000/15,000 with 30/50 shards complete; no result value
+  or terminal state has been read.
+  `D5-SHARD-031` and `D5-SHARD-032` subsequently complete under the same
+  two-process ceiling. Filesystem-only verification advances the contiguous
+  completed prefix to 9,600/15,000 with 32/50 shards complete; no result value
+  or terminal state has been read.
+  `D5-SHARD-033` and `D5-SHARD-034` subsequently complete under the same
+  two-process ceiling, advancing the contiguous prefix to 10,200/15,000 with
+  34/50 shards complete. A user-authorized, read-only operational audit then
+  validates all 10,200 checkpoint identities, generation hashes, responses,
+  backend calls, jobs, and receipts. All 22,100 primary fits returned, while 14
+  retained `D4-S005` attempts lack 15 derived coefficient rows because of
+  `primary_target_nonfinite`; all 1,353,200 inner fits and targets complete and
+  all bootstrap metric and interval rows are available. No effect comparison,
+  replacement, or scientific adjudication is performed.
+  `D5-SHARD-035` and `D5-SHARD-036` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 10,800/15,000 with 36/50 shards complete; no result value
+  or terminal state is read.
+  `D5-SHARD-037` and `D5-SHARD-038` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 11,400/15,000 with 38/50 shards complete; no result value
+  or terminal state is read.
+  `D5-SHARD-039` and `D5-SHARD-040` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 12,000/15,000 with 40/50 shards complete; no result value
+  or terminal state is read.
+  `D5-SHARD-041` and `D5-SHARD-042` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 12,600/15,000 with 42/50 shards complete; no result value
+  or terminal state is read.
+  `D5-SHARD-043` and `D5-SHARD-044` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 13,200/15,000 with 44/50 shards complete; no result value
+  or terminal state is read.
+  `D5-SHARD-045` and `D5-SHARD-046` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 13,800/15,000 with 46/50 shards complete; no result value
+  or terminal state is read.
+  `D5-SHARD-047` and `D5-SHARD-048` subsequently complete under the same
+  two-process ceiling. Metadata-only verification advances the contiguous
+  completed prefix to 14,400/15,000 with 48/50 shards complete; no result value
+  or terminal state is read.
+  The final `D5-SHARD-049` and `D5-SHARD-050` subsequently complete under the
+  same ceiling, producing 15,000/15,000 checkpoints and 50/50 receipts. A
+  complete-denominator identity closure reapplies the existing assertions to
+  every job, receipt, and checkpoint and finds 15,000 unique terminal
+  identities with zero missing, duplicate, or foreign identities. Its
+  metadata-only closure hash is
+  `ac47234f184edbcb3860f0e7e00de8888efe802b98d739af8a0b4f5f3ef9d4a6`;
+  scientific adjudication remains closed.
+- `gtheory-multivariate-dsim5-complete-denominator-adjudication-0.2.4.R`,
+  its focused test, runner, and cumulative record: fix the previously textual
+  standardized-bias and unavailable-interval rules before scientific access,
+  then reject missing, duplicate, foreign, altered, or partial synthetic
+  sentinels. The qualified read-only path assembles all 15,000 outer and
+  995,000 inner attempts and adjudicates once. All 20,000 regular-interior
+  intervals are available. D4-S001 passes all coverage cells but fails the two
+  REL-G standardized-bias cells; D4-S006 fails all ABS-PHI and REL-G bias and
+  coverage cells. Its REL-G coverage is about 0.17 in both strata. The 27
+  retained D4-S005 failures leave 56/45,000 boundary/control scalar positions
+  unavailable, while all 18 boundary/control cells pass their applicable
+  reference, ordering, and fail-closed checks. Both estimands and the overall
+  D-SIM-5 confirmation receive `fail`; simulation validation, reference
+  validation, public support, threshold revision, and same-seed repair remain
+  closed.
+- `gtheory-multivariate-dsim6-maturity-disposition-record-0.2.4.md`: closes
+  the v4 D-SIM cycle at package-level maturity `specified`. It preserves the
+  completed negative confirmation, recognizes only the narrow internal
+  plumbing as implemented, and refuses simulation/reference validation or a
+  public surface. Because D4-S006 bundles partial sharing, MCAR, negative-PSD
+  cross-stratum covariance, and an ordinal aggregate, it routes follow-up to a
+  read-only seam audit and a possible new axis-separating exploratory contract,
+  not to a cell-specific patch, relaxed cutoff, or same-seed replay.
+- `gtheory-multivariate-dsim5-d4s006-root-cause-audit-0.2.4.md`: traces the
+  failed targeted-structural cell without a new response or fit. The generator
+  thresholds a standardized latent response to integer 0--4, the worker fits
+  that observed score as Gaussian, and the truth adapter remains on the
+  pre-threshold latent variance scale. Exact post-fit coefficient algebra and
+  complete intervals rule out a final-transform or availability explanation;
+  REL-G truth lies above the interval in about 2,070/2,500 attempts per
+  stratum. The result therefore triggers response-family/estimand scope review,
+  not optimizer tuning. Continuous observed-score G theory remains the narrow
+  candidate envelope; ordinal dependability stays parked until a real problem
+  packet chooses an observed-score or latent target and justifies a separate
+  oracle/model contract.
+- `gtheory-multivariate-zotero-literature-audit-0.2.4.csv`: a seven-source
+  targeted traceability ledger for the D-SIM-0 re-audit. It records Zotero
+  parent/attachment keys, attachment hashes, indexing and visual-review scope,
+  the contract finding, roadmap action, and claim ceiling. All seven PDFs are
+  now fully text-extracted and visually reviewed, including all 430 pages of
+  Cronbach et al. (1972) and all 14 pages of Wind et al. (2023). It remains a
+  separate extension to, rather than a silent rewrite of, the earlier 57-PDF
+  ledger.
+- `gtheory-measurement-core-page-review-manifest-0.2.4.csv` and
+  `gtheory-measurement-core-page-review-0.2.4.csv`: document- and page-level
+  provenance for the 2026-08-29 close review. Fourteen PDFs contribute
+  1,538/1,538 text/visual-reviewed pages with zero unreadable pages; the page
+  ledger distinguishes 286 implementation-critical close-read pages from
+  substantive full review, package-entry review, and structural front/reference
+  checks. A fifteenth manifest row records the six-section source review of the
+  current nonpaginated `lme4` covariance vignette.
+- `gtheory-measurement-core-page-review-0.2.4.md`: synthesis of the core
+  literature and official package manuals. It corrects the blanket `lme4`
+  covariance claim, records the archived `gtheory 0.1.2` source limitation,
+  treats `mirt`, `TAM`, and `brms` first as external oracle/integration routes,
+  and refines the dependency order for D-SIM, GPCM, GRM, LLTM/LPCM, response
+  time, and multidimensional generalized MFRM without authorizing a new model
+  or simulation run.
+- `gtheory-multivariate-decision-multiverse-owner-input-candidate-0.2.4.csv`
+  and
+  `gtheory-multivariate-decision-multiverse-owner-decision-brief-0.2.4.csv`:
+  the first is the thirteen-input checklist, not the typed value packet itself;
+  the second turns the exact candidate packet into thirteen owner-facing
+  questions with required external evidence, unresolved stop reasons, next
+  actions, dynamic missing counts, and a shared validator readiness state.
+  The candidate brief is 0/13 ready and explicitly keeps simulation authority
+  false. The typed packet is created with
+  `mfrmr_gtds_v3_owner_input_candidate()` and can be finalized only after the
+  same completion registry reports 13/13 ready.
+- `gtheory-multivariate-decision-multiverse-adjudication-plan-0.2.4.csv`:
+  a derived 21-row work surface over the same thirteen decisions, not twenty-one
+  new owner decisions. It preserves the thirteen parent inputs and expands
+  input 9 into two S2/S3 observation-event tasks plus six S2/S3 by
+  Object/Rater/Object:Rater mapping tasks. Every row fixes the phase, decision
+  authority, evidence provider, required confirmation, blocking dependency,
+  recommended predecessor, admissible answer, unsupported-design disposition,
+  and downstream effect. The candidate is 0/21 ready, every row prohibits
+  outcome evidence from resolving the task, and every execution flag is false.
+- `gtheory-multivariate-phase1-scope-use-evidence-dossier-0.2.4.md`:
+  a historical v3 repository-grounded classification of what public G/Phi APIs,
+  documentation, tests, v2/v3 contracts, literature review, and the current
+  ledger can establish for Phase 1. Both coefficient families are
+  computationally available in the simplified univariate helper, but no
+  repository evidence names a multivariate operational workflow, owner, or
+  consequence. V2 gives ABS-PHI a stronger historical technical candidate,
+  not owner acceptance. Both v3 enablement values therefore remain missing;
+  v4 makes this nonblocking because both estimands enter package validation.
+- `gtheory-multivariate-phase1-owner-response-candidate-0.2.4.csv`: a blank
+  two-row historical facilitation surface for ABS-PHI and REL-G, bound to the v3
+  contract and empty typed-packet candidate hashes. It separates the
+  repository candidate interpretation from the external use, owner, workflow,
+  population, consequence, anchor, or disable rationale that must be supplied.
+  It is not the typed packet; owner enablement cannot be inferred, and all
+  readiness and execution fields remain false. It may be reused by an applied
+  project but is not a package-development prerequisite.
+- `gtheory-multivariate-phase1-admission-gate-0.2.4.R`: the upstream Phase 1
+  historical admission gate that corrected a governance asymmetry in the v3
+  packet. Missing evidence remains pending; one or more completely evidenced
+  enabled uses may advance only to Phase 2 evidence collection; two completely
+  evidenced disable decisions produce the legitimate terminal state
+  `completed_stop_no_operational_use`. The stop does not construct a v3 owner
+  packet, and the advance does not satisfy D-SIM-0. Every branch keeps
+  simulation and planned-seed access false and rejects contract-hash mutation
+  or response self-authorization. V4 supersedes it as the active package gate.
+- `gtheory-multivariate-covariance-binding-candidate-0.2.4.csv`: the detailed
+  eight-row surface behind owner input 9. Two S2/S3 observation-event rows and
+  six S2/S3 by Object/Rater/Object:Rater rows remain blank, unconfirmed, and
+  execution-ineligible. It prevents a checklist-only confirmation from hiding
+  an unknown incidence map or unsupported covariance structure.
+- `gtheory-multivariate-decision-multiverse-signoff-candidate-0.2.4.csv`:
+  the unsigned sign-off review surface bound to the exact v3 contract hash. It
+  exposes thirteen confirmations plus the missing owner-input-packet hash and
+  external anchors. Every readiness value remains false/blank.
+- `gtheory-multivariate-decision-simulation-signoff-candidate-0.2.4.csv`: the
+  unsigned review surface for the exact v2 contract hash. It exposes all ten
+  confirmations without filling signer, UTC time, evidence, or external
+  decision anchor. Tests require every confirmation to remain false and reject
+  any hash or wording drift. It is a candidate packet, not authorization.
+- `gtheory-multivariate-current-state-ledger-0.2.4.csv`: the canonical current
+  view over the historical multivariate G-theory records plus the active v4
+  package-capability, D-SIM-1, D-SIM-2, D-SIM-3 coverage, execution-contract,
+  pre-execution-qualification, semantic-compiler, covariance/distribution-
+  binding, response-generator, route/receipt, resource-controller, and initial
+  launch-readiness-reconciliation, separate-univariate-semantics, design-
+  dependent-truth-projection, incidence-allocation-operator, and separate-
+  univariate-truth-coefficient, superseding-unopened-plan, exact-request,
+  fit/metric-worker, terminal/resource-orchestrator, superseding-
+  reconciliation, planned-seed-adapter, and final-reconciliation records. It
+  also includes the separately executed bounded-exploratory-launch record. It
+  keeps four
+  internal foundations separate from the eight c3 execution prerequisites,
+  accounts for every record filename, and identifies only backend
+  qualification and the no-diagnostic-override guard as satisfied (2/8).
+  Draft.85c4p is the latest fit-worker evidence, but its proposed c4q
+  capability run was deferred under the old activation path. V2's audited
+  absolute-Phi decision and v3's bounded policy multiverse remain historical
+  candidates. Their empty owner inputs and confirmations no longer block
+  package development. V4 completes D-SIM-0 at the package-capability scale,
+  the integrated D-SIM-1 deterministic qualification passes 7/7 criteria, and
+  D-SIM-2 completes one nonreserved generator-to-fit-to-metric terminal-state
+  smoke. D-SIM-3 then freezes 21 outcome-blind design cells covering 44/44
+  levels and 603/603 feasible dataset-axis pairs, then freezes a 42-dataset,
+  210-route, 420-coordinate exploratory denominator in the isolated 855 seed
+  band without opening it. Its completed pre-execution audit finds 18/37
+  reusable generator primitives but 0/21 exactly bound profiles, 0/50 exact
+  candidate routes, 0/13 generic terminal bindings, 0/5 enforced resource
+  scopes, and 2/3 deterministic controls. The first common compiler now
+  qualifies the nine design axes for 21/21 profiles. The second shared layer
+  qualifies the three variance/covariance/distribution axes through 84/84 PSD
+  component factors and 21/21 response-kernel contracts. The third shared
+  layer qualifies generator semantics for 21/21 profiles on nonreserved shadow
+  fixtures, with 84/84 unit-to-effective covariance identities and nine
+  randomized fixed-count MCAR masks. The fourth shared layer qualifies 50/50
+  candidate route admissions, all 13 terminal semantics, and present-tense
+  exactly-one accounting across 181 terminal and 92 open units without
+  fabricating a candidate terminal outcome. The fifth shared layer qualifies
+  all five resource scopes through 15/15 process probes, one live-worker
+  concurrency probe, and two composite stop receipts while retaining 6/6
+  registered probe units and creating no unlaunched terminal or replacement.
+  The subsequent launch-readiness reconciliation passes 4/10 gates and returns
+  `no_go_missing_execution_bridge`: exact environment identity, 42 generation
+  requests, 50 backend requests, 100 candidate metric requests, a fit/metric
+  worker, and orchestration for 92 open terminal units remain unbound. The
+  subsequent semantics audit freezes separate-univariate lme4/REML meaning but
+  exposes aliased incompatible truth roles in nested designs and a missing
+  incidence-aware operator in partial and nested designs. The subsequent truth
+  projection resolves the nested alias for all 6/6 affected profiles, and the
+  incidence-aware operator then qualifies all 21 profiles, 78 target-component
+  operators, and 173 component-by-stratum diagonals. Its legacy audit shows
+  that global condition counts fail in 26/47 and global event counts in 47/47
+  stratum partitions. The deterministic truth-metric adapter then qualifies
+  47/47 named stratum coefficients, 173/173 allocated contributions, and
+  235/235 independent scalar-oracle comparisons. Thirteen one-repeat strata
+  retain coefficient identifiability through combined error blocks. The
+  superseding unopened plan now binds those three semantic identities and
+  preserves the 42/210/84/420 scientific denominator one-to-one while moving
+  every attempt and seed identity to the disjoint unopened 856 namespace. It
+  passes 9/10 planning gates. The execution-bridge request contract then
+  freezes both candidate route families as lme4/REML paths returning complete
+  named per-stratum G/Phi vectors without scalar pooling, package-selected
+  decision weights, or voting. It compiles the exact 42 generation, 50
+  backend, 100 metric, 92 terminal-orchestration, and five resource-binding
+  requests (289 total) against the new identity and passes 8/10 bridge gates.
+  The common fit/metric worker then shadow-qualifies six formula classes through
+  25 scenario-route templates, 51/51 returned fits, 57/57 complete stratum
+  coefficient rows, and 50/50 nonpooled metric vectors. These template results
+  cover all 50 backend and 100 metric requests while avoiding 25 duplicate
+  replicate fits. Twelve singular/convergence-message fits remain visible with
+  zero diagnostic overrides. The terminal/resource orchestrator then qualifies
+  25/25 success templates, 4/4 failure probes, all 13 terminal meanings, all
+  92 terminal requests, and all five resource bindings, without converting a
+  qualification receipt into a planned receipt or claiming integrated-load
+  capacity. The superseding static reconciliation closes exact environment
+  identity 8/8 and all 289 request/implementation joins but returns the bounded
+  9/10-gate `no_go_planned_generation_adapter_missing`: all 42 registered 856
+  seeds are outside the current 854-only generator guard. The subsequent
+  parameterized adapter reuses that single stochastic core, dry-compiles all
+  42 exact planned requests, and reproduces 21/21 shadow data and missingness
+  identities with no planned RNG. The final static reconciliation then closes
+  five artifact, eight environment, 289 request/path, and 10/10 gate checks.
+  The subsequent bounded launch attempts all 42 datasets and 50 candidate
+  routes once, commits 42 successful child-process checkpoints and 92/92 exact
+  terminal receipts, and preserves one `metric_failure` rather than rerunning
+  it. Forty-nine routes and 98/100 metric requests are complete and
+  nonpromoting. Read-only descriptive adjudication then compares 184/188
+  planned direct-truth scalars, with ABS-PHI and REL-G RMSE of `0.05240607`
+  and `0.05008863`; the maximum absolute error is `0.3240437`. This remains
+  nonconfirmatory: individual scenario patches, adaptive exclusions, and
+  support claims remain prohibited.
+  The sequential owner records remain immutable provenance rather than a
+  feature queue.
+  The internal strategic roadmap now selects simulation as the evidence method
+  but replaces the generic recovery-first queue with `D-SIM-0` through
+  `D-SIM-6`. The active question is no longer one owner-confirmed allocation
+  policy: it is the design domain over which both `Phi` and `G` are computed
+  correctly, fail honestly, and agree with independent references. The
+  existing regular, boundary, and structural fixtures may be reused as
+  substrates, but the old 968-attempt decision pilot is historical rather than
+  the active design. D-SIM-1 has bound canonical package design and event
+  identities; D-SIM-2 has exercised and exactly replayed one nonreserved
+  end-to-end smoke. D-SIM-3 has frozen and audited its 21-cell exploratory
+  coverage set from the v4 axes without generating responses. Its separate
+  execution contract now binds two 855-band identities per cell, complete
+  route/estimand denominators, terminal accounting, and resources. The
+  subsequent nonexecuting qualification audit maps the exact implementation
+  gaps. Its first shared typed compiler layer now covers all 21 profiles with
+  no response generation; its second shared layer qualifies covariance/
+  distribution binding, its third layer generates one nonreserved shadow
+  fixture per profile, and its fourth layer qualifies route admission and
+  terminal accounting. Its fifth layer qualifies the common five-scope
+  resource controller without opening the 855 plan. The final identity-bound,
+  nonexecuting launch-readiness reconciliation then returns a 4/10-gate no-go
+  because no common execution bridge exists. Separate-univariate semantics,
+  design-dependent truth projection, and the incidence-aware diagonal operator
+  are now qualified, as is the deterministic per-stratum G/Phi truth adapter
+  through 235/235 independent comparisons. The superseding plan now freezes
+  new 856-band attempt identities and exact truth/operator/metric reference
+  bundles without inheriting old receipts or downstream qualifications. The
+  next request contract compiles all 289 new-identity generation, backend,
+  metric, terminal, and resource requests and freezes both route families to
+  complete named per-stratum G/Phi output with no package-selected pooling or
+  decision weights. The common fit/metric worker is now shadow-qualified on 25
+  templates and maps 51 fits and 50 complete metric vectors to all 50 backend
+  and 100 metric requests. Each template retains its actual 854 seed separately
+  from the covered 856 identity; none counts as recovery evidence. The
+  terminal/resource orchestrator is now shadow-qualified across 25 successes,
+  four faults, 13 terminal meanings, 92 requests, and five resource identities.
+  The repeated static reconciliation first isolated the planned-seed boundary
+  at 9/10. The qualified parameterized adapter now carries all 42 exact 856
+  requests through the same stochastic core without duplicating its semantics,
+  and the final static reconciliation passes 10/10. The separately recorded
+  bounded launch then completes 42/42 generations, 50/50 candidate attempts,
+  and 92/92 receipts; one route has a preserved metric failure, so 49/50 routes
+  and 98/100 metrics are complete. The subsequent immutable-evidence
+  adjudication preserves all 420 coordinates and compares 184/188 planned
+  separate-univariate scalar values against direct truth. ABS-PHI and REL-G
+  RMSE are `0.05240607` and `0.05008863`; the largest absolute error is
+  `0.3240437`, while 40/40 multivariate comparisons are only within-backend
+  parity. The subsequent D-SIM-4 decision admits one confirmation-contract
+  construction task on 8/8 scientific criteria. The D-SIM-4 freeze now closes
+  14/14 requirements with six outcome-independent profiles, all 37 dataset-
+  axis levels, 2,500 outer replications per profile, 15,000 registered outer
+  attempts, and 995,000 registered inner bootstrap attempts. The current
+  worker qualification subsequently maps all 15,000 outer and 995,000 inner
+  identities, derives 2,022,500 planned backend fit calls, and passes 10/10
+  static gates. Its nonreserved D3-S001 shadow executes 199 bootstrap attempts,
+  398 full refits, and 796 finite metrics without counting as D-SIM-5. The
+  subsequent D-SIM-5 launch input partitions that exact denominator into 50
+  balanced shards without splitting an outer attempt or bootstrap block. The
+  complete set is now admitted, and the shard executor is preflight-qualified
+  with outer-attempt atomic checkpoints, outcome-blind exact resume, and one
+  integrated nonreserved 199-bootstrap shadow pass. No
+  857/858 seed, confirmation response, or confirmation fit is opened, and
+  simulation validation and public support remain false. Integrated workload
+  capacity is descriptive rather than an enablement gate.
 - `jml-lp-attribution-pilot-0.2.3.R` and its record: draft.56 guarded
   attribution of LP-base, R-dispatch, and solver time, with independent GLPK
   parity over 40 PCM/RSM/bounded-GPCM conditional-additive targets. The

@@ -1934,8 +1934,8 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   roadmap <- paste(readLines(path, warn = FALSE), collapse = "\n")
 
   for (section in c(
-    "charter", "truth", "critical", "horizons", "research",
-    "adversarial", "risks", "governance", "metrics", "queue"
+    "charter", "truth", "critical", "horizons", "architecture",
+    "research", "adversarial", "risks", "governance", "metrics", "queue"
   )) {
     expect_match(roadmap, paste0("id=\"", section, "\""), fixed = TRUE)
   }
@@ -1960,14 +1960,393 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
   expect_match(roadmap, "今は行わない", fixed = TRUE)
   expect_match(roadmap, "停止条件", fixed = TRUE)
   expect_match(roadmap, "同時進行は release-critical 1本", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "Extension portfolio: options, not commitments",
+    fixed = TRUE
+  )
+  expect_false(grepl("completion-rate", roadmap, fixed = TRUE))
+  expect_false(grepl("Literature audit:", roadmap, fixed = TRUE))
+  expect_match(roadmap, "採択済みdomain feature", fixed = TRUE)
+  expect_match(roadmap, "Gate 0", fixed = TRUE)
+  expect_match(roadmap, "4 / 4 parked", fixed = TRUE)
+  expect_match(roadmap, "公開GitHub issueは0件", fixed = TRUE)
+  expect_match(roadmap, "2026-08-28 Gate 0.5", fixed = TRUE)
+  expect_match(roadmap, "240/240 fit attempt", fixed = TRUE)
+  expect_match(roadmap, "同梱packetは0/10適格、fitは0件", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "no_eligible_bundled_problem_packet_external_intake_required",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "B2 parked · discovery only", fixed = TRUE)
+  expect_match(roadmap, "23件の逐次recordをcurrent-state ledgerへ統合", fixed = TRUE)
+  expect_match(roadmap, "Multivariate G-theory current truth：2/8", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "Package-capability multivariate G-theory simulation",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "D-SIM-0", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-6", fixed = TRUE)
+  expect_match(roadmap, "14軸44 level", fixed = TRUE)
+  expect_match(roadmap, "standardized bias", fixed = TRUE)
+  expect_match(roadmap, "scenario行を独立datasetと数えない", fixed = TRUE)
+  expect_match(roadmap, "5段階maturity", fixed = TRUE)
+  expect_match(roadmap, "legacy primitiveは18/37再利用可能", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 shared semantic design compiler",
+               fixed = TRUE)
+  expect_match(roadmap, "scenario-specific branchは0", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 shared covariance/distribution binding",
+               fixed = TRUE)
+  expect_match(roadmap, "84/84 PSD component factor", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 generic shadow response generator",
+               fixed = TRUE)
+  expect_match(roadmap, "854100001--854100021", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 shared route-admission／terminal-receipt adapter",
+               fixed = TRUE)
+  expect_match(roadmap, "route 50/50 · receipt semantics 13/13", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 five-scope resource controller",
+               fixed = TRUE)
+  expect_match(roadmap, "resource 5/5 · process 15/15", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 unopened-855 launch-readiness reconciliation",
+               fixed = TRUE)
+  expect_match(roadmap, "reconciled · no-go 4/10", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 separate-univariate semantics audit",
+               fixed = TRUE)
+  expect_match(roadmap, "semantics audited · no-go 5/10", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 design-dependent truth projection",
+               fixed = TRUE)
+  expect_match(roadmap, "truth 21/21 · gate 8/10", fixed = TRUE)
+  expect_match(roadmap, "84/84 mapping", fixed = TRUE)
+  expect_match(roadmap, "78/78 PSD target", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 incidence-aware D-study operator",
+               fixed = TRUE)
+  expect_match(roadmap, "operator 21/21 · diagonal 173/173", fixed = TRUE)
+  expect_match(roadmap, "global EventIdは47/47で不一致", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 separate-univariate truth coefficient oracle",
+               fixed = TRUE)
+  expect_match(roadmap, "truth metric 47/47 · oracle 235/235", fixed = TRUE)
+  expect_match(roadmap, "Phi=Gはnested 15/15", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 superseding unopened plan",
+               fixed = TRUE)
+  expect_match(roadmap, "856 plan frozen · unopened", fixed = TRUE)
+  expect_match(roadmap,
+               "D-SIM-3 execution-bridge semantics and exact requests",
+               fixed = TRUE)
+  expect_match(roadmap, "289 requests · nonpooling", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 two-family fit/metric shadow worker",
+               fixed = TRUE)
+  expect_match(roadmap, "worker 51/51 · requests 150/150", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "D-SIM-3 terminal/resource shadow orchestrator",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "terminal 92/92 · resource 5/5", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "D-SIM-3 superseding launch-readiness reconciliation",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "reconciled · bounded no-go 9/10", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "D-SIM-3 parameterized planned-seed generator boundary",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "adapter 42/42 · core copy 0", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-3 bounded exploratory launch", fixed = TRUE)
+  expect_match(roadmap, "42/42 · receipts 92/92 · metric 98/100",
+               fixed = TRUE)
+  expect_match(
+    roadmap,
+    "D-SIM-3 descriptive recovery／failure-denominator adjudication",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "184/188 · nonconfirmatory", fixed = TRUE)
+  expect_match(roadmap, "ABS-PHI 0.05240607", fixed = TRUE)
+  expect_match(roadmap, "REL-G 0.05008863", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-4 admission decision", fixed = TRUE)
+  expect_match(roadmap, "admit contract only · execution closed", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-4 role-complete confirmation freeze",
+               fixed = TRUE)
+  expect_match(roadmap, "freeze 14/14 · execution closed", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-4 interval／attempt worker qualification",
+               fixed = TRUE)
+  expect_match(roadmap, "worker 10/10 · static pass", fixed = TRUE)
+  expect_match(roadmap, "D-SIM-5 shardable confirmation launch",
+               fixed = TRUE)
+  expect_match(
+    roadmap,
+    "gtheory-multivariate-current-state-ledger-0.2.4.csv",
+    fixed = TRUE
+  )
+  expect_match(roadmap, "parked options", fixed = TRUE)
+  expect_match(roadmap, "0 · Problem-validated", fixed = TRUE)
+  expect_match(roadmap, "3.5 · Decision-validated field pilot", fixed = TRUE)
+  expect_match(roadmap, "unsupported-by-default", fixed = TRUE)
+  expect_match(roadmap, "parallel = \"future\"", fixed = TRUE)
+  expect_match(roadmap, "future.apply::future_lapply", fixed = TRUE)
+  expect_match(roadmap, "facet count ≠ latent dimension count", fixed = TRUE)
+  expect_match(roadmap, "MeasurementSpecV2", fixed = TRUE)
+  expect_match(roadmap, "AnalysisSpecV1", fixed = TRUE)
+  expect_match(roadmap, "EvidenceSpecV1", fixed = TRUE)
+  expect_match(roadmap, "time_actor", fixed = TRUE)
+  expect_match(
+    roadmap,
+    "measurement-model-extension-literature-roadmap-0.2.4.md",
+    fixed = TRUE
+  )
 
-  count_token <- function(token) {
+  count_task_state <- function(state) {
+    token <- paste0("class=\"task\" data-state=\"", state, "\"")
     length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
   }
-  expect_identical(count_token("data-state=\"done\""), 35L)
-  expect_identical(count_token("data-state=\"open\""), 42L)
-  expect_identical(count_token("data-state=\"hold\""), 6L)
-  expect_identical(count_token("data-state=\"recurring\""), 13L)
+  expect_identical(count_task_state("done"), 67L)
+  expect_identical(count_task_state("open"), 38L)
+  expect_identical(count_task_state("hold"), 8L)
+  expect_identical(count_task_state("parked"), 11L)
+  expect_identical(count_task_state("recurring"), 13L)
+
+  extension_path <- file.path(
+    ctx$validation,
+    "measurement-model-extension-literature-roadmap-0.2.4.md"
+  )
+  expect_true(file.exists(extension_path))
+  extension <- paste(readLines(extension_path, warn = FALSE), collapse = "\n")
+  expect_match(extension, "Coverage was **1,366/1,366 pages**", fixed = TRUE)
+  expect_match(extension, "facet count is not latent dimension count", fixed = TRUE)
+  expect_match(extension, "composition unsupported by default", fixed = TRUE)
+  expect_match(extension, "study-level object", fixed = TRUE)
+  expect_match(extension, "Portfolio selection gate", fixed = TRUE)
+  expect_match(extension, "external_integration", fixed = TRUE)
+  expect_match(extension, "778 tracked files", fixed = TRUE)
+  expect_match(extension, "future.apply::future_lapply", fixed = TRUE)
+  expect_match(extension, "preallocated_design_rep_cell_v1", fixed = TRUE)
+  expect_match(extension, "fixed-ordered-grid serial equivalence", fixed = TRUE)
+  expect_match(extension, "A1. Minimum identity/registry spike -- parked, current No-Go", fixed = TRUE)
+  expect_match(extension, "zero production consumers", fixed = TRUE)
+  expect_match(extension, "Gate 0 disposition -- 2026-08-27", fixed = TRUE)
+  expect_match(extension, "zero domain features are admitted", fixed = TRUE)
+  expect_match(extension, "all ten bundled `.rda` data sets", fixed = TRUE)
+  expect_match(extension, "package=mirt", fixed = TRUE)
+  expect_match(
+    extension,
+    "Gate 0.5 GRM--GPCM simulation disposition -- 2026-08-28",
+    fixed = TRUE
+  )
+  expect_match(
+    extension,
+    "geometry_detectable_reopen_problem_discovery_only",
+    fixed = TRUE
+  )
+  expect_match(
+    extension,
+    "measurement-model-extension-gate05-grm-gpcm-pilot-0.2.4.csv",
+    fixed = TRUE
+  )
+  expect_match(
+    extension,
+    "B2 bundled-data eligibility disposition -- 2026-08-28",
+    fixed = TRUE
+  )
+  expect_match(
+    extension,
+    "measurement-model-extension-b2-data-eligibility-0.2.4.csv",
+    fixed = TRUE
+  )
+  expect_match(extension, "AnalysisSpecV1", fixed = TRUE)
+  expect_match(extension, "EvidenceSpecV1", fixed = TRUE)
+  expect_match(extension, "2026-08-27T01:48:42Z", fixed = TRUE)
+  expect_match(extension, "censoring/competing-event rule", fixed = TRUE)
+  expect_match(extension, "known-answer sentinel cells", fixed = TRUE)
+  expect_match(extension, "a surrogate objective is labeled full likelihood", fixed = TRUE)
+  expect_match(
+    extension,
+    "EvidenceSpecV1 -- decision and simulation identity",
+    fixed = TRUE
+  )
+  expect_match(extension, "**0.2.4:** no new model", fixed = TRUE)
+
+  bundled_paths <- list.files(
+    file.path(ctx$root, "data"), pattern = "[.]rda$", full.names = TRUE
+  )
+  expect_length(bundled_paths, 10L)
+  bundled_columns <- unique(unlist(lapply(bundled_paths, function(path) {
+    data_env <- new.env(parent = emptyenv())
+    object_names <- load(path, envir = data_env)
+    unlist(lapply(object_names, function(object_name) {
+      names(data_env[[object_name]])
+    }), use.names = FALSE)
+  }), use.names = FALSE))
+  expect_false(any(grepl(
+    "response.?time|latency|duration|timestamp",
+    bundled_columns,
+    ignore.case = TRUE
+  )))
+
+  audit_path <- file.path(
+    ctx$validation,
+    "measurement-model-extension-pdf-audit-0.2.4.csv"
+  )
+  expect_true(file.exists(audit_path))
+  audit <- utils::read.csv(audit_path, stringsAsFactors = FALSE)
+  expect_identical(nrow(audit), 57L)
+  expect_identical(sum(audit$pdf_pages), 1366L)
+  expect_true(all(audit$reviewed_pages == audit$pdf_pages))
+  expect_true(all(audit$unreadable_pages == 0L))
+  expect_identical(length(unique(audit$attachment_key)), 57L)
+  expect_identical(length(unique(audit$sha256)), 57L)
+  expect_identical(audit$audit_order, seq_len(57L))
+  expect_true(all(grepl("^[0-9a-f]{64}$", audit$sha256)))
+  expect_match(
+    roadmap,
+    "measurement-model-extension-pdf-audit-0.2.4.csv",
+    fixed = TRUE
+  )
+
+  gate_path <- file.path(
+    ctx$validation,
+    "measurement-model-extension-execution-gates-0.2.4.csv"
+  )
+  expect_true(file.exists(gate_path))
+  gates <- utils::read.csv(
+    gate_path,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  expected_stage_ids <- c(
+    "A0", "A1", "A2", "A3", "B1", "B2", "C1", "C2",
+    "D1", "D2", "D3", "E1", "E2", "E3", "F1", "F2"
+  )
+  expect_identical(nrow(gates), length(expected_stage_ids))
+  expect_identical(gates$stage_id, expected_stage_ids)
+  expect_identical(length(unique(gates$stage_id)), nrow(gates))
+  expect_true(all(c(
+    "status", "depends_on", "wip_lane", "decision_question",
+    "user_decision", "simpler_alternative", "entry_criteria",
+    "deliverables", "exit_gate", "stop_or_hold", "claim_ceiling",
+    "resource_envelope", "reversibility", "next_on_pass",
+    "next_on_fail", "canonical_evidence"
+  ) %in% names(gates)))
+  expect_identical(gates$status[gates$stage_id == "A0"], "complete")
+  expect_identical(gates$status[gates$stage_id == "A1"], "parked")
+  expect_identical(gates$status[gates$stage_id == "A2"], "hold")
+  expect_identical(gates$status[gates$stage_id == "A3"], "parked")
+  parked_gate0 <- c("B1", "B2", "D1")
+  expect_true(all(gates$status[gates$stage_id %in% parked_gate0] == "parked"))
+  expect_true(all(grepl(
+    "2026-08-27 Gate 0",
+    gates$stop_or_hold[gates$stage_id %in% parked_gate0],
+    fixed = TRUE
+  )))
+  expect_identical(
+    gates$next_on_pass[gates$stage_id == "B2"],
+    "PROBLEM_DISCOVERY_ONLY"
+  )
+  remaining_options <- setdiff(
+    gates$stage_id[grepl("^[B-E]", gates$stage_id)], parked_gate0
+  )
+  expect_true(all(gates$status[gates$stage_id %in% remaining_options] == "option"))
+  expect_true(all(gates$status[grepl("^F", gates$stage_id)] == "hold"))
+  domain_rows <- grepl("^[B-F]", gates$stage_id)
+  expect_false(any(grepl("A1|A2|A3", gates$depends_on[domain_rows])))
+  gate_required_text <- c(
+    "stage_name", "strategic_outcome", "status", "wip_lane",
+    "decision_question", "user_decision", "simpler_alternative",
+    "entry_criteria", "deliverables", "exit_gate", "stop_or_hold",
+    "claim_ceiling", "resource_envelope", "reversibility",
+    "next_on_pass", "next_on_fail", "canonical_evidence"
+  )
+  expect_true(all(vapply(gates[gate_required_text], function(x) {
+    all(!is.na(x) & nzchar(trimws(x)))
+  }, logical(1))))
+
+  dependencies <- setNames(lapply(gates$depends_on, function(value) {
+    tokens <- strsplit(value, ";", fixed = TRUE)[[1L]]
+    tokens[nzchar(tokens)]
+  }), gates$stage_id)
+  expect_true(all(unlist(dependencies, use.names = FALSE) %in% gates$stage_id))
+  unresolved <- gates$stage_id
+  resolved <- character()
+  repeat {
+    ready <- unresolved[vapply(unresolved, function(stage_id) {
+      all(dependencies[[stage_id]] %in% resolved)
+    }, logical(1))]
+    if (!length(ready)) break
+    resolved <- c(resolved, ready)
+    unresolved <- setdiff(unresolved, ready)
+  }
+  expect_identical(
+    unresolved,
+    character(),
+    info = "extension-stage dependencies must be acyclic"
+  )
+  expect_match(
+    roadmap,
+    "measurement-model-extension-execution-gates-0.2.4.csv",
+    fixed = TRUE
+  )
+
+  trace_path <- file.path(
+    ctx$validation,
+    "measurement-model-extension-traceability-0.2.4.csv"
+  )
+  expect_true(file.exists(trace_path))
+  trace <- utils::read.csv(
+    trace_path,
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  expect_identical(nrow(trace), 23L)
+  expect_identical(trace$trace_id, sprintf("TR%02d", 0:22))
+  expect_identical(length(unique(trace$trace_id)), nrow(trace))
+  expect_setequal(unique(trace$stage_id), expected_stage_ids)
+  trace_required_text <- c(
+    "source_keys", "sources", "evidence_claim", "strategic_requirement",
+    "spec_owner", "stage_id", "independent_oracle", "negative_control",
+    "test_target", "user_decision", "support_disposition",
+    "cheaper_alternative"
+  )
+  expect_true(all(trace_required_text %in% names(trace)))
+  expect_true(all(vapply(trace[trace_required_text], function(x) {
+    all(!is.na(x) & nzchar(trimws(x)))
+  }, logical(1))))
+  known_source_keys <- unique(c(
+    "repository", audit$parent_item_key, audit$attachment_key
+  ))
+  trace_source_keys <- unlist(strsplit(trace$source_keys, ";", fixed = TRUE))
+  expect_true(all(trace_source_keys %in% known_source_keys))
+  allowed_spec_owners <- c(
+    "portfolio", "MeasurementSpecV2", "AnalysisSpecV1", "EvidenceSpecV1"
+  )
+  trace_spec_owners <- unlist(strsplit(trace$spec_owner, ";", fixed = TRUE))
+  expect_true(all(trace_spec_owners %in% allowed_spec_owners))
+  expect_false(any(trace$support_disposition == "public_supported"))
+  expect_match(
+    trace$cheaper_alternative[trace$stage_id == "B1"],
+    "eRm or TAM",
+    fixed = TRUE
+  )
+  expect_match(
+    trace$cheaper_alternative[trace$stage_id == "B2"],
+    "mirt",
+    fixed = TRUE
+  )
+  expect_true(any(
+    trace$stage_id == "D1" &
+      grepl("LNIRT", trace$cheaper_alternative, fixed = TRUE)
+  ))
+  expect_identical(
+    trace$support_disposition[trace$stage_id == "B2"],
+    "park_simulation_detectable_no_eligible_real_packet"
+  )
+  expect_match(
+    roadmap,
+    "measurement-model-extension-traceability-0.2.4.csv",
+    fixed = TRUE
+  )
 
   ignore <- readLines(file.path(ctx$root, ".Rbuildignore"), warn = FALSE)
   expect_true("^inst/validation$" %in% ignore)

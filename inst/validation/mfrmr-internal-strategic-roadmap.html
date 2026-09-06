@@ -27,10 +27,16 @@
 
     * { box-sizing: border-box; }
 
-    html { scroll-behavior: smooth; }
+    html {
+      max-width: 100%;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
+      max-width: 100%;
+      overflow-x: hidden;
       color: var(--ink);
       background:
         radial-gradient(circle at 8% 0%, rgba(14, 113, 105, 0.12), transparent 31rem),
@@ -53,6 +59,7 @@
     .shell {
       display: grid;
       grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      min-width: 0;
       min-height: 100vh;
     }
 
@@ -64,6 +71,7 @@
       padding: 1.5rem 1.2rem;
       color: #eef5f4;
       background: linear-gradient(165deg, #193b4d, #102c35 68%, #0d4948);
+      min-width: 0;
     }
 
     .brand {
@@ -88,6 +96,7 @@
       color: #e8f1f1;
       text-decoration: none;
       font-size: 0.9rem;
+      overflow-wrap: anywhere;
     }
 
     nav a:hover,
@@ -104,6 +113,8 @@
 
     main {
       width: min(1180px, 100%);
+      min-width: 0;
+      max-width: 100%;
       padding: 2.6rem clamp(1rem, 4vw, 4rem) 5rem;
     }
 
@@ -256,23 +267,6 @@
 
     .metric span { color: var(--muted); font-size: 0.78rem; }
 
-    .progress {
-      height: 7px;
-      margin-top: 0.65rem;
-      overflow: hidden;
-      border-radius: 999px;
-      background: #e7e1d5;
-    }
-
-    .progress > span {
-      display: block;
-      width: 0;
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--teal), #42a16e);
-      transition: width 220ms ease;
-    }
-
     section { scroll-margin-top: 5.5rem; margin: 2.8rem 0; }
 
     .section-head {
@@ -348,8 +342,14 @@
     }
 
     .task strong { display: block; font-size: 0.91rem; }
-    .task p { margin: 0.18rem 0 0; color: var(--muted); font-size: 0.8rem; }
+    .task p {
+      margin: 0.18rem 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      overflow-wrap: anywhere;
+    }
     .task[data-state="hold"] { border-left: 3px solid var(--red); padding-left: 0.65rem; }
+    .task[data-state="parked"] { border-left: 3px solid var(--amber); padding-left: 0.65rem; }
     .task[data-state="open"][data-priority="p0"] { border-left: 3px solid var(--amber); padding-left: 0.65rem; }
 
     .truth {
@@ -468,8 +468,15 @@
 
     @media (max-width: 650px) {
       .dashboard, .grid-2, .grid-3, .principles, .decision-line {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
       }
+      aside, main { width: 100%; max-width: 100vw; }
+      aside { overflow: hidden; padding: 1.25rem 1rem; }
+      nav a { flex: 1 1 9.5rem; min-width: 0; }
+      main { padding: 1.5rem 0.75rem 3rem; }
+      .hero { width: 100%; max-width: 100%; }
+      .hero h1, .hero p, .hero .eyebrow,
+      .pill, .truth, .metric, .card { max-width: 100%; overflow-wrap: anywhere; }
       .decision-line div:not(:last-child)::after { display: none; }
       .section-head { display: block; }
       .section-head p { margin-top: 0.45rem; }
@@ -495,19 +502,20 @@
     <aside>
       <div class="brand">
         <strong>mfrmr / internal</strong>
-        <small>Strategic roadmap · truth snapshot 2026-08-26</small>
+        <small>Strategic roadmap · truth snapshot 2026-09-03</small>
       </div>
       <nav aria-label="ロードマップ内ナビゲーション">
         <a href="#charter">01 · 軸と非目標</a>
         <a href="#truth">02 · 現在地</a>
         <a href="#critical">03 · 直近クリティカルパス</a>
         <a href="#horizons">04 · バージョン別地平</a>
-        <a href="#research">05 · 独立研究レーン</a>
-        <a href="#adversarial">06 · 敵対的レビュー</a>
-        <a href="#risks">07 · リスク台帳</a>
-        <a href="#governance">08 · 意思決定ガバナンス</a>
-        <a href="#metrics">09 · 完了定義と指標</a>
-        <a href="#queue">10 · 次の実行順</a>
+        <a href="#architecture">05 · 推定・モデル拡張設計</a>
+        <a href="#research">06 · 独立研究レーン</a>
+        <a href="#adversarial">07 · 敵対的レビュー</a>
+        <a href="#risks">08 · リスク台帳</a>
+        <a href="#governance">09 · 意思決定ガバナンス</a>
+        <a href="#metrics">10 · 完了定義と指標</a>
+        <a href="#queue">11 · 次の実行順</a>
       </nav>
       <div class="side-note">
         チェック状態はソース管理された証拠状態です。ブラウザ上では変更できません。
@@ -532,6 +540,7 @@
           <span class="pill">0.2.4 development: API consistency validated 5/5</span>
           <span class="pill">Public scope: RSM · PCM · MML · fixed N(0,1)</span>
           <span class="pill">CRAN submission: not performed</span>
+          <span class="pill">Extension portfolio: options, not commitments</span>
         </div>
       </header>
 
@@ -544,23 +553,22 @@
         <button type="button" id="print-roadmap">印刷</button>
       </div>
 
-      <div class="dashboard" aria-label="ロードマップ集計">
+      <div class="dashboard" aria-label="現在の意思決定状態">
         <div class="metric">
-          <strong id="done-count">0</strong>
-          <span>証拠付き完了</span>
+          <strong>No-Go</strong>
+          <span>A1 registryは証拠待ちでpark</span>
         </div>
         <div class="metric">
-          <strong id="open-count">0</strong>
-          <span>未完了</span>
+          <strong>0</strong>
+          <span>採択済みdomain feature</span>
         </div>
         <div class="metric">
-          <strong id="hold-count">0</strong>
-          <span>明示的保留・非昇格</span>
+          <strong>1 + 1</strong>
+          <span>WIP上限：横断1＋domain 1</span>
         </div>
         <div class="metric">
-          <strong id="completion-rate">0%</strong>
-          <span>完了率（反復項目を除く）</span>
-          <div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+          <strong>4 / 4 parked</strong>
+          <span>2026-08-27 Gate 0判定</span>
         </div>
       </div>
 
@@ -600,7 +608,7 @@
           </div>
           <div class="truth">
             <strong>ポートフォリオ制約</strong>
-            <p>同時進行は release-critical 1本、maintenance 1本、研究probe最大2本。新しい研究実行は、既存レーンの停止・統合・判定のいずれかと交換する。</p>
+            <p>同時進行は release-critical 1本、maintenance 1本、拡張研究は横断foundation/evaluation 1本＋domain feature 1本まで。空いた枠は埋めず、新しい実行は既存レーンの停止・統合・判定と交換する。</p>
           </div>
         </div>
       </section>
@@ -777,11 +785,19 @@
               </div>
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>初心者向けfront-door exampleを一つの経路へ統一</strong><p><code>load</code>→<code>describe</code>→<code>fit</code>→<code>summary</code>→<code>plot</code>→<code>diagnose</code>→data/rating-scale/precision review→<code>results</code>→<code>report/export</code>の主要helpだけを、同じ<code>example_operational</code>、明示的列役割・得点範囲、RSM-MML q7へ揃えた。速度目的のJML、小標本切出し、専門家向け出力の羅列を入口から除き、<code>profile = "facets"</code>は歴史的名称でFACETS・TAM・sirtの知識や導入を要しないと明記。静的回帰検査で入口契約を固定した。</p></div><span class="chip done">DX-EX-1 local</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>API整合性payloadを5環境で再検証</strong><p>run <code>32990152654</code>は実装head <code>036565f…</code>で5/5成功し、各cellのexact source checkとrepository reviewを完了。GitHub Actions障害時の空trigger commit <code>322f188…</code>とはtree <code>755dc77…</code>が一致し、production payloadは不変。旧run <code>32976019984</code>は今回の証拠へ流用していない。</p></div><span class="chip done">hosted 5/5 pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
-                <div><strong>candidate metadataとexact headを再形成</strong><p>fresh 5環境pass後にだけdevelopment metadataを遷移し、clean tree・tarball hash・hosted headを再束縛する。旧candidate hashとtagは再利用しない。</p></div><span class="chip open">after hosted pass</span>
+                <div><strong>exact payloadの人間API review</strong><p><a href="fixed-calibration-human-api-review-candidate-0.2.4.md">unsigned review packet</a>は実装commit <code>036565f…</code>、tree <code>755dc77…</code>、tarball hash、run <code>32990152654</code>を一つの対象へ束縛。現行dirty worktreeとD-SIM-5は対象外。明示的な人間判断までmetadata遷移しない。</p></div><span class="chip open">human decision</span>
+              </div>
+              <div class="task" data-state="open" data-horizon="now" data-priority="p0">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>candidate metadataとexact headを再形成</strong><p><code>approve_exact_validated_payload</code>後にだけclean treeでdevelopment metadataを遷移し、candidate commit・tarball hash・hosted headを再束縛する。旧candidate hashとtagは再利用しない。</p></div><span class="chip open">after human review</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
                 <input type="checkbox" disabled aria-label="未完了">
@@ -870,10 +886,345 @@
         </div>
       </section>
 
+      <section id="architecture">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">05 · Estimation and model-extension architecture</p>
+            <h2>推定契約を固定してから、facet・次元・過程を拡張する</h2>
+          </div>
+          <p>同じモデル名と同じ数値解を区別し、測定モデル、推定、得点、予測・推論、検証証拠を段階的な契約へ変換する。</p>
+        </div>
+
+        <div class="truth">
+          <strong>統括命題：MMLはJMLに数値積分層を追加する</strong>
+          <p>
+            JMLとMMLを「丸め対アルゴリズム」と二分しない。両者ともresponse family、score map、識別、
+            full-precision計算、停止条件、表示規則に依存する。JML比較では表示丸めと診断式が可視化されやすく、
+            MMLではさらに人物分布、積分点・重み、分散更新、EM／direct／hybrid、EAP等の得点法が
+            computational estimandを決める。同じ<code>MML</code>ラベルだけでは比較をadmitしない。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>契約</th><th>必須identity</th><th>比較時の拒否条件</th></tr></thead>
+            <tbody>
+              <tr><td><code>MeasurementSpec</code></td><td>response family、score map、facet/step owner、sign、anchor、interaction、識別制約</td><td>RSM対PCM、共有step対criterion-step、生座標だけの比較</td></tr>
+              <tr><td><code>EstimationSpec</code></td><td>JML/MML、人物分布、objective、engine、quadrature rule/nodes/weights、停止条件、終端勾配</td><td>fixed N(0,1)対分散推定、有限値対ready、異なる積分近似をexact equivalenceと表示</td></tr>
+              <tr><td><code>ScoringSpec</code></td><td>JML/MLE/WLE/EAP、prior、scoring grid、interval、calibration uncertaintyの包含範囲</td><td>EAP対WLE、fit-time grid対scoring grid、conditional uncertainty対総不確実性</td></tr>
+              <tr><td><code>ReportingSpec</code></td><td>内部full precision、表示桁、cutoff規則、境界値、failure denominator</td><td>丸め値で再分類、failed fit除外、表示一致から内部一致を推論</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>ecosystem authority（CRAN 2026-09-03）</th><th>既存packageが所有する範囲</th><th>mfrmrでの扱い</th><th>再発明しないもの</th></tr></thead>
+            <tbody>
+              <tr><td><code>mfrmr 0.2.4.9000</code></td><td>facet role、score support、anchor・接続性・readiness、bounded ordered-response fitから診断・report・RSM/PCM portable scoringまでの一貫した測定契約</td><td><strong>product authority</strong>。初心者が一つのlong-format workflowで安全に判断できる範囲を所有</td><td>外部packageの機能数、solver、power engineを追わない</td></tr>
+              <tr><td><code>TAM 4.3-25</code></td><td>広いMML/JML IRT、GPCM、多次元、latent regression、plausible values、multifacet design。<code>tam.mml.mfr</code>自体はfacet designでfree item slopeを推定しない</td><td><strong>independent comparator / external route</strong>。Measurement・Estimation・Scoring specが一致したRSM/PCMを先に照合し、GPCMはdesign変換を含むmatched estimandが成立した場合だけ</td><td>TAM互換mode、EM/direct solver clone、全design-matrix engine</td></tr>
+              <tr><td><code>mirt 1.47</code></td><td>GPCM/GRM/MIRT、mixed-effects、multiple-group、EM/MHRM等の広いIRT</td><td><strong>response-family oracle</strong>。bounded GPCM外のslope・cumulative・多次元問題では内製前の第一候補</td><td>MIRT、GRM、mixture、stochastic engineの無目的な内製</td></tr>
+              <tr><td><code>immer 1.5-13</code></td><td>hierarchical rater model、LLPCMのCML/CCML、bias-corrected／plain JML、FACETS wrapper</td><td><strong>alternative-estimand route</strong>。HRM、conditional likelihood、JML補正を別モデル・別推定対象として比較</td><td>HRM/CMLをmfrmr GPCMの別engineと呼ぶこと、異なるestimandの相関による互換性主張</td></tr>
+              <tr><td><code>simr 1.0.10</code></td><td><code>lme4</code> fitted modelのsimulation-based power、<code>powerSim()</code>、<code>powerCurve()</code>、拡張可能な<code>doSim/doFit/doTest</code></td><td><strong>external power route</strong>。model-matched GLMMの固定／random効果検定に限定し、必要なら利用者を直接案内</td><td>GLMM powerをMFRM parameter recovery、anchor/link、fit flag、scoringの検証へ流用すること。具体的な反復需要前のadapter</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="truth" style="margin-top: 1rem;">
+          <strong>build / integrate / compare / defer</strong>
+          <p>
+            mfrmrは測定契約とfailure preventionを<strong>build</strong>し、既存packageで答えられる問いはdocs／exportで<strong>integrate</strong>する。
+            同一estimandを独立に評価できる最小caseだけを<strong>compare</strong>し、named decision・typical data・反証条件がないengine追加は<strong>defer</strong>する。
+            TAMは既存Suggestsを維持するが、immer／simrを比較目的だけで依存関係へ追加しない。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>現在の証拠</th><th>支持すること</th><th>支持しないこと</th><th>判定</th></tr></thead>
+            <tbody>
+              <tr><td>4,000 dataset JML診断比較</td><td>open 3実装のfull-precision近接、FACETSを含むfit/separation/reliability比較。丸めで5,000 disagreement中1,064が解消</td><td>残る3,936差の説明、MML、現行0.2.4</td><td><strong>論文証拠として保持</strong></td></tr>
+              <tr><td><a href="tam-mml-core-calibration-record-0.2.3.md">TAM MML benign core</a></td><td>matched RSM/PCM・変換後座標・q31/q61でparameter/deviance差&lt;1e-5</td><td>frozen scientific tolerance、EAP/WLE parity、weak-information一般化</td><td><strong>calibration-only</strong></td></tr>
+              <tr><td>140×80×10 observed MML</td><td>TAM/sirtのfailure挙動と、別探索でのmfrmr有限値／readiness保留を記述</td><td>比較可能な二つの解、ソフトウェア間互換性、mfrmrの推論成功</td><td><strong>failure evidence only；mfrmr artifact待ち</strong></td></tr>
+              <tr><td><a href="fixed-calibration-g4-evidence-record-0.2.4.md">0.2.4 portable scoring</a></td><td>fixed N(0,1) RSM/PCM artifact EAPを独立oracleで再現</td><td>estimated-population MML、TAM parity、prior robustness</td><td><strong>release-authorized bounded core</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="truth warning">
+          <strong>0.2.4の公開境界は変更しない</strong>
+          <p>
+            文献が増えたことは実装・回復・artifact・scoring・文書・運用のgate通過を意味しない。
+            portable scopeはRSM/PCM MML fixed N(0,1)のまま、bounded GPCMは一つのobserved facetが
+            stepと完全予測子へのrelative slopeを所有する一次元routeのままにする。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>Gate 0</th><th>着工前に答える問い</th><th>No-Go／より小さい出口</th></tr></thead>
+            <tbody>
+              <tr><td>利用判断</td><td>誰の、どのデータと判断が現在の方法では困るのか</td><td>named workflowがなければ着工しない</td></tr>
+              <tr><td>core adjacency</td><td>尺度の継続性、many-facet測定、portable scoring、もっともらしい誤答の防止を改善するか</td><td>core外ならexternal integration／companion research</td></tr>
+              <tr><td>simpler alternative</td><td>文書、明示的refusal、現行model、export、成熟した外部packageで足りないか</td><td>より低いlifecycle costの手段を採る</td></tr>
+              <tr><td>typical data</td><td>通常のitem・category・owner・incidence・欠測で識別できるか</td><td>好条件synthetic fixtureでしか成立しなければpark／kill</td></tr>
+              <tr><td>lifecycleと反証</td><td>保守・移行・文書・support・独立reviewのownerと、停止させる結果は何か</td><td>ownerまたはfalsifiable exitがなければadmitしない</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="truth warning" style="margin-top: 1rem;">
+          <strong>2026-08-27 Gate 0：4候補すべてpark、採択0</strong>
+          <p>
+            公開GitHub issueは0件。同梱10データセットにはresponse-time列、事前固定A/W行列、
+            cumulative-boundary検証、実運用のGPCM artifact handoffがない。内部synthetic fixtureは
+            技術可能性・安全境界の証拠であり、需要やtypical-data識別の証拠には数えない。
+            さらに<a href="https://CRAN.R-project.org/package=mirt">mirt</a>（GRM/GPCM/fixed calibration）、
+            <a href="https://CRAN.R-project.org/package=eRm">eRm</a>（CML LLTM/LPCM）、
+            <a href="https://CRAN.R-project.org/package=TAM">TAM</a>（GPCM・multifacet design）、
+            <a href="https://CRAN.R-project.org/package=LNIRT">LNIRT</a>（response＋time joint MCMC）という外部routeがあるため、package-nativeの増築は現時点で本質的でない。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>候補</th><th>現行の小さい出口</th><th>現在の判定</th><th>再開に必要な新証拠</th></tr></thead>
+            <tbody>
+              <tr><td>portable GPCM</td><td>fit-object scoring＋typed refusal。必要ならmirt/TAM</td><td><strong>parked</strong>（既存G5 optional lane）</td><td>反復するfresh-session運用、実source/target data、slope-owner・anchor・scale継続要件、現行代替の具体的gap</td></tr>
+              <tr><td>B1 LLTM/LPCM</td><td>現行PCM＋post-fit/external analysis。eRm/TAM</td><td><strong>parked</strong></td><td>outcome前に固定したA/W、typical-data rank、新item/解釈判断、integrationで不足する理由</td></tr>
+              <tr><td>B2 1D GRM</td><td>PCM/bounded GPCMまたはmirt</td><td><strong>parked</strong></td><td>cumulative境界が妥当なcategory意味と、held-outで実判断が変わる証拠</td></tr>
+              <tr><td>D1 joint RT</td><td>記述QCまたはLNIRT</td><td><strong>parked</strong></td><td>実event data、actor/time provenance、typed missingness、QCを超える判断、external gap</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="truth" style="margin-top: 1rem;">
+          <strong>これはbuild順位ではない</strong>
+          <p>
+            問題探索だけならnorth starに最も近いportable GPCMを先に尋ね、次にGRM、LLTM/LPCM、joint RTとする。
+            ただしnamed decision＋typical dataが先に揃った候補だけを再審査する。multiple observed scalesも別のproduct-discovery仮説のままで、ここから採択を推論しない。
+          </p>
+        </div>
+
+        <div class="truth" style="margin-top: 1rem;">
+          <strong>2026-08-28 Gate 0.5：B2はgeometry検出、実装はparkのまま</strong>
+          <p>
+            facet・次元・artifactを増やさず、response familyだけを変えた外部mirt probeを実行した。
+            new-Personの完全item-vectorを標準正規で積分し、held-out marginal log score/responseを比較。
+            240/240 fit attemptがvalid、120/120 pairが利用可能、81対161 nodeの最大平均score差は
+            <code>1.1040169e-10</code>だった。全4 stratumでmatched familyが良かったが、差は
+            <code>0.00108–0.00258</code> nats/responseに留まる。実務閾値・named decision・実dataがないため
+            <code>geometry_detectable_reopen_problem_discovery_only</code>とし、GRM kernel/API/artifactは着工しない。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>threshold</th><th>true family</th><th>valid pairs</th><th>matched − mismatched</th><th>replication MCSE</th></tr></thead>
+            <tbody>
+              <tr><td>compressed</td><td>GPCM</td><td>30/30</td><td>0.0025787153</td><td>0.0003467614</td></tr>
+              <tr><td>compressed</td><td>GRM</td><td>30/30</td><td>0.0011390452</td><td>0.0002298825</td></tr>
+              <tr><td>regular</td><td>GPCM</td><td>30/30</td><td>0.0016411913</td><td>0.0002480214</td></tr>
+              <tr><td>regular</td><td>GRM</td><td>30/30</td><td>0.0010808865</td><td>0.0002148583</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="truth warning" style="margin-top: 1rem;">
+          <strong>simulationが答えていないこと</strong>
+          <p>
+            統計的にfamily差を検出できることは、利用者の判断が変わること、mfrmr内製がmirt integrationより良いこと、
+            multifacet GRMが識別できることを意味しない。次に許されるB2作業は、cumulative category意味を持つ実workflowと
+            de-identified data packetを1件探すことだけである。
+          </p>
+        </div>
+
+        <div class="truth warning" style="margin-top: 1rem;">
+          <strong>2026-08-28 B2 data eligibility：同梱packetは0/10適格、fitは0件</strong>
+          <p>
+            全10個の<code>.rda</code>をfit前監査した。9表はScoreあり、1表はscore-free assignment rosterだが、
+            全件syntheticである。現行3 teaching datasetはadjacent RSM生成、legacy 6 score objectはDGP不明、
+            combined 2表はcross-study linking未確定だった。さらに全表でPerson×Criterionに複数Raterがある。
+            平均後丸め・多数決・first/latest選択・Rater×Criterionのpseudo-item化はrater severityまたはestimandを変えるため拒否した。
+            複数facetは複数latent dimensionを意味せず、整数順序もcumulative semanticsを確定しない。
+            結論は<code>no_eligible_bundled_problem_packet_external_intake_required</code>で、B2はparkを維持する。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>外部packetの必須要素</th><th>fit前に固定する内容</th></tr></thead>
+            <tbody>
+              <tr><td>workflowと判断</td><td>owner、named decision、結果が変わった場合のaction</td></tr>
+              <tr><td>response identity</td><td>de-identified Person・Rater・Criterion/item・occasionと安定したrow identity</td></tr>
+              <tr><td>category意味</td><td>label・順序・方向と、ownerが確認したcumulative-boundary解釈</td></tr>
+              <tr><td>facet方針</td><td>repeated rating、rater severity、missingness、split unitをestimandに合わせて事前固定</td></tr>
+              <tr><td>decision metric</td><td>proper metric、実務閾値、現行adjacent route、mirt integrationで不足する点</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="truth" style="margin-top: 1rem;">
+          <strong>2つのcanonical control surface</strong>
+          <p>
+            段階・入口・出口・停止・resource・reversibilityは
+            <a href="measurement-model-extension-execution-gates-0.2.4.csv">execution-gate ledger</a>、
+            文献→要件→oracle→negative control→利用判断は
+            <a href="measurement-model-extension-traceability-0.2.4.csv">traceability ledger</a>が所有する。
+            B–Fはdependencyを満たしても自動着工しないoption graphであり、両ledgerは新しいauthorization階層ではない。
+          </p>
+        </div>
+
+        <div style="overflow-x:auto; margin-top: 1rem;">
+          <table>
+            <thead><tr><th>意味上分離する軸</th><th>意味</th><th>混同を拒否する対象</th></tr></thead>
+            <tbody>
+              <tr><td><code>MeasurementSpecV2</code></td><td>A1再開時だけ現行RSM/PCM/bounded GPCMに必要なidentityとrefusalを具体化。現時点では語彙でありproduction schemaではない</td><td>facet・outcome・method・random rankを潜在次元Dに数えない</td></tr>
+              <tr><td><code>response_family</code></td><td>adjacentのRSM/PCM/GPCM、cumulativeのGRM、event/time family等</td><td>カテゴリ数・facet数・推定法から推測しない</td></tr>
+              <tr><td><code>item_parameter_design</code></td><td>LLTM/LPCMの既知A/W行列、target、rank、constraint</td><td>潜在loading、割付incidence、facetそのものではない</td></tr>
+              <tr><td><code>incidence</code></td><td>shared owner/row map＋hash、overlap/cumulative membership、occasion・eligibility・assignment</td><td>outcome別IDや累積scoreを独立entity/独立outcomeにしない</td></tr>
+              <tr><td><code>latent_axes</code></td><td>D、Q/loading、共分散とsubstantive/method/speed/style等のrole</td><td>同じ“factor”名でも構成概念・方法・計算rankを混ぜない</td></tr>
+              <tr><td><code>random_blocks</code></td><td>owner×coefficient×covariance×population target</td><td>crossed owner数・random slopeを能力次元数と呼ばない</td></tr>
+              <tr><td><code>process_graph</code></td><td>RT actor、node/route/leaf＋score-map hash、risk set、censoring・competing event、structural missingness</td><td>最終response、post-hoc recode、ResponseTime列だけから過程を推測しない</td></tr>
+              <tr><td><code>AnalysisSpecV1</code></td><td>full/conditional/composite/separate/joint/score objective、prediction target、integrated effects、selection、proper score、CV、sampling/resampling axis</td><td>row likelihood・近似LOO・separate fit・score回帰・model facetからjointnessや一般化単位を推測しない</td></tr>
+              <tr><td><code>EvidenceSpecV1</code></td><td>複数のfit/analysis identityを参照するstudy-level object。ADEMP、attempt分母、failure taxonomy、MCSE、seed、freeze、decision ruleを保持</td><td>fitの確率identityへ埋め込まない。成功fitだけ・事後的model/map/metric/seed選択で昇格しない</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid-2" style="margin-top: 1rem;">
+          <div class="truth">
+            <strong>文献から固定した不変条件</strong>
+            <p>
+              facet count ≠ latent dimension count。multiple observed scales ≠ MIRT。
+              LLTM/LPCM設計 ≠ response family。rater bundle dependence ≠ facet interaction。
+              outcome/method/random-covariance rank ≠ D。speed・response style・process class ≠ 通常のaccuracy facet／内容次元。
+              crossed model structure ≠ sampling/resampling axis。event clock・censoring ≠ content dimension。
+              conditional/pseudo/composite objective ≠ exact marginal likelihood。EAP/BLUP score correlation ≠ structural correlation。
+            </p>
+          </div>
+          <div class="truth warning">
+            <strong>現行sourceの結合点</strong>
+            <p>
+              current scanでは<code>config$model</code>はR 41ファイルに179回、family条件行は293行あり、12の関数宣言が5ファイルで
+              RSM/PCM/GPCMを直書きする。ただし数値核・parameter展開・DGMの不可避な分岐が大半で、registry追加後に削除できるbranch集合は確認できなかった。
+              現行入口は<code>resolve_step_and_slope_facets()</code>と単一の<code>build_estimation_config()</code>へ既に集約される。
+              <code>compute_eta()</code>とMML quadratureはscalar latent state。
+              <code>response_time_review()</code>は正しく記述QCのみ。現行resamplingはperson clusterで、unit-grouped LOO APIはない。
+              <code>evaluate_mfrm_design(parallel = "future")</code>の名目経路は監査後に修正され、
+              現在は<code>future.apply::future_lapply</code>へ実dispatchし、同一ordered grid・明示seedで
+              直列と意味出力が一致する。これはloop位置による<code>preallocated_design_rep_cell_v1</code>であり、
+              A3のgrid/method順序に依存しないidentity-derived substreamは未完のまま維持する。
+            </p>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 1rem;">
+          <article class="card">
+            <div class="card-head"><div><h3>A · 最小compilerと現行parity</h3><p>需要より先にarchitectureを作らない。再開条件が満たされるまで現行configをauthorityとする。</p></div><span class="chip hold">foundation parked</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research">
+                <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>Zotero関連57 PDF・1,366頁を逐頁監査</strong><p>全頁render目視、抽出/OCR照合、57 attachmentのhash ledger、読めない頁0。追加時点を固定した詳細recordへ集約。</p></div>
+                <span class="chip done">1,366/1,366</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>A1最小identity/registry spike：現時点No-Go</strong><p>現行invariantは既存prepare/config/capability/calibration境界で保護され、production consumerは0、削除可能branchは未同定。実装せず語彙だけ残す。current gapまたは独立した採択consumer 2件＋branch削除表が出た場合だけ再審査。</p></div>
+                <span class="chip hold">A1 parked</span>
+              </div>
+              <div class="task" data-state="hold" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>legacy compiler/registryで完全parity</strong><p>A1を将来採択した場合だけ実行する条件付きgate。compilerがない間は、既存のindexed semantic baselineを維持する。</p></div>
+                <span class="chip hold">A2 hold</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>study-level attempt ledgerとexecution integrity</strong><p>named confirmatory studyが出るまでpark。既存fit/calibration identityを参照でき、A1を強制しない。現行future経路のfixed-grid等価性は閉じたが、attempt分母、MCSE、identity-derived substreamはconfirmation前に閉じる。</p></div>
+                <span class="chip hold">A3 parked</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>B · 隣接する測定機能の候補</h3><p>parameter構造と反応核を別sliceで扱うが、利用者証拠で一方だけを選ぶ。</p></div><span class="chip hold">parked options</span></div>
+            <div class="card-body">
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>LPCM/LLTM parameter-design layer</strong><p>Gate 0ではpublic issue、実A/W、named new-item判断がなく、eRm/TAMで代替可能なためpark。再開後も、まずPCM＋full-rank既知W、saturated W→現行PCM、RSM設計→現行RSMとし、CML再現claimは別engine gate。</p></div>
+                <span class="chip hold">B1 parked</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>一次元GRM cumulative kernel</strong><p>Gate 0.5のexternal-mirt simulationでは全4 stratumでmatched geometryを検出したが、差は0.00108–0.00258 nats/responseで実務的重要性は未定。同梱10 objectのfit前監査は適格0・fit 0で、synthetic、cumulative意味未確認、named decision欠如、複数Rater処理未固定を確認した。problem discoveryは外部packet intakeだけとし、追加simulationやkernelを作らない。</p></div>
+                <span class="chip hold">B2 parked · discovery only</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>C/D · 予測・推論・時間・依存</h3><p>横断候補とdomain候補を分離し、named decisionなしには採択しない。</p></div><span class="chip hold">parked options</span></div>
+            <div class="card-body">
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>prediction target＋proper score</strong><p>response / person / rater / item / class / occasion / target / bundle、new / condition / integrate集合、grouped likelihoodを固定。strict refitとfull-data parameter再利用の近似CVを別identityにし、ranking≤MCSEはindeterminate。</p></div>
+                <span class="chip hold">C1 option</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>dependence-aware resampling plan</strong><p>現行person bootstrapを明示baselineにし、sampling/assignment/model facetを分離。exchangeability・増大軸・degeneracyを宣言し、multiway CRVE・pigeonhole・adaptive/product bootstrapは別targetで検証。</p></div>
+                <span class="chip hold">C2 option</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>base joint RTをRSM/PCMから開始</strong><p>Gate 0では実timing data、actor/provenance、QCを超える判断がなく、LNIRTで代替可能なためpark。再開後もlognormal time、1 ability＋1 speed、<code>time_actor</code>とunit、response/time欠測分離を最初の境界にする。</p></div>
+                <span class="chip hold">D1 parked</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>bundle dependenceとcrossed randomを別likelihoodへ</strong><p>RBM joint patternとrandom owner blockを分離。full marginal・conditional/pseudo・composite objectiveも別identityにし、random block数をDにしない。</p></div>
+                <span class="chip hold">D2/D3 options</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>E/F · process・MIRT・method・heterogeneity</h3><p>同じ“factor”や追加係数を一つのmultidimensional箱に入れない。</p></div><span class="chip hold">out-of-core default</span></div>
+            <div class="card-body">
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>response-event＋ProcessGraph基礎</strong><p>initial/review/change/final、mixed-format sequential step、hint request、node・route・leaf・structural missingness。path scoreはGRM/GPCM categoryではない。hintのleaf/score mapはfit前にhash固定する。</p></div>
+                <span class="chip hold">E1 option</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>vector latent state＋simple-structure MIRT</strong><p>D、Q/loading、covariance、latent regression、sign/permutation/rotationを明示。D=1縮約、A/B rank gate、facet/random/methodのnegative controls。ability＋hint tendencyはE1通過後だけ。</p></div>
+                <span class="chip hold">E2 option</span>
+              </div>
+              <div class="task" data-state="parked" data-horizon="research">
+                <input type="checkbox" disabled aria-label="未完了">
+                <div><strong>outcome・method・computational factorを型分離</strong><p>まず2つのlog-time outcome＋crossed owner covariance、long/wide likelihood一致、covariance-aware contrastでoutcome数≠Dを証明し、CTC(M−1) method factor、factor-analytic random covarianceを別probeへ。</p></div>
+                <span class="chip hold">E3 option</span>
+              </div>
+              <div class="task" data-state="hold" data-horizon="research">
+                <input type="checkbox" disabled aria-label="保留">
+                <div><strong>response style＋multiprocess＋mixture</strong><p>signed style→random style→ideal-point→RT→mixture。soft classを返し、自動除外なし。</p></div>
+                <span class="chip hold">F1 hold</span>
+              </div>
+              <div class="task" data-state="hold" data-horizon="research">
+                <input type="checkbox" disabled aria-label="保留">
+                <div><strong>item/person treatment heterogeneity</strong><p>random slope≠dimension/facet severity。finite-test/item-population、assignment、timing、aggregate非識別を閉じるまでcausal名禁止。</p></div>
+                <span class="chip hold">F2 hold</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section id="research">
         <div class="section-head">
           <div>
-            <p class="eyebrow">05 · Research portfolio</p>
+            <p class="eyebrow">06 · Research portfolio</p>
             <h2>製品本線から分離した研究レーン</h2>
           </div>
           <p>各レーンは独自のestimand、反証条件、昇格gateを持つ。0.2.4のpassを借りない。</p>
@@ -885,8 +1236,9 @@
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>現行fitted-object境界を明示</strong><p>aligned single-owner、relative slope、MML/JMLのroute-specific caveats。</p></div><span class="chip done">done</span></div>
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>0.2.4 portable非昇格を決定</strong><p>「未実装」ではなくschema/scorerの意味不足として記録。</p></div><span class="chip done">done</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>利用者価値のある次のGPCM範囲を選ぶ</strong><p>owner一般化、portable calibration、boundary改善を一括しない。</p></div><span class="chip open">decision</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>slope/step ownerのcanonical schema</strong><p>centering、relative slope、population scale、anchor namespaceを損失なく保持。</p></div><span class="chip open">foundation</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>TAM・mirt・immer・simrとの役割境界を固定</strong><p>TAMはmatched MML/design comparator、mirtはbounded外のresponse-family oracle、immerはHRM/CML/JMLのalternative estimand、simrはlme4系powerに限定する。solver・HRM・MIRT・GLMM powerをmfrmr内へ複製せず、docs／export→matched microcase→反復需要がある場合だけadapterの順にする。</p></div><span class="chip done">ecosystem boundary</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>次のGPCM範囲はA2 parity後に一つだけ選ぶ</strong><p>owner一般化、portable calibration、boundary改善、latent loading、GRM、MIRTを一つの「GPCM拡張」に束ねない。</p></div><span class="chip open">decision</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>slope/step ownerとkernel actionのcanonical schema</strong><p>現行full-predictor slopeとMIRTのlatent-loading-onlyを別値にし、centering、relative scale、population scale、anchor namespaceを損失なく保持。</p></div><span class="chip open">foundation</span></div>
               <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>artifact-only probability/posterior oracle</strong><p>source fitを参照しない独立再構成とmutation test。</p></div><span class="chip open">oracle</span></div>
               <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>MMLとJMLを別々に昇格判定</strong><p>marginal boundaryとconditional boundary／post-hoc priorを共有gateにしない。</p></div><span class="chip open">gate</span></div>
             </div>
@@ -897,34 +1249,155 @@
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>typed algebra・incidence・quadratic-form基礎</strong><p>一変量縮約、PSD/rank、allocation overlapの内部oracleが存在。</p></div><span class="chip done">internal</span></div>
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>backend/worker/processのpreflight群</strong><p>候補経路はあるがstudy executionとpublic supportは閉鎖中。</p></div><span class="chip done">preflight</span></div>
-              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>多数の逐次recordをcurrent-state ledgerへ統合</strong><p>最新のblocking condition、superseded chain、次の一手を一意にする。</p></div><span class="chip open">clarify first</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>研究が変える利用判断を定義</strong><p>単なるbackend成功ではなく、どのD-study/composite判断を可能にするか。</p></div><span class="chip open">estimand</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>有限標本回復と失敗率</strong><p>component covariance、rank/boundary、missing/unbalanced designを完全分母で評価。</p></div><span class="chip open">evidence</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>full-refit uncertaintyとD-study stability</strong><p>周辺intervalの代入ではなくscenarioごとに再計算。</p></div><span class="chip open">inference</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>23件の逐次recordをcurrent-state ledgerへ統合</strong><p><a href="gtheory-multivariate-current-state-ledger-0.2.4.csv">canonical ledger</a>で4 foundationとc3 prerequisite 8件を分離。成立はbackend qualificationとno diagnostic overrideの2/8だけで、latestはc4p。</p></div><span class="chip done">consolidated</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-0 v2 technical contract</strong><p>v1監査で見つかったtarget tolerance、scale/facet universe、operator、univariate comparator、failure denominator、signoff schemaの欠落をv2で閉じた。</p></div><span class="chip done">v2 technical</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-0 v3 bounded multiverse</strong><p>v2をABS-PHI P0として保持し、ABS-PHI/REL-G、5 policy axis、14 world、7 routeを分離。高次のaction interactionを落とさないため108 Cartesian policy/familyをすべてdecision-bearingとし、pairwise 11 profile/familyは非decision sentinelに限定した。</p></div><span class="chip done">v3 technical</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-0 v4 package-capability contract</strong><p><a href="gtheory-multivariate-package-capability-contract-v4-record-0.2.4.md">v4 record</a>はRパッケージの責任をestimand定義・design grammar・数値検証・診断・support claimへ限定し、用途・target・actionをユーザーへ戻す。ABS-PHI/REL-Gをともに非投票の検証対象とし、14軸44 level、10 acceptance criterion、5段階maturityを固定した。旧v3 owner packet群は未実行の履歴であり開発をblockしない。</p></div><span class="chip done">D-SIM-0 specified</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-1 deterministic capability oracles</strong><p><a href="gtheory-multivariate-dsim1-deterministic-qualification-record-0.2.4.md">qualification record</a>で5 canonical design、7/7 criterion、39 unique evidence row（43 criterion-to-evidence assignment）を閉じた。public univariate closure、label invariance、PSD、incidence/event identity、20 design×route判定が成立し、response・fit・seedは未使用。</p></div><span class="chip done">7/7 pass</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-2 nonreserved plumbing smoke</strong><p><a href="gtheory-multivariate-dsim2-plumbing-smoke-record-0.2.4.md">smoke record</a>で1つの720-row非予約fixtureをgenerator→lme4 REML fit→非投票G/Phi metric→terminal stateへ通し、exact replayも成立した。shared-rater/distinct-eventの狭い交差セルであり、truth recoveryやsimulation validationではない。</p></div><span class="chip done">plumbing pass</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 exploratory coverage manifest</strong><p><a href="gtheory-multivariate-dsim3-coverage-manifest-record-0.2.4.md">coverage record</a>で21 design cellを結果非依存に固定し、44/44 levelと603/603 feasible dataset-axis pairを被覆した。23 structural exclusionは理由付き。G/Phiと5 routeは同一dataset上のprojectionであり、生成dataset・response・fitは0。</p></div><span class="chip done">coverage pass</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 exploratory execution contract</strong><p><a href="gtheory-multivariate-dsim3-exploratory-execution-contract-record-0.2.4.md">execution-contract record</a>で21 cell×2=42 dataset attempt、210 shared-dataset route unit、420 nonvoting coordinate、855 seed band、terminal/resource規則を凍結した。RNG・response・backend callは未実行。</p></div><span class="chip done">unopened plan frozen</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 pre-execution qualification</strong><p><a href="gtheory-multivariate-dsim3-preexecution-qualification-record-0.2.4.md">qualification record</a>でresponseなしの全域監査を完了。legacy primitiveは18/37再利用可能だが、exact bindingはlevel 0/37、profile 0/21、candidate route 0/50、terminal 0/13、resource 0/5。deterministic controlは2/3。855 streamは未開封。</p></div><span class="chip done">audit complete · no-go</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 shared semantic design compiler</strong><p><a href="gtheory-multivariate-dsim3-semantic-design-compiler-record-0.2.4.md">compiler record</a>で22 rule・9 design axisを一つの共通経路に束縛し、21/21 profile、147,948 structural row、130,694 scheduled observation、17,254 outcome-blind omissionをRNG・responseなしでexact replayした。scenario-specific branchは0。</p></div><span class="chip done">typed compiler 21/21</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 shared covariance/distribution binding</strong><p><a href="gtheory-multivariate-dsim3-covariance-distribution-binding-record-0.2.4.md">binding record</a>で21/21 profileの残る3 generator axisを84/84 PSD component factorと21/21 response-kernel contractへ束縛した。object・condition・event identityに従い、PSD repair・scenario patch・RNG・responseは0。ordinal aggregateはIRT modelではない。</p></div><span class="chip done">binding 21/21 · 84/84 PSD</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 generic shadow response generator</strong><p><a href="gtheory-multivariate-dsim3-response-generator-adapter-record-0.2.4.md">generator record</a>で854100001--854100021の非予約streamから21/21 shadow fixtureを生成した。84/84 unit→effective covariance、9/9 fixed-count randomized MCAR、130,694 retained response、caller RNG復元が成立。855・backend・fitは0。</p></div><span class="chip done">shadow generator 21/21</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 shared route-admission／terminal-receipt adapter</strong><p><a href="gtheory-multivariate-dsim3-route-receipt-adapter-record-0.2.4.md">route/receipt record</a>で21 shadow fixtureを50/50 candidate route template（restricted-lme4 8、separate-univariate 42）へshared dataset identityのまま束縛した。admissionをterminalとせず、21 shadow generationと160 frozen no-call routeにはexactly one receipt、42 unopened datasetと50 admitted candidateにはzero receiptを維持。13/13 terminal semanticsを資格化し、855・backend・fit・metricは0。</p></div><span class="chip done">route 50/50 · receipt semantics 13/13</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 five-scope resource controller</strong><p><a href="gtheory-multivariate-dsim3-resource-controller-record-0.2.4.md">resource record</a>で5/5 scopeを同じcontroller pathへ束縛し、15/15 isolated success／wall-time／peak-RSS probe、1/1 live-worker concurrency、2/2 composite stopを資格化した。登録probe unitは6/6保持し、未起動terminal・replacementは0。probe budgetはproduction capacity claimではなく、855・backend・fit・metricは0。</p></div><span class="chip done">resource 5/5 · process 15/15</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 unopened-855 launch-readiness reconciliation</strong><p><a href="gtheory-multivariate-dsim3-launch-readiness-reconciliation-record-0.2.4.md">reconciliation record</a>でfrozen plan、environment、backend request、terminal/resourceを非実行照合した。4/10 gate pass・6 blockの<code>no_go_missing_execution_bridge</code>。exact requestはgeneration 0/42、backend 0/50、candidate metric 0/100、terminal orchestration 0/92で、855・backend・fit・metricは0。</p></div><span class="chip done">reconciled · no-go 4/10</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 separate-univariate semantics audit</strong><p><a href="gtheory-multivariate-dsim3-separate-univariate-semantics-audit-record-0.2.4.md">semantics record</a>で42 route unit／94 stratum fitのlme4・REML、component representation、層別vector G/Phi outputを非実行固定した。一方、nested 6/21 profileでは生成RaterとObject:Rater partitionが同一なのにerror roleが異なり、partial／nested 11/21ではglobal-condition operatorがobject別割付を表さない。現在semantic-readyは20/42で、5/10 gate passのupstream no-go。</p></div><span class="chip done">semantics audited · no-go 5/10</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 design-dependent truth projection</strong><p><a href="gtheory-multivariate-dsim3-design-dependent-truth-projection-record-0.2.4.md">truth-projection record</a>で既存4-stream generatorを維持し、nested 6/6のaliased Rater＋Object:Raterを一つのrelative-error NestedConditionへ投影した。84/84 mapping、78/78 PSD target、21/21 latent-distribution／absolute-error covariance保存、21/21 identifiable truthが成立。係数・response・RNGは未実行。</p></div><span class="chip done">truth 21/21 · gate 8/10</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 incidence-aware D-study operator</strong><p><a href="gtheory-multivariate-dsim3-incidence-allocation-operator-record-0.2.4.md">operator record</a>で登録済みstructural assignmentからobject内equal weightの二乗和を層別に平均した。21/21 profile、78/78 target operator、173/173 diagonalが独立scalar oracleと一致。旧global conditionはfully crossed 21のみ一致しpartial／nested 26で不一致、global EventIdは47/47で不一致。対角外0はrouteがcross-stratum covarianceを回収しない境界であり、科学的ゼロの主張ではない。</p></div><span class="chip done">operator 21/21 · diagonal 173/173</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 separate-univariate truth coefficient oracle</strong><p><a href="gtheory-multivariate-dsim3-separate-univariate-truth-coefficient-record-0.2.4.md">truth-metric record</a>でqualified target covarianceとincidence-aware diagonalから47/47層別G/Phi truthを構成した。173/173 contributionと実装非共有のdirect 1/k・1/(kr) scalar oracle 235/235が一致。Phi=Gはnested 15/15、Phi&lt;Gはcrossed 32/32。repeat=1の13 stratumは合成誤差blockとして係数識別を保持し、個別成分回復は主張しない。</p></div><span class="chip done">truth metric 47/47 · oracle 235/235</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 superseding unopened plan</strong><p><a href="gtheory-multivariate-dsim3-superseding-unopened-plan-record-0.2.4.md">superseding-plan record</a>でqualified truth projection・allocation operator・truth metricを21/21 profileへ束縛した。旧855 planは不変のまま42 dataset／210 route／84 dataset-estimand／420 coordinateを一対一保存し、attemptとseedを未開封856 namespaceへ完全分離した。計画gateは9/10で、旧receipt・downstream qualificationは継承しない。</p></div><span class="chip done">856 plan frozen · unopened</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 execution-bridge semantics and exact requests</strong><p><a href="gtheory-multivariate-dsim3-execution-bridge-request-contract-record-0.2.4.md">request-contract record</a>で2 route familyをlme4/REMLかつ全層必須のnamed per-stratum G/Phi vectorへ固定し、scalar pooling・package-selected decision weight・voteを禁止した。新identityへgeneration 42、backend 50、metric 100、terminal 92、resource 5の計289 requestをhash束縛したが、856 RNG・response・fit・metric・receiptは0。</p></div><span class="chip done">289 requests · nonpooling</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 two-family fit/metric shadow worker</strong><p><a href="gtheory-multivariate-dsim3-fit-metric-worker-record-0.2.4.md">worker record</a>で6 formula class・25 scenario-route templateを非予約854 fixture上で実行した。lme4/REML fit 51/51、層別係数57/57、named nonpooled metric vector 50/50が成立し、backend 50/50・metric 100/100 exact requestを被覆した。12 singular／convergence-message fitはoverrideせず保持し、recovery evidenceには数えない。</p></div><span class="chip done">worker 51/51 · requests 150/150</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 terminal/resource shadow orchestrator</strong><p><a href="gtheory-multivariate-dsim3-terminal-resource-orchestrator-record-0.2.4.md">orchestrator record</a>で25/25 success template、4/4 fault probe、13/13 terminal meaning、92/92 exact terminal request、5/5 resource identityを新workerへ束縛した。qualification receiptは856分母へ入れず、integrated workload capacityは0/5の非主張を維持する。</p></div><span class="chip done">terminal 92/92 · resource 5/5</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 superseding launch-readiness reconciliation</strong><p><a href="gtheory-multivariate-dsim3-superseding-launch-readiness-reconciliation-record-0.2.4.md">reconciliation record</a>でexact environment 8/8、request identity 289/289、shadow implementation coverage 289/289を非実行照合した。9/10 gate passだが、42/42の856 seedは現行854-only generator guard外であり、<code>no_go_planned_generation_adapter_missing</code>。</p></div><span class="chip done">reconciled · bounded no-go 9/10</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 parameterized planned-seed generator boundary</strong><p><a href="gtheory-multivariate-dsim3-planned-seed-generation-adapter-record-0.2.4.md">planned-seed adapter record</a>で既存stochastic core 1個を再利用し、複製0のまま42/42 exact 856 requestのseed forwardingをdry-run資格化した。非予約854 fixtureでは21/21 generated-data hash、missingness hash、caller RNG復元が一致し、5/5 resource operationを再束縛した。856 RNG・response・fit・metricは0。</p></div><span class="chip done">adapter 42/42 · core copy 0</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 final static launch-readiness reconciliation</strong><p><a href="gtheory-multivariate-dsim3-final-launch-readiness-reconciliation-record-0.2.4.md">final reconciliation record</a>でartifact 5/5、environment 8/8、request/path 289/289、readiness gate 10/10を照合した。状態は<code>internal_exploratory_launch_ready_unopened</code>。capacityは非要件の非主張であり、856・response・backend・fit・metric・process・planned receiptは未実行。</p></div><span class="chip done">technical ready 10/10 · unopened</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 bounded exploratory launch</strong><p><a href="gtheory-multivariate-dsim3-bounded-exploratory-launch-record-0.2.4.md">bounded launch record</a>で固定済み42/42 datasetと50/50 candidate routeを一度ずつ実行し、42 child checkpointと92/92 exact terminal receiptを保存した。49 route・98/100 metricはcomplete nonpromoting、D3-S012 replicate 2のseparate-univariate 1 route・2 metricは<code>metric_failure</code>として補充せず保持。160 no-call route、210 route、420 coordinateの全分母は不変。</p></div><span class="chip done">42/42 · receipts 92/92 · metric 98/100</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-3 descriptive recovery／failure-denominator adjudication</strong><p><a href="gtheory-multivariate-dsim3-descriptive-recovery-adjudication-record-0.2.4.md">descriptive record</a>でimmutableな42 checkpointと420 coordinateをhash照合し、直接truthが定義されたseparate-univariate routeの184/188 scalarを比較した。RMSEはABS-PHI 0.05240607、REL-G 0.05008863、最大絶対誤差0.3240437はboundary profile D3-S010。欠落4 scalarと診断fitを分母に保持し、8 multivariate pairの40/40比較は同一backend内parityに限定した。</p></div><span class="chip done">184/188 · nonconfirmatory</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-4 admission decision</strong><p><a href="gtheory-multivariate-dsim4-admission-decision-record-0.2.4.md">admission record</a>でpackage-levelの科学的価値を8/8基準で判定し、role-completeなconfirmation contractの構築だけをadmitした。利用判断・operational ownerは要件にせず、D-SIM-3 error rankによるscenario選択・局所patchを禁止。14 freeze要件は0/14で、D-SIM-5・新seed・response・fitは閉鎖中。</p></div><span class="chip done">admit contract only · execution closed</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-4 role-complete confirmation freeze</strong><p><a href="gtheory-multivariate-dsim4-confirmation-freeze-record-0.2.4.md">freeze record</a>で14/14要件を同時固定した。結果非依存の最小集合は4 role・12 axis・37 levelを覆う6 profileで、各2,500 outer replicate、95% full-refit parametric-bootstrap percentile interval、199 inner refit、独立scalar式、857/858 seed、全attempt・resource・change controlを束縛した。15,000 outer／995,000 inner attemptは未開封で、D-SIM-5は未許可。</p></div><span class="chip done">freeze 14/14 · execution closed</span></div>
+              <div class="task" data-state="done" data-horizon="research" data-priority="p1"><input type="checkbox" checked disabled aria-label="完了"><div><strong>D-SIM-4 interval／attempt worker qualification</strong><p><a href="gtheory-multivariate-dsim4-worker-qualification-record-0.2.4.md">worker record</a>で10/10 gateを通過した。15,000 outer／5,000 interval block／995,000 inner identityを静的照合し、32,500 primary fit＋1,990,000 full refit＝2,022,500 backend callを導出。非予約D3-S001 shadowでは199 attempt・398 refit・796 metric、type-7 interval、独立scalar一致、failure保持を資格化した。857/858とD-SIM-5は未開封。</p></div><span class="chip done">worker 10/10 · static pass</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>D-SIM-5 shardable confirmation launch</strong><p>照合済みrequestを変更せずshard化し、各scenarioのfull-refit uncertaintyとD-study stabilityを全attempt・失敗込みで実行する。</p></div><span class="chip open">exact launch packaging</span></div>
               <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>public API設計</strong><p>上記の意味・回復・不確実性が閉じるまでexportしない。</p></div><span class="chip hold">blocked</span></div>
             </div>
           </article>
 
-          <article class="card">
-            <div class="card-head"><div><h3>ConQuest / external comparators</h3><p>独立性を得るために使い、模倣を目的にしない。</p></div><span class="chip open">conditional</span></div>
+          <div class="truth warning" style="grid-column: 1 / -1;">
+            <strong>Multivariate G-theory current truth：2/8、c4qは自動的なnextではない</strong>
+            <p>
+              Draft.85a0–c4pの23 recordを統合した結果、internal algebra・incidence・oracle・fixture generatorとbackend qualificationは保持できる。
+              しかしexternal freeze、clean source、fit-capable truth-blind boundary、lane authority、candidate-completion-before-truth、accuracy thresholdは未成立で、study execution・recovery evidence・public supportはすべてfalse。
+              v4で責任スケールを修正し、owner authorizationをpackage validationから除外した。旧v3の0/13 owner brief・0/21 adjudication・0/8 bindingは履歴として保持するがactive blockerではない。D-SIM-1のcanonical design/event identityとdeterministic oracleは7/7 pass、D-SIM-2は1 nonreserved fixtureのend-to-end smoke、D-SIM-3 coverageは21 cell・44/44 level・603/603 pairで閉じた。D-SIM-3 execution contractも42 dataset・210 route・420 coordinateと855 bandを凍結したが未実行である。pre-execution auditはlegacy primitive 18/37を保持しつつexact complete generator 0/21、candidate route 0/50、terminal 0/13、resource 0/5、deterministic control 2/3という当時のgap mapを確定した。shared compiler layerは9 design axis・21/21 profile、shared binding layerは3 axis・84/84 PSD factor・21/21 kernel、shared generator layerは21/21 shadow fixture・84/84 unit→effective covariance・9/9 randomized MCARを資格化し、shared route/receipt layerは50/50 admission・13/13 terminal semantics・181 terminal／92 open unitの現在時点cardinalityを資格化した。shared resource controllerは5/5 scope・15/15 process probe・1/1 live-worker concurrency・2/2 composite stopを資格化し、6/6 registered probe unitを保持した。最終reconciliationは4/10 gate pass・6 blockのno-goで、generation 0/42・backend 0/50・candidate metric 0/100・terminal orchestration 0/92を確定した。separate-univariate semantics auditのnested truth aliasはdesign-dependent projectionで解消し、84/84 mapping・78/78 PSD target・21/21 distribution preservation・21/21 identifiable truth、8/10 gateへ進んだ。続くincidence-aware operatorは21/21 profile・78/78 target operator・173/173 diagonalを独立oracleで資格化し、旧global conditionは26/47、global EventIdは47/47 stratum partitionで不一致と診断した。さらに層別truth metricは47/47 G/Phi、173/173 contribution、235/235独立scalar oracleを資格化し、Phi=Gはnested 15/15、Phi&lt;Gはcrossed 32/32、repeat=1の合成誤差blockは13/13で成立した。superseding unopened planはこれらを21/21 profileへ束縛し、42／210／84／420の分母を一対一保存しながら全attempt・seedを旧855から未開封856へ分離して9/10 gateを通過した。execution-bridge request contractは2 route familyの全層named-vector非pooling意味論を固定し、generation 42・backend 50・metric 100・terminal 92・resource 5、計289 requestを新identityへ束縛して8/10 gateを通過した。fit/metric workerは6 formula class・25 templateを854 shadow上で実行し、fit 51/51・層別係数57/57・vector 50/50、backend 50/50・metric 100/100 request被覆を閉じた。12 singular／convergence-message fitはoverrideせず、recovery evidenceに数えない。terminal/resource orchestratorは25/25 success・4/4 fault・13/13 terminal・92/92 request・5/5 resourceを資格化した。再reconciliationもexact environment 8/8・request／shadow path 289/289を閉じたが、42/42の856 seedが854-only generator guard外のため9/10 no-goである。現在のactive actionは同じ確率生成coreを再利用するparameterized planned-seed adapterであり、855・856 RNG stream、exploratory fit、simulation validation、confirmation、public supportはfalseである。
+            </p>
+            <p><strong>Superseding current status:</strong> 上記末尾の9/10 no-goは履歴である。parameterized adapterは同じstochastic coreを複製せず42/42 planned requestと21/21 shadow equivalenceを資格化し、final static reconciliationはartifact 5/5・environment 8/8・request/path 289/289・gate 10/10を閉じた。その後のbounded launchは42/42 dataset、50/50 candidate route、92/92 exact receiptを完了し、49 route・98/100 metricをcomplete nonpromoting、1 route・2 metricを<code>metric_failure</code>として分母内に保持した。read-only descriptive adjudicationでは直接truthの184/188 scalarを比較し、RMSEはABS-PHI 0.05240607、REL-G 0.05008863、最大絶対誤差0.3240437だった。40/40 multivariate scalar comparisonは同一backend内parityであり独立referenceではない。D-SIM-4 admissionの8/8判定に続き、confirmation freezeは14/14を閉じた。結果非依存の6 profileは4 role・37 dataset levelを覆い、15,000 outer／995,000 inner bootstrap attemptと未開封857/858 seedを固定した。interval／attempt workerは全requestを3 formula classへ束縛して10/10 static gateを通過し、非予約shadowの199 attempt・398 full refit・796 metricとfailure保持を資格化した。計画backend callは2,022,500である。現在は<code>dsim4_worker_qualified_static_reconciliation_passed_dsim5_closed</code>であり、D-SIM-5、新response、simulation validation、confirmation、public supportはfalseである。</p>
+          </div>
+
+          <article class="card" style="grid-column: 1 / -1;">
+            <div class="card-head"><div><h3>Package-capability multivariate G-theory simulation</h3><p>どのdesign domainで正しく推定でき、どこでfail closedになるかを検証する。</p></div><span class="chip open">D-SIM-4 worker 10/10 · D-SIM-5 closed</span></div>
             <div class="card-body">
-              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>ローカルConQuest経路を指定</strong><p><code>/Applications/ConQuest</code>を使用する。</p></div><span class="chip done">bound path</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>実行ごとにbinary/version identityを固定</strong><p>pathだけで同じsolverとみなさない。</p></div><span class="chip open">provenance</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較前にestimand overlapを署名</strong><p>model、estimator、constraints、quadrature、score map、roundingを一致させる。</p></div><span class="chip open">admission</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較が変える判断を先に記録</strong><p>一致率を増やすだけのrunは行わない。</p></div><span class="chip open">consequence</span></div>
-              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>solver完全再現・feature parity</strong><p>目的ではない。matched overlapがなければ主張を撤回し、製品を止めない。</p></div><span class="chip hold">non-goal</span></div>
+              <div class="truth">
+                <strong>primary questionの形</strong>
+                <p>
+                  ABS-PHIとREL-Gを別estimandとして、design・event・information・variance/covariance・distribution・routeのmultiverseで評価する。
+                  問うのは、どの領域で定義どおりの係数を回復し、独立oracleと一致し、非識別・unsupported・boundaryを正しく診断できるかである。
+                  estimand間をpool／voteせず、scenarioを独立datasetと数えず、結果からcoverage setを最適化しない。
+                </p>
+              </div>
+
+              <div class="truth warning" style="margin-top: 1rem;">
+                <strong>D-SIM-0 v4 package-capability multiverse：仕様完了は実行許可ではない</strong>
+                <p>
+                  <a href="gtheory-multivariate-package-capability-contract-v4-0.2.4.R">v4 contract</a>はABS-PHIとREL-Gを自動的に検証対象へ含め、packageとuserの責任を分離する。14軸44 levelはfull anchor、pairwise stress、targeted structural case、boundary、closure、negative controlへ役割分担され、outcome-adaptive selectionを禁止する。10 criterionはalgebra、closure、invariance、PSD、bias、coverage、reference parity、negative control、attempt accounting、resourceを扱う。
+                  現在のoverall maturityは<code>specified</code>だけである。D-SIM-1 deterministic qualificationは7/7 passし、D-SIM-2は1 nonreserved fixtureのgenerator→fit→metric→terminal stateとexact replayを完了した。D-SIM-3は21 design cellで44/44 levelと603/603 feasible dataset-axis pairを被覆し、続くcontractで42 dataset attempt・210 route unit・420 coordinateを855 bandへ凍結した。pre-execution auditは18/37 primitiveを再利用可能とした一方、exact complete generator 0/21、route 0/50、terminal 0/13、resource 0/5を当時のgapとして確認した。これは失敗したsimulationではなく実装gap mapである。共通design compilerは9 axis・21/21 profile、共通bindingは3 axis・84/84 PSD factor・21/21 kernel、共通generatorは非予約854 bandで21/21 shadow fixture・130,694 responseを資格化した。共通route/receipt layerは50/50 candidate admissionと13/13 terminal semanticsを資格化し、admissionをterminalへ偽装せず181 terminal／92 open unitのcardinalityを閉じた。共通resource controllerは5/5 scope、15/15 process probe、1/1 live-worker concurrency、2/2 composite stopを資格化し、6/6 registered probe unitを保持した。最終reconciliationは4/10 gate pass・6 blockのno-goである。separate-univariate auditで発見したnested 6/21のtruth component aliasは、既存generatorを変えないdesign-dependent projectionで解消した。84/84 mapping、78/78 PSD target、21/21 latent／absolute covariance保存、21/21 identifiable truthが成立した。続くincidence-aware operatorは21/21 profile、78/78 target operator、173/173 diagonalを独立scalar oracleで資格化し、旧global conditionは26/47、global EventIdは47/47 partitionで不一致と確定した。層別truth metricも47/47 G/Phi、173/173 contribution、235/235独立scalar oracleを資格化した。nested 15/15ではPhi=G、crossed 32/32ではPhi&lt;Gとなり、repeat=1の13 stratumは個別成分回復を主張せず合成誤差blockで係数識別を保持する。superseding planは新856 identityへ同じ科学分母を写像し、truth・operator・metricの21/21 reference bundleを固定して9/10 planning gateを閉じた。続くrequest contractはmultivariate／separate-univariateとも全層必須のnamed per-stratum G/Phi vectorとし、scalar pooling・package-selected weight・voteを禁止した上で289 exact requestをhash固定して8/10 bridge gateを閉じた。共通fit/metric workerは6 formula class・25 template・51/51 fit・57/57係数・50/50 vectorを854 shadow上で資格化し、50 backend／100 metric requestを全被覆した。12 singular／convergence-message fitは診断として保持し、recovery evidenceとはしない。terminal/resource orchestratorと再reconciliationは完了し、後者は9/10 gateで42/42 planned seedの854-only guard不整合だけを残した。直接依存は確率生成coreを複製しないparameterized planned-seed adapterである。855・856 RNG streamとpublic supportはまだ開かない。
+                </p>
+                <p><strong>Current superseding status:</strong> planned-seed adapterは42/42 forwarding、21/21 shadow hash equivalence、5/5 resource rebindingをcore複製0で閉じ、final static reconciliationも10/10を通過した。bounded launchは856 identityを一度ずつ開き、42/42 generation、50/50 candidate attempt、92/92 exact receiptを完了した。49 route・98/100 metricはcomplete nonpromoting、D3-S012 replicate 2の1 route・2 metricはtyped failureとして保持した。続くread-only adjudicationはseparate-univariate direct truthの184/188 scalarを比較し、ABS-PHI／REL-G RMSEを0.05240607／0.05008863、最大絶対誤差を0.3240437と記述した。multivariate routeの40/40 scalar pairは独立referenceではなくwithin-backend parityである。D-SIM-4 admissionは確認契約構築だけを8/8基準でadmitし、続くfreezeは14/14を閉じた。6 profile・各2,500 outer replicate・199 inner attempt・未開封857/858 seedを固定した。worker qualificationは15,000 outer／995,000 inner identityを静的照合して10/10 gateを通過し、D3-S001 shadowで199 attempt・398 full refit・796 finite metricとtype-7 intervalを資格化した。これはD-SIM-5 attemptではなく、新response・D-SIM-5は閉じた。standardized bias・MCSE・coverage acceptanceは未評価で、simulation validation、confirmation、public supportはfalseである。</p>
+              </div>
+
+              <div style="overflow-x:auto; margin-top: 1rem;">
+                <table>
+                  <thead><tr><th>Stage</th><th>内容</th><th>入口</th><th>出口／停止</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>D-SIM-0</code></td><td>capability specification</td><td>package責任分界とmultiverse採用</td><td>両estimand、14軸44 level、10 criterion、5 maturityをhash固定。完了済みだがresponse生成は不可</td></tr>
+                    <tr><td><code>D-SIM-1</code></td><td>deterministic oracle</td><td>D-SIM-0 pass</td><td>algebra、single-stratum closure、PSD、incidence/event map、backend eligibilityをresponseなしで独立検算</td></tr>
+                    <tr><td><code>D-SIM-2</code></td><td>nonreserved smoke</td><td>D-SIM-1 pass</td><td>1 nonreserved fixtureでgenerator→fit→metric→terminal stateとexact replayを完了。truth・targetとは比較せず非昇格</td></tr>
+                    <tr><td><code>D-SIM-3</code></td><td>exploratory multiverse</td><td>D-SIM-2 pass</td><td>21-cell manifestと42-dataset／210-route／420-coordinate分母を固定し、design compiler、covariance/distribution binding、single stochastic core、route/receipt、resource mechanics、truth projection、incidence operator、47/47 G/Phi truth、fit/metric worker、terminal/resource orchestratorを資格化した。新856 identityにはgeneration 42・backend 50・metric 100・terminal 92・resource 5、計289 requestを束縛。planned-seed adapterとfinal static reconciliationを閉じた後、bounded launchで42/42 generation、50/50 candidate attempt、92/92 exact receiptを保存した。49 route・98/100 metricはcomplete nonpromoting、1 route・2 metricはtyped failureとして全分母に保持。read-only descriptive recoveryはdirect truthの184/188 scalarを比較し、ABS-PHI／REL-G RMSE 0.05240607／0.05008863、最大絶対誤差0.3240437を記録。2 replicate/scenarioのためconfirmation・validation・supportへは昇格しない</td></tr>
+                    <tr><td><code>D-SIM-4</code></td><td>admission → freeze → worker qualification</td><td>D-SIM-3 descriptive evidence reviewed</td><td>8/8 admission、14/14 freeze、10/10 worker/static gateを完了。結果非依存の6 profile、両estimand、95% full-refit interval、N=2,500/scenario、15,000 outer／995,000 inner identityを固定し、非予約shadowで199 attempt・398 refit・796 metric、independent scalar、failure保持を資格化した。2,022,500 planned backend callはresource記述であり、857/858とD-SIM-5は未開封</td></tr>
+                    <tr><td><code>D-SIM-5</code></td><td>shardable confirmation</td><td>D-SIM-4 worker/static pass</td><td>照合済みrequestを変更せずshard化し、optional stopping・成功補充なしで全attemptとMCSEを保持してsimulation_validated可否を判定</td></tr>
+                    <tr><td><code>D-SIM-6</code></td><td>maturity review</td><td>confirmationとreference照合</td><td>specified／implemented／simulation_validated／reference_validated／stableを証拠どおりに付与</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="grid-2" style="margin-top: 1rem;">
+                <div>
+                  <h4>Scenarioと比較</h4>
+                  <ul>
+                    <li>closure：1 stratumでpublic univariate G/Phi式へ縮約し、2/3 strataでcross-stratum covarianceを検証する。</li>
+                    <li>design：condition/event sharing、crossed/nested/partial、balance、missingnessをcanonical incidenceとして扱う。</li>
+                    <li>information：object/rater/repeat、regular/boundary variance、zero/positive/negative-PSD covarianceを分離する。scenario行を独立datasetと数えない。</li>
+                    <li>route：glmmTMB REML/ML、design-qualified lme4、separate univariateを比較するが、backendを独立estimandとして投票しない。</li>
+                    <li>naive poolingはdeliberately invalid negative controlであり、GとPhiのpooling・votingは常に禁止する。</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4>Primary metricとstop rule</h4>
+                  <ul>
+                    <li>deterministic：algebra誤差、univariate closure、label invariance、PSD validity。</li>
+                    <li>Monte Carlo：standardized bias、RMSE、interval coverageをMCSE付きで報告する。</li>
+                    <li>reference：表現可能な同一designで独立式または外部実装と係数を照合する。</li>
+                    <li>safety：nonidentified/unsupported designをsupport-readyとして返さず、全attemptへ一つのterminal stateを付与する。</li>
+                    <li>runtime・peak memoryは欠落runを除かず記述し、速さだけでestimand routeを選ばない。</li>
+                    <li>scenario、acceptance rule、replicateを結果閲覧後に変更したらconfirmationを無効化し新versionへ戻す。</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </article>
 
           <article class="card">
-            <div class="card-head"><div><h3>Rater assignment / anchors</h3><p>anchor意味論と割付最適化を混同しない。</p></div><span class="chip open">design pending</span></div>
+            <div class="card-head"><div><h3>MML computational contract / external comparators</h3><p>同じ計算対象を独立に評価し、solver模倣を目的にしない。</p></div><span class="chip open">post-0.2.4 P1</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>ローカルConQuest経路を指定</strong><p><code>/Applications/ConQuest</code>を使用する。</p></div><span class="chip done">bound path</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>既存TAM benign coreの証拠境界を確定</strong><p>RSM/PCM、q31/q61、座標変換、parameter/devianceはcalibration-only。得点・weak information・一般互換性へ昇格しない。</p></div><span class="chip done">scoped</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>実行ごとにbinary/version identityを固定</strong><p>pathだけで同じsolverとみなさない。</p></div><span class="chip open">provenance</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>80×6×5のmatched RSM MML回帰を一つ凍結</strong><p>入力hash、mfrmr/TAM version、人物分布、座標変換、積分規則、parameter、deviance、variance、EAP対EAPを同一recordへ保存する。既存runnerを拡張し、新frameworkは作らない。</p></div><span class="chip open">MC-1</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較前に三契約のoverlapを署名</strong><p>MeasurementSpec、EstimationSpec、ScoringSpecの一致／差異を列単位で保存する。完全一致できない積分則はq感度と独立log-likelihoodで扱う。</p></div><span class="chip open">MC-2</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>推定人物分散のreadiness規則を校正</strong><p><code>population_formula = ~1</code>について終端勾配、分散境界、local Hessian、q感度を結び、通過時だけ<code>design_rank_not_evaluated</code>から昇格可能にする。<code>population$converged</code>は新意味へ付け替えず非推奨化を検討する。</p></div><span class="chip open">MC-3</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>weak-information failure mapを最小設計で確認</strong><p>既存SD=.55基準を再実行せず、論文判断が変わる場合のみRSM dense/sparse×rater SD=1.10を追加する。有限値、optimizer停止、readiness保留を同じ分母に残す。</p></div><span class="chip open">MC-4 conditional</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較が検証するpackage claimを先に記録</strong><p>一致率を増やすだけのrunは行わない。</p></div><span class="chip open">claim</span></div>
+              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>TAM互換モード・solver完全再現・feature parity</strong><p>目的ではない。比較契約と既存の設定で足りない実利用例が示されるまで作らない。</p></div><span class="chip hold">non-goal</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Rater assignment / anchors</h3><p>経験的link、外部anchor、計算上の固定、割付最適化を混同しない。</p></div><span class="chip open">design pending</span></div>
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>McEwen・DeMarsのsource synthesis</strong><p>不完全割付、link、order、workloadを別要因として整理。</p></div><span class="chip done">done</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>Eckes・Wind・Lamprianouの接続性synthesis</strong><p>Eckesの尺度成立条件、Windのlink構成・適合・DRF検出、Lamprianouのpairwise response networkを分離した。<strong>connected ≠ precise、anchored ≠ empirically connected、converged ≠ comparable</strong>を統括原則とする。</p></div><span class="chip done">scope frozen</span></div>
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>scenario分母を階層化</strong><p>typed anchor 9、direct-anchor configuration 8、McEwen design 20×order 4を混ぜない。</p></div><span class="chip done">done</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>successor network catalogをfreeze</strong><p>bridge topology、cut、degree、workloadをanchor rateより先に定義。</p></div><span class="chip open">RDA-1</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>assignment generatorとgraph oracle</strong><p>planned/observed graph、missingness、order、pairwise overlapを監査。</p></div><span class="chip open">RDA-2</span></div>
-              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>段階的precision design</strong><p>feasibility→calibration→confirmationを分離し、独立単位をdatasetにする。</p></div><span class="chip open">RDA-3–5</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p0"><input type="checkbox" disabled aria-label="未完了"><div><strong>anchor役割と根拠を文書契約へ固定</strong><p>help／vignetteではcommon-rating link、direct equality constraint、group-mean constraint、exported candidateを分離済み。group anchorの外部仮定、<code>min_common_anchors</code>がcross-run identityを検証しないlocal count screenであること、constraintが経験的接続を作らないことも明記した。baselineが<code>InferenceReady != TRUE</code>のときのanchor export/reuseは既定拒否し、明示的<code>readiness_policy = "review"</code>だけを候補値の点検へ限定した。残る作業はDFFがfacet別でなく総anchor数だけで<code>linked</code>判定する箇所のD-SIM-5後審査。</p></div><span class="chip open">RDA-0 guard closed · DFF queued</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p0"><input type="checkbox" disabled aria-label="未完了"><div><strong>link-offset scope／uncertaintyを資格化</strong><p>現行<code>detect_anchor_drift()</code>／<code>build_equating_chain()</code>は選択facetを単一offsetへpoolし、offset推定誤差・cross-fit covariance・累積link uncertaintyを返さない。SE利用可能行だけがweighted offsetへ寄与してもsupport数へSE欠測行が入り、全行screen-out時は全有限差へfallbackする。helpではreview screenへ限定済み。D-SIM-5後にfacet別offset、contributing-N、fallback status、SE契約を最小microcaseで審査する。</p></div><span class="chip open">RDA-0L post-D-SIM-5</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>局所的category avoidanceの意味論を修正</strong><p>1--10中3--8だけを使う評価者は、外側categoryが他評価者で観測される限り、global step欠損ではなくfacet-level range restrictionとして<code>data_quality_report()</code>へ集約する。severityが原点付近というだけでcentral tendencyと呼んでいた<code>facet_quality_dashboard()</code>のlegacy flagは既定無効化し、GPCMへの自動切替を否定した。</p></div><span class="chip done">RDA-0C semantics closed</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>category-use stressを既存RDA catalogへ束縛</strong><p>D-SIM-5後、必要な場合だけglobal／local boundary avoidance、internal category gap、RSM共有step、PCM/GPCMのrater-owner／non-ownerを小さな決定論microcaseで分離する。rater SD、assignment sparsity、anchor designと同じscenario台帳を使い、別simulation universeや「GPCMが回避を修復する」というclaimは作らない。</p></div><span class="chip open">RDA-0C post-D-SIM-5</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>successor network catalogをfreeze</strong><p>完全交差、distributed overlap、single bridge、bridge dropout、同一費用のredundant bridge、nested spiral、妥当／違反group-anchorをanchor率より先に定義する。</p></div><span class="chip open">RDA-1</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>assignment generatorとgraph oracle</strong><p>planned/observed graph、component、articulation、bridge、link width、workload、order、fixed/random rater pair、monitoring rating、pairwise overlapを既存network APIで監査する。</p></div><span class="chip open">RDA-2</span></div>
+              <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>段階的precision design</strong><p>D-SIM-5 terminal record後にfeasibility→calibration→confirmationを分離する。人物・評価者bias/RMSE/SE/coverage、順位・分類、anchor誤差伝播、fit/separation/reliability、DRF sensitivityを全attempt込みで評価し、独立単位をdatasetにする。</p></div><span class="chip open">RDA-3–5 post-D-SIM-5</span></div>
               <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>「最適anchor率」の公開</strong><p>Pareto frontierとnetwork-conditioned evidenceが揃うまで単一率を選ばない。</p></div><span class="chip hold">not selected</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Rater-effect network diagnostics</h3><p>割当構造、評価者間反応、評価者×基準haloを別の記述診断として資格化する。</p></div><span class="chip open">implemented · not qualified</span></div>
+            <div class="card-body">
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>三network surfaceを棚卸し</strong><p><code>mfrm_network_analysis()</code>はco-observation design、<code>rater_network_analysis()</code>はpairwise agreement/disagreement/severity direction、<code>rater_halo_network_analysis()</code>はrater-by-criterion profileを扱う。いずれもMFRM logit、fit、因果診断の代替ではない。</p></div><span class="chip done">boundary mapped</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>用語・計算対象のsource audit</strong><p>公開helpとvignetteでrating-scale centralityとgraph centrality、agreement linkとassignment link、network severityとMFRM severityを分離した。analysis thresholdがgraph計算を変えること、halo review既定値が未較正であること、負相関はpositive haloの証拠でないことも明記した。Lamprianou本文の<code>underfit</code>／<code>lack stochasticity</code>矛盾は引用せず、overfit／過度な予測可能性として扱う。</p></div><span class="chip done">RN-1 closed</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>136×81×3のbounded reproduction</strong><p>D-SIM-5 terminal record後、Yamashita/Lamprianouの同一データで評価者14・36・ChatGPTの順位、NA–MFRM severity／bias相関、halo .815対.271、ChatGPTの三基準相関を一つの非昇格recordへ固定する。相関を数値互換性と呼ばない。</p></div><span class="chip open">RN-2 post-D-SIM-5</span></div>
+              <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>signed halo・threshold・continuityの敵対的microcase</strong><p>強い負相関をhaloと誤分類しないこと、描画filterが全データ指標を変えないこと、zero in/out strength時のcontinuity補正が論文式からの差として保存されることを小さな決定論fixtureで確認する。</p></div><span class="chip open">RN-3</span></div>
+              <div class="task" data-state="open" data-horizon="later"><input type="checkbox" disabled aria-label="未完了"><div><strong>Wind型の検出可能性stress</strong><p>同方向DRFのcluster／分散、fixed／random pair、monitoring ratings、bridge misfit、range restriction、rater SDをRDA catalogと共有する。別simulation universeを作らない。</p></div><span class="chip open">RN-4 shares RDA</span></div>
+              <div class="task" data-state="hold" data-horizon="research"><input type="checkbox" disabled aria-label="保留"><div><strong>SWS/PUSのpublic fit化・NAによる得点調整</strong><p>一研究内相関だけでは閾値・尺度長・network density・failure behaviorが未較正。独立recoveryと実判断便益が出るまで実装せず、既存Infit/OutfitとMFRM scoringをauthorityにする。</p></div><span class="chip hold">not admitted</span></div>
             </div>
           </article>
         </div>
@@ -933,7 +1406,7 @@
       <section id="adversarial">
         <div class="section-head">
           <div>
-            <p class="eyebrow">06 · Adversarial review</p>
+            <p class="eyebrow">07 · Adversarial review</p>
             <h2>緑色のチェックを疑う質問</h2>
           </div>
           <p>各PR、各gate、各release candidateで回答する反復チェック。未回答なら昇格しない。</p>
@@ -953,8 +1426,9 @@
           <article class="card">
             <div class="card-head"><div><h3>製品・組織</h3><p>良い研究が良い製品とは限らない。</p></div><span class="chip recurring">recurring</span></div>
             <div class="card-body">
-              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>この作業でどの利用者判断が変わるか？</strong><p>答えがなければcritical pathから外す。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>この作業でどの利用者能力またはfailure preventionが改善するか？</strong><p>package価値とmaintenance costの差が説明できなければcritical pathから外す。</p></div><span class="chip recurring">intake</span></div>
               <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>既存の単純な代替で十分ではないか？</strong><p>docs、refusal、縮小scopeで解ける問題に新モデルを足さない。</p></div><span class="chip recurring">intake</span></div>
+              <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>初心者が最初のexampleを上から実行し、出力の次の行動を説明できるか？</strong><p>外部softwareの経験、位置引数、暗黙の列推測、速度目的の推定法変更、未説明の専門出力を入口の前提にしない。</p></div><span class="chip recurring">public API</span></div>
               <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>既投入コストに引っ張られていないか？</strong><p>大量のrecordやfitを「続ける理由」にしない。</p></div><span class="chip recurring">monthly</span></div>
               <div class="task" data-state="recurring" data-horizon="review"><input type="checkbox" disabled aria-label="反復"><div><strong>内部複雑性がcurrent truthを隠していないか？</strong><p>一文で現状と次のblockerを言えなければ、実行より統合を先にする。</p></div><span class="chip recurring">monthly</span></div>
             </div>
@@ -974,7 +1448,7 @@
       <section id="risks">
         <div class="section-head">
           <div>
-            <p class="eyebrow">07 · Risk register</p>
+            <p class="eyebrow">08 · Risk register</p>
             <h2>多角的リスク台帳</h2>
           </div>
           <p>確率ではなく、早期兆候と具体的な防御が観測可能かを重視する。</p>
@@ -986,9 +1460,32 @@
             <tbody>
               <tr><td>もっともらしい誤得点</td><td><span class="chip hold">critical</span></td><td>unknown level、prior、schema driftでも有限値</td><td>fail-closed、独立posterior oracle、fresh-process、negative fixture</td></tr>
               <tr><td>support scopeの漏出</td><td><span class="chip hold">critical</span></td><td>helpとcapability matrixの不一致、callable＝supported表現</td><td>中央matrix、public surface scan、scope縮小</td></tr>
+              <tr><td>専門家前提のexample drift</td><td><span class="chip open">high</span></td><td>入口exampleがFACETS/TAM/sirtの経験、位置引数、暗黙列、速度目的JML、weak-information小標本を前提にする</td><td>一つの初心者用operational MML経路、列役割・得点範囲の明示、外部software不要の説明、静的example契約</td></tr>
+              <tr><td>facet／dimensionの混同</td><td><span class="chip hold">critical</span></td><td>facet数、ScaleId、random block数、積分次元をDとして表示</td><td>typed spec、parameter-role table、D=1縮約、異種generator negative controls</td></tr>
+              <tr><td>factor roleの混同</td><td><span class="chip hold">critical</span></td><td>outcome、method、speed、random-covariance rankをcontent traitとして表示</td><td><code>latent_axes.role</code>必須、role別scale/rotation gate、複数axisでrole欠落はerror</td></tr>
+              <tr><td>score相関の構造相関化</td><td><span class="chip hold">critical</span></td><td>別fitのEAP/BLUP相関をlatent/random-effect covarianceとして返す</td><td>joint likelihood、<code>structural_correlation</code>と<code>score_correlation</code>を型・label分離</td></tr>
+              <tr><td>network同名異義</td><td><span class="chip hold">critical</span></td><td>assignment link、agreement edge、rating-scale centrality、graph centralityを同じ「接続性」として報告</td><td>design／rater-response／haloの三networkを型・help・reportで分離する。assignment connectednessはdesign networkで判定し、common-scale主張にはmodel／anchor／link evidenceも併記する</td></tr>
+              <tr><td>network相関の互換性化</td><td><span class="chip hold">critical</span></td><td>NA–MFRM相関≈1を同一尺度・尤度・SE・得点調整の証拠として表示</td><td>network severityを記述尺度に限定し、MFRM logit・fit・scoringをauthorityとして保持</td></tr>
+              <tr><td>halo因果化</td><td><span class="chip hold">critical</span></td><td>強い同一評価者内相関だけでillusory haloと断定、負相関の絶対値もhalo警告</td><td>signed correlation、true/illusory halo非識別、cluster依存、記述的Welch比較を明示</td></tr>
+              <tr><td>network表示filterの推定化</td><td><span class="chip open">high</span></td><td>図を見やすくするtolerance／weight cutoffがseverity・centrality計算まで変更</td><td>全pair metricと描画filterを分離し、settingsへ双方を保存するmicrocase</td></tr>
+              <tr><td>RT actor・単位の誤帰属</td><td><span class="chip hold">critical</span></td><td>採点時間をperson speedとしてfit／秒とmsを混在</td><td><code>time_actor</code>とunit必須、unit変換不変性、actor別validation</td></tr>
+              <tr><td>欠測過程の平坦化</td><td><span class="chip hold">critical</span></td><td>omitted・not-reached・未提示・tree非到達を同じNAとして尤度化</td><td>event/risk set、NRI右打切り、OI competing clock、structural missingnessを型分離</td></tr>
               <tr><td>schema lock-in</td><td><span class="chip open">high</span></td><td>将来fieldを0.2.4 defaultから推測</td><td>versioned schema、明示migration、unknown拒否、単一尺度縮約</td></tr>
+              <tr><td>JML／MML二分法</td><td><span class="chip open">high</span></td><td>JML差を丸めだけ、MML差をsolverだけで説明</td><td>両者に共通する測定・識別・precision契約を保持し、MMLでは人物分布と積分層を追加記録</td></tr>
+              <tr><td>quadrature opacity</td><td><span class="chip hold">critical</span></td><td>同じ点数だけで同じ積分、近いdevianceだけで同じobjectiveとみなす</td><td>rule/nodes/weightsを保存し、同一化できなければq収束と独立likelihoodを要求</td></tr>
+              <tr><td>score estimand混同</td><td><span class="chip hold">critical</span></td><td>EAP、WLE、JML measureの相関を数値互換性として表示</td><td>同種得点だけを比較し、prior・grid・uncertainty basisを署名</td></tr>
+              <tr><td>algorithm-first architecture</td><td><span class="chip open">high</span></td><td>Laplace/HMC/MH-RMが走ることをmodel supportと呼ぶ</td><td>model identityを先にfreeze、engine別support envelope、matched-estimand比較</td></tr>
+              <tr><td>外部package機能の再発明</td><td><span class="chip open">high</span></td><td>TAM/mirt/immer/simrにあるsolver・HRM・MIRT・GLMM powerを、named user decisionなしにmfrmrへ追加</td><td>docs／exportを第一出口、matched microcaseを第二出口、反復する翻訳需要が確認された場合だけnarrow adapter。外部packageで判断が閉じれば実装しない</td></tr>
+              <tr><td>objective laundering</td><td><span class="chip open">high</span></td><td>conditional・pseudo・composite likelihoodをexact MMLとして表示</td><td>probability modelとobjective identityを分離、contribution map・weight・Godambe/適切なSEを保存</td></tr>
+              <tr><td>predictive leakage</td><td><span class="chip open">high</span></td><td>event-wise likelihoodでnew-rater／bundle LOOを主張</td><td>unit＋周辺化署名、cluster holdout、候補間signature不一致をtyped error</td></tr>
+              <tr><td>model facet＝resampling axis</td><td><span class="chip open">high</span></td><td>crossed randomを入れただけでmultiway SE/bootstrap/CVも正しいとみなす</td><td>sampling/assignment/dependence axisを<code>AnalysisSpecV1</code>へ分離、oracle future sample</td></tr>
+              <tr><td>simulation選択バイアス</td><td><span class="chip hold">critical</span></td><td>成功N件まで補充、metric・seed・optimizerを結果後に変更</td><td><code>EvidenceSpecV1</code>、attempt identity、MCSE、freeze/amendment hash、indeterminate結果</td></tr>
+              <tr><td>causal overclaim</td><td><span class="chip hold">critical</span></td><td>item random slopeやfit改善をtreatment effectと呼ぶ</td><td>assignment・moderator timing・finite/item-population estimand必須、aggregate非識別を拒否</td></tr>
+              <tr><td>false composability</td><td><span class="chip hold">critical</span></td><td>個別に通ったfamily・random block・RT・MIRT・objectiveを任意に組合せ可能とみなす</td><td>unsupported-by-default、named capability profile、組合せごとのqualification</td></tr>
+              <tr><td>nominal capability</td><td><span class="chip hold">critical</span></td><td>optionやmessageは存在するが実処理が同じ／未実装</td><td>source-path test、実装または表明撤回。現行<code>parallel = "future"</code>はfixed-grid等価性まで処置済み。A3のidentity-derived streamは別gate</td></tr>
               <tr><td>CI green fallacy</td><td><span class="chip open">high</span></td><td>pass数のみで統計的claimを閉じる</td><td>claim ledger、独立oracle、decision consequence、人間sign-off</td></tr>
-              <tr><td>証拠recordの過剰増殖</td><td><span class="chip open">high</span></td><td>最新blockerが複数recordで矛盾／探索に時間</td><td>append-only history＋一つのcurrent-state index、superseded表示</td></tr>
+              <tr><td>research theater</td><td><span class="chip open">high</span></td><td>PDF頁・fit・test・完了率が前面に出て、閉じた利用判断が見えない</td><td>WIP・decision age・user evidence・support cost・park/killをreview</td></tr>
+              <tr><td>証拠recordの過剰増殖</td><td><span class="chip open">high</span></td><td>最新blockerが複数recordで矛盾／探索に時間</td><td>2つのcanonical ledgerへ集約。具体的欠陥を表現できない場合以外はmicro-roadmap／authorization層を追加しない</td></tr>
               <tr><td>external comparator権威化</td><td><span class="chip open">high</span></td><td>相関や名前だけで等価と主張</td><td>estimand署名、version identity、独立normalizer、非主張</td></tr>
               <tr><td>研究compute sink</td><td><span class="chip open">high</span></td><td>fit行数が独立dataset数や判断価値を上回る</td><td>precision design、sequential stop、代数・microcase優先、WIP制限</td></tr>
               <tr><td>release後の互換性負債</td><td><span class="chip open">high</span></td><td>old artifactが黙って読める／意味が変わる</td><td>schema/version refusal、migration fixtures、公開artifact再取得試験</td></tr>
@@ -1002,10 +1499,21 @@
       <section id="governance">
         <div class="section-head">
           <div>
-            <p class="eyebrow">08 · Governance</p>
+            <p class="eyebrow">09 · Governance</p>
             <h2>タスク投入と昇格の規律</h2>
           </div>
           <p>チェックボックス消化自体を目的にしない。新規タスクは必ず入口審査を通す。</p>
+        </div>
+
+        <div class="grid-2" style="margin-bottom: 1rem;">
+          <div class="truth">
+            <strong>採択とWIP</strong>
+            <p>問題検証→Gate 0→明示的<code>admit</code>が必要。dependency通過は着工命令ではない。拡張研究は横断1＋domain 1までとし、decision-readyの判定待ちがあれば新規featureを入れない。</p>
+          </div>
+          <div class="truth warning">
+            <strong>正規の終了状態</strong>
+            <p><code>external_integration</code>、<code>docs_only</code>、<code>refusal_only</code>、<code>scope_reduced</code>、<code>parked</code>、<code>killed</code>は成功し得る判断。prototype完成やsunk costを昇格理由にしない。</p>
+          </div>
         </div>
 
         <div class="grid-2">
@@ -1035,7 +1543,7 @@
       <section id="metrics">
         <div class="section-head">
           <div>
-            <p class="eyebrow">09 · Definition of done</p>
+            <p class="eyebrow">10 · Definition of done</p>
             <h2>成熟度を一段ずつ区別する</h2>
           </div>
           <p>下段を飛ばしてpublic/stableと呼ばない。pass数は補助指標であり目的関数ではない。</p>
@@ -1045,9 +1553,11 @@
           <table>
             <thead><tr><th>段階</th><th>必要条件</th><th>まだ主張できないこと</th></tr></thead>
             <tbody>
+              <tr><td>0 · Problem-validated</td><td>named user、実データ形状、現行代替、変わる判断、no-build比較</td><td>実装すべきこと、package-nativeであるべきこと</td></tr>
               <tr><td>1 · Implemented</td><td>API/helperが意図した経路を実行</td><td>正確性、識別、一般性</td></tr>
               <tr><td>2 · Behavior-tested</td><td>unit/negative/round-trip testが通る</td><td>独立した統計的妥当性</td></tr>
-              <tr><td>3 · Method-qualified</td><td>独立oracle、recovery、failure denominator、設計条件</td><td>公開文面・移行・運用安全</td></tr>
+              <tr><td>3 · Method-qualified</td><td>独立oracle、matched computational estimand、積分／precision感度、recovery、failure denominator、設計条件</td><td>公開文面・移行・運用安全、未検証solverへの一般化</td></tr>
+              <tr><td>3.5 · Decision-validated field pilot</td><td>外部利用者／実データでbaselineより判断便益があり、誤用・support costが許容可能</td><td>一般的public support、長期安定性</td></tr>
               <tr><td>4 · Public-supported</td><td>code/help/example/capability/release evidenceが一致</td><td>長期安定性、全設計への一般化</td></tr>
               <tr><td>5 · Stable core</td><td>複数release、migration、利用実績、独立reviewを通過</td><td>construct validity、高stakes suitability、全MFRM機能</td></tr>
             </tbody>
@@ -1057,7 +1567,7 @@
         <div class="grid-2" style="margin-top: 1rem;">
           <div class="truth">
             <strong>追う指標</strong>
-            <p>silent acceptance件数、claimに反証がある割合、fresh-process再現時間、schema migration成功、完全分母、公開surface不一致、release後severity。</p>
+            <p>active WIP、oldest decision-ready age、今月閉じた利用判断、user/data evidenceを持つ候補率、park/kill/sunset、silent acceptance、fresh-process再現時間、migration成功、support cost、release後severity。</p>
           </div>
           <div class="truth warning">
             <strong>目的化しない指標</strong>
@@ -1069,10 +1579,10 @@
       <section id="queue">
         <div class="section-head">
           <div>
-            <p class="eyebrow">10 · Ordered queue</p>
-            <h2>次に行うこと</h2>
+            <p class="eyebrow">11 · Decision sequence</p>
+            <h2>次に閉じる判断</h2>
           </div>
-          <p>順番を変える場合は、上位の未完了項目を飛ばす理由とリスクを記録する。</p>
+          <p>これはfeature queueではない。各段階でbuildしない結論を含めて閉じ、未採択optionを自動的に繰り上げない。</p>
         </div>
 
         <article class="card">
@@ -1081,9 +1591,16 @@
               <li><strong>candidate source identityとsign-off対象commitの一対一対応を固定する。</strong></li>
               <li><strong>人間sign-offを機械的5/5 passと分離して記録する。</strong></li>
               <li><strong>CRAN投稿は明示的な別判断まで行わない。</strong></li>
-              <li><strong>multivariate G-theoryの逐次record群を一つのcurrent-state ledgerへ統合する。</strong></li>
+              <li><strong>0.2.4ではfixed N(0,1) RSM/PCM portable scopeを維持し、推定人物分散・TAM parity・WLEをrelease blockerや便宜的追加機能にしない。</strong></li>
+              <li><strong>0.2.4後の最初のMML判断は、80×6×5 matched RSM回帰の凍結と、<code>population_formula = ~1</code>のreadiness校正。新しい推定器、互換モード、広いsimulationより先に閉じる。</strong></li>
+              <li><strong>multivariate G-theoryはv4 package-capability multiverseを採用。D-SIM-1は5 canonical design・7/7 criterion、D-SIM-2は1 nonreserved end-to-end smoke、D-SIM-3 coverageは21 cell・44/44 level・603/603 pairで完了し、execution contractも42 dataset・210 route・420 coordinateと855 bandを未実行で凍結した。shared design compiler、covariance/distribution binding、generator、route/receipt、resource controllerを順に資格化し、launch reconciliationは4/10、separate-univariate semantics auditは5/10のno-goを記録した。続くdesign-dependent truth projectionは既存generator identityを保ったままnested aliasを解消し、84/84 mapping・78/78 PSD target・21/21 identifiable truth、8/10 gateへ進んだ。incidence-aware operatorも21/21 profile・78/78 target・173/173 diagonalを独立oracleで資格化した。層別truth metricも47/47 G/Phi・235/235独立比較・13/13 one-repeat blockを閉じた。superseding unopened planは42／210／84／420分母を新856 attempt namespaceへ一対一写像し9/10 gateを通過した。execution-bridge request contractは2 route familyを全層named-vector非pooling意味論へ固定し、計289 requestを新identityへ束縛して8/10 gateを通過した。共通fit/metric workerは6 formula class・25 template・51/51 fit・57/57係数・50/50 vectorを閉じ、150/150 backend／metric requestを被覆した。terminal/resource orchestratorは25/25 success・4/4 fault・13/13 terminal・92/92 request・5/5 resourceを資格化し、再reconciliationはexact environment 8/8・request／shadow path 289/289を閉じた。残る9/10の技術gateは42/42の856 seedを同じgenerator coreへ渡すparameterized adapterだけであり、それまでは855・856 RNG streamとsupport promotionを開かない。旧v3 owner packet群は履歴でありblockerにしない。</strong></li>
+              <li><strong>D-SIM-5のterminal recordまではnetwork系の新simulationを開始しない。RN-1のhelp／用語／式監査は完了済み。終了後に136×81×3のbounded reproductionを一度だけ実行して、RN-3 microcaseまたはscope縮小のどちらへ進むか判断する。</strong></li>
               <li><strong>0.2.5について実利用problem discoveryを行い、着工／延期を判断する。</strong></li>
-              <li><strong>GPCM、G-theory、anchor研究は各1つのdecision-changing probeだけを選ぶ。</strong></li>
+              <li><strong>現行能力のtruth auditを閉じる。<code>parallel = "future"</code>の実dispatchとfixed-grid等価性は処置済み。次は既存testを索引化したsemantic projectionを維持し、A3のidentity-derived streamと混同しない。</strong></li>
+              <li><strong>A1最小registry spikeは現時点No-Go。current-core gap／独立した採択consumer 2件／削除branch表が揃うまで再開しない。</strong></li>
+              <li><strong>A2はA1再開時だけ。A3はnamed confirmation時に既存identityを参照して最小化し、A1を強制しない。</strong></li>
+              <li><strong>Gate 0.5でB2のfamily geometryは検出できたが効果は小さく実務閾値もない。同梱10 objectのeligibility auditは適格0・fit 0。B2はparkのまま、owner-confirmed cumulative意味・named action・facet方針を持つde-identified外部packetを1件だけ受け付ける。</strong></li>
+              <li><strong>その他のB–F optionは、新しいuser/data evidenceが出るまでparkする。実装可能性や空きWIPは再開理由にしない。</strong></li>
             </ol>
           </div>
         </article>
@@ -1091,9 +1608,13 @@
         <div class="truth warning" style="margin-top: 1rem;">
           <strong>今は行わない</strong>
           <p>
-            0.2.4への新機能追加、portable GPCMの便宜的昇格、multivariate G-theoryのexport、
-            単一anchor率の選定、ConQuest完全模倣、意思決定のない大規模simulation、
-            将来のmultiple-scale fieldを0.2.4 schemaへ先回りして追加すること。
+            0.2.4へのGRM・LLTM・joint RT・MIRT・mixture追加、portable GPCMの便宜的昇格、
+            記述的RT flagによる自動除外、crossed facetだけを根拠にしたmultiway SE/CV、
+            EAP/BLUP相関の構造相関表示、random slopeのcausal命名、multivariate G-theoryのexport、単一anchor率の選定、
+            TAM互換モード、ConQuest完全模倣、同一得点法でない人物相関、既存SD=.55条件の再実行、
+            SWS/PUSのpublic fit化、network severityのlogit扱い、haloの因果診断化、10作文／4評価者を普遍的link下限とすること、
+            意思決定のない大規模simulation、将来のmultiple-scale fieldを
+            0.2.4 schemaへ先回りして追加すること。
           </p>
         </div>
       </section>
@@ -1128,8 +1649,16 @@
           accessible score UX hosted run: <a href="fixed-calibration-score-accessible-ux-hosted-run-32976019984-record-0.2.4.md">final pre-human five-platform UX boundary</a> ·
           API consistency local validation: <a href="fixed-calibration-api-consistency-local-validation-record-0.2.4.md">summary, print, plot, help, and render record</a> ·
           API consistency hosted run: <a href="fixed-calibration-api-consistency-hosted-run-32990152654-record-0.2.4.md">five-platform payload validation</a> ·
+          human API review: <a href="fixed-calibration-human-api-review-candidate-0.2.4.md">unsigned exact-payload decision</a> ·
+          TAM MML calibration: <a href="tam-mml-core-calibration-record-0.2.3.md">matched RSM/PCM calibration-only evidence</a> ·
+          fixed-basis EAP oracle: <a href="fixed-calibration-g4-evidence-record-0.2.4.md">RSM/PCM operational evidence</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
-          anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a>
+          model-extension literature roadmap: <a href="measurement-model-extension-literature-roadmap-0.2.4.md">57 PDFs / 1,366-page audit and dependency contract</a> ·
+          PDF audit ledger: <a href="measurement-model-extension-pdf-audit-0.2.4.csv">57 attachment hashes and page counts</a> ·
+          extension execution gates: <a href="measurement-model-extension-execution-gates-0.2.4.csv">stage, stop, resource, and disposition ledger</a> ·
+          extension traceability: <a href="measurement-model-extension-traceability-0.2.4.csv">literature-to-decision ledger</a> ·
+          anchor refinement: <a href="rater-anchor-incomplete-design-refinement-record-0.2.4.md">literature record</a> ·
+          rater network evidence: <a href="https://doi.org/10.1080/15366367.2021.1942672">Wind 2022</a> / <a href="https://doi.org/10.1016/j.rmal.2025.100205">Lamprianou 2025</a>
         </p>
         <p>
           このHTMLは内部意思決定用であり、package source・help・NEWS・public websiteには含めない。
@@ -1142,18 +1671,6 @@
   <script>
     (() => {
       const tasks = [...document.querySelectorAll('.task[data-state]')];
-      const counted = tasks.filter(task => task.dataset.state !== 'recurring');
-      const done = counted.filter(task => task.dataset.state === 'done').length;
-      const open = counted.filter(task => task.dataset.state === 'open').length;
-      const hold = counted.filter(task => task.dataset.state === 'hold').length;
-      const rate = counted.length ? Math.round((done / counted.length) * 100) : 0;
-
-      document.getElementById('done-count').textContent = done;
-      document.getElementById('open-count').textContent = open;
-      document.getElementById('hold-count').textContent = hold;
-      document.getElementById('completion-rate').textContent = `${rate}%`;
-      document.getElementById('progress-bar').style.width = `${rate}%`;
-
       let activeFilter = 'all';
       const search = document.getElementById('task-search');
       const buttons = [...document.querySelectorAll('[data-filter]')];

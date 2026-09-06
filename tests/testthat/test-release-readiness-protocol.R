@@ -39,7 +39,8 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   news_forbidden <- c(
     "candidate manifest", "frozen gate", "gate-development",
     "unauthorized confirmation", "candidate-linked result",
-    "internal development and validation roadmap"
+    "internal development and validation roadmap", "D-SIM", "D5-SHARD",
+    "seed band", "adjudication closed", "complete denominator"
   )
   for (pattern in news_forbidden) {
     expect_false(grepl(pattern, current_news, fixed = TRUE), info = pattern)
