@@ -3485,6 +3485,13 @@ identify whether the opt-in layer ran and retain its test log.
   metrics, denominators, and numerical review bounds before result inspection.
   The estimated intercept-only population lane is a separate disposition
   inside the same contract and cannot broaden portable-calibration scope.
+- `tam-mml-release-stress-0.2.4.R`, its six CSV outputs, and companion record:
+  complete 42-comparison execution of the frozen 0.2.4 TAM MML contract. All
+  fits returned, but only 12/42 q-specific pairs and 6/21 q31/q61 checks passed.
+  Six-response Person patterns matched, twelve-response patterns required q61,
+  and dense 24--30-response patterns remained unresolved at q61. A post-result
+  baseline probe matched TAM inside `1e-6` at q181, locating the next review at
+  finite-grid resolution rather than authorizing release or TAM parity.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural

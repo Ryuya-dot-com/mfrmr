@@ -1,0 +1,4 @@
+"Engine","Version","PrimaryFunction","FunctionSHA256","ExpectedFunctionSHA256","IdentityMatch","SourceRoot"
+"mfrmr","0.2.4.9000","fit_mfrm","4ac71e5bd7f2eac9c9291280f7ca15dff352d124a0fe42c3f4dc155726809f75",,TRUE,"/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development"
+"TAM","4.3.25","tam.mml","9a3cd55d02641dc6d6ca8a500a8e881edcb2278a301cda31b1d2fbdc05d04775","9a3cd55d02641dc6d6ca8a500a8e881edcb2278a301cda31b1d2fbdc05d04775",TRUE,"/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development"
+"TAM","4.3.25","tam.mml.mfr","93631641ee114fe0e46ae47b8a1c4788d394ec4e1ca74cfef2b5db4efdce07ca","93631641ee114fe0e46ae47b8a1c4788d394ec4e1ca74cfef2b5db4efdce07ca",TRUE,"/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development"

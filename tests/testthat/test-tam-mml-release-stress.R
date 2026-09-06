@@ -78,3 +78,35 @@ test_that("TAM MML release-stress generators realize frozen perturbations", {
   expect_identical(sparse$pweights, c(rep(1, 80L), rep(0, 4L)))
   expect_equal(sparse$deviance_scale, 80 / 84)
 })
+
+test_that("TAM MML release-stress record retains the failed full denominator", {
+  ctx <- load_tam_mml_release_stress()
+  validation <- file.path(ctx$root, "inst", "validation")
+  summary_path <- file.path(
+    validation, "tam-mml-release-stress-summary-0.2.4.csv"
+  )
+  integration_path <- file.path(
+    validation, "tam-mml-release-stress-integration-0.2.4.csv"
+  )
+  record_path <- file.path(
+    validation, "tam-mml-release-stress-record-0.2.4.md"
+  )
+  skip_if_not(all(file.exists(c(summary_path, integration_path, record_path))))
+
+  summary <- utils::read.csv(summary_path, stringsAsFactors = FALSE)
+  integration <- utils::read.csv(integration_path, stringsAsFactors = FALSE)
+  record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
+  source_hash <- digest::digest(
+    file.path(validation, "tam-mml-release-stress-0.2.4.R"),
+    algo = "sha256", file = TRUE, serialize = FALSE
+  )
+
+  expect_identical(nrow(summary), 42L)
+  expect_identical(sum(summary$PairPassed), 12L)
+  expect_identical(sum(nzchar(summary$Error)), 0L)
+  expect_identical(nrow(integration), 21L)
+  expect_identical(sum(integration$IntegrationPassed), 6L)
+  expect_match(record, source_hash, fixed = TRUE)
+  expect_match(record, "ReleaseStressComplete=FALSE", fixed = TRUE)
+  expect_match(record, "ReleaseAuthorized=FALSE", fixed = TRUE)
+})
