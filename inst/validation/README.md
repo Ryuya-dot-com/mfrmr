@@ -201,6 +201,11 @@ identify whether the opt-in layer ran and retain its test log.
   independently revalidated matrix. This restores G4 for the current payload
   without treating repeated fixtures as new independent statistical evidence;
   current-payload G6 and human release review remain to be renewed.
+- `fixed-calibration-g6-current-payload-preflight-record-0.2.4.md`: binds the
+  current implementation payload to its local, five-platform, G4, installed-
+  API, and zero-reverse-dependency evidence; identifies the public semantic
+  deltas requiring fresh rendered-site and owner review; and deliberately
+  leaves CORE-08, G6, and candidate transition authorization open.
 - `fixed-calibration-g6-public-surface-record-0.2.4.md`: records the public
   release-candidate hardening slice: thin exported lifecycle/scoring wrappers,
   the central six-row capability matrix, an executable synthetic vignette,
