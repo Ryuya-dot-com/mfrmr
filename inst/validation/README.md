@@ -3513,6 +3513,11 @@ identify whether the opt-in layer ran and retain its test log.
   the user-selected highest evaluated fit and its review object; adaptive
   quadrature, a blanket q181 default, and automatic scientific decisions stay
   out of scope.
+- `mml-quadrature-remedy-record-0.2.4.md`: binds the frozen contract to the
+  implemented generic diagnostic and fail-closed portable-extraction boundary.
+  Affected tests, source-package documentation checks, and pkgdown pass; the
+  repository-wide suite retains inherited internal evidence-chain failures, so
+  exact-head full-suite closure and release authorization remain open.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural
