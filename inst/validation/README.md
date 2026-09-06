@@ -206,6 +206,11 @@ identify whether the opt-in layer ran and retain its test log.
   API, and zero-reverse-dependency evidence; identifies the public semantic
   deltas requiring fresh rendered-site and owner review; and deliberately
   leaves CORE-08, G6, and candidate transition authorization open.
+- `fixed-calibration-g6-current-payload-rendered-review-record-0.2.4.md`:
+  binds the corrected current public scope to a fresh complete pkgdown build,
+  desktop/narrow visual review, and an exact-head five-platform routine check;
+  it closes the machine and rendered-review portion while leaving owner review,
+  CORE-08, G6, and candidate transition authorization open.
 - `fixed-calibration-g6-public-surface-record-0.2.4.md`: records the public
   release-candidate hardening slice: thin exported lifecycle/scoring wrappers,
   the central six-row capability matrix, an executable synthetic vignette,
