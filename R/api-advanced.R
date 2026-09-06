@@ -323,7 +323,12 @@ resolve_dff_refit_controls <- function(fit) {
 build_dff_linking_setup <- function(fit, facet, facet_names) {
   linking_facets <- setdiff(as.character(facet_names), as.character(facet))
   anchor_tbl <- if (length(linking_facets) > 0) {
-    make_anchor_table(fit, facets = linking_facets, include_person = FALSE)
+    make_anchor_table(
+      fit,
+      facets = linking_facets,
+      include_person = FALSE,
+      readiness_policy = "review"
+    )
   } else {
     tibble::tibble(Facet = character(0), Level = character(0), Anchor = numeric(0))
   }

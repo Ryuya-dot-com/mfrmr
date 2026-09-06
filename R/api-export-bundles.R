@@ -5065,7 +5065,8 @@ export_mfrm_bundle <- function(fit,
   if ("anchors" %in% include) {
     anchor_tbl <- make_anchor_table(
       fit = fit,
-      include_person = isTRUE(include_person_anchors)
+      include_person = isTRUE(include_person_anchors),
+      readiness_policy = "review"
     )
     write_csv(anchor_tbl, paste0(prefix, "_anchors.csv"), "anchors")
     html_tables$anchors <- anchor_tbl
