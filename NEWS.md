@@ -19,6 +19,16 @@
   separate operations; `mfrm_calibration_capabilities()` reports the narrower
   portable support envelope and the fitted-object alternatives for unavailable
   routes.
+* Added `mml_quadrature_sensitivity()` for explicit same-data RSM, PCM, and
+  bounded-GPCM refits across user-selected integration grids. It reports
+  continuous changes in likelihood, measurement coordinates, probabilities,
+  EAP, and posterior SD without assigning a stability cutoff; the existing
+  GPCM-specific function remains available.
+* Portable calibration extraction now requires the reviewed object's exact
+  highest-grid fit together with its quadrature-sensitivity result. Users
+  choose the evaluated grids and judge the observed movement; response-linked
+  fits remain outside the portable artifact and should be archived separately
+  when needed.
 * FACETS-facing scope guidance now distinguishes the supported native
   portable-calibration workflow from unsupported FACETS or third-party
   calibration-file import, and removes stale version-number wording from

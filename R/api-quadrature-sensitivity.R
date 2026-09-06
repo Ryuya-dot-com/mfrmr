@@ -1,4 +1,4 @@
-# Explicit same-data quadrature sensitivity for the bounded GPCM-MML route.
+# Explicit same-data quadrature sensitivity for ordered MML models.
 
 mfrmr_gqs_assert <- function(condition, message) {
   if (!isTRUE(condition)) stop(message, call. = FALSE)
@@ -25,28 +25,28 @@ mfrmr_gqs_capture_conditions <- function(expression) {
 }
 
 mfrmr_gqs_validate <- function(fit, data, quad_points,
-                               theta_range, theta_points) {
+                               theta_range, theta_points,
+                               allowed_models = "GPCM") {
   mfrmr_gqs_assert(
     inherits(fit, "mfrm_fit"),
     "`fit` must be an `mfrm_fit` object returned by `fit_mfrm()`."
   )
   model <- toupper(as.character(fit$config$model %||% "")[1L])
   method <- public_mfrm_method_label(fit$config$method %||% "")
-  mfrmr_gqs_assert(
-    identical(model, "GPCM") && identical(method, "MML"),
+  allowed_models <- unique(toupper(as.character(allowed_models)))
+  scope_message <- if (identical(allowed_models, "GPCM")) {
     "`gpcm_mml_quadrature_sensitivity()` requires a GPCM MML fit."
-  )
+  } else {
+    paste0(
+      "`mml_quadrature_sensitivity()` requires an RSM, PCM, or bounded ",
+      "GPCM MML fit."
+    )
+  }
+  mfrmr_gqs_assert(model %in% allowed_models && identical(method, "MML"),
+                   scope_message)
   mfrmr_gqs_assert(
     is.data.frame(data) && nrow(data) > 0L,
     "`data` must be the non-empty data.frame used to create `fit`."
-  )
-  mfrmr_gqs_assert(
-    length(fit$config$interaction_specs %||% list()) == 0L,
-    paste(
-      "Quadrature sensitivity for GPCM facet interactions is not yet",
-      "implemented. Refit the additive GPCM or compare interaction fits",
-      "explicitly outside this helper."
-    )
   )
   population <- fit$population %||% list()
   mfrmr_gqs_assert(
@@ -114,6 +114,7 @@ mfrmr_gqs_validate <- function(fit, data, quad_points,
     reference_nodes = reference_nodes,
     theta_range = theta_range,
     theta_points = as.integer(theta_points),
+    model = model,
     replay = replay
   )
 }
@@ -133,7 +134,7 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
     weight = replay$weight,
     keep_original = isTRUE(replay$keep_original),
     missing_codes = replay$missing_codes,
-    model = "GPCM",
+    model = as.character(replay$model %||% config$model),
     method = "MML",
     step_facet = replay$step_facet %||% config$step_facet,
     slope_facet = replay$slope_facet %||% config$slope_facet,
@@ -222,7 +223,8 @@ mfrmr_gqs_same_prepared_data <- function(reference, candidate) {
 
 mfrmr_gqs_design_probabilities <- function(fit, theta_range, theta_points) {
   theta <- seq(theta_range[1L], theta_range[2L], length.out = theta_points)
-  structure <- information_build_step_structure(fit, "GPCM")
+  model <- toupper(as.character(fit$config$model %||% "")[1L])
+  structure <- information_build_step_structure(fit, model)
   prepared <- as.data.frame(fit$prep$data, stringsAsFactors = FALSE)
   facet_names <- as.character(fit$config$facet_names %||% character())
   mfrmr_gqs_assert(
@@ -269,25 +271,76 @@ mfrmr_gqs_design_probabilities <- function(fit, theta_range, theta_points) {
     offsets <- offsets + signs[facet_index] * values
   }
 
-  step_index <- match(
-    as.character(cells[[structure$step_facet]]),
-    structure$step_levels
+  interactions <- as.data.frame(
+    fit$interactions$effects %||% data.frame(), stringsAsFactors = FALSE
   )
-  slope_index <- match(
-    as.character(cells[[structure$slope_facet]]),
-    structure$slope_levels
-  )
-  mfrmr_gqs_assert(
-    all(is.finite(step_index)) && all(is.finite(slope_index)),
-    "Step or slope levels were not aligned with the observed design cells."
-  )
+  if (nrow(interactions) > 0L) {
+    required <- c(
+      "Interaction", "FacetA", "FacetA_Level", "FacetB", "FacetB_Level",
+      "Estimate"
+    )
+    mfrmr_gqs_assert(
+      all(required %in% names(interactions)),
+      "The fitted interaction table is incomplete."
+    )
+    for (interaction in unique(as.character(interactions$Interaction))) {
+      table <- interactions[interactions$Interaction == interaction,
+                            , drop = FALSE]
+      facet_a <- unique(as.character(table$FacetA))
+      facet_b <- unique(as.character(table$FacetB))
+      mfrmr_gqs_assert(
+        length(facet_a) == 1L && length(facet_b) == 1L &&
+          all(c(facet_a, facet_b) %in% names(cells)),
+        "The fitted interaction could not be aligned to the design cells."
+      )
+      lookup <- stats::setNames(
+        as.numeric(table$Estimate),
+        paste(table$FacetA_Level, table$FacetB_Level, sep = "\r")
+      )
+      values <- as.numeric(lookup[paste(
+        cells[[facet_a]], cells[[facet_b]], sep = "\r"
+      )])
+      mfrmr_gqs_assert(
+        all(is.finite(values)),
+        "The fitted interaction did not cover every observed design cell."
+      )
+      offsets <- offsets + values
+    }
+  }
+
+  step_index <- slope_index <- NULL
+  if (!identical(structure$kind, "common")) {
+    step_index <- match(
+      as.character(cells[[structure$step_facet]]), structure$step_levels
+    )
+    mfrmr_gqs_assert(
+      all(is.finite(step_index)),
+      "Step levels were not aligned with the observed design cells."
+    )
+  }
+  if (identical(structure$kind, "step_and_slope_specific")) {
+    slope_index <- match(
+      as.character(cells[[structure$slope_facet]]), structure$slope_levels
+    )
+    mfrmr_gqs_assert(
+      all(is.finite(slope_index)),
+      "Slope levels were not aligned with the observed design cells."
+    )
+  }
 
   probability_blocks <- lapply(seq_len(nrow(cells)), function(cell_index) {
-    probabilities <- structure$compute(
-      theta + offsets[cell_index],
-      rep(step_index[cell_index], length(theta)),
-      rep(slope_index[cell_index], length(theta))
-    )
+    eta <- theta + offsets[cell_index]
+    probabilities <- if (identical(structure$kind, "common")) {
+      structure$compute(eta)
+    } else if (identical(structure$kind, "step_facet_specific")) {
+      structure$compute(eta, rep(step_index[cell_index], length(theta)))
+    } else {
+      structure$compute(
+        eta,
+        rep(step_index[cell_index], length(theta)),
+        rep(slope_index[cell_index], length(theta))
+      )
+    }
     mfrmr_gqs_assert(
       is.matrix(probabilities) && all(is.finite(probabilities)) &&
         max(abs(rowSums(probabilities) - 1)) < 1e-10,
@@ -316,6 +369,90 @@ mfrmr_gqs_probability_difference <- function(reference, candidate) {
     "Probability grids could not be aligned across quadrature fits."
   )
   max(abs(reference$values - candidate$values))
+}
+
+mfrmr_gqs_measurement_parameters <- function(fit) {
+  facets <- as.data.frame(fit$facets$others %||% data.frame(),
+                          stringsAsFactors = FALSE)
+  steps <- as.data.frame(fit$steps %||% data.frame(),
+                         stringsAsFactors = FALSE)
+  interactions <- as.data.frame(
+    fit$interactions$effects %||% data.frame(), stringsAsFactors = FALSE
+  )
+  slopes <- as.data.frame(fit$slopes %||% data.frame(),
+                          stringsAsFactors = FALSE)
+  out <- numeric()
+  if (nrow(facets) > 0L) {
+    value <- as.numeric(facets$Estimate)
+    names(value) <- paste("facet", facets$Facet, facets$Level, sep = "::")
+    out <- c(out, value)
+  }
+  if (nrow(steps) > 0L) {
+    owner <- if ("StepFacet" %in% names(steps)) {
+      as.character(steps$StepFacet)
+    } else {
+      rep("Common", nrow(steps))
+    }
+    value <- as.numeric(steps$Estimate)
+    names(value) <- paste("step", owner, steps$Step, sep = "::")
+    out <- c(out, value)
+  }
+  if (nrow(interactions) > 0L) {
+    value <- as.numeric(interactions$Estimate)
+    names(value) <- paste(
+      "interaction", interactions$Interaction,
+      interactions$FacetA_Level, interactions$FacetB_Level, sep = "::"
+    )
+    out <- c(out, value)
+  }
+  if (nrow(slopes) > 0L) {
+    value <- as.numeric(slopes$OptimizerEstimate %||% slopes$Estimate)
+    names(value) <- paste("slope", slopes$SlopeFacet, sep = "::")
+    out <- c(out, value)
+  }
+  mfrmr_gqs_assert(
+    length(out) > 0L && all(is.finite(out)) && !anyDuplicated(names(out)),
+    "Fitted measurement coordinates were incomplete or duplicated."
+  )
+  out
+}
+
+mfrmr_gqs_person_scores <- function(fit, data, nodes) {
+  if (nodes < 2L) {
+    return(data.frame(
+      Person = character(), EAP = numeric(), PosteriorSD = numeric(),
+      stringsAsFactors = FALSE
+    ))
+  }
+  estimates <- predict_mfrm_units(
+    fit,
+    data,
+    scoring_quad_points = as.integer(nodes),
+    readiness_policy = "review"
+  )$estimates
+  estimates <- as.data.frame(estimates, stringsAsFactors = FALSE)
+  mfrmr_gqs_assert(
+    all(c("Person", "Estimate", "SD") %in% names(estimates)) &&
+      nrow(estimates) > 0L && !anyDuplicated(as.character(estimates$Person)) &&
+      all(is.finite(estimates$Estimate)) && all(is.finite(estimates$SD)),
+    "Same-Person posterior summaries were incomplete."
+  )
+  data.frame(
+    Person = as.character(estimates$Person),
+    EAP = as.numeric(estimates$Estimate),
+    PosteriorSD = as.numeric(estimates$SD),
+    stringsAsFactors = FALSE
+  )
+}
+
+mfrmr_gqs_score_difference <- function(reference, candidate, column) {
+  if (nrow(reference) == 0L || nrow(candidate) == 0L) return(NA_real_)
+  index <- match(reference$Person, candidate$Person)
+  mfrmr_gqs_assert(
+    !anyNA(index) && nrow(reference) == nrow(candidate),
+    "Person identities changed across quadrature refits."
+  )
+  max(abs(candidate[[column]][index] - reference[[column]]))
 }
 
 mfrmr_gqs_raw_information <- function(fit) {
@@ -385,11 +522,13 @@ mfrmr_gqs_max_named_difference <- function(reference, candidate, label) {
     setequal(names(reference), names(candidate)),
     paste0("The ", label, " parameter identities changed across refits.")
   )
+  if (length(reference) == 0L) return(0)
   candidate <- candidate[names(reference)]
   max(abs(reference - candidate))
 }
 
-mfrmr_gqs_extract_run <- function(fit, nodes, theta_range, theta_points) {
+mfrmr_gqs_extract_run <- function(fit, data, nodes,
+                                  theta_range, theta_points) {
   information <- mfrmr_gqs_raw_information(fit)
   readiness <- as.data.frame(fit$readiness$fit %||% data.frame(),
                              stringsAsFactors = FALSE)
@@ -397,13 +536,39 @@ mfrmr_gqs_extract_run <- function(fit, nodes, theta_range, theta_points) {
     nrow(readiness) == 1L,
     "A quadrature fit did not retain exactly one fit-readiness row."
   )
-  slopes <- as.data.frame(fit$slopes, stringsAsFactors = FALSE)
-  slope_labels <- as.character(slopes$SlopeFacet)
+  slopes <- as.data.frame(fit$slopes %||% data.frame(),
+                          stringsAsFactors = FALSE)
+  slope_labels <- if (nrow(slopes) > 0L) {
+    as.character(slopes$SlopeFacet)
+  } else {
+    character()
+  }
   mfrmr_gqs_assert(
     length(slope_labels) == length(information$slope_values) &&
       !anyDuplicated(slope_labels),
     "Slope labels were not aligned with the observed-information coordinates."
   )
+
+  slope_table <- if (length(slope_labels) == 0L) {
+    data.frame(
+      Nodes = integer(), SlopeFacet = character(),
+      OptimizerEstimate = numeric(), RawObservedInformationSE = numeric(),
+      SEStatus = character(), PublicSEEligible = logical(),
+      stringsAsFactors = FALSE
+    )
+  } else {
+    data.frame(
+      Nodes = rep(as.integer(nodes), length(slope_labels)),
+      SlopeFacet = slope_labels,
+      OptimizerEstimate = information$slope_values,
+      RawObservedInformationSE = information$slope_se,
+      SEStatus = rep(information$covariance_status, length(slope_labels)),
+      PublicSEEligible = as.logical(
+        slopes$SEEligible %||% rep(FALSE, nrow(slopes))
+      ),
+      stringsAsFactors = FALSE
+    )
+  }
 
   list(
     run = data.frame(
@@ -420,9 +585,8 @@ mfrmr_gqs_extract_run <- function(fit, nodes, theta_range, theta_points) {
       ),
       OptimizerConvergenceCode = as.integer(fit$opt$convergence %||%
                                               NA_integer_),
-      EstimationConverged = isTRUE(
-        fit$population$estimation_converged %||%
-          identical(as.integer(fit$opt$convergence), 0L)
+      EstimationConverged = identical(
+        as.integer(fit$opt$convergence), 0L
       ),
       CovarianceStatus = information$covariance_status,
       HessianRank = information$rank,
@@ -437,16 +601,8 @@ mfrmr_gqs_extract_run <- function(fit, nodes, theta_range, theta_points) {
       ReadinessReasons = as.character(readiness$ReasonCodes[1L]),
       stringsAsFactors = FALSE
     ),
-    slopes = data.frame(
-      Nodes = as.integer(nodes),
-      SlopeFacet = slope_labels,
-      OptimizerEstimate = information$slope_values,
-      RawObservedInformationSE = information$slope_se,
-      SEStatus = information$covariance_status,
-      PublicSEEligible = as.logical(slopes$SEEligible %||%
-                                      rep(FALSE, nrow(slopes))),
-      stringsAsFactors = FALSE
-    ),
+    slopes = slope_table,
+    measurement_parameters = mfrmr_gqs_measurement_parameters(fit),
     slope_parameters = stats::setNames(
       information$slope_values,
       slope_labels
@@ -456,7 +612,8 @@ mfrmr_gqs_extract_run <- function(fit, nodes, theta_range, theta_points) {
     population_sd_se = information$population_sd_se,
     probabilities = mfrmr_gqs_design_probabilities(
       fit, theta_range, theta_points
-    )
+    ),
+    scores = mfrmr_gqs_person_scores(fit, data, nodes)
   )
 }
 
@@ -487,19 +644,21 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
   do.call(rbind, rows)
 }
 
-#' Review GPCM-MML sensitivity to the quadrature grid
+#' Review MML sensitivity to the quadrature grid
 #'
-#' Refit one bounded GPCM-MML model to the same supplied response data at two
-#' or more Gauss--Hermite quadrature counts. The original fit is reused at its
-#' own quadrature count; all other fits reuse its stored model, identification,
-#' anchor, optimizer, and population settings.
+#' Refit one ordered-response MML model to the same supplied response data at
+#' two or more Gauss--Hermite quadrature counts. The original fit is reused at
+#' its own quadrature count; all other fits reuse its stored model,
+#' identification, anchor, interaction, optimizer, and population settings.
 #'
-#' @param fit A GPCM MML `mfrm_fit` returned by [fit_mfrm()].
+#' @param fit An RSM, PCM, or bounded GPCM MML `mfrm_fit` returned by
+#'   [fit_mfrm()]. [gpcm_mml_quadrature_sensitivity()] accepts only GPCM fits.
 #' @param data The original response data.frame used to create `fit`. Prepared
 #'   response rows are compared semantically after refitting; row order may
 #'   differ, but changed observations fail closed.
 #' @param quad_points At least two distinct positive integers, including the
-#'   quadrature count stored on `fit`. A common choice is `c(31, 41)`.
+#'   quadrature count stored on `fit`. The default `c(31, 41)` is a comparison
+#'   starting point, not a claim that either grid is adequate for the data.
 #' @param theta_range Two finite values defining the common ability grid used
 #'   for fitted category-probability comparison.
 #' @param theta_points Number of common-grid ability points; at least 21.
@@ -512,10 +671,11 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' errors, or override the fit-readiness record.
 #'
 #' The probability comparison evaluates every observed combination of
-#' non-Person facet levels on the same theta grid. It therefore exercises the
-#' complete-predictor GPCM slope action, including additive Rater and Criterion
-#' locations. The first version fails closed for fitted facet interactions
-#' rather than approximating their contribution.
+#' non-Person facet levels on the same theta grid. It includes fitted two-way
+#' facet interactions and, for GPCM, the complete-predictor slope action.
+#' Same-Person EAP and posterior-SD changes use each fit's corresponding
+#' quadrature count. A one-point grid has no public scoring route, so those two
+#' changes are `NA` when it is the reference.
 #'
 #' Raw slope and population-SD standard errors are computed from each local
 #' observed-information Hessian for diagnostic comparison only. The public
@@ -523,7 +683,8 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'
 #' @return An object of class `mfrm_quadrature_sensitivity` containing:
 #' - `summary`: one comparison row per quadrature grid relative to the original
-#'   fit;
+#'   fit, including likelihood, measurement-coordinate, probability, EAP, and
+#'   posterior-SD changes;
 #' - `runs`: likelihood, gradient, curvature, population-scale, and readiness
 #'   details for each fit;
 #' - `slopes`: relative-slope estimates and raw diagnostic SEs;
@@ -541,11 +702,10 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' toy <- load_mfrmr_data("example_core")
 #' fit <- fit_mfrm(
 #'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", model = "GPCM",
-#'   step_facet = "Criterion", slope_facet = "Criterion",
+#'   method = "MML", model = "RSM",
 #'   quad_points = 31
 #' )
-#' sensitivity <- gpcm_mml_quadrature_sensitivity(
+#' sensitivity <- mml_quadrature_sensitivity(
 #'   fit, toy, quad_points = c(31, 41)
 #' )
 #' summary(sensitivity)
@@ -553,14 +713,22 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' apa_table(sensitivity, digits = 5)
 #' }
 #' @export
-gpcm_mml_quadrature_sensitivity <- function(
+mml_quadrature_sensitivity <- function(
     fit,
     data,
     quad_points = c(31L, 41L),
     theta_range = c(-4, 4),
     theta_points = 161L) {
+  mfrmr_gqs_run(
+    fit, data, quad_points, theta_range, theta_points,
+    allowed_models = c("RSM", "PCM", "GPCM")
+  )
+}
+
+mfrmr_gqs_run <- function(
+    fit, data, quad_points, theta_range, theta_points, allowed_models) {
   contract <- mfrmr_gqs_validate(
-    fit, data, quad_points, theta_range, theta_points
+    fit, data, quad_points, theta_range, theta_points, allowed_models
   )
 
   fits <- list()
@@ -593,6 +761,7 @@ gpcm_mml_quadrature_sensitivity <- function(
     }
     extracted[[name]] <- mfrmr_gqs_extract_run(
       candidate,
+      data,
       nodes,
       contract$theta_range,
       contract$theta_points
@@ -603,13 +772,18 @@ gpcm_mml_quadrature_sensitivity <- function(
   reference <- extracted[[reference_name]]
   comparison_rows <- lapply(contract$quad_points, function(nodes) {
     candidate <- extracted[[paste0("q", nodes)]]
-    slope_difference <- mfrmr_gqs_max_named_difference(
-      reference$slope_parameters,
-      candidate$slope_parameters,
-      "slope"
-    )
+    slope_difference <- if (length(reference$slope_parameters) > 0L) {
+      mfrmr_gqs_max_named_difference(
+        reference$slope_parameters,
+        candidate$slope_parameters,
+        "slope"
+      )
+    } else {
+      NA_real_
+    }
     slope_se_difference <- if (
-      all(is.finite(reference$slope_se)) &&
+      length(reference$slope_se) > 0L &&
+        all(is.finite(reference$slope_se)) &&
         all(is.finite(candidate$slope_se))
     ) {
       mfrmr_gqs_max_named_difference(
@@ -625,11 +799,17 @@ gpcm_mml_quadrature_sensitivity <- function(
     nll_change_per_person <- candidate_run$NLLPerPerson -
       reference_run$NLLPerPerson
     data.frame(
+      Model = contract$model,
       ReferenceNodes = contract$reference_nodes,
       Nodes = as.integer(nodes),
       IsReference = nodes == contract$reference_nodes,
       NLLChangePerPerson = nll_change_per_person,
       NLLAbsChangePerPerson = abs(nll_change_per_person),
+      MeasurementParameterMaxAbsChange = mfrmr_gqs_max_named_difference(
+        reference$measurement_parameters,
+        candidate$measurement_parameters,
+        "measurement"
+      ),
       SlopeMaxAbsChange = slope_difference,
       RawSlopeSEMaxAbsChange = slope_se_difference,
       PopulationSDAbsChange = abs(
@@ -641,6 +821,12 @@ gpcm_mml_quadrature_sensitivity <- function(
       ProbabilityMaxAbsChange = mfrmr_gqs_probability_difference(
         reference$probabilities,
         candidate$probabilities
+      ),
+      EAPMaxAbsChange = mfrmr_gqs_score_difference(
+        reference$scores, candidate$scores, "EAP"
+      ),
+      PosteriorSDMaxAbsChange = mfrmr_gqs_score_difference(
+        reference$scores, candidate$scores, "PosteriorSD"
       ),
       stringsAsFactors = FALSE
     )
@@ -662,13 +848,14 @@ gpcm_mml_quadrature_sensitivity <- function(
     conditions = conditions,
     fits = fits,
     settings = list(
+      model = contract$model,
       reference_nodes = contract$reference_nodes,
       quad_points = contract$quad_points,
       theta_range = contract$theta_range,
       theta_points = contract$theta_points,
       response_contract = "same_semantically_canonical_prepared_rows",
       probability_contract =
-        "all_observed_additive_facet_cells_on_common_theta_grid",
+        "all_observed_facet_cells_and_fitted_interactions_on_common_theta_grid",
       gpcm_slope_action = as.character(
         fit$config$gpcm_slope_action %||% "complete_adjacent_category_predictor"
       ),
@@ -692,6 +879,20 @@ gpcm_mml_quadrature_sensitivity <- function(
   )
   class(out) <- c("mfrm_quadrature_sensitivity", "list")
   out
+}
+
+#' @rdname mml_quadrature_sensitivity
+#' @export
+gpcm_mml_quadrature_sensitivity <- function(
+    fit,
+    data,
+    quad_points = c(31L, 41L),
+    theta_range = c(-4, 4),
+    theta_points = 161L) {
+  mfrmr_gqs_run(
+    fit, data, quad_points, theta_range, theta_points,
+    allowed_models = "GPCM"
+  )
 }
 
 #' @export
@@ -722,12 +923,19 @@ summary.mfrm_quadrature_sensitivity <- function(object, ...) {
     MaxNLLAbsChangePerPerson = max_or_na(
       nonreference$NLLAbsChangePerPerson
     ),
+    MaxMeasurementParameterAbsChange = max_or_na(
+      nonreference$MeasurementParameterMaxAbsChange
+    ),
     MaxSlopeAbsChange = max_or_na(nonreference$SlopeMaxAbsChange),
     MaxPopulationSDAbsChange = max_or_na(
       nonreference$PopulationSDAbsChange
     ),
     MaxProbabilityAbsChange = max_or_na(
       nonreference$ProbabilityMaxAbsChange
+    ),
+    MaxEAPAbsChange = max_or_na(nonreference$EAPMaxAbsChange),
+    MaxPosteriorSDAbsChange = max_or_na(
+      nonreference$PosteriorSDMaxAbsChange
     ),
     StabilityClassification = "not_assigned_continuous_evidence_only",
     ReadinessEffect = as.character(object$settings$readiness_effect),
@@ -747,7 +955,7 @@ summary.mfrm_quadrature_sensitivity <- function(object, ...) {
 
 #' @export
 print.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
-  cat("GPCM-MML quadrature sensitivity\n")
+  cat(x$settings$model, "-MML quadrature sensitivity\n", sep = "")
   cat("Reference grid: q=", x$settings$reference_nodes, "\n", sep = "")
   display <- as.data.frame(x$summary, stringsAsFactors = FALSE)
   numeric <- vapply(display, is.numeric, logical(1))
@@ -761,7 +969,8 @@ print.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
 
 #' @export
 print.summary.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
-  cat("GPCM-MML quadrature sensitivity summary\n")
+  model <- as.character(x$comparison$Model[1L] %||% "MML")
+  cat(model, "-MML quadrature sensitivity summary\n", sep = "")
   overview <- x$overview
   numeric <- vapply(overview, is.numeric, logical(1))
   overview[numeric] <- lapply(overview[numeric], round, digits = digits)

@@ -127,15 +127,19 @@
 #'                 [reference_case_benchmark()] use this value. \cr
 #'     `15` \tab intermediate review run when runtime matters; automatic
 #'                 model ranking remains disabled. \cr
-#'     `31` \tab package default and the starting grid for model comparison. \cr
-#'     `61+` \tab sensitivity analysis for narrow score distributions or
-#'                 demanding numerical comparisons.
+#'     `31` \tab package default and a starting grid, not evidence by itself
+#'                 that numerical integration is adequate. \cr
+#'     `61+` \tab user-selected denser grids for same-data sensitivity review;
+#'                 no single order is adequate for every response pattern.
 #'   }
 #'   Quadrature adequacy depends on the fitted distribution and score support.
-#'   When substantive conclusions are sensitive, compare results under a
-#'   denser rule and report the setting used. Raw AIC/BIC/SABIC remain visible
-#'   below 31 points for diagnosis, but [compare_mfrm()] fails closed rather
-#'   than turning a screening/review grid into automatic selection.
+#'   Use [mml_quadrature_sensitivity()] to compare the same model and data on
+#'   user-selected grids before portable calibration and whenever numerical
+#'   movement could affect a consequential result. The helper reports
+#'   continuous differences without choosing a cutoff. Raw AIC/BIC/SABIC
+#'   remain visible below 31 points for diagnosis, but [compare_mfrm()] fails
+#'   closed rather than turning a screening/review grid into automatic
+#'   selection.
 #' @param maxit Computational ceiling on optimizer iterations. The default is
 #'   `400`. This is not a convergence criterion or a model-selection control:
 #'   a fit that reaches the ceiling remains non-ready until the common
@@ -745,11 +749,13 @@
 #'   values for automatic model selection.
 #' - `quad_points = 15` is an intermediate review option when runtime matters;
 #'   automatic IC ranking remains disabled.
-#' - `quad_points = 31` is the package default and a suitable starting point
-#'   for a final analysis; always review convergence and, when conclusions are
-#'   sensitive, compare a denser quadrature rule.
-#' - `quad_points = 61` (or higher) supports sensitivity checks on narrow score
-#'   distributions at additional computational cost.
+#' - `quad_points = 31` is the package default and a starting point, not a
+#'   guarantee that integration error is negligible.
+#' - `quad_points = 61` (or higher) supplies candidate denser grids at
+#'   additional computational cost; no fixed order is sufficient for every
+#'   response pattern.
+#' - Use [mml_quadrature_sensitivity()] to inspect same-data movement without
+#'   an automatic stable/unstable decision.
 #' - `mml_engine = "direct"` remains the most stable general-purpose path.
 #' - `mml_engine = "em"` or `"hybrid"` currently target `RSM` / `PCM` fits
 #'   without a latent-regression population model.

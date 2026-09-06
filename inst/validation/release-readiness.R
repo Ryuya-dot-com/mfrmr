@@ -1772,7 +1772,7 @@ mfrmr_release_readiness_public_scope_status <- function(
   )
   coverage_schema_ok <- all(required_columns %in% names(coverage))
   future_features <- c(
-    "Versioned frozen-calibration import and operational scoring",
+    "FACETS or third-party frozen-calibration import",
     "General threshold or step anchors and starting-value import",
     "Multiple observed scales and scale-specific PCM",
     "Native multidimensional estimation and dimension-specific scores",

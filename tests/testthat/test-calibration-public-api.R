@@ -15,11 +15,16 @@ calibration_public_fixture <- local({
       quad_points = 5,
       maxit = 20
     ))
+    quadrature_review <- suppressWarnings(mml_quadrature_sensitivity(
+      fit, training, quad_points = c(5L, 7L), theta_points = 41L
+    ))
+    fit <- quadrature_review$fits$q7
     draft <- extract_mfrm_calibration(
       fit,
       calibration_id = "public-api-rsm",
       source_fit_id = "public-api-source-fit",
-      created_at_utc = "2026-08-26T00:00:00Z"
+      created_at_utc = "2026-08-26T00:00:00Z",
+      quadrature_review = quadrature_review
     )
     validated <- validate_mfrm_calibration(
       draft, validated_at_utc = "2026-08-26T00:01:00Z"
@@ -38,8 +43,8 @@ calibration_public_fixture <- local({
     rows$Score[rows$Person == "NEW_HIGH"] <- max(training$Score)
     rownames(rows) <- NULL
     cache <<- list(
-      data = training, fit = fit, draft = draft, validated = validated,
-      frozen = frozen, rows = rows
+      data = training, fit = fit, quadrature_review = quadrature_review,
+      draft = draft, validated = validated, frozen = frozen, rows = rows
     )
     cache
   }
@@ -443,6 +448,50 @@ test_that("public extraction refusals give actionable non-internal alternatives"
     expect_false(grepl("OPT-[0-9]|CORE-[0-9]|G[0-6] exit|internal",
                        conditionMessage(error), perl = TRUE))
   }
+})
+
+test_that("public extraction requires user-reviewed highest-grid fit", {
+  fixture <- calibration_public_fixture()
+  review <- fixture$quadrature_review
+
+  missing <- tryCatch(
+    extract_mfrm_calibration(fixture$fit),
+    mfrm_calibration_error = identity
+  )
+  expect_s3_class(missing, "mfrm_calibration_error")
+  expect_identical(missing$code, "QUADRATURE_REVIEW_REQUIRED")
+
+  wrong_type <- tryCatch(
+    extract_mfrm_calibration(fixture$fit, quadrature_review = list()),
+    mfrm_calibration_error = identity
+  )
+  expect_identical(wrong_type$code, "QUADRATURE_REVIEW_INVALID")
+
+  lower <- tryCatch(
+    extract_mfrm_calibration(
+      review$fits$q5, quadrature_review = review
+    ),
+    mfrm_calibration_error = identity
+  )
+  expect_identical(lower$code, "QUADRATURE_SOURCE_NOT_HIGHEST")
+
+  incomplete <- review
+  incomplete$runs$EstimationConverged[1L] <- FALSE
+  unfinished <- tryCatch(
+    extract_mfrm_calibration(
+      fixture$fit, quadrature_review = incomplete
+    ),
+    mfrm_calibration_error = identity
+  )
+  expect_identical(unfinished$code, "QUADRATURE_REVIEW_INCOMPLETE")
+
+  expect_s3_class(
+    extract_mfrm_calibration(
+      fixture$fit, quadrature_review = review,
+      calibration_id = "reviewed-highest-grid"
+    ),
+    "mfrm_calibration"
+  )
 })
 
 test_that("installed public surfaces share the bounded calibration wording", {

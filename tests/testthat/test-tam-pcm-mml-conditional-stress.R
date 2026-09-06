@@ -29,7 +29,7 @@ test_that("TAM PCM conditional stress freezes 60 fixed-basis comparisons", {
   )
   expect_true(all(plan$PairTolerance == 1e-4))
   expect_true(all(plan$IntegrationTolerance == 1e-3))
-  expect_false(anyDuplicated(plan$FitId))
+  expect_identical(anyDuplicated(plan$FitId), 0L)
 })
 
 test_that("TAM PCM preparation retains full category support", {

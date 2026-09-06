@@ -128,9 +128,9 @@ test_that("local descriptive manifest is exact when binary evidence exists", {
   ))
   expect_identical(nrow(manifest$ProfileRecoverySummaryRegistry), 42L)
   expect_identical(nrow(manifest$ScenarioRoleRecoverySummaryRegistry), 8L)
-  expect_equal(
-    manifest$EstimandRecoverySummaryRegistry$RootMeanSquaredError,
-    c(0.05240607, 0.05008863), tolerance = 1e-8
+  expect_identical(
+    round(manifest$EstimandRecoverySummaryRegistry$RootMeanSquaredError, 8L),
+    c(0.05240607, 0.05008863)
   )
   expect_true(manifest$Summary$DescriptiveRecoveryComputed)
   expect_false(manifest$Summary$MonteCarloAcceptanceEvaluated)

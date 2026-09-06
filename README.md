@@ -105,7 +105,15 @@ calibration artifact, validated, frozen, saved, and applied to new Persons
 without retaining the source fit or training responses:
 
 ```r
-draft <- extract_mfrm_calibration(fit)
+q_review <- mml_quadrature_sensitivity(
+  fit, training_data, quad_points = c(31, 61)
+)
+summary(q_review) # You decide whether the observed movement is acceptable.
+fit_for_calibration <- q_review$fits$q61
+
+draft <- extract_mfrm_calibration(
+  fit_for_calibration, quadrature_review = q_review
+)
 review_mfrm_calibration(draft)
 
 validated <- validate_mfrm_calibration(draft)
@@ -275,7 +283,8 @@ fit <- fit_mfrm(
 
 `MML` integrates over the person distribution and returns posterior person
 summaries. The default uses 31 quadrature points. Record that setting and
-examine quadrature sensitivity when the application requires it. Eligible
+examine same-data quadrature sensitivity before portable calibration and
+whenever numerical movement could affect a consequential result. Eligible
 fits below 15 points retain raw AIC/BIC/SABIC for screening, and fits at
 15--30 points retain them for review, but automatic deltas, criterion weights,
 preferred-model labels, evidence ratios, and LRT are disabled below 31 points.
@@ -288,19 +297,21 @@ After fitting a bounded GPCM-MML object as `fit_gpcm`, run the comparison
 explicitly rather than making `summary()` refit the model in the background:
 
 ```r
-q_review <- gpcm_mml_quadrature_sensitivity(
-  fit_gpcm,
+q_review <- mml_quadrature_sensitivity(
+  fit,
   data = dat,
-  quad_points = c(31, 41)
+  quad_points = c(31, 61)
 )
 summary(q_review)
 apa_table(q_review)
 ```
 
-The review reports changes in marginal likelihood per Person, relative slopes,
-raw local-curvature SEs, population SD, and fitted probabilities. It does not
-assign a universal stable/unstable cutoff, make raw slope SEs inferentially
-eligible, or change the fit-readiness decision.
+The review works for RSM, PCM, and bounded GPCM. It reports changes in marginal
+likelihood per Person, measurement coordinates, probabilities, EAP, posterior
+SD, and, when present, relative slopes, raw local-curvature SEs, and population
+SD. The GPCM-specific `gpcm_mml_quadrature_sensitivity()` name remains
+available. Neither route assigns a universal stable/unstable cutoff, makes raw
+slope SEs inferentially eligible, or changes the fit-readiness decision.
 
 Use `model = "PCM", step_facet = "Criterion"` when category steps differ
 across that facet. Choose the model from the scoring design and measurement

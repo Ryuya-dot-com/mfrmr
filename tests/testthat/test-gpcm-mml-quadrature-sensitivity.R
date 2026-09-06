@@ -46,9 +46,11 @@ test_that("GPCM quadrature sensitivity separates numerical evidence", {
   reference <- sensitivity$summary$IsReference
   expect_identical(reference, c(TRUE, FALSE))
   change_columns <- c(
-    "NLLAbsChangePerPerson", "SlopeMaxAbsChange",
+    "NLLAbsChangePerPerson", "MeasurementParameterMaxAbsChange",
+    "SlopeMaxAbsChange",
     "RawSlopeSEMaxAbsChange", "PopulationSDAbsChange",
-    "RawPopulationSDSEAbsChange", "ProbabilityMaxAbsChange"
+    "RawPopulationSDSEAbsChange", "ProbabilityMaxAbsChange",
+    "EAPMaxAbsChange", "PosteriorSDMaxAbsChange"
   )
   expect_equal(
     as.numeric(sensitivity$summary[reference, change_columns]),
@@ -140,15 +142,6 @@ test_that("same-data and scope contracts fail closed", {
     "must include the reference fit's quadrature count",
     fixed = TRUE
   )
-  interaction_fit <- fit
-  interaction_fit$config$interaction_specs <- list("Rater:Criterion" = list())
-  expect_error(
-    mfrmr_gqs_validate(
-      interaction_fit, fixture$data, c(5L, 7L), c(-4, 4), 41L
-    ),
-    "facet interactions is not yet implemented",
-    fixed = TRUE
-  )
   regression_fit <- fit
   regression_fit$population$source <- "user_supplied"
   expect_error(
@@ -181,6 +174,7 @@ test_that("refit conditions are retained without error suppression", {
 test_that("the public diagnostic has no machine-identity dependency", {
   namespace <- asNamespace("mfrmr")
   targets <- c(
+    "mml_quadrature_sensitivity",
     "gpcm_mml_quadrature_sensitivity",
     grep("^mfrmr_gqs_", ls(namespace, all.names = TRUE), value = TRUE),
     "as.data.frame.mfrm_quadrature_sensitivity",

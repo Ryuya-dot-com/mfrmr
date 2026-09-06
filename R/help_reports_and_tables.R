@@ -481,7 +481,8 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     MainFunction = c(
       "mfrm_calibration_capabilities()",
       paste0(
-        "extract_mfrm_calibration(); review_mfrm_calibration(); ",
+        "mml_quadrature_sensitivity(); extract_mfrm_calibration(); ",
+        "review_mfrm_calibration(); ",
         "validate_mfrm_calibration(); freeze_mfrm_calibration()"
       ),
       "save_mfrm_calibration(); load_mfrm_calibration()",
@@ -490,21 +491,21 @@ mfrmr_output_guide <- function(scope = c("all", "public", "beginner", "psychomet
     ),
     UseWhen = c(
       "You need to distinguish the narrow portable-artifact envelope from fitted-object scoring.",
-      "A ready one-scale RSM/PCM MML fit uses the fixed standard-normal scoring basis.",
+      "A ready one-scale RSM/PCM MML fit uses the fixed standard-normal scoring basis and its same-data grid movement has been reviewed.",
       "A frozen artifact must move to a separate scoring session or controlled storage location.",
       "New response rows use only known facet levels and the calibration's recorded score map.",
       "A score batch must be reviewed before estimates are used in reporting or decisions."
     ),
     TypicalInput = c(
       "none",
-      "eligible mfrm_fit",
+      "eligible mfrm_fit, original response data, and mfrm_quadrature_sensitivity",
       "validated or frozen mfrm_calibration and an .rds path",
       "frozen mfrm_calibration plus new response rows",
       "mfrm_calibration_score"
     ),
     NextStep = c(
       "Use an available portable row or follow its fitted-object alternative.",
-      "Resolve every structured refusal before freezing; do not bypass lifecycle states.",
+      "Inspect continuous grid movement, select the reviewed highest-grid fit, and resolve every structured refusal before freezing.",
       "Load the artifact in the scoring session and retain its calibration identity with outputs.",
       "Review row and Person dispositions before using posterior EAP estimates.",
       "Inspect every scored_review or not_scored Person and retain the interval-basis note with exported results."

@@ -77,9 +77,14 @@ test_that("all candidate templates receive one shared-dataset route payload", {
   manifest <- gtheory_dsim3r_manifest(env)
   routes <- manifest$CandidateRouteAdmissionRegistry
   expect_identical(nrow(routes), 50L)
+  route_counts <- table(routes$RouteId)
   expect_identical(
-    unname(table(routes$RouteId)),
-    c(multivariate_lme4_restricted = 8L, separate_univariate = 42L)
+    as.integer(route_counts),
+    c(8L, 42L)
+  )
+  expect_identical(
+    names(route_counts),
+    c("multivariate_lme4_restricted", "separate_univariate")
   )
   expect_identical(length(unique(routes$ShadowFixtureId)), 21L)
   expect_true(all(routes$ExactScenarioRouteAdapterReady))

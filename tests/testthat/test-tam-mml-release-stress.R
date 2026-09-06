@@ -33,7 +33,7 @@ test_that("TAM MML release stress freezes a bounded 42-pair denominator", {
   )
   expect_true(all(plan$PairTolerance == 1e-4))
   expect_true(all(plan$IntegrationTolerance == 1e-3))
-  expect_false(anyDuplicated(plan$FitId))
+  expect_identical(anyDuplicated(plan$FitId), 0L)
 })
 
 test_that("TAM MML release stress binds runtime and three overlap layers", {
@@ -103,7 +103,7 @@ test_that("TAM MML release-stress record retains the failed full denominator", {
 
   expect_identical(nrow(summary), 42L)
   expect_identical(sum(summary$PairPassed), 12L)
-  expect_identical(sum(nzchar(summary$Error)), 0L)
+  expect_false(any(!is.na(summary$Error) & nzchar(summary$Error)))
   expect_identical(nrow(integration), 21L)
   expect_identical(sum(integration$IntegrationPassed), 6L)
   expect_match(record, source_hash, fixed = TRUE)

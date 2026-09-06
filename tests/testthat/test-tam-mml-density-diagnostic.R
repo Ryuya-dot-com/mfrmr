@@ -24,7 +24,7 @@ test_that("TAM MML density diagnostic reuses all 21 failed-run identities", {
   expect_identical(sort(unique(plan$Nodes)), c(121L, 181L))
   expect_identical(sort(unique(plan$DatasetId)), sort(unique(frozen$DatasetId)))
   expect_true(all(plan$EvidenceRole == "post_result_density_diagnostic_only"))
-  expect_false(anyDuplicated(plan$FitId))
+  expect_identical(anyDuplicated(plan$FitId), 0L)
 })
 
 test_that("TAM MML density record preserves the post-result denominator", {
