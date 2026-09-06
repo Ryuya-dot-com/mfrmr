@@ -194,6 +194,13 @@ identify whether the opt-in layer ran and retain its test log.
   independently revalidated matrix. It closes CORE-05, CORE-06, and G4 for the
   post-maintenance fixed-N(0,1) RSM/PCM executable boundary. G6 completion and
   public API promotion remain unauthorized.
+- `fixed-calibration-g4-hosted-run-34018691491-revalidation-record-0.2.4.md`:
+  reapplies the unchanged deterministic v6 regression denominator after a
+  later production-boundary change. It binds exact candidate `71f3220`, a
+  clean local tarball, GCC 15 LTO, five successful hosted receipts, and an
+  independently revalidated matrix. This restores G4 for the current payload
+  without treating repeated fixtures as new independent statistical evidence;
+  current-payload G6 and human release review remain to be renewed.
 - `fixed-calibration-g6-public-surface-record-0.2.4.md`: records the public
   release-candidate hardening slice: thin exported lifecycle/scoring wrappers,
   the central six-row capability matrix, an executable synthetic vignette,
