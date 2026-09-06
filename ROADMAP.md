@@ -37,8 +37,8 @@ and compatibility contract for later scoring.
 
 | Area | Current direction |
 | --- | --- |
-| RSM | Supported in the established fitting workflow and the planned 0.2.4 portable calibration workflow. |
-| PCM | Supported in the established fitting workflow and the planned 0.2.4 portable calibration workflow. |
+| RSM | Supported in the established fitting workflow and the 0.2.4 development portable calibration workflow. |
+| PCM | Supported in the established fitting workflow and the 0.2.4 development portable calibration workflow. |
 | GPCM | Available only within the documented bounded fitting routes. Portable GPCM calibration is not part of 0.2.4. |
 | JML | Retained for documented fitted-model analyses. The 0.2.4 portable calibration workflow is MML-only. |
 | Interactions | Supported where documented for fitted models; portable interaction calibration is not part of 0.2.4. |

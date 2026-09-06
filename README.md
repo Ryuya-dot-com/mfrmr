@@ -963,6 +963,7 @@ The package includes the following vignettes:
 
 - [End-to-end workflow](vignettes/mfrmr-workflow.Rmd)
 - [MML estimation and marginal-fit diagnostics](vignettes/mfrmr-mml-and-marginal-fit.Rmd)
+- [Portable calibration and fresh-session scoring](vignettes/mfrmr-portable-calibration.Rmd)
 - [Migrating from FACETS](vignettes/mfrmr-facets-migration.Rmd)
 - [Visual diagnostics](vignettes/mfrmr-visual-diagnostics.Rmd)
 - [Reporting and APA-oriented output](vignettes/mfrmr-reporting-and-apa.Rmd)

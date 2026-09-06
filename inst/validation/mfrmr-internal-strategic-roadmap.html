@@ -789,6 +789,10 @@
               </div>
               <div class="task" data-state="done" data-horizon="now" data-priority="p0">
                 <input type="checkbox" checked disabled aria-label="完了">
+                <div><strong>help・vignette・pkgdownの公開導線を再照合</strong><p><a href="public-documentation-surface-audit-record-0.2.4.md">surface audit</a>で8/8 source vignetteと8/8 article、281 reference page、navbar、主要help、公開scope語彙を再点検。README一覧から漏れていたportable calibration記事を追加し、ROADMAPの実装済みportable workflowをplanned表現からdevelopment supportへ修正した。primary help／vignetteには生成時のoptimizer warningは残らない。secondary referenceの短時間exampleに現れるreview warningは安全上隠さず、72ページの個別抑制という局所修正は行わない。</p></div><span class="chip done">surface aligned</span>
+              </div>
+              <div class="task" data-state="done" data-horizon="now" data-priority="p0">
+                <input type="checkbox" checked disabled aria-label="完了">
                 <div><strong>API整合性payloadを5環境で再検証</strong><p>run <code>32990152654</code>は実装head <code>036565f…</code>で5/5成功し、各cellのexact source checkとrepository reviewを完了。GitHub Actions障害時の空trigger commit <code>322f188…</code>とはtree <code>755dc77…</code>が一致し、production payloadは不変。旧run <code>32976019984</code>は今回の証拠へ流用していない。</p></div><span class="chip done">hosted 5/5 pass</span>
               </div>
               <div class="task" data-state="open" data-horizon="now" data-priority="p0">
@@ -1362,6 +1366,7 @@
             <div class="card-body">
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>ローカルConQuest経路を指定</strong><p><code>/Applications/ConQuest</code>を使用する。</p></div><span class="chip done">bound path</span></div>
               <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>既存TAM benign coreの証拠境界を確定</strong><p>RSM/PCM、q31/q61、座標変換、parameter/devianceはcalibration-only。得点・weak information・一般互換性へ昇格しない。</p></div><span class="chip done">scoped</span></div>
+              <div class="task" data-state="done" data-horizon="research"><input type="checkbox" checked disabled aria-label="完了"><div><strong>0.2.4 current-headでbenign coreを再実行</strong><p><a href="tam-mml-core-current-head-record-0.2.4.md">current-head regression</a>は旧0.2.3証拠を改変せず既存runnerを再利用。RSM/PCM q31/q61のdeviance・46座標・独立likelihood/probability oracleを再現した。これはstress envelopeではなくengineering continuityに限定する。</p></div><span class="chip done">current head pass</span></div>
               <div class="task" data-state="open" data-horizon="research"><input type="checkbox" disabled aria-label="未完了"><div><strong>実行ごとにbinary/version identityを固定</strong><p>pathだけで同じsolverとみなさない。</p></div><span class="chip open">provenance</span></div>
               <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>80×6×5のmatched RSM MML回帰を一つ凍結</strong><p>入力hash、mfrmr/TAM version、人物分布、座標変換、積分規則、parameter、deviance、variance、EAP対EAPを同一recordへ保存する。既存runnerを拡張し、新frameworkは作らない。</p></div><span class="chip open">MC-1</span></div>
               <div class="task" data-state="open" data-horizon="research" data-priority="p1"><input type="checkbox" disabled aria-label="未完了"><div><strong>比較前に三契約のoverlapを署名</strong><p>MeasurementSpec、EstimationSpec、ScoringSpecの一致／差異を列単位で保存する。完全一致できない積分則はq感度と独立log-likelihoodで扱う。</p></div><span class="chip open">MC-2</span></div>
@@ -1650,7 +1655,9 @@
           API consistency local validation: <a href="fixed-calibration-api-consistency-local-validation-record-0.2.4.md">summary, print, plot, help, and render record</a> ·
           API consistency hosted run: <a href="fixed-calibration-api-consistency-hosted-run-32990152654-record-0.2.4.md">five-platform payload validation</a> ·
           human API review: <a href="fixed-calibration-human-api-review-candidate-0.2.4.md">unsigned exact-payload decision</a> ·
+          public documentation surface: <a href="public-documentation-surface-audit-record-0.2.4.md">help, vignette, navbar, and pkgdown alignment</a> ·
           TAM MML calibration: <a href="tam-mml-core-calibration-record-0.2.3.md">matched RSM/PCM calibration-only evidence</a> ·
+          TAM MML current head: <a href="tam-mml-core-current-head-record-0.2.4.md">0.2.4 engineering continuity, not stress</a> ·
           fixed-basis EAP oracle: <a href="fixed-calibration-g4-evidence-record-0.2.4.md">RSM/PCM operational evidence</a> ·
           GPCM disposition: <a href="fixed-calibration-g5-lane-disposition-0.2.4.md">G5 record</a> ·
           model-extension literature roadmap: <a href="measurement-model-extension-literature-roadmap-0.2.4.md">57 PDFs / 1,366-page audit and dependency contract</a> ·

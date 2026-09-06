@@ -211,6 +211,11 @@ identify whether the opt-in layer ran and retain its test log.
   desktop/narrow visual review, and an exact-head five-platform routine check;
   it closes the machine and rendered-review portion while leaving owner review,
   CORE-08, G6, and candidate transition authorization open.
+- `public-documentation-surface-audit-record-0.2.4.md`: rechecks the public
+  README, roadmap, help, vignette, navbar, and generated pkgdown surfaces;
+  records the corrected portable-calibration article route and current
+  development wording; and preserves meaningful secondary-example readiness
+  warnings rather than suppressing them page by page.
 - `fixed-calibration-g6-public-surface-record-0.2.4.md`: records the public
   release-candidate hardening slice: thin exported lifecycle/scoring wrappers,
   the central six-row capability matrix, an executable synthetic vignette,
@@ -3467,6 +3472,11 @@ identify whether the opt-in layer ran and retain its test log.
   values inform a future prospective TAM tolerance only; no TAM tolerance,
   candidate, comparison pass, free-slope GPCM extension, or release decision
   is frozen.
+- `tam-mml-core-current-head-0.2.4.R` and its companion record: minimal bridge
+  that preserves the frozen 0.2.3 runner and replays its RSM/PCM q31/q61 benign
+  comparison against the exact 0.2.4 development namespace. It verifies
+  numerical continuity only; weak-information, sparse, missingness, extreme-
+  score, and EAP stress remain untested against TAM MML.
 - `immer-conditional-estimand-eligibility-0.2.3.R` and its companion record:
   loaded-function-bound 22-row CML/CCML boundary. Only exactly mapped item,
   step, criterion-step, and rater contrasts can enter a future structural
