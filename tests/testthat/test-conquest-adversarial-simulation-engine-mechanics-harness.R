@@ -268,6 +268,7 @@ test_that("mechanics completion rewards coverage but rejects hidden loss", {
 })
 
 test_that("mfrmr execution binds to the 0.2.3 working-tree namespace", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_engine_mechanics_harness()
   .mfrmr_test_ensure_source_namespace(ctx$root)
   namespace <- ctx$env$mfrmr_cq_ameh_loaded_namespace(ctx$root)

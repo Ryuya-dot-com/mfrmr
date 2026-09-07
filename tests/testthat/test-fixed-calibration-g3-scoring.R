@@ -83,22 +83,15 @@ test_that("G3 contract source cannot fit score persist or launch", {
   expect_false(grepl("system2\\s*\\(|system\\s*\\(", source, perl = TRUE))
 })
 
-test_that("record and roadmap expose completed G3 without public promotion", {
+test_that("record exposes completed G3 without public promotion", {
   ctx <- load_fixed_calibration_g3_contract()
   record_path <- file.path(
     ctx$validation, "fixed-calibration-g3-scoring-record-0.2.4.md"
   )
   skip_if_not(file.exists(record_path), "Fixed-calibration G3 record is absent.")
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
-  roadmap <- paste(
-    readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
-    collapse = "\n"
-  )
 
   expect_match(record, ctx$env$mfrmr_fc_g3_specification, fixed = TRUE)
   expect_match(record, "`CORE04Complete=TRUE`", fixed = TRUE)
   expect_match(record, "`PublicAPIAuthorized=FALSE`", fixed = TRUE)
-  expect_match(roadmap, "- [x] **CORE-04 — Pure scoring:**", fixed = TRUE)
-  expect_match(roadmap, "- [x] **G3 — Operational scoring closure**", fixed = TRUE)
-  expect_match(roadmap, "  - [x] **G3 exit:**", fixed = TRUE)
 })

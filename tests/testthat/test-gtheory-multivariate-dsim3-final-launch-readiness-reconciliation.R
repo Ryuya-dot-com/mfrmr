@@ -70,6 +70,7 @@ gtheory_dsim3ab_evidence_paths <- function() {
 load_gtheory_dsim3ab <- local({
   environment <- NULL
   function() {
+    mfrmr_skip_if_not_gtheory_slow()
     paths <- c(gtheory_dsim3ab_paths(),
                gtheory_dsim3ab_evidence_paths())
     skip_if_not(

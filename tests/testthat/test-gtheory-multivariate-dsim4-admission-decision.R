@@ -85,7 +85,7 @@ test_that("D-SIM-4 admission record preserves the claim boundary", {
   expect_match(record, "8/8 required criteria", fixed = TRUE)
   expect_match(record, "0/14 confirmation requirements", fixed = TRUE)
   expect_match(record, "admit_contract_construction_only", fixed = TRUE)
-  expect_match(record, "operational owner", fixed = TRUE)
+  expect_match(record, "does not depend on an operational\\s+owner")
   expect_match(record, "D-SIM-5 execution authorized: **no**", fixed = TRUE)
   expect_match(record, "feature maturity: `specified`", fixed = TRUE)
 })

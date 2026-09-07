@@ -14,7 +14,6 @@ Thanks for helping improve `mfrmr`.
 # from package root
 install.packages(c("devtools", "roxygen2", "testthat"))
 devtools::document()
-devtools::test()
 devtools::check(args = c("--no-manual"), document = FALSE)
 ```
 
@@ -61,11 +60,13 @@ multi-step analyses to README/vignettes or non-CRAN tests.
   payloads.
 - Do not shrink example data below a meaningful many-facet structure just to
   satisfy CRAN timing. Reduce what CRAN executes; keep realistic examples in
-  vignettes and in the full `NOT_CRAN=true` test run.
+  vignettes and in the full packaged `NOT_CRAN=true` test run.
 - CRAN-time `testthat` runs the representative MML-to-export workflow test and
-  selected contracts from `tests/testthat.R`. Run the complete suite
-  locally/CI with `NOT_CRAN=true`; one CI matrix job must always use that
-  setting.
+  selected contracts from `tests/testthat.R`. Run all tests included in the
+  source package locally/CI with `NOT_CRAN=true`; one CI matrix job must always
+  use that setting. Source-tree-only historical and research validation tests
+  are excluded from the package and should be run only for the affected area,
+  with the source version and optional runtime they record.
 - Before release, run an `--as-cran` check with timing enabled and ensure the
   ordinary and `donttest` examples both execute. Treat the summed CRAN-side
   package workload for ordinary examples, `donttest` examples, tests, and
@@ -78,8 +79,8 @@ multi-step analyses to README/vignettes or non-CRAN tests.
 ## Pull request checklist
 
 - [ ] Code and docs updated together
-- [ ] `devtools::test()` passes
 - [ ] `devtools::check(args = c("--no-manual"), document = FALSE)` passes
+- [ ] Relevant source-tree-only validation tests pass when changed
 - [ ] NEWS entry updated when behavior changes materially
 
 ## Reporting bugs

@@ -27,6 +27,7 @@ gtheory_dsim3r_paths <- function() {
 load_gtheory_dsim3r <- local({
   environment <- NULL
   function() {
+    mfrmr_skip_if_not_gtheory_slow()
     paths <- gtheory_dsim3r_paths()
     skip_if_not(all(file.exists(paths)),
                 "repository-internal D-SIM-3 route adapter excluded")

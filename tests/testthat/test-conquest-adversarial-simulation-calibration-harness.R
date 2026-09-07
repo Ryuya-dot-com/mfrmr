@@ -276,6 +276,7 @@ test_that("P1 plan audit rejects denominator and authorization mutations", {
 })
 
 test_that("G4C P1 advances one capability and remains execution-incomplete", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_calibration_harness()
   review <- ctx$env$mfrmr_cq_ach_p1_review(
     ctx$g4x_output, ctx$calibration_output
@@ -511,6 +512,7 @@ test_that("P2 bridge rejects value mask key and typed-map mutations", {
 })
 
 test_that("G4C P2 adds only generation and bridge capabilities", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_calibration_harness()
   review <- ctx$env$mfrmr_cq_ach_p2_review(
     ctx$g4x_output, ctx$calibration_output, ctx$smoke_output

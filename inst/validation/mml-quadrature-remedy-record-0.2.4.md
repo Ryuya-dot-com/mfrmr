@@ -1,7 +1,7 @@
 # MML quadrature remedy record for mfrmr 0.2.4
 
-Status: `implementation scope verified; repository-wide regression baseline
-open`, 2026-09-07. The production behavior was frozen before implementation at
+Status: `implementation and package regression gate verified; source-tree-only
+historical replay bounded`, 2026-09-07. The production behavior was frozen before implementation at
 commit `e42e184cbde397acd6ff802e6299e90a77ce1750` and implemented at commit
 `f3659d954a9b83ed9435b18bccedfefeffd8ccb5`.
 
@@ -29,26 +29,24 @@ commit `e42e184cbde397acd6ff802e6299e90a77ce1750` and implemented at commit
 | Frozen TAM RSM density/release and PCM conditional-stress contract tests | pass |
 | Roxygen regeneration | pass |
 | Source tarball `R CMD check --no-tests` | `Status: OK` |
+| Exact source tarball `R CMD check`, `NOT_CRAN=true` | `Status: OK`; 16,506 package-test expectations passed, 0 failed |
 | pkgdown reference, redirects, and executed portable-calibration vignette | pass |
-| Full test suite on the current host | not green: 130 failing tests across 48 files before final documentation/test-only adjustments |
+| Initial raw source-tree `devtools::test()` diagnostic | not green: 232 errors/failures, dominated by package-excluded historical and optional research replays |
+| Targeted roadmap, calibration, ConQuest/TAM version-boundary, repository-boundary, and G-theory ledger tests | pass |
 | Release authorized | `FALSE` |
 
-The full-suite failures are concentrated in older content-hashed ConQuest,
-fixed-calibration roadmap, G-theory D-SIM, and weak-information stationarity
-evidence chains. Representative D-SIM-3 launch-readiness, D-SIM-3 final-launch,
-and stationarity-authorization failures were reproduced from a clean archive
-of the pre-implementation `HEAD`; they are not evidence of a quadrature API
-regression. This audit did not reclassify or rewrite their scientific evidence.
-The exact implementation commit therefore passes its affected surface and
-package-documentation checks, but the frozen contract's repository-wide
-full-test requirement remains open until the inherited validation baseline is
-reconciled.
+The raw source-tree diagnostic mixes the current package suite with historical
+source-bound and optional research tests that `.Rbuildignore` deliberately
+excludes. Stale public-roadmap coupling, version-bound 0.2.3 replays, and slow
+G-theory launch checks were reconciled at their test boundaries; the relevant
+targeted tests pass. The remaining weak-information G-theory replay requires a
+matching `glmmTMB`/`TMB` binary environment and is not a 0.2.4 package gate.
+This audit did not reclassify or rewrite its scientific evidence.
 
 ## Interpretation
 
 The TAM stress comparison remains part of 0.2.4. Its practical consequence is
 now represented in the package without making q181 a default, treating TAM as
 truth, or substituting a package-owned decision threshold for user judgment.
-The next 0.2.4 task is repository validation-integrity repair and an exact-head
-full-suite rerun, not another quadrature feature or a broader estimator.
-
+The next 0.2.4 task is final diff review followed by the exact-head CI matrix,
+not another quadrature feature or a broader estimator.

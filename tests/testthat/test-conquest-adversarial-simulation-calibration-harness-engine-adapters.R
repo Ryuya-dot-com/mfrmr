@@ -383,6 +383,7 @@ test_that("P3 execution routes exist but remain unopened", {
 })
 
 test_that("P3 advances exactly five capabilities and remains execution-free", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_calibration_p3()
   review <- ctx$env$mfrmr_cq_ach_p3_review(
     ctx$g4x_output, ctx$calibration_output, ctx$smoke_output

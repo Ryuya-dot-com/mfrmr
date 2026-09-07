@@ -91,9 +91,14 @@ mfrmr_erba_data_asset_class <- function(path) {
       "^inst/validation/(claim-disposition-profile|",
       "external-comparison-eligibility-fixtures|external-ic-fixtures|",
       "conquest-gpcm-overlap-registry|gpcm-model-identity-contract|",
+      "gtheory-measurement-core-page-review(-manifest)?|",
+      "gtheory-multivariate-[a-z0-9-]+|",
       "ic-contract-fixtures|",
-      "ic-free-dimension-fixtures|readiness-contract-fixtures|",
-      "release-evidence-checklist)-[^/]+[.]csv$"
+      "ic-free-dimension-fixtures|measurement-model-extension-[a-z0-9-]+|",
+      "public-release-baseline|readiness-contract-fixtures|",
+      "release-evidence-checklist|",
+      "tam-(mml-density-diagnostic|mml-release-stress|",
+      "pcm-mml-conditional-stress)-[a-z0-9-]+)-[^/]+[.]csv$"
     ),
     path, perl = TRUE
   )) {

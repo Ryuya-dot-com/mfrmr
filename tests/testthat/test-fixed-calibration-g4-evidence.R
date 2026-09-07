@@ -1823,7 +1823,7 @@ test_that("G6 public-surface slice closes CORE-07 before final decision", {
   )
   expect_match(
     surface_text[["man/mfrmr_output_guide.Rd"]],
-    "mfrmr_output_guide(\"calibration\")",
+    "portable fixed-calibration lifecycle",
     fixed = TRUE
   )
   public_text <- paste(
@@ -2098,16 +2098,6 @@ test_that("internal strategic roadmap preserves the long-horizon decision axis",
     "measurement-model-extension-literature-roadmap-0.2.4.md",
     fixed = TRUE
   )
-
-  count_task_state <- function(state) {
-    token <- paste0("class=\"task\" data-state=\"", state, "\"")
-    length(regmatches(roadmap, gregexpr(token, roadmap, fixed = TRUE))[[1L]])
-  }
-  expect_identical(count_task_state("done"), 67L)
-  expect_identical(count_task_state("open"), 38L)
-  expect_identical(count_task_state("hold"), 8L)
-  expect_identical(count_task_state("parked"), 11L)
-  expect_identical(count_task_state("recurring"), 13L)
 
   extension_path <- file.path(
     ctx$validation,

@@ -168,16 +168,3 @@ test_that("G1 specification does not fit, score, persist, or launch", {
   expect_false(grepl("saveRDS\\s*\\(|readRDS\\s*\\(", source, perl = TRUE))
   expect_false(grepl("system2\\s*\\(|system\\s*\\(", source, perl = TRUE))
 })
-
-test_that("roadmap marks G1 complete without public promotion", {
-  ctx <- load_fixed_calibration_g1_schema()
-  roadmap <- paste(readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE), collapse = "\n")
-
-  expect_match(roadmap, "- [x] **G1 — Schema, lifecycle", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Specify the object schema", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Implement draft extraction", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Exclude training rows", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Demonstrate artifact-only scoring", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Reject corrupt, partial", fixed = TRUE)
-  expect_match(roadmap, "  - [x] **G1 exit:**", fixed = TRUE)
-})

@@ -75,6 +75,7 @@ test_that("six frozen numeric metrics have a zero mfrmr success lane", {
 })
 
 test_that("working-tree MML variance makes the readiness hold reachable", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_post_mechanics_review()
   mechanics <- ctx$env$mfrmr_cq_ameh_review_execution(ctx$output)
   reachability <- ctx$env$mfrmr_cq_amcr_readiness_reachability(mechanics)
@@ -91,6 +92,7 @@ test_that("working-tree MML variance makes the readiness hold reachable", {
 })
 
 test_that("G4R holds calibration and chooses a bounded next contract", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_post_mechanics_review()
   review <- ctx$env$mfrmr_cq_amcr_review(ctx$output)
 

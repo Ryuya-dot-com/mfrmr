@@ -24,6 +24,7 @@ gtheory_dsim3u_worker_path <- function() {
 load_gtheory_dsim3u <- local({
   environment <- NULL
   function() {
+    mfrmr_skip_if_not_gtheory_slow()
     paths <- c(gtheory_dsim3u_paths(), gtheory_dsim3u_worker_path())
     skip_if_not(all(file.exists(paths)),
                 "repository-internal D-SIM-3 resource controller excluded")

@@ -66,6 +66,7 @@ test_that("the source preflight has an independent normalized GH rule", {
 })
 
 test_that("the source manifest binds the complete R source tree", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   loaded <- load_conquest_additive_reference()
   manifest <- loaded$env$mfrmr_cq_additive_source_manifest(
     loaded$source_root
@@ -105,6 +106,7 @@ test_that("PCM reference export keeps facet-specific step estimates", {
 })
 
 test_that("four source-bound arms pass the oracle but remain external NO-GO", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   loaded <- load_conquest_additive_reference()
   env <- loaded$env
   design_dir <- tempfile("conquest-additive-reference-")

@@ -100,9 +100,9 @@ conditional PCM stress lane is now required before release closure.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `tam-mml-release-stress-0.2.4.R` | `35baab7698a7a0c98c4d6aa3ee848b8ee7024435fb399bc02c2625f786b606bb` |
+| `tam-mml-release-stress-0.2.4.R` | `1a19296db9c650183e37d1d9c448780397009909c4c643e502896380dc40f017` |
 | `test-tam-mml-release-stress.R` | `a790340e628319d01d6108a0776f131b4ecb7bc3816429a63e3b818087b02a26` |
-| `tam-mml-release-stress-runtime-0.2.4.csv` | `5a1793d000793406e76a9bb425f0786ceaad59eb3b083849886d4aebc0d05ea1` |
+| `tam-mml-release-stress-runtime-0.2.4.csv` | `75cf015414ad807b6e7f968d77f6610c2b40192908e0e11140511cf5e7691a16` |
 | `tam-mml-release-stress-plan-0.2.4.csv` | `0ecb2c4306f1d94aa0c8f2699969f91575f96a52bb2c93c90bac490784db0da0` |
 | `tam-mml-release-stress-summary-0.2.4.csv` | `b67e4037b8561f200ea22f8fa90faff407398f5e80eb5cf0ddcfb732964400da` |
 | `tam-mml-release-stress-surface-0.2.4.csv` | `04016e27ff2fff3e98728c14e21751a90f8bd67bc6849ab7fd470873669cd620` |

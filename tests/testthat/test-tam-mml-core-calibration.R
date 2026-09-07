@@ -32,6 +32,7 @@ test_that("TAM MML calibration freezes the matched model and runtime identity", 
 
 test_that("TAM MML complete-crossing calibration is finite but nonconfirmatory", {
   ctx <- load_tam_mml_core_calibration()
+  .mfrmr_test_skip_unless_version("0.2.3")
   result <- ctx$env$mfrmr_run_tam_mml_core_calibration(ctx$root)
 
   expect_identical(

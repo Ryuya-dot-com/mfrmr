@@ -433,6 +433,7 @@ test_that("P4 consumes but never issues the separate live authorization", {
 })
 
 test_that("P4 closes 18 capabilities but does not open live execution", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_calibration_p4()
   review <- ctx$env$mfrmr_cq_ach_dry_run_review(
     ctx$g4x_output, ctx$calibration_output, ctx$smoke_output

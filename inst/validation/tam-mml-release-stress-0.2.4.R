@@ -66,7 +66,7 @@ mfrmr_tms_runtime_identity <- function(source_root = ".") {
       version == mfrmr_tms_expected_tam_version &
         observed_hashes == mfrmr_tms_expected_tam_hashes[functions]
     ),
-    SourceRoot = source_root,
+    SourceRoot = ".",
     stringsAsFactors = FALSE
   )
 }

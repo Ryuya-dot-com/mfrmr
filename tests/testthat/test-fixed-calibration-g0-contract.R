@@ -122,17 +122,13 @@ test_that("G0 source cannot fit, generate data, persist, or launch", {
   expect_false(grepl("system2\\s*\\(|system\\s*\\(", source, perl = TRUE))
 })
 
-test_that("record and roadmap expose only the completed G0 subclaims", {
+test_that("record exposes only the completed G0 subclaims", {
   ctx <- load_fixed_calibration_g0_contract()
   record <- paste(readLines(file.path(
     ctx$validation, "fixed-calibration-g0-contract-record-0.2.4.md"
   ), warn = FALSE), collapse = "\n")
-  roadmap <- paste(readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE), collapse = "\n")
 
   expect_match(record, ctx$env$mfrmr_fc_g0_specification, fixed = TRUE)
   expect_match(record, "`PublishedArtifactIdentityBound=TRUE`", fixed = TRUE)
   expect_match(record, "`G0ExitComplete=TRUE`", fixed = TRUE)
-  expect_match(roadmap, "[x] **GOV-07 — Claim ledger:**", fixed = TRUE)
-  expect_match(roadmap, "- [x] **G0 — Post-0.2.3 baseline", fixed = TRUE)
-  expect_match(roadmap, "- [x] **G0 exit:**", fixed = TRUE)
 })

@@ -25,6 +25,7 @@ gtheory_dsim3l_root <- function() {
 load_gtheory_dsim3l <- local({
   environment <- NULL
   function() {
+    mfrmr_skip_if_not_gtheory_slow()
     paths <- gtheory_dsim3l_paths()
     skip_if_not(all(file.exists(paths)),
                 "repository-internal D-SIM-3 launch audit excluded")

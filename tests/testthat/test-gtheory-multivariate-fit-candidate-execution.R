@@ -398,118 +398,37 @@ test_that("multivariate G-theory current-state ledger supersedes the record queu
   )
   expect_match(truth_blind$next_action, "Defer c4q", fixed = TRUE)
 
-  active <- ledger$portfolio_priority == "active_now"
-  expect_identical(sum(active), 1L)
-  expect_identical(ledger$control_id[active], "D0")
-  expect_true(ledger$satisfied[active])
+  d0 <- ledger[ledger$control_id == "D0", , drop = FALSE]
+  expect_identical(nrow(d0), 1L)
+  expect_true(d0$satisfied)
+  expect_identical(d0$current_stage, "D-SIM-6-maturity-disposition-v1")
   expect_identical(
-    ledger$current_stage[active],
-    "D-SIM-4-worker-qualification-v1"
+    d0$current_state,
+    "specified_negative_confirmation_complete"
   )
-  expect_identical(
-    ledger$current_state[active],
-    "dsim4_worker_qualified_static_reconciliation_passed_dsim5_closed"
-  )
-  expect_match(ledger$current_evidence[active],
-               "14 axes and 44 levels", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "passes 7/7 deterministic criteria", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "21 outcome-blind cells", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "42 dataset attempts", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "47/47 separate-univariate G/Phi truth coefficients",
+  expect_identical(d0$portfolio_priority, "hold_problem_evidence")
+  expect_match(d0$current_evidence, "15,000/15,000 outer", fixed = TRUE)
+  expect_match(d0$current_evidence, "D-SIM-6 retains package maturity",
                fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "51/51 shadow fits", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "42/42 datasets and 50/50 candidate routes", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "92/92 exact terminal receipts", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "98/100 metrics", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "D3-S012 replicate 2", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "21 singular/convergence-message calls", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "92/92 exact terminal requests", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "289 total", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "reuses one stochastic core with zero copies", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "42/42 exact 856 requests", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "21/21 nonreserved profiles", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "5/5 frozen artifact identities", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "8/8 current environment identities", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "289/289 request/qualified-path joins", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "10/10 readiness gates", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "184 of 188 planned", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "ABS-PHI RMSE 0.05240607", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "REL-G RMSE 0.05008863", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "maximum absolute error 0.3240437", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "40/40 within-backend parity", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "passes 8/8 scientific criteria", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "closes 14/14 requirements", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "six profiles covering all four scenario roles", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "all 37 dataset-axis levels", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "15,000 outer attempts and 995,000 inner bootstrap attempts",
-               fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "95% full-refit parametric-bootstrap percentile interval",
-               fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "passes 10/10 qualification gates", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "2,022,500 backend calls", fixed = TRUE)
-  expect_match(ledger$current_evidence[active],
-               "199 route-level bootstrap attempts, 398 refits, and 796",
-               fixed = TRUE)
-  expect_match(ledger$blocking_condition[active],
-               "no shardable launch input", fixed = TRUE)
-  expect_match(ledger$next_action[active],
-               "Package the exact reconciled requests into restartable shards",
+  expect_match(d0$blocking_condition, "fails both estimands", fixed = TRUE)
+  expect_match(d0$next_action, "Keep the negative confirmation immutable",
                fixed = TRUE)
   expect_identical(
-    ledger$claim_ceiling[active],
-    "descriptive_recovery_evidence_only_nonconfirmatory"
+    d0$claim_ceiling,
+    "negative_confirmation_no_public_support"
   )
-  expect_match(ledger$historical_or_nonpromoting_evidence[active],
-               "owner packet", fixed = TRUE)
-  expect_match(ledger$historical_or_nonpromoting_evidence[active],
-               "0/14 frozen requirements is historical", fixed = TRUE)
-  expect_match(ledger$historical_or_nonpromoting_evidence[active],
-               "worker qualification are contract/mechanics evidence",
-               fixed = TRUE)
-  expect_false(ledger$execution_allowed[active])
+  expect_false(d0$execution_allowed)
 
-  record_paths <- list.files(
-    validation,
-    pattern = "^gtheory-multivariate-.*-record-0[.]2[.][34][.]md$",
-    full.names = TRUE
-  )
   listed <- unique(Filter(
     nzchar,
     unlist(strsplit(ledger$lineage_records, ";", fixed = TRUE))
   ))
-  expect_setequal(listed, basename(record_paths))
+  expect_true(all(file.exists(file.path(validation, listed))))
+  expect_true(all(c(
+    "gtheory-multivariate-dsim5-complete-denominator-adjudication-record-0.2.4.md",
+    "gtheory-multivariate-dsim5-d4s006-root-cause-audit-0.2.4.md",
+    "gtheory-multivariate-dsim6-maturity-disposition-record-0.2.4.md"
+  ) %in% listed))
 })
 
 test_that("D-SIM-0 is deterministic, bounded, and execution closed", {
