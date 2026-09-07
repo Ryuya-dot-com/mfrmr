@@ -70,6 +70,27 @@ test_that("fit output leads with a plain-language decision", {
   )
 })
 
+test_that("MML console output states its integration and population contracts", {
+  fit <- make_toy_fit(method = "MML", maxit = 25)
+
+  for (lines in list(
+    capture.output(print(fit)),
+    capture.output(print(summary(fit, detail = "brief")))
+  )) {
+    text <- gsub("[[:space:]]+", " ", paste(lines, collapse = " "))
+    expect_match(text, "fixed non-adaptive Gauss-Hermite", fixed = TRUE)
+    expect_match(text, "q=31", fixed = TRUE)
+    expect_match(text, "latent dimensions=1", fixed = TRUE)
+    expect_match(text, "Population identification: fixed N(0,1)", fixed = TRUE)
+    expect_match(text, "discrimination=1", fixed = TRUE)
+    contract_start <- grep("MML engine:", lines, fixed = TRUE)
+    contract_end <- grep("Population identification:", lines, fixed = TRUE)
+    expect_length(contract_start, 1L)
+    expect_length(contract_end, 1L)
+    expect_public_console_output(lines[contract_start:contract_end])
+  }
+})
+
 test_that("major beginner-facing summaries respect the 80-column privacy contract", {
   old_options <- options(width = 80L)
   on.exit(options(old_options), add = TRUE)

@@ -177,6 +177,9 @@ records its distribution denominator, exclusion count, and estimate use.
 \item \code{step_overview}: threshold spread and monotonicity checks, reported by
 \code{StepFacet} ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 \item \code{settings_overview}: estimation settings that affect interpretation.
+For MML fits, the printed fit and summary also state the engine, fixed
+non-adaptive Gauss--Hermite rule and order, one-dimensional latent
+structure, population identification, and discrimination constraint.
 \item \code{population_coding}: fitted categorical levels and contrasts that must be
 reused when scoring new persons under the population-model posterior.
 \item \code{key_warnings} / \code{notes}: short triage subset of retained zero-count score

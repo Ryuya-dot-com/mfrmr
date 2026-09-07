@@ -3784,6 +3784,12 @@ print.mfrm_fit <- function(x, ...) {
     if (decision_available) {
       print_fit_decision_section(fit_summary$decision)
     }
+    if (!is.null(fit_summary)) {
+      mml_contract_lines <- mfrm_mml_integration_console_lines(fit_summary)
+      if (length(mml_contract_lines) > 0L) {
+        print_wrapped_line(mml_contract_lines)
+      }
+    }
     if (nrow(scale_contract) > 0L) {
       population_sd <- as.numeric(scale_contract$PopulationSD[1])
       population_text <- if (is.finite(population_sd)) {

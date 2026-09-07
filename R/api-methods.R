@@ -8243,6 +8243,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `step_overview`: threshold spread and monotonicity checks, reported by
 #'   `StepFacet` ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 #' - `settings_overview`: estimation settings that affect interpretation.
+#'   For MML fits, the printed fit and summary also state the engine, fixed
+#'   non-adaptive Gauss--Hermite rule and order, one-dimensional latent
+#'   structure, population identification, and discrimination constraint.
 #' - `population_coding`: fitted categorical levels and contrasts that must be
 #'   reused when scoring new persons under the population-model posterior.
 #' - `key_warnings` / `notes`: short triage subset of retained zero-count score
@@ -10306,6 +10309,55 @@ print_fit_decision_section <- function(decision) {
   invisible(NULL)
 }
 
+mfrm_mml_integration_console_lines <- function(summary_object) {
+  overview <- as.data.frame(
+    summary_object$overview %||% data.frame(), stringsAsFactors = FALSE
+  )
+  if (nrow(overview) == 0L ||
+      !identical(as.character(overview$Method[1] %||% ""), "MML")) {
+    return(character(0))
+  }
+  settings <- as.data.frame(
+    summary_object$settings_overview %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  population <- as.data.frame(
+    summary_object$population_overview %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  engine_used <- as.character(overview$MMLEngineUsed[1] %||% "unknown")
+  engine_requested <- as.character(
+    overview$MMLEngineRequested[1] %||% engine_used
+  )
+  quad_points <- suppressWarnings(as.integer(
+    settings$QuadPoints[1] %||% overview$ICQuadraturePoints[1] %||% NA_integer_
+  ))
+  integration <- paste0(
+    "MML engine: ", engine_used, " (requested: ", engine_requested, ") | ",
+    "Integration: fixed non-adaptive Gauss-Hermite (Golub-Welsch), q=",
+    if (is.finite(quad_points)) quad_points else "unknown",
+    " | latent dimensions=1"
+  )
+  population_text <- if (isTRUE(population$PopulationModel[1] %||% FALSE)) {
+    formula <- gsub("[[:space:]]+", "", as.character(
+      population$Formula[1] %||% ""
+    ))
+    if (identical(formula, "~1")) {
+      "Population identification: estimated N(beta0,sigma^2)"
+    } else {
+      "Population identification: estimated N(X beta,sigma^2)"
+    }
+  } else {
+    "Population identification: fixed N(0,1)"
+  }
+  scale_text <- if (identical(as.character(overview$Model[1] %||% ""), "GPCM")) {
+    "relative slopes: geometric mean=1"
+  } else {
+    "discrimination=1"
+  }
+  c(integration, paste(population_text, scale_text, sep = " | "))
+}
+
 mfrm_console_width <- function() {
   width <- getOption("width", 80L)
   if (length(width) != 1L || !is.numeric(width) || is.na(width) ||
@@ -10469,13 +10521,12 @@ print.summary.mfrm_fit <- function(x, ...) {
         !identical(as.character(used_public), as.character(ov$Method))) {
       print_wrapped_line(paste0("Resolved estimator: ", ov$MethodUsed))
     }
+    mml_contract_lines <- mfrm_mml_integration_console_lines(x)
+    if (length(mml_contract_lines) > 0L) {
+      print_wrapped_line(mml_contract_lines)
+    }
     if (identical(as.character(ov$Method %||% NA_character_), "MML") &&
         !is.na(ov$MMLEngineUsed %||% NA_character_)) {
-      print_wrapped_line(sprintf(
-        "MML engine: %s (requested: %s)",
-        ov$MMLEngineUsed %||% NA_character_,
-        ov$MMLEngineRequested %||% NA_character_
-      ))
       if (is.finite(ov$EMIterations %||% NA_real_)) {
         print_wrapped_line(sprintf(
           "EM iterations: %s | EM converged: %s | Last relative change: %s",

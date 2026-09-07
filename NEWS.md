@@ -2,6 +2,9 @@
 
 ## Reliability and reproducibility
 
+* MML `print()` and `summary()` output now states the optimization engine,
+  fixed non-adaptive Gauss--Hermite rule, quadrature order, one-dimensional
+  latent structure, and the fitted population-scale identification.
 * Generalizability-study and D-study results now state explicitly that their
   G/Phi coefficients are estimated on the observed numeric score scale, not on
   the fitted MFRM latent scale. Ordered scores continue to use the documented

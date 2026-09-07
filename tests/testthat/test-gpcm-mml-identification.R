@@ -151,6 +151,16 @@ test_that("default GPCM MML estimates the common population scale", {
     fixed = TRUE
   )))
   expect_true(any(grepl(
+    "Integration: fixed non-adaptive Gauss-Hermite (Golub-Welsch), q=7",
+    fit_console_text,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Population identification: estimated N(beta0,sigma^2) | relative slopes: geometric mean=1",
+    fit_console_text,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
     "Statistical penalty: none | Finite parameter box: no",
     fit_console_text,
     fixed = TRUE
@@ -168,6 +178,16 @@ test_that("default GPCM MML estimates the common population scale", {
   )
   expect_true(any(grepl(
     "GPCM estimator: marginal_maximum_likelihood",
+    summary_console_text,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Integration: fixed non-adaptive Gauss-Hermite (Golub-Welsch), q=7",
+    summary_console_text,
+    fixed = TRUE
+  )))
+  expect_true(any(grepl(
+    "Population identification: estimated N(beta0,sigma^2) | relative slopes: geometric mean=1",
     summary_console_text,
     fixed = TRUE
   )))
