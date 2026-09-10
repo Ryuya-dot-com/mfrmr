@@ -1,0 +1,7 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-plot-comparison.R","plot-comparison","paired Wright plots match identities and retain unavailable differences",10,0,FALSE,FALSE,0,1.171,0.017,1.194,10
+"test-plot-comparison.R","plot-comparison","CCC differences use shared engine coordinates with a known direction",8,0,FALSE,FALSE,0,0.077,0.002,0.0800000000000001,8
+"test-plot-comparison.R","plot-comparison","common RSM curves are paired explicitly with selected PCM groups",9,0,FALSE,FALSE,0,1.217,0.00699999999999999,1.226,9
+"test-plot-comparison.R","plot-comparison","comparison validates scale, categories, selection and identity",11,0,FALSE,FALSE,0,0.141,0.003,0.147,11
+"test-plot-comparison.R","plot-comparison","original scores, eleven categories and GPCM slopes survive comparison",9,0,FALSE,FALSE,0,0.342,0.00800000000000001,0.356999999999999,9
+"test-plot-comparison.R","plot-comparison","comparison renderers retain notes, layout and monochrome encodings",36,0,FALSE,FALSE,0,1.517,0.025,1.544,36

@@ -551,7 +551,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
   if (diff(xr) == 0) xr <- xr + c(-0.5, 0.5)
   xlim <- xr + c(-0.1, 0.1) * diff(xr)
 
-  old_par <- graphics::par(no.readonly = TRUE)
+  old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(4, max(7, min(14, max(nchar(labels)) * 0.5)), 3, 1))
   graphics::plot(

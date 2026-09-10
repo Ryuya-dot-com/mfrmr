@@ -1,0 +1,21 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-as-ggplot.R","as-ggplot","as_ggplot converts the core fitted-result plots",14,0,FALSE,FALSE,0,2.762,0.028,2.803,14
+"test-as-ggplot.R","as-ggplot","fit curves share colour and line encodings across renderers",54,0,FALSE,FALSE,0,3.573,0.045,3.624,54
+"test-as-ggplot.R","as-ggplot","as_ggplot accepts fitted objects and CCC slope styling",7,0,FALSE,FALSE,0,0.38,0.000999999999999973,0.381,7
+"test-as-ggplot.R","as-ggplot","as_ggplot converts DIF summary and heatmap payload shapes",2,0,FALSE,FALSE,0,0.0810000000000013,0.001,0.0820000000000007,2
+"test-as-ggplot.R","as-ggplot","as_ggplot converts simulation handoff lists",2,0,FALSE,FALSE,0,0.072000000000001,0,0.0730000000000004,2
+"test-namespace-contract.R","namespace-contract","NAMESPACE roxygen contract keeps expected exports and methods",4,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00399999999999956,4
+"test-plot-comparison.R","plot-comparison","paired Wright plots match identities and retain unavailable differences",10,0,FALSE,FALSE,0,0.452,0.005,0.456999999999999,10
+"test-plot-comparison.R","plot-comparison","CCC differences use shared engine coordinates with a known direction",8,0,FALSE,FALSE,0,0.052999999999999,0.002,0.0539999999999985,8
+"test-plot-comparison.R","plot-comparison","common RSM curves are paired explicitly with selected PCM groups",9,0,FALSE,FALSE,0,0.384,0.003,0.386999999999999,9
+"test-plot-comparison.R","plot-comparison","comparison validates scale, categories, selection and identity",11,0,FALSE,FALSE,0,0.135999999999999,0.001,0.138,11
+"test-plot-comparison.R","plot-comparison","original scores, eleven categories and GPCM slopes survive comparison",7,0,FALSE,FALSE,0,0.117000000000001,0.002,0.118,7
+"test-plot-comparison.R","plot-comparison","comparison renderers retain notes, layout and monochrome encodings",35,0,FALSE,FALSE,0,1.524,0.01,1.534,35
+"test-plot-device-state.R","plot-device-state","single-panel plots advance through caller layouts and restore style",18,0,FALSE,FALSE,0,0.556000000000001,0.00599999999999998,0.563000000000001,18
+"test-plot-device-state.R","plot-device-state","Wright and CCC layouts do not shrink subsequent standalone plots",20,0,FALSE,FALSE,0,1.277,0.00700000000000001,1.284,20
+"test-plot-device-state.R","plot-device-state","APA composite draws four panels on one page",3,0,FALSE,FALSE,0,0.451,0.002,0.452,3
+"test-plot-device-state.R","plot-device-state","native labels remain distinct without moving or discarding fitted data",73,0,FALSE,FALSE,0,3.712,0.025,3.743,73
+"test-plot-device-state.R","plot-device-state","long and Japanese names stay distinguishable when abbreviated",12,0,FALSE,FALSE,0,0.00900000000000034,0.002,0.0109999999999992,12
+"test-plot-device-state.R","plot-device-state","numerous PCM thresholds do not erase the default facet display",14,0,FALSE,FALSE,0,2.183,0.025,2.213,14
+"test-plot-device-state.R","plot-device-state","an overcrowded canvas reports its limit without deleting labels",3,0,FALSE,FALSE,0,0.0150000000000006,0,0.0160000000000018,3
+"test-plot-device-state.R","plot-device-state","pathway and CCC disclose the same reference profile in data and drawing",7,0,FALSE,FALSE,0,0.550000000000001,0.006,0.561,7

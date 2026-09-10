@@ -1,0 +1,4 @@
+"file","passed","failed","warning","skipped","error","SourceMD5"
+"test-estimability-audit.R",326,0,0,0,0,"89a8665489d96281ee85e991883dc440"
+"test-nonlinear-local-estimability-classification.R",37,0,0,0,0,"ee0f3f8878e17415b255bd8173700fa7"
+"test-readiness-propagation.R",92,0,0,0,0,"304a92e5c2a82fa11bd9b4c69d9df66a"

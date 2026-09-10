@@ -1443,12 +1443,20 @@ build_mfrm_replay_script <- function(fit,
             "# Person-level background data used by the fitted latent-regression branch",
             "replay_script_args <- commandArgs(trailingOnly = FALSE)",
             "replay_script_file <- replay_script_args[grepl('^--file=', replay_script_args)]",
-            "replay_script_path <- if (length(replay_script_file) > 0) {",
-            "  sub('^--file=', '', replay_script_file[1])",
-            "} else {",
-            "  tryCatch(sys.frames()[[1]]$ofile, error = function(e) '')",
+            "replay_script_path <- ''",
+            "for (replay_frame in rev(seq_len(sys.nframe()))) {",
+            "  if (identical(sys.function(replay_frame), base::source) ||",
+            "      identical(sys.function(replay_frame), base::sys.source)) {",
+            "    replay_env <- sys.frame(replay_frame)",
+            "    replay_script_path <- if (exists('ofile', replay_env, inherits = FALSE)) replay_env$ofile else replay_env$file",
+            "    if (isTRUE(replay_env$chdir)) replay_script_path <- basename(replay_script_path)",
+            "    break",
+            "  }",
             "}",
-            "replay_script_dir <- if (is.character(replay_script_path) && nzchar(replay_script_path)) {",
+            "if (identical(replay_script_path, '') && length(replay_script_file) > 0) {",
+            "  replay_script_path <- sub('^--file=', '', replay_script_file[1])",
+            "}",
+            "replay_script_dir <- if (is.character(replay_script_path) && length(replay_script_path) == 1L && nzchar(replay_script_path)) {",
             "  dirname(normalizePath(replay_script_path, winslash = '/', mustWork = FALSE))",
             "} else {",
             "  getwd()",
@@ -5528,6 +5536,7 @@ export_validate_optional_object <- function(x, class_name, arg_name) {
   if (!inherits(x, class_name)) {
     stop("`", arg_name, "` must be output from ", class_name, " helpers.", call. = FALSE)
   }
+  prediction_validate_population_output(x)
   x
 }
 

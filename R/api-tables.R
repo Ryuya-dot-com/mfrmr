@@ -452,8 +452,8 @@ unexpected_response_table <- function(fit,
 #' @param facets Optional subset of facets.
 #' @param totalscore Include all observations for score totals (`TRUE`) or apply
 #'   legacy extreme-row exclusion (`FALSE`).
-#' @param umean Additive score-to-report origin shift.
-#' @param uscale Multiplicative score-to-report scale.
+#' @param umean Additive origin shift for Measure (not fair-score values).
+#' @param uscale Multiplicative scale for Measure and measure SEs (not fair scores).
 #' @param udecimals Rounding digits used in formatted output.
 #' @param reference Which adjusted-score reference to keep in formatted outputs:
 #'   `"both"` (default), `"mean"`, or `"zero"`.
@@ -483,6 +483,10 @@ unexpected_response_table <- function(fit,
 #' standard FACETS Linacre construction: fair averages are
 #' Rasch-measure-to-score transformations evaluated in a standardized
 #' mean/zero-facet environment.
+#' FairM uses mean other-facet measures (and mean person measure for non-person
+#' rows); FairZ uses zero references. Neither integrates over the observed
+#' assignment/person distribution. FairZ and its historical alias
+#' `StandardizedAdjustedAverage` are expected scores, not z-scores.
 #'
 #' Bounded `GPCM` fits are supported under a slope-aware
 #' element-conditional construction. For each slope-facet element
@@ -513,8 +517,8 @@ unexpected_response_table <- function(fit,
 #' - `raw_by_facet`: unformatted values for custom analyses/plots.
 #' - `settings`: scoring-transformation and filtering options used.
 #'
-#' Larger observed-vs-fair gaps can indicate systematic scoring tendencies by
-#' specific facet levels.
+#' Observed-vs-fair gaps also reflect person mix and assignment. They are
+#' descriptive follow-up prompts, not standalone evidence of rater bias.
 #'
 #' @section Typical workflow:
 #' 1. Run `fair_average_table(fit, ...)`.
@@ -528,7 +532,7 @@ unexpected_response_table <- function(fit,
 #'   \item{Level}{Element label within the facet.}
 #'   \item{Obsvd Average}{Observed raw-score average.}
 #'   \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
-#'   \item{Fair(Z) Average}{Standardized adjusted reference average.}
+#'   \item{Fair(Z) Average}{Expected score at a zero reference environment, not a z-score.}
 #'   \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 #'   \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `AdjustedAverage` when `fair_se = TRUE` and available.}
 #'   \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `StandardizedAdjustedAverage` when `fair_se = TRUE` and available.}
@@ -542,9 +546,8 @@ unexpected_response_table <- function(fit,
 #' The `SE`, `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
 #' columns in this table are the **measure-level** standard errors of the
 #' underlying facet element (the same SE that would appear in
-#' `summary(fit)$facets`), rescaled by the fair-average score scale factor
-#' so the units line up with the reported `Fair(M) Average` / `Fair(Z) Average`
-#' columns. They are **not** delta-method standard errors of the fair-average
+#' `summary(fit)$facets`), rescaled by `uscale` to the reported Measure units.
+#' Fair scores remain on the fitted internal score scale. They are **not** delta-method standard errors of the fair-average
 #' values themselves. When `fair_se = TRUE`, the distinct `Fair(M) S.E.` /
 #' `Fair(Z) S.E.` columns are computed by
 #' propagating the joint covariance of the relevant facet element, the
@@ -555,6 +558,16 @@ unexpected_response_table <- function(fit,
 #' SEs. **Do not use the measure-level `SE` / `Model S.E.` columns as
 #' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
 #' fair-average value.**
+#' `FairCIEligible` is `FALSE` for these diagnostic intervals; numerical
+#' availability (`ok` or `regularized`) does not establish inferential validity.
+#' `FairCIReportingUse` distinguishes diagnostic-only and unavailable rows.
+#' Full-refit coverage remains unverified. For RSM/PCM, this table does not
+#' supply fair-score SEs; [plot_fair_average()] can compute a conditional
+#' interval from a fitted model by propagating only the focal measure SE.
+#' Summaries identify `FairMetric`: FairM for mean/both reference tables, FairZ
+#' for zero-reference tables, with matching score/SE column names.
+#' Export `stacked` or the summary's `summary` / `preview` data.frames with
+#' [utils::write.csv()]. [export_summary_appendix()] does not accept this bundle.
 #'
 #' @return A named list with:
 #' - `by_facet`: named list of formatted data.frames
@@ -651,6 +664,9 @@ fair_average_table <- function(fit,
     xtreme = xtreme,
     fair_se = isTRUE(fair_se),
     ci_level = ci_level,
+    rating_min = fit$prep$rating_min,
+    rating_max = fit$prep$rating_max,
+    score_map = fit$prep$score_map,
     model = fit_model,
     method = if (identical(fit_model, "GPCM")) "GPCM-slope-aware" else "PCM/RSM"
   )
@@ -8194,7 +8210,7 @@ plot_table13_bias <- function(x,
         cols <- grDevices::colorRampPalette(
           c("#2166AC", "#FFFFFF", "#B2182B")
         )(101)
-        old_par <- graphics::par(no.readonly = TRUE)
+        old_par <- graphics::par()["mar"]
         on.exit(graphics::par(old_par), add = TRUE)
         graphics::par(mar = c(max(5, label_angle / 9 + 4),
                               max(5, max(nchar(a_lvls)) * 0.55 + 2),

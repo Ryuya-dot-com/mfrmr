@@ -1,0 +1,4 @@
+"LinkID","AnchorId","Facet","Level","Est_From","Est_To","SE_From","SE_To","Retained","Contributing","Flag"
+"1","anchor_1","Item","I1",0,0,1,1,TRUE,TRUE,FALSE
+"1","anchor_2","Item","I2",0,1,2,2,TRUE,TRUE,FALSE
+"1","anchor_3","Item","I3",0,2,NA,NA,TRUE,FALSE,FALSE

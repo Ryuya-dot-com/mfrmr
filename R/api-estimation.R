@@ -383,8 +383,14 @@
 #' marginalization. A weight also does not turn the score into a count outcome
 #' or model dependence among repeated ratings. Non-positive finite weights are
 #' excluded during preparation, and non-unit observation-weight fits are not
-#' eligible for the common MML information-criterion panel under the current
-#' package contract.
+#' eligible for ordinary inference, facet equivalence, or the common MML
+#' information-criterion panel under the current package contract. Normalizing
+#' weights to mean one does not remove this restriction. Point estimates and
+#' computed curvature/posterior precision remain available for diagnostic
+#' review; they do not establish sampling SEs or confidence coverage for the
+#' weighted objective. Omitted weights and explicitly all-unit weights use
+#' the same eligibility rules. Earlier saved fits require refitting or a
+#' current readiness audit; their old inference flags are not carried forward.
 #'
 #' The fitted many-facet ordered-response model assumes conditional
 #' independence of observations given the person and facet parameters
@@ -608,16 +614,16 @@
 #'
 #' @section Latent-regression standard-error caveat:
 #' `summary(fit)$population_coefficients` reports point estimates of
-#' \eqn{\hat{\boldsymbol{\beta}}} and \eqn{\hat{\sigma}^2} only. mfrmr does
-#' **not** currently compute standard errors, confidence intervals, or
-#' asymptotic z / Wald statistics for the population-model parameters: no
-#' Hessian on \eqn{(\boldsymbol{\beta}, \log\sigma^2)} is extracted from the
-#' marginal log-likelihood, and no `vcov()` method is exposed for these
-#' coefficients. Treat the coefficient table as point estimates suitable
-#' for descriptive reporting; **do not** quote \eqn{\hat{\beta}_j \pm 1.96
-#' \cdot \mathrm{SE}} bounds because the SE column is not provided. A
-#' marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is not
-#' available from this function.
+#' \eqn{\hat{\boldsymbol{\beta}}}; `population_overview` reports the estimated
+#' population variance. These tables do **not** provide standard errors,
+#' confidence intervals, or asymptotic z / Wald statistics for the population
+#' parameters, and no `vcov()` method is exposed for these coefficients.
+#' The internal MML observed-information calculation includes
+#' \eqn{(\boldsymbol{\beta}, \log\sigma^2)} when computing joint covariance
+#' for structural-parameter SEs. That internal calculation does not establish
+#' a supported population-parameter inference API. Treat the population
+#' tables as point estimates for descriptive reporting; **do not** quote
+#' \eqn{\hat{\beta}_j \pm 1.96 \cdot \mathrm{SE}} bounds from these tables.
 #'
 #' Identification: the latent-regression intercept is identifiable only
 #' under the default `noncenter_facet = "Person"` (which sum-to-zero-
@@ -892,7 +898,8 @@
 #' - `steps`: estimated threshold/step parameters as a one-row-per-step
 #'   `tibble` with `Estimate`. Bare fits keep this table as point estimates.
 #'   `diagnose_mfrm()` exposes MML observed-information step uncertainty in
-#'   `diagnostics$parameter_uncertainty$steps`; when
+#'   `diagnostics$parameter_uncertainty$steps`. Check `CIEligible` and `CIUse`:
+#'   finite curvature-based bands alone do not establish ordinary inference. When
 #'   `attach_diagnostics = TRUE`, those `SE`, confidence-limit, and status
 #'   columns are attached to `fit$steps` when the Hessian is available.
 #'   For step-structure quality, also use the step-collapse and disordering
@@ -1559,7 +1566,8 @@ attach_diagnostics_to_fit <- function(fit) {
   # naming the user most often expects.
   merge_cols <- intersect(
     c("ModelSE", "Infit", "Outfit", "InfitZSTD", "OutfitZSTD",
-      "PTMEA", "PtMeaCorr"),
+      "PTMEA", "PtMeaCorr", "InferenceReady", "SupportsFormalInference",
+      "SEUse", "CIEligible", "CIUse", "CIBasis", "CILabel"),
     names(m)
   )
   if (length(merge_cols) == 0L) {
@@ -4252,7 +4260,9 @@ make_anchor_table <- function(fit,
 #' - `precision_review`: package-native checks for SE, CI, and reliability
 #' - `parameter_uncertainty`: MML observed-information uncertainty for
 #'   structural parameters when available (`steps`, and bounded-`GPCM`
-#'   `slopes` on both log and positive scales), plus covariance status metadata
+#'   `slopes` on both log and positive scales), plus covariance status metadata.
+#'   Step `CIEligible` and `CIUse` retain the source fit's restrictions;
+#'   non-unit observation-weight bands are diagnostic only.
 #' - `facet_precision`: facet-level precision summary by distribution basis and
 #'   SE mode
 #' - `facets_chisq`: fixed/random facet variability summary

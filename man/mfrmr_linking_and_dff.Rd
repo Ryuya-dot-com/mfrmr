@@ -123,7 +123,9 @@ because their uncertainty is conditional on baseline anchors.}
 \item Use \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} for assignment/co-observation connectedness.
 Agreement, severity-direction, and halo networks describe score relations;
 they do not establish an empirical link or a common measurement scale.
-\item Use DFF outputs as screening results when common-scale linking is weak.
+\item Use residual and refit DFF outputs as screening results. Even with an
+adequate link, refit SEs condition on baseline anchors and omit their
+uncertainty and cross-refit covariance; formal inference remains unavailable.
 \item Always name the facet, facet level, and group pair involved in a DFF
 contrast. A generic "DIF exists" statement is not interpretable in a
 many-facet design.

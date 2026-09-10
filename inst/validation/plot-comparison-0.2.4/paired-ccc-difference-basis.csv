@@ -1,0 +1,13 @@
+"Component","Matches"
+"method",TRUE
+"facets",TRUE
+"rating_min",TRUE
+"rating_max",TRUE
+"score_map",TRUE
+"noncenter_facet",TRUE
+"dummy_facets",TRUE
+"positive_facets",TRUE
+"anchors",TRUE
+"group_anchors",TRUE
+"coordinate_basis",TRUE
+"prepared_rating_range",TRUE

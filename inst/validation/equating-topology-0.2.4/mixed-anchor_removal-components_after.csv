@@ -1,0 +1,17 @@
+"AnchorId","WaveID","Wave","Before","After"
+"anchor_1",1,"Form A",1,1
+"anchor_1",2,"Form B",1,1
+"anchor_1",3,"Form C",1,2
+"anchor_1",4,"Form D",2,3
+"anchor_2",1,"Form A",1,1
+"anchor_2",2,"Form B",1,1
+"anchor_2",3,"Form C",1,1
+"anchor_2",4,"Form D",2,2
+"anchor_3",1,"Form A",1,1
+"anchor_3",2,"Form B",1,1
+"anchor_3",3,"Form C",1,1
+"anchor_3",4,"Form D",2,2
+"anchor_4",1,"Form A",1,1
+"anchor_4",2,"Form B",1,1
+"anchor_4",3,"Form C",1,1
+"anchor_4",4,"Form D",2,2

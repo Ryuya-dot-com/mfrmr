@@ -761,7 +761,7 @@ plot.mfrm_d_study <- function(x,
     }
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      old_par <- graphics::par(no.readonly = TRUE)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex")]
       on.exit(graphics::par(old_par), add = TRUE)
       panel_n <- length(panel_levels)
       graphics::par(mfrow = grDevices::n2mfrow(panel_n))
@@ -906,7 +906,7 @@ plot.mfrm_d_study <- function(x,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()[c("mfrow", "cex", "mex")]
     on.exit(graphics::par(old_par), add = TRUE)
     if (length(panel_grid) == 2L) {
       row_levels <- unique(series_tbl$PanelRow)

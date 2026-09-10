@@ -3401,7 +3401,9 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
       residual = rep(NA_real_, length(diffs)),
       retained = rep(FALSE, length(diffs)),
       n_retained = 0L,
-      weighting = "none"
+      weighting = "none",
+      contributing = rep(FALSE, length(diffs)),
+      screening_fallback = FALSE
     ))
   }
 
@@ -3415,13 +3417,20 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
   } else {
     mean(diffs[ok])
   }
+  if (!is.finite(offset_prelim)) {
+    return(list(offset_prelim = offset_prelim, offset = NA_real_,
+      residual = rep(NA_real_, length(diffs)), retained = rep(FALSE, length(diffs)),
+      n_retained = 0L, weighting = "none", contributing = rep(FALSE, length(diffs)),
+      screening_fallback = FALSE))
+  }
 
   residual_prelim <- diffs - offset_prelim
   retained <- ok
   if (!is.null(drift_threshold) && is.finite(drift_threshold)) {
     retained <- retained & abs(residual_prelim) <= drift_threshold
   }
-  if (!any(retained)) {
+  screening_fallback <- !any(retained)
+  if (screening_fallback) {
     retained <- ok
   }
 
@@ -3438,7 +3447,11 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
     residual = diffs - offset,
     retained = retained,
     n_retained = sum(retained, na.rm = TRUE),
-    weighting = if (any(weight_retained)) "inverse_variance" else "unweighted"
+    weighting = if (any(weight_retained)) "inverse_variance" else "unweighted",
+    contributing = if (any(weight_retained)) {
+      weight_retained & is.finite(weights) & weights > 0
+    } else retained,
+    screening_fallback = screening_fallback
   )
 }
 
@@ -4274,6 +4287,113 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' - Read `links` before `cumulative`: weak adjacent links can make later
 #'   cumulative offsets less trustworthy.
 #'
+#' @section Common-element graph:
+#' `plot(chain, type = "graph")` displays waves as squares and common elements
+#' as circles, including waves without retained connections. Each element node
+#' belongs to one reviewed link: `[L1]` refers to link 1 in the returned links
+#' table. The same element can have different screening results in different
+#' comparisons, so it is repeated per link. Solid lines denote retained,
+#' unflagged elements; dot-dash denotes retained elements with a drift flag or
+#' an unavailable flag; dashed denotes excluded elements; dotted denotes
+#' unknown retention. These distinctions also apply in monochrome.
+#'
+#' This is a graph of screened common-element comparisons, not an inventory
+#' of fixed anchors or an all-pairs assessment. Retention does not guarantee
+#' positive weight in the offset, invariance, adequate support or precision.
+#' New chains store positional `FromID`/`ToID` in `links` and `LinkID` in
+#' `element_detail`; display names may repeat or contain punctuation. Older
+#' chains are matched by their complete link labels; ambiguous references
+#' require rebuilding the chain.
+#'
+#' With `draw = FALSE`, the plot returns an `mfrm_plot_data` object. Its
+#' `$data$data` contains `nodes`, `edges`, `links`, `elements`, `n_waves`,
+#' `n_anchors` (unique facet/level identities), and `n_element_nodes`
+#' (link-specific nodes). Edge `from`/`to` refer to node `NodeId`; `AnchorId`
+#' identifies the same facet/level across links. `Retained`, `Flag`, `Status`
+#' and `Reason` preserve screening information. `RetainedDegree` counts
+#' retained incidences, not statistical information. Interpretation notes
+#' remain in `$data$notes` and in `print()` even when `show_notes = FALSE`.
+#' Full labels remain in the node table if the device is too narrow. Base
+#' graphics are sufficient; no optional graph package is needed.
+#'
+#' @section Wave links and common-element removal:
+#' `plot(chain, type = "links")` summarizes the recorded wave-to-wave
+#' comparisons. Numbers count common elements with `Retained = TRUE`, including
+#' flagged retained elements. A dotted comparison has no recorded retained
+#' element; this is not proof that the original rating design is disconnected.
+#' Missing retention is counted separately. Dot-dash connections have flagged
+#' retained elements or inadequate/unknown recorded link support.
+#'
+#' `plot(chain, type = "anchor_removal")` removes each facet/level identity,
+#' one at a time, from all recorded comparisons. Other retention decisions stay
+#' fixed. The horizontal axis counts newly disconnected unordered wave pairs,
+#' including indirect paths. Pairs already disconnected at baseline are not
+#' counted. Losing a direct link need not disconnect its endpoints if another
+#' path remains. Zero means no new graph disconnection, not negligible impact
+#' on estimates or adequate linking support. No screening, offsets, estimates,
+#' SEs or confidence intervals are recomputed by either view.
+#'
+#' Both views return `$data$data$nodes`, `links`, `elements` and `summary`.
+#' The removal view additionally returns `removal` (one row per common-element
+#' identity), `lost_links` (recorded comparisons losing their last retained
+#' element), `lost_pairs` (newly disconnected wave pairs), and `components_after`
+#' (baseline and post-removal membership for every wave). Use `AnchorId` to
+#' join the removal table to these details; `FromID`/`ToID` and `WaveID` identify
+#' waves independently of display labels. Component numbers are local to each
+#' partition: compare membership relations, not numeric labels across Before,
+#' After or different removal scenarios. Removal counts
+#' include `RetainedOccurrences`, `UnknownOccurrences`, `LostLinks`,
+#' `ComponentsAfter` and `NewlyDisconnectedPairs`.
+#'
+#' These calculations reuse the recorded common-element graph; they do not
+#' search for new links or assess statistical influence. The full lost-pair
+#' table can be large for chains with many waves and common elements. Compact
+#' plots abbreviate long labels and warn when IDs or a larger device are needed;
+#' full identities and interpretation notes remain in the returned tables.
+#'
+#' @section Conditional offset sensitivity:
+#' `plot(chain, type = "offset_sensitivity")` removes each common `(Facet,
+#' Level)` identity from every adjacent link, then reruns the existing offset
+#' calculation with its recorded drift threshold. Preliminary offsets,
+#' screening, final weighted/unweighted offsets and cumulative offsets are
+#' recomputed. The source wave estimates and SEs remain fixed: this is a
+#' conditional linking sensitivity calculation, not a refit of item, rater or
+#' person parameters or a new uncertainty estimate.
+#'
+#' The view requires an ordered adjacent chain with the recorded method,
+#' threshold, support guideline, source estimate/SE columns and offsets.
+#' Recomputed baseline offsets must agree with recorded offsets within
+#' `1e-8 * max(1, abs(recorded_offset))`; inconsistent or incomplete source
+#' records require rebuilding the chain. Numerical overflow/underflow that
+#' prevents a finite preliminary offset is reported as a numerical failure.
+#'
+#' The figure shows each deletion's maximum absolute cumulative offset change
+#' over finite comparisons, excluding the fixed-zero first wave. Shapes
+#' distinguish complete comparisons, partial comparisons and no finite
+#' comparison. An unavailable comparison remains `NA`, not zero. If one link
+#' becomes unavailable, later cumulative offsets also become unavailable.
+#' Read the detailed tables when a figure marks an incomplete comparison.
+#'
+#' The `$data$data` payload contains `settings`, `baseline_links`, `baseline_cumulative`,
+#' `baseline_elements`, `removal`, `links`, `cumulative`, `retention_changes`
+#' and `common_by_facet`. Join `RemovedAnchorId` in scenario tables to
+#' `removal$AnchorId`. Signed `Change` is recalculated minus baseline offset.
+#' `Status` distinguishes `computed`, `no_common`, `no_finite_differences`
+#' and `numerical_failure`. `N_Contributing` and element `Contributing` identify
+#' positive finite weight contributors (or retained rows in an unweighted
+#' offset). `retention_changes` records other elements whose retention,
+#' contribution or residual flag changes; the deliberately removed element is
+#' omitted. Facets whose last element is removed remain in support tables with
+#' zero counts. No support failure is converted into a statement of readiness.
+#'
+#' `ScreeningFallback` identifies the existing rule that restores all finite
+#' differences if preliminary screening would remove every one. SEs may be
+#' missing, in which case the existing unweighted fallback is used. No offset
+#' SE, confidence interval, cross-fit covariance, or uncertainty propagation
+#' is supplied. A small conditional change is not evidence of anchor invariance
+#' or negligible change under a full model refit. Notes remain available when
+#' figure titles and footers are omitted.
+#'
 #' @section Typical workflow:
 #' 1. Fit each administration wave separately: `fit_a <- fit_mfrm(...)`.
 #' 2. Combine into an ordered named list:
@@ -4418,6 +4538,7 @@ build_equating_chain <- function(fits,
       common <- common |>
         dplyr::mutate(
           Link = paste0(wave_names[i], " -> ", wave_names[i + 1]),
+          LinkID = i,
           Diff = .data$Est_To - .data$Est_From,
           Offset_Prelim = offset_info$offset_prelim,
           Offset = offset,
@@ -4430,6 +4551,7 @@ build_equating_chain <- function(fits,
 
     links <- c(links, list(tibble::tibble(
       Link = i,
+      FromID = i, ToID = i + 1L,
       From = wave_names[i], To = wave_names[i + 1],
       N_Common = as.integer(n_common),
       N_Retained = if (n_common > 0) offset_info$n_retained else 0L,
@@ -4492,101 +4614,102 @@ print.mfrm_equating_chain <- function(x, ...) {
 
 #' @rdname build_equating_chain
 #' @param y Unused (S3 plot signature requirement).
-#' @param type One of `"graph"` (bipartite Wave x anchor-element graph;
-#'   requires the `igraph` package), `"common_anchors"` (default; bar
-#'   chart of common-anchor counts per wave pair), or `"chain"`.
+#' @param type One of `"graph"` (bipartite wave x link-specific common-element
+#'   graph), `"common_anchors"` (default; bar
+#'   chart of common-anchor counts per wave pair), `"chain"` (cumulative
+#'   offsets), `"links"` (recorded wave comparisons), or `"anchor_removal"`
+#'   (newly disconnected wave pairs after deleting each common element), or
+#'   `"offset_sensitivity"` (conditional rescreened linking-offset changes).
 #' @param preset Visual preset.
 #' @param draw If `TRUE`, draw the plot with base graphics.
+#' @param show_title Logical; display the main title.
+#' @param show_notes Logical; display graph/topology interpretation footers.
+#'   Returned notes and ordinary R warnings are unaffected. Axes, legends and
+#'   data labels remain visible; other chain views have no interpretation footer.
 #' @export
 plot.mfrm_equating_chain <- function(x, y = NULL,
-                                     type = c("common_anchors", "graph", "chain"),
+                                     type = c("common_anchors", "graph", "chain", "links", "anchor_removal", "offset_sensitivity"),
                                      preset = c("standard", "publication", "compact", "monochrome"),
-                                     draw = TRUE, ...) {
+                                     draw = TRUE, show_title = TRUE, show_notes = TRUE, ...) {
   if (!inherits(x, "mfrm_equating_chain")) {
     stop("`x` must be an mfrm_equating_chain object.", call. = FALSE)
+  }
+  for (arg in c("show_title", "show_notes")) {
+    value <- get(arg)
+    if (!is.logical(value) || length(value) != 1L || is.na(value)) {
+      stop(sprintf("`%s` must be TRUE or FALSE.", arg), call. = FALSE)
+    }
   }
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
   if (identical(type, "chain")) {
     if (isTRUE(draw)) apply_plot_preset(style)
-    return(.plot_equating_chain(x, draw = draw, style = style, ...))
+    return(.plot_equating_chain(x, draw = draw, style = style,
+      show_title = show_title, show_notes = show_notes, ...))
+  }
+  if (identical(type, "offset_sensitivity")) {
+    sensitivity <- .equating_offset_sensitivity(x)
+    key <- data.frame(Label = c("All cumulative comparisons available", "Some comparisons unavailable", "No finite cumulative comparison"),
+      Shape = c(19, 17, 4), Color = unname(.plot_series_colors(1:3, style$name)))
+    out <- new_mfrm_plot_data("equating_chain_offset_sensitivity", list(
+      data = sensitivity$data, notes = sensitivity$notes, styles = key,
+      title = "Common-element offset sensitivity",
+      subtitle = "Rescreened linking offsets; source estimates and SEs held fixed",
+      display = list(show_title = show_title, show_notes = show_notes),
+      legend = new_plot_legend(key$Label, rep("availability", 3), rep("shape", 3), key$Shape),
+      preset = style$name
+    ))
+    if (isTRUE(draw)) .draw_equating_offset_sensitivity(out, style)
+    return(invisible(out))
+  }
+  if (type %in% c("links", "anchor_removal")) {
+    removal <- identical(type, "anchor_removal")
+    topology <- .equating_link_topology(.equating_graph_data(x), removal = removal)
+    if (removal) {
+      key <- data.frame(Status = c("disconnected", "unchanged", "not_retained"),
+        Label = c("New disconnection", "No new disconnection", "No retained occurrence"),
+        Shape = c(19, 1, 4), stringsAsFactors = FALSE)
+    } else {
+      key <- data.frame(Status = c("retained", "retained_review", "no_retained"),
+        Label = c("Retained connection", "Retained; review support", "No recorded retained connection"),
+        Linetype = c("solid", "dotdash", "dotted"), stringsAsFactors = FALSE)
+    }
+    key$Color <- unname(.plot_series_colors(key$Status, style$name))
+    out <- new_mfrm_plot_data(paste0("equating_chain_", type), list(
+      data = topology$data, notes = topology$notes, styles = key,
+      title = if (removal) "Common-element removal" else "Recorded wave links",
+      subtitle = "Connectivity of recorded retained elements; no re-estimation",
+      display = list(show_title = show_title, show_notes = show_notes),
+      legend = new_plot_legend(key$Label, rep("topology", 3),
+        rep(if (removal) "shape" else "linetype", 3),
+        if (removal) key$Shape else key$Linetype),
+      preset = style$name
+    ))
+    if (isTRUE(draw)) .draw_equating_topology(out, style, removal = removal)
+    return(invisible(out))
   }
   if (identical(type, "graph")) {
-    if (!requireNamespace("igraph", quietly = TRUE)) {
-      message("`plot(..., type = \"graph\")` requires the `igraph` package ",
-              "(in Suggests). Falling back to type = \"common_anchors\".")
-      type <- "common_anchors"
-    } else {
-      detail <- as.data.frame(x$element_detail %||% data.frame(),
-                              stringsAsFactors = FALSE)
-      if (nrow(detail) == 0L ||
-          !all(c("Facet", "Level") %in% names(detail))) {
-        stop("Graph view requires Facet/Level columns in element_detail.",
-             call. = FALSE)
-      }
-      detail$AnchorId <- paste0(detail$Facet, ":", detail$Level)
-      if ("Wave" %in% names(detail)) {
-        edges <- unique(detail[, c("Wave", "AnchorId")])
-      } else if ("Link" %in% names(detail)) {
-        # Parse "<from> -> <to>" / "<from> | <to>" / "<from> <-> <to>"
-        # link strings into both endpoints so each wave-anchor pair
-        # becomes an edge.
-        link_str <- as.character(detail$Link)
-        parts <- strsplit(link_str, "\\s*(->|<->|<-|\\|)\\s*", perl = TRUE)
-        endpoints <- do.call(rbind, lapply(seq_along(parts), function(i) {
-          p <- parts[[i]]
-          if (length(p) >= 2L) {
-            data.frame(
-              Wave = c(p[1], p[2]),
-              AnchorId = rep(detail$AnchorId[i], 2L),
-              stringsAsFactors = FALSE
-            )
-          } else if (length(p) == 1L) {
-            data.frame(Wave = p[1], AnchorId = detail$AnchorId[i],
-                       stringsAsFactors = FALSE)
-          } else NULL
-        }))
-        edges <- if (!is.null(endpoints)) unique(endpoints) else
-          data.frame(Wave = character(0), AnchorId = character(0),
-                     stringsAsFactors = FALSE)
-      } else {
-        stop("Graph view requires either a Wave column or a Link column ",
-             "(parseable as 'WaveA -> WaveB').", call. = FALSE)
-      }
-      g <- igraph::graph_from_data_frame(
-        d = edges, directed = FALSE,
-        vertices = data.frame(
-          name = c(unique(edges$Wave), unique(edges$AnchorId)),
-          type = c(rep(TRUE, length(unique(edges$Wave))),
-                   rep(FALSE, length(unique(edges$AnchorId))))
-        )
-      )
-      out <- new_mfrm_plot_data(
-        "equating_chain_graph",
-        list(
-          data = list(edges = edges, n_waves = length(unique(edges$Wave)),
-                       n_anchors = length(unique(edges$AnchorId))),
-          title = "Equating chain (bipartite graph)",
-          subtitle = sprintf("%d wave(s), %d anchor element(s)",
-                              length(unique(edges$Wave)),
-                              length(unique(edges$AnchorId))),
-          preset = style$name
-        )
-      )
-      if (isTRUE(draw)) {
-        apply_plot_preset(style)
-        igraph::V(g)$color <- ifelse(igraph::V(g)$type,
-                                      style$accent_primary,
-                                      style$accent_tertiary)
-        igraph::V(g)$shape <- ifelse(igraph::V(g)$type, "square", "circle")
-        igraph::V(g)$label.cex <- 0.7
-        plot(g, layout = igraph::layout_as_bipartite(g),
-             vertex.size = 14, vertex.label.color = "black",
-             edge.color = style$grid, edge.width = 1,
-             main = "Equating chain (bipartite graph)")
-      }
-      return(invisible(out))
-    }
+    graph_data <- .equating_graph_data(x)
+    status <- c("retained", "retained_review", "excluded", "candidate")
+    colors <- .plot_series_colors(status, style$name)
+    key <- data.frame(
+      Status = status,
+      Label = c("Retained", "Retained; review drift", "Excluded", "Retention unknown"),
+      Linetype = c("solid", "dotdash", "dashed", "dotted"),
+      Color = unname(colors), stringsAsFactors = FALSE
+    )
+    out <- new_mfrm_plot_data("equating_chain_graph", list(
+      data = graph_data$data, notes = graph_data$notes,
+      styles = key,
+      title = "Screened common-element links",
+      subtitle = sprintf("%d waves; %d unique elements; %d link-specific element nodes",
+        graph_data$data$n_waves, graph_data$data$n_anchors, graph_data$data$n_element_nodes),
+      display = list(show_title = show_title, show_notes = show_notes),
+      legend = new_plot_legend(key$Label, rep("screening", 4), rep("linetype", 4), key$Linetype),
+      preset = style$name
+    ))
+    if (isTRUE(draw)) .draw_equating_graph(out, style)
+    return(invisible(out))
   }
   # type == "common_anchors": bar chart of pairwise common anchor counts.
   links <- as.data.frame(x$links %||% data.frame(), stringsAsFactors = FALSE)
@@ -4608,13 +4731,15 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
     list(
       data = links,
       title = "Common anchors per wave pair",
+      display = list(show_title = show_title, show_notes = show_notes),
       subtitle = sprintf("%d pairwise comparison(s)", nrow(links)),
       preset = style$name
     )
   )
+  out$data$notes <- .mfrm_plot_notes(out$data)
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(8, 5, 3, 1))
     graphics::barplot(
@@ -4622,7 +4747,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
       names.arg = links$Pair,
       las = 2,
       col = style$accent_primary,
-      main = "Common anchors per wave pair",
+      main = .mfrm_plot_display_title(out$data),
       ylab = "N common"
     )
   }

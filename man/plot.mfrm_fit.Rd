@@ -39,6 +39,8 @@
   wright_range = NULL,
   extreme_placement = c("ends", "estimate"),
   persons_per_star = NULL,
+  show_title = TRUE,
+  show_notes = TRUE,
   ...
 )
 }
@@ -55,8 +57,9 @@ fit-statistic-to-measure display.}
 
 \item{facet}{Optional facet name for \code{type = "facet"}.}
 
-\item{top_n}{Maximum number of facet/step locations retained by the native
-Wright map for compact displays. Step transitions are always retained;
+\item{top_n}{Maximum number of non-person facet locations retained by the
+native Wright map for compact displays. Step transitions are always
+retained separately and do not consume this limit;
 any omitted facet locations are counted in the returned \code{retention} table
 and disclosed in the plot subtitle/note. Use \code{Inf} for a complete
 all-level final map. The FACETS-style payload always retains every fitted
@@ -170,6 +173,13 @@ persons at the ruler \code{"ends"} or retain their fitted \code{"estimate"}.}
 \item{persons_per_star}{Number of persons represented by one \code{*} in the
 FACETS-style frequency column. \code{NULL} chooses a compact value automatically.}
 
+\item{show_title}{Logical; display the main plot title. Structural panel
+headings, axis labels, legends, and data labels remain visible.}
+
+\item{show_notes}{Logical; display explanatory subtitles, footnotes, and
+review-only title markers. Notes remain available in the returned object,
+and R warnings are still issued when this is \code{FALSE}.}
+
 \item{...}{Additional arguments ignored for S3 compatibility.}
 }
 \value{
@@ -177,7 +187,8 @@ Invisibly, an \code{mfrm_plot_data} object (default and for any
 single \code{type}), or an \code{mfrm_plot_bundle} when
 \code{type = "bundle"} / \code{"all"} / \code{"default"}. Each returned fit plot
 includes domain-specific readiness and an interpretation status in its
-data payload. It also includes a one-row \code{scale_contract} table recording
+data payload, plus a \code{notes} table and \code{display} settings. It also includes
+a one-row \code{scale_contract} table recording
 the fitted coordinate basis, population SD when applicable,
 discrimination basis, and bounded-GPCM MML identification convention.
 }
@@ -194,9 +205,11 @@ Wright map, pathway map, and category characteristic curves. The
 compact native default records any omitted facet locations in
 \code{data$retention} and annotates the subtitle and drawn figure; use
 \code{top_n = Inf} to retain every fitted location in the final Wright map.
-Every retained native location is labelled. Collision-aware \code{LabelX} /
-\code{LabelY} coordinates and leader lines displace text without moving the
-fitted point; \code{label_points} retains both point and text coordinates for
+Every retained native location is labelled. \code{LabelX} / \code{LabelY} provide
+initial text positions; base graphics further adjusts these positions for
+the device's text dimensions, avoiding nearby labels and fitted points where
+space permits. Leader lines connect displaced text to the unchanged point.
+\code{label_points} retains fitted coordinates and initial text positions for
 custom renderers. Step transitions share one vertical ladder and their
 labels include the fitted threshold logit. When the fit records
 boundary-separated facet levels and no
@@ -209,13 +222,37 @@ triangles and the plot footer disclose any omitted or clipped interval.
 The returned object always carries machine-readable metadata through
 the \code{mfrm_plot_data} contract, even when the plot is drawn
 immediately.
+Set \code{show_title = FALSE} and \code{show_notes = FALSE} for a figure whose title
+and explanation will be supplied by the surrounding document. The returned
+\code{data$notes} table contains \code{Type} and \code{Text} columns for interpretation,
+reference-profile conditions, and display/retention notes where applicable;
+\code{print()} also prints these notes. \code{data$display} records the two flags.
+Original titles, subtitles, coordinates, and readiness metadata are retained.
+Device-dependent crowding warnings are issued during drawing rather than
+stored in this draw-free notes table. \code{as_ggplot()} respects these flags and
+retains the notes in \code{attr(plot, "mfrmr_notes")}.
+
+Fit-family Wright, pathway, and CCC displays use a shared, CUD-informed
+palette. The first eight series use an Okabe-Ito foundation with bright
+yellow omitted and darker pink/amber/cyan entries for light backgrounds.
+Beyond eight series, colours come from the dark half of the viridis HCL
+palette. Expected-score and category curves also vary line type; Wright
+locations retain their distinct point shapes, and small data labels use
+dark neutral text. Six line types cycle for larger series sets, so dense
+plots still require labels, panels, or more space. This is not a guarantee
+of perceptual separation for every viewer or device.
+\code{preset = "monochrome"} applies to these series in both base and ggplot
+renderers. Custom \code{palette} values are retained in \code{data$palette} and used
+during ggplot conversion; colour overrides keep the non-colour encodings.
+See \url{https://jfly.uni-koeln.de/color/} for Color Universal Design guidance.
 
 Every fit-derived payload also carries \code{data$fit_readiness},
 \code{data$interpretation_status}, and \code{data$interpretation_note}. Availability
 and interpretability are separate: when a numerical, data, design, or
 stability status requires review, the coordinates remain available for
 diagnosis, but the call warns and marks the returned subtitle and drawn
-title \verb{REVIEW ONLY}.
+title \verb{REVIEW ONLY} by default. Hiding that annotation changes presentation
+only; it does not change the fit's interpretation status or suppress warnings.
 A prior-regularized extreme MML EAP remains in \code{fit$facets$person}. If its
 source fit is blocked, however, it is omitted from the Wright-map scale so
 that a finite but non-interpretable trace cannot collapse the display. The
@@ -245,6 +282,9 @@ and standard errors remain those produced by \code{mfrmr}. Use
 \code{show_ci = FALSE} for the closest FACETS-style rendering. If
 \code{show_ci = TRUE} is requested, interpret the result as a hybrid that adds
 mfrmr uncertainty intervals to FACETS-style ruler grammar.
+Column headings are retained even on narrow devices. If headings or person
+frequency stars need more space, drawing warns; use a wider device or increase
+\code{persons_per_star} for a more compact frequency column.
 
 \code{type = "pathway"} shows expected score
 traces and dominant-category regions across theta. This expected-score
@@ -259,10 +299,15 @@ map in ggplot2, plotly, or a report pipeline while keeping the same
 underfit/overfit labels used by \code{\link[=fit_measures_table]{fit_measures_table()}}. \code{type = "ccc"} shows
 category response probabilities. Multiple curve groups are faceted rather
 than overplotted by the native renderer, and category-specific legends use
-the same colours across panels. For \code{GPCM}, these curves retain the
+the same colours across panels. Multiple groups or more than five categories use one legend
+beside the plotting area; colour presets use distinct default colours
+beyond eight categories. For \code{GPCM}, these curves retain the
 estimated step-facet slope; all curve families are reference-profile curves
 with additive facet main effects and fitted interactions fixed at zero; the
 native footer and ggplot subtitle disclose that conditioning.
+Expected-score pathways use the same reference profile and expose the
+same \code{curve_basis} table. These curves do not average over the observed
+rater assignments or show a particular fitted interaction cell.
 The draw-free \code{curve_basis}, \code{CurveBasis}, and \code{PredictorOffset} fields make
 that conditioning explicit. \code{type = "ccc_surface"} or
 \code{type = "category_surface"} returns 3D-ready category-probability surface
@@ -274,6 +319,24 @@ manuscript-use boundaries remain visible to beginners. The remaining
 types (\code{"facet"}, \code{"person"}, \code{"step"}, \code{"shrinkage"}) provide
 compact location-specific displays.
 }
+\section{Graphics layout}{
+
+Single-panel plots advance through a caller's \code{par(mfrow = ...)} or
+\code{layout()} arrangement and restore the style and margins they change.
+Native Wright maps, multi-group CCC plots, and faceted fit pathways create
+their own page layouts; call these outside a custom \code{layout()} arrangement.
+Use \code{renderer = "facets"} for a single-panel Wright map in a custom grid.
+A 7 by 5 inch device is a useful starting size for standalone plots;
+dense PCM labels benefit from a wider device.
+Native Wright/pathway plots warn when labels cannot be separated within
+the available space. Enlarge the device (for example, to 12 by 8 inches)
+and inspect the result; this warning concerns readability, not model fit.
+Abbreviated labels retain distinguishing text where possible, falling back
+to full names if needed. Original names remain available in the plot data.
+For non-Latin labels, select a graphics device and font that support the
+characters before plotting; the package retains the caller's font family.
+}
+
 \section{Typical workflow}{
 
 \enumerate{
@@ -311,6 +374,9 @@ fit <- fit_mfrm(
 wright <- plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)
 wright$name
 head(wright$data$locations)
+clean <- plot(fit, type = "wright", draw = FALSE,
+              show_title = FALSE, show_notes = FALSE)
+clean$data$notes
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}}, \code{\link[=plot_bubble]{plot_bubble()}},

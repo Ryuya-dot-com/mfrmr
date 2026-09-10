@@ -69,7 +69,8 @@ scoring call. Passed to \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} 
 fit-time quadrature order.}
 
 \item{readiness_policy}{Source-fit readiness policy passed to
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.}
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. Estimated-population fits currently require
+\code{"review"}; the returned notes and eligibility labels retain that restriction.}
 
 \item{seed}{Optional seed for reproducible posterior draws.}
 }

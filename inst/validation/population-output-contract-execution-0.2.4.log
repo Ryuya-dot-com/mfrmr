@@ -1,0 +1,72 @@
+BEFORE
+RSM default TRUE ready TRUE 
+PCM default TRUE ready TRUE 
+single default TRUE ready TRUE 
+paired default TRUE ready TRUE 
+coverage-1-61-omitted default TRUE ready TRUE 
+coverage-1-61-explicit_unit default TRUE ready TRUE 
+coverage-5-61-omitted default TRUE ready TRUE 
+coverage-5-61-explicit_unit default TRUE ready TRUE 
+AFTER
+RSM default FALSE ready FALSE 
+PCM default FALSE ready FALSE 
+single default FALSE ready FALSE 
+paired default FALSE ready FALSE 
+coverage-1-61-omitted default TRUE ready TRUE 
+coverage-1-61-explicit_unit default TRUE ready TRUE 
+coverage-5-61-omitted default TRUE ready TRUE 
+coverage-5-61-explicit_unit default TRUE ready TRUE 
+MIGRATION
+  PopulationActive Checks Restricted ExpectedBehavior
+1            FALSE     96          0               24
+2             TRUE     96         24               24
+PREDICTION
+prediction: ................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+EXPORT
+export-bundles: ................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................  adding: bundle_zip_test_manifest_summary.csv (deflated 38%)
+  adding: bundle_zip_test_manifest_readiness.csv (deflated 40%)
+  adding: bundle_zip_test_manifest_readiness_components.csv (deflated 50%)
+  adding: bundle_zip_test_manifest_readiness_parameters.csv (deflated 48%)
+  adding: bundle_zip_test_manifest_environment.csv (deflated 22%)
+  adding: bundle_zip_test_manifest_model_settings.csv (deflated 63%)
+  adding: bundle_zip_test_manifest_source_columns.csv (deflated 17%)
+  adding: bundle_zip_test_manifest_estimation_control.csv (deflated 20%)
+  adding: bundle_zip_test_manifest_settings.csv (deflated 69%)
+  adding: bundle_zip_test_manifest_anchor_summary.csv (deflated 31%)
+  adding: bundle_zip_test_manifest_anchors.csv (deflated 39%)
+  adding: bundle_zip_test_manifest_available_outputs.csv (deflated 50%)
+  adding: bundle_zip_test_manifest.txt (deflated 74%)
+....  adding: bundle_zip_overwrite_manifest_summary.csv (deflated 38%)
+  adding: bundle_zip_overwrite_manifest_readiness.csv (deflated 40%)
+  adding: bundle_zip_overwrite_manifest_readiness_components.csv (deflated 50%)
+  adding: bundle_zip_overwrite_manifest_readiness_parameters.csv (deflated 48%)
+  adding: bundle_zip_overwrite_manifest_environment.csv (deflated 22%)
+  adding: bundle_zip_overwrite_manifest_model_settings.csv (deflated 63%)
+  adding: bundle_zip_overwrite_manifest_source_columns.csv (deflated 17%)
+  adding: bundle_zip_overwrite_manifest_estimation_control.csv (deflated 20%)
+  adding: bundle_zip_overwrite_manifest_settings.csv (deflated 69%)
+  adding: bundle_zip_overwrite_manifest_anchor_summary.csv (deflated 31%)
+  adding: bundle_zip_overwrite_manifest_anchors.csv (deflated 39%)
+  adding: bundle_zip_overwrite_manifest_available_outputs.csv (deflated 50%)
+  adding: bundle_zip_overwrite_manifest.txt (deflated 74%)
+..
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+You rock!
+summary-table-bundle: ......................................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+😸
+REFERENCE
+reference-benchmark: ................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+readiness-propagation: ............................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+DOCUMENTATION
+release-readiness-protocol: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════

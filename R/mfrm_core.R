@@ -6069,7 +6069,7 @@ estimate_eta_from_target <- function(target, step_cum, rating_min, rating_max,
     f_up <- f(upper)
     if (!is.finite(f_low) || !is.finite(f_up) || f_low * f_up > 0) return(NA_real_)
   }
-  uniroot(f, lower = lower, upper = upper)$root
+  uniroot(f, lower = lower, upper = upper, tol = 1e-10)$root
 }
 
 facet_anchor_status <- function(facet, levels, config) {
@@ -7151,12 +7151,11 @@ add_gpcm_fair_average_delta_se <- function(raw_tbls,
       )
     }
     grad <- finite_difference_gradient(fn, par)
-    if (length(grad) != ncol(cov_mat) || !any(is.finite(grad))) {
+    if (length(grad) != ncol(cov_mat) || !all(is.finite(grad))) {
       return(list(se = NA_real_, lower = NA_real_, upper = NA_real_,
                   status = "not available",
-                  detail = "Finite-difference gradient was not available."))
+                  detail = "The complete finite-difference gradient was not available."))
     }
-    grad[!is.finite(grad)] <- 0
     var <- as.numeric(t(grad) %*% cov_mat %*% grad)
     if (is.finite(var) && var < 0 && abs(var) < 1e-10) var <- 0
     if (!is.finite(var) || var < 0) {
@@ -7244,6 +7243,20 @@ calc_fair_average_bundle <- function(res,
       covariance = NULL,
       ci_level = ci_level
     )
+    # Computable score intervals are diagnostic approximations; their full-refit
+    # coverage is not qualified, even when the source fit admits other inference.
+    raw_tbls <- lapply(raw_tbls, function(tbl) {
+      tbl$FairCIEligible <- rep(FALSE, nrow(tbl))
+      available <- rep(FALSE, nrow(tbl))
+      metrics <- switch(reference, mean = "FairM", zero = "FairZ", c("FairM", "FairZ"))
+      for (metric in metrics) {
+        cols <- paste0(metric, c("_CI_Lower", "_CI_Upper"))
+        if (all(cols %in% names(tbl))) available <- available |
+          (is.finite(tbl[[cols[1]]]) & is.finite(tbl[[cols[2]]]))
+      }
+      tbl$FairCIReportingUse <- ifelse(available, "diagnostic_only", "unavailable")
+      tbl
+    })
   }
 
   by_facet <- lapply(names(raw_tbls), function(facet) {
@@ -9328,6 +9341,11 @@ compute_mml_structural_parameter_se <- function(res,
     step_tbl$SE_Method <- se_method
     step_tbl$SE_Status <- status
     step_tbl$SE_Detail <- covariance$detail
+    step_tbl$InferenceReady <- mfrm_inference_ready(res)
+    step_tbl$SupportsFormalInference <- step_tbl$InferenceReady &
+      identical(status, "ok") & is.finite(step_tbl$SE)
+    step_tbl$CIEligible <- step_tbl$SupportsFormalInference
+    step_tbl$CIUse <- ifelse(step_tbl$CIEligible, "primary_reporting", "review_before_reporting")
   }
 
   if (nrow(slope_tbl) > 0L && identical(config$model, "GPCM")) {
@@ -9483,7 +9501,7 @@ build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl, covariance 
       ),
       CIBasis = dplyr::case_when(
         .data$PrecisionTier == "model_based" & .data$InferenceReady ~ "Normal interval from model-based SE",
-        .data$PrecisionTier == "model_based" ~ "Normal interval from model-based SE; optimizer convergence review required",
+        .data$PrecisionTier == "model_based" ~ "Diagnostic normal band; ordinary inference unavailable under the fit-readiness contract",
         .data$PrecisionTier == "hybrid" ~ "Normal interval from fallback observation-table SE",
         TRUE ~ "Normal interval from exploratory observation-table SE"
       ),
@@ -9679,6 +9697,7 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
     Converged = converged,
     InferenceReady = inference_ready,
     ConvergenceSeverity = convergence$severity,
+    ReasonCodes = mfrmr_get_readiness_record(res)$fit$ReasonCodes,
     PrecisionTier = precision_tier,
     SupportsFormalInference = supports_formal,
     HasFallbackSE = has_fallback,
@@ -9688,7 +9707,7 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
       if (isTRUE(inference_ready)) {
         "Normal interval from model-based SE"
       } else {
-        "Normal interval from model-based SE; optimizer convergence review required"
+        "Diagnostic normal band; ordinary inference unavailable under the fit-readiness contract"
       }
     } else if (identical(precision_tier, "hybrid")) {
       "Normal interval from mixed model-based and fallback SE"
@@ -9699,7 +9718,7 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
       if (isTRUE(inference_ready)) {
         "Observed variance with model-based and fit-adjusted error bounds"
       } else {
-        "Observed variance with model-based and fit-adjusted error bounds; optimizer convergence review required"
+        "Descriptive variance decomposition; ordinary inference unavailable under the fit-readiness contract"
       }
     } else if (identical(precision_tier, "hybrid")) {
       "Observed variance with mixed model-based and fallback error bounds"
@@ -9711,7 +9730,7 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
     RecommendedUse = if (identical(precision_tier, "model_based") && isTRUE(inference_ready)) {
       "Use for primary reporting of SE, CI, and reliability in this package."
     } else if (identical(precision_tier, "model_based")) {
-      "This run reached the model-based precision path, but optimizer convergence should be reviewed before primary reporting."
+      "Diagnostic review only; ordinary inference is unavailable under the fit-readiness contract."
     } else if (identical(precision_tier, "hybrid")) {
       "Use model-based rows for primary reporting, but review levels that fell back to observation-table information before treating the whole run as formal inference."
     } else {
@@ -10236,6 +10255,7 @@ mfrm_diagnostics <- function(res,
       CIEligible = dplyr::coalesce(.data$SupportsFormalInference, FALSE),
       CILabel = dplyr::case_when(
         .data$BoundaryExcluded ~ "No interval; typed unbounded JML Person",
+        .data$PrecisionTier == "model_based" & !.data$CIEligible ~ "Diagnostic normal band; ordinary inference unavailable",
         .data$PrecisionTier == "model_based" ~ "Model-based normal interval",
         .data$PrecisionTier == "hybrid" ~ "Approximate interval; review fallback SE",
         .data$PrecisionTier == "exploratory" ~ "Approximate interval; screening only",

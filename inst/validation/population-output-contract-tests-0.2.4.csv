@@ -1,0 +1,171 @@
+"Suite","file","test","nb","failed","skipped","error","warning","passed"
+"prediction","test-prediction.R","predict_mfrm_units returns posterior summaries and optional draws",14,0,FALSE,FALSE,0,14
+"prediction","test-prediction.R","predict_mfrm_units supports explicit column remapping and weights",7,0,FALSE,FALSE,0,7
+"prediction","test-prediction.R","prediction draws are reproducible for a fixed seed",2,0,FALSE,FALSE,0,2
+"prediction","test-prediction.R","predict_mfrm_units rejects unseen facet levels",1,0,FALSE,FALSE,0,1
+"prediction","test-prediction.R","predict_mfrm_units requires person_data when latent-regression scoring uses covariates",1,0,FALSE,FALSE,0,1
+"prediction","test-prediction.R","predict_mfrm_units scores latent-regression fits under the fitted population model",18,0,FALSE,FALSE,0,18
+"prediction","test-prediction.R","latent-regression prediction reuses categorical model-matrix levels",8,0,FALSE,FALSE,0,8
+"prediction","test-prediction.R","latent-regression prediction can omit scored persons with incomplete background data",11,0,FALSE,FALSE,0,11
+"prediction","test-prediction.R","latent-regression prediction errors on incomplete covariates under the default policy",1,0,FALSE,FALSE,0,1
+"prediction","test-prediction.R","latent-regression scoring changes scored contrasts relative to legacy MML",5,0,FALSE,FALSE,0,5
+"prediction","test-prediction.R","predict_mfrm_units supports intercept-only latent-regression scoring without person_data",13,0,FALSE,FALSE,0,13
+"prediction","test-prediction.R","predict_mfrm_units supports JML PCM calibrations with custom facet names",10,0,FALSE,FALSE,0,10
+"prediction","test-prediction.R","predict_mfrm_units supports bounded GPCM fixed-calibration scoring",10,0,FALSE,FALSE,0,10
+"prediction","test-prediction.R","predict_mfrm_units respects stored score mapping from compressed fits",3,0,FALSE,FALSE,0,3
+"prediction","test-prediction.R","sample_mfrm_plausible_values exposes fixed-calibration posterior draws",11,0,FALSE,FALSE,0,11
+"prediction","test-prediction.R","sample_mfrm_plausible_values requires positive draw count",1,0,FALSE,FALSE,0,1
+"prediction","test-prediction.R","prediction preprocessing audits missing responses and refuses invalid weights",11,0,FALSE,FALSE,0,11
+"prediction","test-prediction.R","unit scoring fails closed for non-ready fits unless review is explicit",4,0,FALSE,FALSE,0,4
+"prediction","test-prediction.R","estimated-population scoring cannot bypass unresolved source validity",20,0,FALSE,FALSE,0,20
+"prediction","test-prediction.R","scoring quadrature is explicit and cannot degenerate to one point",3,0,FALSE,FALSE,0,3
+"prediction","test-prediction.R","prediction integer validation does not leak coercion warnings",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","build_mfrm_manifest captures reproducibility metadata",17,0,FALSE,FALSE,0,17
+"export","test-export-bundles.R","manifest preserves the exact fail-closed readiness provenance",8,0,FALSE,FALSE,0,8
+"export","test-export-bundles.R","build_mfrm_manifest and replay script support FACETS-mode runs",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","replay preserves source readiness but recomputes replay readiness",7,0,FALSE,FALSE,0,7
+"export","test-export-bundles.R","build_mfrm_manifest records optional prediction artifacts",7,0,FALSE,FALSE,0,7
+"export","test-export-bundles.R","build_mfrm_manifest records latent-regression provenance",36,0,FALSE,FALSE,0,36
+"export","test-export-bundles.R","build_mfrm_manifest records latent-regression omit provenance",24,0,FALSE,FALSE,0,24
+"export","test-export-bundles.R","build_mfrm_manifest returns bounded GPCM caveat boundary",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","build_mfrm_replay_script reproduces optional prediction artifacts",11,0,FALSE,FALSE,0,11
+"export","test-export-bundles.R","build_mfrm_replay_script preserves latent-regression scoring inputs",30,0,FALSE,FALSE,0,30
+"export","test-export-bundles.R","build_mfrm_replay_script preserves replay-ready omit latent-regression inputs",8,0,FALSE,FALSE,0,8
+"export","test-export-bundles.R","build_mfrm_replay_script can externalize fit-level latent replay person data",8,0,FALSE,FALSE,0,8
+"export","test-export-bundles.R","build_mfrm_replay_script rejects omit latent-regression fits without replay-ready person data",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","build_conquest_overlap_bundle returns a minimal supported-scope bundle",97,0,FALSE,FALSE,0,97
+"export","test-export-bundles.R","build_conquest_overlap_bundle records controls from a supplied fit",10,0,FALSE,FALSE,0,10
+"export","test-export-bundles.R","build_conquest_overlap_bundle rejects intercept-only latent-regression fits",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","build_conquest_overlap_bundle rejects unsupported overlap contracts",16,0,FALSE,FALSE,0,16
+"export","test-export-bundles.R","build_conquest_overlap_bundle writes expected external-comparison files",33,0,FALSE,FALSE,0,33
+"export","test-export-bundles.R","normalize_conquest_overlap_exports reads the generated native CSV contract",13,0,FALSE,FALSE,0,13
+"export","test-export-bundles.R","build_conquest_overlap_bundle accepts the documented PCM overlap surface",9,0,FALSE,FALSE,0,9
+"export","test-export-bundles.R","review_conquest_overlap compares normalized ConQuest tables",26,0,FALSE,FALSE,0,26
+"export","test-export-bundles.R","review_conquest_overlap separates constraint shifts from direct differences",16,0,FALSE,FALSE,0,16
+"export","test-export-bundles.R","review_conquest_overlap records worst compared rows in overall",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","review_conquest_overlap records non-numeric extracted estimates",32,0,FALSE,FALSE,0,32
+"export","test-export-bundles.R","normalize_conquest_overlap_tables standardizes extracted tables",18,0,FALSE,FALSE,0,18
+"export","test-export-bundles.R","normalize_conquest_overlap_tables rejects unresolved automatic aliases",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","normalize_conquest_overlap_tables rejects ambiguous automatic aliases",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","normalize_conquest_overlap_tables rejects missing explicit columns",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","review_conquest_overlap accepts normalized contract objects",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","review_conquest_overlap rejects mixed normalized and raw external tables",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","review_conquest_overlap requires either a normalized object or all three raw tables",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","review_conquest_overlap records duplicate external rows as attention items",9,0,FALSE,FALSE,0,9
+"export","test-export-bundles.R","review_conquest_overlap records missing external rows as attention items",21,0,FALSE,FALSE,0,21
+"export","test-export-bundles.R","review_conquest_overlap matches item IDs by response variable when requested",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","review_conquest_overlap auto-detects response-variable item IDs",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","review_conquest_overlap matches item IDs by original level when requested",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","review_conquest_overlap auto-detects original-level item IDs",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","review_conquest_overlap auto item matching breaks ties toward response variables",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","review_conquest_overlap treats explicit item-source mismatches as review attention",8,0,FALSE,FALSE,0,8
+"export","test-export-bundles.R","normalize_conquest_overlap_files reads extracted csv/tsv tables",13,0,FALSE,FALSE,0,13
+"export","test-export-bundles.R","ConQuest overlap helpers auto-resolve conservative alias columns",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","build_mfrm_replay_script preserves keep_original and rating range",8,0,FALSE,FALSE,0,8
+"export","test-export-bundles.R","export_mfrm_bundle writes requested tables and html output",21,0,FALSE,FALSE,0,21
+"export","test-export-bundles.R","export_mfrm_bundle labels every fit-level archive as potentially identifying",10,0,FALSE,FALSE,0,10
+"export","test-export-bundles.R","export_mfrm_bundle writes optional prediction artifacts",20,0,FALSE,FALSE,0,20
+"export","test-export-bundles.R","export_mfrm_bundle writes latent-regression scoring provenance artifacts",36,0,FALSE,FALSE,0,36
+"export","test-export-bundles.R","export_mfrm_bundle writes default summary-table bundles for manuscript handoff",34,0,FALSE,FALSE,0,34
+"export","test-export-bundles.R","export_summary_appendix writes appendix-ready summary artifacts without requiring fit export inputs",90,0,FALSE,FALSE,0,90
+"export","test-export-bundles.R","export_summary_appendix preset trims bridge-only and preview-only tables",20,0,FALSE,FALSE,0,20
+"export","test-export-bundles.R","export_summary_appendix supports weighting-review inputs",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","export_summary_appendix supports misfit-casebook review inputs",8,0,FALSE,FALSE,0,8
+"export","test-export-bundles.R","export_summary_appendix supports recovery simulation and assessment inputs",14,0,FALSE,FALSE,0,14
+"export","test-export-bundles.R","export_summary_appendix supports recovery-validation summaries",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","export_summary_appendix supports diagnostic-screening summaries",12,0,FALSE,FALSE,0,12
+"export","test-export-bundles.R","export_summary_appendix supports person-fit summary inputs",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","export_summary_appendix supports precision-review summaries",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","export_summary_appendix supports fit-measure and FACETS fit-review summaries",6,0,FALSE,FALSE,0,6
+"export","test-export-bundles.R","export_mfrm_bundle supports recovery-validation summary tables",5,0,FALSE,FALSE,0,5
+"export","test-export-bundles.R","export_summary_appendix supports section-aware appendix presets",15,0,FALSE,FALSE,0,15
+"export","test-export-bundles.R","export_summary_appendix supports future arbitrary-facet active-branch inputs",12,0,FALSE,FALSE,0,12
+"export","test-export-bundles.R","export_summary_appendix applies appendix presets to future arbitrary-facet active-branch inputs",15,0,FALSE,FALSE,0,15
+"export","test-export-bundles.R","export_mfrm_bundle requires explicit prediction objects for prediction export",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","export_mfrm_bundle rejects malformed bias_results inputs early",1,0,FALSE,FALSE,0,1
+"export","test-export-bundles.R","export_mfrm_bundle does not change the caller working directory",4,0,FALSE,FALSE,0,4
+"export","test-export-bundles.R","export_mfrm_bundle respects overwrite for zip bundles",2,0,FALSE,FALSE,0,2
+"export","test-summary-table-bundle.R","summary table bundle role registry covers every supported spec role",3,0,FALSE,FALSE,0,3
+"export","test-summary-table-bundle.R","build_summary_table_bundle converts supported reporting summaries into named tables",69,0,FALSE,FALSE,0,69
+"export","test-summary-table-bundle.R","build_summary_table_bundle carries fit and score-support caveats",16,0,FALSE,FALSE,0,16
+"export","test-summary-table-bundle.R","build_summary_table_bundle exports population-model caveats as analysis caveats",6,0,FALSE,FALSE,0,6
+"export","test-summary-table-bundle.R","build_summary_table_bundle supports workflow, bias, anchor, linking, and prediction summaries",27,0,FALSE,FALSE,0,27
+"export","test-summary-table-bundle.R","build_summary_table_bundle keeps explicitly requested empty tables and rejects unknown names",19,0,FALSE,FALSE,0,19
+"export","test-summary-table-bundle.R","build_summary_table_bundle validates front-door inputs before bundle conversion",6,0,FALSE,FALSE,0,6
+"export","test-summary-table-bundle.R","build_summary_table_bundle supports planning and forecast summaries with structural-design tables",9,0,FALSE,FALSE,0,9
+"export","test-summary-table-bundle.R","build_summary_table_bundle supports diagnostic-screening summaries",22,0,FALSE,FALSE,0,22
+"export","test-summary-table-bundle.R","build_summary_table_bundle supports recovery simulation and assessment summaries",32,0,FALSE,FALSE,0,32
+"export","test-summary-table-bundle.R","build_summary_table_bundle supports future arbitrary-facet active-branch inputs",29,0,FALSE,FALSE,0,29
+"export","test-summary-table-bundle.R","future arbitrary-facet active-branch bundles support appendix presets",16,0,FALSE,FALSE,0,16
+"export","test-summary-table-bundle.R","build_summary_table_bundle applies appendix presets at bundle-construction time",14,0,FALSE,FALSE,0,14
+"export","test-summary-table-bundle.R","apa_table consumes summary outputs and summary table bundles directly",9,0,FALSE,FALSE,0,9
+"export","test-summary-table-bundle.R","apa_table consumes workflow, bias, anchor, and prediction summaries directly",18,0,FALSE,FALSE,0,18
+"export","test-summary-table-bundle.R","apa_table consumes future arbitrary-facet active-branch summaries directly",4,0,FALSE,FALSE,0,4
+"export","test-summary-table-bundle.R","plot methods consume summary table bundles directly",16,0,FALSE,FALSE,0,16
+"export","test-summary-table-bundle.R","structural-design summary table bundles expose selection plot surfaces",27,0,FALSE,FALSE,0,27
+"reference","test-reference-benchmark.R","reference_case_benchmark returns package-native benchmark bundle",19,0,FALSE,FALSE,0,19
+"reference","test-reference-benchmark.R","reference case status treats code-zero optimizer review as Warn",2,0,FALSE,FALSE,0,2
+"reference","test-reference-benchmark.R","reference_case_benchmark includes latent-regression omission contract case",16,0,FALSE,FALSE,0,16
+"reference","test-reference-benchmark.R","reference_case_benchmark includes ConQuest-overlap package-side check",13,0,FALSE,FALSE,0,13
+"reference","test-reference-benchmark.R","reference_case_benchmark enforces the ConQuest-overlap package-side route",2,0,FALSE,FALSE,0,2
+"reference","test-reference-benchmark.R","reference_case_benchmark summary surfaces specialized contract checks",18,0,FALSE,FALSE,0,18
+"reference","test-reference-benchmark.R","reference_case_benchmark includes latent-regression benchmark case",20,0,FALSE,FALSE,0,20
+"reference","test-reference-benchmark.R","reference_case_benchmark recovers synthetic truth under MML",9,0,FALSE,FALSE,0,9
+"reference","test-reference-benchmark.R","reference_case_benchmark recovers latent-regression synthetic case under MML",11,0,FALSE,FALSE,0,11
+"reference","test-reference-benchmark.R","reference_case_benchmark recovers synthetic GPCM case under MML",8,0,FALSE,FALSE,0,8
+"reference","test-reference-benchmark.R","reference_case_benchmark enforces the GPCM benchmark contract",2,0,FALSE,FALSE,0,2
+"reference","test-reference-benchmark.R","reference_case_benchmark captures pair stability and summary output",10,0,FALSE,FALSE,0,10
+"reference","test-reference-benchmark.R","reference_case_benchmark verifies bias-contract identities",5,0,FALSE,FALSE,0,5
+"reference","test-reference-benchmark.R","reference_case_benchmark reports exploratory precision under JML",2,0,FALSE,FALSE,0,2
+"reference","test-reference-benchmark.R","reference_case_benchmark handles single-case runs without warnings",1,0,FALSE,FALSE,0,1
+"reference","test-reference-benchmark.R","reference_case_benchmark carries MML engine metadata",4,0,FALSE,FALSE,0,4
+"reference","test-reference-benchmark.R","reference_case_benchmark does not pass bias-contract cases when checks are missing",2,0,FALSE,FALSE,0,2
+"reference","test-readiness-propagation.R","fit readiness precedence is deterministic and fail-closed",5,0,FALSE,FALSE,0,5
+"reference","test-readiness-propagation.R","the unified builder preserves component causes",14,0,FALSE,FALSE,0,14
+"reference","test-readiness-propagation.R","estimator and nonlinear boundary scope are not conflated",9,0,FALSE,FALSE,0,9
+"reference","test-readiness-propagation.R","new native fits store and consume one fit-readiness record",9,0,FALSE,FALSE,0,9
+"reference","test-readiness-propagation.R","PCM readiness propagates without upgrading numerical holds",22,0,FALSE,FALSE,0,22
+"reference","test-readiness-propagation.R","legacy objects are not upgraded from the old scalar",9,0,FALSE,FALSE,0,9
+"reference","test-readiness-propagation.R","legacy objects fail closed at convergence, summary, and plot entry points",7,0,FALSE,FALSE,0,7
+"reference","test-readiness-propagation.R","a real serialized 0.2.2 fit cannot acquire current readiness",17,0,FALSE,FALSE,0,17
+"docs","test-release-readiness-protocol.R","public roadmap and current NEWS exclude internal release operations",48,0,FALSE,FALSE,0,48
+"docs","test-release-readiness-protocol.R","internal draft.62 roadmap and GPCM work remain explicit and private",277,0,FALSE,FALSE,0,277
+"docs","test-release-readiness-protocol.R","WP0 readiness contract freezes scoped fail-closed semantics",27,0,FALSE,FALSE,0,27
+"docs","test-release-readiness-protocol.R","WP0 fixture validator rejects post-hoc readiness upgrades",2,0,FALSE,FALSE,0,2
+"docs","test-release-readiness-protocol.R","FACETS and diagnostic stress registries retain prior edge cells under draft.31",15,0,FALSE,FALSE,0,15
+"docs","test-release-readiness-protocol.R","FACETS divergence audit fails closed on rank and category contracts",8,0,FALSE,FALSE,0,8
+"docs","test-release-readiness-protocol.R","release-readiness protocol exposes review steps and parses check logs",24,0,FALSE,FALSE,0,24
+"docs","test-release-readiness-protocol.R","release-readiness timing excludes check infrastructure overhead",4,0,FALSE,FALSE,0,4
+"docs","test-release-readiness-protocol.R","release-readiness protocol flags check timing above ten minutes",8,0,FALSE,FALSE,0,8
+"docs","test-release-readiness-protocol.R","release-readiness protocol rejects a check log without Status",8,0,FALSE,FALSE,0,8
+"docs","test-release-readiness-protocol.R","release-readiness protocol rejects stale check logs by version",3,0,FALSE,FALSE,0,3
+"docs","test-release-readiness-protocol.R","release-readiness protocol requires --as-cran provenance",3,0,FALSE,FALSE,0,3
+"docs","test-release-readiness-protocol.R","release-readiness binds a 0.2.3 candidate to frozen hashed inputs",26,0,FALSE,FALSE,0,26
+"docs","test-release-readiness-protocol.R","release-readiness reconstructs checklist decisions from hashed result rows",16,0,FALSE,FALSE,0,16
+"docs","test-release-readiness-protocol.R","release-readiness keeps the 0.2.3 current/future API truth explicit",7,0,FALSE,FALSE,0,7
+"docs","test-release-readiness-protocol.R","release-readiness rejects stale numeric pass counts in current prose",8,0,FALSE,FALSE,0,8
+"docs","test-release-readiness-protocol.R","release-readiness protocol rejects stale tarball and check evidence",14,0,FALSE,FALSE,0,14
+"docs","test-release-readiness-protocol.R","release-readiness protocol finds common check-log locations",2,0,FALSE,FALSE,0,2
+"docs","test-release-readiness-protocol.R","release-readiness prefers candidate check logs over newer archives",1,0,FALSE,FALSE,0,1
+"docs","test-release-readiness-protocol.R","release-readiness prefers submission and checked tarballs over backups",2,0,FALSE,FALSE,0,2
+"docs","test-release-readiness-protocol.R","release-readiness protocol checks CI workflow contract",12,0,FALSE,FALSE,0,12
+"docs","test-release-readiness-protocol.R","release-readiness follows local reusable CI workflows",9,0,FALSE,FALSE,0,9
+"docs","test-release-readiness-protocol.R","release-readiness accepts check-only runner and rejects legacy G4",9,0,FALSE,FALSE,0,9
+"docs","test-release-readiness-protocol.R","release-readiness protocol checks source-truth alignment",36,0,FALSE,FALSE,0,36
+"docs","test-release-readiness-protocol.R","release-readiness protocol enforces semantic example guards",8,0,FALSE,FALSE,0,8
+"docs","test-release-readiness-protocol.R","release-readiness protocol checks GPCM scope alignment",11,0,FALSE,FALSE,0,11
+"docs","test-release-readiness-protocol.R","release-readiness protocol reviews the source tree shape",26,0,FALSE,FALSE,0,26
+"docs","test-release-readiness-protocol.R","GPCM stress manifest covers every prespecified axis pair",15,0,FALSE,FALSE,0,15
+"docs","test-release-readiness-protocol.R","GPCM stress smoke generator is deterministic and fails closed",12,0,FALSE,FALSE,0,12
+"docs","test-release-readiness-protocol.R","GPCM local-dependence corner reaches exploratory residual PCA",7,0,FALSE,FALSE,0,7
+"docs","test-release-readiness-protocol.R","target-scale sparse feasibility execution is fixed and guarded",19,0,FALSE,FALSE,0,19
+"docs","test-release-readiness-protocol.R","target-scale completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"docs","test-release-readiness-protocol.R","target baseline and bridge execution is fixed and guarded",18,0,FALSE,FALSE,0,18
+"docs","test-release-readiness-protocol.R","target baseline completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"docs","test-release-readiness-protocol.R","JML bottleneck decomposition manifest is fixed and guarded",24,0,FALSE,FALSE,0,24
+"docs","test-release-readiness-protocol.R","JML profile completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"docs","test-release-readiness-protocol.R","GPCM attribution manifest isolates one axis and four fit routes",21,0,FALSE,FALSE,0,21
+"docs","test-release-readiness-protocol.R","GPCM attribution routes retain identical paired data and fail closed",14,0,FALSE,FALSE,0,14
+"docs","test-release-readiness-protocol.R","GPCM replicated pilot prespecifies tiers and uncertainty summaries",23,0,FALSE,FALSE,0,23
+"docs","test-release-readiness-protocol.R","GPCM replicated checkpoints resume atomically and fail closed",31,0,FALSE,FALSE,0,31
+"docs","test-release-readiness-protocol.R","MML metamorphic grid is prespecified, guarded, and fail closed",30,0,FALSE,FALSE,0,30

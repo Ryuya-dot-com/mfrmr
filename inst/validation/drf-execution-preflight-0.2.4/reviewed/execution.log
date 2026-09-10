@@ -1,0 +1,20 @@
+RSM-null error:  
+RSM-group_mean_only error:  
+RSM-drf error:  
+RSM-interaction error:  
+RSM-combined error:  
+RSM-connected_incomplete error:  
+RSM-no_common_raters error:  
+RSM-linked_null error: all(is.finite(tab$p_adjusted)) is not TRUE 
+RSM-linked_drf error: all(is.finite(tab$p_adjusted)) is not TRUE 
+PCM-null error:  
+PCM-group_mean_only error:  
+PCM-drf error:  
+PCM-interaction error:  
+PCM-combined error:  
+PCM-connected_incomplete error:  
+PCM-no_common_raters error:  
+PCM-linked_null error: all(is.finite(tab$p_adjusted)) is not TRUE 
+PCM-linked_drf error: all(is.finite(tab$p_adjusted)) is not TRUE 
+Error: all(runs$Error == "") is not TRUE
+Execution halted

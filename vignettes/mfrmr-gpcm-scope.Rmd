@@ -360,8 +360,10 @@ maximum exists or that slope uncertainty is inferentially eligible.
 
 The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
 local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for
-numerical review. Ordinary slope `SE` and confidence-limit fields remain
-unavailable when `SEEligible` or `CIEligible` is false. This avoids presenting
+numerical review. Free slopes currently have `SEEligible = FALSE` and
+`CIEligible = FALSE`; ordinary slope `SE` and confidence-limit fields remain
+unavailable. Convergence or quadrature stability does not change this status.
+This avoids presenting
 a local Hessian around a finite stopping point as uncertainty for a parameter
 whose applicable global boundary status has not been established.
 
@@ -580,8 +582,11 @@ screens rather than as Rasch-style invariance evidence:
 
 The dashboard marks the fair-average panel unavailable under `GPCM`; use
 `fair_average_table()` directly for the slope-aware element-conditional table
-and `fair_average_table(fair_se = TRUE)` when you need structural
-fair-average SEs for non-person rows.
+and `fair_average_table(fit_gpcm, fair_se = TRUE)` to inspect structural
+fair-average SEs for non-person rows. These condition on Person EAP/reference
+means and remain diagnostic-only: `FairCIEligible = FALSE`, including when
+the covariance is computable or regularized. Full-refit coverage remains
+unverified. Historical measure-level SE columns are not fair-score SEs.
 
 ## What is intentionally restricted
 

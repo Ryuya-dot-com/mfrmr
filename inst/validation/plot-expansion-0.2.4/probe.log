@@ -1,0 +1,21 @@
+                                 Check
+1                       Declared waves
+2                 Returned graph waves
+3 Returned edges from excluded element
+4                 Edge status retained
+5                 Zero common elements
+                                                       Value
+1                                                          3
+2                                                          2
+3                                                          2
+4                                                          0
+5 Graph view requires Facet/Level columns in element_detail.
+  Nodes Edges Components LargestComponentNodes LargestComponentShare   Density
+1    68   376          1                    68                     1 0.1650571
+  MeanDegree MeanStrength ArticulationPoints Bridges Connected  Diameter
+1   11.05882     36.35294                  0       0      TRUE 0.7435897
+  MeanDistance
+1    0.5128226
+[1] "plot"            "nodes"           "edges"           "title"          
+[5] "subtitle"        "legend"          "reference_lines" "preset"         
+[9] "plot_name"      

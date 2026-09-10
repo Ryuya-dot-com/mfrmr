@@ -1,0 +1,28 @@
+NUMERICAL RUN
+RSM-31 full gradient 6.649657e-05 covariance TRUE  
+PCM-31 full gradient 6.475034e-05 covariance TRUE  
+single-31 full gradient 2.442942e-09 covariance FALSE  
+paired-31 full gradient 2.933831e-06 covariance TRUE  
+RSM-61 full gradient 6.682285e-05 covariance TRUE  
+PCM-61 full gradient 6.472703e-05 covariance TRUE  
+single-61 full gradient 2.442942e-09 covariance FALSE  
+paired-61 full gradient 2.936247e-06 covariance TRUE  
+RSM-121 full gradient 6.682399e-05 covariance TRUE  
+PCM-121 full gradient 6.473272e-05 covariance TRUE  
+single-121 full gradient 2.373143e-09 covariance FALSE  
+paired-121 full gradient 2.936531e-06 covariance TRUE  
+QUADRATURE/STATIONARITY TESTS
+mml-quadrature-sensitivity: .............................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+numerical-stationarity-pilot: ......................................................................S
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. the five-run pilot records review evidence and fails closed ('test-numerical-stationarity-pilot.R:314:3') - Reason: Frozen fixed-standard-normal GPCM numerical evidence belongs to an earlier package payload and is not replayed under the new default identification.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+DOCUMENTATION TESTS
+release-readiness-protocol: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+VERIFICATION: full dimensions, raw inverse identities, singular exclusion, profile probes and unchanged production source passed.

@@ -73,7 +73,11 @@ scoring call. It is independent of the quadrature order used while fitting
 \item{readiness_policy}{How a source fit that is not scoring-ready is
 handled. \code{"error"} (default) refuses scoring. \code{"review"} permits an
 explicitly review-only fitted-object calculation and labels the returned
-estimates and settings accordingly; it does not make the source fit ready.}
+estimates and settings accordingly; it does not make the source fit ready.
+Estimated-population fits currently require \code{"review"} because their
+identification, boundary and numerical-accuracy acceptance rule is incomplete.
+Earlier population-model predictions labelled scoring-ready must be
+regenerated with explicit review before summary or export.}
 
 \item{n_draws}{Optional number of quadrature-grid posterior draws to return
 per scored person. Use 0 to skip draws.}

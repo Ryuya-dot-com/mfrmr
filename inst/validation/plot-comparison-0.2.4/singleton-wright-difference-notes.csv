@@ -1,0 +1,11 @@
+"Type","Text","Fit"
+"interpretation","Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.","Reference"
+"description","Shared logit scale for persons, facets, and thresholds","Reference"
+"display","Persons: N=12; mean=0.26; median=0.67.","Reference"
+"interpretation","Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.","Comparison"
+"description","Shared logit scale for persons, facets, and thresholds","Comparison"
+"display","Persons: N=1; mean=0.67; median=0.67.","Comparison"
+"basis","Descriptive comparison on fitted coordinates; no alignment or refitting. Matching recorded settings does not prove scale equivalence or identical observations. Differences are comparison minus reference.",NA
+"uncertainty","No difference SE, covariance, confidence interval or significance test is computed. Source readiness is retained; overlap does not establish equivalence.",NA
+"selection","Selected 1 of 1 step groups. RSM shared steps/curves are reused for each selected non-RSM group, not independently estimated.",NA
+"availability","12 of 23 matched/unmatched location rows have finite differences. Boundary, non-finite and source-excluded values remain unavailable. Violins summarize eligible person point estimates only; individual identities remain in the tables.",NA

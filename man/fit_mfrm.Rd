@@ -343,7 +343,8 @@ reportable when the source fit is blocked.
 \item \code{steps}: estimated threshold/step parameters as a one-row-per-step
 \code{tibble} with \code{Estimate}. Bare fits keep this table as point estimates.
 \code{diagnose_mfrm()} exposes MML observed-information step uncertainty in
-\code{diagnostics$parameter_uncertainty$steps}; when
+\code{diagnostics$parameter_uncertainty$steps}. Check \code{CIEligible} and \code{CIUse}:
+finite curvature-based bands alone do not establish ordinary inference. When
 \code{attach_diagnostics = TRUE}, those \code{SE}, confidence-limit, and status
 columns are attached to \code{fit$steps} when the Hessian is available.
 For step-structure quality, also use the step-collapse and disordering
@@ -564,8 +565,14 @@ pattern is not the same as replicating a complete Person pattern after
 marginalization. A weight also does not turn the score into a count outcome
 or model dependence among repeated ratings. Non-positive finite weights are
 excluded during preparation, and non-unit observation-weight fits are not
-eligible for the common MML information-criterion panel under the current
-package contract.
+eligible for ordinary inference, facet equivalence, or the common MML
+information-criterion panel under the current package contract. Normalizing
+weights to mean one does not remove this restriction. Point estimates and
+computed curvature/posterior precision remain available for diagnostic
+review; they do not establish sampling SEs or confidence coverage for the
+weighted objective. Omitted weights and explicitly all-unit weights use
+the same eligibility rules. Earlier saved fits require refitting or a
+current readiness audit; their old inference flags are not carried forward.
 
 The fitted many-facet ordered-response model assumes conditional
 independence of observations given the person and facet parameters
@@ -806,16 +813,16 @@ on EAP or MLE scores.
 \section{Latent-regression standard-error caveat}{
 
 \code{summary(fit)$population_coefficients} reports point estimates of
-\eqn{\hat{\boldsymbol{\beta}}} and \eqn{\hat{\sigma}^2} only. mfrmr does
-\strong{not} currently compute standard errors, confidence intervals, or
-asymptotic z / Wald statistics for the population-model parameters: no
-Hessian on \eqn{(\boldsymbol{\beta}, \log\sigma^2)} is extracted from the
-marginal log-likelihood, and no \code{vcov()} method is exposed for these
-coefficients. Treat the coefficient table as point estimates suitable
-for descriptive reporting; \strong{do not} quote \eqn{\hat{\beta}_j \pm 1.96
-\cdot \mathrm{SE}} bounds because the SE column is not provided. A
-marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is not
-available from this function.
+\eqn{\hat{\boldsymbol{\beta}}}; \code{population_overview} reports the estimated
+population variance. These tables do \strong{not} provide standard errors,
+confidence intervals, or asymptotic z / Wald statistics for the population
+parameters, and no \code{vcov()} method is exposed for these coefficients.
+The internal MML observed-information calculation includes
+\eqn{(\boldsymbol{\beta}, \log\sigma^2)} when computing joint covariance
+for structural-parameter SEs. That internal calculation does not establish
+a supported population-parameter inference API. Treat the population
+tables as point estimates for descriptive reporting; \strong{do not} quote
+\eqn{\hat{\beta}_j \pm 1.96 \cdot \mathrm{SE}} bounds from these tables.
 
 Identification: the latent-regression intercept is identifiable only
 under the default \code{noncenter_facet = "Person"} (which sum-to-zero-

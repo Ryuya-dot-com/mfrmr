@@ -2,6 +2,134 @@
 
 ## Reliability and reproducibility
 
+* Fair-average summaries now use FairZ values and SEs when `reference = "zero"`,
+  with an explicit `FairMetric`. Requested fair-score intervals carry separate
+  diagnostic-only eligibility metadata through tables, summaries and plots.
+  GPCM fair-score SEs remain unavailable if any gradient component is missing,
+  rather than replacing the missing uncertainty with zero.
+* `plot_fair_average(plot_type = "measure")` connects person/facet measures
+  to Fair Scores alongside the observed-score and gap views. Base/ggplot
+  share colours and six point shapes, grayscale, and title/note controls;
+  full notes and excluded rows remain available in the returned data.
+  FairZ documentation now correctly describes a zero-reference expected
+  score, not a z-score. Conditional RSM/PCM interval derivatives now use the
+  actual FairM/FairZ profile and undo measure-unit scaling. GPCM bundle
+  intervals honor the requested confidence level. These approximate intervals
+  do not establish full-refit coverage; gap whiskers hold observed means fixed.
+* `plot_compare_mfrm()` adds paired Wright distributions/locations and CCCs,
+  plus matched-location and probability-difference views. Existing source
+  coordinates and probability calculations are reused, with explicit group
+  selection, original score labels, source readiness and returned notes.
+  Monochrome/many-category CCCs use category panels by default. Incompatible
+  recorded comparison bases fail without automatic alignment. Drawing uses
+  optional ggplot2; draw-free data need no renderer. No difference SEs or CIs
+  are calculated. The shared Wright builder also handles a single person
+  without calling the undefined one-observation FD histogram rule.
+* Linking-chain plots add `type = "offset_sensitivity"`. Each common-element
+  deletion reruns preliminary offsets, screening, weighted/unweighted offsets
+  and cumulative offsets with source estimates/SEs fixed. Returned tables expose
+  signed changes, rescreened elements, actual weight contributors, screening
+  fallback and unavailable comparisons. Missing offsets propagate rather than
+  becoming zero changes; plots distinguish complete, partial and unavailable
+  comparisons. Inconsistent source offsets require rebuilding the chain. No
+  source model is refitted and no new uncertainty interval is calculated.
+* The shared link-offset helper records contributors and the all-finite-row
+  screening fallback. Non-finite preliminary weighted offsets now return an
+  unavailable result rather than failing during the subsequent screening test.
+* Linking chains add `type = "links"` and `type = "anchor_removal"` plot views.
+  They summarize recorded retained connections and remove each common-element
+  identity across all comparisons, holding screening fixed. Returned tables
+  distinguish lost direct links from newly disconnected wave pairs, preserve
+  existing disconnections and unknown-retention information, and retain all
+  waves. Monochrome line/point encodings and title/note controls are supported.
+  These are graph calculations; offsets, estimates and SEs are not recomputed,
+  and zero new disconnections does not establish negligible statistical impact.
+* The screened linking-chain graph retains isolated waves and handles no-common-
+  element cases. Elements are shown separately for each reviewed link so that
+  retained/excluded decisions cannot be merged across comparisons. Returned
+  node/edge tables preserve source IDs, screening flags and interpretation notes;
+  explicit IDs handle repeated names and punctuation. Four line types distinguish
+  retention states in colour and monochrome. `show_title` and `show_notes` allow
+  clean figures while notes remain printable. Drawing now uses base graphics
+  without requiring `igraph`. This graph does not establish anchor invariance,
+  precision or common-scale comparability.
+* Fit-family Wright, pathway, and CCC plots now share CUD-informed series
+  colours across base and ggplot. Bright yellow is omitted from line defaults;
+  small data labels use neutral dark text. Expected-score/CCC curves vary line
+  type even in colour, CCC overlays vary point shape, and Wright subgroup
+  densities vary line type. ggplot conversion preserves category order, custom
+  palettes, and monochrome presets. Large series sets still need suitable
+  labels, panels, and canvas size; a palette alone cannot ensure readability.
+* Fit plots accept `show_title` and `show_notes` (both default to `TRUE`).
+  Users can omit figure titles and explanatory annotations while retaining
+  axes, legends, and structural panel headings. Interpretation, curve-profile,
+  and retention/display notes remain in `data$notes` and are printed by
+  `print()`; ggplot conversions honor the flags and retain a `mfrmr_notes`
+  attribute. Readiness and R warnings are unchanged by these display flags.
+* Clean native pathways reserve enough bottom space for their axis title.
+  FACETS-style Wright maps retain every column heading, split scale headings
+  over two lines, and wrap facet cells and footnotes to the available width. Crowded headings and
+  overflowing frequency stars warn about the needed width or star-count setting.
+* Expected-score pathways now display the same reference-profile condition as
+  CCC plots: fitted steps/slopes are retained and additive facet main effects
+  and interactions are fixed at zero. Their returned `curve_basis` tables
+  match, including in plot bundles; numerical curves are unchanged.
+* ggplot conversions wrap titles, subtitles, and captions at 72 text columns
+  and omit missing labels, preventing ordinary-width subtitle clipping and
+  spurious `NA` captions. Users can override labels with `ggplot2::labs()`.
+  Multi-group native CCC plots now share a margin legend even with five or
+  fewer categories, keeping repeated keys off the fitted curves.
+* Replay scripts with person-data CSV files now locate those files beside the
+  replay script when invoked through nested `source()` or `sys.source()`.
+  They no longer mistake the outer Rscript driver for the replay file.
+* Native Wright `top_n` now limits non-person facet locations independently
+  of step thresholds. Many PCM thresholds no longer consume the limit and
+  silently remove every item/rater location; returned locations and retention
+  counts reflect this corrected selection.
+* Plot label abbreviations now respect display width and distinguish long
+  common-prefix names, including Japanese. Crowded native Wright/pathway
+  labels prioritize fitted-point visibility and warn when more space is
+  needed. Wider Wright maps keep their legend inside the page.
+* Native CCC plots use a shared margin legend beyond five categories and
+  distinct default colours beyond eight categories. Long panel names remain
+  distinguishable, and single-group legends stay within the caller's panel.
+* Native Wright and expected-score pathway labels now account for text width,
+  text height, nearby labels, and fitted points when choosing their positions.
+  Leader lines retain the link to each unchanged estimate; off-screen pathway
+  thresholds stay off-screen. Drawing moves text without changing fitted
+  coordinates; initial annotation positions remain available to custom renderers.
+* Plot styling now restores only the graphical settings it changes, allowing
+  single-panel plots to advance through a caller's grid. Native Wright maps
+  and multi-group CCC plots clean up their own layouts before subsequent plots.
+  Wright titles, pathway endpoint labels, and plot footnotes have more room;
+  subgroup densities now draw in the Wright map's person panel.
+  `plot_apa_figure_one()` uses a single-panel FACETS-style Wright map without
+  CI whiskers (also reflected in its returned Wright payload), so all four
+  panels share one page; its summary text wraps within the panel.
+* Estimated-population individual scoring now requires explicit
+  `readiness_policy = "review"`; an active population model no longer bypasses
+  incomplete source-identification checks. The same guard applies to plausible
+  values, whose notes now retain the source review restriction. Earlier
+  population predictions claiming scoring readiness must be regenerated before
+  summary, printing or structured export. Numerical calculations are unchanged;
+  local rank and optimizer convergence do not establish population-scoring validity.
+* Non-unit observation weights now prevent ordinary-inference approval in the
+  shared fit-readiness record. Diagnostic SE/normal-band calculations remain
+  available, but do not license formal inference or facet-equivalence decisions.
+  Explicit all-unit weights preserve the unweighted estimation/inference path.
+  Readiness contract `mfrmr-readiness-0.2.4-v1` requires older saved fits and
+  diagnostics to be refitted/re-audited and old equivalence bundles to be
+  recomputed; their former inference approval is not reused.
+* Facet equivalence now requires an inference-ready MML fit, matching supplied
+  diagnostics, and unregularized covariance with estimable joint contrasts.
+  Contrast rank is checked from the model constraints so covariance roundoff
+  cannot admit a singular anchored comparison.
+  Pairwise TOST SEs include covariance between facet effects. The heterogeneity
+  summary uses a joint Wald test; the former unsupported Bayes-factor heuristic
+  is unavailable. Forest plots show deviations from the equally weighted facet
+  mean with uncertainty in that mean included. Old equivalence bundles must be
+  recomputed before summary, printing, or plotting. These corrections do not
+  establish finite-sample coverage or extend GPCM/JML inference support.
 * MML `print()` and `summary()` output now states the optimization engine,
   fixed non-adaptive Gauss--Hermite rule, quadrature order, one-dimensional
   latent structure, and the fitted population-scale identification.

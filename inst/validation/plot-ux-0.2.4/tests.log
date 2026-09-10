@@ -1,0 +1,67 @@
+
+ tests/testthat/test-plot-device-state.R 
+plot-device-state: .........................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-draw-and-plot-contracts.R 
+draw-and-plot-contracts: .................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-fit-pathway.R 
+fit-pathway: .................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-plot-customization.R 
+plot-customization: .................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-wright-facets-style.R 
+wright-facets-style: ...............................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-plotting-extras.R 
+plotting-extras: ...............................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-plotting-secondary.R 
+plotting-secondary: ........................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-plotting-screening.R 
+plotting-screening: ................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-as-ggplot.R 
+as-ggplot: .................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-expanded-summary-plot.R 
+expanded-summary-plot: .........................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+
+ tests/testthat/test-facet-equivalence.R 
+facet-equivalence: ...........................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+                      file tests passed failed errors warnings skipped
+1        plot-device-state     3     41      0      0        0       0
+2  draw-and-plot-contracts    38     81      0      0        0       0
+3              fit-pathway     7     33      0      0        0       0
+4       plot-customization     1     17      0      0        0       0
+5      wright-facets-style    12    127      0      0        0       0
+6          plotting-extras    23     95      0      0        0       0
+7       plotting-secondary     9     24      0      0        0       0
+8       plotting-screening    14     32      0      0        0       0
+9                as-ggplot     4     17      0      0        0       0
+10   expanded-summary-plot     5     89      0      0        0       0
+11       facet-equivalence     7     75      0      0        0       0

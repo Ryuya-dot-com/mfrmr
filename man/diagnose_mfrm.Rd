@@ -71,7 +71,9 @@ recommended use
 \item \code{precision_review}: package-native checks for SE, CI, and reliability
 \item \code{parameter_uncertainty}: MML observed-information uncertainty for
 structural parameters when available (\code{steps}, and bounded-\code{GPCM}
-\code{slopes} on both log and positive scales), plus covariance status metadata
+\code{slopes} on both log and positive scales), plus covariance status metadata.
+Step \code{CIEligible} and \code{CIUse} retain the source fit's restrictions;
+non-unit observation-weight bands are diagnostic only.
 \item \code{facet_precision}: facet-level precision summary by distribution basis and
 SE mode
 \item \code{facets_chisq}: fixed/random facet variability summary

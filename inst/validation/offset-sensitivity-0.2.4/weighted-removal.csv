@@ -1,0 +1,4 @@
+"AnchorId","Facet","Level","MaxAbsCumulativeChange","MaxAbsLinkChange","FallbackLinks","RetentionChanges","NewlyUnavailableLinks","UnavailableLinksAfter","CompleteComparison"
+"anchor_1","Item","I1",0.8,0.8,0,0,0,0,TRUE
+"anchor_2","Item","I2",0.2,0.2,0,0,0,0,TRUE
+"anchor_3","Item","I3",0,0,0,0,0,0,TRUE

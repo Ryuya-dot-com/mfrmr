@@ -1,0 +1,38 @@
+GPCM-Criterion-JML completed
+GPCM-Criterion-MML completed
+GPCM-Rater-JML completed
+GPCM-Rater-MML completed
+RSM-interaction-MML completed
+PCM-interaction-MML completed
+GPCM-Criterion-JML wright drawn
+GPCM-Criterion-JML pathway drawn
+GPCM-Criterion-JML ccc drawn
+GPCM-Criterion-MML wright drawn
+GPCM-Criterion-MML pathway drawn
+GPCM-Criterion-MML ccc drawn
+GPCM-Rater-JML wright drawn
+GPCM-Rater-JML pathway drawn
+GPCM-Rater-JML ccc drawn
+GPCM-Rater-MML wright drawn
+GPCM-Rater-MML pathway drawn
+GPCM-Rater-MML ccc drawn
+RSM-interaction-MML wright drawn
+RSM-interaction-MML pathway drawn
+RSM-interaction-MML ccc drawn
+PCM-interaction-MML wright drawn
+PCM-interaction-MML pathway drawn
+PCM-interaction-MML ccc drawn
+                                   Case ProbabilityMaxError
+GPCM-Criterion-JML   GPCM-Criterion-JML        6.994405e-15
+GPCM-Criterion-MML   GPCM-Criterion-MML        3.552714e-15
+GPCM-Rater-JML           GPCM-Rater-JML        3.219647e-15
+GPCM-Rater-MML           GPCM-Rater-MML        1.776357e-15
+RSM-interaction-MML RSM-interaction-MML        1.665335e-15
+PCM-interaction-MML PCM-interaction-MML        1.665335e-15
+                    ExpectedScoreMaxError InformationMaxError BasisMatches
+GPCM-Criterion-JML           2.797762e-14        2.610607e-12         TRUE
+GPCM-Criterion-MML           1.421085e-14        2.597462e-13         TRUE
+GPCM-Rater-JML               1.287859e-14        1.797733e-13         TRUE
+GPCM-Rater-MML               7.105427e-15        7.633130e-14         TRUE
+RSM-interaction-MML          7.105427e-15        3.019807e-14         TRUE
+PCM-interaction-MML          6.661338e-15        2.664535e-14         TRUE

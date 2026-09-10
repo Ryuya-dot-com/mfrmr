@@ -634,6 +634,11 @@ mfrm_results_validate_diagnostics_identity <- function(fit, diagnostics,
     }
     return(invisible("imported_identity_match"))
   }
+  if (!identical(as.character(diagnostics$fit_readiness$ReadinessContractVersion),
+                 mfrmr_readiness_contract_version())) {
+    stop("The supplied diagnostics lack the current readiness contract. Recompute them with diagnose_mfrm(fit, ...).",
+         call. = FALSE)
+  }
   if (!isTRUE(mfrm_results_native_diagnostics_match(fit, diagnostics))) {
     stop(
       "fit/diagnostics mismatch in `", helper, "`: the supplied diagnostics ",

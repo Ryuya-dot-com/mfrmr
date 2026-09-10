@@ -263,7 +263,8 @@ test_that("GPCM compute_information + plot_information work", {
 
 test_that("GPCM CCC / pathway / Wright plots return mfrm_plot_data", {
   for (type in c("wright", "pathway", "ccc")) {
-    p <- plot(.gpcm_fit, type = type, draw = FALSE)
+    p <- .mfrmr_muffle_expected_warnings(
+      plot(.gpcm_fit, type = type, draw = FALSE), "^Review-only display:")
     expect_s3_class(p, "mfrm_plot_data")
   }
 })

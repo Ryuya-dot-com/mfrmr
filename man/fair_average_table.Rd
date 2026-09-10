@@ -30,9 +30,9 @@ fair_average_table(
 \item{totalscore}{Include all observations for score totals (\code{TRUE}) or apply
 legacy extreme-row exclusion (\code{FALSE}).}
 
-\item{umean}{Additive score-to-report origin shift.}
+\item{umean}{Additive origin shift for Measure (not fair-score values).}
 
-\item{uscale}{Multiplicative score-to-report scale.}
+\item{uscale}{Multiplicative scale for Measure and measure SEs (not fair scores).}
 
 \item{udecimals}{Rounding digits used in formatted output.}
 
@@ -81,6 +81,10 @@ For the Rasch-family \code{RSM} / \code{PCM} branch, these tables follow the
 standard FACETS Linacre construction: fair averages are
 Rasch-measure-to-score transformations evaluated in a standardized
 mean/zero-facet environment.
+FairM uses mean other-facet measures (and mean person measure for non-person
+rows); FairZ uses zero references. Neither integrates over the observed
+assignment/person distribution. FairZ and its historical alias
+\code{StandardizedAdjustedAverage} are expected scores, not z-scores.
 
 Bounded \code{GPCM} fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
@@ -114,8 +118,8 @@ uncertainty is reported under distinct columns such as \verb{Fair(M) S.E.},
 \item \code{settings}: scoring-transformation and filtering options used.
 }
 
-Larger observed-vs-fair gaps can indicate systematic scoring tendencies by
-specific facet levels.
+Observed-vs-fair gaps also reflect person mix and assignment. They are
+descriptive follow-up prompts, not standalone evidence of rater bias.
 }
 
 \section{Typical workflow}{
@@ -135,7 +139,7 @@ The \code{stacked} data.frame contains:
 \item{Level}{Element label within the facet.}
 \item{Obsvd Average}{Observed raw-score average.}
 \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
-\item{Fair(Z) Average}{Standardized adjusted reference average.}
+\item{Fair(Z) Average}{Expected score at a zero reference environment, not a z-score.}
 \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{AdjustedAverage} when \code{fair_se = TRUE} and available.}
 \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{StandardizedAdjustedAverage} when \code{fair_se = TRUE} and available.}
@@ -151,9 +155,8 @@ The \code{stacked} data.frame contains:
 The \code{SE}, \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE}
 columns in this table are the \strong{measure-level} standard errors of the
 underlying facet element (the same SE that would appear in
-\code{summary(fit)$facets}), rescaled by the fair-average score scale factor
-so the units line up with the reported \verb{Fair(M) Average} / \verb{Fair(Z) Average}
-columns. They are \strong{not} delta-method standard errors of the fair-average
+\code{summary(fit)$facets}), rescaled by \code{uscale} to the reported Measure units.
+Fair scores remain on the fitted internal score scale. They are \strong{not} delta-method standard errors of the fair-average
 values themselves. When \code{fair_se = TRUE}, the distinct \verb{Fair(M) S.E.} /
 \verb{Fair(Z) S.E.} columns are computed by
 propagating the joint covariance of the relevant facet element, the
@@ -164,6 +167,16 @@ than included in the Hessian, so person rows receive unavailable fair-average
 SEs. \strong{Do not use the measure-level \code{SE} / \verb{Model S.E.} columns as
 \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
 fair-average value.}
+\code{FairCIEligible} is \code{FALSE} for these diagnostic intervals; numerical
+availability (\code{ok} or \code{regularized}) does not establish inferential validity.
+\code{FairCIReportingUse} distinguishes diagnostic-only and unavailable rows.
+Full-refit coverage remains unverified. For RSM/PCM, this table does not
+supply fair-score SEs; \code{\link[=plot_fair_average]{plot_fair_average()}} can compute a conditional
+interval from a fitted model by propagating only the focal measure SE.
+Summaries identify \code{FairMetric}: FairM for mean/both reference tables, FairZ
+for zero-reference tables, with matching score/SE column names.
+Export \code{stacked} or the summary's \code{summary} / \code{preview} data.frames with
+\code{\link[utils:write.csv]{utils::write.csv()}}. \code{\link[=export_summary_appendix]{export_summary_appendix()}} does not accept this bundle.
 }
 
 \section{References}{

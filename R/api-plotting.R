@@ -105,9 +105,16 @@ print.mfrm_plot_data <- function(x, ...) {
   if (!is.null(data$subtitle) && nzchar(data$subtitle)) {
     cat("  subtitle : ", data$subtitle, "\n", sep = "")
   }
+  if (is.data.frame(data$notes) && all(c("Type", "Text") %in% names(data$notes))) {
+    cat("  notes    :\n")
+    for (i in seq_len(nrow(data$notes))) {
+      cat(paste(strwrap(paste0("[", data$notes$Type[i], "] ", data$notes$Text[i]),
+        width = max(40L, getOption("width") - 4L), prefix = "    "), collapse = "\n"), "\n", sep = "")
+    }
+  }
   data_slots <- setdiff(
     names(data),
-    c("title", "subtitle", "legend", "reference_lines")
+    c("title", "subtitle", "legend", "reference_lines", "notes")
   )
   if (length(data_slots) > 0L) {
     cat("  data     :\n", sep = "")
@@ -438,7 +445,27 @@ plot_data_components <- function(x, type = NULL, ...) {
 truncate_axis_label <- function(x, width = 28L) {
   x <- as.character(x)
   width <- max(8L, as.integer(width))
-  ifelse(nchar(x) > width, paste0(substr(x, 1, width - 3L), "..."), x)
+  values <- unique(x)
+  labels <- ifelse(nchar(values, type = "width") > width,
+                    paste0(strtrim(values, width - 3L), "..."), values)
+  collision <- (duplicated(labels) | duplicated(labels, fromLast = TRUE)) &
+    !is.na(values) & nchar(values, type = "width") > width
+  if (any(collision)) {
+    tail_width <- ceiling((width - 3L) / 2)
+    suffix <- substring(values[collision], nchar(values[collision]) - tail_width + 1L)
+    while (any(nchar(suffix, type = "width") > tail_width)) {
+      wide <- nchar(suffix, type = "width") > tail_width
+      suffix[wide] <- substring(suffix[wide], 2L)
+    }
+    labels[collision] <- paste0(strtrim(values[collision], width - 3L - tail_width),
+      "...", suffix)
+    # Preserve full names when an abbreviation would still be ambiguous.
+    while (anyDuplicated(labels)) {
+      collision <- duplicated(labels) | duplicated(labels, fromLast = TRUE)
+      labels[collision] <- values[collision]
+    }
+  }
+  labels[match(x, values)]
 }
 
 draw_rotated_x_labels <- function(at,
@@ -575,13 +602,12 @@ resolve_plot_preset <- function(preset = c("standard", "publication", "compact",
 }
 
 apply_plot_preset <- function(style) {
-  # Capture the caller's par() state and register an on.exit handler in
-  # the caller's frame so graphical parameters are restored when the
-  # calling function exits. This follows "Writing R Extensions" 2.1:
-  # functions that modify par() must restore it. The envir=parent.frame()
-  # pattern is the standard CRAN-safe form used by withr::defer and
-  # friends -- see ?on.exit for the contract.
-  old <- graphics::par(no.readonly = TRUE)
+  # Restore only the style we change. Restoring every par() also rewinds
+  # mfg, resets custom layouts and replaces the coordinates for annotations.
+  old <- graphics::par()[c(
+    "bg", "fg", "col", "col.axis", "col.lab", "col.main", "col.sub",
+    "cex.axis", "cex.lab", "cex.main", "lend", "ljoin"
+  )]
   do.call(
     base::on.exit,
     list(substitute(graphics::par(old), list(old = old)), add = TRUE),
@@ -657,73 +683,30 @@ stack_fair_raw_tables <- function(raw_by_facet) {
   if (length(out) == 0) data.frame() else dplyr::bind_rows(out)
 }
 
-# Delta-method variance Var(X | eta) for each fair_average_table row.
-#
-# Returns Var(X | eta = sign * Measure) at each row of `fair_df`, so the
-# caller can form delta-method standard errors on the observed-score
-# scale via |dE[X]/d_delta| * SE(delta) = Var(X) * SE(delta) (a known
-# Rasch-family identity). This helper is intentionally RSM/PCM only. Bounded
-# GPCM plot CIs use the opt-in structural fair-average SE columns produced by
-# fair_average_table(fair_se = TRUE). Rows that cannot be resolved return
-# NA_real_ so callers can suppress CI whiskers.
-.fair_average_delta_variance <- function(fit, fair_df) {
-  n <- nrow(fair_df)
-  if (n == 0L) return(numeric(0))
-  spec <- tryCatch(build_step_curve_spec(fit), error = function(e) NULL)
-  if (is.null(spec) || length(spec$groups) == 0L) {
-    return(rep(NA_real_, n))
-  }
-  model <- toupper(as.character(fit$config$model[1]))
-  if (identical(model, "GPCM")) {
-    return(rep(NA_real_, n))
-  }
-  step_facet <- as.character(fit$config$step_facet %||% NA_character_)
-  rating_min <- suppressWarnings(as.numeric(fit$prep$rating_min %||% 0))
-  if (!is.finite(rating_min)) rating_min <- 0
-  facet_signs <- fit$config$facet_signs %||%
-    stats::setNames(rep(-1, length(fit$config$facet_names)),
-                    fit$config$facet_names)
-
-  single_group_var <- function(eta_scalar, step_cum) {
-    n_cat <- length(step_cum)
-    if (n_cat < 2L) return(NA_real_)
-    k_vec <- rating_min + 0:(n_cat - 1L)
-    probs <- category_prob_rsm(eta_scalar, step_cum)
-    expected <- as.numeric(probs %*% k_vec)
-    second <- as.numeric(probs %*% (k_vec^2))
-    max(second - expected^2, 0)
-  }
-
-  vars <- rep(NA_real_, n)
-  fair_facet <- as.character(fair_df$Facet)
-  fair_level <- as.character(fair_df$Level)
-  fair_meas <- suppressWarnings(as.numeric(fair_df$Measure))
-
-  for (i in seq_len(n)) {
-    if (!is.finite(fair_meas[i])) next
-    sign_i <- suppressWarnings(as.numeric(facet_signs[fair_facet[i]] %||% -1))
-    if (!is.finite(sign_i)) sign_i <- -1
-    eta_i <- sign_i * fair_meas[i]
-
-    if (model == "RSM") {
-      g <- spec$groups[[1L]]
-      vars[i] <- single_group_var(eta_i, g$step_cum)
-    } else if (!is.na(step_facet) && identical(fair_facet[i], step_facet) &&
-               fair_level[i] %in% names(spec$groups)) {
-      # PCM / GPCM row that IS the step facet: use that level's tau vector.
-      vars[i] <- single_group_var(eta_i, spec$groups[[fair_level[i]]]$step_cum)
-    } else if (model %in% c("PCM", "GPCM")) {
-      # Row from another facet: average variance across step-facet levels.
-      per_group <- vapply(
-        spec$groups,
-        function(g) single_group_var(eta_i, g$step_cum),
-        numeric(1)
-      )
-      per_group <- per_group[is.finite(per_group)]
-      if (length(per_group) > 0L) vars[i] <- mean(per_group)
+# Conditional Rasch-family derivative at the SAME reference profile as the
+# reported fair score. Inverting the fair score avoids reporting-scale,
+# Person-sign and mean-reference errors. Calibration is held fixed here.
+.fair_average_delta_variance <- function(fit, fair_df, metric = "FairM") {
+  out <- rep(NA_real_, nrow(fair_df))
+  if (!inherits(fit, "mfrm_fit") || !fit$config$model %in% c("RSM", "PCM")) return(out)
+  params <- expand_params(fit$opt$par, build_param_sizes(fit$config), fit$config)
+  common <- if (fit$config$model == "RSM") params$steps else colMeans(params$steps_mat, na.rm = TRUE)
+  for (i in seq_len(nrow(fair_df))) {
+    steps <- common
+    if (fit$config$model == "PCM" && fair_df$Facet[i] == fit$config$step_facet) {
+      j <- match(fair_df$Level[i], fit$prep$levels[[fit$config$step_facet]])
+      if (is.na(j)) next
+      steps <- params$steps_mat[j, ]
     }
+    cumulative <- c(0, cumsum(steps))
+    eta <- estimate_eta_from_target(fair_df[[metric]][i], cumulative,
+                                    fit$prep$rating_min, fit$prep$rating_max)
+    if (!is.finite(eta)) next
+    prob <- as.numeric(category_prob_rsm(eta, cumulative))
+    scores <- seq_along(prob) - 1
+    out[i] <- sum(prob * (scores - sum(prob * scores))^2)
   }
-  vars
+  out
 }
 
 resolve_unexpected_bundle <- function(x,
@@ -1613,27 +1596,22 @@ plot_unexpected <- function(x,
 #'
 #' @param x Output from [fit_mfrm()] or [fair_average_table()].
 #' @param diagnostics Optional output from [diagnose_mfrm()] when `x` is `mfrm_fit`.
-#' @param facet Optional facet name for level-wise lollipop plots.
+#' @param facet Optional facet name or names. Use `"Person"` for ability-to-score relationships.
 #' @param metric Adjusted-score metric. Accepts legacy names (`"FairM"`,
 #'   `"FairZ"`) and package-native names (`"AdjustedAverage"`,
 #'   `"StandardizedAdjustedAverage"`).
-#' @param plot_type `"difference"` or `"scatter"`.
+#' @param plot_type `"difference"`, `"scatter"`, or `"measure"` (Measure on x, fair score on y).
 #' @param top_n Maximum levels shown for `"difference"` plot.
-#' @param show_ci Logical. When `TRUE`, draw approximate
-#'   confidence-interval whiskers on the fair metric using a
-#'   delta-method propagation from the logit `Measure` standard error
-#'   to the observed-score scale. The derivative equals the implied
-#'   score variance `Var(X | Measure)`, so the fair-scale standard
-#'   error is `Var(X) * ModelSE`. CI bounds are clipped to the rating
-#'   range. Rows where the score variance is effectively zero (levels
-#'   whose measure sits near the rating boundary, so the delta-method
-#'   approximation becomes uninformative) are drawn with an open
-#'   circle and excluded from the whiskers; the excluded count is
-#'   reported in the subtitle. For bounded `GPCM` fits, this option requests
-#'   `fair_average_table(fair_se = TRUE)` when `x` is a fit object and uses the
-#'   structural delta-method fair-average CI columns when they are available.
-#'   If `x` is a precomputed fair-average bundle without those columns, the
-#'   plot records an unavailable-CI note.
+#' @param show_ci Draw approximate fair-score intervals. RSM/PCM propagate
+#'   only the focal measure SE, holding thresholds, other effects and reference
+#'   means fixed. This is not full calibration uncertainty. GPCM uses available
+#'   structural delta-method SEs, conditioning on person EAP/reference means;
+#'   person rows are unavailable. Bounds are clipped to the internal rating
+#'   range. Unavailable intervals are retained as NA with status and notes.
+#'   The difference view treats the observed average as fixed: its whiskers
+#'   are not confidence intervals for the observed-minus-fair gap.
+#'   Returned `CI_Eligible` is `FALSE`; `CI_ReportingUse` distinguishes
+#'   diagnostic-only and unavailable intervals, including stored bundles.
 #' @param ci_level Confidence level used when `show_ci = TRUE`;
 #'   default `0.95`. The returned plot-data object gains `CI_Lower`,
 #'   `CI_Upper`, and `CI_Level` columns for downstream reuse.
@@ -1641,49 +1619,36 @@ plot_unexpected <- function(x,
 #' @param preset Visual preset (`"standard"`, `"publication"`, `"compact"`, or `"monochrome"`).
 #' @param ... Additional arguments passed to [fair_average_table()] when `x` is `mfrm_fit`.
 #'
+#' @param show_title Show the figure title. The title remains in the return value.
+#' @param show_notes Show short figure annotations. Full interpretation and
+#'   uncertainty notes remain in `data$notes` and the ggplot `mfrmr_notes` attribute.
+#'
 #' @details
-#' Fair-average plots compare observed scoring tendency against model-based
-#' fair metrics.
+#' FairM is an expected score at the mean measures of the other facets; for
+#' non-person rows it also uses the mean estimated person measure. FairZ uses
+#' zero reference measures instead. **FairZ is not a z-score.** The historical
+#' alias `StandardizedAdjustedAverage` refers to the reference environment,
+#' not z-standardization. Both metrics use fitted internal score coding.
+#' PCM/GPCM use an element's own thresholds for the step facet and the mean
+#' threshold profile for other facets. GPCM uses an element's own slope for
+#' the slope facet and slope 1 otherwise. These are reporting conventions,
+#' not averages of predictions over the observed person/assignment distribution.
 #'
-#' **FairM** is the model-predicted mean score for each element, adjusting
-#' for the ability distribution of persons actually encountered.  It
-#' answers: "What average score would this rater/criterion produce if all
-#' raters/criteria saw the same mix of persons?"
+#' `plot_type = "measure"` connects measures (person ability or facet effects)
+#' to the reported fair score. Select `facet = "Person"` for an ability-to-score
+#' view. Points reuse the table values, without fitting a trend across different
+#' reference profiles. This transformation is not independent validation of
+#' the fitted model. `umean`/`uscale` change Measure units, not score units;
+#' `xtreme` changes the reported Measure only and disables conditional intervals.
 #'
-#' **FairZ** standardises FairM to a z-score across elements within each
-#' facet, making it easier to compare relative severity across facets
-#' with different raw-score scales.
-#'
-#' Use FairM when the raw-score metric is meaningful (e.g., reporting
-#' average ratings on the original 1--4 scale).
-#' Use FairZ when comparing standardised severity ranks across facets.
-#'
-#' @section Plot types:
-#' \describe{
-#'   \item{`"difference"` (default)}{Lollipop chart showing the gap between
-#'     observed and fair-average score for each element.  X-axis:
-#'     Observed - Fair metric.  Y-axis: element labels.  Points colored
-#'     teal (lenient, gap >= 0) or orange (severe, gap < 0).  Ordered by
-#'     absolute gap.}
-#'   \item{`"scatter"`}{Scatter plot of fair metric (x) vs observed average
-#'     (y) with an identity line.  Points colored by facet.  Useful for
-#'     checking overall alignment between observed and model-adjusted
-#'     scores.}
-#' }
-#'
-#' @section Interpreting output:
-#' Difference plot: ranked element-level gaps (`Observed - Fair`), useful
-#' for triage of potentially lenient/severe levels.
-#'
-#' Scatter plot: global agreement pattern relative to the identity line.
-#'
-#' Larger absolute gaps suggest stronger divergence between observed and
-#' model-adjusted scoring.
-#'
-#' @section Typical workflow:
-#' 1. Start with `plot_type = "difference"` to find largest discrepancies.
-#' 2. Use `plot_type = "scatter"` to check overall alignment pattern.
-#' 3. Follow up with facet-level diagnostics for flagged levels.
+#' `"difference"` ranks absolute observed-minus-fair gaps; `"scatter"` compares
+#' observed averages against fair scores with an identity line. These gaps
+#' also reflect assignment and person mix and do not by themselves diagnose
+#' leniency, severity or bias. Intervals are conditional approximations with
+#' full-refit coverage unverified. RSM/PCM intervals require a fitted model;
+#' a stored bundle alone lacks the calibration needed to calculate them.
+#' GPCM bundle intervals honor `ci_level`; older bundles without rating limits
+#' can only reuse intervals at their recorded confidence level.
 #'
 #' @section Further guidance:
 #' For a plot-selection guide and a longer walkthrough, see
@@ -1692,7 +1657,9 @@ plot_unexpected <- function(x,
 #'
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' With `draw = FALSE`, the returned plot data includes `title`, `subtitle`,
-#' `legend`, `reference_lines`, and the stacked fair-average data.
+#' `legend`, `reference_lines`, and the stacked fair-average `data`.
+#' `plot_data` contains the displayed rows and coordinates; `excluded` retains
+#' non-finite rows. `notes` explains the reference, uncertainty and row selection.
 #' @seealso [fair_average_table()], [plot_unexpected()], [plot_displacement()],
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
 #' @concept confidence intervals
@@ -1716,300 +1683,175 @@ plot_fair_average <- function(x,
                               diagnostics = NULL,
                               facet = NULL,
                               metric = c("AdjustedAverage", "StandardizedAdjustedAverage", "FairM", "FairZ"),
-                              plot_type = c("difference", "scatter"),
+                              plot_type = c("difference", "scatter", "measure"),
                               top_n = 40,
                               show_ci = FALSE,
                               ci_level = 0.95,
                               draw = TRUE,
                               preset = c("standard", "publication", "compact", "monochrome"),
+                              show_title = TRUE,
+                              show_notes = TRUE,
                               ...) {
-  metric <- match.arg(metric, c("AdjustedAverage", "StandardizedAdjustedAverage", "FairM", "FairZ"))
-  metric <- switch(
-    metric,
-    AdjustedAverage = "FairM",
-    StandardizedAdjustedAverage = "FairZ",
-    metric
-  )
-  plot_type <- match.arg(tolower(plot_type), c("difference", "scatter"))
-  top_n <- max(1L, as.integer(top_n))
+  metric <- match.arg(metric)
+  metric <- switch(metric, AdjustedAverage = "FairM", StandardizedAdjustedAverage = "FairZ", metric)
+  plot_type <- match.arg(tolower(plot_type), c("difference", "scatter", "measure"))
+  if (!is.numeric(top_n) || length(top_n) != 1L || is.na(top_n) || top_n < 1) {
+    stop("`top_n` must be a positive number.", call. = FALSE)
+  }
   if (!is.numeric(ci_level) || length(ci_level) != 1L ||
       !is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be a single number in (0, 1).", call. = FALSE)
   }
   style <- resolve_plot_preset(preset)
-
-  bundle <- if (inherits(x, "mfrm_fit")) {
-    fair_args <- list(...)
-    x_model <- toupper(as.character(x$config$model[1] %||% NA_character_))
-    if (isTRUE(show_ci) && identical(x_model, "GPCM") &&
-        is.null(fair_args$fair_se)) {
-      fair_args$fair_se <- TRUE
-    }
-    if (isTRUE(show_ci) && identical(x_model, "GPCM") &&
-        isTRUE(fair_args$fair_se) && is.null(fair_args$ci_level)) {
-      fair_args$ci_level <- ci_level
-    }
-    do.call(
-      fair_average_table,
-      c(list(fit = x, diagnostics = diagnostics), fair_args)
-    )
-  } else {
-    resolve_fair_bundle(x)
-  }
-
+  is_fit <- inherits(x, "mfrm_fit")
+  bundle <- if (is_fit) {
+    args <- list(...)
+    if (isTRUE(show_ci) && identical(x$config$model, "GPCM") && is.null(args$fair_se)) args$fair_se <- TRUE
+    if (isTRUE(args$fair_se)) args$ci_level <- ci_level
+    do.call(fair_average_table, c(list(fit = x, diagnostics = diagnostics), args))
+  } else resolve_fair_bundle(x)
+  report_scale <- bundle$settings$uscale %||% 1
+  report_origin <- bundle$settings$umean %||% 0
+  if (!is.finite(report_scale)) report_scale <- 1
+  if (!is.finite(report_origin)) report_origin <- 0
   fair_df <- stack_fair_raw_tables(bundle$raw_by_facet)
-  if (nrow(fair_df) == 0) stop("No fair-average data available.")
-  needed <- c("Facet", "Level", "ObservedAverage", "FairM", "FairZ")
-  if (!all(needed %in% names(fair_df))) {
-    stop("Fair-average table does not include required columns.")
-  }
-  fair_df <- fair_df[is.finite(fair_df$ObservedAverage) & is.finite(fair_df[[metric]]), , drop = FALSE]
-  if (nrow(fair_df) == 0) stop("No finite fair-average rows available.")
-
+  needed <- c("Facet", "Level", "ObservedAverage", metric,
+              if (plot_type == "measure") "Measure")
+  if (!all(needed %in% names(fair_df))) stop("Fair-average table does not include required columns.")
   if (!is.null(facet)) {
-    fair_df <- fair_df[as.character(fair_df$Facet) == as.character(facet[1]), , drop = FALSE]
-    if (nrow(fair_df) == 0) stop("Requested `facet` was not found in fair-average output.")
+    fair_df <- fair_df[as.character(fair_df$Facet) %in% as.character(facet), , drop = FALSE]
+    if (!nrow(fair_df)) stop("Requested `facet` was not found in fair-average output.")
   }
+  finite <- is.finite(fair_df[[metric]]) & is.finite(fair_df[[if (plot_type == "measure") "Measure" else "ObservedAverage"]])
+  excluded <- fair_df[!finite, , drop = FALSE]
+  fair_df <- fair_df[finite, , drop = FALSE]
+  if (!nrow(fair_df)) stop("No finite fair-average rows available.")
   fair_df$Gap <- fair_df$ObservedAverage - fair_df[[metric]]
-
-  fair_model <- toupper(as.character(
-    bundle$settings$model %||%
-      if (inherits(x, "mfrm_fit")) x$config$model[1] else NA_character_
-  ))
-
-  # Delta-method CI for the fair-average metric on the observed-score
-  # scale. We use the Rasch identity |dE[X]/d_delta| = Var(X | delta)
-  # evaluated at the facet-level measure, so the SE of the expected
-  # fair score is Var(X) * ModelSE. CIs are set to NA when the
-  # evaluated variance is below 1e-6 (near a rating boundary the
-  # delta-method approximation becomes uninformative because a tiny
-  # change in the measure barely shifts the predicted category
-  # distribution). CI bounds are clipped to the rating range so we
-  # never display values outside the observable scale.
-  ci_excluded <- 0L
   ci_note <- NULL
-  ci_enabled <- isTRUE(show_ci)
-  ci_from_fair_table <- FALSE
-  if (ci_enabled && identical(fair_model, "GPCM")) {
-    prefix <- if (identical(metric, "FairM")) "FairM" else "FairZ"
-    ci_cols <- paste0(prefix, c("_CI_Lower", "_CI_Upper", "_CI_Level"))
-    se_col <- paste0(prefix, "SE")
-    status_col <- paste0(prefix, "_SE_Status")
-    if (all(ci_cols %in% names(fair_df))) {
-      fair_df$CI_Lower <- suppressWarnings(as.numeric(fair_df[[ci_cols[1]]]))
-      fair_df$CI_Upper <- suppressWarnings(as.numeric(fair_df[[ci_cols[2]]]))
-      fair_df$CI_Level <- suppressWarnings(as.numeric(fair_df[[ci_cols[3]]]))
-      if (se_col %in% names(fair_df)) {
-        fair_df$CI_SE <- suppressWarnings(as.numeric(fair_df[[se_col]]))
-      }
-      if (status_col %in% names(fair_df)) {
-        fair_df$CI_Status <- as.character(fair_df[[status_col]])
-      }
-      fair_df$CI_Method <- "structural delta method"
-      ci_from_fair_table <- TRUE
-      ci_enabled <- FALSE
-      ci_excluded <- sum(!is.finite(fair_df$CI_Lower) | !is.finite(fair_df$CI_Upper))
-      ci_note <- paste0(
-        round(100 * ci_level),
-        "% CI via structural delta method",
-        if (ci_excluded > 0L) {
-          paste0(" (", ci_excluded,
-                 " row(s) unavailable: person rows or Hessian/gradient limits)")
-        } else ""
-      )
-    } else {
-      ci_enabled <- FALSE
-      ci_note <- paste(
-        "CI unavailable for GPCM fair averages:",
-        "call fair_average_table(..., fair_se = TRUE) or pass a fit object."
-      )
-    }
-  }
-  if (ci_enabled && "ModelSE" %in% names(fair_df) &&
-      "Measure" %in% names(fair_df)) {
-    score_var <- .fair_average_delta_variance(x, fair_df)
-    se_logit <- suppressWarnings(as.numeric(fair_df$ModelSE))
-    se_fair <- score_var * se_logit
-    valid <- is.finite(score_var) & is.finite(se_logit) & score_var > 1e-6
-    ci_excluded <- sum(!valid)
-    z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
-    fair_df$CI_Lower <- NA_real_
-    fair_df$CI_Upper <- NA_real_
+  if (isTRUE(show_ci)) {
+    fair_df$CI_SE <- NA_real_
+    fair_df$CI_Lower <- fair_df$CI_Upper <- NA_real_
     fair_df$CI_Level <- ci_level
-    if (any(valid)) {
-      rating_min <- suppressWarnings(as.numeric(x$prep$rating_min %||% NA_real_))
-      rating_max <- suppressWarnings(as.numeric(x$prep$rating_max %||% NA_real_))
-      lo <- fair_df[[metric]][valid] - z_ci * se_fair[valid]
-      hi <- fair_df[[metric]][valid] + z_ci * se_fair[valid]
-      if (is.finite(rating_min)) lo <- pmax(lo, rating_min)
-      if (is.finite(rating_max)) hi <- pmin(hi, rating_max)
-      fair_df$CI_Lower[valid] <- lo
-      fair_df$CI_Upper[valid] <- hi
+    fair_df$CI_Status <- "unavailable"
+    fair_df$CI_Method <- "unavailable"
+    if (identical(bundle$settings$model, "GPCM")) {
+      se_col <- paste0(metric, "SE")
+      if (se_col %in% names(fair_df)) {
+        fair_df$CI_SE <- fair_df[[se_col]]
+        fair_df$CI_Status <- fair_df[[paste0(metric, "_SE_Status")]] %||% "unavailable"
+        fair_df$CI_Method <- "structural delta method"
+      }
+      ci_note <- "structural delta method; person EAP/reference mean held fixed; person rows unavailable."
+    } else if (is_fit && "ModelSE" %in% names(fair_df)) {
+      scale <- bundle$settings$uscale %||% 1
+      if (!is.finite(scale)) scale <- 1
+      if (scale != 0 && (bundle$settings$xtreme %||% 0) == 0) {
+        variance <- .fair_average_delta_variance(x, fair_df, metric)
+        valid <- is.finite(variance) & variance > 1e-6 & is.finite(fair_df$ModelSE) & fair_df$ModelSE >= 0
+        fair_df$CI_SE[valid] <- variance[valid] * fair_df$ModelSE[valid] / abs(scale)
+        fair_df$CI_Status[valid] <- "conditional_approximation"
+        fair_df$CI_Method[valid] <- "conditional measure delta method"
+      }
+      ci_note <- "Conditional measure delta method; thresholds, other effects and reference means held fixed."
+    } else ci_note <- "CI unavailable: pass a fitted model or a GPCM bundle with fair_se = TRUE."
+    limits <- c(bundle$settings$rating_min, bundle$settings$rating_max)
+    if (length(limits) != 2L && is_fit) limits <- c(x$prep$rating_min, x$prep$rating_max)
+    if (length(limits) == 2L && all(is.finite(limits))) {
+      z <- stats::qnorm((1 + ci_level) / 2)
+      fair_df$CI_Lower <- pmax(limits[1], fair_df[[metric]] - z * fair_df$CI_SE)
+      fair_df$CI_Upper <- pmin(limits[2], fair_df[[metric]] + z * fair_df$CI_SE)
+    } else {
+      # Older bundles retain their own confidence level; never relabel a 95% CI as 90%.
+      cols <- paste0(metric, c("_CI_Lower", "_CI_Upper", "_CI_Level"))
+      if (all(cols %in% names(fair_df))) {
+        same <- is.finite(fair_df[[cols[3]]]) & abs(fair_df[[cols[3]]] - ci_level) < 1e-12
+        fair_df$CI_Lower[same] <- fair_df[[cols[1]]][same]
+        fair_df$CI_Upper[same] <- fair_df[[cols[2]]][same]
+      }
     }
-    fair_df$CI_Method <- "Rasch-family delta method"
+    unavailable <- !is.finite(fair_df$CI_Lower) | !is.finite(fair_df$CI_Upper)
+    fair_df$CI_Status[unavailable] <- "unavailable"
+    fair_df$CI_Eligible <- FALSE
+    fair_df$CI_ReportingUse <- ifelse(unavailable, "unavailable", "diagnostic_only")
+    ci_note <- paste0(round(100 * ci_level), "% approximate intervals. ", ci_note,
+      " Full-refit coverage unverified; ", sum(unavailable), " row(s) unavailable.",
+      if (plot_type == "difference") " Observed averages treated as fixed; these are not gap confidence intervals." else "")
   }
-
-  plot_title <- if (plot_type == "difference") {
-    paste0("Fair-average gaps (", metric, ")")
-  } else {
-    paste0("Observed vs ", metric)
+  groups <- unique(as.character(fair_df$Facet))
+  encoding <- data.frame(Facet = groups, Color = unname(.plot_series_colors(groups, style$name)),
+    Shape = rep(c(16, 17, 15, 18, 1, 2), length.out = length(groups)))
+  fair_df$Color <- encoding$Color[match(fair_df$Facet, groups)]
+  fair_df$Shape <- encoding$Shape[match(fair_df$Facet, groups)]
+  plot_df <- fair_df
+  if (plot_type == "difference") {
+    ord <- order(abs(plot_df$Gap), decreasing = TRUE)
+    plot_df <- plot_df[head(ord, min(length(ord), top_n)), , drop = FALSE]
   }
-  plot_subtitle <- paste0(
-    if (!is.null(facet)) paste0("Facet: ", as.character(facet[1]), "; ") else "",
-    "Metric: ", metric,
-    if (!is.null(ci_note)) {
-      paste0("; ", ci_note)
-    } else if (isTRUE(show_ci) && "CI_Lower" %in% names(fair_df)) {
-      paste0("; ", if (isTRUE(ci_from_fair_table)) {
-        ci_note
-      } else {
-        paste0(round(100 * ci_level), "% CI via delta-method",
-               if (ci_excluded > 0L) {
-                 paste0(" (", ci_excluded,
-                        " level(s) excluded: near-boundary score variance)")
-               } else "")
-      })
-    } else ""
-  )
-  plot_legend <- if (plot_type == "difference") {
-    new_plot_legend(
-      label = c("Observed above model-adjusted average", "Observed below model-adjusted average"),
-      role = c("gap_direction", "gap_direction"),
-      aesthetic = c("point", "point"),
-      value = c(style$accent_tertiary, style$accent_secondary)
-    )
-  } else {
-    new_plot_legend(
-      label = unique(as.character(fair_df$Facet)),
-      role = rep("facet", length(unique(as.character(fair_df$Facet)))),
-      aesthetic = rep("point", length(unique(as.character(fair_df$Facet)))),
-      value = grDevices::hcl.colors(max(1L, length(unique(as.character(fair_df$Facet)))), "Dark 3")[seq_along(unique(as.character(fair_df$Facet)))]
-    )
+  plot_df$Label <- paste(plot_df$Facet, plot_df$Level, sep = ": ")
+  plot_df$X <- switch(plot_type, difference = plot_df$Gap, scatter = plot_df[[metric]], measure = plot_df$Measure)
+  plot_df$Y <- switch(plot_type, difference = rev(seq_len(nrow(plot_df))), scatter = plot_df$ObservedAverage, measure = plot_df[[metric]])
+  plot_df$Lower <- plot_df$Upper <- NA_real_
+  if (isTRUE(show_ci)) {
+    plot_df$Lower <- if (plot_type == "difference") plot_df$ObservedAverage - plot_df$CI_Upper else plot_df$CI_Lower
+    plot_df$Upper <- if (plot_type == "difference") plot_df$ObservedAverage - plot_df$CI_Lower else plot_df$CI_Upper
   }
-  plot_reference <- if (plot_type == "difference") {
-    new_reference_lines("v", 0, "Zero gap reference", "dashed", "reference")
-  } else {
-    new_reference_lines("diag", 1, "Identity line", "dashed", "reference")
-  }
-
+  reference_note <- if (metric == "FairM") {
+    "FairM: expected score at mean other-facet measures (and mean person measure for non-person rows)."
+  } else "FairZ: expected score at zero other-facet/person reference; Z does not mean z-score."
+  reference_note <- paste(reference_note,
+    "PCM/GPCM use own thresholds for the step facet and mean thresholds for other facets.",
+    "GPCM uses own slope for the slope facet, otherwise slope 1.")
+  score_note <- paste("Scores use fitted internal category coding. Gaps also reflect assignment/person mix;",
+    "they do not by themselves establish leniency, severity or bias.")
+  if (plot_type == "measure") score_note <- paste(score_note,
+    "Points show a model-based transformation, not independent validation. Do not pool correlations across facets.")
+  if ((bundle$settings$xtreme %||% 0) > 0) score_note <- paste(score_note,
+    "xtreme changes the displayed Measure only; fair scores are unchanged and conditional intervals unavailable.")
+  out <- new_mfrm_plot_data("fair_average", list(
+    plot = plot_type, metric = metric, data = fair_df, plot_data = plot_df,
+    excluded = excluded, settings = bundle$settings, ci_note = ci_note,
+    title = switch(plot_type, difference = paste("Observed -", metric),
+      scatter = paste("Observed vs", metric), measure = paste("Measure and", metric)),
+    subtitle = if (isTRUE(show_ci)) "Approximate intervals; see returned notes for uncertainty scope." else reference_note,
+    caption = NULL, display = list(show_title = isTRUE(show_title), show_notes = isTRUE(show_notes)),
+    xlab = switch(plot_type, difference = paste("Observed -", metric), scatter = paste(metric, "(internal score)"),
+      measure = if (report_scale == 1 && report_origin == 0) "Measure (logits)" else "Measure (reporting units)"),
+    ylab = switch(plot_type, difference = "", scatter = "Observed average (internal score)", measure = paste(metric, "(internal score)")),
+    encoding = encoding,
+    legend = new_plot_legend(groups, rep("facet", length(groups)), rep("point", length(groups)), encoding$Color),
+    reference_lines = if (plot_type == "difference") new_reference_lines("v", 0, "Zero gap", "dashed", "reference") else if (plot_type == "scatter") new_reference_lines("diag", 1, "Identity", "dashed", "reference") else NULL,
+    preset = style$name))
+  if (is_fit) out <- .mfrm_attach_plot_readiness(out, .mfrm_fit_plot_readiness(x))
+  out$data$notes <- rbind(.mfrm_plot_notes(out$data), data.frame(
+    Type = c("reference", "interpretation", if (!is.null(ci_note)) "uncertainty", "retention"),
+    Text = c(reference_note, score_note, ci_note,
+      paste(nrow(excluded), "non-finite rows excluded;", nrow(plot_df), "of", nrow(fair_df), "finite rows displayed."))))
+  if (length(groups) > 6L) out$data$notes <- rbind(out$data$notes,
+    data.frame(Type = "display", Text = "Shapes repeat beyond six facets; select a facet for an unambiguous grayscale display."))
   if (isTRUE(draw)) {
     apply_plot_preset(style)
+    old_mar <- graphics::par("mar")
+    on.exit(graphics::par(mar = old_mar), add = TRUE)
+    graphics::par(mar = c(if (isTRUE(show_notes)) 6 else 4.5, if (plot_type == "difference") 9 else 4.5, if (isTRUE(show_title)) 3 else 1, 1))
+    xlim <- range(c(plot_df$X, if (plot_type != "measure") c(plot_df$Lower, plot_df$Upper), if (plot_type == "difference") 0), finite = TRUE)
+    ylim <- range(c(plot_df$Y, if (plot_type == "measure") c(plot_df$Lower, plot_df$Upper)), finite = TRUE)
+    if (plot_type == "scatter") xlim <- ylim <- range(xlim, ylim)
+    graphics::plot(plot_df$X, plot_df$Y, type = "n", xlim = xlim, ylim = ylim,
+      xlab = out$data$xlab, ylab = out$data$ylab, yaxt = if (plot_type == "difference") "n" else "s",
+      main = .mfrm_plot_display_title(out$data))
     if (plot_type == "difference") {
-      ord <- order(abs(fair_df$Gap), decreasing = TRUE, na.last = NA)
-      use <- ord[seq_len(min(length(ord), top_n))]
-      sub <- fair_df[use, , drop = FALSE]
-      y <- seq_len(nrow(sub))
-      lbl <- paste0(sub$Facet, ":", sub$Level)
-      lbl <- truncate_axis_label(lbl, width = 26L)
-      # When CI whiskers are active, compute Gap CI by propagating the
-      # CI of the fair metric (the observed component has no CI here).
-      have_gap_ci <- isTRUE(show_ci) && all(c("CI_Lower", "CI_Upper") %in% names(sub))
-      gap_ci_lo <- gap_ci_hi <- NULL
-      if (have_gap_ci) {
-        gap_ci_lo <- sub$ObservedAverage - sub$CI_Upper
-        gap_ci_hi <- sub$ObservedAverage - sub$CI_Lower
-      }
-      xlim <- if (have_gap_ci) {
-        range(c(sub$Gap, gap_ci_lo, gap_ci_hi, 0), finite = TRUE)
-      } else {
-        NULL
-      }
-      graphics::plot(
-        x = sub$Gap,
-        y = y,
-        type = "n",
-        xlab = paste0("Observed - ", metric),
-        ylab = "",
-        yaxt = "n",
-        main = plot_title,
-        xlim = xlim
-      )
-      graphics::segments(x0 = 0, y0 = y, x1 = sub$Gap, y1 = y, col = "gray55")
-      cols <- ifelse(sub$Gap >= 0, style$accent_tertiary, style$accent_secondary)
-      if (have_gap_ci) {
-        valid <- is.finite(gap_ci_lo) & is.finite(gap_ci_hi)
-        if (any(valid)) {
-          graphics::segments(
-            x0 = gap_ci_lo[valid], y0 = y[valid],
-            x1 = gap_ci_hi[valid], y1 = y[valid],
-            col = cols[valid], lwd = 1
-          )
-        }
-        # Excluded rows (near-boundary) drawn with open circle.
-        if (any(!valid)) {
-          graphics::points(sub$Gap[!valid], y[!valid], pch = 1,
-                           col = cols[!valid])
-        }
-        if (any(valid)) {
-          graphics::points(sub$Gap[valid], y[valid], pch = 16,
-                           col = cols[valid])
-        }
-      } else {
-        graphics::points(sub$Gap, y, pch = 16, col = cols)
-      }
-      graphics::axis(side = 2, at = y, labels = lbl, las = 2, cex.axis = 0.75)
+      graphics::segments(0, plot_df$Y, plot_df$X, plot_df$Y, col = "gray65")
+      graphics::axis(2, at = plot_df$Y, labels = truncate_axis_label(plot_df$Label, 32L), las = 2, cex.axis = 0.75)
       graphics::abline(v = 0, lty = 2, col = style$neutral)
-    } else {
-      fac <- as.character(fair_df$Facet)
-      fac_levels <- unique(fac)
-      col_idx <- match(fac, fac_levels)
-      cols <- grDevices::hcl.colors(length(fac_levels), if (identical(style$name, "publication")) "Temps" else "Dark 3")[col_idx]
-      # Horizontal whiskers on the fair metric (x-axis) when CI is on.
-      have_sc_ci <- isTRUE(show_ci) && all(c("CI_Lower", "CI_Upper") %in% names(fair_df))
-      xlim_sc <- if (have_sc_ci) {
-        range(c(fair_df[[metric]], fair_df$CI_Lower, fair_df$CI_Upper),
-              finite = TRUE)
-      } else {
-        NULL
-      }
-      graphics::plot(
-        x = fair_df[[metric]],
-        y = fair_df$ObservedAverage,
-        xlab = metric,
-        ylab = "Observed average",
-        main = plot_title,
-        pch = 16,
-        col = cols,
-        xlim = xlim_sc
-      )
-      if (have_sc_ci) {
-        valid <- is.finite(fair_df$CI_Lower) & is.finite(fair_df$CI_Upper)
-        if (any(valid)) {
-          graphics::segments(
-            x0 = fair_df$CI_Lower[valid], y0 = fair_df$ObservedAverage[valid],
-            x1 = fair_df$CI_Upper[valid], y1 = fair_df$ObservedAverage[valid],
-            col = cols[valid], lwd = 1
-          )
-        }
-        if (any(!valid)) {
-          graphics::points(fair_df[[metric]][!valid],
-                           fair_df$ObservedAverage[!valid],
-                           pch = 1, col = cols[!valid])
-        }
-      }
-      lims <- range(c(fair_df[[metric]], fair_df$ObservedAverage), finite = TRUE)
-      palette_vals <- grDevices::hcl.colors(length(fac_levels), if (identical(style$name, "publication")) "Temps" else "Dark 3")
-      graphics::abline(a = 0, b = 1, lty = 2, col = style$neutral)
-      graphics::legend("topleft", legend = fac_levels, col = palette_vals, pch = 16, bty = "n", cex = 0.85)
-      graphics::segments(x0 = lims[1], y0 = lims[1], x1 = lims[2], y1 = lims[2], col = style$grid, lty = 3)
-    }
+    } else if (plot_type == "scatter") graphics::abline(0, 1, lty = 2, col = style$neutral)
+    if (plot_type == "measure") graphics::segments(plot_df$X, plot_df$Lower, plot_df$X, plot_df$Upper, col = plot_df$Color)
+    else graphics::segments(plot_df$Lower, plot_df$Y, plot_df$Upper, plot_df$Y, col = plot_df$Color)
+    graphics::points(plot_df$X, plot_df$Y, pch = plot_df$Shape, col = plot_df$Color)
+    if (plot_type != "difference" && length(groups) > 1L) graphics::legend("topleft", legend = groups,
+      col = encoding$Color, pch = encoding$Shape, bty = "n", cex = 0.8)
+    if (isTRUE(show_notes)) graphics::mtext(if (isTRUE(show_ci)) "Approximate intervals; uncertainty scope in returned notes." else paste(metric, "reference:", if (metric == "FairM") "mean" else "zero", "| Internal score coding"),
+      side = 1, line = 4.5, cex = 0.72)
   }
-
-  out <- new_mfrm_plot_data(
-    "fair_average",
-    list(
-      plot = plot_type,
-      metric = metric,
-      data = fair_df,
-      settings = bundle$settings,
-      ci_note = ci_note,
-      title = plot_title,
-      subtitle = plot_subtitle,
-      legend = plot_legend,
-      reference_lines = plot_reference,
-      preset = style$name
-    )
-  )
   invisible(out)
 }
 
@@ -2909,7 +2751,7 @@ plot_qc_dashboard <- function(fit,
   rel_tbl <- as.data.frame(diagnostics$reliability, stringsAsFactors = FALSE)
 
   if (isTRUE(draw)) {
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()[c("mfrow", "cex", "mex", "mar")]
     on.exit(graphics::par(old_par), add = TRUE)
     apply_plot_preset(style)
     graphics::par(mfrow = c(3, 3), mar = c(4, 4, 3, 1))

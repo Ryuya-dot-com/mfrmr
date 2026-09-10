@@ -17,6 +17,158 @@ maintainer sequencing, local-tool identities, candidate gates, and validation
 operations. Other files in this directory may add evidence or preserve history
 but do not broaden current API scope.
 
+The [plot UX review](plot-ux-record-0.2.4.md) records the graphics-state repair,
+visual examples, and focused regression checks completed before resuming
+long simulation work.
+The [dense-label follow-up](plot-label-ux-record-0.2.4.md) adds device-aware
+label placement while retaining the original numerical plotting payloads.
+The [dataset/device follow-up](plot-generality-record-0.2.4.md) varies counts,
+names, and coincident estimates, repairs facet retention and CCC legends,
+and records device capacity and Japanese-font limits.
+The [model/assignment follow-up](plot-models-record-0.2.4.md) adds GPCM,
+incomplete assignments, and RSM/PCM interactions; it checks curve calculations,
+base/ggplot explanations, and replay-script source-location handling.
+The [presentation follow-up](plot-presentation-record-0.2.4.md) checks separate
+title/note controls, returned interpretation notes, small-device axis visibility,
+and FACETS-style column headings and frequency-column capacity.
+The [colour-accessibility follow-up](plot-color-record-0.2.4.md) checks the
+core fit-family palette, non-colour encodings, renderer consistency, contrast,
+and simulated colour-vision conditions.
+The [question-led visualization plan](plot-expansion-plan-0.2.4.md) inventories
+existing network and adjacent plot routes, records the initial anchor-graph gaps,
+and prioritizes connection/sensitivity views before adding new plot families.
+The [first anchor-graph repair](equating-graph-record-0.2.4.md) covers isolated
+waves, pair-specific screening, stable identities, returned notes and small
+colour/monochrome figures. Sensitivity calculations remain separate work.
+The [topology follow-up](equating-topology-record-0.2.4.md) adds wave-link and
+single-element deletion views, keeping lost direct links distinct from newly
+disconnected wave pairs. It holds screening fixed and does not refit models.
+The [conditional offset follow-up](offset-sensitivity-record-0.2.4.md) reruns
+screening and offsets on fixed source estimates/SEs, exposing signed changes,
+changed contributing elements, fallback and unavailable comparisons.
+The [paired Wright/CCC follow-up](plot-comparison-record-0.2.4.md) implements
+paired distributions, selected-group curves and signed differences, following
+the JLTA slide review. It preserves unmatched/unavailable values and source
+readiness, with category panels for monochrome and many-category curves.
+The [Fair Score follow-up](fair-score-refit-record-0.2.4.md) adds measure-to-score
+plots, repairs conditional interval/reference handling and records a bounded
+full-refit RSM/PCM pilot. The [protocol](fair-score-refit-protocol-0.2.4.md)
+separates fixed/estimated references, Person intervals and paired anchor/model
+interventions; pilot execution is not coverage confirmation.
+The [interval/DRF follow-up](interval-drf-preflight-record-0.2.4.md) maps score
+and uncertainty outputs, repairs FairZ-only summaries and incomplete-gradient
+handling, checks eight FairZ numerical/full-refit cells, and records 22 unique
+DRF/interaction execution datasets. It retains weak-link/refit refusals and
+identifies the generator's location-alignment issue before any DRF power study.
+The [FairZ confirmation preparation](fairz-coverage-record-0.2.4.md) freezes
+eight cells × 2,500 fresh datasets, reuses the existing MC metrics and
+independent generator, and passes 40 matching-source preflight datasets.
+It records native-backend identity, tested checkpoints/resume and about
+3.7 serial core hours for the planned main run; confirmation remains unrun.
+Execution is paused by user instruction for the
+[documentation audit](documentation-before-simulation-0.2.4.md). The original
+preflight remains historical evidence; revised documentation sources require
+source reconciliation before a future computational continuation.
+
+The [2026-09-10 integrated work queue](internal-roadmap-0.2.3.md#2026-09-10-integrated-work-queue)
+consolidates the current Fair Score, population, DRF/interaction, GPCM/JML and
+UX work. It identifies dependencies, interval targets, concrete completion
+checks and measured versus unmeasured computing budgets. Existing protocols
+and historical results retain their original identities.
+
+Start current 0.2.4 release planning with the
+[2026-09-09 validation-before-release sequence](internal-roadmap-0.2.3.md#2026-09-09-024-validation-before-release).
+It maps the available TAM, GPCM, JML, quadrature, and output-restriction evidence
+to the required current-source claim review, missing numerical/statistical
+validation, and final release checks. The historical filename is retained;
+older 0.2.3 distribution priorities and individual records' next-action text
+do not override this dated sequence. No historical result is reclassified.
+
+The [initial current-source claim review](public-claim-evidence-review-0.2.4.md)
+maps all public entry points to 18 claim groups and records the evidence,
+remaining checks, and a reproduced facet-equivalence release blocker. Its
+linked inventory, runner, and numeric results distinguish API accounting,
+regression checks, and unresolved statistical validation.
+The [facet-equivalence repair record](facet-equivalence-repair-record-0.2.4.md)
+documents the subsequent runtime correction and revalidation while retaining
+the initial failure evidence.
+The [first independent RSM information check](mml-independent-rsm-information-record-0.2.4.md)
+adds a bounded whole-line integration/Hessian comparison for C05; broader
+model conditions and statistical coverage remain open.
+The [RSM/PCM condition extension](mml-independent-information-conditions-record-0.2.4.md)
+covers explicit population, constraint, interaction and weight fixtures and
+records the additional anchored-contrast defect and its correction.
+The [structural coverage protocol](mml-structural-coverage-protocol-0.2.4.md)
+and [execution record](mml-structural-coverage-record-0.2.4.md) follow with
+coordinate-specific repeated-sampling SE, coverage and availability checks.
+The fixed 20,000-dataset confirmation supports five of eight evaluated cells;
+three remain review on bias, despite meeting coverage and SE-scale criteria.
+The separate preflight and complete confirmation evidence are retained.
+The [subsequent bias diagnostic](mml-structural-bias-diagnostic-record-0.2.4.md)
+uses the same datasets to separate first-order Monte Carlo imbalance from
+finite-sample curvature bias, with independent pattern and optimizer checks.
+It explains the selected flags without changing the confirmation decisions.
+The [fresh bias-confirmation protocol](mml-structural-bias-confirmation-protocol-0.2.4.md)
+and [execution record](mml-structural-bias-confirmation-record-0.2.4.md) retain
+the original primary targets in a separate fixed 30,000-dataset study, with
+the score decomposition prespecified as secondary evidence. The completed
+fresh study supports all three cells and all 37 primary coordinate checks,
+and reproduces the three prespecified small-curvature-bias mechanism targets.
+Its linked summaries and complete archive retain all twelve unavailable fits.
+The original study's decisions and the broader release limitations remain
+separate.
+The [use-condition audit](mml-use-condition-audit-record-0.2.4.md) follows with
+52 fits over 16 model/design cases. It distinguishes negligible short-pattern
+SE movement from the retained long-pattern quadrature issue, checks the
+estimated-population restriction, and identifies the remaining non-unit-weight
+ordinary-inference gap. Its independent pattern check and complete saved-fit
+evidence explain why the unit-weight sampling result cannot simply transfer.
+The [observation-weight readiness repair](observation-weight-readiness-repair-record-0.2.4.md)
+closes that output gap with a shared restriction and saved-object migration
+checks. Ten refits preserve all evaluated numerical values exactly; unit-weight
+controls retain eligibility. The original statistical and numerical archives
+remain unchanged and are not relabeled as current-source certifications.
+The [population-identifiability review](population-identifiability-review-record-0.2.4.md)
+then separates existing local evidence from full inference readiness. Independent
+continuous integration supports full local rank in the two retained examples;
+binary negative/paired controls expose a true variance/difficulty ridge and the
+limits of rank as a precision criterion. The production restriction remains.
+The [variance-profile review](population-variance-profile-record-0.2.4.md)
+then evaluates exact zero variance, bounded interior/tail nuisance profiles and
+the same binary controls. Its 184 original fits and 32 targeted denser-grid
+refits preserve the flat unidentified ridge and interior improvements, while
+exposing integration failures despite native convergence. Six of eight selected
+q961 tail vectors qualify; the two largest-variance RSM/PCM vectors remain
+unqualified. Original failures, full vectors and source identities are retained.
+The [population-output contract and repair](population-output-contract-record-0.2.4.md)
+turns those findings into necessary use conditions and closes a reproduced
+individual-scoring exception. Estimated-population predictions/PVs now require
+explicit review, including saved-output summary/export guards. Eight source-fit
+replays preserve numerical summaries and seeded draws; four fixed-population
+controls retain ordinary scoring eligibility. An independent ridge calculation
+shows why equal observed marginal probabilities need not imply equal Person scores.
+The [full-information review](population-full-information-record-0.2.4.md)
+then checks 12 free-population refits and 48 same-vector integration evaluations.
+Independent full gradients and Hessians support the interior positive controls;
+all 36 applicable inverse-information/SE comparisons meet the original bounds.
+Six strict q31 score disagreements remain, and the exact-ridge control has no
+reference covariance. Two fixed-variance probes retain large variance-direction
+scores despite nuisance stationarity. No production rule is changed.
+The [population sampling protocol](population-coverage-protocol-0.2.4.md)
+then fixes the mean/slope/log-variance calibration question, a separate
+natural-variance interval comparison, failure accounting and Monte Carlo
+precision. Its [execution record](population-coverage-record-0.2.4.md)
+retains 40 preliminary datasets, their exact replay and the original derivative
+discrepancies alongside the qualifying personwise refinements, separately from
+the unexecuted main study. Computable diagnostic intervals do not change
+population-model inference or scoring restrictions.
+The subsequent [interaction/DRF scope revision](internal-roadmap-0.2.3.md#interaction-and-drf-simulation-scope)
+places this additive study inside a broader claim-based simulation design.
+Interaction recovery, DRF screening, omitted effects and combined design stress
+must be specified and piloted before allocating the larger runs. The old
+population protocol and its execution evidence remain unchanged; its 80,000
+main-study datasets have not been run.
+
 ## Evidence types
 
 | Type | What it is for |

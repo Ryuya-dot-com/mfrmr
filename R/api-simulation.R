@@ -4505,7 +4505,7 @@ plot.mfrm_recovery_assessment <- function(x,
   )
   out <- new_mfrm_plot_data("recovery_assessment", payload)
   if (!isTRUE(draw)) return(out)
-  op <- graphics::par(no.readonly = TRUE)
+  op <- graphics::par()["mar"]
   on.exit(graphics::par(op), add = TRUE)
   graphics::par(mar = c(8, 4, 3, 1))
   ylim <- range(c(0, plot_tbl$Value, reference_lines$value), na.rm = TRUE)
@@ -4726,7 +4726,7 @@ plot.mfrm_recovery_simulation <- function(x,
     )
     out <- new_mfrm_plot_data("recovery_simulation", payload)
     if (!isTRUE(draw)) return(out)
-    op <- graphics::par(no.readonly = TRUE)
+    op <- graphics::par()["mar"]
     on.exit(graphics::par(op), add = TRUE)
     graphics::par(mar = c(8, 4, 3, 1))
     cols <- grDevices::hcl.colors(nrow(plot_tbl), "Dark 3")

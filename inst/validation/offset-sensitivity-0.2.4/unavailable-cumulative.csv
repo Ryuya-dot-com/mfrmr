@@ -1,0 +1,3 @@
+"WaveID","Wave","Offset","RemovedAnchorId","Offset_Before","Change"
+1,"A",0,"anchor_1",0,0
+2,"B",NA,"anchor_1",0.5,NA

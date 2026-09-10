@@ -1,0 +1,9 @@
+File,Tests,Passed,Failed,Errors,Warnings,Skipped
+plot-customization,2,124,0,0,0,0
+plot-device-state,8,150,0,0,0,0
+as-ggplot,5,79,0,0,0,0
+draw-and-plot-contracts,38,81,0,0,0,0
+wright-facets-style,12,127,0,0,0,0
+fit-pathway,7,33,0,0,0,0
+api-public-method-contracts,53,195,0,0,0,0
+mathematical-consistency,9,58,0,0,0,0

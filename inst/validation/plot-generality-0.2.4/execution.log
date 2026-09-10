@@ -1,0 +1,28 @@
+minimal-RSM fitted
+minimal-PCM fitted
+many_levels-RSM fitted
+many_levels-PCM fitted
+many_categories-RSM fitted
+many_categories-PCM fitted
+coincident-RSM fitted
+coincident-PCM fitted
+long_english-RSM fitted
+long_english-PCM fitted
+japanese-RSM fitted
+japanese-PCM fitted
+[1] Case    Type    Width   Device  Error   Overlap Outside
+<0 rows> (or 0-length row.names)
+                Case Overlap Covered Outside
+      coincident-PCM       6       0       0
+      coincident-RSM       0       0       0
+        japanese-PCM       6       0       0
+        japanese-RSM       0       0       0
+    long_english-PCM       6       0       0
+    long_english-RSM       0       0       0
+ many_categories-PCM      80       0       0
+ many_categories-RSM       0       0       0
+     many_levels-PCM     106       0       0
+     many_levels-RSM       0       0       0
+         minimal-PCM       0       0       0
+         minimal-RSM       0       0       0
+Non-readiness warning rows: 14 

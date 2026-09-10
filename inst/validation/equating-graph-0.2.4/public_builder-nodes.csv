@@ -1,0 +1,7 @@
+"NodeId","Label","Kind","WaveID","AnchorId","LinkID","Facet","Level","Status","RetainedDegree"
+"wave_1","A","wave",1,NA,NA,NA,NA,NA,4
+"wave_2","B","wave",2,NA,NA,NA,NA,NA,4
+"element_1","Criterion: C01 [L1]","element",NA,"anchor_1","1","Criterion","C01","retained",2
+"element_2","Criterion: C02 [L1]","element",NA,"anchor_2","1","Criterion","C02","retained",2
+"element_3","Criterion: C03 [L1]","element",NA,"anchor_3","1","Criterion","C03","retained",2
+"element_4","Criterion: C04 [L1]","element",NA,"anchor_4","1","Criterion","C04","retained",2

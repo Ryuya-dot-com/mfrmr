@@ -20,9 +20,12 @@ build_equating_chain(
 \method{plot}{mfrm_equating_chain}(
   x,
   y = NULL,
-  type = c("common_anchors", "graph", "chain"),
+  type = c("common_anchors", "graph", "chain", "links", "anchor_removal",
+    "offset_sensitivity"),
   preset = c("standard", "publication", "compact", "monochrome"),
   draw = TRUE,
+  show_title = TRUE,
+  show_notes = TRUE,
   ...
 )
 
@@ -46,13 +49,22 @@ elements.}
 
 \item{y}{Unused (S3 plot signature requirement).}
 
-\item{type}{One of \code{"graph"} (bipartite Wave x anchor-element graph;
-requires the \code{igraph} package), \code{"common_anchors"} (default; bar
-chart of common-anchor counts per wave pair), or \code{"chain"}.}
+\item{type}{One of \code{"graph"} (bipartite wave x link-specific common-element
+graph), \code{"common_anchors"} (default; bar
+chart of common-anchor counts per wave pair), \code{"chain"} (cumulative
+offsets), \code{"links"} (recorded wave comparisons), or \code{"anchor_removal"}
+(newly disconnected wave pairs after deleting each common element), or
+\code{"offset_sensitivity"} (conditional rescreened linking-offset changes).}
 
 \item{preset}{Visual preset.}
 
 \item{draw}{If \code{TRUE}, draw the plot with base graphics.}
+
+\item{show_title}{Logical; display the main title.}
+
+\item{show_notes}{Logical; display graph/topology interpretation footers.
+Returned notes and ordinary R warnings are unaffected. Axes, legends and
+data labels remain visible; other chain views have no interpretation footer.}
 
 \item{object}{An \code{mfrm_equating_chain} object (for \code{summary}).}
 }
@@ -153,6 +165,118 @@ each adjacent link.
 \item Read \code{links} before \code{cumulative}: weak adjacent links can make later
 cumulative offsets less trustworthy.
 }
+}
+
+\section{Common-element graph}{
+
+\code{plot(chain, type = "graph")} displays waves as squares and common elements
+as circles, including waves without retained connections. Each element node
+belongs to one reviewed link: \verb{[L1]} refers to link 1 in the returned links
+table. The same element can have different screening results in different
+comparisons, so it is repeated per link. Solid lines denote retained,
+unflagged elements; dot-dash denotes retained elements with a drift flag or
+an unavailable flag; dashed denotes excluded elements; dotted denotes
+unknown retention. These distinctions also apply in monochrome.
+
+This is a graph of screened common-element comparisons, not an inventory
+of fixed anchors or an all-pairs assessment. Retention does not guarantee
+positive weight in the offset, invariance, adequate support or precision.
+New chains store positional \code{FromID}/\code{ToID} in \code{links} and \code{LinkID} in
+\code{element_detail}; display names may repeat or contain punctuation. Older
+chains are matched by their complete link labels; ambiguous references
+require rebuilding the chain.
+
+With \code{draw = FALSE}, the plot returns an \code{mfrm_plot_data} object. Its
+\verb{$data$data} contains \code{nodes}, \code{edges}, \code{links}, \code{elements}, \code{n_waves},
+\code{n_anchors} (unique facet/level identities), and \code{n_element_nodes}
+(link-specific nodes). Edge \code{from}/\code{to} refer to node \code{NodeId}; \code{AnchorId}
+identifies the same facet/level across links. \code{Retained}, \code{Flag}, \code{Status}
+and \code{Reason} preserve screening information. \code{RetainedDegree} counts
+retained incidences, not statistical information. Interpretation notes
+remain in \verb{$data$notes} and in \code{print()} even when \code{show_notes = FALSE}.
+Full labels remain in the node table if the device is too narrow. Base
+graphics are sufficient; no optional graph package is needed.
+}
+
+\section{Wave links and common-element removal}{
+
+\code{plot(chain, type = "links")} summarizes the recorded wave-to-wave
+comparisons. Numbers count common elements with \code{Retained = TRUE}, including
+flagged retained elements. A dotted comparison has no recorded retained
+element; this is not proof that the original rating design is disconnected.
+Missing retention is counted separately. Dot-dash connections have flagged
+retained elements or inadequate/unknown recorded link support.
+
+\code{plot(chain, type = "anchor_removal")} removes each facet/level identity,
+one at a time, from all recorded comparisons. Other retention decisions stay
+fixed. The horizontal axis counts newly disconnected unordered wave pairs,
+including indirect paths. Pairs already disconnected at baseline are not
+counted. Losing a direct link need not disconnect its endpoints if another
+path remains. Zero means no new graph disconnection, not negligible impact
+on estimates or adequate linking support. No screening, offsets, estimates,
+SEs or confidence intervals are recomputed by either view.
+
+Both views return \verb{$data$data$nodes}, \code{links}, \code{elements} and \code{summary}.
+The removal view additionally returns \code{removal} (one row per common-element
+identity), \code{lost_links} (recorded comparisons losing their last retained
+element), \code{lost_pairs} (newly disconnected wave pairs), and \code{components_after}
+(baseline and post-removal membership for every wave). Use \code{AnchorId} to
+join the removal table to these details; \code{FromID}/\code{ToID} and \code{WaveID} identify
+waves independently of display labels. Component numbers are local to each
+partition: compare membership relations, not numeric labels across Before,
+After or different removal scenarios. Removal counts
+include \code{RetainedOccurrences}, \code{UnknownOccurrences}, \code{LostLinks},
+\code{ComponentsAfter} and \code{NewlyDisconnectedPairs}.
+
+These calculations reuse the recorded common-element graph; they do not
+search for new links or assess statistical influence. The full lost-pair
+table can be large for chains with many waves and common elements. Compact
+plots abbreviate long labels and warn when IDs or a larger device are needed;
+full identities and interpretation notes remain in the returned tables.
+}
+
+\section{Conditional offset sensitivity}{
+
+\code{plot(chain, type = "offset_sensitivity")} removes each common \verb{(Facet, Level)} identity from every adjacent link, then reruns the existing offset
+calculation with its recorded drift threshold. Preliminary offsets,
+screening, final weighted/unweighted offsets and cumulative offsets are
+recomputed. The source wave estimates and SEs remain fixed: this is a
+conditional linking sensitivity calculation, not a refit of item, rater or
+person parameters or a new uncertainty estimate.
+
+The view requires an ordered adjacent chain with the recorded method,
+threshold, support guideline, source estimate/SE columns and offsets.
+Recomputed baseline offsets must agree with recorded offsets within
+\code{1e-8 * max(1, abs(recorded_offset))}; inconsistent or incomplete source
+records require rebuilding the chain. Numerical overflow/underflow that
+prevents a finite preliminary offset is reported as a numerical failure.
+
+The figure shows each deletion's maximum absolute cumulative offset change
+over finite comparisons, excluding the fixed-zero first wave. Shapes
+distinguish complete comparisons, partial comparisons and no finite
+comparison. An unavailable comparison remains \code{NA}, not zero. If one link
+becomes unavailable, later cumulative offsets also become unavailable.
+Read the detailed tables when a figure marks an incomplete comparison.
+
+The \verb{$data$data} payload contains \code{settings}, \code{baseline_links}, \code{baseline_cumulative},
+\code{baseline_elements}, \code{removal}, \code{links}, \code{cumulative}, \code{retention_changes}
+and \code{common_by_facet}. Join \code{RemovedAnchorId} in scenario tables to
+\code{removal$AnchorId}. Signed \code{Change} is recalculated minus baseline offset.
+\code{Status} distinguishes \code{computed}, \code{no_common}, \code{no_finite_differences}
+and \code{numerical_failure}. \code{N_Contributing} and element \code{Contributing} identify
+positive finite weight contributors (or retained rows in an unweighted
+offset). \code{retention_changes} records other elements whose retention,
+contribution or residual flag changes; the deliberately removed element is
+omitted. Facets whose last element is removed remain in support tables with
+zero counts. No support failure is converted into a statement of readiness.
+
+\code{ScreeningFallback} identifies the existing rule that restores all finite
+differences if preliminary screening would remove every one. SEs may be
+missing, in which case the existing unweighted fallback is used. No offset
+SE, confidence interval, cross-fit covariance, or uncertainty propagation
+is supplied. A small conditional change is not evidence of anchor invariance
+or negligible change under a full model refit. Notes remain available when
+figure titles and footers are omitted.
 }
 
 \section{Typical workflow}{

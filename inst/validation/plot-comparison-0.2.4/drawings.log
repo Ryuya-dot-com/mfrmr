@@ -1,0 +1,122 @@
+        Case   Type       View      Preset Notes Device Error
+1     paired wright comparison publication  TRUE    png      
+2     paired wright comparison publication  TRUE    pdf      
+3     paired wright comparison publication FALSE    png      
+4     paired wright comparison publication FALSE    pdf      
+5     paired wright comparison  monochrome  TRUE    png      
+6     paired wright comparison  monochrome  TRUE    pdf      
+7     paired wright comparison  monochrome FALSE    png      
+8     paired wright comparison  monochrome FALSE    pdf      
+9     paired wright difference publication  TRUE    png      
+10    paired wright difference publication  TRUE    pdf      
+11    paired wright difference publication FALSE    png      
+12    paired wright difference publication FALSE    pdf      
+13    paired wright difference  monochrome  TRUE    png      
+14    paired wright difference  monochrome  TRUE    pdf      
+15    paired wright difference  monochrome FALSE    png      
+16    paired wright difference  monochrome FALSE    pdf      
+17    paired    ccc comparison publication  TRUE    png      
+18    paired    ccc comparison publication  TRUE    pdf      
+19    paired    ccc comparison publication FALSE    png      
+20    paired    ccc comparison publication FALSE    pdf      
+21    paired    ccc comparison  monochrome  TRUE    png      
+22    paired    ccc comparison  monochrome  TRUE    pdf      
+23    paired    ccc comparison  monochrome FALSE    png      
+24    paired    ccc comparison  monochrome FALSE    pdf      
+25    paired    ccc difference publication  TRUE    png      
+26    paired    ccc difference publication  TRUE    pdf      
+27    paired    ccc difference publication FALSE    png      
+28    paired    ccc difference publication FALSE    pdf      
+29    paired    ccc difference  monochrome  TRUE    png      
+30    paired    ccc difference  monochrome  TRUE    pdf      
+31    paired    ccc difference  monochrome FALSE    png      
+32    paired    ccc difference  monochrome FALSE    pdf      
+33    eleven wright comparison publication FALSE    png      
+34    eleven wright comparison publication FALSE    pdf      
+35    eleven wright comparison  monochrome FALSE    png      
+36    eleven wright comparison  monochrome FALSE    pdf      
+37    eleven wright difference publication FALSE    png      
+38    eleven wright difference publication FALSE    pdf      
+39    eleven wright difference  monochrome FALSE    png      
+40    eleven wright difference  monochrome FALSE    pdf      
+41    eleven    ccc comparison publication FALSE    png      
+42    eleven    ccc comparison publication FALSE    pdf      
+43    eleven    ccc comparison  monochrome FALSE    png      
+44    eleven    ccc comparison  monochrome FALSE    pdf      
+45    eleven    ccc difference publication FALSE    png      
+46    eleven    ccc difference publication FALSE    pdf      
+47    eleven    ccc difference  monochrome FALSE    png      
+48    eleven    ccc difference  monochrome FALSE    pdf      
+49 singleton wright comparison  monochrome FALSE    png      
+50 singleton wright comparison  monochrome FALSE    pdf      
+51 singleton wright difference  monochrome FALSE    png      
+52 singleton wright difference  monochrome FALSE    pdf      
+53 unmatched wright comparison  monochrome FALSE    png      
+54 unmatched wright comparison  monochrome FALSE    pdf      
+55 unmatched wright difference  monochrome FALSE    png      
+56 unmatched wright difference  monochrome FALSE    pdf      
+57      long    ccc comparison  monochrome FALSE    png      
+58      long    ccc comparison  monochrome FALSE    pdf      
+59      long    ccc difference  monochrome FALSE    png      
+60      long    ccc difference  monochrome FALSE    pdf      
+   UnexpectedWarnings
+1                   0
+2                   0
+3                   0
+4                   0
+5                   0
+6                   0
+7                   0
+8                   0
+9                   0
+10                  0
+11                  0
+12                  0
+13                  0
+14                  0
+15                  0
+16                  0
+17                  0
+18                  0
+19                  0
+20                  0
+21                  0
+22                  0
+23                  0
+24                  0
+25                  0
+26                  0
+27                  0
+28                  0
+29                  0
+30                  0
+31                  0
+32                  0
+33                  0
+34                  0
+35                  0
+36                  0
+37                  0
+38                  0
+39                  0
+40                  0
+41                  0
+42                  0
+43                  0
+44                  0
+45                  0
+46                  0
+47                  0
+48                  0
+49                  0
+50                  0
+51                  0
+52                  0
+53                  0
+54                  0
+55                  0
+56                  0
+57                  0
+58                  0
+59                  0
+60                  0

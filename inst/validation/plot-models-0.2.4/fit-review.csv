@@ -1,0 +1,7 @@
+"Case","RetainedRows","InteractionCells","MaxAbsInteraction","FitReadiness"
+"GPCM-Criterion-JML",412,0,0,"blocked"
+"GPCM-Criterion-MML",412,0,0,"review"
+"GPCM-Rater-JML",412,0,0,"blocked"
+"GPCM-Rater-MML",412,0,0,"review"
+"RSM-interaction-MML",412,16,0.785620774758978,"review"
+"PCM-interaction-MML",412,16,1.22991858116756,"review"

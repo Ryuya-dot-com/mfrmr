@@ -36,7 +36,10 @@ plot method.}
 additionally accepts \code{slope_aes}, \code{facet_by}, and \code{show_overlay}.}
 }
 \value{
-A \code{ggplot2} plot object.
+A \code{ggplot2} plot object, with a \code{mfrmr_notes} attribute when the
+source plot payload contains a \code{notes} table.
+Paired Wright/CCC payloads from \code{\link[=plot_compare_mfrm]{plot_compare_mfrm()}} retain their selected
+comparison or difference view, group selection and monochrome panel policy.
 }
 \description{
 \code{as_ggplot()} is an optional renderer for an \code{mfrm_plot_data} object or an
@@ -50,6 +53,18 @@ bubble charts, DIF/DFF summaries and heatmaps, and portable-calibration
 score review plots. Other draw-free payloads use a conservative tabular
 fallback; inspect \code{\link[=plot_data_components]{plot_data_components()}} when automatic inference is not
 appropriate.
+Titles, subtitles, and captions are wrapped at 72 text columns for ordinary
+figure widths; missing text is omitted. For narrower exports or custom line
+breaks, override these labels with \code{ggplot2::labs()} on the returned plot.
+Fit plots created with \code{show_title = FALSE} or \code{show_notes = FALSE} retain
+those settings on conversion. To set them when converting a fit directly,
+pass the flags through \code{...}. Interpretation and display notes remain
+available in \code{attr(plot, "mfrmr_notes")}, when present in the source payload.
+Wright, pathway, and CCC conversions share the fit-family series palette,
+honour monochrome presets and supplied palette overrides, and preserve
+line-type or point-shape distinctions. CCC categories retain their source
+order. When \code{slope_aes = "colour"}, slopes instead use a continuous viridis
+scale (a grey gradient in monochrome); categories still have line types.
 }
 \examples{
 \donttest{

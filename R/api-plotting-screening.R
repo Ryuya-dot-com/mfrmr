@@ -580,7 +580,7 @@ plot_rater_agreement_heatmap <- function(fit,
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     cols <- grDevices::hcl.colors(20L, palette_name, rev = TRUE)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 5, 3, 2))
     graphics::image(

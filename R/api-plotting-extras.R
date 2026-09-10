@@ -88,6 +88,11 @@ plot_threshold_ladder <- function(fit,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
+    old_mar <- graphics::par("mar")
+    on.exit(graphics::par(mar = old_mar), add = TRUE)
+    subtitle_lines <- strwrap(plot_subtitle,
+      width = max(30L, floor((graphics::par("fin")[1] - 0.8) * 15)))
+    graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)), old_mar[-1]))
     groups <- unique(rows$Group)
     n_grp <- length(groups)
     x_pos <- seq_along(groups)
@@ -99,7 +104,8 @@ plot_threshold_ladder <- function(fit,
       xaxt = "n", xlab = "", ylab = "Threshold (logit)",
       main = plot_title
     )
-    graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+    graphics::mtext(subtitle_lines, side = 1,
+                    line = 3.7 + 0.8 * seq_along(subtitle_lines), cex = 0.72)
     graphics::axis(1, at = x_pos, labels = groups, las = 2, cex.axis = 0.85)
     graphics::abline(h = 0, lty = 2, col = style$neutral)
     for (i in seq_along(groups)) {
@@ -313,6 +319,11 @@ plot_person_fit <- function(fit,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
+    old_mar <- graphics::par("mar")
+    on.exit(graphics::par(mar = old_mar), add = TRUE)
+    subtitle_lines <- strwrap(plot_subtitle,
+      width = max(30L, floor((graphics::par("fin")[1] - 0.8) * 15)))
+    graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)), old_mar[-1]))
     if (identical(fit_index, "meansquare")) {
       cex_size <- 0.6 + 1.6 * sqrt(m$N / max(m$N, na.rm = TRUE))
       x_rng <- range(c(m$Infit, lower, upper), finite = TRUE)
@@ -327,7 +338,8 @@ plot_person_fit <- function(fit,
         cex = cex_size,
         xlim = x_rng + x_pad, ylim = y_rng + y_pad
       )
-      graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+      graphics::mtext(subtitle_lines, side = 1,
+                    line = 3.7 + 0.8 * seq_along(subtitle_lines), cex = 0.72)
       graphics::abline(h = 1, v = 1, lty = 3, col = style$neutral)
       graphics::abline(h = c(lower, upper), v = c(lower, upper),
                        lty = 2, col = style$grid)
@@ -361,7 +373,8 @@ plot_person_fit <- function(fit,
           cex = 0.85 + 1.2 * sqrt(ranked$N / max(ranked$N, na.rm = TRUE)),
           xlim = x_rng + x_pad
         )
-        graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+        graphics::mtext(subtitle_lines, side = 1,
+                    line = 3.7 + 0.8 * seq_along(subtitle_lines), cex = 0.72)
         graphics::abline(v = 0, lty = 3, col = style$neutral)
         graphics::abline(v = c(-z_5pct, z_5pct), lty = 2, col = style$grid)
         graphics::abline(v = c(-z_1pct, z_1pct), lty = 3, col = style$grid)
@@ -583,6 +596,11 @@ plot_rater_severity_profile <- function(fit,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
+    old_mar <- graphics::par("mar")
+    on.exit(graphics::par(mar = old_mar), add = TRUE)
+    subtitle_lines <- strwrap(plot_subtitle,
+      width = max(30L, floor((graphics::par("fin")[1] - 0.8) * 15)))
+    graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)), old_mar[-1]))
     y <- seq_len(nrow(m))
     xrange <- range(c(m$CI_Lower, m$CI_Upper, -1.05, 1.05), finite = TRUE,
                     na.rm = TRUE)
@@ -595,7 +613,8 @@ plot_rater_severity_profile <- function(fit,
       ylab = "",
       main = plot_title
     )
-    graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+    graphics::mtext(subtitle_lines, side = 1,
+                    line = 3.7 + 0.8 * seq_along(subtitle_lines), cex = 0.72)
     if (isTRUE(show_bands)) {
       usr <- graphics::par("usr")
       graphics::rect(-0.5, usr[3], 0.5, usr[4], border = NA,
@@ -797,6 +816,11 @@ plot_dif_summary <- function(x,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
+    old_mar <- graphics::par("mar")
+    on.exit(graphics::par(mar = old_mar), add = TRUE)
+    subtitle_lines <- strwrap(plot_subtitle,
+      width = max(30L, floor((graphics::par("fin")[1] - 0.8) * 15)))
+    graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)), old_mar[-1]))
     y <- rev(seq_len(nrow(tbl)))
     x_values <- c(tbl$Effect, tbl$CI_Lower, tbl$CI_Upper, 0,
                   effect_thresholds, -effect_thresholds)
@@ -811,7 +835,8 @@ plot_dif_summary <- function(x,
       xlab = axis_label, ylab = "",
       main = plot_title
     )
-    graphics::title(sub = plot_subtitle, line = 2.2, cex.sub = 0.9)
+    graphics::mtext(subtitle_lines, side = 1,
+                    line = 3.7 + 0.8 * seq_along(subtitle_lines), cex = 0.72)
     graphics::abline(v = 0, lty = 2, col = style$neutral)
     if (length(effect_thresholds) > 0L) {
       for (thr in effect_thresholds) {
@@ -898,7 +923,7 @@ plot_dif_summary <- function(x,
 #'
 #' Builds a 2x2 draft composite for an `mfrm_fit`, suitable for reviewing a
 #' possible "Figure 1" in the Rasch-family `RSM`/`PCM` manuscript route. Panels: (1)
-#' Wright map, (2)
+#' single-panel FACETS-style Wright map (without CI whiskers), (2)
 #' rater severity profile with CI whiskers, (3) threshold ladder, (4)
 #' a one-line reliability / separation summary block. Each panel reuses
 #' the standalone plot helper so the visual language is consistent
@@ -973,7 +998,8 @@ plot_apa_figure_one <- function(fit,
     ))
   }
   wright <- muffle_nested_readiness(
-    plot(fit, type = "wright", preset = preset, draw = FALSE)
+    plot(fit, type = "wright", renderer = "facets", show_ci = FALSE,
+         preset = preset, draw = FALSE)
   )
   severity <- plot_rater_severity_profile(
     fit, diagnostics = diagnostics, facet = rater_facet,
@@ -1039,11 +1065,12 @@ plot_apa_figure_one <- function(fit,
   }
 
   if (isTRUE(draw)) {
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()[c("mfrow", "cex", "mex")]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::layout(matrix(c(1, 2, 3, 4), nrow = 2L, byrow = TRUE))
     muffle_nested_readiness(
-      plot(fit, type = "wright", preset = preset, draw = TRUE)
+      plot(fit, type = "wright", renderer = "facets", show_ci = FALSE,
+           preset = preset, draw = TRUE)
     )
     plot_rater_severity_profile(fit, diagnostics = diagnostics,
                                 facet = rater_facet,
@@ -1060,9 +1087,11 @@ plot_apa_figure_one <- function(fit,
       },
       line = 1
     )
+    display_lines <- unlist(lapply(summary_lines, strwrap,
+      width = max(25L, floor(graphics::par("pin")[1] * 15))), use.names = FALSE)
     graphics::text(
-      x = 0, y = seq(1, 0, length.out = length(summary_lines) + 2L)[-c(1, length(summary_lines) + 2L)],
-      labels = summary_lines, adj = 0, cex = 0.9
+      x = 0, y = seq(0.95, 0.05, length.out = length(display_lines)),
+      labels = display_lines, adj = 0, cex = 0.9
     )
   }
 

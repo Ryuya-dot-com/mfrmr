@@ -1,0 +1,4 @@
+"LinkID","AnchorId","Facet","Level","Retained_Before","Contributing_Before","Flag_Before","Retained_After","Contributing_After","Flag_After","RemovedAnchorId"
+"1","anchor_2","Item","I2",TRUE,TRUE,FALSE,FALSE,FALSE,FALSE,"anchor_1"
+"1","anchor_1","Item","I1",FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,"anchor_3"
+"1","anchor_1","Item","I1",FALSE,FALSE,TRUE,TRUE,TRUE,FALSE,"anchor_4"

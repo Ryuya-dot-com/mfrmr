@@ -1,0 +1,17 @@
+"Cell","Model","Persons","Exposure","Stage","Planned","SeedFirst","SeedLast"
+1,"RSM",80,3,"preflight",5,76010001,76010005
+2,"RSM",80,6,"preflight",5,76020001,76020005
+3,"RSM",320,3,"preflight",5,76030001,76030005
+4,"RSM",320,6,"preflight",5,76040001,76040005
+5,"PCM",80,3,"preflight",5,76050001,76050005
+6,"PCM",80,6,"preflight",5,76060001,76060005
+7,"PCM",320,3,"preflight",5,76070001,76070005
+8,"PCM",320,6,"preflight",5,76080001,76080005
+1,"RSM",80,3,"confirmation",2500,77010001,77012500
+2,"RSM",80,6,"confirmation",2500,77020001,77022500
+3,"RSM",320,3,"confirmation",2500,77030001,77032500
+4,"RSM",320,6,"confirmation",2500,77040001,77042500
+5,"PCM",80,3,"confirmation",2500,77050001,77052500
+6,"PCM",80,6,"confirmation",2500,77060001,77062500
+7,"PCM",320,3,"confirmation",2500,77070001,77072500
+8,"PCM",320,6,"confirmation",2500,77080001,77082500

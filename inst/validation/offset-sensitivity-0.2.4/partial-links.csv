@@ -1,0 +1,9 @@
+"LinkID","FromID","ToID","From","To","N_Common","N_Retained","N_Contributing","Offset","Offset_Prelim","Offset_Method","ScreeningFallback","LinkSupportAdequate","Status","RemovedAnchorId","Offset_Before","Change"
+"1",1,2,"A","B",3,1,1,0.8,1.06666666666667,"unweighted",FALSE,FALSE,"computed","anchor_1",0.6,0.2
+"2",2,3,"B","C",0,0,0,NA,NA,"none",FALSE,FALSE,"no_common","anchor_1",0.25,NA
+"1",1,2,"A","B",3,1,1,0.8,0.933333333333333,"unweighted",FALSE,FALSE,"computed","anchor_2",0.6,0.2
+"2",2,3,"B","C",1,1,1,0.25,0.25,"unweighted",FALSE,FALSE,"computed","anchor_2",0.25,0
+"1",1,2,"A","B",3,1,1,0.4,0.8,"unweighted",FALSE,FALSE,"computed","anchor_3",0.6,-0.2
+"2",2,3,"B","C",1,1,1,0.25,0.25,"unweighted",FALSE,FALSE,"computed","anchor_3",0.25,0
+"1",1,2,"A","B",3,3,3,0.4,0.4,"unweighted",FALSE,FALSE,"computed","anchor_4",0.6,-0.2
+"2",2,3,"B","C",1,1,1,0.25,0.25,"unweighted",FALSE,FALSE,"computed","anchor_4",0.25,0

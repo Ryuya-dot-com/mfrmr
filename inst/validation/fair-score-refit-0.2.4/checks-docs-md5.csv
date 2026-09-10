@@ -1,0 +1,5 @@
+"File","MD5"
+"tests/testthat/test-fair-score-plots.R","d6cd84fe4b87d2268e71db7ca04ff226"
+"man/plot_fair_average.Rd","42fa6fe18b48f49dfcc1d5d17c6da5bc"
+"man/fair_average_table.Rd","989074caadb1623c50b7bd9fd1bdf7a0"
+"inst/validation/fair-score-refit-record-0.2.4.md","7db80aedd5ea1fab8b2e82ba371f507c"

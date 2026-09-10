@@ -38,7 +38,7 @@ bundles the four panel data objects under \code{wright}, \code{severity},
 \description{
 Builds a 2x2 draft composite for an \code{mfrm_fit}, suitable for reviewing a
 possible "Figure 1" in the Rasch-family \code{RSM}/\code{PCM} manuscript route. Panels: (1)
-Wright map, (2)
+single-panel FACETS-style Wright map (without CI whiskers), (2)
 rater severity profile with CI whiskers, (3) threshold ladder, (4)
 a one-line reliability / separation summary block. Each panel reuses
 the standalone plot helper so the visual language is consistent

@@ -1,0 +1,226 @@
+ℹ Loading mfrmr
+Writing 'plot_fair_average.Rd'
+
+Attaching package: ‘testthat’
+
+The following object is masked from ‘package:mfrmr’:
+
+    describe
+
+✔ | F W  S  OK | Context
+
+⠏ |          0 | as-ggplot                                                      
+⠋ |          1 | as-ggplot                                                      
+⠙ |          2 | as-ggplot                                                      
+⠼ |          5 | as-ggplot                                                      
+⠼ |         15 | as-ggplot                                                      
+⠋ |         21 | as-ggplot                                                      
+⠋ |         31 | as-ggplot                                                      
+⠴ |         36 | as-ggplot                                                      
+⠙ |         42 | as-ggplot                                                      
+⠧ |         48 | as-ggplot                                                      
+⠸ |         54 | as-ggplot                                                      
+⠋ |         61 | as-ggplot                                                      
+⠼ |         65 | as-ggplot                                                      
+⠇ |         69 | as-ggplot                                                      
+⠴ |         76 | as-ggplot                                                      
+⠇ |         79 | as-ggplot                                                      
+✔ |         79 | as-ggplot [7.2s]
+
+⠏ |          0 | fair-score-plots                                               
+⠋ |          1 | fair-score-plots                                               
+⠹ |          3 | fair-score-plots                                               
+⠼ |          5 | fair-score-plots                                               
+⠦ |          7 | fair-score-plots                                               
+⠇ |          9 | fair-score-plots                                               
+⠋ |         11 | fair-score-plots                                               
+⠹ |         13 | fair-score-plots                                               
+⠼ |         15 | fair-score-plots                                               
+⠦ |         17 | fair-score-plots                                               
+⠇ |         19 | fair-score-plots                                               
+⠋ |         21 | fair-score-plots                                               
+⠹ |         23 | fair-score-plots                                               
+⠼ |         25 | fair-score-plots                                               
+⠦ |         27 | fair-score-plots                                               
+⠇ |         29 | fair-score-plots                                               
+⠋ |         31 | fair-score-plots                                               
+⠹ |         33 | fair-score-plots                                               
+⠼ |         35 | fair-score-plots                                               
+⠦ |         37 | fair-score-plots                                               
+⠇ |         39 | fair-score-plots                                               
+⠋ |         41 | fair-score-plots                                               
+⠹ |         43 | fair-score-plots                                               
+⠼ |         45 | fair-score-plots                                               
+⠦ |         47 | fair-score-plots                                               
+⠇ |         49 | fair-score-plots                                               
+⠋ |         51 | fair-score-plots                                               
+⠹ |         53 | fair-score-plots                                               
+⠼ |         55 | fair-score-plots                                               
+⠦ |         57 | fair-score-plots                                               
+⠇ |         59 | fair-score-plots                                               
+⠋ |         61 | fair-score-plots                                               
+⠹ |         63 | fair-score-plots                                               
+⠼ |         65 | fair-score-plots                                               
+⠦ |         67 | fair-score-plots                                               
+⠇ |         69 | fair-score-plots                                               
+⠋ |         71 | fair-score-plots                                               
+⠹ |         73 | fair-score-plots                                               
+⠼ |         75 | fair-score-plots                                               
+⠦ |         77 | fair-score-plots                                               
+⠇ |         79 | fair-score-plots                                               
+⠋ |         81 | fair-score-plots                                               
+⠹ |         83 | fair-score-plots                                               
+⠼ |         85 | fair-score-plots                                               
+⠦ |         87 | fair-score-plots                                               
+⠇ |         89 | fair-score-plots                                               
+⠋ |         91 | fair-score-plots                                               
+⠹ |         93 | fair-score-plots                                               
+⠼ |         95 | fair-score-plots                                               
+⠦ |         97 | fair-score-plots                                               
+⠇ |         99 | fair-score-plots                                               
+⠋ |        101 | fair-score-plots                                               
+⠹ |        103 | fair-score-plots                                               
+⠼ |        105 | fair-score-plots                                               
+⠦ |        107 | fair-score-plots                                               
+⠇ |        109 | fair-score-plots                                               
+⠋ |        111 | fair-score-plots                                               
+⠹ |        113 | fair-score-plots                                               
+⠼ |        115 | fair-score-plots                                               
+⠦ |        117 | fair-score-plots                                               
+⠇ |        119 | fair-score-plots                                               
+⠋ |        121 | fair-score-plots                                               
+⠹ |        123 | fair-score-plots                                               
+⠼ |        125 | fair-score-plots                                               
+⠦ |        127 | fair-score-plots                                               
+⠇ |        129 | fair-score-plots                                               
+⠋ |        131 | fair-score-plots                                               
+⠹ |        133 | fair-score-plots                                               
+⠼ |        135 | fair-score-plots                                               
+⠦ |        137 | fair-score-plots                                               
+⠇ |        139 | fair-score-plots                                               
+⠋ |        141 | fair-score-plots                                               
+⠹ |        143 | fair-score-plots                                               
+⠼ |        145 | fair-score-plots                                               
+⠦ |        147 | fair-score-plots                                               
+⠇ |        149 | fair-score-plots                                               
+⠋ |        151 | fair-score-plots                                               
+⠹ |        153 | fair-score-plots                                               
+⠼ |        155 | fair-score-plots                                               
+⠦ |        157 | fair-score-plots                                               
+⠇ |        159 | fair-score-plots                                               
+⠋ |        161 | fair-score-plots                                               
+⠹ |        163 | fair-score-plots                                               
+⠼ |        165 | fair-score-plots                                               
+⠦ |        167 | fair-score-plots                                               
+⠇ |        169 | fair-score-plots                                               
+⠋ |        171 | fair-score-plots                                               
+⠹ |        173 | fair-score-plots                                               
+⠼ |        175 | fair-score-plots                                               
+⠦ |        177 | fair-score-plots                                               
+⠇ |        179 | fair-score-plots                                               
+⠋ |        181 | fair-score-plots                                               
+⠹ |        183 | fair-score-plots                                               
+⠼ |        185 | fair-score-plots                                               
+⠦ |        187 | fair-score-plots                                               
+⠇ |        189 | fair-score-plots                                               
+⠋ |        191 | fair-score-plots                                               
+⠹ |        193 | fair-score-plots                                               
+⠼ |        195 | fair-score-plots                                               
+⠦ |        197 | fair-score-plots                                               
+⠇ |        199 | fair-score-plots                                               
+⠋ |        201 | fair-score-plots                                               
+⠹ |        203 | fair-score-plots                                               
+⠼ |        205 | fair-score-plots                                               
+⠦ |        207 | fair-score-plots                                               
+⠇ |        209 | fair-score-plots                                               
+⠋ |        211 | fair-score-plots                                               
+⠹ |        213 | fair-score-plots                                               
+⠼ |        215 | fair-score-plots                                               
+⠦ |        217 | fair-score-plots                                               
+⠇ |        219 | fair-score-plots                                               
+⠋ |        221 | fair-score-plots                                               
+⠹ |        223 | fair-score-plots                                               
+⠼ |        225 | fair-score-plots                                               
+⠦ |        227 | fair-score-plots                                               
+⠇ |        229 | fair-score-plots                                               
+⠋ |        231 | fair-score-plots                                               
+⠹ |        233 | fair-score-plots                                               
+⠧ |        238 | fair-score-plots                                               
+⠋ |        241 | fair-score-plots                                               
+⠸ |        244 | fair-score-plots                                               
+⠸ |        254 | fair-score-plots                                               
+✔ |        256 | fair-score-plots [21.3s]
+
+⠏ |          0 | output-stability                                               
+⠋ |          1 | output-stability                                               
+⠙ |         22 | output-stability                                               
+⠦ |         47 | output-stability                                               
+⠸ |         64 | output-stability                                               
+⠋ |         71 | output-stability                                               
+⠙ |         92 | output-stability                                               
+⠼ |         95 | output-stability                                               
+⠦ |        107 | output-stability                                               
+⠴ |        116 | output-stability                                               
+⠏ |        120 | output-stability                                               
+⠙ |        132 | output-stability                                               
+⠸ |        134 | output-stability                                               
+⠹ |        143 | output-stability                                               
+⠙ |        152 | output-stability                                               
+⠏ |        160 | output-stability                                               
+⠏ |        170 | output-stability                                               
+⠇ |        179 | output-stability                                               
+⠦ |        187 | output-stability                                               
+⠦ |        197 | output-stability                                               
+⠏ |        200 | output-stability                                               
+⠦ |        207 | output-stability                                               
+✔ |        209 | output-stability [37.7s]
+
+⠏ |          0 | plot-device-state                                              
+⠋ |          1 | plot-device-state                                              
+⠹ |         13 | plot-device-state                                              
+⠇ |         19 | plot-device-state                                              
+⠋ |         21 | plot-device-state                                              
+⠴ |         26 | plot-device-state                                              
+⠋ |         31 | plot-device-state                                              
+⠴ |         36 | plot-device-state                                              
+⠇ |         39 | plot-device-state                                              
+⠸ |         44 | plot-device-state                                              
+⠧ |         48 | plot-device-state                                              
+⠏ |         50 | plot-device-state                                              
+⠙ |         52 | plot-device-state                                              
+⠼ |         55 | plot-device-state                                              
+⠇ |         59 | plot-device-state                                              
+⠋ |         61 | plot-device-state                                              
+⠹ |         63 | plot-device-state                                              
+⠦ |        127 | plot-device-state                                              
+⠴ |        136 | plot-device-state                                              
+⠇ |        139 | plot-device-state                                              
+⠸ |        144 | plot-device-state                                              
+⠼ |        145 | plot-device-state                                              
+✔ |        150 | plot-device-state [8.8s]
+
+⠏ |          0 | regression-edge-paths                                          
+⠋ |          1 | regression-edge-paths                                          
+⠼ |         15 | regression-edge-paths                                          
+⠦ |         17 | regression-edge-paths                                          
+⠏ |         20 | regression-edge-paths                                          
+⠼ |         25 | regression-edge-paths                                          
+⠏ |         30 | regression-edge-paths                                          
+⠼ |         35 | regression-edge-paths                                          
+⠧ |         48 | regression-edge-paths                                          
+⠋ |         71 | regression-edge-paths                                          
+⠹ |         93 | regression-edge-paths                                          
+⠇ |         99 | regression-edge-paths                                          
+⠸ |        104 | regression-edge-paths                                          
+⠏ |        120 | regression-edge-paths                                          
+⠧ |        128 | regression-edge-paths                                          
+⠸ |        134 | regression-edge-paths                                          
+⠼ |        135 | regression-edge-paths                                          
+⠴ |        146 | regression-edge-paths                                          
+⠹ |        153 | regression-edge-paths                                          
+✔ |        154 | regression-edge-paths [7.9s]
+
+══ Results ═════════════════════════════════════════════════════════════════════
+Duration: 82.9 s
+
+[ FAIL 0 | WARN 0 | SKIP 0 | PASS 848 ]

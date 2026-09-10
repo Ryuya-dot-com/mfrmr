@@ -1,0 +1,66 @@
+             Case      Preset Notes Device Error
+1           mixed publication  TRUE    png      
+2           mixed publication  TRUE    pdf      
+3           mixed publication FALSE    png      
+4           mixed publication FALSE    pdf      
+5           mixed  monochrome  TRUE    png      
+6           mixed  monochrome  TRUE    pdf      
+7           mixed  monochrome FALSE    png      
+8           mixed  monochrome FALSE    pdf      
+9           empty publication  TRUE    png      
+10          empty publication  TRUE    pdf      
+11          empty publication FALSE    png      
+12          empty publication FALSE    pdf      
+13          empty  monochrome  TRUE    png      
+14          empty  monochrome  TRUE    pdf      
+15          empty  monochrome FALSE    png      
+16          empty  monochrome FALSE    pdf      
+17      duplicate publication  TRUE    png      
+18      duplicate publication  TRUE    pdf      
+19      duplicate publication FALSE    png      
+20      duplicate publication FALSE    pdf      
+21      duplicate  monochrome  TRUE    png      
+22      duplicate  monochrome  TRUE    pdf      
+23      duplicate  monochrome FALSE    png      
+24      duplicate  monochrome FALSE    pdf      
+25 public_builder publication  TRUE    png      
+26 public_builder publication  TRUE    pdf      
+27 public_builder publication FALSE    png      
+28 public_builder publication FALSE    pdf      
+29 public_builder  monochrome  TRUE    png      
+30 public_builder  monochrome  TRUE    pdf      
+31 public_builder  monochrome FALSE    png      
+32 public_builder  monochrome FALSE    pdf      
+                                                                                                                         Warnings
+1                                                                                                                                
+2                                                                                                                                
+3                                                                                                                                
+4                                                                                                                                
+5                                                                                                                                
+6                                                                                                                                
+7                                                                                                                                
+8                                                                                                                                
+9                                                                                                                                
+10                                                                                                                               
+11                                                                                                                               
+12                                                                                                                               
+13                                                                                                                               
+14                                                                                                                               
+15                                                                                                                               
+16                                                                                                                               
+17 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+18 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+19 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+20 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+21 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+22 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+23 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+24 Some graph labels exceed the panel width; node IDs are shown. Widen the device or use the returned node table for full labels.
+25                                                                                                                               
+26                                                                                                                               
+27                                                                                                                               
+28                                                                                                                               
+29                                                                                                                               
+30                                                                                                                               
+31                                                                                                                               
+32                                                                                                                               

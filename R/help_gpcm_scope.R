@@ -266,7 +266,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "The historical SE columns in the output are scaled facet-measure SEs,",
         "not fair-average SEs. Use `fair_se = TRUE` to request structural",
         "delta-method fair-average SEs for non-person rows when the MML",
-        "observed-information Hessian is available."
+        "observed-information Hessian is available. These remain diagnostic-only:",
+        "FairCIEligible is FALSE, including with computable or regularized",
+        "covariance, and full-refit coverage remains unverified."
       ),
       paste(
         "Supported with caveat as a role-based person x rater-like x",
@@ -542,7 +544,7 @@ gpcm_score_side_contract <- function(status = "all") {
       "Expected-score fields use the fitted slope structure and therefore depend on the declared step and slope facets.",
       "Uncertainty fields require the relevant MML diagnostics; otherwise the scorefile reports an explicit unavailable status.",
       "No FACETS-compatible free-discrimination score-side uncertainty definition is currently available.",
-      "Structural fair-average SEs are a separate table route and do not establish FACETS score-side equivalence.",
+      "Structural fair-average SEs condition on Person EAP/reference means and remain diagnostic-only (FairCIEligible = FALSE); full-refit coverage and FACETS score-side equivalence are unverified.",
       "Unit-slope agreement with PCM is an interpretation reference, not evidence that every free-slope score quantity is Rasch-equivalent.",
       "The exported scorefile is package-native and must retain its bounded-GPCM caveat fields.",
       "The full FACETS-style score-side review is unavailable for free-discrimination bounded GPCM.",
@@ -553,7 +555,7 @@ gpcm_score_side_contract <- function(status = "all") {
       "Inspect the fitted step and slope summaries before interpreting exported expected scores or residuals.",
       "Use an MML fit when uncertainty is required, or report the explicit unavailable status without substituting another SE.",
       "Use the package-native scorefile with caveats; use an `RSM` or `PCM` fit when a full FACETS score-side review is required.",
-      "Use `fair_average_table(fair_se = TRUE)` directly and label the result as slope-aware element-conditional.",
+      "Use `fair_average_table(fit, fair_se = TRUE)` directly and label the result as slope-aware element-conditional diagnostic uncertainty.",
       "Fit a `PCM` reference when equal-discrimination score semantics are required for comparison.",
       "Use `facets_output_file_bundle(include = \"score\")` and retain all status and caveat columns.",
       "Keep full `facets_output_contract_review()` work on the `RSM` or `PCM` route.",

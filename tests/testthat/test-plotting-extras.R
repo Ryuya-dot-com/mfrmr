@@ -224,7 +224,7 @@ test_that("plot_apa_figure_one bundles the four panels", {
 })
 
 test_that("plot_apa_figure_one draws the 2x2 composite", {
-  pdf(NULL); on.exit(dev.off(), add = TRUE)
+  pdf(NULL, width = 12, height = 9); on.exit(dev.off(), add = TRUE)
   warnings <- character(0)
   expect_no_error(withCallingHandlers(
     plot_apa_figure_one(.fit, diagnostics = .diag, draw = TRUE),

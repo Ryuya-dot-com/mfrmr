@@ -147,8 +147,21 @@ Interpretation:
 
 ## 4. Refit DFF when subgroup comparisons are defensible
 
-The refit route can support logit-scale contrasts only when subgroup linking is
-adequate and the precision layer supports it.
+The refit route reports logit-scale point contrasts when subgroup linking
+supports a common scale. Any available SE or test statistic conditions on the
+baseline anchors and omits their uncertainty and cross-refit covariance;
+`FormalInferenceEligible` remains `FALSE`, even with adequate linking.
+The default refit linking screen requires at least five anchored levels in
+total across the non-target linking facets in each subgroup. A weak link
+withholds contrast SEs and p-values. Inspect `LinkingAnchoredLevels`,
+`LinkingThreshold`, and `ScaleLinkStatus`; five is a local screening threshold,
+not a universal adequate anchor count or proof of invariance.
+
+Refits currently refuse baselines with user-specified active population
+models, fitted facet interactions, or group-anchor constraints because those
+structures cannot yet be replayed and linked completely within subgroups.
+The default GPCM-MML identification intercept is handled separately. Residual
+DFF remains a screening alternative; see `?analyze_dff` for the exact scope.
 
 ```{r dff-refit}
 dff_refit <- analyze_dff(

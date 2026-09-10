@@ -164,6 +164,42 @@ test_that("fair_average_table() no longer hard-stops on GPCM fits", {
   expect_true(any(is.finite(p$data$data$CI_Lower) &
                     is.finite(p$data$data$CI_Upper)))
   expect_true(grepl("structural delta method", p$data$ci_note, fixed = TRUE))
+
+  # FairZ-only summaries and exported rows retain score-side uncertainty scope.
+  zero <- fair_average_table(fit, reference = "zero", fair_se = TRUE)
+  finite <- is.finite(zero$stacked$StandardizedAdjustedAverageSE)
+  expect_true(any(finite))
+  expect_false(any(zero$stacked$FairCIEligible))
+  expect_true(all(zero$stacked$FairCIReportingUse[finite] == "diagnostic_only"))
+  zs <- summary(zero)
+  expect_equal(zs$summary$FairSEAvailableRows, sum(finite))
+  expect_equal(zs$summary$FairMetric, "FairZ")
+  expect_output(print(zs), "FairCIEligible")
+  tmp <- tempfile("fair-contract-")
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  saveRDS(zero, file.path(tmp, "fair.rds"))
+  restored <- readRDS(file.path(tmp, "fair.rds"))
+  expect_identical(restored, zero)
+  # The appendix API does not accept Fair Score bundles; use their public tables.
+  expect_error(export_summary_appendix(restored, output_dir = tmp, include_html = FALSE),
+               "must be an mfrm_fit", fixed = TRUE)
+  write.csv(restored$stacked, file.path(tmp, "fair.csv"), row.names = FALSE)
+  write.csv(summary(restored)$summary, file.path(tmp, "summary.csv"), row.names = FALSE)
+  write.csv(summary(restored)$preview, file.path(tmp, "preview.csv"), row.names = FALSE)
+  csv <- lapply(list.files(tmp, pattern = "[.]csv$", full.names = TRUE),
+                read.csv, check.names = FALSE)
+  eligible_tables <- Filter(function(x) "FairCIEligible" %in% names(x), csv)
+  expect_gte(length(eligible_tables), 2L)
+  expect_true(all(vapply(eligible_tables, function(x) !any(x$FairCIEligible), logical(1))))
+  restored$stacked$FairCIEligible <- NULL  # older saved payload
+  restored$stacked$FairCIReportingUse <- NULL
+  old_plot <- plot_fair_average(restored, metric = "FairZ", show_ci = TRUE, draw = FALSE)
+  expect_false(any(old_plot$data$data$CI_Eligible))
+  expect_false(summary(restored)$summary$FairCIEligible)
+  missing <- mfrmr:::add_gpcm_fair_average_delta_se(zero$raw_by_facet, fit,
+    covariance = list(status = "not_available", cov = NULL, detail = "missing covariance"))
+  expect_true(all(vapply(missing, function(x) all(is.na(x$FairZSE)), logical(1))))
 })
 
 test_that("estimate_bias() no longer hard-stops on GPCM fits", {

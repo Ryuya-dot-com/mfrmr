@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-08-18.
+Status: repository-only maintainer plan, refined 2026-09-10.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -8,6 +8,634 @@ tool identities, and validation operations. `NEWS.md` records completed
 user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
+
+## 2026-09-09: 0.2.4 validation before release
+
+This is the controlling maintainer sequence for 0.2.4, adopted following the
+user's review of the TAM comparison and the outstanding GPCM/JML uncertainty
+questions. The historical filename is retained to avoid a second internal
+roadmap. The 0.2.3 distribution-first policy below applies to that release;
+its instruction to run no further external confirmation does not govern 0.2.4.
+Likewise, the next-action statement in the September 7 quadrature-remedy
+record is superseded: final diff review and CI alone do not close this review.
+
+This section changes priorities and release requirements, not historical
+results, public APIs, statistical acceptance thresholds, or release status.
+It does not reopen every item in the old 106-row portfolio. The required scope
+is the actual 0.2.4 public claim surface, including inherited functionality.
+
+### 2026-09-10 integrated work queue
+
+This is the active local queue, combining the user's global and local review
+requests after the Fair Score follow-up. The five release gates below remain
+controlling. Later chronological evidence sections explain how the project
+arrived here; they do not create competing "next" tasks. The initial planning
+revision performed no new simulation or publication; the execution follow-up
+below records subsequent work without expanding inferential support.
+Frozen protocols, counts, thresholds, seeds and historical dispositions remain
+unchanged. Reuse this roadmap and the existing claim inventory; do not start
+another roadmap, runner framework or authorization layer.
+
+**Status baseline.** The 20,000-dataset structural study and separate 30,000
+fresh bias confirmation support their named conditions. They do not validate
+all 0.2.4 outputs. Population coverage has 40 preflight datasets and an unrun
+80,000-dataset main study. The [Fair Score follow-up](fair-score-refit-record-0.2.4.md)
+has 40 independent datasets, two additional q121 full optimizations, repaired
+conditional plot intervals and 48 drawing checks. Neither pilot supplies
+coverage approval. In particular, retain FairZ RSM Rater R3's 16/20 coverage
+and wide Monte Carlo interval as an unresolved signal, not a reason to tune
+thresholds or regenerate favorable seeds.
+
+#### Bounded work packages and dependencies
+
+| Priority / claim groups | Concrete next output | Dependency and completion decision |
+| --- | --- | --- |
+| 0. Result and interval contract — C05/C06/C07/C12/C17 | Reconcile the existing claim table with the new export/plot routes and current source. For every returned interval identify target, units/reference, estimator, fixed/reestimated quantities, covariance, CI method/level, readiness and unavailable reason. Trace fit → table → plot/ggplot → saved bundle → export. | Start now. Check one qualified case and negative controls for weighted, population, GPCM/JML, legacy and missing-covariance paths. A numerical approximation must not regain ordinary-inference eligibility through a label or plot. Resolve any demonstrated bypass before new inferential promotion. |
+| 1. Full-refit and numerical contract — C02/C05/C08/C12/C15 | Audit the FairZ joint-delta candidate, clipping/interval definition, category map and gradient; extend numerical microcases to the proposed N/exposure cells. Specify what a complete refit reestimates and compare direct public calls with replayed calls. | Requires target definitions from 0. Match parameters, objective, scores, SEs, CI endpoints and readiness; explicitly retain unavailable values. Separate a higher-grid evaluation at fixed parameters from actual reoptimization and Person rescoring. Do not add a general refit API until the existing fit-call/replay paths have a demonstrated gap. |
+| 2. Interaction/DRF design pilot — C01/C02/C10/C12/C15 | A small condition/target table and executable null/non-null examples for Rater × Criterion interaction and Rater × examinee Group DRF, including group-mean-only nulls and incomplete linking. Reuse existing generators and independently verify truth/probabilities. | Requires 0 and relevant numerical checks in 1. Follow the existing interaction/DRF scope below. Establish a supported fit/screen path or a tested unavailable result for each combination; do not force rejected latent-regression/interaction combinations through `analyze_dff()`. Fix effect meanings, comparison families and assignment conditions before long studies. |
+| 3. Missing confirmation — C02/C05/C12/C15 | A frozen FairZ confirmation supplement, then per-cell estimates, SE/SD, bias/RMSE, coverage/width, availability, false-ready states and MC uncertainty. Keep the population confirmation as a separately labelled study with its existing protocol. | Requires 0–2 and per-cell timing/numerical preflight. Start with fixed-reference non-Person FairZ. Do not borrow Person/FairM coverage from it. Review all original targets, including the pilot concern; exclude pilot seeds. Population and DRF confirmation receive distinct study decisions and denominator definitions. |
+| 4. Scoring and anchor consequences — C06/C07/C08/C10/C12 | Separate target-specific protocols and paired examples for FairM/Person uncertainty, releasing a fixed anchor, deleting ratings and excluding common elements from linking. Evaluate the complete declared procedure, including screening/alignment when applicable. | Define the target/reference first; rely on qualified component numerics/uncertainty from 1/3 where required. Same-replicate comparisons preserve covariance and scale; unidentified/disconnected results stay unavailable. Statistical qualification precedes any new public difference CI or formal drift decision. |
+| 5. GPCM/JML and external scope — C03/C04/C16 | An updated exact-model/estimator comparison disposition using later owner/boundary evidence, plus only the missing deterministic cases. Separate selected slope owner, JML/MML and raw/corrected/extreme conventions. | Can progress independently after 0 while admitted RSM/PCM calculations run. Nonzero rater/other effects must appear in full GPCM checks. Use TAM only for an established common target; otherwise use independent exact-model calculations. Do not rerun known-mismatched models or launch the old JML topology pilot unchanged. Recovery/CI studies start only after their numerical basis qualifies. |
+| 6. Remaining outputs and user workflows — C09/C10/C11/C13/C14/C16/C17/C18 | Scoped dispositions for joint/equivalence decisions, residual/fit flags, observed-score G/D studies, shrinkage and imported/descriptive routes; targeted regression/visual examples across the full workflow. | Begins with 0 and continues alongside 1–5. Formula correctness, familywise decisions and marginal coverage are different checks. Preserve current support limits; make only evidence-justified UX corrections. Gate new plot families on a named user decision and existing data/renderer reuse. |
+| 7. Release candidate — all retained groups | One resolved claim/evidence table and exact-source package, cross-platform tests, executable examples, migration notes and final review. | All retained claims have a scoped support or enforced restriction decision; no material defect/unassigned inference gap remains. Apply the final-source gate below. Existing publication exclusions remain; this work package does not itself publish a release. |
+
+Work packages describe dependencies rather than separate serial research programs. The
+critical path is 0 → 1/2 → admitted confirmation and corresponding output
+qualification → 7. GPCM/JML, secondary-route audit and UX checks can proceed
+independently when their inputs are ready. A research extension becomes a
+release prerequisite only if its claim is retained in the released product;
+existing public claims cannot be hidden in the future-version backlog.
+
+#### Uncertainty targets that must not be merged
+
+| Quantity | What is fixed / reestimated | Evidence required before extending its interpretation |
+| --- | --- | --- |
+| Structural effects/thresholds | Joint model parameters under declared constraints; fixed or estimated population specified separately. | Constrained information/covariance correctness, estimator recovery and interval calibration in the claimed conditions. |
+| Non-Person FairZ | Reference means fixed at zero; effects, threshold profile and applicable slope estimated. | Gradient includes all estimated coordinates and covariance. The RSM/PCM pilot candidate has no Person target and does not supply GPCM validation. |
+| FairM | Choose an external fixed reference or a reference reestimated from each dataset. | Define the truth corresponding to that choice. For reestimated references, refit/rescore Persons and recompute means; conditioning on the old EAP mean misses that source of variation. |
+| Person ability/Fair Score | Choose fixed calibration with its prior, repeated calibration with a fixed scoring target, or repeated responses at fixed ability. | Declare posterior versus frequentist target, prior-predictive versus ability-stratified evaluation and treatment of calibration uncertainty. Do not match Person IDs across independently drawn populations as if they were the same estimation target. |
+| Difference after anchor/model change | Fit both declared procedures to the same replicate on an identified common scale. | Preserve covariance between fits and repeat any data-dependent linking/selection. Fixed external anchors and estimated anchors require different uncertainty treatment. |
+| Observed-minus-fair gap / curve difference | Observed outcomes and fitted predictions are generally dependent; curve points are not independent targets. | Current gap whiskers condition on observed means. A true gap CI needs joint variation; pointwise intervals do not imply simultaneous bands, ranking or equivalence decisions. |
+
+A bootstrap is a candidate computational method, not a default scientific
+answer. First specify the target, assignment/cluster resampling and anchor
+source, then pilot the entire procedure. One bootstrap on one dataset checks
+execution; repeated-sampling coverage needs independent outer datasets and
+separate accounting for inner resamples. Do not automatically add nested
+bootstrap to every existing study.
+
+#### Informative design, acceptance and computing budget
+
+Retain the additive known-truth baseline as a calibration check. Add a small
+set of purposeful contrasts: zero/present interaction, zero/present DRF with
+and without group ability differences, correctly represented/omitted effects,
+and complete/connected-incomplete/weak-bridge assignments. Use a disconnected
+negative control. Cross only factors needed to answer a named question.
+Boundary/extreme scores, missing categories, long response patterns and
+unequal exposure must appear where the corresponding claim is retained;
+unit weights and fixed population remain explicit in the baseline.
+
+For each new confirmatory study, freeze: (1) estimand/constraint/reference map,
+(2) public and independent evaluation routes, (3) null/alternative and
+multiplicity family, (4) effect sizes and practical margins, (5) sample and
+replication counts, (6) seed/source identity, and (7) failure/availability and
+compute accounting. Give the actual question → design rationale → result →
+answer in every record. This follows the existing ADEMP/Monte Carlo approach
+of [Morris, White and Crowther (2019)](https://doi.org/10.1002/sim.8086);
+package-specific acceptance margins remain project choices.
+
+The existing FairZ continuation calls for at least 2,500 fresh datasets per
+cell, extending to RSM/PCM × 80/320 Persons × 3/6 ratings. At nominal 95%
+coverage, 2,500 gives MCSE 0.00436; 10,000 gives 0.00218. Check bias and
+SE-ratio precision too before fixing R. Preserve the existing coverage
+[0.93,0.97], RMS-SE/SD [0.90,1.10], standardized-bias [-0.10,0.10], availability
+and numerical review rules for that continuation. Decisions use the specified
+MC intervals, not just whether the point estimate is near 95%. These margins
+are not automatically appropriate for DRF power, Person conditional intervals,
+boundary parameters, equivalence decisions or simultaneous curves.
+
+Availability, coverage among available intervals, and available-and-covered
+per assigned dataset must remain separate. For research intervals computed
+under a production restriction, report diagnostic computability and policy
+eligibility separately; all policy-blocked rows neither prove zero statistical
+coverage nor validate lifting the policy. Retain all numerical failures and
+false-ready cases. No favorable-result replacement, silent tolerance change
+or coverage-driven early stopping is allowed. An imprecise finding stays open.
+
+| Workload | Available timing evidence | Allocation rule |
+| --- | --- | --- |
+| FairZ full-refit pilot | Ordinary N=80/six-rating cases averaged about 2.1 seconds each, including public score/plot-data calculations; the 40-dataset replay plus two high-grid fits and 48 drawings took about 93 seconds. | Two such 2,500-replicate cells would be roughly three serial hours by simple extrapolation. This is not an eight-cell estimate: benchmark N=320/three-rating cases and confirmation-only numerical checks first. Separate fitting, scoring, covariance and rendering time; reuse fitted results when only summaries change. |
+| Eight-cell FairZ / minimal DRF audit | The [follow-up](interval-drf-preflight-record-0.2.4.md) took 35.637 seconds for eight FairZ cells, q61/q121 and two replayed fits; the final 22-case DRF workflow took 100.242 seconds including subgroup fits/screens. | These are numerical/execution workloads, not coverage/power study budgets. q61 optimization alone totaled 3.731 seconds over the FairZ cells; measure the exact confirmation procedure before extrapolating. |
+| Frozen FairZ confirmation | [Final preflight](fairz-coverage-record-0.2.4.md): 40 unique datasets, 48 full fits, 59.23 seconds wall; exact main core totaled 26.632 seconds. | 20,000 planned datasets project to 3.7 serial core hours (observed-time sensitivity 3.4–4.4), plus checkpoint/report overhead. Initial budget about four hours, with tested four-hour checkpoint/resume. Native binary/source identity is required. Main study 0/20,000; parallel speedup unmeasured. |
+| Population confirmation | Existing eight-cell 80,000-dataset protocol; five-per-cell timings projected 20–22 hours using three local fit processes. Main study unrun. | Preserve the frozen plan and seeds. Review allocation after work package 2; use existing four-hour checkpoint/resume invocations. This estimate excludes DRF/interaction and nested resampling work. |
+| Paired anchor/Person/DRF studies | No qualified whole-study timing yet. | Measure one complete procedure per representative condition, including failed fits and any inner resamples, before committing a large count. |
+
+Use existing scripts and checkpoints. Diagnostic investigations retain their
+original failures and are distinct from fresh confirmation. A consequential
+change to generation, estimator, covariance, interval construction or target
+requires a documented successor and applicable fresh evidence. A pure renderer
+change requires coordinate/visual/contract checks and does not automatically
+invalidate statistical fits; document that source-impact assessment.
+
+#### Local next actions and user-facing completion
+
+The [2026-09-10 execution follow-up](interval-drf-preflight-record-0.2.4.md)
+completed a bounded target/output map, repaired FairZ summaries and incomplete
+GPCM gradients, passed the eight-cell FairZ numerical/refit audit, and exercised
+22 unique DRF/interaction cases. This is progress on 0–2, not closure of the
+entire public-output inventory. The joint FairZ SE remains repository-only.
+
+The [FairZ confirmation supplement](fairz-coverage-record-0.2.4.md) is now frozen:
+eight cells × 2,500 fresh datasets, all five non-Person targets, original
+acceptance criteria and adverse pilot evidence retained. Its 40-dataset
+preflight passed with matching R/C++/native-binary identity and tested resume;
+the main run remains unrun. The user subsequently paused execution for the
+help/README audit. Complete that review and reconcile source identity before
+any new preflight or main execution; do not edit saved hashes to bypass the
+source check. Resume computation only after the user lifts this pause,
+reporting incomplete results and all failures without changing the protocol.
+For DRF,
+first align generator location constraints/population intercepts and specify
+the five-anchor linking regime and its conditional uncertainty; two/three
+anchors only produced descriptive refit differences. Preserve all unavailable
+population/interaction combinations. Do not start the 80,000-run population
+study or infer a new public SE claim from the completed numerical checks.
+
+For Wright/CCC/Fair Score/anchor views, completion means table values, plotted
+coordinates and base/ggplot encodings agree; colour is not the only channel;
+long labels, dense panels and small devices have a readable behavior; hiding
+titles/notes preserves returned interpretation and availability. Check legacy,
+imported and ineligible objects as well as successful fits. A real-data example
+must demonstrate a user decision and limits, while simulation addresses a
+stated known-truth question. Windows/macOS/Linux rendering, optional ggplot2,
+clean-session use and final saved/exported output belong in the release replay.
+New graphical polish cannot close an untested statistical claim.
+
+### Why this work is required
+
+Users may interpret a finite GPCM slope, a JML standard error, or an exported
+interval as an ordinary inferential result. They may also freeze a numerically
+sensitive calibration and reuse it for later Persons. The release question is
+whether the package supports those interpretations under stated conditions,
+and reliably prevents them where it does not. Installation success, optimizer
+completion, and matching point estimates answer only parts of that question.
+
+Before requesting more simulation, identify which claim each existing analysis
+answers and what remains missing. Every new execution record must state the
+question, why its data/design/comparator/metrics answer it, the result with
+its magnitude and uncertainty, and the resulting support decision.
+
+### Evidence available at this revision
+
+These are scoped observations, not a claim that the old fitted objects or
+acceptance rules already validate the current source. Step 1 below must check
+their applicability and any later evidence before assigning an open item.
+
+| Area | Existing evidence | Remaining release question |
+| --- | --- | --- |
+| RSM/PCM benign MML overlap | [Current-source replay](tam-mml-core-current-head-record-0.2.4.md): transformed coordinates agree to about 1e-7 at q31/q61. | Does the evidence cover the population basis, response exposure, anchors, and scoring actually supported? |
+| RSM adverse MML overlap | [Initial stress](tam-mml-release-stress-record-0.2.4.md): 12/42 pair passes, 6/21 q31-to-q61 stability passes. [Density diagnostic](tam-mml-density-diagnostic-record-0.2.4.md): 17/21 pair passes at q181; two representative tail-range probes support the remaining mechanism explanation. | Is numerical sensitivity adequately evaluated and handled for retained uses? Preserve the original failures; the diagnostic probes are not new confirmation passes. |
+| PCM adverse MML overlap | [Conditional stress](tam-pcm-mml-conditional-stress-record-0.2.4.md): 15/15 high-grid pairs pass, but lower-grid stability remains incomplete. | How does the reviewed-grid workflow protect the intended use without claiming a universally adequate q? |
+| Quadrature review and portable calibration | [Remedy](mml-quadrature-remedy-record-0.2.4.md): implementation, focused tests, and source-package checks pass. [Portable revalidation](fixed-calibration-g4-hosted-run-34018691491-revalidation-record-0.2.4.md) covers an earlier exact payload. | Which source changes require replay, and does numerical scoring/interval evidence match conditional fixed-calibration use? A required review object is not a stability certificate. |
+| Full GPCM numerical foundations | [Independent score checks](gpcm-nonunit-score-oracle-record-0.2.3.md), [owner identity](gpcm-owner-current-default-smoke-p1s-record-0.2.3.md), and subsequent estimator/boundary records provide distinct foundation results. | Which complete Criterion- and Rater-owned JML/MML claims have independent numerical and estimability support on the current implementation? |
+| GPCM external overlap | [TAM item-only comparison](tam-gpcm-item-only-overlap-record-0.2.3.md) and [external feasibility audit](gpcm-owner-external-reproducibility-preflight-p1t-record-0.2.3.md) establish limited overlap and full-model mismatches. | Can an exact full-model comparator be established? If not, validate the exact model independently; do not run a known different model as an equivalence test. |
+| GPCM recovery and uncertainty | [20-replicate pilot](gpcm-estimator-asymptotics-pilot-record-0.2.3.md) is descriptive; all 200 fits were inference-ineligible in that recorded source. | What recovery and uncertainty claims survive the current numerical/readiness checks? This historical result neither proves current failure nor supplies SE/coverage validation. |
+| JML overlap and adversity | [Matched modes](tam-immer-jml-mode-comparison-record-0.2.3.md), [290-dataset pilot](tam-immer-jml-factor-pilot-record-0.2.3.md), and [extreme-Person recovery](jml-extreme-profile-recovery-pilot-record-0.2.3.md) separate raw, adjusted, corrected, and profile targets. | Confirm like-for-like raw overlap and estimator-specific bias, uncertainty, and extreme-state behavior. The retained pilot has no eligible common-surface SE coverage rows. |
+| JML sparse topology | [Connected designs](tam-immer-jml-connected-design-record-0.2.3.md) and [topology smoke](tam-immer-jml-topology-calibration-record-0.2.3.md) establish design and execution feasibility. | The unexecuted 180-dataset pilot is not ready unchanged: separate raw-eligible and operational extreme-response questions and improve the convergence evidence first. |
+| Public restrictions | [Conditional-output audit](conditional-fallback-coverage-audit-0.2.3.md) records earlier enforcement of GPCM, JML, diagnostic, and reporting limits. | Do the actual 0.2.4 fit, summary, plot, scoring, and export paths preserve each necessary restriction? Historical enforcement is not an automatic current-source pass. |
+
+### Required sequence and completion criteria
+
+The [2026-09-09 initial claim audit](public-claim-evidence-review-0.2.4.md)
+now indexes all 181 exports and 191 S3 registrations in 18 claim groups and
+records their evidence dispositions and next checks. Its six current-source
+fits reproduced a facet-equivalence inference bypass and a contrast-SE
+calculation defect. The [successor repair](facet-equivalence-repair-record-0.2.4.md)
+corrects these implementation defects and adds executable regression checks.
+The inventory and targeted audit are complete; full claim closure and the
+remaining steps are open. Neither the earlier 703 passing expectations nor
+the new numerical regressions establish statistical coverage.
+
+#### 1. Map the current public claims to evidence
+
+Inspect `NAMESPACE`, capability tables, fitted-object methods, help, examples,
+and actual decision-bearing output. Group routes by shared statistical claim,
+not by function count. Cover RSM/PCM/GPCM, JML/MML, slope owner, population
+basis, supported anchors/interactions/weights, fitted-object versus portable
+scoring, and diagnostic/reporting claims. Include existing observed-score
+G/D-study helpers without reopening their deferred multivariate replacement.
+
+Produce one compact review table with: public route/claim; estimand and
+conditions; numerical, recovery, uncertainty, and restriction evidence;
+source applicability; missing question; next check; and release consequence.
+Use the existing records and runners. Do not duplicate the historical research
+portfolio, create a new authorization service, or mark a claim passed because
+it has many tests. Separate point-estimate, ordinary inference, descriptive,
+and unavailable uses, including routes marked `supported_with_caveat`.
+
+Exit: every retained claim has an evidence disposition and a bounded next
+action where needed. Missing SE evidence is a blocker for ordinary SE/CI use;
+missing exact external overlap requires an alternative validation route,
+not automatic rejection or acceptance of the estimator.
+
+#### 2. Close deterministic and numerical foundations
+
+- RSM/PCM MML: reuse the matched TAM generators, category/weight and coordinate
+  handling, and independent probability/likelihood oracles. Check integration
+  density and tail range separately, using the retained failures as regression
+  cases. Evaluate fit-time and score-time grids separately. Review the entire
+  quadrature-to-extraction path, including a review with material movement;
+  confirm that procedural completion is not reported as numerical stability.
+- Full GPCM: validate the selected-owner slope multiplying the complete
+  adjacent-category predictor, including nonzero other-facet effects. Keep
+  Criterion and Rater owners, JML and MML, and fixed/free population bases
+  separate. Reuse independent probability, likelihood, score, Jacobian, and
+  information checks; check unit-slope and item-only reductions, initial-value
+  sensitivity, local estimability, and relevant boundary behavior. Examine
+  existing later boundary records before commissioning additional work.
+- JML: reproduce a finite, no-extreme, unadjusted common-model comparison with
+  matched identification and score support. Then check spontaneous/forced
+  extremes, profile limits, adjustment constants, and correction formulas as
+  separate estimator identities. Finite traces must not be called attained
+  MLEs when the likelihood has no finite maximum.
+- External comparisons: freeze the common model, constraints, scoring target,
+  coordinate/covariance transformation, integration settings, and numerical
+  stopping evidence before interpretation. TAM `iter < maxiter` alone is not
+  a shared stationarity criterion. Use stronger retained evidence or an
+  independent objective/gradient check where feasible; otherwise retain the
+  limitation. Do not add a TAM compatibility mode or clone its solver.
+
+Exit: each retained numerical claim has an independent check, an explanation
+of material discrepancies, and a verified fix or output restriction. Missing
+foundations block inferential promotion. A matching item-only reduction or
+an error-free run cannot close the complete-model question.
+
+#### 3. Design only the missing statistical validation
+
+For each gap from Steps 1--2, specify the aim, data-generating mechanisms,
+estimands, methods, and performance measures before inspecting new results.
+Choose a bounded set of informative contrasts rather than all combinations.
+
+| Question | Design and reason | Required interpretation |
+| --- | --- | --- |
+| Parameter recovery | Vary Person count separately from responses per Person; include ordinary and connected weak-information designs. For GPCM retain non-unit slopes, nonzero rater effects, and separate owners. | Coordinate-specific bias and RMSE after valid identification alignment; sample-size effects must not conceal finite-exposure JML bias. |
+| Ordinary structural SE/CI | Under each claimed estimator and regularity regime, compare SEs with independent information and across-replication SD; evaluate interval coverage and width. | Separate numerical covariance correctness from frequentist calibration. Marginal SEs cannot replace the covariance required by a nonlinear coordinate map. |
+| Person score uncertainty | Match EAP/posterior-SD and interval definitions, prior, grid, and fixed versus re-estimated calibration. Specify prior-predictive or ability-stratified evaluation explicitly. | Conditional posterior uncertainty is not structural-parameter SE or unconditional repeated-calibration coverage. Population transport requires separate evidence. |
+| JML adjustments and extremes | Separate high-information raw-JML comparisons from operational sparse designs with natural extremes; retain profile, adjusted, and corrected routes separately. | Report their targets, bias, RMSE, computability, and supported uncertainty. Do not select away extreme datasets or infer bias correction from a profile limit. |
+| Design and readiness failures | Include connected sparse assignments and planned disconnections, weak bridges, unequal workloads, missing categories/ratings, and relevant boundary cases. | Retain assigned and observed connectivity. Measure inappropriate ordinary-inference eligibility as well as refusal/availability; rejection of a disconnected design is not optimizer failure. |
+
+Include anchors, interactions, non-unit weights, population misspecification,
+or other mechanisms where Step 1 identifies a corresponding public claim or
+a sensitivity question. Distinguish correctly specified validation from
+robustness to misspecification. No universal bridge percentage, sample size,
+quadrature count, or fit cutoff follows from one design.
+
+For each planned metric, fix the acceptance rationale, independent dataset
+count, Monte Carlo precision, failure handling, and computational ceiling.
+For an estimated rate, `MCSE = sqrt(p * (1 - p) / R)` can guide planning;
+use a justified planning value or conservative bound and an appropriate
+interval rule, including zero/rare-event cases. Derive replication needs from
+the decision precision, not a convenient five- or twenty-replicate default.
+Coordinate rows, repeated fits, grids, and OS replays of the same dataset do
+not increase the independent replication count.
+
+Report interval availability and conditional coverage among eligible
+intervals separately, with all attempted datasets retained. Also report
+false-ready rates and unresolved numerical states; neither dropping failures
+nor passing no intervals can establish valid inference. Criteria must state
+how uncertainty around each performance estimate affects pass/review/fail.
+An imprecise result remains review, not pass.
+
+Exit: a reviewable, runnable protocol answers a named release question with
+prespecified criteria and resources. Reuse existing generators and analysis
+helpers; repair only demonstrated gaps. Pilot data used to choose criteria
+remain pilot data. Substantive changes require a new protocol and fresh
+confirmation data rather than tuning until the retained results pass.
+
+#### 4. Execute, adjudicate, and verify public restrictions
+
+Run only the admitted missing checks and retain every planned outcome.
+Separate successful execution, numerical agreement, recovery, uncertainty,
+and output enforcement in the result table. Record effect sizes and Monte
+Carlo uncertainty, conditions of applicability, and a plain-language answer
+to each question; do not substitute correlations or counts of passing tests.
+
+Resolve each public claim as supported in its evaluated scope, unresolved,
+or restricted/unavailable. Unresolved ordinary estimation/inference holds the
+release until corrected and validated or explicitly removed from the release
+claim. A scope reduction must be reviewed and implemented, not inferred from
+the word "bounded" or a warning. Descriptive retention still requires evidence
+that the numerical result and its stated interpretation are defensible.
+
+Check the restriction from fit through `print()`, `summary()`, plots, scoring,
+model comparison, diagnostics, reports, and exports. Exercise a supported case
+and relevant ineligible cases using existing tests. No route may recreate
+ordinary GPCM slope SE/CI, a corrected-JML claim, a profile SE, automatic
+ranking, or formal diagnostic decision after another route suppresses it.
+Reconcile capability tables and the complete tutorial workflow with the
+observed outputs. For portable intervals, state the exclusion of calibration
+uncertainty at the point where users receive the interval.
+
+Exit: no retained public claim has an unassigned evidence gap, material
+numerical defect, or unverified output restriction. Unsupported extensions
+remain excluded; inherited functionality receives the same scrutiny as new
+functions.
+
+#### 5. Validate the final source and decide release
+
+Only after the statistical/support dispositions are resolved, review the final
+diff, freeze the release source, and run the ordinary five-platform CI matrix,
+full packaged `NOT_CRAN=true` tests, relevant repository-only checks, manuals,
+executed examples/vignettes, and the CRAN timing/URL checks described in
+`../../CONTRIBUTING.md`. Verify source applicability after every corrective
+change; an older successful matrix cannot certify a newer payload. A
+repository-only test excluded from CRAN may still supply necessary statistical
+evidence and must not be dismissed merely because it is excluded.
+
+The release review must reference the final claim/evidence table, retained
+failures and their dispositions, enforced limitations, and exact checked
+source. The earlier 16,506 passing package expectations are regression
+evidence, not a substitute for this decision. Update release metadata and
+publication materials only after this review closes. This roadmap edit does
+not authorize or perform submission, tagging, or publication.
+
+### Evidence follow-up and later versions
+
+For current task order, use the integrated work queue above. The following
+records preserve the progression and limits of the completed studies.
+
+The numerical basis of RSM/PCM MML uncertainty (C05) now includes the
+[first three-parameter RSM pilot](mml-independent-rsm-information-record-0.2.4.md)
+and a [13-fixture condition extension](mml-independent-information-conditions-record-0.2.4.md)
+using independent whole-line integration and finite-difference information.
+The extension separates population regression, direct/group anchors,
+interactions and likelihood weights; it also found and repaired a remaining
+singular-contrast admission in PCM equivalence. Preserve its initial failure
+and the separate repaired-source replay.
+
+The first repeated-sampling structural SE/SD and coverage evaluation for
+correctly specified, unit-weight RSM/PCM MML now has a
+[fixed eight-cell protocol](mml-structural-coverage-protocol-0.2.4.md) and
+[execution record](mml-structural-coverage-record-0.2.4.md). All 20,000
+confirmation datasets are complete, separately from 40 preflight datasets.
+All 96 coordinate-by-cell rows meet coverage, SE-scale, availability and
+numerical criteria; 89 meet every criterion. Five cells are supported and
+three received review because standardized-bias MC intervals cross the stated
+margin. The reviewed directions are RSM shared thresholds at N=80/exposure=3,
+PCM C1 thresholds at N=80/exposure=3, and PCM Criterion effects at
+N=320/exposure=3. Constrained copies do not multiply these findings.
+
+The [bias mechanism diagnostic](mml-structural-bias-diagnostic-record-0.2.4.md)
+now decomposes every original replication using the score at truth. Small
+finite-sample remainders agree with independent order-1/N curvature predictions;
+Monte Carlo imbalance amplifies the selected flags, especially PCM Criterion
+at N=320. Independent pattern probabilities and 30 numerical refit checks
+give no evidence of a material parameter-map or optimizer cause. This
+post-confirmation explanation does not replace the original decisions.
+
+The [fresh confirmation protocol](mml-structural-bias-confirmation-protocol-0.2.4.md)
+fixed 10,000 new datasets in each of the three reviewed cells, with
+precision planned for conditional standardized bias as well as coverage.
+Its [execution record](mml-structural-bias-confirmation-record-0.2.4.md)
+now reports the complete 30,000-dataset run, separate from 15 excluded preflight
+datasets. All 37 original primary coordinate checks and all three cells are
+supported; the three prespecified secondary mechanism targets are also
+supported. Coverage ranges from 94.67% to 95.65%, RMS-SE / empirical-SD from
+0.98283 to 1.00738, and the most distant standardized-bias MC endpoint is
+0.09179 in magnitude. All numerical checks pass. Twelve code-52
+`terminal_gradient_review` warnings retain unavailable status in the
+availability denominators; no fitting or secondary-calculation error occurred.
+
+This resolves those selected bias questions for the fresh study's conditions.
+Keep the original five-supported/three-review record unchanged and do not pool
+the selected old cells with the fresh study. Small positive curvature bias
+persists; the unconditional score decomposition does not replace available-only
+bias or authorize a bias correction. The q61, fixed-standard-normal,
+unit-weight evidence supplies no default-q31 or universal exposure guarantee.
+
+The [use-condition audit](mml-use-condition-audit-record-0.2.4.md) now reconciles
+these C05/C09 gaps in 16 model/design cases and 52 grid-specific fits, using
+14 distinct response datasets. Short-pattern q31 SE movement is at most
+1.276e-6 relative; three of eight such examples miss only the strict absolute
+objective bound. The four retained 12/30-rating stress cases reproduce larger
+movement, including q31 structural-SE changes up to 0.776%. Their highest
+evaluated grids meet the local q241 reference checks; no universal grid follows.
+All six population-regression fits retain `design_rank_not_evaluated` and
+refuse ordinary inference/equivalence despite numerical agreement.
+
+The [observation-weight readiness repair](observation-weight-readiness-repair-record-0.2.4.md)
+completed on September 10. It reuses the IC weight classifier in the common
+input-readiness component, labels diagnostic normal bands, propagates interval
+eligibility into steps and attached diagnostics, and prevents old stored
+readiness/equivalence bundles from restoring approval. Six weighted replays
+retain exactly the old parameters, objective, covariance and structural SEs;
+four omitted/explicit-unit controls retain both their numerical values and
+ordinary eligibility. All 52 historical fits and 46 historical equivalence
+bundles fail closed under the new readiness contract. The old audit's positive
+inference flags remain preserved as failure evidence. This resolves the
+output defect by restricting scope; weighted inferential validity remains
+unestablished and is not a new package claim.
+
+The [population-identifiability review](population-identifiability-review-record-0.2.4.md)
+now completes that initial inspection. The two retained RSM/PCM latent-regression
+examples have full observed-score rank (7/7 and 8/8) under both fixed quadrature
+and independent continuous integration. The all-pattern execution cap is not
+an absence of local evidence. A binary intercept-only negative control has an
+exact variance/difficulty ridge and rank 2/3, whereas paired ratings restore
+local rank 3/3. Near zero variance, the paired model still has full scaled rank
+but almost no log-variance information after nuisance adjustment. Thus additive
+rank, local identification, and ordinary sampling uncertainty remain separate.
+No production readiness rule or inference support has been relaxed.
+
+The [variance-profile review](population-variance-profile-record-0.2.4.md)
+now completes this bounded inspection: 184 q1/q61/q121 nuisance fits plus 32
+targeted q481/q961 tail refits retain all native convergence passes and all
+continuous-integral failures. Exact zero variance fits worse than the included
+interior RSM/PCM and paired-control values; the unpaired control retains its
+exact ridge. Of eight selected q961 tail vectors, six meet the unchanged
+continuous-integral objective/derivative/stationarity bounds. RSM/PCM at variance
+64 remain unqualified; agreeing starts do not repair integration error.
+No global profile, infinite-variance limit or calibrated boundary test is claimed.
+
+The [population-output contract](population-output-contract-record-0.2.4.md)
+now distinguishes exact nonidentification, local full rank, boundary behavior,
+qualified numerical solutions and estimand-specific uncertainty. It also closes
+the active-population scoring exception that admitted all four retained fits,
+including the exact-ridge control. The shared unit/PV guard requires explicit
+review; old ready-labelled population predictions and summaries cannot bypass
+the restriction through supported summary/print/export paths. Eight replays
+preserve numerical values/draws and the four fixed-population control approvals.
+The exact ridge changes a positive-response EAP from about zero to 1.75 while
+holding its marginal probability at .3, so fitted marginals cannot certify
+individual-score uniqueness.
+
+The [full-information review](population-full-information-record-0.2.4.md)
+now binds full-coordinate stationarity and inverse observed information to 12
+current public refits. Nine positive-information fits yield 36 independent
+same-vector Hessian/covariance/SE agreements; the three exact-ridge fits retain
+regularized package covariance and no independent reference SE. All full scores
+meet the existing stationary-point bound, while six evaluation-q31 score
+comparisons miss the stricter derivative-agreement bound. The two variance-16
+profile probes have log-variance derivatives around 31--33 and cannot be
+promoted to free-population solutions. All failures and original bounds remain.
+
+The [population sampling protocol](population-coverage-protocol-0.2.4.md)
+now fixes eight RSM/PCM conditions, three primary population targets and a
+secondary natural-variance Wald interval. It separates policy restrictions from
+diagnostic computability, keeps numerical conflicts in coverage and preserves
+all assigned/attempted counts. The [execution record](population-coverage-record-0.2.4.md)
+now retains 40 distinct preflight datasets with computable diagnostic intervals
+and an exact source replay. Three original independent-gradient step failures
+remain recorded; finer personwise reference calculations qualify at the same
+fitted vectors. No readiness restriction changes. The 10,000-per-cell main study
+is not yet executed; projected runtime is about 20--22 hours across three
+resumable cell groups. Zero-variance generation and
+boundary-aware interval calibration need a separate design. Do not turn
+numerical agreement or simulation coverage into a global identification/boundary
+certificate. Keep Person-score
+precision and joint Wald/equivalence calibration distinct from the tested
+coordinate coverage. The
+[C09 repair](facet-equivalence-repair-record-0.2.4.md) now enforces fit and
+diagnostic eligibility, computes covariance-aware contrasts and mean
+deviations, suppresses the unsupported BF heuristic, and rejects legacy
+bundles in summary/print/plot paths. The successor also checks the constraint
+rank and refuses bundles lacking that check. These are scoped implementation
+corrections; finite-sample calibration and remaining release claims stay open.
+
+Retain the separate GPCM/JML numerical and comparison-feasibility questions.
+Finish the assigned secondary-route reviews and prepare only the missing
+estimand-specific SE/coverage protocols. Do not launch the old 180-dataset
+JML topology pilot unchanged or a broad GPCM study to compensate for an
+incomplete foundation.
+
+0.2.5 multiple-scale work follows closure of the 0.2.4 public-route review:
+explicit scale identity and separate-scale behavior precede mixed structures.
+0.3.0 consolidates validated APIs, migration, documentation, and reproducible
+performance; 1.0.0 requires a stable, evidenced support envelope. Portable
+GPCM, multidimensional models, and multivariate G-theory retain their separate
+need, identification, uncertainty, and validation prerequisites. Their dormant
+research runs are not automatically part of this release. Conversely, an
+already-exported claim cannot be deferred by assigning its validation to a
+future extension.
+
+### Interaction and DRF simulation scope
+
+2026-09-10 user-directed revision. This controls the next simulation allocation
+and supersedes the recommendation to launch the additive population study
+immediately. Its frozen protocol, 40-dataset evidence and reserved main seeds
+remain intact; no 80,000-dataset main run has started. Keep their archived source
+and document snapshots historical rather than rebinding them to this revision.
+
+The release question is whether retained analyses estimate their stated targets,
+detect relevant departures with understood false-flag behavior, and preserve
+appropriate use restrictions. An additive, correctly specified population study
+answers only the first part for its selected population intervals. It cannot
+stand in for fitted-interaction, DRF, diagnostic or operational-score validation.
+First specify and pilot the broader cases, then allocate confirmatory repetitions
+by claim and Monte Carlo precision. Do not multiply every existing cell by every
+new factor or attach 10,000 repetitions to every exploratory condition.
+
+**Distinct questions and comparisons**
+
+| Component | Data generation and analysis comparison | Main question and evidence |
+| --- | --- | --- |
+| Additive population baseline | No DRF/interaction; correctly specified population and response model. Retain the existing eight-cell protocol as this baseline. | Population mean/slope/log-variance bias, SE scale, coverage and computability; this does not validate a screen. |
+| Fitted interaction | Prespecified Rater x Criterion (or a separately specified Task pair), at zero and practically small/larger zero-marginal effects. Fit additive and explicit-interaction models to each dataset. | Under the correctly specified model: interaction-contrast recovery, full-covariance SEs and interval coverage, including nuisance parameters. Under omission: consequences for population/structural estimates and scores. |
+| Group-linked DRF | Rater x examinee Group, initially a constant severity shift at matched ability. Include DRF=0 both with and without genuine group ability differences, plus nonzero effects with a named sign/target. | Distinguish group ability differences from group-specific rater severity; quantify target and null-rater screening flags, relative-contrast recovery where defined, and group-specific score consequences. |
+| Combined effects and misspecification | Selected DRF-only, interaction-only and both-present conditions on a common design, with neither/one/both effects represented where supported. Add a small separately justified local-dependence or misfit challenge. | Determine whether one effect masks another or creates apparent effects in other raters, and whether the implemented diagnostics distinguish them. Agreement between software on the same omitted model is not truth recovery. |
+| Assignment and information stress | Carry a limited subset of null and meaningful-effect cases into unequal group sizes/exposure, connected incomplete assignment and weak cross-group links; include a disconnected negative control. | Separate insufficient information or linking from failed detection, assess false flags and estimate/score deterioration, and verify refusal of unsupported comparisons. |
+
+DRF here names the Rater x examinee Group target, while Rater x Criterion is a
+separate, explicitly named facet interaction. Terminology is broader in parts of
+the literature; the analysis must always state the actual interacting variables.
+Group ability mean differences alone are a null-DRF control, not an injected
+rater effect. Group variance differences are a targeted population-sensitivity
+extension. A group mean and a shift common to all raters can be confounded;
+freeze the scale, reference/anchor assumptions or valid contrast constraints
+before defining truth, fitted parameters and unaffected rater targets. Merely
+adding Group as another facet does not resolve that identification problem.
+
+**Implementation evidence and limits already present**
+
+- `fit_mfrm(..., facet_interactions=...)` estimates two-way non-Person fixed
+  interactions for RSM/PCM. Its interaction coefficients are distinct from
+  `estimate_bias()` residual-recalibration screening outputs. The historical
+  [interaction/bias/PCA pilot](interaction-bias-pca-stress-pilot-record-0.2.3.md)
+  explicitly lacks repeated-sampling false-positive/power calibration.
+- `analyze_dff(..., facet="Rater", group=...)` is the DRF route. Residual
+  contrasts are on a residual-score scale, not logit parameter differences.
+  Refit contrasts condition on baseline anchors and omit their uncertainty and
+  cross-refit covariance; their output remains screening-only. Current refit
+  replay rejects user-specified active latent regression and facet interactions.
+  Establish a supported analysis path, or record an explicit unsupported-path
+  result, before scheduling repeated DRF + population/interaction fits. Do not
+  force the combined study through that rejected route or bypass its guards.
+- `simulate_mfrm_data()` already accepts Group/Rater `dif_effects` and
+  `interaction_effects`; reuse these and the independent probability/constraint
+  checks. However, `evaluate_mfrm_signal_detection()` currently builds the DIF
+  target on the criterion-role facet and analyses that facet. It is not a
+  Rater-DRF recovery/coverage runner simply because it reports a DIF hit rate.
+  Reuse its accounting patterns, not its target labels without checking them.
+- Ability-dependent DRF and group differences in category use cannot be
+  represented by a constant logit shift alone. Treat these as separately
+  specified stress or future-model conditions. They do not imply support for
+  GPCM interactions, Person interactions or higher-order/random interactions.
+
+**Performance and accounting**
+
+Prespecify null and affected targets after the identification map. Include
+global-null and partial-null screening cases; count per-target false flags and
+the probability of any false flag across a stated comparison family. Freeze
+the adjustment method (including the actual Holm family), significance and
+practical-effect thresholds, and whether any selection/anchor purification is
+part of the evaluated workflow. Report true-target detection as screening
+sensitivity unless a formal test and its uncertainty have separately qualified.
+If FDR is selected instead, name and evaluate that criterion explicitly.
+
+Compare parameter bias/RMSE and SEs on consistent coordinate/subset definitions.
+Coverage of correctly specified identifiable parameters is distinct from
+misspecification consequences: do not count coverage of an omitted parameter,
+or label every deviation under the wrong fitted model an implementation bug.
+Score recovery and group disparities require their own targets and preserve
+review-only Person output; an unbiased EAP for each fixed Person is not assumed.
+Classification/ranking consequences require prespecified operational targets
+and do not inherit approval from parameter coverage.
+
+Retain all assigned/attempted trials, finite estimates, errors, covariance or
+linking failures, numerical conflicts and policy restrictions. Report callable,
+numerically computable and decision-eligible outputs separately. A refused
+comparison is unavailable, not a negative detection; a policy-ineligible but
+computable diagnostic is not automatically deleted from research evaluation.
+Monte Carlo precision is defined per estimand/rate, not by pooling correlated
+raters, groups, thresholds or fitted models as independent replications.
+
+**Next work and scope boundary**
+
+Create an economical design registry with the above questions, truth maps,
+supported fitting/screening routes and performance definitions. Verify a few
+null/non-null generation and replay cases, especially group-mean-only controls
+and combined-route identification/availability, before a broader timing pilot.
+Only then freeze effect magnitudes, group/assignment cells, practical margins,
+replications, disjoint confirmation seeds and resource allocation for the new
+studies. No new cell grid or statistical criterion is claimed frozen here.
+The baseline 80,000-run specification is preserved; changing its counts or
+criteria would require an explicit successor protocol before new confirmation
+outcomes. Its earlier 20--22 hour estimate covers that baseline only, not this
+broader review. Keep the independent GPCM/JML and matched TAM/FACETS work open.
+
+This revision makes interaction/DRF validation necessary for the corresponding
+retained claims; it does not require every possible rater-effect model in 0.2.4.
+Unvalidated formal conclusions must remain unavailable, with the documented
+screening scope and its observed operating behavior assessed in their own right.
+No production guard is relaxed and no simulation was run for this revision.
+
+Research rationale: [Wind and Guo (2019)](https://pmc.ncbi.nlm.nih.gov/articles/PMC6713980/)
+studied combined DRF/misfit under complete and incomplete designs and found that
+numeric indicators could have difficulty distinguishing co-occurring effects.
+[Wind (2023)](https://journals.sagepub.com/doi/abs/10.1177/02655322221092388)
+studied true versus artificial DRF in sparse rating networks. These motivate
+combined-effect and null-target checks; their methods, cutoffs and performance
+are not imported as validation of mfrmr's different procedures.
 
 ## 2026-08-16 distribution-first de-escalation
 

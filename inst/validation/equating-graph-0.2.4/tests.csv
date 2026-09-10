@@ -1,0 +1,71 @@
+file,context,test,nb,failed,skipped,error,warning,user,system,real,passed
+test-anchor-equating.R,anchor-equating,anchor_to_baseline returns correct class and structure,9,0,FALSE,FALSE,0,22.35,0.17,22.567,9
+test-anchor-equating.R,anchor-equating,anchor_to_baseline self-anchoring yields near-zero drift,2,0,FALSE,FALSE,0,21.788,0.174,22.035,2
+test-anchor-equating.R,anchor-equating,anchor_to_baseline rejects non-mfrm_fit input,1,0,FALSE,FALSE,0,0.00300000000000011,0,0.00300000000000011,1
+test-anchor-equating.R,anchor-equating,anchor_to_baseline refuses a nonready baseline fit,1,0,FALSE,FALSE,0,0.00199999999999534,0.001,0.00200000000000244,1
+test-anchor-equating.R,anchor-equating,fit_mfrm surfaces malformed anchor schemas instead of silently dropping them,2,0,FALSE,FALSE,0,0.345000000000006,0.00399999999999995,0.369,2
+test-anchor-equating.R,anchor-equating,anchor_to_baseline S3 methods produce output,6,0,FALSE,FALSE,0,22.391,0.039,22.472,6
+test-anchor-equating.R,anchor-equating,detect_anchor_drift returns correct class and structure,14,0,FALSE,FALSE,0,13.545,0.031,13.624,14
+test-anchor-equating.R,anchor-equating,detect_anchor_drift finds common elements,2,0,FALSE,FALSE,0,13.201,0.016,13.235,2
+test-anchor-equating.R,anchor-equating,detect_anchor_drift uses aligned drift and combined standard errors,2,0,FALSE,FALSE,0,13.415,0.0199999999999999,13.46,2
+test-anchor-equating.R,anchor-equating,detect_anchor_drift warns when retained link support is thin,2,0,FALSE,FALSE,0,0.974000000000004,0.003,0.977000000000004,2
+test-anchor-equating.R,anchor-equating,detect_anchor_drift flagging logic works,2,0,FALSE,FALSE,0,27.11,0.0840000000000001,27.273,2
+test-anchor-equating.R,anchor-equating,detect_anchor_drift rejects invalid input,2,0,FALSE,FALSE,0,0.00399999999999068,0,0.0040000000000191,2
+test-anchor-equating.R,anchor-equating,detect_anchor_drift S3 methods produce output,5,0,FALSE,FALSE,0,13.334,0.021,13.381,5
+test-anchor-equating.R,anchor-equating,build_equating_chain returns correct class and structure,17,0,FALSE,FALSE,0,13.167,0.0209999999999999,13.191,17
+test-anchor-equating.R,anchor-equating,build_equating_chain with 3 fits produces 2 links,4,0,FALSE,FALSE,0,15.996,0.041,16.045,4
+test-anchor-equating.R,anchor-equating,build_equating_chain uses inverse-variance weighted offsets,1,0,FALSE,FALSE,0,13.492,0.082,13.604,1
+test-anchor-equating.R,anchor-equating,build_equating_chain warns when retained link support is thin,3,0,FALSE,FALSE,0,0.691999999999979,0.003,0.694999999999993,3
+test-anchor-equating.R,anchor-equating,build_equating_chain rejects invalid input,2,0,FALSE,FALSE,0,0.0040000000000191,0,0.00399999999999068,2
+test-anchor-equating.R,anchor-equating,build_equating_chain S3 methods produce output,4,0,FALSE,FALSE,0,13.628,0.053,13.717,4
+test-anchor-equating.R,anchor-equating,build_linking_review returns a synthesis bundle with expected structure,14,0,FALSE,FALSE,0,26.682,0.08,26.825,14
+test-anchor-equating.R,anchor-equating,build_linking_review summary methods produce front-door output,5,0,FALSE,FALSE,0,26.35,0.118,26.506,5
+test-anchor-equating.R,anchor-equating,build_linking_review rejects malformed inputs,2,0,FALSE,FALSE,0,0.0029999999999859,0.00100000000000011,0.0029999999999859,2
+test-anchor-equating.R,anchor-equating,build_linking_review returns exploratory bounded GPCM source reviews,4,0,FALSE,FALSE,0,4.63900000000001,0.0249999999999999,4.67000000000002,4
+test-anchor-equating.R,anchor-equating,plot_anchor_drift drift type returns data with draw=FALSE,5,0,FALSE,FALSE,0,0.0149999999999864,0.002,0.0169999999999959,5
+test-anchor-equating.R,anchor-equating,plot_anchor_drift heatmap type returns data with draw=FALSE,3,0,FALSE,FALSE,0,0.0099999999999909,0.00099999999999989,0.0110000000000241,3
+test-anchor-equating.R,anchor-equating,plot_anchor_drift chain type returns data with draw=FALSE,4,0,FALSE,FALSE,0,0.00399999999996226,0.00100000000000011,0.00499999999999545,4
+test-anchor-equating.R,anchor-equating,plot_anchor_drift drift type draws without error,1,0,FALSE,FALSE,0,0.0220000000000482,0.00099999999999989,0.0250000000000341,1
+test-anchor-equating.R,anchor-equating,plot_anchor_drift chain type draws without error,1,0,FALSE,FALSE,0,0.0190000000000055,0,0.0190000000000055,1
+test-anchor-equating.R,anchor-equating,plot_anchor_drift heatmap type draws without error,1,0,FALSE,FALSE,0,0.0109999999999673,0,0.0110000000000241,1
+test-anchor-equating.R,anchor-equating,plot_anchor_drift accepts publication preset,2,0,FALSE,FALSE,0,0.007000000000005,0,0.0080000000000382,2
+test-anchor-equating.R,anchor-equating,plot_anchor_drift rejects unsupported type/class combo,1,0,FALSE,FALSE,0,0.00200000000000955,0,0.00200000000000955,1
+test-anchor-equating.R,anchor-equating,plot_anchor_drift facet filter works,1,0,FALSE,FALSE,0,0.00200000000000955,0,0.00200000000000955,1
+test-plot-device-state.R,plot-device-state,single-panel plots advance through caller layouts and restore style,18,0,FALSE,FALSE,0,1.01799999999997,0.00800000000000001,1.02799999999996,18
+test-plot-device-state.R,plot-device-state,Wright and CCC layouts do not shrink subsequent standalone plots,20,0,FALSE,FALSE,0,1.743,0.0119999999999998,1.75800000000004,20
+test-plot-device-state.R,plot-device-state,APA composite draws four panels on one page,3,0,FALSE,FALSE,0,0.459000000000003,0.004,0.463999999999999,3
+test-plot-device-state.R,plot-device-state,native labels remain distinct without moving or discarding fitted data,73,0,FALSE,FALSE,0,3.72699999999998,0.0330000000000001,3.76999999999998,73
+test-plot-device-state.R,plot-device-state,long and Japanese names stay distinguishable when abbreviated,12,0,FALSE,FALSE,0,0.00900000000001455,0.00299999999999989,0.0110000000000241,12
+test-plot-device-state.R,plot-device-state,numerous PCM thresholds do not erase the default facet display,14,0,FALSE,FALSE,0,1.94799999999998,0.016,1.96499999999997,14
+test-plot-device-state.R,plot-device-state,an overcrowded canvas reports its limit without deleting labels,3,0,FALSE,FALSE,0,0.0160000000000196,0,0.0149999999999864,3
+test-plot-device-state.R,plot-device-state,pathway and CCC disclose the same reference profile in data and drawing,7,0,FALSE,FALSE,0,0.521000000000015,0.002,0.524000000000001,7
+test-equating-graph.R,equating-graph,"graph preserves isolated waves, pair screening and shared identities",13,0,FALSE,FALSE,0,0.022,0.005,0.0270000000000001,13
+test-equating-graph.R,equating-graph,zero common elements and zero links still produce wave vertices,10,0,FALSE,FALSE,0,0.117,0.004,0.122,10
+test-equating-graph.R,equating-graph,unknown retention and retained-but-flagged are not called unflagged retention,3,0,FALSE,FALSE,0,0.006,0,0.00700000000000012,3
+test-equating-graph.R,equating-graph,wave and element identity survives duplicate names and delimiter punctuation,7,0,FALSE,FALSE,0,0.01,0.002,0.012,7
+test-equating-graph.R,equating-graph,malformed graph references and flags fail explicitly,4,0,FALSE,FALSE,0,0.00900000000000012,0,0.0089999999999999,4
+test-equating-graph.R,equating-graph,monochrome and clean drawing preserve data and the caller's panel sequence,10,0,FALSE,FALSE,0,0.012,0.002,0.0129999999999999,10
+test-equating-graph.R,equating-graph,supported paths do not bypass excluded pair-specific links,2,0,FALSE,FALSE,0,0.0209999999999999,0.002,0.0230000000000001,2
+test-plotting-extras.R,plotting-extras,plot_threshold_ladder returns structured payload,5,0,FALSE,FALSE,0,0.004,0.001,0.00499999999999989,5
+test-plotting-extras.R,plotting-extras,plot_threshold_ladder draw = TRUE runs without error,1,0,FALSE,FALSE,0,0.0369999999999999,0.001,0.0380000000000003,1
+test-plotting-extras.R,plotting-extras,plot_threshold_ladder honours highlight_disorder = FALSE,1,0,FALSE,FALSE,0,0.00200000000000022,0,0.00300000000000011,1
+test-plotting-extras.R,plotting-extras,plot_person_fit returns one row per Person,7,0,FALSE,FALSE,0,0.0209999999999999,0.002,0.0219999999999998,7
+test-plotting-extras.R,plotting-extras,plot_person_fit honours custom fit envelope,2,0,FALSE,FALSE,0,0.107,0.001,0.108,2
+test-plotting-extras.R,plotting-extras,plot_person_fit draws without error,1,0,FALSE,FALSE,0,0.0149999999999997,0.001,0.0150000000000001,1
+test-plotting-extras.R,plotting-extras,plot_person_fit exposes log-likelihood report view and monochrome preset,6,0,FALSE,FALSE,0,0.016,0.001,0.0179999999999998,6
+test-plotting-extras.R,plotting-extras,plot_rater_severity_profile produces CI whiskers,5,0,FALSE,FALSE,0,0.012,0.001,0.0140000000000002,5
+test-plotting-extras.R,plotting-extras,plot_rater_severity_profile validates ci_level,2,0,FALSE,FALSE,0,0.0210000000000004,0.001,0.0219999999999998,2
+test-plotting-extras.R,plotting-extras,plot_rater_severity_profile errors on unknown facet,1,0,FALSE,FALSE,0,0.592,0.005,0.597,1
+test-plotting-extras.R,plotting-extras,plot_dif_summary accepts mfrm_dff output,3,0,FALSE,FALSE,0,0.0309999999999997,0,0.032,3
+test-plotting-extras.R,plotting-extras,plot_dif_summary rejects non-DIF inputs,1,0,FALSE,FALSE,0,0.036,0.001,0.0369999999999999,1
+test-plotting-extras.R,plotting-extras,plot_dif_summary validates top_n,3,0,FALSE,FALSE,0,0.0989999999999998,0.001,0.0999999999999996,3
+test-plotting-extras.R,plotting-extras,plot_dif_summary supports CI and threshold guides,8,0,FALSE,FALSE,0,0.0449999999999999,0.000999999999999987,0.0469999999999997,8
+test-plotting-extras.R,plotting-extras,plot_dif_summary sort_by = 'effect' orders by signed contrast,1,0,FALSE,FALSE,0,0.0270000000000001,0.001,0.0270000000000001,1
+test-plotting-extras.R,plotting-extras,plot_apa_figure_one bundles the four panels,14,0,FALSE,FALSE,0,0.0979999999999999,0.002,0.100000000000001,14
+test-plotting-extras.R,plotting-extras,plot_apa_figure_one draws the 2x2 composite,3,0,FALSE,FALSE,0,0.465,0.00700000000000001,0.472,3
+test-plotting-extras.R,plotting-extras,"plot(fit, type = 'ccc_overlay') carries overlay rows",5,0,FALSE,FALSE,0,0.0209999999999999,0.001,0.0219999999999994,5
+test-plotting-extras.R,plotting-extras,"plot(fit, type = 'wright') subgroup overlay via group_data",4,0,FALSE,FALSE,0,0.0209999999999999,0.001,0.0220000000000002,4
+test-plotting-extras.R,plotting-extras,"plot(fit, type = 'wright') without group has no group payload",1,0,FALSE,FALSE,0,0.048,0.001,0.0489999999999995,1
+test-plotting-extras.R,plotting-extras,plot_bias_interaction heatmap mode returns bundle,16,0,FALSE,FALSE,0,0.242999999999999,0.00499999999999999,0.247,16
+test-plotting-extras.R,plotting-extras,plot_anchor_drift forest draws from mfrm_anchor_drift,3,0,FALSE,FALSE,0,1.54,0.013,1.553,3
+test-plotting-extras.R,plotting-extras,plot.mfrm_equating_chain common_anchors falls back cleanly,2,0,FALSE,FALSE,0,0.737,0.006,0.744000000000001,2

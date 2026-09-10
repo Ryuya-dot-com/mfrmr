@@ -1,0 +1,5 @@
+"Facet","Level","Est_From","Est_To","SE_From","SE_To","Link","LinkID","Diff","Offset_Prelim","Offset","Residual","Retained","Flag","Status","Reason","AnchorId","NodeId"
+"Criterion","C01",-0.047459,-0.047459,0.131358449452145,0.131358449452145,"A -> B","1",0,0,0,0,TRUE,FALSE,"retained","Retained; no residual drift flag","anchor_1","element_1"
+"Criterion","C02",0.00641,0.00641,0.123358932178087,0.123358932178087,"A -> B","1",0,0,0,0,TRUE,FALSE,"retained","Retained; no residual drift flag","anchor_2","element_2"
+"Criterion","C03",-0.095813,-0.095813,0.128912124717691,0.128912124717691,"A -> B","1",0,0,0,0,TRUE,FALSE,"retained","Retained; no residual drift flag","anchor_3","element_3"
+"Criterion","C04",0.136862,0.136862,0.125441996577693,0.125441996577693,"A -> B","1",0,0,0,0,TRUE,FALSE,"retained","Retained; no residual drift flag","anchor_4","element_4"

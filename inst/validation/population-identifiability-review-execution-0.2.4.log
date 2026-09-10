@@ -1,0 +1,29 @@
+INITIAL EXECUTION
+Error in population_identifiability_review() : 
+  row$ScoreVsFixedQMaxAbs < 1e-07 is not TRUE
+Calls: population_identifiability_review -> stopifnot
+Execution halted
+COMPLETE EXECUTION
+RSM-q31 : local rank 7 / 7 ; score discrepancy 1.870907e-07 
+RSM-q61 : local rank 7 / 7 ; score discrepancy 2.131686e-10 
+RSM-q121 : local rank 7 / 7 ; score discrepancy 2.099172e-10 
+PCM-q31 : local rank 8 / 8 ; score discrepancy 9.5606e-08 
+PCM-q61 : local rank 8 / 8 ; score discrepancy 2.785083e-10 
+PCM-q121 : local rank 8 / 8 ; score discrepancy 2.785709e-10 
+CONTROL WARNINGS
+rankMatrix(x, method='qr'): computing t(x) as nrow(x) < ncol(x)
+rankMatrix(x, method='qr'): computing t(x) as nrow(x) < ncol(x)
+rankMatrix(x, method='qr'): computing t(x) as nrow(x) < ncol(x)
+The MML fixed-effect design is full rank, but the corresponding free-Person JML design is rank deficient. Cross-panel identification therefore relies on the common latent-population assumption; review assignment and population invariance before reporting facet contrasts.
+The observed measurement design contains 2 disconnected subset(s). Numerical estimation can continue, but cross-subset comparisons are not design-linked and reporting remains on hold until the design or an external linking justification is reviewed.
+FOCUSED TESTS
+estimability-audit: ......................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+nonlinear-local-estimability-classification: .....................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+🥇 Your tests deserve a gold medal 🥇
+readiness-propagation: ............................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════

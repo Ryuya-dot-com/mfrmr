@@ -1,0 +1,31 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-equating-graph.R","equating-graph","graph preserves isolated waves, pair screening and shared identities",13,0,FALSE,FALSE,0,0.022,0.005,0.0270000000000001,13
+"test-equating-graph.R","equating-graph","zero common elements and zero links still produce wave vertices",10,0,FALSE,FALSE,0,0.117,0.004,0.122,10
+"test-equating-graph.R","equating-graph","unknown retention and retained-but-flagged are not called unflagged retention",3,0,FALSE,FALSE,0,0.006,0,0.00700000000000012,3
+"test-equating-graph.R","equating-graph","wave and element identity survives duplicate names and delimiter punctuation",7,0,FALSE,FALSE,0,0.01,0.002,0.012,7
+"test-equating-graph.R","equating-graph","malformed graph references and flags fail explicitly",4,0,FALSE,FALSE,0,0.00900000000000012,0,0.0089999999999999,4
+"test-equating-graph.R","equating-graph","monochrome and clean drawing preserve data and the caller's panel sequence",10,0,FALSE,FALSE,0,0.012,0.002,0.0129999999999999,10
+"test-equating-graph.R","equating-graph","supported paths do not bypass excluded pair-specific links",2,0,FALSE,FALSE,0,0.0209999999999999,0.002,0.0230000000000001,2
+"test-plotting-extras.R","plotting-extras","plot_threshold_ladder returns structured payload",5,0,FALSE,FALSE,0,0.004,0.001,0.00499999999999989,5
+"test-plotting-extras.R","plotting-extras","plot_threshold_ladder draw = TRUE runs without error",1,0,FALSE,FALSE,0,0.0369999999999999,0.001,0.0380000000000003,1
+"test-plotting-extras.R","plotting-extras","plot_threshold_ladder honours highlight_disorder = FALSE",1,0,FALSE,FALSE,0,0.00200000000000022,0,0.00300000000000011,1
+"test-plotting-extras.R","plotting-extras","plot_person_fit returns one row per Person",7,0,FALSE,FALSE,0,0.0209999999999999,0.002,0.0219999999999998,7
+"test-plotting-extras.R","plotting-extras","plot_person_fit honours custom fit envelope",2,0,FALSE,FALSE,0,0.107,0.001,0.108,2
+"test-plotting-extras.R","plotting-extras","plot_person_fit draws without error",1,0,FALSE,FALSE,0,0.0149999999999997,0.001,0.0150000000000001,1
+"test-plotting-extras.R","plotting-extras","plot_person_fit exposes log-likelihood report view and monochrome preset",6,0,FALSE,FALSE,0,0.016,0.001,0.0179999999999998,6
+"test-plotting-extras.R","plotting-extras","plot_rater_severity_profile produces CI whiskers",5,0,FALSE,FALSE,0,0.012,0.001,0.0140000000000002,5
+"test-plotting-extras.R","plotting-extras","plot_rater_severity_profile validates ci_level",2,0,FALSE,FALSE,0,0.0210000000000004,0.001,0.0219999999999998,2
+"test-plotting-extras.R","plotting-extras","plot_rater_severity_profile errors on unknown facet",1,0,FALSE,FALSE,0,0.592,0.005,0.597,1
+"test-plotting-extras.R","plotting-extras","plot_dif_summary accepts mfrm_dff output",3,0,FALSE,FALSE,0,0.0309999999999997,0,0.032,3
+"test-plotting-extras.R","plotting-extras","plot_dif_summary rejects non-DIF inputs",1,0,FALSE,FALSE,0,0.036,0.001,0.0369999999999999,1
+"test-plotting-extras.R","plotting-extras","plot_dif_summary validates top_n",3,0,FALSE,FALSE,0,0.0989999999999998,0.001,0.0999999999999996,3
+"test-plotting-extras.R","plotting-extras","plot_dif_summary supports CI and threshold guides",8,0,FALSE,FALSE,0,0.0449999999999999,0.000999999999999987,0.0469999999999997,8
+"test-plotting-extras.R","plotting-extras","plot_dif_summary sort_by = 'effect' orders by signed contrast",1,0,FALSE,FALSE,0,0.0270000000000001,0.001,0.0270000000000001,1
+"test-plotting-extras.R","plotting-extras","plot_apa_figure_one bundles the four panels",14,0,FALSE,FALSE,0,0.0979999999999999,0.002,0.100000000000001,14
+"test-plotting-extras.R","plotting-extras","plot_apa_figure_one draws the 2x2 composite",3,0,FALSE,FALSE,0,0.465,0.00700000000000001,0.472,3
+"test-plotting-extras.R","plotting-extras","plot(fit, type = 'ccc_overlay') carries overlay rows",5,0,FALSE,FALSE,0,0.0209999999999999,0.001,0.0219999999999994,5
+"test-plotting-extras.R","plotting-extras","plot(fit, type = 'wright') subgroup overlay via group_data",4,0,FALSE,FALSE,0,0.0209999999999999,0.001,0.0220000000000002,4
+"test-plotting-extras.R","plotting-extras","plot(fit, type = 'wright') without group has no group payload",1,0,FALSE,FALSE,0,0.048,0.001,0.0489999999999995,1
+"test-plotting-extras.R","plotting-extras","plot_bias_interaction heatmap mode returns bundle",16,0,FALSE,FALSE,0,0.242999999999999,0.00499999999999999,0.247,16
+"test-plotting-extras.R","plotting-extras","plot_anchor_drift forest draws from mfrm_anchor_drift",3,0,FALSE,FALSE,0,1.54,0.013,1.553,3
+"test-plotting-extras.R","plotting-extras","plot.mfrm_equating_chain common_anchors falls back cleanly",2,0,FALSE,FALSE,0,0.737,0.006,0.744000000000001,2

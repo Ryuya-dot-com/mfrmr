@@ -296,6 +296,12 @@ test_that("build_equating_chain returns correct class and structure", {
                  "Offset_Method")
   expect_true(all(link_cols %in% names(chain$links)))
   expect_equal(nrow(chain$links), 1)  # 2 fits -> 1 link
+  expect_equal(chain$links$FromID, 1L)
+  expect_equal(chain$links$ToID, 2L)
+  expect_true(all(chain$element_detail$LinkID == 1L))
+  graph <- plot(chain, type = "graph", draw = FALSE)
+  expect_equal(graph$data$data$elements$Retained, chain$element_detail$Retained)
+  expect_equal(graph$data$data$elements$Flag, chain$element_detail$Flag)
 
   # cumulative has one row per wave
   expect_true(is.data.frame(chain$cumulative))

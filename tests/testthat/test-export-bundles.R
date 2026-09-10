@@ -556,14 +556,14 @@ latent_prediction_bundle_fixture <- delayed_export_fixture(function() {
     )
 
     unit_prediction <- predict_mfrm_units(
-      fit,
+      fit, readiness_policy = "review",
       new_units,
       person_data = new_person_data,
       n_draws = 2,
       seed = 1
     )
     plausible_values <- sample_mfrm_plausible_values(
-      fit,
+      fit, readiness_policy = "review",
       new_units,
       person_data = new_person_data,
       n_draws = 2,
@@ -626,7 +626,7 @@ latent_prediction_omit_bundle_fixture <- delayed_export_fixture(function() {
     )
 
     unit_prediction <- predict_mfrm_units(
-      fit,
+      fit, readiness_policy = "review",
       new_units,
       person_data = scoring_person_tbl,
       population_policy = "omit",
@@ -634,7 +634,7 @@ latent_prediction_omit_bundle_fixture <- delayed_export_fixture(function() {
       seed = 2
     )
     plausible_values <- sample_mfrm_plausible_values(
-      fit,
+      fit, readiness_policy = "review",
       new_units,
       person_data = scoring_person_tbl,
       population_policy = "omit",
@@ -1058,7 +1058,6 @@ test_that("build_mfrm_replay_script can externalize fit-level latent replay pers
 
   expect_s3_class(replay, "mfrm_replay_script")
   expect_match(replay$script, "replay_script_args <- commandArgs", fixed = TRUE)
-  expect_match(replay$script, "sys.frames()[[1]]$ofile", fixed = TRUE)
   expect_match(replay$script, "latent_fit_person_data.csv", fixed = TRUE)
   expect_match(replay$script, "fit_person_data <- utils::read.csv", fixed = TRUE)
   expect_false(grepl("fit_person_data <- structure\\(", replay$script))
@@ -1070,6 +1069,29 @@ test_that("build_mfrm_replay_script can externalize fit-level latent replay pers
     as.character(replay$settings$Value[replay$settings$Setting == "fit_population_person_data_file"][1]),
     "latent_fit_person_data.csv"
   )
+  root <- tempfile("replay-source-")
+  dir.create(file.path(root, "bundle"), recursive = TRUE)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  utils::write.csv(data.frame(Person = "P01", X = 3L),
+    file.path(root, "bundle", "latent_fit_person_data.csv"), row.names = FALSE)
+  lines <- strsplit(replay$script, "\n", fixed = TRUE)[[1L]]
+  start <- which(grepl("replay_script_args <-", lines, fixed = TRUE))
+  end <- which(grepl("fit_person_data <- utils::read.csv", lines, fixed = TRUE))
+  script <- file.path(root, "bundle", "replay.R")
+  writeLines(c(lines[start:end], "stopifnot(identical(fit_person_data$X, 3L))"), script)
+  driver <- file.path(root, "driver.R")
+  writeLines(c(
+    paste0("setwd(", encodeString(root, quote = '"'), ")"),
+    "source('bundle/replay.R', local = new.env(), chdir = FALSE)",
+    "source('bundle/replay.R', local = new.env(), chdir = TRUE)",
+    "sys.source('bundle/replay.R', envir = new.env(), chdir = FALSE)",
+    "sys.source('bundle/replay.R', envir = new.env(), chdir = TRUE)"
+  ), driver)
+  for (entry in c(script, driver)) {
+    output <- system2(file.path(R.home("bin"), "Rscript"),
+      c("--vanilla", shQuote(entry)), stdout = TRUE, stderr = TRUE)
+    expect_equal(attr(output, "status") %||% 0L, 0L, info = paste(output, collapse = "\n"))
+  }
 })
 
 test_that("build_mfrm_replay_script rejects omit latent-regression fits without replay-ready person data", {
@@ -2961,7 +2983,6 @@ test_that("export_mfrm_bundle writes latent-regression scoring provenance artifa
   expect_true(any(is.na(person_data$X)))
   expect_true(nrow(fit_person_data) > nrow(person_data))
   expect_match(replay_text, "replay_script_args <- commandArgs", fixed = TRUE)
-  expect_match(replay_text, "sys.frames()[[1]]$ofile", fixed = TRUE)
   expect_match(replay_text, "bundle_latent_pred_test_replay_fit_person_data.csv", fixed = TRUE)
   expect_match(replay_text, "fit_person_data <- utils::read.csv", fixed = TRUE)
   expect_match(html_text, "<h2>replay_artifacts</h2>", fixed = TRUE)

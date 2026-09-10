@@ -1,0 +1,19 @@
+anchor-equating: .............................................................................................................................
+equating-graph: .................................................
+plot-device-state: ......................................................................................................................................................
+plotting-extras: ..............................................................12...............................
+
+══ Failed ══════════════════════════════════════════════════════════════════════
+── 1. Failure ('test-plotting-extras.R:236:3'): plot_apa_figure_one draws the 2x
+Expected `warnings` to have length 1.
+Actual length: 2.
+
+── 2. Failure ('test-plotting-extras.R:237:3'): plot_apa_figure_one draws the 2x
+Expected every element of `warnings` to match string "Review-only display".
+Actual text:
+x | FACETS-style frequency stars exceed their column; increase `persons_per_star` or use a wider device.
+v | Review-only display: Fit=blocked, Numerical=fail, Data=pass, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+Error: sum(d$failed) == 0L is not TRUE
+Execution halted

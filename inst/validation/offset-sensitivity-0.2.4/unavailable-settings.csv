@@ -1,0 +1,2 @@
+"Method","DriftThreshold","MinCommonPerFacet","SourceEstimatesFixed","SourceSEsFixed","BaselineTolerance"
+"screened_common_element_alignment",0.5,5,TRUE,TRUE,1e-08

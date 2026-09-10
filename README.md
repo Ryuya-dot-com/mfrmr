@@ -61,6 +61,10 @@ Questions and bug reports:
 
 ## Installation
 
+This README describes the `0.2.4.9000` development version. Functions and
+options shown here may differ from an installed release; check
+`packageVersion("mfrmr")` and the help shipped with that installation.
+
 Install the CRAN package with:
 
 ```r
@@ -103,6 +107,10 @@ reviewed fit to tables and manuscript-draft output.
 An eligible `RSM` or `PCM` `MML` fit can be converted into a versioned
 calibration artifact, validated, frozen, saved, and applied to new Persons
 without retaining the source fit or training responses:
+
+The following template assumes an eligible `fit`, its original `training_data`,
+and `new_responses` with matching facet labels and score coding. The portable
+calibration vignette below supplies a complete example defining these objects.
 
 ```r
 q_review <- mml_quadrature_sensitivity(
@@ -186,7 +194,9 @@ one Person's conditional pattern is not equivalent to replicating a complete
 Person response pattern after marginalization. It also does not change the
 response family or model dependence among repeated ratings. Non-unit
 observation-weight fits are excluded from the common MML information-criterion
-panel. FACETS has separate `Bn` binomial-trial and `P` Poisson response models;
+panel and remain review-only for ordinary inference: their SEs and intervals
+have not been qualified for the weighted objective. FACETS has separate `Bn`
+binomial-trial and `P` Poisson response models;
 those are not reproduced by mfrmr's binary ordered-score route.
 
 Each row should represent a distinguishable rating event. Exact duplicate
@@ -293,8 +303,9 @@ sensitivity grid. A close or consequential comparison still requires a
 prespecified common-grid sensitivity check; q>=31 alone is not evidence that
 integration error is negligible.
 
-After fitting a bounded GPCM-MML object as `fit_gpcm`, run the comparison
-explicitly rather than making `summary()` refit the model in the background:
+For the fitted MML model and the same data, request the comparison explicitly.
+`mml_quadrature_sensitivity()` refits each requested grid; `summary(q_review)`
+only summarizes the returned review:
 
 ```r
 q_review <- mml_quadrature_sensitivity(
@@ -653,6 +664,44 @@ The separate `type = "pathway"` route displays expected scores and
 dominant-category regions across theta; `type = "fit_pathway"` displays Infit
 or Outfit against the fitted measure.
 
+### Fair Scores and figures without embedded notes
+
+`plot_fair_average()` offers observed-versus-fair (`"scatter"`),
+observed-minus-fair (`"difference"`), and measure-to-score (`"measure"`) views.
+FairM uses mean reference measures; FairZ uses zero reference measures.
+**FairZ is an expected score, not a z-score.** These transformations do not
+average predictions over the observed assignment distribution, and gaps also
+reflect person mix and assignment; they do not by themselves establish bias.
+
+```r
+p_fair <- plot_fair_average(
+  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
+  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
+  show_title = FALSE, show_notes = FALSE, draw = FALSE
+)
+p_fair$data$notes
+p_fair$data$plot_data
+# With ggplot2 installed:
+# as_ggplot(p_fair)
+```
+
+Use `draw = TRUE` for a base-R figure. The returned object retains notes even
+when annotations are hidden. Wright, expected-score pathway, and CCC plots
+also accept `show_title`, `show_notes`, and `preset = "monochrome"`; see
+`help("mfrmr_visual_diagnostics")` for the reusable-data route and display limits.
+
+| Fair-score interval route | What is propagated | Current interpretation |
+| --- | --- | --- |
+| `plot_fair_average(fit, show_ci = TRUE)` for RSM/PCM | Focal measure SE, with thresholds and reference measures fixed | Conditional diagnostic interval |
+| `fair_average_table(fit_gpcm, fair_se = TRUE)` for GPCM-MML | Joint structural covariance, with Person EAP/reference means fixed; non-Person rows only | Structural diagnostic interval |
+
+The table's `fair_se` option does not supply RSM/PCM fair-score SEs. Historical
+`SE`/`ModelBasedSE` columns describe measures, not fair scores. Plot intervals
+carry `CI_Eligible = FALSE`; requested table intervals carry
+`FairCIEligible = FALSE`. Neither finite limits nor a ready fit establishes
+full-refit coverage. Difference-view whiskers also hold the observed mean
+fixed and are not confidence intervals for the observed-minus-fair gap.
+
 ### 8. Build a report and export the results
 
 Start with the brief result summary:
@@ -856,9 +905,10 @@ inference remains review-only. Read `print(fit)`, `summary(fit)$decision`, and
 the slope table's `ParameterStatus` and `PrimaryEstimate` before interpreting
 the finite optimizer trace in `OptimizerEstimate`. `Optimizer*SE` and
 `Optimizer*CI` are diagnostic quantities; ordinary slope SEs and confidence
-intervals remain unavailable until the parameter-specific readiness checks
-pass. The GPCM scope vignette explains each status and the appropriate next
-action.
+intervals are currently unavailable for free slopes (`SEEligible = FALSE`,
+`CIEligible = FALSE`). Convergence or quadrature stability does not change
+that eligibility. The GPCM scope vignette explains each status and the
+appropriate next action.
 
 For MML, the default `gpcm_mml_identification = "free_population"` estimates
 an intercept-only population distribution while relative slopes satisfy a

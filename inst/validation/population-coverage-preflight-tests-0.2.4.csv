@@ -1,0 +1,42 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-release-readiness-protocol.R","release-readiness-protocol","public roadmap and current NEWS exclude internal release operations",48,0,FALSE,FALSE,0,0.038,0.01,0.0489999999999999,48
+"test-release-readiness-protocol.R","release-readiness-protocol","internal draft.62 roadmap and GPCM work remain explicit and private",277,0,FALSE,FALSE,0,0.117,0.01,0.13,277
+"test-release-readiness-protocol.R","release-readiness-protocol","WP0 readiness contract freezes scoped fail-closed semantics",27,0,FALSE,FALSE,0,0.0390000000000001,0.005,0.0449999999999999,27
+"test-release-readiness-protocol.R","release-readiness-protocol","WP0 fixture validator rejects post-hoc readiness upgrades",2,0,FALSE,FALSE,0,0.00800000000000001,0.001,0.012,2
+"test-release-readiness-protocol.R","release-readiness-protocol","FACETS and diagnostic stress registries retain prior edge cells under draft.31",15,0,FALSE,FALSE,0,0.0170000000000001,0.003,0.0209999999999999,15
+"test-release-readiness-protocol.R","release-readiness-protocol","FACETS divergence audit fails closed on rank and category contracts",8,0,FALSE,FALSE,0,0.0269999999999999,0.002,0.028,8
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol exposes review steps and parses check logs",24,0,FALSE,FALSE,0,0.0229999999999999,0.006,0.0290000000000001,24
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness timing excludes check infrastructure overhead",4,0,FALSE,FALSE,0,0.0089999999999999,0.001,0.0110000000000001,4
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol flags check timing above ten minutes",8,0,FALSE,FALSE,0,0.0590000000000002,0.00299999999999999,0.065,8
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol rejects a check log without Status",8,0,FALSE,FALSE,0,0.012,0.002,0.0149999999999997,8
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol rejects stale check logs by version",3,0,FALSE,FALSE,0,0.00800000000000001,0.001,0.0100000000000002,3
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol requires --as-cran provenance",3,0,FALSE,FALSE,0,0.00900000000000012,0.001,0.0089999999999999,3
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness binds a 0.2.3 candidate to frozen hashed inputs",26,0,FALSE,FALSE,0,0.065,0.00800000000000001,0.0760000000000001,26
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness reconstructs checklist decisions from hashed result rows",16,0,FALSE,FALSE,0,0.0659999999999998,0.006,0.0750000000000002,16
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness keeps the 0.2.3 current/future API truth explicit",7,0,FALSE,FALSE,0,0.0249999999999999,0.002,0.0270000000000001,7
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness rejects stale numeric pass counts in current prose",8,0,FALSE,FALSE,0,0.02,0.002,0.0219999999999998,8
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol rejects stale tarball and check evidence",14,0,FALSE,FALSE,0,0.048,0.00599999999999998,0.0630000000000002,14
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol finds common check-log locations",2,0,FALSE,FALSE,0,0.0149999999999999,0.001,0.0169999999999999,2
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness prefers candidate check logs over newer archives",1,0,FALSE,FALSE,0,0.00600000000000023,0.002,0.00699999999999967,1
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness prefers submission and checked tarballs over backups",2,0,FALSE,FALSE,0,0.012,0.001,0.0139999999999998,2
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol checks CI workflow contract",12,0,FALSE,FALSE,0,0.0310000000000001,0.004,0.036,12
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness follows local reusable CI workflows",9,0,FALSE,FALSE,0,0.0169999999999999,0.003,0.02,9
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness accepts check-only runner and rejects legacy G4",9,0,FALSE,FALSE,0,0.012,0.002,0.0150000000000001,9
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol checks source-truth alignment",36,0,FALSE,FALSE,0,0.0640000000000001,0.00900000000000001,0.0870000000000002,36
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol enforces semantic example guards",8,0,FALSE,FALSE,0,0.136,0.031,0.191,8
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol checks GPCM scope alignment",11,0,FALSE,FALSE,0,0.0209999999999999,0.003,0.0230000000000001,11
+"test-release-readiness-protocol.R","release-readiness-protocol","release-readiness protocol reviews the source tree shape",26,0,FALSE,FALSE,0,1.412,0.191,1.701,26
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM stress manifest covers every prespecified axis pair",15,0,FALSE,FALSE,0,0.256,0.005,0.262,15
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM stress smoke generator is deterministic and fails closed",12,0,FALSE,FALSE,0,3.469,0.036,3.507,12
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM local-dependence corner reaches exploratory residual PCA",7,0,FALSE,FALSE,0,2.449,0.044,2.517,7
+"test-release-readiness-protocol.R","release-readiness-protocol","target-scale sparse feasibility execution is fixed and guarded",19,0,FALSE,FALSE,0,0.882,0.056,1.031,19
+"test-release-readiness-protocol.R","release-readiness-protocol","target-scale completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,0.0190000000000001,0.001,0.0220000000000002,2
+"test-release-readiness-protocol.R","release-readiness-protocol","target baseline and bridge execution is fixed and guarded",18,0,FALSE,FALSE,0,1.352,0.062,1.503,18
+"test-release-readiness-protocol.R","release-readiness-protocol","target baseline completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,0.0180000000000007,0.001,0.0199999999999996,2
+"test-release-readiness-protocol.R","release-readiness-protocol","JML bottleneck decomposition manifest is fixed and guarded",24,0,FALSE,FALSE,0,2.08,0.0710000000000001,2.241,24
+"test-release-readiness-protocol.R","release-readiness-protocol","JML profile completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,0.0199999999999996,0.001,0.0240000000000009,2
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM attribution manifest isolates one axis and four fit routes",21,0,FALSE,FALSE,0,0.15,0.006,0.156000000000001,21
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM attribution routes retain identical paired data and fail closed",14,0,FALSE,FALSE,0,5.712,0.078,5.79,14
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM replicated pilot prespecifies tiers and uncertainty summaries",23,0,FALSE,FALSE,0,0.158999999999999,0.021,0.209,23
+"test-release-readiness-protocol.R","release-readiness-protocol","GPCM replicated checkpoints resume atomically and fail closed",31,0,FALSE,FALSE,0,1.809,0.172,2.212,31
+"test-release-readiness-protocol.R","release-readiness-protocol","MML metamorphic grid is prespecified, guarded, and fail closed",30,0,FALSE,FALSE,0,0.0800000000000018,0.00599999999999989,0.0869999999999997,30

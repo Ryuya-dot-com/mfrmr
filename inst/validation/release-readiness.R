@@ -1589,6 +1589,8 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
     mfrmr_release_readiness_path_is_ignored("ROADMAP.md", patterns)
   roadmap_lines <- mfrmr_release_readiness_read_lines(paths$roadmap)
   roadmap_text <- tolower(paste(roadmap_lines, collapse = "\n"))
+  # Evidence links are reader-facing citations, not internal operations prose.
+  roadmap_text <- gsub("\\]\\(inst/validation/[^)\n]+\\)", "]", roadmap_text)
   roadmap_required_markers <- c(
     "# mfrmr roadmap",
     "status: public roadmap",

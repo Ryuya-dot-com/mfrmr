@@ -1,0 +1,7 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-offset-sensitivity.R","offset-sensitivity","removing an excluded element can change offsets through rescreening",11,0,FALSE,FALSE,0,0.079,0.00899999999999999,0.0920000000000001,11
+"test-offset-sensitivity.R","offset-sensitivity","weighted offsets preserve contributing rows and expose unweighted fallback",10,0,FALSE,FALSE,0,0.182,0.004,0.186,10
+"test-offset-sensitivity.R","offset-sensitivity","missing links propagate and are not reported as zero changes",11,0,FALSE,FALSE,0,0.0660000000000001,0.003,0.0690000000000004,11
+"test-offset-sensitivity.R","offset-sensitivity","nonfinite inputs and empty candidate sets retain failure status",6,0,FALSE,FALSE,0,0.048,0.002,0.0499999999999998,6
+"test-offset-sensitivity.R","offset-sensitivity","missing or inconsistent source metadata fails explicitly",4,0,FALSE,FALSE,0,0.02,0.000999999999999987,0.02,4
+"test-offset-sensitivity.R","offset-sensitivity","sensitivity drawing retains notes, missing values and caller state",21,0,FALSE,FALSE,0,0.143,0.006,0.151,21

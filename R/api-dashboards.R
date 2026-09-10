@@ -773,7 +773,7 @@ plot_facet_quality_dashboard <- function(x,
   }
 
   if (isTRUE(draw)) {
-    opar <- graphics::par(no.readonly = TRUE)
+    opar <- graphics::par()["mar"]
     on.exit(graphics::par(opar), add = TRUE)
     graphics::par(mar = c(4.5, 8.5, 3.5, 1.5))
     dashboard_draw_plot(

@@ -1,0 +1,206 @@
+Original aggregation: eight row-name metadata warnings; no fitting warnings.
+Initial worker 1
+preflight cell 1 1 / 5 mean seconds 11.73 unavailable 0 conflicts 0 
+preflight cell 1 2 / 5 mean seconds 9.2 unavailable 0 conflicts 0 
+preflight cell 1 3 / 5 mean seconds 8.105333 unavailable 0 conflicts 0 
+preflight cell 1 4 / 5 mean seconds 7.51525 unavailable 0 conflicts 0 
+preflight cell 1 5 / 5 mean seconds 7.109 unavailable 0 conflicts 0 
+preflight cell 4 1 / 5 mean seconds 20.33 unavailable 0 conflicts 0 
+preflight cell 4 2 / 5 mean seconds 10.976 unavailable 0 conflicts 0 
+preflight cell 4 3 / 5 mean seconds 7.877 unavailable 0 conflicts 0 
+preflight cell 4 4 / 5 mean seconds 6.318 unavailable 0 conflicts 0 
+preflight cell 4 5 / 5 mean seconds 5.3826 unavailable 0 conflicts 0 
+preflight cell 7 1 / 5 mean seconds 22.861 unavailable 0 conflicts 0 
+preflight cell 7 2 / 5 mean seconds 12.0265 unavailable 0 conflicts 0 
+preflight cell 7 3 / 5 mean seconds 8.440333 unavailable 0 conflicts 0 
+preflight cell 7 4 / 5 mean seconds 6.62 unavailable 0 conflicts 0 
+preflight cell 7 5 / 5 mean seconds 5.5508 unavailable 0 conflicts 0 
+Initial worker 2
+preflight cell 2 1 / 5 mean seconds 6.599 unavailable 0 conflicts 0 
+preflight cell 2 2 / 5 mean seconds 4.257 unavailable 0 conflicts 0 
+preflight cell 2 3 / 5 mean seconds 3.111 unavailable 0 conflicts 0 
+preflight cell 2 4 / 5 mean seconds 2.544 unavailable 0 conflicts 0 
+preflight cell 2 5 / 5 mean seconds 2.2092 unavailable 0 conflicts 0 
+preflight cell 5 1 / 5 mean seconds 12.641 unavailable 0 conflicts 0 
+preflight cell 5 2 / 5 mean seconds 9.5635 unavailable 0 conflicts 0 
+preflight cell 5 3 / 5 mean seconds 8.453333 unavailable 0 conflicts 0 
+preflight cell 5 4 / 5 mean seconds 7.86425 unavailable 0 conflicts 0 
+preflight cell 5 5 / 5 mean seconds 7.5094 unavailable 0 conflicts 0 
+preflight cell 8 1 / 5 mean seconds 23.736 unavailable 0 conflicts 0 
+preflight cell 8 2 / 5 mean seconds 12.792 unavailable 0 conflicts 0 
+preflight cell 8 3 / 5 mean seconds 9.155 unavailable 0 conflicts 0 
+preflight cell 8 4 / 5 mean seconds 7.3605 unavailable 0 conflicts 0 
+preflight cell 8 5 / 5 mean seconds 6.277 unavailable 0 conflicts 0 
+Initial worker 3
+preflight cell 3 1 / 5 mean seconds 22.806 unavailable 0 conflicts 0 
+preflight cell 3 2 / 5 mean seconds 12.5415 unavailable 0 conflicts 0 
+preflight cell 3 3 / 5 mean seconds 8.732667 unavailable 0 conflicts 0 
+preflight cell 3 4 / 5 mean seconds 6.8695 unavailable 0 conflicts 0 
+preflight cell 3 5 / 5 mean seconds 5.7132 unavailable 0 conflicts 0 
+preflight cell 6 1 / 5 mean seconds 6.534 unavailable 0 conflicts 0 
+preflight cell 6 2 / 5 mean seconds 3.718 unavailable 0 conflicts 0 
+preflight cell 6 3 / 5 mean seconds 2.771333 unavailable 0 conflicts 0 
+preflight cell 6 4 / 5 mean seconds 2.29675 unavailable 0 conflicts 0 
+preflight cell 6 5 / 5 mean seconds 2.0144 unavailable 0 conflicts 0 
+mfrmr-population-coverage-replay-worker-1-20260910.log
+preflight cell 1 1 / 5 mean seconds 11.574 unavailable 0 conflicts 0 
+preflight cell 1 2 / 5 mean seconds 9.143 unavailable 0 conflicts 0 
+preflight cell 1 3 / 5 mean seconds 7.961 unavailable 0 conflicts 0 
+preflight cell 1 4 / 5 mean seconds 7.3775 unavailable 0 conflicts 0 
+preflight cell 1 5 / 5 mean seconds 6.9894 unavailable 0 conflicts 0 
+preflight cell 2 1 / 5 mean seconds 5.832 unavailable 0 conflicts 0 
+preflight cell 2 2 / 5 mean seconds 3.311 unavailable 0 conflicts 0 
+preflight cell 2 3 / 5 mean seconds 2.457 unavailable 0 conflicts 0 
+preflight cell 2 4 / 5 mean seconds 2.026 unavailable 0 conflicts 0 
+preflight cell 2 5 / 5 mean seconds 1.7812 unavailable 0 conflicts 0 
+preflight cell 3 1 / 5 mean seconds 21.202 unavailable 0 conflicts 0 
+preflight cell 3 2 / 5 mean seconds 11.1575 unavailable 0 conflicts 0 
+preflight cell 3 3 / 5 mean seconds 7.779 unavailable 0 conflicts 0 
+preflight cell 3 4 / 5 mean seconds 6.1175 unavailable 0 conflicts 0 
+preflight cell 3 5 / 5 mean seconds 5.096 unavailable 0 conflicts 0 
+preflight cell 4 1 / 5 mean seconds 19.87 unavailable 0 conflicts 0 
+preflight cell 4 2 / 5 mean seconds 10.721 unavailable 0 conflicts 0 
+preflight cell 4 3 / 5 mean seconds 7.7 unavailable 0 conflicts 0 
+preflight cell 4 4 / 5 mean seconds 6.17225 unavailable 0 conflicts 0 
+preflight cell 4 5 / 5 mean seconds 5.262 unavailable 0 conflicts 0 
+mfrmr-population-coverage-replay-worker-2-20260910.log
+preflight cell 5 1 / 5 mean seconds 13.163 unavailable 0 conflicts 0 
+preflight cell 5 2 / 5 mean seconds 10.2165 unavailable 0 conflicts 0 
+preflight cell 5 3 / 5 mean seconds 8.908667 unavailable 0 conflicts 0 
+preflight cell 5 4 / 5 mean seconds 8.24625 unavailable 0 conflicts 0 
+preflight cell 5 5 / 5 mean seconds 7.8572 unavailable 0 conflicts 0 
+preflight cell 6 1 / 5 mean seconds 6.709 unavailable 0 conflicts 0 
+preflight cell 6 2 / 5 mean seconds 3.903 unavailable 0 conflicts 0 
+preflight cell 6 3 / 5 mean seconds 2.902667 unavailable 0 conflicts 0 
+preflight cell 6 4 / 5 mean seconds 2.398 unavailable 0 conflicts 0 
+preflight cell 6 5 / 5 mean seconds 2.0954 unavailable 0 conflicts 0 
+preflight cell 7 1 / 5 mean seconds 22.709 unavailable 0 conflicts 0 
+preflight cell 7 2 / 5 mean seconds 11.9835 unavailable 0 conflicts 0 
+preflight cell 7 3 / 5 mean seconds 8.372 unavailable 0 conflicts 0 
+preflight cell 7 4 / 5 mean seconds 6.59375 unavailable 0 conflicts 0 
+preflight cell 7 5 / 5 mean seconds 5.5046 unavailable 0 conflicts 0 
+preflight cell 8 1 / 5 mean seconds 23.088 unavailable 0 conflicts 0 
+preflight cell 8 2 / 5 mean seconds 12.472 unavailable 0 conflicts 0 
+preflight cell 8 3 / 5 mean seconds 8.922667 unavailable 0 conflicts 0 
+preflight cell 8 4 / 5 mean seconds 7.16775 unavailable 0 conflicts 0 
+preflight cell 8 5 / 5 mean seconds 6.1052 unavailable 0 conflicts 0 
+mfrmr-population-coverage-refinement-20260910.log
+    Cell RelativeStep ObjectiveDifference GradientStepDifference
+4.1    4     1.00e-04        4.547474e-13                     NA
+4.2    4     5.00e-05        4.547474e-13           1.909939e-07
+4.3    4     2.50e-05        4.547474e-13           7.958079e-08
+4.4    4     1.25e-05        4.547474e-13           7.275958e-08
+7.1    7     1.00e-04        7.958079e-13                     NA
+7.2    7     5.00e-05        7.958079e-13           1.335820e-07
+7.3    7     2.50e-05        7.958079e-13           2.046363e-08
+7.4    7     1.25e-05        7.958079e-13           3.865352e-08
+8.1    8     1.00e-04        9.094947e-13                     NA
+8.2    8     5.00e-05        9.094947e-13           3.035439e-07
+8.3    8     2.50e-05        9.094947e-13           7.503331e-08
+8.4    8     1.25e-05        9.094947e-13           1.045919e-07
+    GradientDifference FullGradient
+4.1       2.805815e-07 9.696805e-05
+4.2       8.958760e-08 9.705445e-05
+4.3       4.843745e-08 9.709765e-05
+4.4       9.106559e-08 9.713403e-05
+7.1       1.753322e-07 5.102265e-05
+7.2       4.175016e-08 5.107381e-05
+7.3       2.299154e-08 5.107267e-05
+7.4       4.570138e-08 5.108632e-05
+8.1       3.785543e-07 7.158292e-05
+8.2       7.501048e-08 7.127937e-05
+8.3       4.409912e-08 7.120434e-05
+8.4       9.092663e-08 7.129529e-05
+mfrmr-population-coverage-personwise-20260910.log
+  Cell RelativeStep ObjectiveDifference GradientStepDifference
+1    4     2.50e-05        4.547474e-13           1.416645e-08
+2    4     1.25e-05        4.547474e-13           1.416645e-08
+  GradientDifference FullGradient
+1       1.802707e-08 9.707392e-05
+2       3.860624e-09 9.707954e-05
+  Cell RelativeStep ObjectiveDifference GradientStepDifference
+1    7     2.50e-05        7.958079e-13           8.508749e-09
+2    7     1.25e-05        7.958079e-13           8.508749e-09
+  GradientDifference FullGradient
+1       1.103695e-08 5.108574e-05
+2       2.528203e-09 5.108877e-05
+  Cell RelativeStep ObjectiveDifference GradientStepDifference
+1    8     2.50e-05         6.82121e-13           1.673328e-08
+2    8     1.25e-05         6.82121e-13           1.673328e-08
+  GradientDifference FullGradient
+1       2.266124e-08 7.122702e-05
+2       5.927959e-09 7.121029e-05
+mfrmr-population-coverage-verification-20260910.log
+ Cell Model Persons Exposure     Stage Assigned Attempted NativePass
+    1   RSM      80        3 preflight        5         5          5
+    2   RSM      80        6 preflight        5         5          5
+    3   RSM     320        3 preflight        5         5          5
+    4   RSM     320        6 preflight        5         5          5
+    5   PCM      80        3 preflight        5         5          5
+    6   PCM      80        6 preflight        5         5          5
+    7   PCM     320        3 preflight        5         5          5
+    8   PCM     320        6 preflight        5         5          5
+ InferenceReady ScoringReady Computable NumericalConflicts Errors Warnings
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+              0            0          5                  0      0        0
+ CoreSeconds Seconds
+      29.781  34.947
+       3.810   8.906
+       5.515  25.480
+       8.079  26.310
+      33.271  39.286
+       4.662  10.477
+       6.008  27.523
+       9.370  30.526
+         ObjectiveChange         RelativeSEChange ScaledNewtonDisplacement 
+            3.848299e-11             3.464593e-10             1.660532e-05 
+            FullGradient         HighFullGradient 
+            9.708140e-05             9.708140e-05 
+  Cell ObjectiveDifference GradientStepDifference GradientDifference
+1    1        2.273737e-13           2.430056e-08       6.664336e-09
+2    2        5.968559e-12           3.979039e-08       1.302508e-08
+3    3        9.094947e-13           8.867573e-08       2.917526e-08
+4    4        4.547474e-13           1.909939e-07       8.958760e-08
+5    5        6.991741e-12           2.756906e-08       9.318564e-09
+6    6        1.705303e-12           5.286438e-08       1.848277e-08
+7    7        7.958079e-13           1.335820e-07       4.175016e-08
+8    8        9.094947e-13           3.035439e-07       7.501048e-08
+  FullGradient OriginalPass
+1 1.974570e-05         TRUE
+2 2.634351e-05         TRUE
+3 5.928314e-05         TRUE
+4 9.705445e-05        FALSE
+5 9.535142e-05         TRUE
+6 8.141967e-05         TRUE
+7 5.107381e-05        FALSE
+8 7.127937e-05        FALSE
+                              Execution Cell CoreSeconds MainCellHours
+1               initial_three_processes    1      30.231     16.795000
+2               initial_three_processes    2       6.081      3.378333
+3               initial_three_processes    3       7.812      4.340000
+4               initial_three_processes    4       8.296      4.608889
+5               initial_three_processes    5      31.223     17.346111
+6               initial_three_processes    6       4.434      2.463333
+7               initial_three_processes    7       6.175      3.430556
+8               initial_three_processes    8       9.702      5.390000
+9  replay_two_processes_plus_refinement    1      29.781     16.545000
+10 replay_two_processes_plus_refinement    2       3.810      2.116667
+11 replay_two_processes_plus_refinement    3       5.515      3.063889
+12 replay_two_processes_plus_refinement    4       8.079      4.488333
+13 replay_two_processes_plus_refinement    5      33.271     18.483889
+14 replay_two_processes_plus_refinement    6       4.662      2.590000
+15 replay_two_processes_plus_refinement    7       6.008      3.337778
+16 replay_two_processes_plus_refinement    8       9.370      5.205556
+All preflight bookkeeping, source, replay and resume checks passed.
+mfrmr-population-coverage-tests-20260910.log
+release-readiness-protocol: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+ failed   error warning skipped  passed 
+      0       0       0       0     834 

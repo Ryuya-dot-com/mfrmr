@@ -922,7 +922,8 @@ test_that("build_wright_map_data from fit", {
   expect_true(is.list(wd))
   expect_true("person" %in% names(wd))
   expect_true("locations" %in% names(wd))
-  expect_lte(nrow(wd$locations), 5)
+  expect_equal(sum(wd$locations$PlotType == "Facet level"), 5)
+  expect_equal(sum(wd$locations$PlotType == "Step threshold"), nrow(fit$steps))
 })
 
 # ---------------------------------------------------------------------------

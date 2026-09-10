@@ -7703,6 +7703,7 @@ build_summary_table_bundle <- function(x,
                                        digits = 3,
                                        top_n = 10,
                                        preview_chars = 160) {
+  prediction_validate_population_output(x)
   validated <- validate_summary_table_bundle_inputs(
     x = x,
     which = which,

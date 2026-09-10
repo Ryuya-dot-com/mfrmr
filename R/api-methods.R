@@ -1533,9 +1533,16 @@ summarize_unexpected_bundle <- function(object, digits = 3, top_n = 10) {
 summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
   top_n <- max(1L, as.integer(top_n))
   stacked <- bundle_component_table(object, "stacked")
+  zero_reference <- identical(object$settings$reference, "zero") ||
+    (!any(c("AdjustedAverage", "Fair(M) Average") %in% names(stacked)) &&
+       any(c("StandardizedAdjustedAverage", "Fair(Z) Average") %in% names(stacked)))
 
   first_present <- function(candidates) {
     candidates <- as.character(candidates %||% character(0))
+    if (zero_reference) {
+      candidates <- sub("AdjustedAverage", "StandardizedAdjustedAverage", candidates, fixed = TRUE)
+      candidates <- sub("Fair(M)", "Fair(Z)", candidates, fixed = TRUE)
+    }
     hit <- candidates[candidates %in% names(stacked)]
     if (length(hit) == 0L) NA_character_ else hit[1]
   }
@@ -1590,12 +1597,12 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     if (length(dif) > 0) mean_abs_gap <- mean(dif)
   }
 
-  has_fair_se_columns <- any(c(
+  has_fair_se_columns <- !is.na(first_present(c(
     "AdjustedAverageSE", "Fair(M) S.E.",
     "AdjustedAverageCI_Lower", "Fair(M) CI Lower",
     "AdjustedAverageCI_Upper", "Fair(M) CI Upper",
     "AdjustedAverageSEStatus", "Fair(M) S.E. Status"
-  ) %in% names(stacked))
+  )))
   fair_se_requested <- isTRUE(object$settings$fair_se %||% FALSE) || has_fair_se_columns
   status_values <- fair_m_status[!is.na(fair_m_status) & nzchar(fair_m_status)]
   method_values <- fair_m_method[!is.na(fair_m_method) & nzchar(fair_m_method)]
@@ -1620,6 +1627,8 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     Facets = if ("Facet" %in% names(stacked)) length(unique(as.character(stacked$Facet))) else length(object$by_facet %||% list()),
     Levels = nrow(stacked),
     MeanAbsObservedFairM = mean_abs_gap,
+    FairMetric = if (zero_reference) "FairZ" else "FairM",
+    FairCIEligible = FALSE,
     FairSERequested = fair_se_requested,
     FairSEAvailableRows = sum(is.finite(fair_m_se)),
     FairSEUnavailableRows = if (fair_se_requested) sum(!is.finite(fair_m_se)) else 0L,
@@ -1645,6 +1654,7 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
       preview_tbl$AdjustedAverageCI_Lower <- fair_m_ci_lower
       preview_tbl$AdjustedAverageCI_Upper <- fair_m_ci_upper
       preview_tbl$AdjustedAverageSEStatus <- fair_m_status
+      preview_tbl$FairCIEligible <- FALSE
     }
     abs_gap <- abs(obs_avg - fair_m)
     if (fair_se_requested && any(is.finite(fair_m_se))) {
@@ -1656,11 +1666,16 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     preview_tbl <- utils::head(preview_tbl, n = top_n)
   }
 
+  if (zero_reference) {
+    names(summary_tbl) <- sub("AdjustedAverage", "StandardizedAdjustedAverage", names(summary_tbl), fixed = TRUE)
+    names(summary_tbl) <- sub("MeanAbsObservedFairM", "MeanAbsObservedFairZ", names(summary_tbl), fixed = TRUE)
+    names(preview_tbl) <- sub("AdjustedAverage", "StandardizedAdjustedAverage", names(preview_tbl), fixed = TRUE)
+  }
   notes <- "Adjusted-score reference summary by facet level."
   if (fair_se_requested) {
     notes <- c(
       notes,
-      "Fair-average SE columns summarize structural delta-method uncertainty when available; unavailable rows are reported explicitly."
+      "Fair-average SE columns describe computable diagnostic delta-method intervals, not qualified formal inference; full-refit coverage is unverified and unavailable rows are explicit."
     )
   } else {
     notes <- c(
@@ -2015,6 +2030,9 @@ summary_mfrm_bundle_impl <- function(object,
                                      ...) {
   if (!is.list(object)) {
     stop("`object` must be a bundle-like list output.")
+  }
+  if (inherits(object, "mfrm_facet_equivalence")) {
+    validate_facet_equivalence_bundle(object)
   }
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
@@ -3525,7 +3543,7 @@ draw_category_curves_bundle <- function(x,
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     if (type == "overview") {
-      old_par <- graphics::par(no.readonly = TRUE)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex", "mar", "oma")]
       on.exit(graphics::par(old_par), add = TRUE)
       graphics::par(mfrow = c(2, 2), mar = c(4.2, 4.2, 3.2, 1.2), oma = c(0, 0, 2.2, 0))
       draw_ccc_panel("Category probability")
@@ -4469,6 +4487,8 @@ draw_data_quality_bundle <- function(x,
 
     if (isTRUE(draw)) {
       apply_plot_preset(style)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex")]
+      on.exit(graphics::par(old_par), add = TRUE)
       graphics::par(mfrow = c(2, 2))
       if (nrow(row_tbl) > 0 && all(c("Status", "N") %in% names(row_tbl))) {
         barplot_rot45(
@@ -5743,7 +5763,7 @@ draw_subset_connectivity_bundle <- function(x,
     }
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      old_par <- graphics::par(no.readonly = TRUE)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex", "mar", "oma")]
       on.exit(graphics::par(old_par), add = TRUE)
       graphics::layout(matrix(c(1, 2), nrow = 2), heights = c(0.8, 2.7))
       graphics::par(mar = c(1.2, 7.5, 2.5, 2.2))
@@ -7143,7 +7163,7 @@ summary.mfrm_diagnostics <- function(object,
   )[1L]
   diagnostic_mode <- as.character(object$diagnostic_mode %||% "legacy")
   fit_readiness_tbl <- tibble::as_tibble(
-    object$fit_readiness %||% data.frame()
+    mfrmr_get_readiness_record(object)$fit
   )
   fit_readiness_components_tbl <- tibble::as_tibble(
     object$fit_readiness_components %||% data.frame()
@@ -7160,6 +7180,14 @@ summary.mfrm_diagnostics <- function(object,
   }
   source_inference_ready <- fit_readiness_known &&
     isTRUE(fit_readiness_tbl$InferenceReady[1])
+  if (!source_inference_ready && nrow(precision_profile_tbl) > 0L) {
+    precision_profile_tbl$InferenceReady <- FALSE
+    precision_profile_tbl$SupportsFormalInference <- FALSE
+    precision_profile_tbl$RecommendedUse <-
+      "Diagnostic review only; ordinary inference is unavailable under the fit-readiness contract."
+    precision_profile_tbl$CIBasis <- "Diagnostic normal bands only"
+    precision_profile_tbl$ReliabilityBasis <- "Descriptive variance decomposition only"
+  }
   source_fit_label <- switch(
     source_fit_state,
     ready = "ready; fit-readiness requirements satisfied, with formal precision evaluated separately",
@@ -10186,7 +10214,9 @@ mfrm_fit_decision_summary <- function(readiness,
     "InputState", "EstimabilityState", "CategoryState", "BoundaryState",
     "NumericalState", "FitReadiness", "InferenceReady"
   )
-  if (nrow(readiness) != 1L || !all(required %in% names(readiness))) {
+  if (nrow(readiness) != 1L || !all(required %in% names(readiness)) ||
+      !identical(as.character(readiness$ReadinessContractVersion),
+                 mfrmr_readiness_contract_version())) {
     return(data.frame(
       Interpretation = "Re-audit or refit before interpretation",
       FormalInference = "No",
@@ -10221,6 +10251,9 @@ mfrm_fit_decision_summary <- function(readiness,
     "Review before reporting or inference"
   )
   reasons <- c(
+    if ("nonunit_observation_weights_inference_unvalidated" %in%
+        mfrmr_readiness_split_codes(readiness$ReasonCodes))
+      "Ordinary inference for non-unit observation weights is not validated",
     if (value("InputState") == "review")
       "Input preparation requires review",
     if (value("InputState") == "blocked")

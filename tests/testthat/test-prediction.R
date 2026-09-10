@@ -199,7 +199,7 @@ test_that("predict_mfrm_units requires person_data when latent-regression scorin
   fixture <- make_population_model_prediction_fixture()
 
   expect_error(
-    predict_mfrm_units(fixture$fit, fixture$new_units),
+    predict_mfrm_units(fixture$fit, fixture$new_units, readiness_policy = "review"),
     "`person_data` must be supplied when scoring a latent-regression fit with background covariates.",
     fixed = TRUE
   )
@@ -210,20 +210,20 @@ test_that("predict_mfrm_units scores latent-regression fits under the fitted pop
   swapped_person_data <- fixture$person_data
   swapped_person_data$X <- rev(swapped_person_data$X)
   pred <- predict_mfrm_units(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     person_data = fixture$person_data,
     n_draws = 3,
     seed = 17
   )
   pred_swapped <- predict_mfrm_units(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     person_data = swapped_person_data,
     n_draws = 0
   )
   pv <- sample_mfrm_plausible_values(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     person_data = fixture$person_data,
     n_draws = 3,
@@ -296,7 +296,7 @@ test_that("latent-regression prediction reuses categorical model-matrix levels",
     )
 
     pred <- predict_mfrm_units(
-      fit,
+      fit, readiness_policy = "review",
       new_units,
       person_data = single_level_person_data,
       n_draws = 0
@@ -314,7 +314,7 @@ test_that("latent-regression prediction reuses categorical model-matrix levels",
     bad_person_data$Group <- "unseen"
     expect_error(
       predict_mfrm_units(
-        fit,
+        fit, readiness_policy = "review",
         new_units,
         person_data = bad_person_data,
         n_draws = 0
@@ -331,14 +331,14 @@ test_that("latent-regression prediction can omit scored persons with incomplete 
   person_data$X[1] <- NA_real_
 
   pred <- predict_mfrm_units(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     person_data = person_data,
     population_policy = "omit",
     n_draws = 0
   )
   pv <- sample_mfrm_plausible_values(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     person_data = person_data,
     population_policy = "omit",
@@ -366,7 +366,7 @@ test_that("latent-regression prediction errors on incomplete covariates under th
 
   expect_error(
     predict_mfrm_units(
-      fixture$fit,
+      fixture$fit, readiness_policy = "review",
       fixture$new_units,
       person_data = person_data
     ),
@@ -390,7 +390,7 @@ test_that("latent-regression scoring changes scored contrasts relative to legacy
   )
 
   pred_population <- predict_mfrm_units(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     person_data = fixture$person_data,
     n_draws = 0
@@ -419,13 +419,13 @@ test_that("predict_mfrm_units supports intercept-only latent-regression scoring 
   fixture <- make_mean_only_population_model_prediction_fixture()
 
   pred <- predict_mfrm_units(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     n_draws = 2,
     seed = 27
   )
   pv <- sample_mfrm_plausible_values(
-    fixture$fit,
+    fixture$fit, readiness_policy = "review",
     fixture$new_units,
     n_draws = 2,
     seed = 28
@@ -674,6 +674,45 @@ test_that("unit scoring fails closed for non-ready fits unless review is explici
   expect_true(all(!reviewed$estimates$SourceScoringReady))
   expect_identical(reviewed$settings$source_scoring_status, "review_only")
   expect_true(any(grepl("review-only", reviewed$notes, fixed = TRUE)))
+})
+
+test_that("estimated-population scoring cannot bypass unresolved source validity", {
+  dat <- data.frame(Person = paste0("P", 1:100), Rater = rep(c("R1", "R2"), each = 50),
+    Score = c(rep(0, 35), rep(1, 15), rep(0, 15), rep(1, 35)))
+  fit <- suppressWarnings(fit_mfrm(dat, "Person", "Rater", "Score", method = "MML",
+    population_formula = ~ 1, person_data = dat["Person"], rating_min = 0,
+    rating_max = 1, quad_points = 61, maxit = 300, reltol = 1e-10))
+  new <- data.frame(Person = "NEW", Rater = "R1", Score = 1)
+  expect_true(fit$data_review$estimability$nonlinear_local_estimability$local_first_order_rank_deficient)
+  expect_error(predict_mfrm_units(fit, new), "population_scoring_validity_not_evaluated")
+  expect_error(sample_mfrm_plausible_values(fit, new, n_draws = 3),
+               "population_scoring_validity_not_evaluated")
+  reviewed <- predict_mfrm_units(fit, new, readiness_policy = "review")
+  pv <- sample_mfrm_plausible_values(fit, new, n_draws = 3, seed = 2,
+                                    readiness_policy = "review")
+  expect_false(reviewed$settings$source_scoring_ready)
+  expect_false(any(reviewed$estimates$SourceScoringReady))
+  expect_true(any(grepl("review-only", pv$notes, fixed = TRUE)))
+  local_only <- fit
+  local_only$readiness$fit$EstimabilityState <- "identified"
+  expect_false(mfrmr:::prediction_source_scoring_readiness(local_only)$ready)
+
+  for (x in list(reviewed, pv, summary(reviewed), summary(pv))) {
+    stale <- x
+    stale$settings$source_scoring_ready <- TRUE
+    stale$settings$source_scoring_status <- "ready"
+    stale$settings$readiness_policy <- "error"
+    stale$estimates$SourceScoringReady <- TRUE
+    if (inherits(stale, c("mfrm_unit_prediction", "mfrm_plausible_values"))) {
+      expect_error(summary(stale), "requires explicit review-only eligibility")
+      expect_error(mfrmr:::export_validate_optional_object(stale, class(stale)[1], "prediction"),
+                   "requires explicit review-only eligibility")
+    }
+    expect_error(print(stale), "requires explicit review-only eligibility")
+    expect_error(build_summary_table_bundle(stale), "requires explicit review-only eligibility")
+  }
+  expect_s3_class(build_mfrm_manifest(fit, unit_prediction = reviewed, plausible_values = pv),
+                  "mfrm_manifest")
 })
 
 test_that("scoring quadrature is explicit and cannot degenerate to one point", {

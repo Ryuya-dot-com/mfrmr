@@ -1,0 +1,7 @@
+"Case","Model","Method","Owner","Rows","Missing","Interactions","Seconds"
+"GPCM-Criterion-JML","GPCM","JML","Criterion",480,68,FALSE,1.718
+"GPCM-Criterion-MML","GPCM","MML","Criterion",480,68,FALSE,1.396
+"GPCM-Rater-JML","GPCM","JML","Rater",480,68,FALSE,1.267
+"GPCM-Rater-MML","GPCM","MML","Rater",480,68,FALSE,0.646999999999999
+"RSM-interaction-MML","RSM","MML","",480,68,TRUE,0.220000000000001
+"PCM-interaction-MML","PCM","MML","Criterion",480,68,TRUE,0.229

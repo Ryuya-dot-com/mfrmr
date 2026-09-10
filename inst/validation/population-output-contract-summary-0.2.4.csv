@@ -1,0 +1,17 @@
+"Stage","Case","PopulationActive","DefaultPredictionReturned","DefaultPVReturned","SourceScoringReady","InferenceReady","NumericalValuesUnchanged","DrawsUnchanged"
+"before","RSM",TRUE,TRUE,TRUE,TRUE,FALSE,NA,NA
+"before","PCM",TRUE,TRUE,TRUE,TRUE,FALSE,NA,NA
+"before","single",TRUE,TRUE,TRUE,TRUE,FALSE,NA,NA
+"before","paired",TRUE,TRUE,TRUE,TRUE,FALSE,NA,NA
+"before","coverage-1-61-omitted",FALSE,TRUE,TRUE,TRUE,TRUE,NA,NA
+"before","coverage-1-61-explicit_unit",FALSE,TRUE,TRUE,TRUE,TRUE,NA,NA
+"before","coverage-5-61-omitted",FALSE,TRUE,TRUE,TRUE,TRUE,NA,NA
+"before","coverage-5-61-explicit_unit",FALSE,TRUE,TRUE,TRUE,TRUE,NA,NA
+"after","RSM",TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,TRUE
+"after","PCM",TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,TRUE
+"after","single",TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,TRUE
+"after","paired",TRUE,FALSE,FALSE,FALSE,FALSE,TRUE,TRUE
+"after","coverage-1-61-omitted",FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
+"after","coverage-1-61-explicit_unit",FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
+"after","coverage-5-61-omitted",FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
+"after","coverage-5-61-explicit_unit",FALSE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE
