@@ -306,10 +306,10 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
       t$Fit <- factor(t$Fit, levels = labels)
       # ponytail: deterministic horizontal spreading; use custom ggplot labels for dense individual audits.
       t <- t[order(t$Panel, t$Fit, t$Level), ]
-      t$X <- as.numeric(t$Fit) + ave(seq_len(nrow(t)), interaction(t$Panel, t$Fit, drop = TRUE),
+      t$X <- as.numeric(t$Fit) + stats::ave(seq_len(nrow(t)), interaction(t$Panel, t$Fit, drop = TRUE),
         FUN = function(z) if (length(z) == 1L) 0 else seq(-0.08, 0.08, length.out = length(z)))
       persons <- t[t$Kind == "Person", ]
-      if (nrow(persons)) persons <- persons[ave(persons$Estimate, persons$Fit,
+      if (nrow(persons)) persons <- persons[stats::ave(persons$Estimate, persons$Fit,
         FUN = function(z) length(unique(z))) >= 2L, ]
       p <- ggplot2::ggplot(t, ggplot2::aes(.data$X, .data$Estimate, colour = .data$Fit, shape = .data$Fit)) +
         ggplot2::geom_hline(yintercept = 0, colour = "grey75", linewidth = 0.35)
@@ -321,7 +321,7 @@ plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
         centers <- stats::aggregate(Estimate ~ Panel + Level, steps, mean)
         yr <- range(t$Estimate)
         if (diff(yr) == 0) yr <- yr + c(-0.5, 0.5)
-        centers$LabelY <- ave(centers$Estimate, centers$Panel, FUN = function(z)
+        centers$LabelY <- stats::ave(centers$Estimate, centers$Panel, FUN = function(z)
           .spread_wright_label_positions(z, yr[1], yr[2]))
         steps <- dplyr::left_join(steps, centers[, c("Panel", "Level", "LabelY")], by = c("Panel", "Level"))
         p <- p + ggplot2::geom_segment(data = steps,
