@@ -205,15 +205,30 @@ slope-aware extension.)
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-t12 <- fair_average_table(fit, udecimals = 2)
-t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
-summary(t12)
-p_t12 <- plot(t12, draw = FALSE)
-p_t12$data$plot
-}
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare observed person means with model-based scores on a common reference
+fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
+                           reference = "mean", label_style = "native")
+head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
+# FairM uses the mean reference for the other facets; it is in score units
+# It is a conditional model prediction, not a guarantee of fairness
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

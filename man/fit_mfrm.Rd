@@ -410,11 +410,22 @@ from \code{\link[stats:optim]{stats::optim()}}; EM additionally records engine-s
 }
 }
 \description{
-This is the package entry point. It wraps \code{mfrm_estimate()} and defaults to
-\code{method = "MML"}. Any number of facet columns can be supplied via \code{facets}.
+Estimate person abilities while accounting for rater severity and other
+influences on scores, such as criterion difficulty. A facet is one such
+source of variation; its levels are the individual raters or criteria.
+Each data row is one rating. Supply its column names with \code{person},
+\code{facets}, and \code{score}, as in the complete example below.
+The default is \code{method = "MML"} (marginal maximum likelihood).
 The \code{RSM} / \code{PCM} branches are the package's many-facet Rasch-family
 reference route; the bounded \code{GPCM} branch is available where explicitly
 documented.
+In the example, \code{toy} stores the data and \code{fit} stores the fitted model.
+Quoted column names such as \code{"Person"} must match the data, including case.
+For your own CSV, see the "Use your own CSV" section of
+\code{vignette("mfrmr-workflow", package = "mfrmr")}. If the vignette is not
+installed, \link{mfrmr_workflow_methods} and \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} explain the
+input checks. Pass the reviewed rating data frame to \code{data}, not the object
+returned by \code{describe_mfrm_data()}.
 }
 \details{
 Data must be in \strong{long format} (one row per observed rating event).
@@ -1109,27 +1120,35 @@ problems in multivariate analysis}. Psychometrika, 52(3), 333-343.
 }
 
 \examples{
-# Each quoted role below is a column name in the long-format data.
-ratings <- load_mfrmr_data("example_operational")
-names(ratings)
+\donttest{
+# Load the package
+library(mfrmr)
 
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30,
-  reltol = 1e-11
+  method = "MML",
+  model = "RSM"
 )
-fit_review <- summary(fit, profile = "fit", detail = "brief")
-fit_review$decision
-fit_review$overview[, c("Model", "Method", "FitReadiness", "InferenceReady")]
 
-# This seven-point grid keeps the example short. Use the default 31-point
-# grid, and a denser sensitivity check when needed, for substantive work.
-plot(fit, type = "wright", draw = FALSE)$name
+# Plot the results (Wright map)
+plot(fit)
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},

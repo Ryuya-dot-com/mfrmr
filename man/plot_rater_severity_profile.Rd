@@ -27,7 +27,8 @@ facet name is accepted.}
 \code{0.95}). Bounds use \verb{+/- z * ModelSE}.}
 
 \item{show_bands}{Logical. When \code{TRUE} (default) draw shaded
-\verb{+/-0.5} (gentle) and \verb{+/-1.0} (strict) logit guidance bands.}
+\verb{+/-0.5} and \verb{+/-1.0} logit guide bands and describe them in the
+subtitle and legend. Set to \code{FALSE} to omit both bands and their labels.}
 
 \item{preset}{Visual preset.}
 
@@ -41,26 +42,43 @@ columns \code{Level}, \code{Estimate}, \code{SE}, \code{CI_Lower}, \code{CI_Uppe
 \description{
 Ranks the levels of a chosen rater facet by estimated severity and
 draws each level as a horizontal CI whisker around the point
-estimate. Optional gentle / strict guidance bands at \verb{+/-0.5} and
-\verb{+/-1.0} logit relative to the centred mean make rater calibration
-easy to read for training feedback.
+estimate. Optional descriptive bands mark absolute distances of \code{0.5}
+and \code{1.0} logit from zero; they are display aids, not calibration rules.
 }
 \section{Interpreting output}{
 
-The vertical reference line at zero is the sum-to-zero centring
-point. Levels well within \verb{+/- 0.5 logit} (gentle band) are
-typically interchangeable in operational scoring; levels outside
-\verb{+/- 1.0 logit} (strict band) deserve targeted training or
-anchoring.
+Zero is the sum-to-zero reference for the default centered facet; describe
+any different constraints or anchors used in the fit. With the default
+negative facet orientation, higher estimates mean stricter scoring.
+The optional bands and the legacy \code{Band} labels (\code{gentle}, \code{moderate},
+\code{strict}) describe absolute magnitude, not the sign of severity, operational
+interchangeability, or a need for training. Pairwise claims require the
+uncertainty of the contrast; check the SE basis in the supplied diagnostics.
 }
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-p <- plot_rater_severity_profile(fit, draw = FALSE)
-head(p$data$data)
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare signed severity estimates and their intervals
+plot_rater_severity_profile(fit, diagnostics = diagnostics, show_bands = FALSE)
+# Higher estimates mean stricter ratings with this example's default orientation
+# The optional magnitude bands are omitted from this first comparison
 }
 }
 \seealso{

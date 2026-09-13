@@ -94,6 +94,9 @@ from post hoc regression on EAP/MLE scores.
 
 When bias results or PCA diagnostics are not supplied, those sections
 are omitted from the narrative rather than producing placeholder text.
+Reporting reuses stored residual PCA results and does not compute omitted
+overall or facet-specific analyses. Request the intended scope with
+\code{diagnose_mfrm(..., residual_pca = "overall")}, \code{"facet"}, or \code{"both"} first.
 }
 
 \section{Typical workflow}{
@@ -131,50 +134,40 @@ package-native bias helper that provides a table component.
 
 \examples{
 \donttest{
-# Minimal APA-output example using a JML fit and lightweight diagnostics.
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
-fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "JML", maxit = 30
-)
-diag_quick <- diagnose_mfrm(fit_quick,
-  residual_pca = "none",
-  diagnostic_mode = "legacy"
-)
-apa_quick <- build_apa_outputs(fit_quick, diag_quick)
-nchar(apa_quick$report_text) > 0
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Prepare draft wording from the fitted model and diagnostics
 apa <- build_apa_outputs(
   fit,
-  diag,
+  diagnostics = diagnostics,
   context = list(
-    assessment = "Toy writing task",
+    assessment = "Synthetic writing assessment",
     setting = "Demonstration dataset",
-    scale_desc = "0-2 rating scale",
+    scale_desc = "1-4 rating scale",
     rater_facet = "Rater"
   )
 )
-s_apa <- summary(apa)
-s_apa$overview
-# Look for: `SentenceCount` non-zero in every section that the run
-#   should support (Method / Results / fit / reliability / bias).
-#   Zero counts mean that section's prose is empty and the
-#   manuscript will need to fill it manually.
-chk <- reporting_checklist(fit, diagnostics = diag)
-head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-# Look for: rows with `DraftReady = "yes"` are ready to paste into
-#   the manuscript. `"no"` rows tell you which helper / setting
-#   needs to run before that paragraph can be drafted, via
-#   `NextAction`. Aim for every Visual Displays / Reliability /
-#   Diagnostics row to be `"yes"` before submitting.
-cat(apa$report_text)
-apa$section_map[, c("SectionId", "Available")]
 
+# Check which sections are supported, then read the draft
+apa_review <- summary(apa)
+apa_review$content_checks
+cat(apa$report_text)
+# Adapt the text to the study question, design, and evidence before using it
 }
 }
 \seealso{

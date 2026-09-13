@@ -79,19 +79,35 @@ sharing it.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", model = "RSM", maxit = 30)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-out <- export_mfrm(
-  fit,
-  diagnostics = diag,
-  output_dir = tempdir(),
-  prefix = "mfrmr_example",
-  overwrite = TRUE,
-  acknowledge_sensitive = TRUE
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-out$Table
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Use a new temporary folder for this example; choose a permanent one for your work
+output_dir <- tempfile("mfrmr-tables-")
+files <- export_mfrm(
+  fit,
+  diagnostics = diagnostics,
+  output_dir = output_dir,
+  acknowledge_sensitive = TRUE # Synthetic data; exported tables retain person IDs
+)
+
+# Locate the CSV files
+files[, c("Table", "Path")]
+# Open a listed Path in a spreadsheet app or read it with read.csv()
 }
 }
 \seealso{

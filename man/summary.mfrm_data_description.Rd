@@ -41,28 +41,44 @@ are suppressed unless explicitly requested in \code{\link[=describe_mfrm_data]{d
 which companion outputs should be consulted
 \item \code{caveats}: structured warning/review rows for score-support issues;
 \code{print(summary(ds))} shows a compact \code{Caveats} block when rows are present
+\item \code{notes}: plain-language explanations of missingness, preparation, score
+support, and design-review findings
 }
 }
 \description{
-Summarize a data-description object
+Read a compact summary of the checks from \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} before
+fitting a model. Save it with \code{review <- summary(data_review)} and select
+the tables you need with \code{$}, as in the example.
 }
 \details{
-This summary is intended as a compact pre-fit quality snapshot for
-manuscripts and analysis logs.
+\code{data_review} holds the complete data checks; \code{review} holds summary tables
+and notes. Neither object contains model estimates. The default \code{top_n = 10}
+limits the missing-column and score-distribution previews; use
+\code{data_review$missing_by_column} and \code{data_review$score_distribution} to see
+the complete tables.
 }
 \section{Interpreting output}{
 
 Recommended read order:
 \itemize{
-\item \code{overview}: sample size, persons/facets/categories.
-\item \code{missing}: missingness hotspots by selected input columns.
+\item \code{overview}: retained ratings (\code{Observations}), persons, facets, and
+categories. Compare input and retained \code{Rows} in \code{row_retention} and
+investigate unexpected \code{DroppedRows}.
+\item \code{missing}: input \code{NA} counts by column. This table is named
+\code{missing_by_column} in the original \code{data_review} object. Declared
+missing-code replacements and invalid score text can cause additional
+row loss; inspect \code{data_review$missing_recoding} and \code{preparation_notes}.
 \item \code{score_distribution}: category usage balance.
 \item \code{notes} / printed \code{Caveats}: retained zero-count score categories and
-related score-support caveats; intermediate unused categories should be
-treated as threshold-functioning warnings before model fitting.
+related score-support caveats. With \code{keep_original = TRUE}, a retained
+unused internal category stops fitting; review the data and rubric first.
 \item \code{facet_overview}: coverage per facet (minimum/maximum weighted counts).
 \item \code{agreement}: observed-score agreement for the selected scorer facet (when
 available).
+\item \code{design_connectivity}: check for more than one observed component before
+comparing facet levels. \code{structural_missingness} reports planned omissions
+only when an assignment roster was supplied; \code{not_declared} does not mean
+that no ratings are missing.
 }
 
 Very low \code{MinWeightedN} in \code{facet_overview} is a practical warning for
@@ -73,22 +89,36 @@ unstable downstream facet estimates.
 
 \enumerate{
 \item Run \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} on raw long-format data.
-\item Inspect \code{summary(ds)} before model fitting.
-\item Resolve sparse/missing issues, then run \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item Inspect \code{review <- summary(data_review)} before model fitting.
+\item Correct input issues and repeat the review, then pass the corrected
+rating data to \code{\link[=fit_mfrm]{fit_mfrm()}} with the same preparation settings.
 }
 }
 
 \examples{
+library(mfrmr)
 ratings <- load_mfrmr_data("example_operational")
+
+# Demonstrate two missing scores in a copy of the example data
+ratings$Score[1:2] <- NA
 data_review <- describe_mfrm_data(
   data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   rating_min = 1,
-  rating_max = 4
+  rating_max = 4,
+  keep_original = TRUE
 )
-summary(data_review)
+review <- summary(data_review)
+review$row_retention # 282 input rows, 280 retained rows
+review$missing       # Score has 2 missing input values
+review$overview      # Counts describe the retained ratings
+review$notes         # Explanations to read before fitting
+
+# The original description retains the full missingness table
+data_review$missing_by_column
+# Investigate missingness before using ratings in fit_mfrm()
 }
 \seealso{
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}}

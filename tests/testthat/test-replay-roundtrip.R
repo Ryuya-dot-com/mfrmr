@@ -12,7 +12,7 @@ local({
   ))
 })
 
-bundle_and_source <- function(fit, data, prefix = "rt_test") {
+bundle_and_source <- function(fit, data, prefix = "rt_test", diagnostics = NULL) {
   td <- tempfile("mfrm_replay_rt_")
   dir.create(td)
   on.exit(unlink(td, recursive = TRUE), add = TRUE)
@@ -21,6 +21,7 @@ bundle_and_source <- function(fit, data, prefix = "rt_test") {
   setwd(td)
   export_mfrm_bundle(
     fit,
+    diagnostics = diagnostics,
     output_dir = ".",
     prefix = prefix,
     include = c("core_tables", "manifest", "script"),
@@ -54,6 +55,67 @@ test_that("replay round-trip reproduces person estimates", {
   expect_equal(suppressWarnings(as.numeric(r$Estimate)),
                suppressWarnings(as.numeric(o$Estimate)),
                tolerance = 1e-6)
+})
+
+test_that("replay preserves literal IDs and non-syntactic column names", {
+  dat <- .toy
+  ids <- unique(dat$Person)
+  labels <- c("01", "1", "NA", sprintf("%03d", seq.int(4L, length(ids))))
+  dat$Person <- labels[match(dat$Person, ids)]
+  raters <- unique(dat$Rater)
+  rater_labels <- c("01", "1", "NA", paste0("R", seq_along(raters)))[seq_along(raters)]
+  dat$Rater <- rater_labels[match(dat$Rater, raters)]
+  names(dat)[match(c("Person", "Rater", "Criterion", "Score"), names(dat))] <-
+    c("Person ID", "Rater ID", "Criterion name", "Score value")
+  fit <- suppressWarnings(fit_mfrm(dat, "Person ID", c("Rater ID", "Criterion name"),
+                                  "Score value", method = "JML", maxit = 25))
+  replay <- bundle_and_source(fit, dat, prefix = "literal_ids")
+  expect_identical(names(replay$data), names(dat))
+  for (nm in c("Person ID", "Rater ID", "Criterion name")) {
+    expect_identical(replay$data[[nm]], as.character(dat[[nm]]))
+  }
+  expect_equal(replay$fit$summary$N, fit$summary$N)
+  expect_equal(replay$fit$summary$Persons, fit$summary$Persons)
+  expect_equal(replay$fit$summary$LogLik, fit$summary$LogLik, tolerance = 1e-6)
+})
+
+test_that("latent-regression replay preserves background IDs and factor coding", {
+  dat <- load_mfrmr_data("example_operational")
+  ids <- unique(dat$Person)
+  labels <- c("01", "1", "NA", sprintf("%03d", seq.int(4L, length(ids))))
+  dat$Person <- labels[match(dat$Person, ids)]
+  background <- data.frame(Person = labels)
+  background[["Group code"]] <- factor(rep(c("01", "1"), length.out = length(ids)),
+                                       levels = c("1", "01"))
+  contrasts(background[["Group code"]]) <- contr.sum(2)
+  fit <- suppressWarnings(fit_mfrm(
+    dat, "Person", c("Rater", "Criterion"), "Score", method = "MML",
+    population_formula = ~ `Group code`, person_data = background, person_id = "Person"
+  ))
+  replay <- bundle_and_source(fit, dat, prefix = "latent_literal_ids")
+  expect_identical(replay$fit_person_data, fit$population$person_table_replay)
+  expect_equal(replay$fit$summary$LogLik, fit$summary$LogLik, tolerance = 1e-6)
+  expect_equal(replay$fit$population$coefficients, fit$population$coefficients,
+               tolerance = 1e-6)
+})
+
+test_that("replay preserves diagnostic selection and standardization", {
+  diagnostics <- suppressWarnings(diagnose_mfrm(
+    .fit, interaction_pairs = list(c("Rater", "Criterion")), top_n_interactions = 3,
+    whexact = TRUE, fit_df_method = "facets", diagnostic_mode = "legacy",
+    residual_pca = "overall", pca_max_factors = 2L
+  ))
+  replay <- bundle_and_source(.fit, .toy, prefix = "diagnostic_settings",
+                              diagnostics = diagnostics)$diagnostics
+  expect_identical(replay$replay_inputs, diagnostics$replay_inputs)
+  expect_identical(replay$diagnostic_mode, "legacy")
+  expect_equal(replay$fit_standardization, diagnostics$fit_standardization)
+  expect_equal(replay$measures, diagnostics$measures, tolerance = 1e-6)
+  expect_equal(replay$interactions, diagnostics$interactions, tolerance = 1e-6)
+  expect_equal(ncol(replay$residual_pca_overall$pca$loadings), 2L)
+  expect_equal(replay$residual_pca_overall$pca$loadings,
+               diagnostics$residual_pca_overall$pca$loadings, tolerance = 1e-6)
+  expect_null(replay$residual_pca_by_facet)
 })
 
 test_that("replay carries `mml_engine` argument forward", {
@@ -108,6 +170,18 @@ test_that("replay preserves the complete interaction specification", {
     replayed$summary$FitReadiness,
     interaction_fit$summary$FitReadiness
   )
+})
+
+test_that("FACETS workflow replay runs with the original MML engine", {
+  run <- suppressWarnings(run_mfrm_facets(
+    .toy, "Person", c("Rater", "Criterion"), "Score",
+    method = "MML", mml_engine = "em", quad_points = 7, maxit = 25
+  ))
+  replay <- bundle_and_source(run, .toy, prefix = "facets_workflow")
+  expect_s3_class(replay$run, "mfrm_facets_run")
+  expect_identical(replay$fit$config$estimation_control$mml_engine_requested, "em")
+  expect_equal(replay$fit$summary$LogLik, run$fit$summary$LogLik, tolerance = 1e-6)
+  expect_equal(replay$diagnostics$measures, run$diagnostics$measures, tolerance = 1e-6)
 })
 
 test_that("replay argument registry has no unhandled material fields", {

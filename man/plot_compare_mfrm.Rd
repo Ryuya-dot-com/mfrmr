@@ -94,6 +94,53 @@ group selection or a larger export when many panels are needed.
 score label shown in the plot. \code{ExpectedScoreDifference} uses the native
 internal score coding, which need not equal the original score increments.
 }
+\examples{
+\donttest{
+# Load one dataset for both models
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# RSM: shared category thresholds
+fit_rsm <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# PCM: separate category thresholds for each criterion
+fit_pcm <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "PCM",
+  step_facet = "Criterion"
+)
+
+# Compare fitted locations; drawing requires the optional ggplot2 package
+# If needed, install it once with install.packages("ggplot2")
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  plot_compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
+
+  # Run separately: compare score-category probabilities for one criterion
+  plot_compare_mfrm(
+    fit_rsm, fit_pcm,
+    type = "ccc",
+    curve_groups = "Content",
+    labels = c("RSM", "PCM")
+  )
+}
+
+# Plot data are available even without ggplot2
+paired <- plot_compare_mfrm(fit_rsm, fit_pcm, draw = FALSE)
+head(paired$data$differences)
+# Differences are PCM minus RSM; no difference SE or significance test is computed
+}
+}
 \seealso{
 \code{\link[=plot.mfrm_fit]{plot.mfrm_fit()}}, \code{\link[=as_ggplot]{as_ggplot()}}, \code{\link[=compare_mfrm]{compare_mfrm()}}
 }

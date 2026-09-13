@@ -255,10 +255,10 @@ test_that("front-door examples use one explicit beginner workflow", {
   testthat::skip_if(is.na(pkg_root), "source files are not available")
 
   rd_text <- function(page) {
-    paste(
-      readLines(file.path(pkg_root, "man", page), warn = FALSE),
-      collapse = "\n"
-    )
+    rd <- tools::parse_Rd(file.path(pkg_root, "man", page))
+    examples <- rd[vapply(rd, function(x) identical(attr(x, "Rd_tag"), "\\examples"),
+                          logical(1))]
+    paste(unlist(examples, use.names = FALSE), collapse = "")
   }
 
   load_text <- rd_text("load_mfrmr_data.Rd")
@@ -280,20 +280,33 @@ test_that("front-door examples use one explicit beginner workflow", {
     "mfrmr-package.Rd", "diagnose_mfrm.Rd",
     "summary.mfrm_diagnostics.Rd", "plot.mfrm_fit.Rd",
     "data_quality_report.Rd", "rating_scale_table.Rd",
-    "precision_review_report.Rd"
+    "precision_review_report.Rd", "as.data.frame.mfrm_fit.Rd",
+    "mfrmr_visual_diagnostics.Rd", "mfrmr_reporting_and_apa.Rd",
+    "compare_mfrm.Rd", "plot_compare_mfrm.Rd", "plot_marginal_fit.Rd",
+    "plot_marginal_pairwise.Rd", "plot_qc_dashboard.Rd", "plot_person_fit.Rd",
+    "compute_person_fit_indices.Rd", "plot_rater_severity_profile.Rd",
+    "plot_bubble.Rd", "fair_average_table.Rd", "plot_fair_average.Rd",
+    "interrater_agreement_table.Rd", "plot_interrater_agreement.Rd",
+    "apa_table.Rd", "export_mfrm.Rd", "reporting_checklist.Rd",
+    "build_apa_outputs.Rd", "plot_data.Rd", "plot_data_components.Rd"
   )
   for (page in fit_pages) {
     text <- rd_text(page)
     for (snippet in c(
       'load_mfrmr_data("example_operational")',
       'person = "Person"', 'facets = c("Rater", "Criterion")',
-      'score = "Score"', 'rating_min = 1', 'rating_max = 4',
-      'method = "MML"', 'model = "RSM"', 'quad_points = 7'
+      'score = "Score"', 'method = "MML"', 'model = "RSM"'
     )) {
       expect_true(grepl(snippet, text, fixed = TRUE), info = paste(page, snippet))
     }
+    expect_false(grepl("quad_points\\s*=|maxit\\s*=|reltol\\s*=", text), info = page)
     expect_false(grepl("JML keeps the help example fast", text, fixed = TRUE), info = page)
   }
+  for (page in c("reporting_checklist.Rd", "build_apa_outputs.Rd")) {
+    text <- rd_text(page)
+    expect_false(grepl('DraftReady = "yes"|ready to paste', text), info = page)
+  }
+  expect_false(grepl("panels$Status", rd_text("plot_qc_dashboard.Rd"), fixed = TRUE))
 })
 
 test_that("roxygen examples keep expensive demonstrations conditional", {
@@ -309,14 +322,6 @@ test_that("roxygen examples keep expensive demonstrations conditional", {
     example_policy_hits(multi_fit),
     character(0),
     info = "Standard Rd examples should not run multiple fit_mfrm() calls."
-  )
-
-  mml_without_quadrature <- examples[
-    examples$has_mml & !examples$has_quad_points, ]
-  expect_identical(
-    example_policy_hits(mml_without_quadrature),
-    character(0),
-    info = "MML examples should set quad_points, including donttest examples."
   )
 
   active_mml_without_quadrature <- examples[

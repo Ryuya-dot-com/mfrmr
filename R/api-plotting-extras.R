@@ -196,11 +196,27 @@ plot_threshold_ladder <- function(fit,
 #'
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' p <- plot_person_fit(fit, draw = FALSE)
-#' head(p$data$data)
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Compare each person's Infit and Outfit with the reference value of 1
+#' plot_person_fit(fit, diagnostics = diagnostics)
+#' # Values above 1 indicate more response variation than expected, below 1 less
+#' # The reference bands flag patterns for review, not automatic exclusion
 #' }
 #' @export
 plot_person_fit <- function(fit,
@@ -510,9 +526,8 @@ plot_person_fit <- function(fit,
 #'
 #' Ranks the levels of a chosen rater facet by estimated severity and
 #' draws each level as a horizontal CI whisker around the point
-#' estimate. Optional gentle / strict guidance bands at `+/-0.5` and
-#' `+/-1.0` logit relative to the centred mean make rater calibration
-#' easy to read for training feedback.
+#' estimate. Optional descriptive bands mark absolute distances of `0.5`
+#' and `1.0` logit from zero; they are display aids, not calibration rules.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param diagnostics Optional [diagnose_mfrm()] output. When omitted,
@@ -522,7 +537,8 @@ plot_person_fit <- function(fit,
 #' @param ci_level Confidence level used for the whiskers (default
 #'   `0.95`). Bounds use `+/- z * ModelSE`.
 #' @param show_bands Logical. When `TRUE` (default) draw shaded
-#'   `+/-0.5` (gentle) and `+/-1.0` (strict) logit guidance bands.
+#'   `+/-0.5` and `+/-1.0` logit guide bands and describe them in the
+#'   subtitle and legend. Set to `FALSE` to omit both bands and their labels.
 #' @param preset Visual preset.
 #' @param draw If `TRUE`, draw with base graphics.
 #'
@@ -531,11 +547,13 @@ plot_person_fit <- function(fit,
 #'   `Band`.
 #'
 #' @section Interpreting output:
-#' The vertical reference line at zero is the sum-to-zero centring
-#' point. Levels well within `+/- 0.5 logit` (gentle band) are
-#' typically interchangeable in operational scoring; levels outside
-#' `+/- 1.0 logit` (strict band) deserve targeted training or
-#' anchoring.
+#' Zero is the sum-to-zero reference for the default centered facet; describe
+#' any different constraints or anchors used in the fit. With the default
+#' negative facet orientation, higher estimates mean stricter scoring.
+#' The optional bands and the legacy `Band` labels (`gentle`, `moderate`,
+#' `strict`) describe absolute magnitude, not the sign of severity, operational
+#' interchangeability, or a need for training. Pairwise claims require the
+#' uncertainty of the contrast; check the SE basis in the supplied diagnostics.
 #'
 #' @seealso [diagnose_mfrm()], [analyze_facet_equivalence()],
 #'   [plot_facet_equivalence()].
@@ -546,11 +564,27 @@ plot_person_fit <- function(fit,
 #'
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' p <- plot_rater_severity_profile(fit, draw = FALSE)
-#' head(p$data$data)
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Compare signed severity estimates and their intervals
+#' plot_rater_severity_profile(fit, diagnostics = diagnostics, show_bands = FALSE)
+#' # Higher estimates mean stricter ratings with this example's default orientation
+#' # The optional magnitude bands are omitted from this first comparison
 #' }
 #' @export
 plot_rater_severity_profile <- function(fit,
@@ -590,8 +624,9 @@ plot_rater_severity_profile <- function(fit,
   m <- m[order(m$Estimate), , drop = FALSE]
   plot_title <- sprintf("%s severity profile", facet)
   plot_subtitle <- sprintf(
-    "Sum-to-zero centred; +/-0.5 gentle band, +/-1.0 strict band; %g%% CI from ModelSE",
-    round(100 * ci_level)
+    "Zero reference; %g%% normal CI from ModelSE%s",
+    round(100 * ci_level),
+    if (isTRUE(show_bands)) "; shaded guides at +/-0.5 and +/-1.0 logits" else ""
   )
 
   if (isTRUE(draw)) {
@@ -600,7 +635,13 @@ plot_rater_severity_profile <- function(fit,
     on.exit(graphics::par(mar = old_mar), add = TRUE)
     subtitle_lines <- strwrap(plot_subtitle,
       width = max(30L, floor((graphics::par("fin")[1] - 0.8) * 15)))
-    graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)), old_mar[-1]))
+    label_width <- max(graphics::strwidth(as.character(m$Level), units = "inches", cex = 0.85))
+    label_margin <- label_width / (graphics::par("csi") * graphics::par("mex")) + 1.2
+    if (label_width + graphics::par("mai")[4] + 1.25 >= graphics::par("fin")[1]) {
+      stop("Facet labels need more horizontal space; use a wider graphics device or inspect the table with `draw = FALSE`.", call. = FALSE)
+    }
+    graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)),
+                          max(old_mar[2], label_margin), old_mar[3:4]))
     y <- seq_len(nrow(m))
     xrange <- range(c(m$CI_Lower, m$CI_Upper, -1.05, 1.05), finite = TRUE,
                     na.rm = TRUE)
@@ -654,14 +695,14 @@ plot_rater_severity_profile <- function(fit,
       title = plot_title,
       subtitle = plot_subtitle,
       legend = new_plot_legend(
-        label = c("Estimate", "CI whisker", "+/-0.5 gentle", "+/-1.0 strict"),
-        role = c("location", "uncertainty", "band", "band"),
-        aesthetic = c("point", "segment", "fill", "fill"),
+        label = c("Estimate", "CI whisker", if (isTRUE(show_bands)) c("+/-0.5 guide", "+/-1.0 guide")),
+        role = c("location", "uncertainty", if (isTRUE(show_bands)) c("band", "band")),
+        aesthetic = c("point", "segment", if (isTRUE(show_bands)) c("fill", "fill")),
         value = c(style$accent_primary, style$accent_primary,
-                  style$success, style$warn)
+                  if (isTRUE(show_bands)) c(style$success, style$warn))
       ),
       reference_lines = new_reference_lines(
-        "v", 0, "Sum-to-zero centred", "dashed", "reference"
+        "v", 0, "Zero reference", "dashed", "reference"
       ),
       preset = style$name
     )

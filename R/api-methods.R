@@ -3031,8 +3031,11 @@ draw_category_structure_bundle <- function(x,
   if (isTRUE(draw)) {
     if (type == "counts") {
       if (nrow(cat_tbl) == 0 || !all(c("Category", "Count") %in% names(cat_tbl))) stop("No category count data available.")
+      obs_ct <- suppressWarnings(as.numeric(cat_tbl$Count))
+      exp_ct <- suppressWarnings(as.numeric(cat_tbl$ExpectedCount))
       bp <- barplot_rot45(
-        height = suppressWarnings(as.numeric(cat_tbl$Count)),
+        height = obs_ct,
+        ylim = range(0, 1, obs_ct, exp_ct, finite = TRUE) * c(1, 1.08),
         labels = as.character(cat_tbl$Category),
         col = pal["counts"],
         main = if (is.null(main)) "Category counts" else as.character(main[1]),
@@ -3041,7 +3044,6 @@ draw_category_structure_bundle <- function(x,
         mar_bottom = 8.2
       )
       if ("ExpectedCount" %in% names(cat_tbl)) {
-        exp_ct <- suppressWarnings(as.numeric(cat_tbl$ExpectedCount))
         if (any(is.finite(exp_ct))) {
           graphics::points(bp, exp_ct, pch = 21, bg = "white", col = pal["expected"])
           graphics::lines(bp, exp_ct, col = pal["expected"], lwd = 1.4)
@@ -3659,8 +3661,11 @@ draw_rating_scale_bundle <- function(x,
       if (nrow(cat_tbl) == 0 || !all(c("Category", "Count") %in% names(cat_tbl))) {
         stop("No category count data available.")
       }
+      obs_ct <- suppressWarnings(as.numeric(cat_tbl$Count))
+      exp_ct <- suppressWarnings(as.numeric(cat_tbl$ExpectedCount))
       bp <- barplot_rot45(
-        height = suppressWarnings(as.numeric(cat_tbl$Count)),
+        height = obs_ct,
+        ylim = range(0, 1, obs_ct, exp_ct, finite = TRUE) * c(1, 1.08),
         labels = as.character(cat_tbl$Category),
         col = pal["counts"],
         main = if (is.null(main)) "Rating-scale category counts" else as.character(main[1]),
@@ -3669,7 +3674,6 @@ draw_rating_scale_bundle <- function(x,
         mar_bottom = 8.2
       )
       if ("ExpectedCount" %in% names(cat_tbl)) {
-        exp_ct <- suppressWarnings(as.numeric(cat_tbl$ExpectedCount))
         if (any(is.finite(exp_ct))) {
           graphics::points(bp, exp_ct, pch = 21, bg = "white", col = pal["expected"])
           graphics::lines(bp, exp_ct, col = pal["expected"], lwd = 1.3)
@@ -7097,25 +7101,30 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-#' s <- summary(diag, top_n = 3)
-#' s$decision
-#' s$key_warnings
-#' s$top_fit
+#'
+#' # Check model fit and the support for standard errors and intervals
+#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostic_summary <- summary(diagnostics)
+#' diagnostic_summary$decision
+#'
+#' diagnostic_summary$key_warnings # Issues to investigate, if present
+#' diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
+#'
+#' # Distinguish residual-based checks from marginal model checks
+#' diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #' }
 #' @export
 summary.mfrm_diagnostics <- function(object,
@@ -8227,6 +8236,18 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   is `FALSE` for privacy-safe console output.
 #'
 #' @details
+#' Start with `results <- summary(fit)`. Use `results$person_overview` for
+#' the distribution of person ability estimates and `results$facet_overview`
+#' for the distribution of estimates within each non-person facet. These are
+#' aggregate summaries; use `as.data.frame(fit)` for individual person and
+#' facet-level estimates. Read `results$decision` before interpreting results.
+#' Assignment with `<-` saves the summary without printing it; enter `results`
+#' to print the full summary or use `$` to display a selected table.
+#' In the example, `person_overview` has one row for all persons and
+#' `facet_overview` has one row for raters and one for criteria. Each non-person
+#' facet's mean is constrained to zero in this fit; use its SD and range or
+#' individual estimates to inspect differences among its levels.
+#'
 #' This method provides a compact, human-readable summary oriented to reporting.
 #' The expanded profiles use FACETS-style organization for navigation, but do
 #' not claim that FACETS was executed or that estimates are numerically
@@ -8379,31 +8400,38 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   `NULL` for the lightweight `"fit"` profile
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' ratings <- load_mfrmr_data("example_operational")
-#' # Seven quadrature points keep this executable example short. For a final
-#' # analysis, restore the default or a prespecified grid and review sensitivity.
+#' \donttest{
+#' # Load the package
+#' library(mfrmr)
+#'
+#' # Load example ratings and look at the first six rows
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
-#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
-#'   reltol = 1e-11
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' fit_review <- summary(fit, profile = "fit", detail = "brief")
-#' fit_review$decision
-#' # `InferenceReady = TRUE` means all five stored fit components passed.
-#' # It does not, by itself, support formal SE/CI or reliability.
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' full_review <- summary(
-#'   fit, profile = "facets", detail = "brief", diagnostics = diag
-#' )
-#' full_review$decision
-#' plot(
-#'   fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
-#' )$name
+#'
+#' # Save the summary, then display its tables
+#' results <- summary(fit)
+#' results$person_overview # One row summarizing person ability estimates
+#' results$facet_overview  # One row per facet: number of levels, mean, SD, range
+#'
+#' # Check the interpretation status and recommended next step
+#' results$decision
+#'
+#' # Extract estimates and select the rows to display
+#' estimates <- as.data.frame(fit)
+#' head(subset(estimates, Facet == "Person")) # First six persons
+#' subset(estimates, Facet == "Rater")       # All raters
+#' subset(estimates, Facet == "Criterion")   # All criteria
+#' }
 #' @export
 summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
                              profile = c("fit", "facets", "reporting"),

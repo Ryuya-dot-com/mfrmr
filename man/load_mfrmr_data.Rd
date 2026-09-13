@@ -53,14 +53,17 @@ fit is interpretable.
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_operational")
-head(ratings)
-names(ratings)
-table(ratings$Score)
+library(mfrmr)
 
-# Base R's data() loader returns the same packaged data.
+# Load synthetic ratings and inspect their columns and score frequencies
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+names(toy)
+table(toy$Score)
+
+# Optional: base R's data() loads the same dataset under its full name
 data("mfrmr_example_operational", package = "mfrmr")
-identical(ratings, mfrmr_example_operational)
+identical(toy, mfrmr_example_operational) # TRUE: both contain the same data
 }
 \seealso{
 \code{\link[=list_mfrmr_data]{list_mfrmr_data()}}, \link{ej2021_data}

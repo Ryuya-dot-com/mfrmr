@@ -196,6 +196,10 @@ discrimination basis, and bounded-GPCM MML identification convention.
 Plot fitted MFRM results with base R
 }
 \details{
+Start with \code{plot(fit)}: it draws a Wright map of person abilities, rater
+severities, other facet locations, and category thresholds on one logit
+scale. No plot options are needed for this first view.
+
 This S3 plotting method provides the core fit-family visuals for
 \code{mfrmr}. When \code{type} is omitted, it returns the Wright map alone as
 an \code{mfrm_plot_data} object (the most useful single figure for a
@@ -357,26 +361,34 @@ For a plot-selection guide and extended examples, see
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_operational")
+\donttest{
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-wright <- plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)
-wright$name
+
+# Run each plot command separately to inspect its figure
+plot(fit) # Wright map: persons, facets, and category thresholds
+
+# Rater severity estimates (higher means stricter in this example)
+plot(fit, type = "facet", facet = "Rater")
+
+# Probability of each score category across the ability scale
+plot(fit, type = "ccc")
+
+# Optional: get plot data instead of drawing a figure
+wright <- plot(fit, draw = FALSE)
 head(wright$data$locations)
-clean <- plot(fit, type = "wright", draw = FALSE,
-              show_title = FALSE, show_notes = FALSE)
-clean$data$notes
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=plot_wright_unified]{plot_wright_unified()}}, \code{\link[=plot_bubble]{plot_bubble()}},

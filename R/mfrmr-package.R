@@ -9,74 +9,42 @@
 #' @useDynLib mfrmr, .registration = TRUE
 #'
 #' @details
-#' Start with the following core workflow before branching into diagnostics,
-#' bounded `GPCM`, simulation, and planning notes:
+#' Start with the complete script in the Examples section:
 #'
-#' 1. Review long-format data and the intended score support with
-#'    [describe_mfrm_data()]. When a planned assignment roster exists, pass it
-#'    as `expected_design` so absent rows are not confused with unassigned cells
-#' 2. Fit with [fit_mfrm()] using `method = "MML"`
-#' 3. Read `summary(fit, profile = "fit")`, then request the comprehensive
-#'    measurement review with `summary(fit, profile = "facets")`. The profile
-#'    name describes a familiar organization; FACETS knowledge or software is
-#'    not required
-#' 4. Create the required native Wright map with
-#'    `plot(fit, type = "wright", show_ci = TRUE)`; use the FACETS renderer
-#'    only as an optional familiar presentation
-#' 5. Continue from the summary's `results` component to [mfrm_report()] and
-#'    [export_mfrm_results()]
-#' 6. Reuse `review$results$diagnostics` for [plot_qc_dashboard()] and
-#'    [reporting_checklist()]; call [diagnose_mfrm()] again only for residual
-#'    PCA or other custom settings. For
-#'    bounded `GPCM`, read [gpcm_capability_matrix()] before interpreting
-#'    specialist helpers
+#' 1. Load the package and example ratings with [load_mfrmr_data()].
+#' 2. Fit a model with [fit_mfrm()].
+#' 3. Draw the Wright map with `plot(fit)`.
+#' 4. Save `results <- summary(fit)` and inspect `results$person_overview`
+#'    and `results$facet_overview`.
 #'
-#' Recommended workflow:
+#' Each data row is one rating event. The `person`, `facets`, and `score`
+#' arguments name columns. The example uses marginal maximum likelihood
+#' (`MML`) and a rating-scale model (`RSM`) with shared category thresholds.
+#' `head(toy)` displays the first six rows. Only `Person`, `Rater`, `Criterion`,
+#' and `Score` are used by this model; the example's `Study` and `Group` columns
+#' are additional labels. `<-` saves an object, and `$` selects a named part:
+#' `results$person_overview` displays one table from the saved summary.
+#' The overview tables summarize distributions; `as.data.frame(fit)` returns
+#' individual person, rater, and criterion estimates.
 #'
-#' 1. Review the data with [describe_mfrm_data()] and fit with [fit_mfrm()]
-#' 2. For `RSM` / `PCM`, create the comprehensive summary and reuse its
-#'    diagnostics; request a separate [diagnose_mfrm()] call only for custom
-#'    settings
-#' 3. For `RSM` / `PCM`, run residual PCA with [analyze_residual_pca()] if needed
-#' 4. For `RSM` / `PCM`, or bounded `GPCM` with the documented screening
-#'    caveat, estimate interactions with [estimate_bias()]
-#' 5. For `RSM` / `PCM`, choose a downstream branch:
-#'    [reporting_checklist()] for manuscript/report preparation, or
-#'    [build_misfit_casebook()] / [build_linking_review()] for operational
-#'    misfit or anchor/drift review. After
-#'    [build_misfit_casebook()], inspect `casebook$group_view_index` before
-#'    moving to source-specific plots.
-#' 6. For `RSM` / `PCM`, build narrative/report outputs with
-#'    [build_apa_outputs()] and [build_visual_summaries()]
-#' 7. Treat bounded `GPCM`, prediction, and planning helpers as advanced scope
-#'    after the basic `RSM` / `PCM` route is working cleanly.
+#' Before interpreting or reporting estimates, read `results$decision` and
+#' follow its `NextAction`. The default summary does not compute diagnostics.
+#' For your own data, first inspect the design and score categories with
+#' [describe_mfrm_data()].
 #'
-#' Guide pages:
-#' - [mfrmr_output_guide()] for the compact purpose-to-helper map
-#' - [mfrmr_workflow_methods]
-#' - [mfrmr_visual_diagnostics]
-#' - [mfrmr_reports_and_tables]
-#' - [mfrmr_reporting_and_apa]
-#' - [mfrmr_linking_and_dff]
-#' - [mfrm_calibration_capabilities()] and [mfrm_calibration_workflow] for
-#'   portable fixed calibration
-#' - [gpcm_capability_matrix]
-#' - [mfrmr_compatibility_layer]
+#' @section Where to go next:
+#' - [mfrmr_workflow_methods] and `vignette("mfrmr-workflow", package = "mfrmr")`
+#'   for your own CSV, column mapping, input troubleshooting, and the full
+#'   analysis workflow. If vignettes are not installed, start with
+#'   [describe_mfrm_data()] and [recode_missing_codes()].
+#' - [mfrmr_visual_diagnostics] for choosing follow-up figures.
+#' - [mfrmr_reporting_and_apa] and [mfrmr_reports_and_tables] for reporting.
+#' - [mfrmr_linking_and_dff] for linking and differential facet functioning.
+#' - [gpcm_capability_matrix] for the bounded `GPCM` extension.
+#' - [mfrmr_output_guide()] for the broader purpose-to-function map.
 #'
-#' Companion vignettes:
-#' - `vignette("mfrmr-workflow", package = "mfrmr")`
-#' - `vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")`
-#' - `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`
-#' - `vignette("mfrmr-reporting-and-apa", package = "mfrmr")`
-#' - `vignette("mfrmr-linking-and-dff", package = "mfrmr")`
-#' - `vignette("mfrmr-portable-calibration", package = "mfrmr")`
-#'
-#' A printable landscape cheatsheet of the public API ships at
-#' `system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`
-#' (pre-rendered) and `system.file("cheatsheet", "mfrmr-cheatsheet.Rmd",
-#' package = "mfrmr")` (source). Open the PDF directly for a printable
-#' reference card, or knit the source with `rmarkdown::render()` when
-#' you want a customised version.
+#' A printable reference card is available at
+#' `system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")`.
 #'
 #' @section Portable fixed calibration:
 #' A saved, versioned calibration artifact can be created from an eligible
@@ -90,27 +58,6 @@
 #' score uncertainty is conditional on the frozen point calibration and its
 #' recorded prior; loading validates consistency but does not authenticate an
 #' untrusted file.
-#'
-#' @section First 5-minute route:
-#' Use this order before exploring the broader feature surface:
-#' 1. [describe_mfrm_data()] for score support, column missingness, declared
-#'    assignment coverage, and Person-facet connectivity
-#' 2. [fit_mfrm()] with `method = "MML"`
-#' 3. `summary(fit, profile = "fit")`, followed by
-#'    `summary(fit, profile = "facets")` for the comprehensive first screen
-#' 4. `plot(fit, type = "wright", show_ci = TRUE)` for the required
-#'    shared-logit figure
-#' 5. [mfrm_report()] and [export_mfrm_results()] from the summary's `results`
-#'    component for reporting and reproducible analysis handoff
-#' 6. Add [diagnose_mfrm()] with `diagnostic_mode = "both"` for deeper
-#'    `RSM` / `PCM` diagnostics; for bounded `GPCM`, keep diagnostics on the
-#'    direct exploratory route and read [gpcm_capability_matrix()]
-#' 7. Choose the next branch:
-#'    [reporting_checklist()] for reporting,
-#'    [build_weighting_review()] for Rasch-versus-`GPCM` weighting review,
-#'    [build_misfit_casebook()] for operational case review, or
-#'    [build_linking_review()] for operational linking review (`RSM` / `PCM`)
-#'    or caveated bounded-`GPCM` linking synthesis
 #'
 #' @section Advanced scope:
 #' After the basic route above:
@@ -730,36 +677,35 @@
 #' incomplete, or arbitrary imported designs.
 #'
 #' @examples
-#' ratings <- load_mfrmr_data("example_operational")
-#' head(ratings)
-#' review <- describe_mfrm_data(
-#'   data = ratings,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4
-#' )
-#' summary(review)$overview
-#'
 #' \donttest{
+#' # Load the package
+#' library(mfrmr)
+#'
+#' # Load example ratings and look at the first six rows
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' summary(fit, profile = "fit", detail = "brief")$decision
-#' plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)$name
-#' }
 #'
+#' # Plot the results (Wright map)
+#' plot(fit)
+#'
+#' # Save the summary, then display its tables
+#' results <- summary(fit)
+#' results$person_overview # One row summarizing person ability estimates
+#' results$facet_overview  # One row per facet: number of levels, mean, SD, range
+#'
+#' # Check the interpretation status and recommended next step
+#' results$decision
+#' }
 #' @importFrom dplyr across all_of any_of arrange bind_cols bind_rows
 #' @importFrom dplyr case_when coalesce count desc distinct everything filter group_by
 #' @importFrom dplyr if_all inner_join lag last left_join mutate n n_distinct pull rename

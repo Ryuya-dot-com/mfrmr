@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-estimation.R
 \name{describe_mfrm_data}
 \alias{describe_mfrm_data}
-\title{Summarize MFRM input data (TAM-style descriptive snapshot)}
+\title{Check rating data before fitting an MFRM}
 \usage{
 describe_mfrm_data(
   data,
@@ -122,13 +122,17 @@ replaced with \code{NA} before row filtering
 }
 }
 \description{
-Summarize MFRM input data (TAM-style descriptive snapshot)
+Inspect how many rating rows can be used, how often each score category
+occurs, and whether facet levels connect through shared persons. This
+function prepares descriptive checks; it does not fit a model or change
+the data object supplied by the caller. Each row should represent one
+rating, and \code{person}, \code{facets}, and \code{score} name its columns.
 }
 \details{
-This function provides a compact descriptive bundle similar to the
-pre-fit summaries commonly checked in TAM workflows:
-sample size, score distribution, per-facet coverage, and linkage counts.
-\code{psych::describe()} is used for numeric descriptives of score and weight.
+Set \code{rating_min} and \code{rating_max} from the rubric, including categories
+nobody received. Use \code{keep_original = TRUE} to preserve its category
+structure in the review. Numeric descriptives of score and weight use
+\code{psych::describe()}.
 
 \strong{Key data-quality checks to perform before fitting:}
 \itemize{
@@ -140,19 +144,25 @@ interpretation, and category diagnostics after fitting.
 Person-facet graph. More than one component means that the levels of that
 facet are not connected through shared persons. This facet-specific check
 is conservative and does not by itself prove full model identification.
-\item \emph{Extreme scores}: persons or facet levels with all-minimum or
-all-maximum scores yield infinite logit estimates under JML;
-they are handled via Bayesian shrinkage under MML.
+\item \emph{Extreme scores}: MML uses a person distribution to obtain posterior
+person scores, including for persons with all-minimum or all-maximum
+scores. Non-person facets remain fixed effects: an extreme rater or
+criterion is not given a prior or automatically shrunk by choosing MML.
+Review the fitted boundary and precision evidence before interpretation.
 }
 }
 \section{Interpreting output}{
 
 Recommended order:
 \itemize{
-\item \code{overview}: confirms sample size, facet count, and category span.
-\item \code{missing_by_column}: identifies immediate data-quality risks.
-Understand why values are missing and whether the fitted missing-data
-handling matches the study design.
+\item \code{overview}: confirms retained ratings (\code{Observations}), persons, facets,
+and category span. Use \code{row_retention} to compare input and retained
+\code{Rows}; \code{DroppedRows} counts exclusions during preparation.
+\item \code{missing_by_column}: counts \code{NA} values in the input columns. A missing
+score or required identifier excludes that rating row, not automatically
+the person's other ratings. The package does not fill missing ratings.
+When \code{missing_codes} is supplied, these counts still describe the original
+input; inspect \code{missing_recoding} and \code{preparation_notes} as well.
 \item \code{structural_missingness}: compares observed rating cells with
 \code{expected_design}, when supplied. Without a declared roster, structural
 missingness is reported as not assessed rather than assumed to be zero.
@@ -165,32 +175,80 @@ separate graph-component result.
 \item \code{agreement}: optional observed agreement summary for the selected scorer
 facet (exact agreement, correlation, and mean differences per pair).
 }
+
+\code{data_review <- describe_mfrm_data(...)} saves all these checks.
+\code{review <- summary(data_review)} provides a compact view; its missingness
+table is named \code{review$missing}, while the original full table is
+\code{data_review$missing_by_column}. Summary previews use \code{top_n = 10} by
+default. Use the original tables to inspect all rows or categories.
+}
+
+\section{If the input needs attention}{
+
+\itemize{
+\item \strong{Column name not found:} run \code{names(ratings)} and match spelling,
+spaces, and case in \code{person}, \code{facets}, and \code{score}.
+\item \strong{Unexpected row loss:} inspect \code{row_retention}, \code{missing_by_column},
+and \code{preparation_notes}. Resolve unintended missing IDs and invalid score
+text in the input data. For documented score markers such as \code{99} or \code{.},
+use \code{\link[=recode_missing_codes]{recode_missing_codes()}} with explicit \code{columns} and \code{codes}.
+\item \strong{Repeated person-by-facet cells:} inspect \code{duplicate_cell_detail}.
+Correct accidental duplicates; include a task or occasion facet when
+ratings represent distinct events in the design.
+\item \strong{Unused category or disconnected design:} inspect
+\code{score_distribution} and \code{design_connectivity}. Review the rubric and
+assignments before changing the model. A retained internal zero-count
+category stops fitting; extra optimizer iterations cannot supply the
+missing category information.
+}
+
+After editing or recoding ratings, rerun this review on the corrected data
+and pass that same data to \code{\link[=fit_mfrm]{fit_mfrm()}}, using the same columns, score
+bounds, and \code{keep_original} setting. If you use \code{missing_codes} within the
+review instead of recoding first, supply the same option to the fit:
+reviewing does not modify the original data. For CSV import, column mapping,
+and a complete worked example, see
+\code{vignette("mfrmr-workflow", package = "mfrmr")}.
 }
 
 \section{Typical workflow}{
 
 \enumerate{
-\item Run \code{describe_mfrm_data()} on long-format input.
-\item Review \code{summary(ds)} and \code{plot(ds, ...)}.
-\item Resolve missingness/sparsity issues before \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item Run \code{data_review <- describe_mfrm_data(...)} on the rating data.
+\item Inspect row retention, category counts, and design connectivity.
+\item Correct input issues, repeat the review, and fit the reviewed data with
+\code{\link[=fit_mfrm]{fit_mfrm()}}.
 }
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_operational")
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Check the data before fitting; the intended score categories are 1 to 4
 data_review <- describe_mfrm_data(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   rating_min = 1,
-  rating_max = 4
+  rating_max = 4,
+  keep_original = TRUE
 )
+data_review$row_retention       # Input and retained rows; check DroppedRows
+data_review$missing_by_column   # Missing input values in each model column
+data_review$score_distribution  # RawN is the number of ratings per category
+data_review$design_connectivity # Components = 1 means connected for that facet
+# Here all 282 rows are retained, and all four categories have observations
+
+# Save a compact summary when you want the overview and review notes
 review <- summary(data_review)
 review$overview
-review$score_distribution
-review$design_connectivity
+review$notes
+# For the next fit, use data = toy; data_review is a set of checks, not ratings
 }
 \seealso{
-\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}
+\code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=summary.mfrm_data_description]{summary.mfrm_data_description()}},
+\code{\link[=recode_missing_codes]{recode_missing_codes()}}, \link{mfrmr_workflow_methods}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}
 }

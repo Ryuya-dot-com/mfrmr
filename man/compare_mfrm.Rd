@@ -255,18 +255,41 @@ problems in multivariate analysis. \emph{Psychometrika, 52}(3), 333-343.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
+# Load one dataset for both models
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                     method = "MML", model = "RSM", quad_points = 31, maxit = 30)
-fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                     method = "MML", model = "PCM",
-                     step_facet = "Criterion", quad_points = 31, maxit = 30)
-comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
-comp$table
-comp$evidence_ratios
+# RSM: shared category thresholds
+fit_rsm <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# PCM: separate category thresholds for each criterion
+fit_pcm <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "PCM",
+  step_facet = "Criterion"
+)
+
+# Check that the fitted models can be compared
+comparison <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
+comparison$table[, c("Label", "Converged", "ICComparable", "ICSelectable")]
+
+# Smaller AIC/BIC indicates better relative support among these models
+comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
+# Delta is the difference from the lowest value of that criterion
+# For close or consequential comparisons, check a denser shared grid with
+# mml_quadrature_sensitivity() before choosing a model
 }
-
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

@@ -243,11 +243,20 @@ describe_series <- function(series) {
 safe_residual_pca <- function(diagnostics, mode = "both", pca_max_factors = 10L) {
   if (is.null(diagnostics)) return(NULL)
   tryCatch(
-    analyze_residual_pca(
-      diagnostics = diagnostics,
-      mode = mode,
-      pca_max_factors = pca_max_factors
-    ),
+    {
+      # Reporting summarizes stored diagnostics; it must not add an analysis.
+      available_mode <- infer_export_residual_pca_mode(diagnostics)
+      if (available_mode == "none" ||
+          (mode != "both" && available_mode != "both" && mode != available_mode)) {
+        return(NULL)
+      }
+      if (mode == "both") mode <- available_mode
+      analyze_residual_pca(
+        diagnostics = diagnostics,
+        mode = mode,
+        pca_max_factors = pca_max_factors
+      )
+    },
     error = function(e) {
       structure(
         list(
@@ -1431,7 +1440,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     fit_readiness_record$fit$InferenceReady[1]
   )
 
-  n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
+  n_obs <- to_float(prep$n_obs %||% summary$N)
+  weight_sum <- to_float(prep$weighted_n %||% summary$N)
   n_person <- if (!is.null(summary)) to_float(summary$Persons) else nrow(res$facets$person)
   n_cat <- if (!is.null(summary)) to_float(summary$Categories) else to_float(config$n_cat)
   rating_min <- to_float(prep$rating_min)
@@ -1445,7 +1455,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     numeric(0)
   }
   facets_text <- if (length(facet_counts) > 0) {
-    paste(paste0(names(facet_counts), " (n = ", fmt_count(facet_counts), ")"), collapse = ", ")
+    paste(paste0(names(facet_counts), " (n = ", vapply(facet_counts, fmt_count, character(1)), ")"), collapse = ", ")
   } else {
     "no additional facets"
   }
@@ -1529,6 +1539,13 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     " persons scored on a ", fmt_count(n_cat),
     "-category scale (", fmt_count(rating_min), "-", fmt_count(rating_max), ")."
   )
+  if (any(abs(prep$data$Weight - 1) > 1e-12, na.rm = TRUE)) {
+    design_overview_sentence <- paste0(
+      design_overview_sentence, " The sum of observation weights was ",
+      format(weight_sum, digits = 10, trim = TRUE),
+      "; the fit summary's N field denotes this weight sum, not the number of rating rows."
+    )
+  }
   design_facets_sentence <- if (length(facet_names) > 0) {
     paste0("The design included facets for ", facets_text, ".")
   } else {
@@ -1927,12 +1944,8 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     }
     results_residual_sentences <- c(results_residual_sentences, pca_overall_sentence)
     results_sentences <- c(results_sentences, pca_overall_sentence)
-  } else {
-    unavailable_msg <- if (nzchar(pca_overall_error)) {
-      paste0("Residual PCA was not available for this run: ", pca_overall_error)
-    } else {
-      "Residual PCA was not available for this run."
-    }
+  } else if (nzchar(pca_overall_error)) {
+    unavailable_msg <- paste0("Overall residual PCA was not available for this run: ", pca_overall_error)
     results_residual_sentences <- c(results_residual_sentences, unavailable_msg)
     results_sentences <- c(results_sentences, unavailable_msg)
   }
@@ -1947,8 +1960,10 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
     results_residual_sentences <- c(results_residual_sentences, facet_pca_sentence)
     results_sentences <- c(results_sentences, facet_pca_sentence)
   }
-  results_residual_sentences <- c(results_residual_sentences, pca_reference_text)
-  results_sentences <- c(results_sentences, pca_reference_text)
+  if (!is.null(pca_overall_1) || nrow(pca_facet_1) > 0) {
+    results_residual_sentences <- c(results_residual_sentences, pca_reference_text)
+    results_sentences <- c(results_sentences, pca_reference_text)
+  }
 
   if (isTRUE(marginal_state$marginal_available)) {
     strict_marginal_sentence <- paste0(
@@ -2075,6 +2090,7 @@ build_apa_reporting_contract <- function(res, diagnostics, bias_results = NULL, 
       model = model,
       method = method,
       n_obs = n_obs,
+      weight_sum = weight_sum,
       n_person = n_person,
       n_cat = n_cat,
       rating_min = rating_min,
@@ -2282,7 +2298,7 @@ build_visual_warning_map <- function(res,
   pca_first_prop_warn <- active$pca_first_prop_warn %||% 0.10
 
   summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
-  n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
+  n_obs <- to_float(res$prep$n_obs %||% summary$N)
   n_person <- if (!is.null(res$facets$person)) nrow(res$facets$person) else 0
 
   # Stage 2: Sample-size and design warnings (Wright/pathway/observed-expected plots).
@@ -2583,7 +2599,7 @@ build_visual_summary_map <- function(res,
 
   # Stage 1: Global design summary.
   summary <- if (!is.null(res$summary) && nrow(res$summary) > 0) res$summary[1, , drop = FALSE] else NULL
-  n_obs <- if (!is.null(summary)) to_float(summary$N) else NA_real_
+  n_obs <- to_float(res$prep$n_obs %||% summary$N)
   n_person <- if (!is.null(res$facets$person)) nrow(res$facets$person) else 0
 
   if (is.finite(n_obs)) summaries$wright_map <- c(summaries$wright_map, paste0("Observations: N = ", fmt_count(n_obs), "."))

@@ -76,17 +76,27 @@
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' ir <- interrater_agreement_table(fit, rater_facet = "Rater")
-#' # One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,
-#' # RaterSeparation, and RaterReliability are the headline reportable
-#' # statistics.
-#' ir$summary
-#' # Per-pair detail (Rater1 vs Rater2 with Exact, Adjacent, Corr, MAD).
-#' head(ir$pairs)
-#' p_ir <- plot(ir, draw = FALSE)
-#' p_ir$data$plot
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compare ratings of the same person on the same criterion
+#' agreement <- interrater_agreement_table(fit, rater_facet = "Rater")
+#' agreement$summary
+#' agreement$pairs[, c("Rater1", "Rater2", "N", "Exact", "Corr", "MeanDiff")]
+#' # N is the number of matched ratings; Exact is the fraction with identical scores
+#' # MeanDiff = Rater1 minus Rater2: positive means Rater1 assigned higher scores
+#' # These observed-score comparisons are distinct from fitted rater severity
 #' }
 #' @export
 interrater_agreement_table <- function(fit,
@@ -322,7 +332,8 @@ facets_chisq_table <- function(fit,
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param abs_z_min Absolute standardized-residual cutoff.
 #' @param prob_max Maximum observed-category probability cutoff.
-#' @param top_n Maximum number of rows to return.
+#' @param top_n Maximum number of ranked rows to return in `table`.
+#'   Summary counts and percentages always use all flagged observations.
 #' @param rule Flagging rule: `"either"` (default) or `"both"`.
 #'
 #' @details
@@ -335,7 +346,8 @@ facets_chisq_table <- function(fit,
 #' severity score for sorting.
 #'
 #' @section Interpreting output:
-#' - `summary`: prevalence of unexpected responses under current thresholds.
+#' - `summary`: prevalence of unexpected responses under current thresholds,
+#'   before limiting the displayed rows with `top_n`.
 #' - `table`: ranked row-level diagnostics for case review.
 #' - `thresholds`: active cutoffs and flagging rule.
 #'
@@ -386,16 +398,24 @@ facets_chisq_table <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy_full <- load_mfrmr_data("example_core")
-#' toy_people <- unique(toy_full$Person)[1:12]
-#' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
-#' fit <- suppressWarnings(
-#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
-#' summary(t4)
-#' p_t4 <- plot(t4, draw = FALSE)
-#' p_t4$data$plot
+#' diagnostics <- diagnose_mfrm(fit)
+#' unexpected <- unexpected_response_table(
+#'   fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
+#' )
+#' unexpected$summary # Counts and percentages for all flagged observations
+#' unexpected$table   # Only the five highest-ranked cases
+#' plot(unexpected)
+#' # The rule is exploratory: inspect the scoring context before changing a rating
 #' }
 #' @export
 unexpected_response_table <- function(fit,
@@ -422,7 +442,6 @@ unexpected_response_table <- function(fit,
     rating_min = fit$prep$rating_min,
     abs_z_min = abs_z_min,
     prob_max = prob_max,
-    top_n = top_n,
     rule = rule
   )
   summary_tbl <- summarize_unexpected_response_table(
@@ -434,7 +453,7 @@ unexpected_response_table <- function(fit,
   )
 
   out <- list(
-    table = tbl,
+    table = utils::head(tbl, max(1L, as.integer(top_n))),
     summary = summary_tbl,
     thresholds = list(
       abs_z_min = abs_z_min,
@@ -578,15 +597,30 @@ unexpected_response_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [displacement_table()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t12 <- fair_average_table(fit, udecimals = 2)
-#' t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
-#' summary(t12)
-#' p_t12 <- plot(t12, draw = FALSE)
-#' p_t12$data$plot
-#' }
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Compare observed person means with model-based scores on a common reference
+#' fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
+#'                            reference = "mean", label_style = "native")
+#' head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
+#' # FairM uses the mean reference for the other facets; it is in score units
+#' # It is a conditional model prediction, not a guarantee of fairness
+#' }
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
@@ -969,6 +1003,13 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' - `threshold_table` for adjacent-step gaps and ordering within each
 #'   `StepFacet`.
 #'
+#' For MML step uncertainty, inspect
+#' `diagnostics$parameter_uncertainty$steps` from [diagnose_mfrm()]. A bare fit
+#' supplies point estimates to `threshold_table`; passing separate diagnostics
+#' here does not attach their SEs or intervals to that table. Check `SE_Status`
+#' and, when present, `CIEligible` / `CIUse` before reporting intervals. Retain
+#' `StepFacet` for PCM threshold families. A facet-location SE is not a step SE.
+#'
 #' @section Typical workflow:
 #' 1. Fit model: [fit_mfrm()].
 #' 2. Build diagnostics: [diagnose_mfrm()].
@@ -999,7 +1040,8 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'
 #' The `threshold_table` data.frame contains:
 #' \describe{
-#'   \item{Step}{Step label (e.g., "1-2", "2-3").}
+#'   \item{Step}{Step label (e.g., `Step_1`, `Step_2`). Use `LowerCategory`
+#'     and `UpperCategory` to identify the corresponding score transition.}
 #'   \item{Estimate}{Estimated threshold/step difficulty (logits).}
 #'   \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
 #'     threshold sets.}
@@ -1034,26 +1076,27 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' t8 <- rating_scale_table(fit)
-#' summary(t8)
-#' summary(t8)$summary
-#' p_t8 <- plot(t8, draw = FALSE)
-#' p_t8$data$plot
 #'
+#' # Review category use and the fitted transitions between scores
+#' categories <- rating_scale_table(fit)
+#' review <- summary(categories)
+#' review$summary
+#'
+#' # Bars show observed counts; the line shows model-expected counts
+#' plot(categories)
 #' }
 #' @section References:
 #' - Andrich, D. (1978). *A rating formulation for ordered response
@@ -1414,7 +1457,9 @@ bias_count_table <- function(bias_results,
 #' @param diagnostics Optional output from [diagnose_mfrm()] for baseline comparison.
 #' @param abs_z_min Absolute standardized-residual cutoff.
 #' @param prob_max Maximum observed-category probability cutoff.
-#' @param top_n Maximum number of rows to return.
+#' @param top_n Maximum number of ranked rows to return in `table`.
+#'   Summary counts, percentages, and before/after comparisons use all flagged
+#'   observations, regardless of this display limit.
 #' @param rule Flagging rule: `"either"` or `"both"`.
 #'
 #' @details
@@ -1511,7 +1556,6 @@ unexpected_after_bias_table <- function(fit,
     rating_min = fit$prep$rating_min,
     abs_z_min = abs_z_min,
     prob_max = prob_max,
-    top_n = top_n,
     rule = rule
   )
   if (nrow(tbl) > 0 && "Row" %in% names(tbl) && "BiasAdjustment" %in% names(obs_adj)) {
@@ -1533,10 +1577,10 @@ unexpected_after_bias_table <- function(fit,
     diagnostics = diagnostics,
     abs_z_min = abs_z_min,
     prob_max = prob_max,
-    top_n = max(top_n, nrow(obs_adj)),
+    top_n = 1,
     rule = rule
   )
-  baseline_n <- if (is.null(baseline$table)) NA_integer_ else nrow(baseline$table)
+  baseline_n <- baseline$summary$UnexpectedN
   after_n <- nrow(tbl)
   summary_tbl <- summary_tbl |>
     mutate(
@@ -1547,7 +1591,7 @@ unexpected_after_bias_table <- function(fit,
     )
 
   out <- list(
-    table = tbl,
+    table = utils::head(tbl, max(1L, as.integer(top_n))),
     summary = summary_tbl,
     thresholds = list(
       abs_z_min = abs_z_min,

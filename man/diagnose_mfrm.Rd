@@ -94,6 +94,8 @@ diagnostic computation does not override a blocked or review-only fit
 posterior-expected first-order category counts
 \item \code{residual_pca_overall}: optional overall PCA object
 \item \code{residual_pca_by_facet}: optional facet PCA objects
+\item \code{replay_inputs}: diagnostic settings retained for reproducible export,
+including fit standardization, interaction selection, and PCA limits
 }
 }
 \description{
@@ -287,26 +289,30 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-s_diag <- summary(diag, top_n = 3)
-s_diag$decision
-s_diag$key_warnings
-s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
-s_diag$top_fit
+
+# Check model fit and the support for standard errors and intervals
+diagnostics <- diagnose_mfrm(fit)
+diagnostic_summary <- summary(diagnostics)
+diagnostic_summary$decision
+
+diagnostic_summary$key_warnings # Issues to investigate, if present
+diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
+
+# Distinguish residual-based checks from marginal model checks
+diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 }
 }
 \seealso{

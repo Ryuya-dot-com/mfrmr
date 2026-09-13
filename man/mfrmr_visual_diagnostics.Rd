@@ -449,6 +449,19 @@ SEs. See \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} and \code{\
 columns and the observed-minus-fair gap caveat.
 }
 
+\section{Non-Latin and long labels}{
+
+Select an installed font that contains the characters in your labels before
+drawing. For example, on macOS, open a PNG device and set
+\code{par(family = "Hiragino Sans")} before \code{plot(fit)}. Use an appropriate
+installed font on other systems. A successful plot call alone does not
+confirm that the device rendered every character; inspect the saved figure.
+Long labels also require enough space. Use a wider device for rater-severity
+profiles. For crowded FACETS-style maps, use a taller or wider device,
+increase \code{rows_per_logit}, or switch to \code{renderer = "native"}.
+Full labels remain in the tables returned with \code{draw = FALSE}.
+}
+
 \section{Companion vignette}{
 
 For a longer, plot-first walkthrough, run
@@ -457,41 +470,34 @@ For a longer, plot-first walkthrough, run
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
-)
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-checklist <- reporting_checklist(fit, diagnostics = diag)
-visual_reporting_template("manuscript")
-subset(
-  checklist$checklist,
-  Section == "Visual Displays" & Item \%in\% c("QC / facet dashboard", "Strict marginal visuals"),
-  c("Item", "Available", "NextAction")
+  model = "RSM"
 )
 
-qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
-qc$data$plot
+# Start with the shared-scale view; run plot commands one at a time
+plot(fit)
 
-p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-p_marg$data$preset
+# Compute diagnostics once and check their interpretation status
+diagnostics <- diagnose_mfrm(fit)
+review <- summary(diagnostics)
+review$decision
 
-wright <- plot(fit, type = "wright", draw = FALSE, preset = "publication")
-wright$data$preset
+# Inspect an overview of model-fit issues
+plot_qc_dashboard(fit, diagnostics = diagnostics)
 
-pca <- analyze_residual_pca(diag, mode = "overall")
-scree <- plot_residual_pca(pca, plot_type = "scree", draw = FALSE, preset = "publication")
-scree$data$preset
+# Follow up on observed versus model-expected category frequencies
+plot_marginal_fit(diagnostics)
 }
-
 }
 \seealso{
 \link{mfrmr_workflow_methods}, \link{mfrmr_reports_and_tables},

@@ -129,6 +129,18 @@ FACETS-organization interpretation boundary
 Summarize an \code{mfrm_fit} object in a user-friendly format
 }
 \details{
+Start with \code{results <- summary(fit)}. Use \code{results$person_overview} for
+the distribution of person ability estimates and \code{results$facet_overview}
+for the distribution of estimates within each non-person facet. These are
+aggregate summaries; use \code{as.data.frame(fit)} for individual person and
+facet-level estimates. Read \code{results$decision} before interpreting results.
+Assignment with \verb{<-} saves the summary without printing it; enter \code{results}
+to print the full summary or use \code{$} to display a selected table.
+In the example, \code{person_overview} has one row for all persons and
+\code{facet_overview} has one row for raters and one for criteria. Each non-person
+facet's mean is constrained to zero in this fit; use its SD and range or
+individual estimates to inspect differences among its levels.
+
 This method provides a compact, human-readable summary oriented to reporting.
 The expanded profiles use FACETS-style organization for navigation, but do
 not claim that FACETS was executed or that estimates are numerically
@@ -221,31 +233,38 @@ checks. For bounded \code{GPCM}, continue with \code{\link[=compute_information]
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_operational")
-# Seven quadrature points keep this executable example short. For a final
-# analysis, restore the default or a prespecified grid and review sensitivity.
+\donttest{
+# Load the package
+library(mfrmr)
+
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30,
-  reltol = 1e-11
+  method = "MML",
+  model = "RSM"
 )
-fit_review <- summary(fit, profile = "fit", detail = "brief")
-fit_review$decision
-# `InferenceReady = TRUE` means all five stored fit components passed.
-# It does not, by itself, support formal SE/CI or reliability.
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-full_review <- summary(
-  fit, profile = "facets", detail = "brief", diagnostics = diag
-)
-full_review$decision
-plot(
-  fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
-)$name
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
+
+# Extract estimates and select the rows to display
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
+subset(estimates, Facet == "Rater")       # All raters
+subset(estimates, Facet == "Criterion")   # All criteria
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}

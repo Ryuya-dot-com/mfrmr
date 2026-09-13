@@ -49,6 +49,12 @@
 #' - `DraftReady = TRUE` / `ReadyForAPA = TRUE` does not certify formal
 #'   inferential adequacy.
 #' - Missing bias rows may simply mean `bias_results` were not supplied.
+#' - Study questions, recruitment, rater training, the assignment process,
+#'   missingness reasons, ethics, and substantive interpretation require the
+#'   author's study record. Available output does not verify those facts.
+#'   The "Manuscript coverage map" in
+#'   `vignette("mfrmr-reporting-and-apa", package = "mfrmr")` pairs reporting
+#'   topics with numerical evidence and information to supply manually.
 #'
 #' @section Interpreting output:
 #' - `checklist`: one row per reporting item with `Available = TRUE/FALSE`.
@@ -71,7 +77,9 @@
 #' - `visual_scope`: plotting-route summary that separates report-default
 #'   2D figures from exploratory surface/3D-ready data handoffs, including a
 #'   short `InterpretationCheck` for the main user-facing caveat.
-#' - `references`: core background references when requested.
+#' - `references`: abbreviated background citations and topics when requested,
+#'   not a complete bibliography. Verify full records for the methods used;
+#'   use `citation("mfrmr")` for the installed software's citation.
 #'
 #' @section Recommended next step:
 #' Review the rows with `Available = FALSE` or `DraftReady = FALSE`, then add
@@ -112,32 +120,32 @@
 #'   [build_misfit_casebook()], [build_linking_review()]
 #' @examples
 #' \donttest{
-#' # Minimal checklist example using a JML fit and lightweight diagnostics.
-#' toy <- load_mfrmr_data("example_core")
-#' # A balanced slice retains every Rater and Criterion while running quickly.
-#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
-#' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                       method = "JML", maxit = 30)
-#' diag_quick <- diagnose_mfrm(fit_quick, residual_pca = "none",
-#'                              diagnostic_mode = "legacy")
-#' chk_quick <- reporting_checklist(fit_quick, diagnostics = diag_quick)
-#' head(chk_quick$checklist[, c("Section", "Item", "DraftReady")])
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "MML", quad_points = 7, maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
-#' chk <- reporting_checklist(fit, diagnostics = diag)
-#' summary(chk)
-#' # Look for: a high `Ready` / `Total` ratio in the summary block.
-#' #   Sections with `Ready = 0` need follow-up before submitting
-#' #   (typically diagnostic_mode = "both" or a residual-PCA pass).
-#' apa <- build_apa_outputs(fit, diag)
-#' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-#' # Look for: every row where `DraftReady = "yes"` is ready to paste
-#' #   into the manuscript. `"no"` rows include a concrete `NextAction`
-#' #   step (e.g. "run plot_qc_dashboard()") so the gap can be closed
-#' #   without re-reading the methodology guide.
-#' nchar(apa$report_text)
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Which reporting items still need evidence or explanation?
+#' checklist <- reporting_checklist(fit, diagnostics = diagnostics)
+#' checklist$section_summary
+#'
+#' # Review the missing items and their suggested next actions
+#' subset(checklist$checklist, !DraftReady,
+#'        c("Section", "Item", "DraftReady", "NextAction"))
+#' # DraftReady is TRUE/FALSE; TRUE means draft material is available with caveats
+#' # Choose follow-up analyses for your question, not merely to make every row TRUE
 #' }
 #' @export
 reporting_checklist <- function(fit,

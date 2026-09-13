@@ -49,11 +49,27 @@ All non-person facets are stacked underneath in the same schema.
 }
 
 \examples{
+\donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", model = "RSM",
-                quad_points = 7, maxit = 30)
-head(as.data.frame(fit))
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Extract estimates and select the rows to display
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
+subset(estimates, Facet == "Rater")       # All raters
+subset(estimates, Facet == "Criterion")   # All criteria
+}
 }
 \seealso{
 \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}

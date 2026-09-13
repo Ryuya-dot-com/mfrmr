@@ -113,17 +113,27 @@ rater facet, reported separately from agreement.}
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-ir <- interrater_agreement_table(fit, rater_facet = "Rater")
-# One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,
-# RaterSeparation, and RaterReliability are the headline reportable
-# statistics.
-ir$summary
-# Per-pair detail (Rater1 vs Rater2 with Exact, Adjacent, Corr, MAD).
-head(ir$pairs)
-p_ir <- plot(ir, draw = FALSE)
-p_ir$data$plot
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compare ratings of the same person on the same criterion
+agreement <- interrater_agreement_table(fit, rater_facet = "Rater")
+agreement$summary
+agreement$pairs[, c("Rater1", "Rater2", "N", "Exact", "Corr", "MeanDiff")]
+# N is the number of matched ratings; Exact is the fraction with identical scores
+# MeanDiff = Rater1 minus Rater2: positive means Rater1 assigned higher scores
+# These observed-score comparisons are distinct from fitted rater severity
 }
 }
 \seealso{

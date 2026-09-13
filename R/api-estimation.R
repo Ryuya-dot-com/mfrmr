@@ -1,10 +1,21 @@
 #' Fit many-facet ordered-response models with a flexible number of facets
 #'
-#' This is the package entry point. It wraps `mfrm_estimate()` and defaults to
-#' `method = "MML"`. Any number of facet columns can be supplied via `facets`.
+#' Estimate person abilities while accounting for rater severity and other
+#' influences on scores, such as criterion difficulty. A facet is one such
+#' source of variation; its levels are the individual raters or criteria.
+#' Each data row is one rating. Supply its column names with `person`,
+#' `facets`, and `score`, as in the complete example below.
+#' The default is `method = "MML"` (marginal maximum likelihood).
 #' The `RSM` / `PCM` branches are the package's many-facet Rasch-family
 #' reference route; the bounded `GPCM` branch is available where explicitly
 #' documented.
+#' In the example, `toy` stores the data and `fit` stores the fitted model.
+#' Quoted column names such as `"Person"` must match the data, including case.
+#' For your own CSV, see the "Use your own CSV" section of
+#' `vignette("mfrmr-workflow", package = "mfrmr")`. If the vignette is not
+#' installed, [mfrmr_workflow_methods] and [describe_mfrm_data()] explain the
+#' input checks. Pass the reviewed rating data frame to `data`, not the object
+#' returned by `describe_mfrm_data()`.
 #'
 #' @param data A data.frame in long format with one row per observed rating
 #'   event.
@@ -967,27 +978,35 @@
 #'   [gpcm_capability_matrix], [mfrmr_workflow_methods],
 #'   [mfrmr_reporting_and_apa]
 #' @examples
-#' # Each quoted role below is a column name in the long-format data.
-#' ratings <- load_mfrmr_data("example_operational")
-#' names(ratings)
+#' \donttest{
+#' # Load the package
+#' library(mfrmr)
 #'
+#' # Load example ratings and look at the first six rows
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
-#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
-#'   reltol = 1e-11
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' fit_review <- summary(fit, profile = "fit", detail = "brief")
-#' fit_review$decision
-#' fit_review$overview[, c("Model", "Method", "FitReadiness", "InferenceReady")]
 #'
-#' # This seven-point grid keeps the example short. Use the default 31-point
-#' # grid, and a denser sensitivity check when needed, for substantive work.
-#' plot(fit, type = "wright", draw = FALSE)$name
+#' # Plot the results (Wright map)
+#' plot(fit)
+#'
+#' # Save the summary, then display its tables
+#' results <- summary(fit)
+#' results$person_overview # One row summarizing person ability estimates
+#' results$facet_overview  # One row per facet: number of levels, mean, SD, range
+#'
+#' # Check the interpretation status and recommended next step
+#' results$decision
+#' }
 #' @export
 fit_mfrm <- function(data,
                      person,
@@ -2443,7 +2462,13 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
   )
 }
 
-#' Summarize MFRM input data (TAM-style descriptive snapshot)
+#' Check rating data before fitting an MFRM
+#'
+#' Inspect how many rating rows can be used, how often each score category
+#' occurs, and whether facet levels connect through shared persons. This
+#' function prepares descriptive checks; it does not fit a model or change
+#' the data object supplied by the caller. Each row should represent one
+#' rating, and `person`, `facets`, and `score` name its columns.
 #'
 #' @param data A data.frame in long format (one row per rating event).
 #' @param person Column name for person IDs.
@@ -2491,10 +2516,10 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   a model-acceptance rule.
 #'
 #' @details
-#' This function provides a compact descriptive bundle similar to the
-#' pre-fit summaries commonly checked in TAM workflows:
-#' sample size, score distribution, per-facet coverage, and linkage counts.
-#' `psych::describe()` is used for numeric descriptives of score and weight.
+#' Set `rating_min` and `rating_max` from the rubric, including categories
+#' nobody received. Use `keep_original = TRUE` to preserve its category
+#' structure in the review. Numeric descriptives of score and weight use
+#' `psych::describe()`.
 #'
 #' **Key data-quality checks to perform before fitting:**
 #' - *Sparse categories*: review categories with little weighted support because
@@ -2505,16 +2530,22 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #'   Person-facet graph. More than one component means that the levels of that
 #'   facet are not connected through shared persons. This facet-specific check
 #'   is conservative and does not by itself prove full model identification.
-#' - *Extreme scores*: persons or facet levels with all-minimum or
-#'   all-maximum scores yield infinite logit estimates under JML;
-#'   they are handled via Bayesian shrinkage under MML.
+#' - *Extreme scores*: MML uses a person distribution to obtain posterior
+#'   person scores, including for persons with all-minimum or all-maximum
+#'   scores. Non-person facets remain fixed effects: an extreme rater or
+#'   criterion is not given a prior or automatically shrunk by choosing MML.
+#'   Review the fitted boundary and precision evidence before interpretation.
 #'
 #' @section Interpreting output:
 #' Recommended order:
-#' - `overview`: confirms sample size, facet count, and category span.
-#' - `missing_by_column`: identifies immediate data-quality risks.
-#'   Understand why values are missing and whether the fitted missing-data
-#'   handling matches the study design.
+#' - `overview`: confirms retained ratings (`Observations`), persons, facets,
+#'   and category span. Use `row_retention` to compare input and retained
+#'   `Rows`; `DroppedRows` counts exclusions during preparation.
+#' - `missing_by_column`: counts `NA` values in the input columns. A missing
+#'   score or required identifier excludes that rating row, not automatically
+#'   the person's other ratings. The package does not fill missing ratings.
+#'   When `missing_codes` is supplied, these counts still describe the original
+#'   input; inspect `missing_recoding` and `preparation_notes` as well.
 #' - `structural_missingness`: compares observed rating cells with
 #'   `expected_design`, when supplied. Without a declared roster, structural
 #'   missingness is reported as not assessed rather than assumed to be zero.
@@ -2527,10 +2558,41 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #' - `agreement`: optional observed agreement summary for the selected scorer
 #'   facet (exact agreement, correlation, and mean differences per pair).
 #'
+#' `data_review <- describe_mfrm_data(...)` saves all these checks.
+#' `review <- summary(data_review)` provides a compact view; its missingness
+#' table is named `review$missing`, while the original full table is
+#' `data_review$missing_by_column`. Summary previews use `top_n = 10` by
+#' default. Use the original tables to inspect all rows or categories.
+#'
+#' @section If the input needs attention:
+#' - **Column name not found:** run `names(ratings)` and match spelling,
+#'   spaces, and case in `person`, `facets`, and `score`.
+#' - **Unexpected row loss:** inspect `row_retention`, `missing_by_column`,
+#'   and `preparation_notes`. Resolve unintended missing IDs and invalid score
+#'   text in the input data. For documented score markers such as `99` or `.`,
+#'   use [recode_missing_codes()] with explicit `columns` and `codes`.
+#' - **Repeated person-by-facet cells:** inspect `duplicate_cell_detail`.
+#'   Correct accidental duplicates; include a task or occasion facet when
+#'   ratings represent distinct events in the design.
+#' - **Unused category or disconnected design:** inspect
+#'   `score_distribution` and `design_connectivity`. Review the rubric and
+#'   assignments before changing the model. A retained internal zero-count
+#'   category stops fitting; extra optimizer iterations cannot supply the
+#'   missing category information.
+#'
+#' After editing or recoding ratings, rerun this review on the corrected data
+#' and pass that same data to [fit_mfrm()], using the same columns, score
+#' bounds, and `keep_original` setting. If you use `missing_codes` within the
+#' review instead of recoding first, supply the same option to the fit:
+#' reviewing does not modify the original data. For CSV import, column mapping,
+#' and a complete worked example, see
+#' `vignette("mfrmr-workflow", package = "mfrmr")`.
+#'
 #' @section Typical workflow:
-#' 1. Run `describe_mfrm_data()` on long-format input.
-#' 2. Review `summary(ds)` and `plot(ds, ...)`.
-#' 3. Resolve missingness/sparsity issues before [fit_mfrm()].
+#' 1. Run `data_review <- describe_mfrm_data(...)` on the rating data.
+#' 2. Inspect row retention, category counts, and design connectivity.
+#' 3. Correct input issues, repeat the review, and fit the reviewed data with
+#'    [fit_mfrm()].
 #'
 #' @return A list of class `mfrm_data_description` with:
 #' - `overview`: one-row run-level summary
@@ -2566,21 +2628,34 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
 #' - `score_support`: minimal prepared score-support metadata used by
 #'   `summary(ds)$caveats`
 #'
-#' @seealso [fit_mfrm()], [review_mfrm_anchors()]
+#' @seealso [fit_mfrm()], [summary.mfrm_data_description()],
+#'   [recode_missing_codes()], [mfrmr_workflow_methods], [review_mfrm_anchors()]
 #' @examples
-#' ratings <- load_mfrmr_data("example_operational")
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
+#'
+#' # Check the data before fitting; the intended score categories are 1 to 4
 #' data_review <- describe_mfrm_data(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   rating_min = 1,
-#'   rating_max = 4
+#'   rating_max = 4,
+#'   keep_original = TRUE
 #' )
+#' data_review$row_retention       # Input and retained rows; check DroppedRows
+#' data_review$missing_by_column   # Missing input values in each model column
+#' data_review$score_distribution  # RawN is the number of ratings per category
+#' data_review$design_connectivity # Components = 1 means connected for that facet
+#' # Here all 282 rows are retained, and all four categories have observations
+#'
+#' # Save a compact summary when you want the overview and review notes
 #' review <- summary(data_review)
 #' review$overview
-#' review$score_distribution
-#' review$design_connectivity
+#' review$notes
+#' # For the next fit, use data = toy; data_review is a set of checks, not ratings
 #' @export
 describe_mfrm_data <- function(data,
                                person,
@@ -2881,6 +2956,10 @@ describe_mfrm_data <- function(data,
 #' `"N"`, `"NA"`, `"n/a"`, `"."`, `""`) with `NA` across the columns
 #' you select. It is useful before calling [fit_mfrm()] on data exported with
 #' those conventions.
+#' A sentinel is a value used to mean "missing" instead of an actual score.
+#' Only recode values that your data documentation defines as missing. For
+#' custom score markers, specify both `columns = "Score"` and `codes`; this
+#' preserves a person or rater identifier such as `99`.
 #'
 #' @param data A data frame.
 #' @param columns Character vector of column names to recode. Defaults
@@ -2897,17 +2976,39 @@ describe_mfrm_data <- function(data,
 #'   replaced by `NA`. A `mfrm_missing_recoding` attribute records the
 #'   per-column replacement counts for traceability logs.
 #'
+#' @details
+#' Save the returned data, for example `cleaned <- recode_missing_codes(...)`.
+#' The original object is unchanged. This helper replaces cells and retains
+#' every row; later, [describe_mfrm_data()] and [fit_mfrm()] exclude rating rows
+#' with missing scores or required identifiers. Inspect the replacement counts
+#' with `attr(cleaned, "mfrm_missing_recoding")`, then review and fit `cleaned`.
+#'
+#' The defaults differ across entry points: this helper scans all columns when
+#' `columns` is omitted. In `describe_mfrm_data()` and `fit_mfrm()`,
+#' `missing_codes = TRUE` uses the conventional code set on the score column
+#' only; an explicit `missing_codes` vector applies to the person, facet, and
+#' score columns. Use this helper with an explicit score column when your custom code
+#' could also be a legitimate identifier.
+#'
 #' @seealso [describe_mfrm_data()], [fit_mfrm()].
 #'
 #' @examples
-#' dat <- data.frame(
-#'   Person = paste0("P", 1:5),
-#'   Rater = c("R1", "R1", "R2", "R2", "R2"),
-#'   Score = c(1, 99, 2, -1, 3)
+#' library(mfrmr)
+#'
+#' # A small input example: 99 and . mean missing only in the Score column
+#' ratings <- data.frame(
+#'   Person = c("001", "001", "002", "002"),
+#'   Rater = c("R1", "99", "R1", "99"),
+#'   Score = c("3", "99", ".", "2")
 #' )
-#' cleaned <- recode_missing_codes(dat, columns = "Score")
-#' cleaned$Score
-#' attr(cleaned, "mfrm_missing_recoding")
+#' cleaned <- recode_missing_codes(
+#'   ratings,
+#'   columns = "Score",
+#'   codes = c("99", ".")
+#' )
+#' cleaned # Two scores become NA; rater ID 99 and all four rows remain
+#' attr(cleaned, "mfrm_missing_recoding") # Score: Replaced = 2
+#' # Use the returned cleaned data for subsequent data review and fitting
 #' @export
 recode_missing_codes <- function(data,
                                  columns = NULL,
@@ -3109,34 +3210,51 @@ collect_mfrm_design_caveats <- function(object) {
 
 #' Summarize a data-description object
 #'
+#' Read a compact summary of the checks from [describe_mfrm_data()] before
+#' fitting a model. Save it with `review <- summary(data_review)` and select
+#' the tables you need with `$`, as in the example.
+#'
 #' @param object Output from [describe_mfrm_data()].
 #' @param digits Number of digits for numeric rounding.
 #' @param top_n Maximum rows shown in preview blocks.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
-#' This summary is intended as a compact pre-fit quality snapshot for
-#' manuscripts and analysis logs.
+#' `data_review` holds the complete data checks; `review` holds summary tables
+#' and notes. Neither object contains model estimates. The default `top_n = 10`
+#' limits the missing-column and score-distribution previews; use
+#' `data_review$missing_by_column` and `data_review$score_distribution` to see
+#' the complete tables.
 #'
 #' @section Interpreting output:
 #' Recommended read order:
-#' - `overview`: sample size, persons/facets/categories.
-#' - `missing`: missingness hotspots by selected input columns.
+#' - `overview`: retained ratings (`Observations`), persons, facets, and
+#'   categories. Compare input and retained `Rows` in `row_retention` and
+#'   investigate unexpected `DroppedRows`.
+#' - `missing`: input `NA` counts by column. This table is named
+#'   `missing_by_column` in the original `data_review` object. Declared
+#'   missing-code replacements and invalid score text can cause additional
+#'   row loss; inspect `data_review$missing_recoding` and `preparation_notes`.
 #' - `score_distribution`: category usage balance.
 #' - `notes` / printed `Caveats`: retained zero-count score categories and
-#'   related score-support caveats; intermediate unused categories should be
-#'   treated as threshold-functioning warnings before model fitting.
+#'   related score-support caveats. With `keep_original = TRUE`, a retained
+#'   unused internal category stops fitting; review the data and rubric first.
 #' - `facet_overview`: coverage per facet (minimum/maximum weighted counts).
 #' - `agreement`: observed-score agreement for the selected scorer facet (when
 #'   available).
+#' - `design_connectivity`: check for more than one observed component before
+#'   comparing facet levels. `structural_missingness` reports planned omissions
+#'   only when an assignment roster was supplied; `not_declared` does not mean
+#'   that no ratings are missing.
 #'
 #' Very low `MinWeightedN` in `facet_overview` is a practical warning for
 #' unstable downstream facet estimates.
 #'
 #' @section Typical workflow:
 #' 1. Run [describe_mfrm_data()] on raw long-format data.
-#' 2. Inspect `summary(ds)` before model fitting.
-#' 3. Resolve sparse/missing issues, then run [fit_mfrm()].
+#' 2. Inspect `review <- summary(data_review)` before model fitting.
+#' 3. Correct input issues and repeat the review, then pass the corrected
+#'    rating data to [fit_mfrm()] with the same preparation settings.
 #'
 #' @return An object of class `summary.mfrm_data_description`.
 #' - `overview`: design/sample counts
@@ -3162,18 +3280,33 @@ collect_mfrm_design_caveats <- function(object) {
 #'   which companion outputs should be consulted
 #' - `caveats`: structured warning/review rows for score-support issues;
 #'   `print(summary(ds))` shows a compact `Caveats` block when rows are present
+#' - `notes`: plain-language explanations of missingness, preparation, score
+#'   support, and design-review findings
 #' @seealso [describe_mfrm_data()], [summary.mfrm_fit()]
 #' @examples
+#' library(mfrmr)
 #' ratings <- load_mfrmr_data("example_operational")
+#'
+#' # Demonstrate two missing scores in a copy of the example data
+#' ratings$Score[1:2] <- NA
 #' data_review <- describe_mfrm_data(
 #'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
 #'   rating_min = 1,
-#'   rating_max = 4
+#'   rating_max = 4,
+#'   keep_original = TRUE
 #' )
-#' summary(data_review)
+#' review <- summary(data_review)
+#' review$row_retention # 282 input rows, 280 retained rows
+#' review$missing       # Score has 2 missing input values
+#' review$overview      # Counts describe the retained ratings
+#' review$notes         # Explanations to read before fitting
+#'
+#' # The original description retains the full missingness table
+#' data_review$missing_by_column
+#' # Investigate missingness before using ratings in fit_mfrm()
 #' @export
 summary.mfrm_data_description <- function(object, digits = 3, top_n = 10, ...) {
   digits <- max(0L, as.integer(digits))
@@ -4283,31 +4416,37 @@ make_anchor_table <- function(fit,
 #'   posterior-expected first-order category counts
 #' - `residual_pca_overall`: optional overall PCA object
 #' - `residual_pca_by_facet`: optional facet PCA objects
+#' - `replay_inputs`: diagnostic settings retained for reproducible export,
+#'   including fit standardization, interaction selection, and PCA limits
 #'
 #' @seealso [fit_mfrm()], [analyze_residual_pca()], [build_visual_summaries()],
 #'   [mfrmr_visual_diagnostics], [mfrmr_reporting_and_apa]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-#' s_diag <- summary(diag, top_n = 3)
-#' s_diag$decision
-#' s_diag$key_warnings
-#' s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
-#' s_diag$top_fit
+#'
+#' # Check model fit and the support for standard errors and intervals
+#' diagnostics <- diagnose_mfrm(fit)
+#' diagnostic_summary <- summary(diagnostics)
+#' diagnostic_summary$decision
+#'
+#' diagnostic_summary$key_warnings # Issues to investigate, if present
+#' diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
+#'
+#' # Distinguish residual-based checks from marginal model checks
+#' diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 #' }
 #' @section References:
 #' - Wright, B. D., & Masters, G. N. (1982). *Rating scale analysis*.
@@ -4787,18 +4926,41 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
+#' # Load one dataset for both models
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
-#' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                      method = "MML", model = "RSM", quad_points = 31, maxit = 30)
-#' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                      method = "MML", model = "PCM",
-#'                      step_facet = "Criterion", quad_points = 31, maxit = 30)
-#' comp <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
-#' comp$table
-#' comp$evidence_ratios
+#' # RSM: shared category thresholds
+#' fit_rsm <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # PCM: separate category thresholds for each criterion
+#' fit_pcm <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "PCM",
+#'   step_facet = "Criterion"
+#' )
+#'
+#' # Check that the fitted models can be compared
+#' comparison <- compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
+#' comparison$table[, c("Label", "Converged", "ICComparable", "ICSelectable")]
+#'
+#' # Smaller AIC/BIC indicates better relative support among these models
+#' comparison$table[, c("Label", "AIC", "Delta_AIC", "BIC", "Delta_BIC")]
+#' # Delta is the difference from the lowest value of that criterion
+#' # For close or consequential comparisons, check a denser shared grid with
+#' # mml_quadrature_sensitivity() before choosing a model
 #' }
-#'
 #' @section References:
 #' - Burnham, K. P., & Anderson, D. R. (2002). *Model selection and
 #'   multimodel inference: A practical information-theoretic

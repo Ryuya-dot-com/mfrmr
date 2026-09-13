@@ -81,23 +81,25 @@ language or should remain in exploratory/screening mode.
 
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-out <- precision_review_report(fit, diagnostics = diag)
-summary(out)
+
+# Review support for standard errors, intervals, and reliability summaries
+diagnostics <- diagnose_mfrm(fit)
+precision <- precision_review_report(fit, diagnostics = diagnostics)
+review <- summary(precision)
+review$checks # Check statuses and reasons before making precision claims
 }
 }
 \seealso{

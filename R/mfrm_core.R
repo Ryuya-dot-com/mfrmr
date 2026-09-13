@@ -5056,7 +5056,6 @@ calc_unexpected_response_table <- function(obs_df,
                                            rating_min,
                                            abs_z_min = 2,
                                            prob_max = 0.30,
-                                           top_n = 100,
                                            rule = c("either", "both")) {
   rule <- match.arg(tolower(rule), c("either", "both"))
   if (is.null(obs_df) || nrow(obs_df) == 0 || is.null(probs) || nrow(probs) != nrow(obs_df)) {
@@ -5136,11 +5135,10 @@ calc_unexpected_response_table <- function(obs_df,
   )
   keep_cols <- keep_cols[keep_cols %in% names(out)]
 
-  top_n <- max(1L, as.integer(top_n))
+  # Keep all flagged rows until callers have computed prevalence summaries.
   out |>
     arrange(desc(.data$Severity), desc(abs(.data$StdResidual)), .data$ObsProb) |>
-    select(dplyr::all_of(keep_cols)) |>
-    slice_head(n = top_n)
+    select(dplyr::all_of(keep_cols))
 }
 
 summarize_unexpected_response_table <- function(unexpected_tbl,
@@ -10298,7 +10296,6 @@ mfrm_diagnostics <- function(res,
     rating_min = res$prep$rating_min,
     abs_z_min = unexpected_abs_z_min,
     prob_max = unexpected_prob_max,
-    top_n = 100,
     rule = unexpected_rule
   )
   unexpected_summary <- summarize_unexpected_response_table(
@@ -10437,6 +10434,15 @@ mfrm_diagnostics <- function(res,
   list(
     obs = obs_df,
     facet_names = res$config$facet_names,
+    replay_inputs = list(
+      interaction_pairs = interaction_pairs,
+      top_n_interactions = top_n_interactions,
+      whexact = whexact,
+      fit_df_method = fit_df_method,
+      diagnostic_mode = diagnostic_mode,
+      residual_pca = residual_pca,
+      pca_max_factors = pca_max_factors
+    ),
     diagnostic_mode = diagnostic_mode,
     diagnostic_basis = diagnostic_basis_tbl,
     fit_standardization = fit_standardization,
@@ -10466,7 +10472,7 @@ mfrm_diagnostics <- function(res,
     interactions = interaction_tbl,
     interrater = interrater_tbl,
     unexpected = list(
-      table = unexpected_tbl,
+      table = utils::head(unexpected_tbl, 100L),
       summary = unexpected_summary,
       thresholds = list(
         abs_z_min = unexpected_abs_z_min,

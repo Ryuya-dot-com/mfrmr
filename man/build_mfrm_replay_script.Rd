@@ -112,6 +112,12 @@ embedded into the script
 The source readiness row is not copied into the replayed fit. The generated
 script recomputes readiness and warns when its fit-level decision fields do
 not match the source record.
+Identifier columns are read as text, preserving leading zeros and literal
+\code{"NA"} labels. Original column names and factor coding in exported
+person-level background data are retained. Stored diagnostic settings are
+replayed as well; older diagnostic objects may not retain interaction
+selection or PCA limits, so rerun \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} before exporting them
+when those settings matter.
 
 If \code{ScriptMode} is \code{"facets"}, the script replays the higher-level
 \code{\link[=run_mfrm_facets]{run_mfrm_facets()}} workflow. If it is \code{"fit"}, the script uses
@@ -143,9 +149,16 @@ you.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
 replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 cat(substr(replay$script, 1, 120))

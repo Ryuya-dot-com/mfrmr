@@ -299,40 +299,30 @@ plot_component_note <- function(name, role) {
 #' @return The full reusable plot-data list, or the selected component.
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' # A balanced slice retains every Rater and Criterion while running quickly.
-#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
-#' wright_plot_data <- plot_data(fit, type = "wright")
-#' names(wright_plot_data)
-#'
-#' wright_table <- plot_data(fit, type = "wright", component = "locations")
-#' head(wright_table)
-#'
-#' curves <- category_curves_report(fit, theta_points = 51)
-#' curve_long <- plot_data(curves, component = "plot_long")
-#' head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
-#'
-#' pathway_long <- plot_data(fit, type = "pathway", component = "pathway_long")
-#' head(pathway_long[, c("Layer", "CurveGroup", "Theta", "Value")])
-#' pathway_fit <- plot_data(fit, type = "pathway", component = "fit_measures")
-#' head(pathway_fit[, c("Facet", "Level", "Infit", "Outfit", "FitStatus")])
-#'
-#' # Re-render one component with your own styling while keeping the
-#' # package-generated data and interpretation metadata.
-#' expected <- pathway_long[pathway_long$Layer == "expected_score", , drop = FALSE]
-#' plot(expected$Theta, expected$Value, type = "l",
-#'      xlab = "Theta", ylab = "Expected score",
-#'      main = "Custom expected-score pathway")
-#' abline(v = 0, lty = 2, col = "grey60")
-#'
-#' info <- compute_information(fit, theta_points = 51)
-#' sem_long <- plot_data(
-#'   plot_information(info, type = "sem", draw = FALSE),
-#'   component = "plot_long"
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' head(sem_long[, c("Metric", "Theta", "Value", "DisplayedByDefault")])
+#'
+#' # Draw the Wright map and keep its reusable data
+#' wright <- plot(fit)
+#'
+#' # Extract the plotted locations as a table
+#' locations <- plot_data(wright, component = "locations")
+#' head(locations)
+#'
+#' # For table extraction alone, no graphics device is needed
+#' locations_only <- plot_data(fit, component = "locations")
+#' head(locations_only)
 #' }
 #' @export
 plot_data <- function(x, component = NULL, type = NULL, ...) {
@@ -377,24 +367,29 @@ plot_data <- function(x, component = NULL, type = NULL, ...) {
 #' @return A data frame with one row per reusable plot-data component.
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' # A balanced slice retains every Rater and Criterion while running quickly.
-#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
-#' plot_data_components(fit, type = "pathway")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
-#' curves <- category_curves_report(fit, theta_points = 51)
-#' plot_data_components(curves, type = "category_probability")
-#'
-#' toy$ResponseTime <- 10 + seq_len(nrow(toy)) %% 6 + as.numeric(toy$Score)
-#' rt <- response_time_review(
-#'   toy,
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   time = "ResponseTime"
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' plot_data_components(plot_response_time_review(rt, draw = FALSE))
+#'
+#' # Discover which tables the default Wright map provides without drawing it
+#' plot_data_components(fit)
+#'
+#' # Extract one of the listed components
+#' locations <- plot_data(fit, component = "locations")
+#' head(locations)
+#'
+#' # A different plot type has different reusable tables
+#' plot_data_components(fit, type = "ccc")
 #' }
 #' @export
 plot_data_components <- function(x, type = NULL, ...) {
@@ -963,27 +958,30 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   toy,
-#'   "Person",
-#'   c("Rater", "Criterion"),
-#'   "Score",
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
 #'   method = "MML",
-#'   quad_points = 7,
-#'   maxit = 30
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-#' p <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-#' p$data$preset
-#' if (interactive()) {
-#'   plot_marginal_fit(
-#'     diag,
-#'     plot_type = "prop_diff",
-#'     draw = TRUE,
-#'     preset = "publication"
-#'   )
-#' }
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Which score categories occur more or less often than the model expects?
+#' plot_marginal_fit(diagnostics)
+#' # Positive bars: more frequent than expected; negative bars: less frequent
+#'
+#' # Optional: show observed-minus-expected proportions instead
+#' # Run this command separately to inspect the second figure
+#' plot_marginal_fit(diagnostics, plot_type = "prop_diff")
 #' }
 #' @export
 plot_marginal_fit <- function(x,
@@ -1200,27 +1198,29 @@ plot_marginal_fit <- function(x,
 #' @seealso [diagnose_mfrm()], [plot_marginal_fit()], [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   toy,
-#'   "Person",
-#'   c("Rater", "Criterion"),
-#'   "Score",
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
 #'   method = "MML",
-#'   quad_points = 7,
-#'   maxit = 30
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-#' p <- plot_marginal_pairwise(diag, draw = FALSE, preset = "publication")
-#' p$data$preset
-#' if (interactive()) {
-#'   plot_marginal_pairwise(
-#'     diag,
-#'     metric = "adjacent",
-#'     draw = TRUE,
-#'     preset = "publication"
-#'   )
-#' }
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Which pairs show more or less exact agreement than the model expects?
+#' plot_marginal_pairwise(diagnostics)
+#' # These are screening results; inspect the rating design before drawing conclusions
+#'
+#' # Optional: agreement within one score category
+#' plot_marginal_pairwise(diagnostics, metric = "adjacent")
 #' }
 #' @export
 plot_marginal_pairwise <- function(x,
@@ -1667,16 +1667,31 @@ plot_unexpected <- function(x,
 #' @concept fair averages
 #' @examples
 #' \donttest{
-#' toy_full <- load_mfrmr_data("example_core")
-#' toy_people <- unique(toy_full$Person)[1:12]
-#' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
-#' fit <- suppressWarnings(
-#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
-#' if (interactive()) {
-#'   plot_fair_average(fit, metric = "AdjustedAverage", plot_type = "difference")
-#' }
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # How do the observed and reference-adjusted person averages compare?
+#' plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
+#'                   metric = "FairM", plot_type = "scatter")
+#'
+#' # Optional: inspect the gap (observed average minus FairM)
+#' plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
+#'                   metric = "FairM", plot_type = "difference")
+#' # A positive gap means the observed average is higher than the model-based FairM
 #' }
 #' @export
 plot_fair_average <- function(x,
@@ -2125,16 +2140,17 @@ plot_displacement <- function(x,
 #'
 #' **Exact agreement** is the proportion of matched observations where
 #' both raters assigned the same category score.  The **expected
-#' agreement** line shows the proportion expected by chance given each
-#' rater's marginal category distribution, providing a baseline.
+#' agreement** line shows the proportion expected under the fitted model,
+#' averaging products of category probabilities over matched rating contexts.
+#' It is a model-based baseline, not a chance-corrected agreement coefficient.
 #'
 #' **Pairwise correlation** is the Pearson correlation between scores
 #' assigned by each rater pair on matched observations.
 #'
-#' The **difference plot** decomposes disagreement into systematic bias
-#' (mean signed difference on x-axis: positive = Rater 1 more severe)
+#' The **difference plot** describes directional score differences
+#' (mean signed difference on x-axis: positive = Rater 1 assigned higher scores)
 #' and total inconsistency (mean absolute difference on y-axis).  Points
-#' near the origin indicate both low bias and low inconsistency.
+#' near the origin indicate both small mean differences and low inconsistency.
 #'
 #' The `context_facets` parameter specifies which facets define "the
 #' same rating target" (e.g., Criterion).  When `NULL`, all non-rater
@@ -2152,7 +2168,8 @@ plot_displacement <- function(x,
 #'     ordering of persons between raters.}
 #'   \item{`"difference"`}{Scatter plot.  X-axis: mean signed score
 #'     difference (Rater 1 \eqn{-} Rater 2); positive values indicate
-#'     Rater 1 is more severe.  Y-axis: mean absolute difference
+#'     Rater 1 assigned higher scores. This observed-score contrast is distinct
+#'     from the fitted rater-severity parameter. Y-axis: mean absolute difference
 #'     (overall disagreement magnitude).  Points colored red when
 #'     flagged.  Vertical reference at 0.}
 #' }
@@ -2160,7 +2177,7 @@ plot_displacement <- function(x,
 #' @section Interpreting output:
 #' Pairs below `exact_warn` and/or `corr_warn` should be prioritized for
 #' rater calibration review.  On the difference plot, points far from the
-#' origin along the x-axis indicate systematic bias; points high on the
+#' origin along the x-axis indicate directional score differences; points high on the
 #' y-axis indicate large inconsistency regardless of direction.
 #'
 #' @section Typical workflow:
@@ -2178,21 +2195,27 @@ plot_displacement <- function(x,
 #'   [plot_qc_dashboard()], [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
-#' if (interactive()) {
-#'   plot_interrater_agreement(
-#'     fit,
-#'     rater_facet = "Rater",
-#'     draw = TRUE,
-#'     plot_type = "exact",
-#'     main = "Inter-rater Agreement (Customized)",
-#'     palette = c(ok = "#2b8cbe", flag = "#cb181d"),
-#'     label_angle = 45,
-#'     preset = "publication"
-#'   )
-#' }
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compare observed exact agreement with its model-expected baseline
+#' plot_interrater_agreement(fit, rater_facet = "Rater")
+#' # Bars show observed agreement; connected circles show model-expected agreement
+#'
+#' # Optional: compare the direction and magnitude of observed-score differences
+#' plot_interrater_agreement(fit, rater_facet = "Rater", plot_type = "difference")
+#' # Positive horizontal values mean Rater1 assigned higher scores than Rater2
 #' }
 #' @export
 plot_interrater_agreement <- function(x,
@@ -2635,27 +2658,33 @@ plot_facets_chisq <- function(x,
 #' @seealso [plot_unexpected()], [plot_fair_average()], [plot_displacement()], [plot_interrater_agreement()], [plot_facets_chisq()], [build_visual_summaries()]
 #' @examples
 #' \donttest{
-#' # Build the plotting data without opening a graphics device.
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:3], ]
-#' fit_quick <- suppressWarnings(
-#'   fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'            method = "JML", maxit = 3)
-#' )
-#' qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
-#' names(qc_quick$data)
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' qc <- plot_qc_dashboard(fit, draw = FALSE)
-#' qc$data$panels$Status
-#' # Look for: a row whose `Status` is "OK" for each panel that
-#' #   the run should support. "WARN" / "REVIEW" rows tell you which
-#' #   downstream helper to run next (e.g. `plot_unexpected()`,
-#' #   `plot_residual_pca()`); the dashboard is a triage screen, not
-#' #   a publication figure on its own.
-#' if (interactive()) {
-#'   plot_qc_dashboard(fit, rater_facet = "Rater")
-#' }
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Read the interpretation status before reviewing the quality-control (QC) panels
+#' review <- summary(diagnostics)
+#' review$decision
+#'
+#' # Draw the dashboard and save its data
+#' qc <- plot_qc_dashboard(fit, diagnostics = diagnostics)
+#'
+#' # Inspect the counts behind the category panel
+#' qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
+#' # Use focused plots such as plot_marginal_fit(diagnostics) to investigate a panel
 #' }
 #' @export
 plot_qc_dashboard <- function(fit,
@@ -2763,6 +2792,7 @@ plot_qc_dashboard <- function(fit,
       exp_ct <- suppressWarnings(as.numeric(cat_tbl$ExpectedCount))
       bp <- barplot_rot45(
         height = obs_ct,
+        ylim = range(0, 1, obs_ct, exp_ct, finite = TRUE) * c(1, 1.08),
         labels = cat_lbl,
         col = style$fill_muted,
         main = "QC: Category counts",
@@ -3108,27 +3138,31 @@ resolve_bubble_measures <- function(x, diagnostics = NULL) {
 #'   \code{\link{plot_fair_average}}
 #' @examples
 #' \donttest{
+#' # Load the package and example ratings
+#' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "MML", model = "RSM",
-#'                 quad_points = 7, maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
-#' head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
-#' # Look for (default `view = "measure"`): bubbles inside the shaded
-#' #   0.5-1.5 fit-review band. Bubbles above the band are underfit
-#' #   (noisy elements); below the band are overfit (overly predictable).
-#' #
-#' # For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
-#' p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
-#'                      draw = FALSE)
-#' p_io$data$view
-#' # Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]
-#' #   square. Points outside the upper-right corner have both Infit
-#' #   AND Outfit > 1.5 (consistent underfit); points outside the
-#' #   lower-left have both < 0.5 (consistent overfit). Bubble size in
-#' #   this view defaults to N (observation count) so the visual
-#' #   weighting matches how seriously the misfit should be taken.
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Compare facet estimates (horizontal axis) with Infit (vertical axis)
+#' plot_bubble(fit, diagnostics = diagnostics)
+#' # Above the review band: more response variation than expected; below: less
+#' # By default, larger bubbles indicate greater precision, not greater misfit
+#'
+#' # Optional: compare Infit (horizontal) and Outfit (vertical) directly
+#' plot_bubble(fit, diagnostics = diagnostics, view = "infit_outfit")
+#' # Here bubble size represents observation count; bands are review aids
 #' }
 #' @export
 plot_bubble <- function(x,
@@ -3389,19 +3423,35 @@ plot_bubble <- function(x,
 #'   \code{\link{as.data.frame.mfrm_fit}}
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", model = "RSM", maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' out <- export_mfrm(
-#'   fit,
-#'   diagnostics = diag,
-#'   output_dir = tempdir(),
-#'   prefix = "mfrmr_example",
-#'   overwrite = TRUE,
-#'   acknowledge_sensitive = TRUE
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' out$Table
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Use a new temporary folder for this example; choose a permanent one for your work
+#' output_dir <- tempfile("mfrmr-tables-")
+#' files <- export_mfrm(
+#'   fit,
+#'   diagnostics = diagnostics,
+#'   output_dir = output_dir,
+#'   acknowledge_sensitive = TRUE # Synthetic data; exported tables retain person IDs
+#' )
+#'
+#' # Locate the CSV files
+#' files[, c("Table", "Path")]
+#' # Open a listed Path in a spreadsheet app or read it with read.csv()
 #' }
 #' @export
 export_mfrm <- function(fit,
@@ -3562,11 +3612,27 @@ export_mfrm <- function(fit,
 #'   facet rows carry \code{NA} in that column by design.
 #' @seealso \code{\link{fit_mfrm}}, \code{\link{export_mfrm}}
 #' @examples
+#' \donttest{
+#' # Load the package and example ratings
+#' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "MML", model = "RSM",
-#'                 quad_points = 7, maxit = 30)
-#' head(as.data.frame(fit))
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Extract estimates and select the rows to display
+#' estimates <- as.data.frame(fit)
+#' head(subset(estimates, Facet == "Person")) # First six persons
+#' subset(estimates, Facet == "Rater")       # All raters
+#' subset(estimates, Facet == "Criterion")   # All criteria
+#' }
 #' @export
 as.data.frame.mfrm_fit <- function(x, row.names = NULL, optional = FALSE, ...) {
   # Carry forward the Extreme flag from build_person_table().

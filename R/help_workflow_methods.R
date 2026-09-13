@@ -1,10 +1,57 @@
 #' mfrmr Workflow and Method Map
 #'
 #' @description
-#' Quick reference for end-to-end `mfrmr` analysis and for checking which
-#' output objects support `summary()` and `plot()`.
+#' Start with one analysis: load ratings, fit a model, plot the results, and
+#' read the summary. The Examples section contains a complete runnable script.
+#' The later sections describe diagnostics, reporting, and specialist routes.
 #'
-#' @section Canonical reporting route:
+#' @section Start here:
+#' 1. Load the package with `library(mfrmr)` and example ratings with
+#'    `toy <- load_mfrmr_data("example_operational")`.
+#' 2. Fit with [fit_mfrm()]. The `person`, `facets`, and `score` arguments
+#'    name columns in the data; each row represents one rating event.
+#' 3. Draw the Wright map with `plot(fit)` to view person abilities, rater
+#'    severities, criterion difficulties, and category thresholds together.
+#' 4. Save `results <- summary(fit)` and inspect `results$person_overview`
+#'    and `results$facet_overview` for the distributions of estimates.
+#'
+#' These overview tables summarize distributions. Use `as.data.frame(fit)`
+#' for individual person, rater, and criterion estimates, identified by
+#' `Facet` and `Level`. Before interpreting or reporting estimates, read
+#' `results$decision` and follow its `NextAction`; the default summary does
+#' not compute diagnostics. For your own data, first check the rating design
+#' and score categories with [describe_mfrm_data()].
+#' `head(toy)` shows the input rows; `Study` and `Group` are extra labels unused
+#' by this model. `<-` saves an object and `$` selects a named part of it.
+#'
+#' @section Use your own ratings:
+#' The "Use your own CSV" section of
+#' `vignette("mfrmr-workflow", package = "mfrmr")` covers CSV import,
+#' column-name mapping, and reshaping a sheet with separate criterion columns.
+#' The following help pages are also available without an installed vignette:
+#' - [describe_mfrm_data()] explains input and retained row counts, category
+#'   usage, connectedness, and how to follow up input problems.
+#' - [recode_missing_codes()] shows how to replace documented missing-score
+#'   markers while preserving person and rater IDs.
+#' - [summary.mfrm_data_description()] shows a missing-score example and
+#'   explains the full data checks versus their compact summary tables.
+#'
+#' Set the score bounds from your rubric and use the same columns, bounds,
+#' and `keep_original` setting for the review and the fit. Reviewing data does
+#' not change the original ratings. After correcting or recoding them, repeat
+#' the review and pass the corrected data frame to [fit_mfrm()]. A
+#' `data_review` object contains checks; it is not the rating data to fit.
+#'
+#' @section From the first summary to diagnostics:
+#' A `FormalInference = "No"` entry in `results$decision` can mean that precision
+#' has not yet been reviewed. Read `Why` and `NextAction` to distinguish that
+#' state from a detected problem. Run `diagnostics <- diagnose_mfrm(fit)` and
+#' inspect `summary(diagnostics)$decision`. To reuse these checks in the fuller
+#' reporting object, call `res <- mfrm_results(fit, diagnostics = diagnostics)`.
+#' Here `results` is the basic summary and `res` is the comprehensive object
+#' accepted by [mfrm_report()] and [export_mfrm_results()].
+#'
+#' @section Next steps for reporting:
 #' For the clearest default route in `RSM` / `PCM`, use
 #' [describe_mfrm_data()] ->
 #' [fit_mfrm()] with `method = "MML"` ->
@@ -336,34 +383,33 @@
 #'
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package
+#' library(mfrmr)
+#'
+#' # Load example ratings and look at the first six rows
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' fit_review <- summary(fit, profile = "fit", detail = "brief")
-#' fit_review$decision
 #'
-#' full_review <- summary(
-#'   fit,
-#'   profile = "facets", # Historical profile name; FACETS is not required.
-#'   detail = "brief"
-#' )
-#' results <- full_review$results
-#' plot(results, type = "wright", show_ci = TRUE, draw = FALSE)$name
+#' # Plot the results (Wright map)
+#' plot(fit)
 #'
-#' report <- mfrm_report(results)
-#' summary(report, view = "reader")
+#' # Save the summary, then display its tables
+#' results <- summary(fit)
+#' results$person_overview # One row summarizing person ability estimates
+#' results$facet_overview  # One row per facet: number of levels, mean, SD, range
+#'
+#' # Check the interpretation status and recommended next step
+#' results$decision
 #' }
-#'
 #' @name mfrmr_workflow_methods
 NULL

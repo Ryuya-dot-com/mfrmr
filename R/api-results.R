@@ -5310,23 +5310,25 @@ mfrm_report_html <- function(report) {
 #'   [mfrmr_output_guide()]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' results <- mfrm_results(fit)
 #'
-#' report <- mfrm_report(results)
+#' # Build results, then turn them into a report
+#' res <- mfrm_results(fit)
+#' report <- mfrm_report(res)
+#'
+#' # Read the report and the issues to address
 #' summary(report, view = "reader")
 #' report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 #' }
@@ -5578,7 +5580,8 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #' The helper writes:
 #' - summary CSVs from `summary(x)` such as overview, status, triage, plot
 #'   routes, next actions, mapping, and replay-code lines;
-#' - collected `x$tables` as CSV files;
+#' - collected `x$tables` as CSV files (tables with no columns are omitted;
+#'   zero-row tables with defined columns retain their headers);
 #' - optional report artifacts from `mfrm_report(x)`, including report-index,
 #'   evidence-summary, and reporting-template CSVs plus Markdown and HTML;
 #' - a lightweight HTML report equivalent to `mfrm_results(x, output = "html")`
@@ -5611,31 +5614,37 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   [export_mfrm_bundle()], [export_summary_appendix()]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' results <- mfrm_results(fit)
 #'
+#' res <- mfrm_results(fit)
+#'
+#' # Create a new temporary folder for this example's files
+#' # For your own analysis, use a permanent folder you can write to
+#' output_dir <- tempfile("mfrmr-example-")
 #' exported <- export_mfrm_results(
-#'   results,
-#'   output_dir = tempdir(),
-#'   prefix = "mfrmr_results_example",
+#'   res,
+#'   output_dir = output_dir,
 #'   preset = "starter",
-#'   overwrite = TRUE,
-#'   acknowledge_sensitive = TRUE # The packaged example is synthetic.
+#'   acknowledge_sensitive = TRUE # These data are synthetic; exports retain IDs
 #' )
-#' exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
+#'
+#' # Locate the files and check whether any plots could not be exported
+#' output_dir
+#' exported$written_files[, c("Component", "Path")]
+#' exported$plot_errors
+#' # Open index.html in this folder to read the report
 #' }
 #' @export
 export_mfrm_results <- function(x,
@@ -5706,6 +5715,7 @@ export_mfrm_results <- function(x,
     invisible(path)
   }
   write_csv <- function(df, filename, component, note = "") {
+    if (is.null(df) || NCOL(df) == 0L) return(invisible(NULL))
     path <- ensure_path(filename)
     mfrm_results_export_write_csv(df, path)
     add_written(component, "csv", path, note)
@@ -6030,6 +6040,11 @@ export_mfrm_results <- function(x,
 #' also carries
 #' `next_actions` and `input$reproducible_code` so users can move from the
 #' comprehensive first screen to explicit reporting or replay code.
+#' The examples call this object `res` to distinguish it from
+#' `results <- summary(fit)` in the quick start. Use `mfrm_report(res)` and
+#' `export_mfrm_results(res)` for reporting and export; those functions need
+#' the comprehensive results object. If diagnostics were already computed,
+#' pass them with `diagnostics = diagnostics` to reuse them.
 #'
 #' @section Include presets:
 #' - `"standard"`: fit, diagnostics, tables, precision, reporting, categories,
@@ -6158,26 +6173,28 @@ export_mfrm_results <- function(x,
 #'   [launch_mfrmr_viewer()], [mfrmr_output_guide()]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' results <- mfrm_results(fit)
 #'
-#' results_review <- summary(results, view = "brief")
-#' results_review$decision
-#' results_review$next_actions
-#' plot(results, type = "wright", draw = FALSE)$name
+#' # Build the fuller results object, including diagnostics
+#' res <- mfrm_results(fit)
+#' review <- summary(res)
+#' review$decision
+#' review$next_actions
+#'
+#' # Draw the Wright map
+#' plot(res)
 #' }
 #' @export
 mfrm_results <- function(fit,

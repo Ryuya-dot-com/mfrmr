@@ -799,6 +799,13 @@ draw_wright_facets_style <- function(plot_data,
           floor(0.9 / graphics::strwidth("M", cex = 0.68))))), collapse = "\n"),
         character(1)
       )
+      label_order <- order(cell$RulerValue)
+      label_heights <- graphics::strheight(cell_labels, cex = 0.68)[label_order]
+      if (any(graphics::strwidth(cell_labels, cex = 0.68) > 0.9) ||
+          (length(label_order) > 1L && any(diff(cell$RulerValue[label_order]) <
+            (head(label_heights, -1L) + tail(label_heights, -1L)) / 2))) {
+        warning("FACETS-style facet labels need more space; use a taller or wider device, increase `rows_per_logit`, or use `renderer = 'native'`.", call. = FALSE)
+      }
       graphics::text(
         x = x_pos,
         y = cell$RulerValue,

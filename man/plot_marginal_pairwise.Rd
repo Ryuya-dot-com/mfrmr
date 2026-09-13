@@ -85,27 +85,29 @@ For a plot-selection guide and a longer walkthrough, see
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
-  "Person",
-  c("Rater", "Criterion"),
-  "Score",
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-p <- plot_marginal_pairwise(diag, draw = FALSE, preset = "publication")
-p$data$preset
-if (interactive()) {
-  plot_marginal_pairwise(
-    diag,
-    metric = "adjacent",
-    draw = TRUE,
-    preset = "publication"
-  )
-}
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Which pairs show more or less exact agreement than the model expects?
+plot_marginal_pairwise(diagnostics)
+# These are screening results; inspect the rating design before drawing conclusions
+
+# Optional: agreement within one score category
+plot_marginal_pairwise(diagnostics, metric = "adjacent")
 }
 }
 \seealso{

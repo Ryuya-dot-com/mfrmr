@@ -96,30 +96,31 @@ names listed in \code{build_summary_table_bundle(x)$table_index}
 }
 
 \examples{
+\donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", quad_points = 7, maxit = 30
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
-tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
-fit_bundle <- build_summary_table_bundle(summary(fit))
-tbl_from_summary <- apa_table(fit_bundle, which = "facet_overview")
-summary(tbl)
-p <- plot(tbl, draw = FALSE)
-p_facets <- plot(tbl_facets, type = "numeric_profile", draw = FALSE)
-p$data$plot
-p_facets$data$plot
-if (interactive()) {
-  plot(
-    tbl,
-    type = "numeric_profile",
-    main = "APA Table Numeric Profile (Customized)",
-    palette = c(numeric_profile = "#2b8cbe", grid = "#d9d9d9"),
-    label_angle = 45
-  )
+
+# Turn one summary table into a table with a caption and note
+results <- summary(fit)
+tbl <- apa_table(results, which = "facet_overview",
+                 caption = "Distribution of estimates within each facet")
+tbl # Prints the table, caption, and note
+
+# Extract the ordinary data frame for further formatting or export
+tbl$table
+# This table summarizes facets; use as.data.frame(fit) for individual estimates
 }
-tbl$note
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},

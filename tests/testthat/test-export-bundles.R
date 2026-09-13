@@ -1069,7 +1069,7 @@ test_that("build_mfrm_replay_script can externalize fit-level latent replay pers
     as.character(replay$settings$Value[replay$settings$Setting == "fit_population_person_data_file"][1]),
     "latent_fit_person_data.csv"
   )
-  root <- tempfile("replay-source-")
+  root <- tempfile("replay source ")
   dir.create(file.path(root, "bundle"), recursive = TRUE)
   on.exit(unlink(root, recursive = TRUE), add = TRUE)
   utils::write.csv(data.frame(Person = "P01", X = 3L),
@@ -3078,6 +3078,8 @@ test_that("export_summary_appendix writes appendix-ready summary artifacts witho
   )
 
   expect_s3_class(appendix, "mfrm_summary_appendix_export")
+  csv_paths <- appendix$written_files$Path[appendix$written_files$Format == "csv"]
+  expect_no_error(lapply(csv_paths, utils::read.csv, check.names = FALSE))
   appendix_summary <- summary(appendix)
   expect_s3_class(appendix_summary, "summary.mfrm_bundle")
   expect_identical(appendix_summary$preview_name, "written_files")

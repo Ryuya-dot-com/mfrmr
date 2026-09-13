@@ -4,10 +4,67 @@
 \alias{mfrmr_workflow_methods}
 \title{mfrmr Workflow and Method Map}
 \description{
-Quick reference for end-to-end \code{mfrmr} analysis and for checking which
-output objects support \code{summary()} and \code{plot()}.
+Start with one analysis: load ratings, fit a model, plot the results, and
+read the summary. The Examples section contains a complete runnable script.
+The later sections describe diagnostics, reporting, and specialist routes.
 }
-\section{Canonical reporting route}{
+\section{Start here}{
+
+\enumerate{
+\item Load the package with \code{library(mfrmr)} and example ratings with
+\code{toy <- load_mfrmr_data("example_operational")}.
+\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}}. The \code{person}, \code{facets}, and \code{score} arguments
+name columns in the data; each row represents one rating event.
+\item Draw the Wright map with \code{plot(fit)} to view person abilities, rater
+severities, criterion difficulties, and category thresholds together.
+\item Save \code{results <- summary(fit)} and inspect \code{results$person_overview}
+and \code{results$facet_overview} for the distributions of estimates.
+}
+
+These overview tables summarize distributions. Use \code{as.data.frame(fit)}
+for individual person, rater, and criterion estimates, identified by
+\code{Facet} and \code{Level}. Before interpreting or reporting estimates, read
+\code{results$decision} and follow its \code{NextAction}; the default summary does
+not compute diagnostics. For your own data, first check the rating design
+and score categories with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
+\code{head(toy)} shows the input rows; \code{Study} and \code{Group} are extra labels unused
+by this model. \verb{<-} saves an object and \code{$} selects a named part of it.
+}
+
+\section{Use your own ratings}{
+
+The "Use your own CSV" section of
+\code{vignette("mfrmr-workflow", package = "mfrmr")} covers CSV import,
+column-name mapping, and reshaping a sheet with separate criterion columns.
+The following help pages are also available without an installed vignette:
+\itemize{
+\item \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} explains input and retained row counts, category
+usage, connectedness, and how to follow up input problems.
+\item \code{\link[=recode_missing_codes]{recode_missing_codes()}} shows how to replace documented missing-score
+markers while preserving person and rater IDs.
+\item \code{\link[=summary.mfrm_data_description]{summary.mfrm_data_description()}} shows a missing-score example and
+explains the full data checks versus their compact summary tables.
+}
+
+Set the score bounds from your rubric and use the same columns, bounds,
+and \code{keep_original} setting for the review and the fit. Reviewing data does
+not change the original ratings. After correcting or recoding them, repeat
+the review and pass the corrected data frame to \code{\link[=fit_mfrm]{fit_mfrm()}}. A
+\code{data_review} object contains checks; it is not the rating data to fit.
+}
+
+\section{From the first summary to diagnostics}{
+
+A \code{FormalInference = "No"} entry in \code{results$decision} can mean that precision
+has not yet been reviewed. Read \code{Why} and \code{NextAction} to distinguish that
+state from a detected problem. Run \code{diagnostics <- diagnose_mfrm(fit)} and
+inspect \code{summary(diagnostics)$decision}. To reuse these checks in the fuller
+reporting object, call \code{res <- mfrm_results(fit, diagnostics = diagnostics)}.
+Here \code{results} is the basic summary and \code{res} is the comprehensive object
+accepted by \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
+}
+
+\section{Next steps for reporting}{
 
 For the clearest default route in \code{RSM} / \code{PCM}, use
 \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} ->
@@ -365,35 +422,34 @@ plots from component tables.
 
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package
+library(mfrmr)
+
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-fit_review <- summary(fit, profile = "fit", detail = "brief")
-fit_review$decision
 
-full_review <- summary(
-  fit,
-  profile = "facets", # Historical profile name; FACETS is not required.
-  detail = "brief"
-)
-results <- full_review$results
-plot(results, type = "wright", show_ci = TRUE, draw = FALSE)$name
+# Plot the results (Wright map)
+plot(fit)
 
-report <- mfrm_report(results)
-summary(report, view = "reader")
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
 }
-
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=run_mfrm_facets]{run_mfrm_facets()}}, \code{\link[=mfrmRFacets]{mfrmRFacets()}},

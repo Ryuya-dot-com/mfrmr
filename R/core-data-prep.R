@@ -272,8 +272,8 @@ prepare_mfrm_data <- function(data, person_col, facet_cols, score_col,
   names(raw_facet_id) <- facet_cols
   df <- df |>
     mutate(
-      Person = trimws(as.character(Person)),
-      across(all_of(facet_cols), ~ trimws(as.character(.x))),
+      Person = enc2utf8(trimws(as.character(Person))),
+      across(all_of(facet_cols), ~ enc2utf8(trimws(as.character(.x)))),
       Score = score_num
     )
   blank_person <- !is.na(df$Person) & !nzchar(df$Person)

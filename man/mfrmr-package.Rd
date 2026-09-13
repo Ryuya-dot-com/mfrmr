@@ -12,80 +12,48 @@ many-facet ordered-response measurement models: the Rasch-family \code{RSM} /
 documented.
 }
 \details{
-Start with the following core workflow before branching into diagnostics,
-bounded \code{GPCM}, simulation, and planning notes:
+Start with the complete script in the Examples section:
 \enumerate{
-\item Review long-format data and the intended score support with
-\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. When a planned assignment roster exists, pass it
-as \code{expected_design} so absent rows are not confused with unassigned cells
-\item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"}
-\item Read \code{summary(fit, profile = "fit")}, then request the comprehensive
-measurement review with \code{summary(fit, profile = "facets")}. The profile
-name describes a familiar organization; FACETS knowledge or software is
-not required
-\item Create the required native Wright map with
-\code{plot(fit, type = "wright", show_ci = TRUE)}; use the FACETS renderer
-only as an optional familiar presentation
-\item Continue from the summary's \code{results} component to \code{\link[=mfrm_report]{mfrm_report()}} and
-\code{\link[=export_mfrm_results]{export_mfrm_results()}}
-\item Reuse \code{review$results$diagnostics} for \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} and
-\code{\link[=reporting_checklist]{reporting_checklist()}}; call \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} again only for residual
-PCA or other custom settings. For
-bounded \code{GPCM}, read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} before interpreting
-specialist helpers
+\item Load the package and example ratings with \code{\link[=load_mfrmr_data]{load_mfrmr_data()}}.
+\item Fit a model with \code{\link[=fit_mfrm]{fit_mfrm()}}.
+\item Draw the Wright map with \code{plot(fit)}.
+\item Save \code{results <- summary(fit)} and inspect \code{results$person_overview}
+and \code{results$facet_overview}.
 }
 
-Recommended workflow:
-\enumerate{
-\item Review the data with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and fit with \code{\link[=fit_mfrm]{fit_mfrm()}}
-\item For \code{RSM} / \code{PCM}, create the comprehensive summary and reuse its
-diagnostics; request a separate \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} call only for custom
-settings
-\item For \code{RSM} / \code{PCM}, run residual PCA with \code{\link[=analyze_residual_pca]{analyze_residual_pca()}} if needed
-\item For \code{RSM} / \code{PCM}, or bounded \code{GPCM} with the documented screening
-caveat, estimate interactions with \code{\link[=estimate_bias]{estimate_bias()}}
-\item For \code{RSM} / \code{PCM}, choose a downstream branch:
-\code{\link[=reporting_checklist]{reporting_checklist()}} for manuscript/report preparation, or
-\code{\link[=build_misfit_casebook]{build_misfit_casebook()}} / \code{\link[=build_linking_review]{build_linking_review()}} for operational
-misfit or anchor/drift review. After
-\code{\link[=build_misfit_casebook]{build_misfit_casebook()}}, inspect \code{casebook$group_view_index} before
-moving to source-specific plots.
-\item For \code{RSM} / \code{PCM}, build narrative/report outputs with
-\code{\link[=build_apa_outputs]{build_apa_outputs()}} and \code{\link[=build_visual_summaries]{build_visual_summaries()}}
-\item Treat bounded \code{GPCM}, prediction, and planning helpers as advanced scope
-after the basic \code{RSM} / \code{PCM} route is working cleanly.
-}
+Each data row is one rating event. The \code{person}, \code{facets}, and \code{score}
+arguments name columns. The example uses marginal maximum likelihood
+(\code{MML}) and a rating-scale model (\code{RSM}) with shared category thresholds.
+\code{head(toy)} displays the first six rows. Only \code{Person}, \code{Rater}, \code{Criterion},
+and \code{Score} are used by this model; the example's \code{Study} and \code{Group} columns
+are additional labels. \verb{<-} saves an object, and \code{$} selects a named part:
+\code{results$person_overview} displays one table from the saved summary.
+The overview tables summarize distributions; \code{as.data.frame(fit)} returns
+individual person, rater, and criterion estimates.
 
-Guide pages:
+Before interpreting or reporting estimates, read \code{results$decision} and
+follow its \code{NextAction}. The default summary does not compute diagnostics.
+For your own data, first inspect the design and score categories with
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}.
+}
+\section{Where to go next}{
+
 \itemize{
-\item \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} for the compact purpose-to-helper map
-\item \link{mfrmr_workflow_methods}
-\item \link{mfrmr_visual_diagnostics}
-\item \link{mfrmr_reports_and_tables}
-\item \link{mfrmr_reporting_and_apa}
-\item \link{mfrmr_linking_and_dff}
-\item \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} and \link{mfrm_calibration_workflow} for
-portable fixed calibration
-\item \link{gpcm_capability_matrix}
-\item \link{mfrmr_compatibility_layer}
+\item \link{mfrmr_workflow_methods} and \code{vignette("mfrmr-workflow", package = "mfrmr")}
+for your own CSV, column mapping, input troubleshooting, and the full
+analysis workflow. If vignettes are not installed, start with
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}} and \code{\link[=recode_missing_codes]{recode_missing_codes()}}.
+\item \link{mfrmr_visual_diagnostics} for choosing follow-up figures.
+\item \link{mfrmr_reporting_and_apa} and \link{mfrmr_reports_and_tables} for reporting.
+\item \link{mfrmr_linking_and_dff} for linking and differential facet functioning.
+\item \link{gpcm_capability_matrix} for the bounded \code{GPCM} extension.
+\item \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}} for the broader purpose-to-function map.
 }
 
-Companion vignettes:
-\itemize{
-\item \code{vignette("mfrmr-workflow", package = "mfrmr")}
-\item \code{vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")}
-\item \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}
-\item \code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")}
-\item \code{vignette("mfrmr-linking-and-dff", package = "mfrmr")}
-\item \code{vignette("mfrmr-portable-calibration", package = "mfrmr")}
+A printable reference card is available at
+\code{system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")}.
 }
 
-A printable landscape cheatsheet of the public API ships at
-\code{system.file("cheatsheet", "mfrmr-cheatsheet.pdf", package = "mfrmr")}
-(pre-rendered) and \code{system.file("cheatsheet", "mfrmr-cheatsheet.Rmd", package = "mfrmr")} (source). Open the PDF directly for a printable
-reference card, or knit the source with \code{rmarkdown::render()} when
-you want a customised version.
-}
 \section{Portable fixed calibration}{
 
 A saved, versioned calibration artifact can be created from an eligible
@@ -99,31 +67,6 @@ bounded \code{GPCM} remain fitted-object-only scoring routes in 0.2.4. Artifact
 score uncertainty is conditional on the frozen point calibration and its
 recorded prior; loading validates consistency but does not authenticate an
 untrusted file.
-}
-
-\section{First 5-minute route}{
-
-Use this order before exploring the broader feature surface:
-\enumerate{
-\item \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} for score support, column missingness, declared
-assignment coverage, and Person-facet connectivity
-\item \code{\link[=fit_mfrm]{fit_mfrm()}} with \code{method = "MML"}
-\item \code{summary(fit, profile = "fit")}, followed by
-\code{summary(fit, profile = "facets")} for the comprehensive first screen
-\item \code{plot(fit, type = "wright", show_ci = TRUE)} for the required
-shared-logit figure
-\item \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}} from the summary's \code{results}
-component for reporting and reproducible analysis handoff
-\item Add \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} with \code{diagnostic_mode = "both"} for deeper
-\code{RSM} / \code{PCM} diagnostics; for bounded \code{GPCM}, keep diagnostics on the
-direct exploratory route and read \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}}
-\item Choose the next branch:
-\code{\link[=reporting_checklist]{reporting_checklist()}} for reporting,
-\code{\link[=build_weighting_review]{build_weighting_review()}} for Rasch-versus-\code{GPCM} weighting review,
-\code{\link[=build_misfit_casebook]{build_misfit_casebook()}} for operational case review, or
-\code{\link[=build_linking_review]{build_linking_review()}} for operational linking review (\code{RSM} / \code{PCM})
-or caveated bounded-\code{GPCM} linking synthesis
-}
 }
 
 \section{Advanced scope}{
@@ -778,36 +721,35 @@ incomplete, or arbitrary imported designs.
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_operational")
-head(ratings)
-review <- describe_mfrm_data(
-  data = ratings,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  rating_min = 1,
-  rating_max = 4
-)
-summary(review)$overview
-
 \donttest{
+# Load the package
+library(mfrmr)
+
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-summary(fit, profile = "fit", detail = "brief")$decision
-plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)$name
-}
 
+# Plot the results (Wright map)
+plot(fit)
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
+}
 }
 \seealso{
 Useful links:

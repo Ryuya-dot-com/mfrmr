@@ -253,13 +253,18 @@ NULL
 #'
 #' @seealso [load_mfrmr_data()], [ej2021_data]
 #' @examples
-#' keys <- list_mfrmr_data()
-#' keys
-#' list_mfrmr_data(details = TRUE)[, c(
-#'   "Key", "PrimaryUse", "Design", "CountBasis"
-#' )]
-#' d <- load_mfrmr_data("example_operational")
-#' head(d)
+#' library(mfrmr)
+#'
+#' # See the names accepted by load_mfrmr_data()
+#' list_mfrmr_data()
+#'
+#' # Compare the purpose and design of the available datasets
+#' catalog <- list_mfrmr_data(details = TRUE)
+#' catalog[, c("Key", "PrimaryUse", "Design")]
+#'
+#' # Choose one dataset
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
 #' @export
 list_mfrmr_data <- function(details = FALSE) {
   if (!is.logical(details) || length(details) != 1L || is.na(details)) {
@@ -353,14 +358,17 @@ list_mfrmr_data <- function(details = FALSE) {
 #'
 #' @seealso [list_mfrmr_data()], [ej2021_data]
 #' @examples
-#' ratings <- load_mfrmr_data("example_operational")
-#' head(ratings)
-#' names(ratings)
-#' table(ratings$Score)
+#' library(mfrmr)
 #'
-#' # Base R's data() loader returns the same packaged data.
+#' # Load synthetic ratings and inspect their columns and score frequencies
+#' toy <- load_mfrmr_data("example_operational")
+#' head(toy)
+#' names(toy)
+#' table(toy$Score)
+#'
+#' # Optional: base R's data() loads the same dataset under its full name
 #' data("mfrmr_example_operational", package = "mfrmr")
-#' identical(ratings, mfrmr_example_operational)
+#' identical(toy, mfrmr_example_operational) # TRUE: both contain the same data
 #' @export
 load_mfrmr_data <- function(name = c(
                             "example_core",

@@ -152,10 +152,25 @@ mechanism and exclusions, multiplicity or deviations from plan, or complete
 data/code availability statements. Those study-level fields, effect-size and
 uncertainty choices, statistic-specific rounding, and journal typography
 must be reviewed and completed outside the generated template.
+The "Manuscript coverage map" in
+\code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")} connects each
+reporting topic to the relevant output and the information the author must
+supply. It includes the rating assignment and training, missingness,
+estimation settings, uncertainty, category functioning, and the distinct
+meanings of separation reliability and observed agreement. The vignette
+also demonstrates a question-to-result explanation with actual estimates.
+Its short Methods and Results example includes rating-row denominators,
+residual counts, step uncertainty, and the difference between
+separation-based reliability and posterior-variance EAP reliability.
+The observed-versus-fair-score example states its reference environment
+and distinguishes logit-measure uncertainty from fair-score uncertainty.
+Verify author-provided context labels, such as \code{scale_desc}, against the
+study record; generated-content checks do not establish their accuracy.
 
 Appelbaum, M., Cooper, H., Kline, R. B., Mayo-Wilson, E., Nezu, A. M., and
 Rao, S. M. (2018). Journal article reporting standards for quantitative
-research in psychology. \emph{American Psychologist, 73}(1), 3-25.
+research in psychology: The APA Publications and Communications Board task
+force report. \emph{American Psychologist, 73}(1), 3-25.
 \doi{10.1037/amp0000191}
 }
 
@@ -203,8 +218,9 @@ follow-up should be \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, \code
 \item Use \code{\link[=visual_reporting_template]{visual_reporting_template()}} to draft visual captions and
 results-sentence starters, but do not paste the skeletons without checking
 the actual fit, diagnostics, and study context.
-\item Phrase formal inferential claims only when the precision tier is
-model-based.
+\item Before formal inferential claims, review the fit decision, precision
+checks, and restrictions for the particular statistic. A \code{model_based}
+tier alone does not establish that the claim is supported.
 \item Keep bias and differential-functioning outputs in screening language
 unless the current precision layer and linking evidence justify stronger
 claims.
@@ -278,49 +294,32 @@ caveated \code{\link[=build_apa_outputs]{build_apa_outputs()}}, \code{\link[=bui
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  toy,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
   method = "MML",
-  quad_points = 7,
-  maxit = 30
-)
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-
-checklist <- reporting_checklist(fit, diagnostics = diag)
-visual_reporting_template("manuscript")[, c("FigureFamily", "CaptionSkeleton")]
-head(checklist$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-subset(
-  checklist$checklist,
-  Section == "Visual Displays",
-  c("Item", "Available", "NextAction")
+  model = "RSM"
 )
 
-apa <- build_apa_outputs(fit, diagnostics = diag)
-apa$section_map[, c("SectionId", "Available")]
+# Check which report sections have supporting evidence
+diagnostics <- diagnose_mfrm(fit)
+checklist <- reporting_checklist(fit, diagnostics = diagnostics)
+checklist$section_summary
+subset(checklist$checklist, !DraftReady,
+       c("Section", "Item", "NextAction"))
 
-tbl <- apa_table(fit, which = "summary")
-tbl$caption
-bundle <- build_summary_table_bundle(checklist)
-bundle$table_index
-apa_from_bundle <- apa_table(bundle, which = "section_summary")
-apa_from_bundle$caption
+# Format the per-facet distribution summary as a table
+results <- summary(fit, diagnostics = diagnostics)
+tbl <- apa_table(results, which = "facet_overview")
+tbl # Prints the table, caption, and note; review them before using in a paper
 
-report_bundle <- export_mfrm_bundle(
-  fit,
-  diagnostics = diag,
-  output_dir = tempdir(),
-  prefix = "mfrmr_report_bundle",
-  include = c("core_tables", "checklist", "apa", "summary_tables", "html"),
-  overwrite = TRUE,
-  acknowledge_sensitive = TRUE
-)
-report_bundle$summary[, c("FilesWritten", "HtmlWritten")]
+# For individual estimates, see as.data.frame(fit)
 }
-
 }

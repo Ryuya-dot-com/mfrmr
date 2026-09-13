@@ -156,37 +156,34 @@
 #'
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #'
-#' spec <- specifications_report(fit)
-#' summary(spec)$overview
+#' # Build the comprehensive results and report
+#' res <- mfrm_results(fit)
+#' report <- mfrm_report(res)
+#' summary(report, view = "reader")
 #'
-#' prec <- precision_review_report(fit, diagnostics = diag)
-#' summary(prec)$checks
+#' # Find report sections that need attention
+#' report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 #'
-#' checklist <- reporting_checklist(fit, diagnostics = diag)
-#' subset(checklist$checklist, Section == "Visual Displays", c("Item", "NextAction"))
-#'
-#' apa <- build_apa_outputs(fit, diagnostics = diag)
-#' apa$section_map[, c("Heading", "Available")]
-#' bundle <- build_summary_table_bundle(checklist)
-#' bundle$table_index
+#' # Extract individual person, rater, and criterion estimates
+#' estimates <- as.data.frame(fit)
+#' head(subset(estimates, Facet == "Person")) # First six persons
+#' subset(estimates, Facet == "Rater")       # All raters
+#' subset(estimates, Facet == "Criterion")   # All criteria
 #' }
-#'
 #' @name mfrmr_reports_and_tables
 NULL
 

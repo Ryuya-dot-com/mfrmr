@@ -107,16 +107,31 @@ For a plot-selection guide and a longer walkthrough, see
 
 \examples{
 \donttest{
-toy_full <- load_mfrmr_data("example_core")
-toy_people <- unique(toy_full$Person)[1:12]
-toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
-fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-p <- plot_fair_average(fit, metric = "AdjustedAverage", draw = FALSE)
-if (interactive()) {
-  plot_fair_average(fit, metric = "AdjustedAverage", plot_type = "difference")
-}
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# How do the observed and reference-adjusted person averages compare?
+plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
+                  metric = "FairM", plot_type = "scatter")
+
+# Optional: inspect the gap (observed average minus FairM)
+plot_fair_average(fit, diagnostics = diagnostics, facet = "Person",
+                  metric = "FairM", plot_type = "difference")
+# A positive gap means the observed average is higher than the model-based FairM
 }
 }
 \seealso{

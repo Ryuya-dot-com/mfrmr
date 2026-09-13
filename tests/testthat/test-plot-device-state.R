@@ -220,3 +220,76 @@ test_that("pathway and CCC disclose the same reference profile in data and drawi
     expect_true(all(p$data$curve_basis$PredictorOffset == 0))
   }
 })
+
+test_that("category-count axes include expected counts above observed bars", {
+  grDevices::pdf(NULL, width = 12, height = 9)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  axes <- list()
+  original <- mfrmr:::barplot_rot45
+  testthat::local_mocked_bindings(barplot_rot45 = function(..., main = NULL) {
+    result <- original(..., main = main)
+    if (main %in% c("Category counts", "Rating-scale category counts", "QC: Category counts")) {
+      axes[[main]] <<- graphics::par("usr")[3:4]
+    }
+    result
+  }, .package = "mfrmr")
+
+  categories <- list(category_table = data.frame(
+    Category = 1:3, Count = c(2, 4, 3), ExpectedCount = c(NA, 30, 1)
+  ))
+  for (draw in list(mfrmr:::draw_category_structure_bundle, mfrmr:::draw_rating_scale_bundle)) {
+    draw(categories)
+    expect_gt(tail(axes, 1)[[1]][2], 30)
+    draw(list(category_table = data.frame(Category = 1:3, Count = 0)))
+    expect_gt(tail(axes, 1)[[1]][2], 0)
+  }
+
+  toy <- load_mfrmr_data("example_operational")
+  fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "MML")
+  dashboard <- plot_qc_dashboard(fit, diagnostics = diagnose_mfrm(fit))
+  counts <- dashboard$data$category_stats
+  expect_gt(max(counts$ExpectedCount), max(counts$Count))
+  expect_gt(axes[["QC: Category counts"]][2], max(counts$ExpectedCount))
+})
+
+test_that("rater profiles reserve room for complete labels or explain the size limit", {
+  fit <- make_toy_fit(maxit = 20)
+  dx <- make_toy_diagnostics(fit)
+  rater <- dx$measures$Facet == "Rater"
+  dx$measures$Level[rater] <- paste("Long assessment team", dx$measures$Level[rater])
+  grDevices::pdf(NULL, width = 8, height = 6)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  old_mar <- graphics::par("mar")
+  axis_calls <- 0L
+  original_axis <- graphics::axis
+  testthat::local_mocked_bindings(axis = function(side, at = NULL, labels = TRUE, ...) {
+    if (side == 2 && is.character(labels)) {
+      axis_calls <<- axis_calls + 1L
+      expect_setequal(labels, dx$measures$Level[rater])
+      expect_lt(max(graphics::strwidth(labels, units = "inches", cex = 0.85)),
+                graphics::par("mai")[2] - 0.1)
+    }
+    original_axis(side, at = at, labels = labels, ...)
+  }, .package = "graphics")
+  plot_rater_severity_profile(fit, dx)
+  expect_equal(axis_calls, 1L)
+  expect_identical(graphics::par("mar"), old_mar)
+  dx$measures$Level[rater] <- strrep("Very long label ", 30)
+  expect_error(plot_rater_severity_profile(fit, dx), "wider graphics device")
+  expect_identical(graphics::par("mar"), old_mar)
+})
+
+test_that("FACETS maps warn when adjacent multi-line cells cannot fit", {
+  fit <- make_toy_fit(maxit = 20)
+  p <- .mfrmr_muffle_expected_warnings(
+    plot(fit, renderer = "facets", show_ci = FALSE, draw = FALSE), "^Review-only display:")
+  grDevices::pdf(NULL, width = 8, height = 6)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  cells <- p$data$facets_style$facet_cells
+  # Keep the observed locations; make the labels too large for those cells.
+  crowded <- cells$Facet == cells$Facet[1]
+  p$data$facets_style$facet_cells$CellLabel[crowded] <- paste(cells$CellLabel[crowded],
+    strrep("long label ", 30))
+  expect_warning(mfrmr:::draw_wright_facets_style(p$data, show_ci = FALSE),
+                 "FACETS-style facet labels need more space")
+})
