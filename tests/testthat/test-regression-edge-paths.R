@@ -198,16 +198,14 @@ test_that("build_apa_report_text with line_width too small falls back to 92", {
   expect_true(nzchar(txt))
 })
 
-# ---- lines 760-766, 769: PCA branches ----
-# To trigger PCA NULL, we need to remove StdResidual from obs to prevent
-# recomputation inside safe_residual_pca.
-test_that("build_apa_report_text handles PCA not available", {
+# Reporting must not add PCA when the stored diagnostics omit it.
+test_that("build_apa_report_text does not add an unrequested PCA", {
   mock_diag <- .diag
   mock_diag$residual_pca_overall <- NULL
   mock_diag$residual_pca_by_facet <- NULL
-  mock_diag$obs$StdResidual <- NA_real_  # prevents PCA recomputation
+  expect_null(mfrmr:::safe_residual_pca(mock_diag))
   txt <- mfrmr:::build_apa_report_text(.fit, mock_diag)
-  expect_true(grepl("Residual PCA was not available", txt))
+  expect_false(grepl("residual PCA", txt, ignore.case = TRUE))
 })
 
 # ---- lines 795: build_apa_report_text bias fallback label ----
