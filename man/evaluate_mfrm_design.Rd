@@ -137,7 +137,11 @@ alongside the standard result columns.
 \item \code{results}: facet-level replicate results, with the same design-variable
 alias columns when applicable.
 \item \code{rep_overview}: run-level status and timing, with the same design-variable
-alias columns when applicable. Failed fits retain the condition class,
+alias columns when applicable. \code{Observations} counts generated rating rows;
+\code{MaxRatingsPerRater} is the largest row count for a single rater-like facet
+level. One row is one person-rater-criterion rating, regardless of \code{Weight}.
+These workload counts are retained even when fitting or diagnostics fail.
+Failed fits retain the condition class,
 failure component, and category-support state/reason codes when available;
 a completely failed design still returns the documented zero-row
 \code{results} schema rather than a zero-column table.

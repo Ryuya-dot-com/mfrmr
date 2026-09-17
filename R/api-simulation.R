@@ -1875,12 +1875,17 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
   if (nrow(results_tbl) > 0) {
     # Failed fits/diagnostics have no facet rows. Keep their run records in
     # the denominator used by summaries, plots and design recommendations.
+    for (name in c("Observations", "MaxRatingsPerRater")) {
+      if (!name %in% names(rep_tbl)) rep_tbl[[name]] <- rep(NA_real_, nrow(rep_tbl))
+    }
     run_summary <- rep_tbl |>
       dplyr::group_by(.data$design_id) |>
       dplyr::summarize(
         Reps = dplyr::n(),
         ConvergenceRate = mean(.data$Converged %in% TRUE),
         McseConvergenceRate = simulation_mcse_proportion(.data$Converged %in% TRUE),
+        MaxRatings = max(.data$Observations),
+        MaxRatingsPerRater = max(.data$MaxRatingsPerRater),
         .groups = "drop"
       )
     design_summary <- results_tbl |>
@@ -5001,6 +5006,7 @@ simulation_evaluate_design_cell <- function(design,
       simulate_mfrm_data(sim_spec = row_spec, seed = cell_seed)
     }
 
+    max_ratings_per_rater <- max(table(sim[[row_facet_names[1]]]))
     t0 <- proc.time()[["elapsed"]]
     fit_args <- list(
       data = sim,
@@ -5050,6 +5056,7 @@ simulation_evaluate_design_cell <- function(design,
       n_criterion = design$n_criterion,
       raters_per_person = design$raters_per_person,
       Observations = nrow(sim),
+      MaxRatingsPerRater = max_ratings_per_rater,
       MinCategoryCount = min_category_count,
       SparseDesignActive = sparse_fields$SparseDesignActive,
       DesignDensity = sparse_fields$DesignDensity,
@@ -5379,7 +5386,11 @@ simulation_evaluate_design_cell <- function(design,
 #' - `results`: facet-level replicate results, with the same design-variable
 #'   alias columns when applicable.
 #' - `rep_overview`: run-level status and timing, with the same design-variable
-#'   alias columns when applicable. Failed fits retain the condition class,
+#'   alias columns when applicable. `Observations` counts generated rating rows;
+#'   `MaxRatingsPerRater` is the largest row count for a single rater-like facet
+#'   level. One row is one person-rater-criterion rating, regardless of `Weight`.
+#'   These workload counts are retained even when fitting or diagnostics fail.
+#'   Failed fits retain the condition class,
 #'   failure component, and category-support state/reason codes when available;
 #'   a completely failed design still returns the documented zero-row
 #'   `results` schema rather than a zero-column table.
@@ -5764,6 +5775,12 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' To update an older saved summary, call `summary()` again on the original
 #' evaluation object; no simulation or refitting is needed.
 #'
+#' `MaxRatings` and `MaxRatingsPerRater` are the largest total rating count
+#' and individual rater workload across all recorded replications, including
+#' failed runs. A rating is one generated person-rater-criterion row; weights
+#' do not multiply workload. A maximum is `NA` when any replication lacks
+#' that count, including older evaluations without per-rater workload records.
+#'
 #' @return An object of class `summary.mfrm_design_evaluation` with components:
 #' - `overview`: run-level overview
 #' - `design_summary`: aggregated design-by-facet metrics, with design-variable
@@ -6085,6 +6102,12 @@ plot.mfrm_design_evaluation <- function(x,
 #'   optimized first when multiple designs pass. Custom public aliases from
 #'   `sim_spec` are also accepted, as are the role keywords `person`, `rater`,
 #'   `criterion`, and `assignment`.
+#' @param max_ratings Optional upper bound on total rating rows in each
+#'   evaluated replication. Supply a non-negative whole number, or `NULL`
+#'   (default) to impose no limit.
+#' @param max_ratings_per_rater Optional upper bound on rating rows assigned
+#'   to any one rater-like facet level in each evaluated replication. Supply
+#'   a non-negative whole number, or `NULL` (default) to impose no limit.
 #'
 #' @details
 #' This helper converts a design-study summary into a simple planning table.
@@ -6098,6 +6121,21 @@ plot.mfrm_design_evaluation <- function(x,
 #' failures that returned no facet metrics, as summarized by
 #' [summary.mfrm_design_evaluation()].
 #'
+#' Workload limits apply to the maxima across all recorded replications,
+#' including failed fits and diagnostic runs. One rating is one generated
+#' person-rater-criterion row, not a bundle of criteria or a weighted count.
+#' For example, two raters each scoring three criteria for ten persons use
+#' 60 ratings, with 30 per rater. Counts use the actual assignment, including
+#' linking persons and uneven or incomplete skeletons. A design cannot pass
+#' an active limit when its corresponding count is missing. Older evaluation
+#' objects can be re-summarized for total counts, but per-rater counts require
+#' an evaluation that recorded `MaxRatingsPerRater`.
+#'
+#' These checks describe the evaluated assignments. With randomized
+#' assignments, an observed maximum does not guarantee that future assignments
+#' will respect the same limit. The limits constrain workload, not monetary
+#' cost or scoring time. Ranking among passing designs still follows `prefer`.
+#'
 #' @section Typical workflow:
 #' 1. Run [evaluate_mfrm_design()].
 #' 2. Review [summary.mfrm_design_evaluation()] and [plot.mfrm_design_evaluation()].
@@ -6107,7 +6145,9 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `facet_table`: facet-level threshold checks, including design-variable
 #'   alias columns when applicable
 #' - `design_table`: design-level aggregated checks, including design-variable
-#'   alias columns when applicable
+#'   alias columns when applicable, `MaxRatings`, `MaxRatingsPerRater`, and
+#'   workload checks `RatingsPass` and `RaterWorkloadPass`. Its `Pass` requires
+#'   both the facet-level checks and the active workload limits to pass.
 #' - `recommended`: the first passing design after ranking
 #' - `thresholds`: thresholds used in the recommendation
 #' - `design_variable_aliases`: accepted public aliases for design variables
@@ -6115,11 +6155,7 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `planning_scope`: explicit record of the current planning contract
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: structured planning metadata
-#' - `caveats`: structured warning rows for situations where the
-#'   recommendation rests on weak evidence (e.g., no design met every
-#'   threshold; the recommended design is at the boundary of the
-#'   evaluated grid; only one rep was simulated). Empty `tibble()`
-#'   when no caveats apply.
+#' - `caveats`: fixed-effects interpretation and suggested post-fit reviews
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
 #' \donttest{
@@ -6132,7 +6168,9 @@ plot.mfrm_design_evaluation <- function(x,
 #'   maxit = 30,
 #'   seed = 123
 #' ))
-#' rec <- recommend_mfrm_design(sim_eval)
+#' rec <- recommend_mfrm_design(
+#'   sim_eval, max_ratings = 48, max_ratings_per_rater = 24
+#' )
 #' rec$recommended
 #' }
 #' @export
@@ -6143,7 +6181,17 @@ recommend_mfrm_design <- function(x,
                                   max_severity_rmse = 0.5,
                                   max_misfit_rate = 0.10,
                                   min_convergence_rate = 1,
-                                  prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion")) {
+                                  prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion"),
+                                  max_ratings = NULL,
+                                  max_ratings_per_rater = NULL) {
+  limits <- list(max_ratings = max_ratings, max_ratings_per_rater = max_ratings_per_rater)
+  for (name in names(limits)) {
+    limit <- limits[[name]]
+    if (!is.null(limit) && (!is.numeric(limit) || length(limit) != 1L ||
+        !is.finite(limit) || limit < 0 || limit != floor(limit))) {
+      stop("`", name, "` must be NULL or a single finite non-negative whole number.", call. = FALSE)
+    }
+  }
   if (inherits(x, "mfrm_design_evaluation")) {
     design_summary <- summary.mfrm_design_evaluation(x, digits = 6)$design_summary
   } else if (inherits(x, "summary.mfrm_design_evaluation")) {
@@ -6154,6 +6202,9 @@ recommend_mfrm_design <- function(x,
 
   design_summary <- tibble::as_tibble(design_summary)
   if (nrow(design_summary) == 0) stop("No design summary rows available.")
+  for (name in c("MaxRatings", "MaxRatingsPerRater")) {
+    if (!name %in% names(design_summary)) design_summary[[name]] <- NA_real_
+  }
 
   if (missing(facets)) {
     facets <- setdiff(unique(as.character(design_summary$Facet)), "Person")
@@ -6203,6 +6254,8 @@ recommend_mfrm_design <- function(x,
       MaxSeverityRMSE = max(.data$MeanSeverityRMSE, na.rm = TRUE),
       MaxMisfitRate = max(.data$MeanMisfitRate, na.rm = TRUE),
       MinConvergenceRate = min(.data$ConvergenceRate, na.rm = TRUE),
+      MaxRatings = dplyr::first(.data$MaxRatings),
+      MaxRatingsPerRater = dplyr::first(.data$MaxRatingsPerRater),
       FacetsPassing = sum(.data$Pass, na.rm = TRUE),
       FacetsRequired = dplyr::n(),
       Pass = all(.data$Pass),
@@ -6210,8 +6263,14 @@ recommend_mfrm_design <- function(x,
     )
   design_table <- simulation_append_design_alias_columns(design_table, design_variable_aliases)
 
-  rank_vars <- c("Pass", prefer)
   design_table <- design_table |>
+    dplyr::mutate(
+      RatingsPass = if (is.null(max_ratings)) TRUE else
+        is.finite(.data$MaxRatings) & .data$MaxRatings <= max_ratings,
+      RaterWorkloadPass = if (is.null(max_ratings_per_rater)) TRUE else
+        is.finite(.data$MaxRatingsPerRater) & .data$MaxRatingsPerRater <= max_ratings_per_rater,
+      Pass = .data$Pass & .data$RatingsPass & .data$RaterWorkloadPass
+    ) |>
     dplyr::arrange(dplyr::desc(.data$Pass), !!!rlang::syms(prefer))
 
   recommended <- design_table |>
@@ -6242,6 +6301,8 @@ recommend_mfrm_design <- function(x,
         max_severity_rmse = max_severity_rmse,
         max_misfit_rate = max_misfit_rate,
         min_convergence_rate = min_convergence_rate,
+        max_ratings = max_ratings,
+        max_ratings_per_rater = max_ratings_per_rater,
         prefer = prefer
       ),
       design_variable_aliases = design_variable_aliases,

@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* `recommend_mfrm_design()` accepts `max_ratings` and
+  `max_ratings_per_rater` to select designs within total and individual rater
+  workload limits. Counts use actual generated rating rows, including linking
+  assignments and failed fits, and limits apply to the maximum across all
+  recorded replications. Missing workload records cannot pass an active limit;
+  omitting the limits preserves the existing ranking behavior.
+
 * Design-evaluation summaries, plots, and recommendations now include failed
   fits and diagnostic runs in the convergence-rate denominator. Previously,
   one successful run and nine failures could be reported as 100% convergence

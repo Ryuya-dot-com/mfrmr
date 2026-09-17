@@ -12,7 +12,9 @@ recommend_mfrm_design(
   max_severity_rmse = 0.5,
   max_misfit_rate = 0.1,
   min_convergence_rate = 1,
-  prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion")
+  prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion"),
+  max_ratings = NULL,
+  max_ratings_per_rater = NULL
 )
 }
 \arguments{
@@ -34,6 +36,14 @@ recommend_mfrm_design(
 optimized first when multiple designs pass. Custom public aliases from
 \code{sim_spec} are also accepted, as are the role keywords \code{person}, \code{rater},
 \code{criterion}, and \code{assignment}.}
+
+\item{max_ratings}{Optional upper bound on total rating rows in each
+evaluated replication. Supply a non-negative whole number, or \code{NULL}
+(default) to impose no limit.}
+
+\item{max_ratings_per_rater}{Optional upper bound on rating rows assigned
+to any one rater-like facet level in each evaluated replication. Supply
+a non-negative whole number, or \code{NULL} (default) to impose no limit.}
 }
 \value{
 A list of class \code{mfrm_design_recommendation} with:
@@ -41,7 +51,9 @@ A list of class \code{mfrm_design_recommendation} with:
 \item \code{facet_table}: facet-level threshold checks, including design-variable
 alias columns when applicable
 \item \code{design_table}: design-level aggregated checks, including design-variable
-alias columns when applicable
+alias columns when applicable, \code{MaxRatings}, \code{MaxRatingsPerRater}, and
+workload checks \code{RatingsPass} and \code{RaterWorkloadPass}. Its \code{Pass} requires
+both the facet-level checks and the active workload limits to pass.
 \item \code{recommended}: the first passing design after ranking
 \item \code{thresholds}: thresholds used in the recommendation
 \item \code{design_variable_aliases}: accepted public aliases for design variables
@@ -49,11 +61,7 @@ alias columns when applicable
 \item \code{planning_scope}: explicit record of the current planning contract
 \item \code{planning_constraints}: explicit record of mutable/locked design variables
 \item \code{planning_schema}: structured planning metadata
-\item \code{caveats}: structured warning rows for situations where the
-recommendation rests on weak evidence (e.g., no design met every
-threshold; the recommended design is at the boundary of the
-evaluated grid; only one rep was simulated). Empty \code{tibble()}
-when no caveats apply.
+\item \code{caveats}: fixed-effects interpretation and suggested post-fit reviews
 }
 }
 \description{
@@ -70,6 +78,21 @@ then fewer raters, then fewer criteria).
 The convergence threshold uses all recorded replications, including
 failures that returned no facet metrics, as summarized by
 \code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}.
+
+Workload limits apply to the maxima across all recorded replications,
+including failed fits and diagnostic runs. One rating is one generated
+person-rater-criterion row, not a bundle of criteria or a weighted count.
+For example, two raters each scoring three criteria for ten persons use
+60 ratings, with 30 per rater. Counts use the actual assignment, including
+linking persons and uneven or incomplete skeletons. A design cannot pass
+an active limit when its corresponding count is missing. Older evaluation
+objects can be re-summarized for total counts, but per-rater counts require
+an evaluation that recorded \code{MaxRatingsPerRater}.
+
+These checks describe the evaluated assignments. With randomized
+assignments, an observed maximum does not guarantee that future assignments
+will respect the same limit. The limits constrain workload, not monetary
+cost or scoring time. Ranking among passing designs still follows \code{prefer}.
 }
 \section{Typical workflow}{
 
@@ -91,7 +114,9 @@ sim_eval <- suppressWarnings(evaluate_mfrm_design(
   maxit = 30,
   seed = 123
 ))
-rec <- recommend_mfrm_design(sim_eval)
+rec <- recommend_mfrm_design(
+  sim_eval, max_ratings = 48, max_ratings_per_rater = 24
+)
 rec$recommended
 }
 }

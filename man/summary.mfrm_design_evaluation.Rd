@@ -55,6 +55,12 @@ means still use the available metric values. Designs with no returned
 facet results have no performance-summary rows and cannot be recommended.
 To update an older saved summary, call \code{summary()} again on the original
 evaluation object; no simulation or refitting is needed.
+
+\code{MaxRatings} and \code{MaxRatingsPerRater} are the largest total rating count
+and individual rater workload across all recorded replications, including
+failed runs. A rating is one generated person-rater-criterion row; weights
+do not multiply workload. A maximum is \code{NA} when any replication lacks
+that count, including older evaluations without per-rater workload records.
 }
 \examples{
 \donttest{
