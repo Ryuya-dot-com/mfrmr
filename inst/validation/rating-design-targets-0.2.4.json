@@ -1,0 +1,46 @@
+{
+  "scope": "Series D planning targets only; no responses, fitting, coverage or design ranking",
+  "source": "research-notes/2026-09-17-random-effects-rating-design/design-incidence.csv",
+  "source_sha256": "e3ddca64cbc6b2d018d7c23cc6ed466bd7ca76e4b49f362908a83d725ab1d60f",
+  "script_sha256": "ce85637b1987d08d581c08b05c023427379ce6bf0e9cd900a5700211b5b9504b",
+  "ordering": "lexicographic SHA256(mfrmr-D-targets-v1:{Person}); Person breaks ties",
+  "candidate_pairs": 120,
+  "planned_pilot_pairs": 12,
+  "b_exposure_by_reference_group": {
+    "C1": {
+      "4": 80,
+      "1": 40
+    },
+    "C2": {
+      "1": 120
+    }
+  },
+  "candidate_pair_exposure": {
+    "within_C1": {
+      "1_4": 15,
+      "4_4": 19,
+      "1_1": 6
+    },
+    "within_C2": {
+      "1_1": 40
+    },
+    "between_C1_C2": {
+      "1_4": 27,
+      "1_1": 13
+    }
+  },
+  "pilot_pair_exposure": {
+    "within_C1": {
+      "1_4": 2,
+      "4_4": 2
+    },
+    "within_C2": {
+      "1_1": 4
+    },
+    "between_C1_C2": {
+      "1_4": 2,
+      "1_1": 2
+    }
+  },
+  "checks": "fixed input membership, counts, disjoint pairs, C partitions, B exposure and D reassignment passed"
+}

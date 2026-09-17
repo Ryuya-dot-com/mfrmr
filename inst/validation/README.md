@@ -145,6 +145,16 @@ The startup check found seven completed datasets with all 504 targets available;
 this is a progress snapshot, not a final performance result.
 The selected allocation is a pilot-based planning decision, not a precision
 guarantee or public interval qualification.
+While that run continues, the [interpretation and next-work note](measurement-extension-next-decisions-0.2.4.md)
+maps its eight coverage differences to questions and subsequent decisions,
+defines a bounded shared-rater likelihood implementation, and supplies common
+Series D evaluation targets without generating responses. The code review
+identifies that Series R ability differences require the joint posterior even
+at known calibration. The allocation review also records that all 80 heavily
+rated people in B belong to C's first reference group; group contrasts must
+therefore retain exposure information. The new target tables contain 240
+people and 120 disjoint candidate pairs, with 12 marked for a future pilot.
+They do not alter the active main-study targets or establish design performance.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

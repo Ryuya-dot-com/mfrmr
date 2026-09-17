@@ -462,6 +462,22 @@ checks used saved evidence and exactly reproduced the seven original aggregate
 tables; the older numerical experiments and package suite were not rerun.
 The main study is running; its final coverage and precision remain pending.
 
+An [outcome-independent planning supplement](measurement-extension-next-decisions-0.2.4.md)
+now specifies the interpretation of those results, the next Series R fixed-point
+likelihood task, and Series D comparison targets. The active study addresses
+estimated versus known calibration under the same local-dependence model;
+it does not test omission of that dependence. For Series R, integrating shared
+rater effects generally induces posterior dependence between people even at
+fixed calibration, so the Series L independent-person difference density is
+not reusable. The first proposed implementation remains the saved two-person,
+two-rater likelihood example, before estimation or design simulations.
+The target-construction script reuses the A/B/C/D allocation unchanged and
+creates 120 disjoint candidate pairs in three reference strata, with four per
+stratum marked for the future pilot. It reveals that B's 80 four-rater people
+all fall in C's first reference group; interpreting these strata requires their
+one-/four-rater exposure composition. This is target construction and source
+review, not an additional coverage or design-performance experiment.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,
