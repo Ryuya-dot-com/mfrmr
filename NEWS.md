@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Design recommendations now require results for every requested facet in
+  each candidate design. Previously, a design missing a requested facet
+  could pass on its remaining facet alone. `FacetsMissing` identifies absent
+  facets, and `FacetsRequired` counts the request rather than available rows.
+  Default requests use stored facet names when available, so missing results
+  no longer silently narrow the requested scope.
+
 * `recommend_mfrm_design()` accepts `max_ratings` and
   `max_ratings_per_rater` to select designs within total and individual rater
   workload limits. Counts use actual generated rating rows, including linking

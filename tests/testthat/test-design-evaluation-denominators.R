@@ -106,6 +106,42 @@ test_that("workload limits include failed runs and preserve ranking within limit
     max_ratings = 1000, max_ratings_per_rater = 1000)$recommended$design_id, "D2")
 })
 
+test_that("a design must provide every requested facet before it can pass", {
+  x <- design_evaluation_denominator_fixture()
+  x$results <- x$results[!(x$results$design_id == "D1" & x$results$Facet == "Criterion"), ]
+  for (object in list(x, summary(x))) {
+    rec <- recommend_mfrm_design(object, facets = c("Rater", "Criterion"),
+      min_convergence_rate = .1)
+    partial <- rec$design_table[rec$design_table$design_id == "D1", ]
+    complete <- rec$design_table[rec$design_table$design_id == "D2", ]
+    expect_identical(rec$recommended$design_id, "D2")
+    expect_identical(partial$FacetsMissing, "Criterion")
+    expect_equal(partial$FacetsRequired, 2)
+    expect_equal(partial$FacetsPassing, 1)
+    expect_false(partial$Pass)
+    expect_identical(complete$FacetsMissing, "")
+    expect_true(complete$Pass)
+    expect_identical(recommend_mfrm_design(object, min_convergence_rate = .1)$recommended$design_id, "D2")
+    # An intentional single-facet request remains supported.
+    expect_identical(recommend_mfrm_design(object, facets = "Rater",
+      min_convergence_rate = .1)$recommended$design_id, "D1")
+  }
+})
+
+test_that("default facet requests retain stored custom names when results are missing", {
+  x <- design_evaluation_denominator_fixture()
+  x$settings <- list(facet_names = c(rater = "Judge", criterion = "Task"))
+  x$results$Facet <- ifelse(x$results$Facet == "Rater", "Judge", "Task")
+  x$results <- x$results[x$results$Facet == "Judge", ]
+  for (object in list(x, summary(x))) {
+    expect_error(recommend_mfrm_design(object), "Requested facets not found.*Task")
+    expect_identical(recommend_mfrm_design(object, facets = "Judge")$recommended$design_id, "D2")
+    for (facets in list(character(0), NA_character_, "", " ")) {
+      expect_error(recommend_mfrm_design(object, facets = facets), "`facets` must contain")
+    }
+  }
+})
+
 test_that("legacy workload records are unknown without changing uncapped recommendations", {
   x <- design_evaluation_denominator_fixture()
   x$rep_overview$Observations <- 240

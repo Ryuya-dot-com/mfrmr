@@ -6092,7 +6092,9 @@ plot.mfrm_design_evaluation <- function(x,
 #' Recommend a design condition from simulation results
 #'
 #' @param x Output from [evaluate_mfrm_design()] or [summary.mfrm_design_evaluation()].
-#' @param facets Facets that must satisfy the planning thresholds.
+#' @param facets Non-empty vector of facets that must satisfy the planning
+#'   thresholds. By default, use the stored non-person facet names; for older
+#'   objects without these names, use the non-person facets in the summary.
 #' @param min_separation Minimum acceptable mean separation.
 #' @param min_reliability Minimum acceptable mean reliability.
 #' @param max_severity_rmse Maximum acceptable severity recovery RMSE.
@@ -6114,6 +6116,12 @@ plot.mfrm_design_evaluation <- function(x,
 #'
 #' A design is marked as recommended when all requested facets satisfy all
 #' selected thresholds simultaneously.
+#' Each design must have results for every requested facet. Missing facets
+#' are reported in `FacetsMissing` and prevent that design from passing;
+#' `FacetsRequired` always counts the requested facets, not the available rows.
+#' Designs with none of the requested facets have no facet-check rows and
+#' cannot be recommended. A requested facet absent from the entire summary
+#' produces an error.
 #' If multiple designs pass, the helper returns the smallest one according to
 #' `prefer` (by default: fewer persons first, then fewer ratings per person,
 #' then fewer raters, then fewer criteria).
@@ -6207,9 +6215,12 @@ recommend_mfrm_design <- function(x,
   }
 
   if (missing(facets)) {
-    facets <- setdiff(unique(as.character(design_summary$Facet)), "Person")
-  } else {
-    facets <- unique(as.character(facets))
+    facets <- x$settings$facet_names %||% x$facet_names %||%
+      setdiff(unique(as.character(design_summary$Facet)), "Person")
+  }
+  facets <- unique(as.character(facets))
+  if (length(facets) == 0L || anyNA(facets) || any(!nzchar(trimws(facets)))) {
+    stop("`facets` must contain at least one non-missing, non-empty facet name.", call. = FALSE)
   }
   missing_facets <- setdiff(facets, unique(design_summary$Facet))
   if (length(missing_facets) > 0) {
@@ -6249,6 +6260,7 @@ recommend_mfrm_design <- function(x,
     dplyr::group_by(dplyr::across(dplyr::all_of(simulation_design_group_variables(design_descriptor)))) |>
     dplyr::summarize(
       FacetsChecked = paste(.data$Facet, collapse = ", "),
+      FacetsMissing = paste(setdiff(facets, .data$Facet), collapse = ", "),
       MinSeparation = min(.data$MeanSeparation, na.rm = TRUE),
       MinReliability = min(.data$MeanReliability, na.rm = TRUE),
       MaxSeverityRMSE = max(.data$MeanSeverityRMSE, na.rm = TRUE),
@@ -6257,8 +6269,8 @@ recommend_mfrm_design <- function(x,
       MaxRatings = dplyr::first(.data$MaxRatings),
       MaxRatingsPerRater = dplyr::first(.data$MaxRatingsPerRater),
       FacetsPassing = sum(.data$Pass, na.rm = TRUE),
-      FacetsRequired = dplyr::n(),
-      Pass = all(.data$Pass),
+      FacetsRequired = length(facets),
+      Pass = all(facets %in% .data$Facet) && all(.data$Pass),
       .groups = "drop"
     )
   design_table <- simulation_append_design_alias_columns(design_table, design_variable_aliases)
