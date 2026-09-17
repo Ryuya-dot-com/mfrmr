@@ -295,6 +295,28 @@ element rather than a numerical-control extension. Current production APIs,
 0.2.4 eligibility and the later-version promises are unchanged. No production
 estimator, generic registry, new dependency or simulation batch was added.
 
+### 2026-09-17: person-local testlet fixed-point reference
+
+The [new matched reference](local-testlet-tam-reference-0.2.4.md) executes the
+first bounded numerical step above: six Persons, two fixed Raters, three
+Criteria, three categories, and local variances 0, .01 and .49. Explicit A/B
+translation to TAM 4.3.25 agrees with independent normal quadrature for
+probabilities, likelihood, gradients and posterior moments. All 51 checks pass,
+including owner relabeling, a basis reflection, the exact removal of zero local
+effects, and an unobserved Person/Rater pair. This is one fixed response table
+at specified parameters, not recovery evidence or a fitted random-effects API.
+
+The reference also exposes a model-translation limitation: TAM's multidimensional
+prior helper adjusts singular values below .05 and rescales the covariance.
+For example, the requested diagonal (1, .01, .01) becomes approximately
+(.92727, .04636, .04636) in its density calculation. Standardizing local effects
+and putting their known SD in B, while fixing the latent covariance to I,
+preserves the declared fixed-point model. Unknown variance estimation still
+needs a separately qualified path; simply freeing that covariance would not
+inherit this result. Shared random-rater severity remains the distinct later
+likelihood target. Production source and package tests are unchanged; the
+successful `ce50822` package check is reused.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

@@ -42,6 +42,13 @@ files and their source identities remain unchanged.
 The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
 binds the consolidated development work to commit `fe8220ce`.
 
+For future-model research, the [person-local testlet reference](local-testlet-tam-reference-0.2.4.md)
+matches a fixed-parameter RSM with Person/Rater dependence to TAM's A/B design.
+It records 51 passing checks and a small-covariance adjustment in the external
+prior calculation. The standardized representation preserves the specified
+model; variance estimation, recovery and shared random-rater effects remain
+unqualified. This research does not change production scope or release gates.
+
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and
 checks specified slope/variance directions against continuous integration.
