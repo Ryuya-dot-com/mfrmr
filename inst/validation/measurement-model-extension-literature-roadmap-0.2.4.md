@@ -365,6 +365,18 @@ full-package experiments were reused. Generalizing the owner structure,
 propagating population-parameter uncertainty into person measures, and
 qualifying recovery/coverage remain research tasks, not consequences of speed.
 
+The [person-calibration sensitivity follow-up](local-testlet-person-uncertainty-0.2.4.md)
+adds J C J' for posterior means and explicit pair contrasts at the saved points.
+All 53 checks pass. Shared calibration can cancel or amplify uncertainty in a
+difference, and finite local mixtures demonstrate that averaging the conditional
+variance is a separate term from variance of posterior means. This is not yet
+a corrected posterior SD or frequentist prediction MSE. A focused reread of
+Skrondal and Rabe-Hesketh, especially pp.668--670, fixes those target distinctions.
+The next scoring requirement is a checked conditional posterior quantile path;
+parameter-aware inference then needs either a declared posterior or a sampling
+and refitting scheme, with variance-boundary handling and separate coverage
+targets for individual abilities and their differences.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

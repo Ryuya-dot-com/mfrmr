@@ -79,6 +79,15 @@ optimizer bridges. At GH181 and 120 rows, median evaluation time falls from
 120 distinct response patterns and missing entries. Model ownership and
 quadrature accuracy are unchanged. This bounded performance step adds no
 recovery, coverage, or new N=120 fitting evidence.
+The [person-scoring sensitivity step](local-testlet-person-uncertainty-0.2.4.md)
+then computes how the saved calibration covariance propagates into posterior
+means and their pairwise differences. Fifty-three checks pass, including an
+analytic derivative identity, coordinate invariance and exact finite-mixture
+variance decomposition. Calibration covariance can cancel or amplify a person
+contrast. The conditional posterior variance also changes with calibration,
+so the sensitivity term is not labeled a corrected SE. The variance-zero case
+retains only fixed-zero submodel sensitivity; full-model intervals remain
+unavailable. Existing fits and external/package checks were reused.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

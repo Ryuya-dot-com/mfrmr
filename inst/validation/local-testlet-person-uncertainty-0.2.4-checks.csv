@@ -1,0 +1,54 @@
+"Case","Quantity","Error","Tolerance","Pass"
+"original","mean_jacobian_121 0.001",1.10811360087837e-08,1e-06,TRUE
+"original","mean_jacobian_121 5e-04",2.88657986402541e-12,1e-06,TRUE
+"original","mean_jacobian_181 0.001",1.10824682764132e-08,1e-06,TRUE
+"original","mean_jacobian_181 5e-04",0,1e-06,TRUE
+"original","alpha_integration_by_parts",5.38871391952966e-10,1e-07,TRUE
+"original","calibration_covariance_symmetry",2.77555756156289e-17,1e-10,TRUE
+"original","calibration_covariance_psd",0,1e-10,TRUE
+"original","pair_contrast_identity",1.11022302462516e-16,1e-10,TRUE
+"original","log_variance_coordinate_invariance",3.96065730212669e-09,1e-06,TRUE
+"original","missing_person_prior_and_sensitivity",9.07747768365232e-16,1e-09,TRUE
+"original","existing_person_mean_and_jacobian",3.99680288865056e-15,1e-09,TRUE
+"original","probe_covariance_0.01",1.0842021724855e-19,1e-10,TRUE
+"original","total_variance_identity_0.01",1.37700113356058e-15,1e-10,TRUE
+"original","probe_linearized_mean_covariance_0.01",1.93502482499497e-05,1e-04,TRUE
+"original","probe_covariance_0.005",2.71050543121376e-20,1e-10,TRUE
+"original","total_variance_identity_0.005",5.67848346740441e-16,1e-10,TRUE
+"original","probe_linearized_mean_covariance_0.005",4.83513401569602e-06,1e-04,TRUE
+"original","probe_within_variance_change_stability",1.66004798796138e-05,1e-04,TRUE
+"original","capture",0,0,TRUE
+"clustered","mean_jacobian_121 0.001",2.91555668496812e-09,1e-06,TRUE
+"clustered","mean_jacobian_121 5e-04",1.55431223447522e-12,1e-06,TRUE
+"clustered","mean_jacobian_181 0.001",2.91572321842182e-09,1e-06,TRUE
+"clustered","mean_jacobian_181 5e-04",0,1e-06,TRUE
+"clustered","alpha_integration_by_parts",7.18117787457118e-11,1e-07,TRUE
+"clustered","calibration_covariance_symmetry",2.08166817117217e-17,1e-10,TRUE
+"clustered","calibration_covariance_psd",2.00141997009634e-17,1e-10,TRUE
+"clustered","pair_contrast_identity",2.41777084464267e-17,1e-10,TRUE
+"clustered","log_variance_coordinate_invariance",3.55373303007056e-09,1e-06,TRUE
+"clustered","probe_covariance_0.01",1.0842021724855e-19,1e-10,TRUE
+"clustered","total_variance_identity_0.01",2.41594125347661e-16,1e-10,TRUE
+"clustered","probe_linearized_mean_covariance_0.01",1.11396265789349e-05,1e-04,TRUE
+"clustered","probe_covariance_0.005",2.71050543121376e-20,1e-10,TRUE
+"clustered","total_variance_identity_0.005",1.36432867363671e-16,1e-10,TRUE
+"clustered","probe_linearized_mean_covariance_0.005",2.78393141782407e-06,1e-04,TRUE
+"clustered","probe_within_variance_change_stability",4.37618274951035e-06,1e-04,TRUE
+"clustered","capture",0,0,TRUE
+"boundary","mean_jacobian_121 0.001",8.89347040455846e-10,1e-06,TRUE
+"boundary","mean_jacobian_121 5e-04",6.70863364859997e-12,1e-06,TRUE
+"boundary","mean_jacobian_181 0.001",8.82700246229717e-10,1e-06,TRUE
+"boundary","mean_jacobian_181 5e-04",0,1e-06,TRUE
+"boundary","alpha_integration_by_parts",2.94248070353831e-10,1e-07,TRUE
+"boundary","calibration_covariance_symmetry",2.77555756156289e-17,1e-10,TRUE
+"boundary","calibration_covariance_psd",6.32984445820793e-17,1e-10,TRUE
+"boundary","pair_contrast_identity",5.10893229096935e-26,1e-10,TRUE
+"boundary","probe_covariance_0.01",3.3881317890172e-21,1e-10,TRUE
+"boundary","total_variance_identity_0.01",3.83976975649319e-17,1e-10,TRUE
+"boundary","probe_linearized_mean_covariance_0.01",4.18534467916398e-08,1e-04,TRUE
+"boundary","probe_covariance_0.005",8.470329472543e-22,1e-10,TRUE
+"boundary","total_variance_identity_0.005",2.05820535853322e-17,1e-10,TRUE
+"boundary","probe_linearized_mean_covariance_0.005",1.03898804282299e-08,1e-04,TRUE
+"boundary","probe_within_variance_change_stability",1.15232823283407e-08,1e-04,TRUE
+"boundary","capture",0,0,TRUE
+"provenance","source_and_input_identity",0,0,TRUE
