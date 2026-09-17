@@ -54,6 +54,20 @@ local({
     }
   })
 
+  test_that("toy diagnostics follow the supplied fit on every call", {
+    for (key in c("JML_RSM", "MML_RSM", "JML_RSM")) {
+      dx <- make_toy_diagnostics(fits[[key]])
+      expect_equal(dx$measures, diagnostics[[key]]$measures, info = key)
+      expect_equal(dx$fit_readiness, diagnostics[[key]]$fit_readiness, info = key)
+    }
+    changed <- fits$JML_RSM
+    changed$readiness$fit$InferenceReady <- FALSE
+    changed$readiness$fit$FitReadiness <- "blocked"
+    dx <- make_toy_diagnostics(changed)
+    expect_false(dx$fit_readiness$InferenceReady)
+    expect_identical(dx$fit_readiness$FitReadiness, "blocked")
+  })
+
   routes <- list(
     summary_fit = function(f, d) summary(f, diagnostics = d),
     summary_facets = function(f, d) summary(f, profile = "facets", diagnostics = d),

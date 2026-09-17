@@ -399,6 +399,7 @@ make_mfrm_boundary_safe_objective <- function(evaluator,
     stop("`penalty` must be one finite positive value.", call. = FALSE)
   }
   rejections <- 0L
+  population_rejections <- 0L
   list(
     value = function(par, ...) {
       tryCatch(
@@ -406,10 +407,25 @@ make_mfrm_boundary_safe_objective <- function(evaluator,
         mfrmr_gpcm_slope_numeric_boundary_error = function(error) {
           rejections <<- rejections + 1L
           penalty
+        },
+        mfrmr_population_variance_numeric_boundary_error = function(error) {
+          population_rejections <<- population_rejections + 1L
+          penalty
         }
       )
     },
+    gradient = function(par, ...) {
+      # L-BFGS-B requests a gradient even at rejected trial points. The
+      # constant penalty has zero gradient; retained solutions are assessed
+      # separately with the unwrapped evaluator.
+      tryCatch(
+        evaluator$gradient(par),
+        mfrmr_gpcm_slope_numeric_boundary_error = function(error) numeric(length(par)),
+        mfrmr_population_variance_numeric_boundary_error = function(error) numeric(length(par))
+      )
+    },
     rejections = function() as.integer(rejections),
+    population_variance_rejections = function() as.integer(population_rejections),
     penalty = penalty
   )
 }
@@ -503,16 +519,18 @@ run_mfrm_direct_optimization <- function(start,
     quad = quad,
     reuse_probability_workspace = identical(optimizer_plan$Used, "L-BFGS-B")
   )
-  # A non-representable GPCM slope is an invalid line-search proposal, not a
-  # fitted parameter vector. Return a finite, dominating objective so both
+  # A non-representable GPCM slope or population variance is an invalid
+  # line-search proposal. Return a finite, dominating objective so both
   # BFGS and L-BFGS-B can contract the step. All other errors remain fail-hard,
   # and expand_params() still rejects an invalid retained solution.
   safe_objective <- make_mfrm_boundary_safe_objective(evaluator)
   fn <- function(par, ...) safe_objective$value(par)
-  gr <- function(par, ...) evaluator$gradient(par)
+  gr <- function(par, ...) safe_objective$gradient(par)
 
   run_stage <- function(par, stage_method, stage_reltol, index, label,
                         fail_hard = FALSE) {
+    # The finite penalty applies only to proposals from a valid starting point.
+    cache$ensure(par)
     started <- proc.time()[["elapsed"]]
     stage_control <- build_mfrm_optim_control(
       stage_method,
@@ -568,7 +586,7 @@ run_mfrm_direct_optimization <- function(start,
     }
 
     final_gradient <- tryCatch(
-      gr(stage_opt$par),
+      evaluator$gradient(stage_opt$par),
       error = function(e) rep(NA_real_, length(stage_opt$par))
     )
     diagnostics <- build_optimizer_diagnostics(
@@ -714,6 +732,8 @@ run_mfrm_direct_optimization <- function(start,
   opt$evaluation_cache <- evaluator$diagnostics()
   opt$evaluation_cache$GPCMSlopeNumericBoundaryRejections <-
     safe_objective$rejections()
+  opt$evaluation_cache$PopulationVarianceNumericBoundaryRejections <-
+    safe_objective$population_variance_rejections()
 
   if (!identical(opt$optimizer_diagnostics$ConvergenceSeverity, "pass") &&
       !isTRUE(suppress_convergence_warning)) {

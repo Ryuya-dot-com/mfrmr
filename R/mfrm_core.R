@@ -926,6 +926,21 @@ new_gpcm_slope_numeric_boundary_error <- function(log_slopes) {
   )
 }
 
+new_population_variance_numeric_boundary_error <- function(log_sigma2) {
+  structure(
+    list(
+      message = paste(
+        "Population-model residual variance `sigma2` must be a single positive",
+        "finite value after log-scale transformation."
+      ),
+      call = NULL,
+      log_sigma2 = as.numeric(log_sigma2),
+      sigma2 = exp(log_sigma2)
+    ),
+    class = c("mfrmr_population_variance_numeric_boundary_error", "error", "condition")
+  )
+}
+
 project_sum_zero_gradient <- function(grad_expanded) {
   grad_expanded <- as.numeric(grad_expanded %||% numeric(0))
   n <- length(grad_expanded)
@@ -1619,10 +1634,14 @@ expand_params <- function(par, sizes, config) {
       paste0("beta_", seq_along(beta))
     names(beta) <- beta_names
     log_sigma2 <- as.numeric(parts$log_sigma2[1] %||% 0)
+    sigma2 <- exp(log_sigma2)
+    if (!is.finite(sigma2) || sigma2 <= 0) {
+      stop(new_population_variance_numeric_boundary_error(log_sigma2))
+    }
     population <- list(
       coefficients = beta,
       log_sigma2 = log_sigma2,
-      sigma2 = exp(log_sigma2)
+      sigma2 = sigma2
     )
   }
 

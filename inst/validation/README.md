@@ -32,8 +32,13 @@ round trips retain diagnostic-only intervals. The subsequent
 datasets after verified user-authorized resumption and completed all 20,000
 on September 17. The [final frozen adjudication](fairz-confirmation-results-0.2.4.md)
 supports five primary cells and leaves three under review. Public interval
-eligibility remains false; the separate full package check has six unresolved
-failures. The 24-configuration FairZ output audit passed again.
+eligibility remains false. The 24-configuration FairZ output audit passed again.
+The [subsequent package-check repair](package-check-repair-0.2.4.md) resolves
+all six software failures: the complete packaged suite has 18,406 passes,
+0 failures, 38 unchanged warning conditions and 44 skips, and `R CMD check`
+has 0 errors/warnings/notes. Twelve same-data FairZ comparisons preserve the
+original results, including the four non-ready fits; historical confirmation
+files and their source identities remain unchanged.
 The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
 binds the consolidated development work to commit `fe8220ce`.
 

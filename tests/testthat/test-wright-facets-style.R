@@ -165,7 +165,7 @@ test_that("Wright CI payload stores absolute endpoints", {
   expect_true(all(loc$CI_Lower <= loc$Estimate & loc$Estimate <= loc$CI_Upper))
 })
 
-test_that("supplied diagnostics drive Wright SE metadata but not coordinates", {
+test_that("supplied diagnostics drive Wright SE metadata and must match coordinates", {
   fit <- make_wright_ready_fit()
   diagnostics <- make_toy_diagnostics(fit)
   row <- which(as.character(diagnostics$measures$Facet) != "Person")[1]
@@ -176,7 +176,6 @@ test_that("supplied diagnostics drive Wright SE metadata but not coordinates", {
       as.character(fit$facets$others$Level) == level
   ]
   fitted_estimate <- unname(fitted_estimate)
-  diagnostics$measures$Estimate[row] <- 1.2345
   diagnostics$measures$SE[row] <- 0.123
 
   out <- plot(
@@ -211,6 +210,12 @@ test_that("supplied diagnostics drive Wright SE metadata but not coordinates", {
   ]
   expect_equal(unified_loc$Estimate, fitted_estimate)
   expect_equal(unified_loc$SE, 0.123)
+
+  diagnostics$measures$Estimate[row] <- fitted_estimate + 1
+  expect_error(plot(fit, type = "wright", diagnostics = diagnostics, draw = FALSE),
+               "fit/diagnostics mismatch")
+  expect_error(plot_wright_unified(fit, diagnostics = diagnostics, draw = FALSE),
+               "fit/diagnostics mismatch")
 })
 
 test_that("FACETS-style Wright payload is complete and explicitly visual", {

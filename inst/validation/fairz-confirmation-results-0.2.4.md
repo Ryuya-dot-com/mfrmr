@@ -100,10 +100,13 @@ objects/replay and retained diagnostic-only eligibility. All reported
 `FairCIEligible` values remain false. The public conditional plot route is
 not silently replaced by the joint-covariance candidate.
 
-The separate full package check ended with six failures: five fit-plot
+At confirmation completion, the separate full package check had six failures: five fit-plot
 diagnostic-identity errors and one GPCM extreme-score optimization error.
-Those failures are unresolved. The successful FairZ output audit and bounded
-confirmation do not constitute a package or release pass.
+The [subsequent repair](package-check-repair-0.2.4.md) resolves those failures
+and passes the complete packaged regression check. It also records 12 same-data
+comparisons against the changed source, preserving the historical confirmation
+and all four non-ready results. The successful FairZ output audit and bounded
+confirmation do not constitute a release pass.
 
 ## Retained records
 

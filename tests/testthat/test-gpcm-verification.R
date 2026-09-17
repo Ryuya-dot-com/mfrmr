@@ -495,6 +495,7 @@ test_that("five-category all-maximum persons and raters retain distinct contract
     quad_points = 7L, maxit = 80L, reltol = 1e-9
   )))
   mml_person <- mml$facets$person[mml$facets$person$Person == "P01", , drop = FALSE]
+  expect_gt(mml$opt$evaluation_cache$PopulationVarianceNumericBoundaryRejections, 0L)
   expect_true(is.finite(mml_person$PrimaryEstimate))
   expect_true(is.finite(mml_person$PosteriorSD))
   expect_identical(mml_person$PrimaryEstimateBasis, "posterior_eap")

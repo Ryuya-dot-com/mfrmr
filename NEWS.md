@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Direct MML optimization now rejects trial points whose population variance
+  overflows or underflows after log-scale transformation. This fixes an abort
+  in a five-category GPCM fit with all-maximum responses. L-BFGS-B can also
+  request gradients at rejected slope/variance trials; those receive the
+  constant penalty's gradient. Readiness still uses the actual terminal
+  gradient, and invalid starting or retained parameters remain errors.
+
 * Fair-average tables and plots now also reject diagnostics from a different
   fitted analysis. This prevents mixing one fit's thresholds with another
   fit's measures and standard errors when computing FairM/FairZ.

@@ -43,11 +43,16 @@ mixed fit/diagnostic inputs in fair-average tables and plots and reconciles
 the fixed-reference candidate with a matching 40-dataset preflight. Saved
 outputs, label variants and CSV routes retain the diagnostic restrictions.
 This advances C12/C17 preparation. The subsequent
-[confirmation](fairz-confirmation-status-0.2.4.md) was paused with 450/20,000
-datasets saved. On September 17 the user requested resumption after source
-and saved-state verification; those identity checks passed. Public Fair Score
-interval eligibility remains false. Earlier checkpoint tables below retain
-their original counts; the machine-readable ledger includes later follow-ups.
+[confirmation](fairz-confirmation-status-0.2.4.md) resumed from 450 saved datasets
+after the user's September 17 instruction and source/state verification.
+All 20,000 assigned datasets are now complete: the
+[frozen adjudication](fairz-confirmation-results-0.2.4.md) supports five primary
+cells and leaves three under review. The subsequent
+[package-check repair](package-check-repair-0.2.4.md) preserves the original
+evidence identity and compares 12 saved cases against the changed source.
+Public Fair Score interval eligibility remains false. Earlier checkpoint
+tables below retain their original counts; the machine-readable ledger
+includes later follow-ups.
 
 The [September 17 maintainer sequence](internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
 uses committed baseline `fe8220ce` and supersedes stale execution instructions

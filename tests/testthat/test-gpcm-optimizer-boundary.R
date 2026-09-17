@@ -29,31 +29,103 @@ test_that("direct objectives reject only typed non-representable slope trials", 
   expect_identical(safe$rejections(), 2L)
 
   unrelated <- mfrmr:::make_mfrm_boundary_safe_objective(list(
-    value = function(par) stop("unrelated evaluator failure")
+    value = function(par) stop("unrelated evaluator failure"),
+    gradient = function(par) stop("unrelated gradient failure")
   ))
   expect_error(unrelated$value(0), "unrelated evaluator failure")
+  expect_error(unrelated$gradient(0), "unrelated gradient failure")
   expect_identical(unrelated$rejections(), 0L)
 })
 
-test_that("boundary-safe BFGS contracts an invalid trial instead of aborting", {
-  evaluator <- list(value = function(par) {
-    if (abs(par[1]) > 0.1) {
-      stop(mfrmr:::new_gpcm_slope_numeric_boundary_error(par[1]))
+test_that("boundary-safe optimizers retain valid iterates and expose stalled gradients", {
+  for (method in c("BFGS", "L-BFGS-B")) {
+    evaluator <- list(
+      value = function(par) {
+        if (abs(par[1]) > 0.1) {
+          stop(mfrmr:::new_gpcm_slope_numeric_boundary_error(par[1]))
+        }
+        (par[1] - 0.08)^2
+      },
+      gradient = function(par) {
+        if (abs(par[1]) > 0.1) {
+          stop(mfrmr:::new_gpcm_slope_numeric_boundary_error(par[1]))
+        }
+        2 * (par - 0.08)
+      }
+    )
+    safe <- mfrmr:::make_mfrm_boundary_safe_objective(evaluator)
+    opt <- stats::optim(
+      par = 0, fn = safe$value, gr = safe$gradient, method = method,
+      control = mfrmr:::build_mfrm_optim_control(method, 50L, 1e-12)
+    )
+
+    expect_true(is.finite(opt$value))
+    expect_lte(abs(opt$par[1]), 0.1)
+    gradient <- evaluator$gradient(opt$par)
+    diagnostics <- mfrmr:::build_optimizer_diagnostics(
+      opt, gradient, reltol = 1e-12, maxit = 50L, optimizer_method = method
+    )
+    if (abs(opt$par[1] - 0.08) > 1e-6) {
+      # A dominating penalty can stall a line search. Its zero derivative
+      # must never replace the actual terminal gradient in readiness review.
+      expect_false(identical(diagnostics$ConvergenceSeverity, "pass"))
+      expect_gt(diagnostics$TerminalGradientSupNorm, 1e-6)
     }
-    (par[1] - 0.08)^2
-  })
-  safe <- mfrmr:::make_mfrm_boundary_safe_objective(evaluator)
+    expect_gt(safe$rejections(), 0L)
+    expect_identical(safe$population_variance_rejections(), 0L)
+  }
+})
 
-  opt <- stats::optim(
-    par = 0,
-    fn = safe$value,
-    gr = function(par) 2 * (par - 0.08),
-    method = "BFGS",
-    control = list(maxit = 50L, reltol = 1e-12)
+test_that("population variance boundaries cannot poison an MML evaluation cache", {
+  fit <- make_toy_fit(method = "MML")
+  config <- fit$config
+  n_persons <- length(fit$prep$levels$Person)
+  config$population_spec <- list(
+    active = TRUE,
+    design_matrix = matrix(1, nrow = n_persons, ncol = 1L),
+    design_columns = "(Intercept)",
+    person_lookup = seq_len(n_persons)
   )
+  sizes <- mfrmr:::build_param_sizes(config)
+  idx <- mfrmr:::build_indices(fit$prep, config$step_facet)
+  par <- c(fit$opt$par, 0, 0)
+  sigma_index <- mfrmr:::build_param_slices(sizes)$log_sigma2
+  cache <- mfrmr:::make_param_cache(sizes, config, idx, is_mml = TRUE)
+  evaluator <- mfrmr:::make_mfrm_direct_evaluator(
+    "MML", cache, idx, config, sizes, mfrmr:::gauss_hermite_normal(7L)
+  )
+  safe <- mfrmr:::make_mfrm_boundary_safe_objective(evaluator)
+  value <- safe$value(par)
+  gradient <- evaluator$gradient(par)
+  params <- cache$params()
 
-  expect_false(inherits(opt, "error"))
-  expect_true(is.finite(opt$value))
-  expect_lte(abs(opt$par[1]), 0.1)
-  expect_gt(safe$rejections(), 0L)
+  for (log_sigma2 in c(800, -800)) {
+    trial <- par
+    trial[sigma_index] <- log_sigma2
+    error <- tryCatch(cache$ensure(trial), error = identity)
+    expect_s3_class(error, "mfrmr_population_variance_numeric_boundary_error")
+    expect_identical(error$log_sigma2, log_sigma2)
+    expect_identical(error$sigma2, exp(log_sigma2))
+    expect_identical(cache$params(), params)
+    # Repeated rejected points must never be mistaken for successful cache hits.
+    expect_equal(safe$value(trial), safe$penalty)
+    expect_equal(safe$value(trial), safe$penalty)
+    expect_identical(safe$gradient(trial), numeric(length(trial)))
+    expect_error(evaluator$gradient(trial),
+                 class = "mfrmr_population_variance_numeric_boundary_error")
+    expect_identical(safe$value(par), value)
+    expect_identical(evaluator$gradient(par), gradient)
+  }
+  expect_identical(safe$population_variance_rejections(), 4L)
+  expect_identical(safe$rejections(), 0L)
+  expect_error(mfrmr:::run_mfrm_direct_optimization(
+    trial, "MML", idx, config, sizes, quad_points = 7L,
+    maxit = 2L, reltol = 1e-6
+  ), class = "mfrmr_population_variance_numeric_boundary_error")
+  for (log_sigma2 in c(-10, 10)) {
+    trial <- par
+    trial[sigma_index] <- log_sigma2
+    cache$ensure(trial)
+    expect_identical(cache$params()$population$sigma2, exp(log_sigma2))
+  }
 })

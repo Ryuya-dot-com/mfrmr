@@ -27,12 +27,15 @@ The current bottleneck is deciding which exact estimates, intervals and
 decisions the existing evidence supports. More functions, passing assertions
 or simulation rows do not resolve an unspecified claim. Use this order:
 
-1. Resolve the six failures in the completed full package check: five
-   fit-plot diagnostic-identity errors and one GPCM extreme-score residual
-   variance error. The check recorded 18,281 passes, 38 warnings and 44 skips;
-   the existing input/replay scenarios passed. Record software failures
-   separately from statistical limitations and recheck after fixes. This
-   checkpoint does not replace the eventual final-source platform check.
+1. The [six package-check failures are repaired](package-check-repair-0.2.4.md):
+   plot tests now derive diagnostics from the supplied fit, and direct
+   optimization rejects nonrepresentable variance/slope proposals while
+   retaining actual-gradient readiness review. The full packaged suite
+   (`NOT_CRAN=true`) records 18,406 passes, 0 failures, 38 unchanged warning
+   conditions and 44 skips; `R CMD check` has 0 errors/warnings/notes.
+   Reuse this result until affected code changes or new concerns justify
+   another check. This does not replace the eventual final-source platform
+   check or resolve statistical limitations.
 2. Apply the [completed FairZ confirmation](fairz-confirmation-results-0.2.4.md)
    to its exact claim: all 20,000 assigned datasets were retained after the
    user's verified September 17 resumption, and frozen adjudication supports
@@ -61,6 +64,17 @@ does this work answer, what decision follows each possible result, and what
 existing evidence can be reused? An inconclusive result remains unresolved;
 do not change seeds, thresholds or scope to manufacture a pass. Research
 extensions in the later roadmap do not enter this execution queue by default.
+
+Testing policy clarified by the user on September 17: choose checks from the
+changed behavior and its affected callers. Retain complete logs, inspect the
+summary on success, and investigate detailed errors only on failure. After a
+fix, rerun the affected checks; do not repeat a passed full suite without a new
+change, failure or unresolved concern. Use complete integration checks at
+shared-runtime changes or final-source review, not for each documentation edit
+or commit. Confirm the intended mode first: `NOT_CRAN=true` selects the full
+packaged suite; the default noninteractive check selects the CRAN light suite.
+Repository-only exclusions and historical source-bound checks remain separate.
+Passing software checks does not supply missing statistical evidence.
 
 FairZ completion and the preserved pause history are recorded in
 [the existing confirmation status](fairz-confirmation-status-0.2.4.md).
