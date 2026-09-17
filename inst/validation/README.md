@@ -137,7 +137,12 @@ versus 9.82 for four pairs and 700 datasets per cell. Scoring all 60 pairs at
 N=120 would raise that estimate to 17.44 hours without reducing the selected
 replication count. An ideal-oracle MCSE benchmark is reported separately from
 the empirical projections. The [main protocol](local-testlet-main-coverage-0.2.4-protocol.md)
-and new seed manifest are frozen; main-study generation/fitting has not started.
+and new seed manifest are frozen. The [main execution](local-testlet-main-coverage-0.2.4-execution.md)
+started on 2026-09-17 at 20:54:52 JST; all 1,200 datasets were generated and
+verified before fitting. It runs in the background with separate stage
+checkpoints and automatic final aggregation after the fixed manifest completes.
+The startup check found seven completed datasets with all 504 targets available;
+this is a progress snapshot, not a final performance result.
 The selected allocation is a pilot-based planning decision, not a precision
 guarantee or public interval qualification.
 

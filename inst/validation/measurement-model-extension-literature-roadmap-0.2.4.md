@@ -451,6 +451,17 @@ completes numerical preparation and effort allocation; the next step is the
 fixed main coverage experiment, with corrections and shared-rater/design
 comparisons kept as subsequent research questions.
 
+The user then explicitly authorized [main-study execution](local-testlet-main-coverage-0.2.4-execution.md).
+It began at 20:54:52 JST on 2026-09-17, preserving the fixed protocol. All 1,200
+datasets were generated, regenerated for identity checking and hashed before
+fitting. The initial seven completed datasets passed the fit/reference gates,
+with all 504 method/target rows available; no interim coverage was inspected.
+The detached process retains per-stage checkpoints, numerical failures and
+unavailable targets, then automatically aggregates at the fixed end. Wrapper
+checks used saved evidence and exactly reproduced the seven original aggregate
+tables; the older numerical experiments and package suite were not rerun.
+The main study is running; its final coverage and precision remain pending.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,
