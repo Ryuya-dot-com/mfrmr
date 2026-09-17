@@ -1,0 +1,4 @@
+"Case","Persons","UniqueRows","OldMedianSeconds","NewMedianSeconds","Speedup"
+"repeated",120,6,12.722,1.098,11.5865209471767
+"heterogeneous",120,120,13.516,1.17000000000002,11.5521367521366
+"heterogeneous_missing",120,120,12.561,1.08799999999999,11.545036764706

@@ -18,6 +18,17 @@ testlet_estimation_input <- function(fixture) {
 
 testlet_zero_variance_score <- function(fixture, parameters, order) {
   rule <- stress_normal_rule(order)
+  items <- lapply(seq_len(ncol(fixture$response)), function(i) {
+    eta <- rule$nodes + parameters[1] -
+      sum(fixture$criterion_contrasts[fixture$map$Criterion[i], ] * parameters[2:3]) -
+      fixture$rater_contrasts[fixture$map$Rater[i]] * parameters[4]
+    logits <- cbind(0, eta - parameters[5], 2 * eta)
+    logits <- logits - pmax(0, logits[, 2], logits[, 3])
+    logp <- logits - log(rowSums(exp(logits)))
+    probabilities <- exp(logp)
+    list(logp = logp, probabilities = probabilities,
+      mean = probabilities[, 2] + 2 * probabilities[, 3])
+  })
   total <- 0
   for (p in seq_len(nrow(fixture$response))) {
     logconditional <- numeric(order)
@@ -25,16 +36,11 @@ testlet_zero_variance_score <- function(fixture, parameters, order) {
     for (r in 1:2) {
       residual_sum <- variance_sum <- numeric(order)
       for (i in which(fixture$map$Rater == r & !is.na(fixture$response[p, ]))) {
-        eta <- rule$nodes + parameters[1] -
-          sum(fixture$criterion_contrasts[fixture$map$Criterion[i], ] * parameters[2:3]) -
-          fixture$rater_contrasts[r] * parameters[4]
-        logits <- cbind(0, eta - parameters[5], 2 * eta)
-        logits <- logits - apply(logits, 1, max)
-        logp <- logits - log(rowSums(exp(logits)))
-        probabilities <- exp(logp)
-        mean <- probabilities[, 2] + 2 * probabilities[, 3]
+        item <- items[[i]]
+        probabilities <- item$probabilities
+        mean <- item$mean
         y <- fixture$response[p, i]
-        logconditional <- logconditional + logp[, y + 1L]
+        logconditional <- logconditional + item$logp[, y + 1L]
         residual_sum <- residual_sum + y - mean
         variance_sum <- variance_sum + probabilities[, 2] + 4 * probabilities[, 3] - mean^2
       }

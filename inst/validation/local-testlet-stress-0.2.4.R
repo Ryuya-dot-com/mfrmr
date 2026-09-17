@@ -28,6 +28,21 @@ stress_reference <- function(fixture, parameters, variance, order) {
   gamma <- if (variance == 0) 0 else sqrt(variance) * theta
   gamma_weights <- if (variance == 0) 1 else rule$weights
   ng <- length(gamma)
+  # These probabilities depend on the item and parameters, not the person.
+  # Keep reuse inside this evaluation; each person's local effects still have
+  # their own integral below, including their own missing-response pattern.
+  latent <- outer(theta, gamma, '+')
+  items <- lapply(seq_len(ncol(fixture$response)), function(i) {
+    r <- fixture$map$Rater[i]
+    contrast <- fixture$criterion_contrasts[fixture$map$Criterion[i], ]
+    eta <- as.vector(latent + parameters[1] - sum(contrast * parameters[2:3]) -
+      fixture$rater_contrasts[r] * parameters[4])
+    logits <- cbind(0, eta - parameters[5], 2 * eta)
+    logits <- logits - pmax(0, logits[, 2], logits[, 3])
+    logp <- logits - log(rowSums(exp(logits)))
+    list(logp = logp, probs = exp(logp),
+      derivative = c(1, -contrast, -fixture$rater_contrasts[r]))
+  })
   loglik <- numeric(n_person)
   gradient <- matrix(0, n_person, 6)
   moments <- matrix(0, n_person, 6, dimnames = list(rownames(fixture$response),
@@ -38,18 +53,12 @@ stress_reference <- function(fixture, parameters, variance, order) {
       conditional <- matrix(0, order, ng)
       score <- array(0, c(order, ng, 6))
       for (i in which(fixture$map$Rater == r & !is.na(fixture$response[p, ]))) {
-        contrast <- fixture$criterion_contrasts[fixture$map$Criterion[i], ]
-        eta <- as.vector(outer(theta, gamma, '+') + parameters[1] -
-          sum(contrast * parameters[2:3]) - fixture$rater_contrasts[r] * parameters[4])
-        logits <- cbind(0, eta - parameters[5], 2 * eta)
-        logits <- logits - apply(logits, 1, max)
-        logp <- logits - log(rowSums(exp(logits)))
-        probs <- exp(logp)
+        item <- items[[i]]
+        probs <- item$probs
         y <- fixture$response[p, i]
-        conditional <- conditional + matrix(logp[, y + 1L], order, ng)
+        conditional <- conditional + matrix(item$logp[, y + 1L], order, ng)
         residual <- matrix(y - probs[, 2] - 2 * probs[, 3], order, ng)
-        derivative <- c(1, -contrast, -fixture$rater_contrasts[r])
-        for (a in 1:4) score[, , a] <- score[, , a] + derivative[a] * residual
+        for (a in 1:4) score[, , a] <- score[, , a] + item$derivative[a] * residual
         score[, , 5] <- score[, , 5] + matrix(probs[, 2] - (y == 1), order, ng)
         score[, , 6] <- score[, , 6] + sweep(residual, 2, gamma / 2, '*')
       }

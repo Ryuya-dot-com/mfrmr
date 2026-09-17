@@ -71,6 +71,14 @@ positive-variance examples. Exact zero retains only conditional fixed-variance
 curvature, with ordinary full-model intervals unavailable. The N=120 repeated
 table checks arithmetic and evaluation cost, not recovery or coverage; its
 12.6-second reference evaluation motivates kernel efficiency before large runs.
+The [subsequent evaluator optimization](local-testlet-speed-0.2.4.md) reuses
+person-independent item probabilities within each call. All 33 fixed-point
+comparisons are numerically identical, and all 238 checks pass, including three
+optimizer bridges. At GH181 and 120 rows, median evaluation time falls from
+12.6--13.5 seconds to 1.09--1.17 seconds (about 11.6 times faster), including
+120 distinct response patterns and missing entries. Model ownership and
+quadrature accuracy are unchanged. This bounded performance step adds no
+recovery, coverage, or new N=120 fitting evidence.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

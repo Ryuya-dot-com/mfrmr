@@ -355,6 +355,16 @@ not repeated-sampling performance. The reference evaluation takes about 12.6
 seconds at 120 rows/GH181 in this run, so kernel efficiency is the next bounded
 implementation step before a recovery/coverage simulation.
 
+That [bounded efficiency step](local-testlet-speed-0.2.4.md) is now complete.
+Reusing item probabilities within each evaluation preserves all 33 fixed-point
+comparisons exactly, including tails and the variance-zero right derivative.
+Three optimizer bridges also pass. N=120/GH181 median timings improve by about
+11.6 times for repeated, distinct, and missing-response tables without a
+response-pattern cache. All 238 planned checks pass; existing external and
+full-package experiments were reused. Generalizing the owner structure,
+propagating population-parameter uncertainty into person measures, and
+qualifying recovery/coverage remain research tasks, not consequences of speed.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,
