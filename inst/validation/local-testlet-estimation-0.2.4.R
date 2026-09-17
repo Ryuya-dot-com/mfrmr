@@ -98,7 +98,8 @@ testlet_bounded_fit <- function(fixture, start, fixed_variance = NULL,
     fit <- stats::optim(start[free], function(x) -evaluate(expand(x))$loglik,
       function(x) -evaluate(expand(x))$gradient[free], method = 'L-BFGS-B',
       lower = c(rep(-8, 5), 0)[free], upper = c(rep(8, 5), 16)[free],
-      control = list(maxit = 250L, factr = 1e3, pgtol = 1e-7))
+      # Match the checked integration-score accuracy; final KKT tolerance is 1e-5.
+      control = list(maxit = 250L, factr = 1e3, pgtol = 1e-6))
     par <- expand(fit$par)
     value <- evaluate(par)
     list(par = par, loglik = value$loglik, gradient = value$gradient, moments = value$moments,

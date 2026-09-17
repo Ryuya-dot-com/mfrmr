@@ -329,6 +329,19 @@ integration are necessary in the independent reference as well. These findings
 constrain the next unknown-variance prototype, without establishing identification,
 recovery, coverage or a universally adequate integration range.
 
+The next [bounded joint-estimation prototype](local-testlet-estimation-0.2.4.md)
+reuses that quadrature as an objective for five structural coordinates plus the
+common local variance, keeping the standardized local-effect distribution fixed.
+Two prespecified response tables reach positive variances (.988 and 2.559) from
+three starts; a separate balanced table reaches exact zero. Finite nuisance
+profiles, score checks and external TAM evaluations support the selected points.
+An exact right derivative in variance checks the zero boundary. A retained
+code-52 refinement stop at an already qualified point leads to a stopping-tolerance
+alignment, verified by five targeted comparisons without changing the saved
+solutions. This remains a six-person/two-rater research prototype: uncertainty,
+general-size computation, recovery, coverage and shared random-rater estimation
+still need their own qualification. No public model API is introduced.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

@@ -1,0 +1,6 @@
+"Case","OldCode","NewCode","Variance","LogLikDifference","ParameterDifference","ProjectedScore","FunctionEvaluations","Error","Warnings","Pass"
+"original_saved",0,0,0.988329201821339,0,0,3.0942568818304e-07,1,"","",TRUE
+"clustered_saved",0,0,2.55920186442643,0,0,3.33333189085759e-07,1,"","",TRUE
+"boundary_saved",52,0,0,0,0,1.67324578635257e-07,1,"","",TRUE
+"boundary_zero",0,0,0,0,1.38777878078145e-16,1.67324579393268e-07,5,"","",TRUE
+"original_zero",0,0,0.988328934029828,0,0,2.08342404055956e-06,18,"","",TRUE

@@ -55,6 +55,14 @@ location conditions match only in a separate wider-range follow-up. All-missing
 and all-zero responses remain unsupported by the tested TAM input path. The
 experiment also qualifies tail-preserving reference weights and records all
 initial discrepancies; it does not establish variance-recovery performance.
+The [bounded joint-estimation prototype](local-testlet-estimation-0.2.4.md)
+then estimates the five structural coordinates and a common local variance.
+Two prespecified fixtures give positive variance, and a separate balanced
+fixture gives exact zero. Scores, moments and likelihoods at the selected
+points agree with TAM. One retained boundary refinement had a line-search stop;
+aligning its stopping tolerance with the checked score accuracy resolves it in
+five targeted comparisons. The old stop remains recorded. General estimation,
+uncertainty, recovery and planning performance are still unqualified.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and
