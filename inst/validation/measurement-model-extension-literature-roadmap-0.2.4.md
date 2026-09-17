@@ -432,6 +432,25 @@ independent calibration datasets to generate. Further optimizer variants are
 unmotivated by this run; parameter-aware inference and shared random-rater
 models remain distinct later steps.
 
+The [pair-allocation analysis](local-testlet-pair-allocation-0.2.4.md) now
+closes that allocation decision using the same 40 fits, with 2,560 additional
+method/pair events and no fit/person rescoring. All added events are available;
+eight bridges and 16 saved-evidence audits pass. Twelve disjoint pairs per
+dataset remove the zero empirical planning variances seen at four pairs and
+give paired coverage differences of -.83/+.83/-.83/-.83 percentage points,
+with MCSEs 1.50/.83/1.50/.83 points. These remain ten-cluster pilot estimates,
+not evidence of equivalent or adequate coverage. The full 12-allocation cost
+comparison selects 12 pairs and 300 independent datasets per cell, reducing
+the planned fit count from 2,800 to 1,200 and estimated serial time from 9.82
+to 7.62 hours. More pairs do not necessarily lower total study cost: 12/60
+pairs at N=24/120 project to 17.44 hours with the same replication count.
+The [main protocol](local-testlet-main-coverage-0.2.4-protocol.md) fixes new
+seeds, all-person and paired coverage targets, failure denominators and stopping
+rules before main-study execution. Generation/fitting has not started. This
+completes numerical preparation and effort allocation; the next step is the
+fixed main coverage experiment, with corrections and shared-rater/design
+comparisons kept as subsequent research questions.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

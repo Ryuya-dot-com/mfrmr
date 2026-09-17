@@ -1,0 +1,17 @@
+"Check","Pass"
+"all 40 records retain plan and input provenance",TRUE
+"eight bridge rows and integral histories agree exactly",TRUE
+"original four pair rows retained exactly",TRUE
+"complete pair targets match frozen prespecified truth and membership",TRUE
+"each full pairing uses every person exactly once",TRUE
+"additional rows and attempts have unique ownership",TRUE
+"all additional pairs are numerically available",TRUE
+"additional scoring retains no errors or warnings",TRUE
+"all additional scoring meets frozen continuous-CDF criteria",TRUE
+"every summary retains all ten assigned dataset clusters",TRUE
+"equal complete denominators agree with direct dataset-mean MCSE",TRUE
+"four-pair estimates and dataset-cluster MCSE reproduce saved summary",TRUE
+"every person planning metric is reused unchanged",TRUE
+"zero or undefined MCSE is not assigned zero replication need",TRUE
+"paired numerator retains gains and losses separately",TRUE
+"elapsed times are finite and nonnegative",TRUE

@@ -128,6 +128,18 @@ including uninformative zero empirical MCSEs. Replication projections suggest
 retained; evaluating more prespecified pairs per fit is a separate efficiency
 question to settle in the main protocol. The ten-replicate cells do not
 qualify intervals, and the main study has not started.
+The [pair-allocation follow-up](local-testlet-pair-allocation-0.2.4.md) reuses
+those 40 fits and scores only additional prespecified disjoint pairs. All
+2,560 new method/pair events are available, eight bridge events match exactly,
+and 16 saved-evidence audits pass. Comparing 12 allocations selects 12 pairs
+and 300 datasets per cell (1,200 total): estimated serial time is 7.62 hours,
+versus 9.82 for four pairs and 700 datasets per cell. Scoring all 60 pairs at
+N=120 would raise that estimate to 17.44 hours without reducing the selected
+replication count. An ideal-oracle MCSE benchmark is reported separately from
+the empirical projections. The [main protocol](local-testlet-main-coverage-0.2.4-protocol.md)
+and new seed manifest are frozen; main-study generation/fitting has not started.
+The selected allocation is a pilot-based planning decision, not a precision
+guarantee or public interval qualification.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and
