@@ -388,6 +388,20 @@ retaining the known-calibration result as its paired reference. Posterior mass
 at fixed parameters is not an empirical coverage rate; variance-boundary
 inference and shared-calibration effects remain separate requirements.
 
+The [same-sample calibration pilot](local-testlet-calibration-pilot-0.2.4.md)
+now retains all 40 generated datasets and refits for N=24/120 and v=0/.49.
+Only 23 fits satisfy the prespecified numerical requirements: 14 native-code-0
+results miss the total projected-score threshold, and three exploratory trials
+cannot satisfy quadrature tolerances. All 4,356 available method/target CDFs
+resolve, and 13 saved-evidence audits pass. Matched plug-in-minus-oracle person
+coverage differences range from -1.88 to +1.56 percentage points, but only
+three/four datasets supply plug-in results in the N=120 cells. These selected
+comparisons do not qualify intervals or establish a sample-size effect.
+The next bounded study examines objective scaling and optimizer stopping on
+the saved 17 non-ready fits, with successful controls and original outcomes
+preserved. Increasing coverage replication comes after that numerical obstacle;
+shared random-rater estimation and rating-design comparisons remain separate.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

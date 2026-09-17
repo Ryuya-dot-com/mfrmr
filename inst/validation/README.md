@@ -96,6 +96,17 @@ with mean +/- 1.96 SD, whose posterior probabilities range from 94.89% to 95.00%
 in these saved examples. Extreme-score rows show unequal normal-interval tails.
 This is a known-calibration reference, not repeated-sampling coverage or an
 estimated-calibration interval qualification.
+The [same-sample calibration pilot](local-testlet-calibration-pilot-0.2.4.md)
+then generates and refits 40 datasets, crossing 24/120 people with local
+variance 0/.49. Twenty-three fits meet the frozen criteria; 14 stop on function
+reduction with an excessive score, and three encounter unresolved quadrature
+at an exploratory trial. All oracle targets and all targets from ready fits
+resolve their continuous CDFs. Thirteen read-only audits preserve the complete
+denominators and numerical evidence. Coverage comparisons use common available
+people/pairs and dataset-cluster MCSEs, but the substantial fit selection
+precludes interval qualification. The next step is a bounded optimization
+follow-up using these saved failures before increasing replication. No prior
+full-package, TAM or FairZ experiments were repeated.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and
