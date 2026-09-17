@@ -1,0 +1,3 @@
+"Case","Grid","LogLikError","MomentError","LimitingNormalError","ProbabilityError","OriginalReferenceLogLikError","OriginalReferenceMomentError","Error","Warnings","Seconds","Pass"
+"alpha_-40","n121_r20",6.82121026329696e-13,4.02167188440217e-12,3.24742899238117e-10,2.22044604925031e-16,0.346877433428517,0.489111661748558,"","",9.04,TRUE
+"alpha_40","n121_r20",4.54747350886464e-13,2.72848410531878e-12,3.23352011832867e-10,2.22044604925031e-16,0.346877420608962,0.489111661749739,"","",9.775,TRUE

@@ -1,0 +1,12 @@
+"Check","Error","Tolerance","Pass"
+"normal_moments_81",8.51685253357647e-15,1e-10,TRUE
+"normal_moments_121",8.88178419700125e-15,1e-10,TRUE
+"normal_moments_181",5.55014760446042e-15,1e-10,TRUE
+"normal_moments_241",4.88498130835069e-15,1e-10,TRUE
+"normal_tilt_-16",8.5265128291212e-14,1e-10,TRUE
+"normal_tilt_-12",5.6843418860808e-14,1e-10,TRUE
+"normal_tilt_12",4.2632564145606e-14,1e-10,TRUE
+"normal_tilt_16",1.4210854715202e-14,1e-10,TRUE
+"saved_reference_0",1.6153745008296e-14,1e-09,TRUE
+"saved_reference_0.01",2.1316282072803e-14,1e-09,TRUE
+"saved_reference_0.49",6.13953332617712e-14,1e-09,TRUE

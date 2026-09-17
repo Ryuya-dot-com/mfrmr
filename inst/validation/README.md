@@ -48,6 +48,13 @@ It records 51 passing checks and a small-covariance adjustment in the external
 prior calculation. The standardized representation preserves the specified
 model; variance estimation, recovery and shared random-rater effects remain
 unqualified. This research does not change production scope or release gates.
+The subsequent [24-condition stress experiment](local-testlet-stress-0.2.4.md)
+finds that grid density and integration range require separate checks. Fifteen
+conditions match the original grid; five match after refinement and two extreme
+location conditions match only in a separate wider-range follow-up. All-missing
+and all-zero responses remain unsupported by the tested TAM input path. The
+experiment also qualifies tail-preserving reference weights and records all
+initial discrepancies; it does not establish variance-recovery performance.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

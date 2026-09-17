@@ -317,6 +317,18 @@ inherit this result. Shared random-rater severity remains the distinct later
 likelihood target. Production source and package tests are unchanged; the
 successful `ce50822` package check is reused.
 
+The [subsequent fixed-point stress test](local-testlet-stress-0.2.4.md) covers
+24 deterministic conditions spanning near-zero/large local variance, extreme
+locations and thresholds, sparse/disconnected allocation and degenerate response
+tables. Fifteen match the original grid, five require refinement, and two extreme
+locations require a separately recorded wider-range follow-up. Two TAM input
+errors remain for all-missing/all-zero data. Four selected conditions also pass
+all 24 coordinate-gradient comparisons. Both grid spacing and truncation range
+must be checked before trusting an optimizer; positive tail weights and log-scale
+integration are necessary in the independent reference as well. These findings
+constrain the next unknown-variance prototype, without establishing identification,
+recovery, coverage or a universally adequate integration range.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,
