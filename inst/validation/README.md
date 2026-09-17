@@ -127,7 +127,7 @@ including uninformative zero empirical MCSEs. Replication projections suggest
 700 datasets per cell as a fixed-size candidate if that pairing design is
 retained; evaluating more prespecified pairs per fit is a separate efficiency
 question to settle in the main protocol. The ten-replicate cells do not
-qualify intervals, and the main study has not started.
+qualify intervals; the main study had not started at that pilot stage.
 The [pair-allocation follow-up](local-testlet-pair-allocation-0.2.4.md) reuses
 those 40 fits and scores only additional prespecified disjoint pairs. All
 2,560 new method/pair events are available, eight bridge events match exactly,
@@ -155,6 +155,15 @@ rated people in B belong to C's first reference group; group contrasts must
 therefore retain exposure information. The new target tables contain 240
 people and 120 disjoint candidate pairs, with 12 marked for a future pilot.
 They do not alter the active main-study targets or establish design performance.
+The [Series R fixed-point implementation](shared-rater-fixed-point-0.2.4.md)
+now passes 15 bounded checks using the saved two-person/two-rater example.
+Its Q41/Q81 log likelihoods agree with the Python reference within 7.11e-15,
+and it preserves the 0.42524 log-likelihood difference from incorrectly
+redrawing raters for each person. Zero variance, owner relabeling, the saved
+one-rater adaptive integral, missing observations and input limits also pass.
+This is a joint-likelihood reference, not an estimator or posterior-scoring API;
+joint ability moments are the next separate step. The active Series L sources
+and inputs are unchanged.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

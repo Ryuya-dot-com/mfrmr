@@ -478,6 +478,18 @@ all fall in C's first reference group; interpreting these strata requires their
 one-/four-rater exposure composition. This is target construction and source
 review, not an additional coverage or design-performance experiment.
 
+The [bounded Series R likelihood](shared-rater-fixed-point-0.2.4.md) is now
+implemented in R with the existing probability and quadrature helpers. All
+15 fixed-point checks pass; the Q41/Q81 log likelihoods match the saved Python
+values within 7.11e-15, including the positive shared-versus-person-redrawn
+log-likelihood difference for that response example. A saved independent
+adaptive integral checks the one-rater fixed-ability case. Zero variance,
+relabeling and missing-observation reductions are also checked. This qualifies
+only these likelihood examples: no parameter estimation, recovery, posterior
+intervals or larger crossed design has been implemented or qualified. The
+next numerical step is joint ability moments and covariance in the same small
+example, preserving dependence through the shared-rater posterior.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

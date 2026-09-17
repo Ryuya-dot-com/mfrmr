@@ -1,0 +1,16 @@
+"Check","Error","Tolerance","Pass"
+"saved_python_q41_loglik",1.77635683940025e-15,1e-07,TRUE
+"saved_python_q81_loglik",7.105427357601e-15,1e-07,TRUE
+"q41_q81_loglik",1.77635683940025e-15,1e-07,TRUE
+"saved_zero_variance_loglik",1.77635683940025e-15,1e-07,TRUE
+"exact_zero_reduction",0,1e-12,TRUE
+"rater_relabeling",0,1e-12,TRUE
+"person_relabeling",0,1e-12,TRUE
+"saved_person_redrawn_loglik",7.105427357601e-15,1e-07,TRUE
+"shared_vs_redrawn_gap",0,1e-07,TRUE
+"saved_adaptive_one_rater_loglik",0,1e-07,TRUE
+"empty_data_loglik",4.44089209850063e-16,1e-12,TRUE
+"unobserved_rater_integrates_out",2.22044604925031e-15,1e-12,TRUE
+"reject_invalid_category",0,0,TRUE
+"reject_negative_variance",0,0,TRUE
+"reject_larger_tensor",0,0,TRUE
