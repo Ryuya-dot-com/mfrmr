@@ -148,13 +148,8 @@ def plot():
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
-    from matplotlib import font_manager
     from matplotlib.lines import Line2D
 
-    font = Path('/System/Library/Fonts/Supplemental/Arial Unicode.ttf')
-    if font.exists():
-        font_manager.fontManager.addfont(str(font))
-        plt.rcParams['font.family'] = font_manager.FontProperties(fname=font).get_name()
     plt.rcParams.update({'font.size': 12, 'axes.titlesize': 14, 'pdf.fonttype': 42, 'axes.unicode_minus': False})
     values = json.loads(HERE.with_suffix('.json').read_text())
     assert all(row['pass'] for row in values['checks'])
@@ -162,13 +157,13 @@ def plot():
     grid, density, product, widths = [saved[key] for key in ('grid', 'density', 'product', 'widths')]
     blue, orange, neutral = '#0072B2', '#D55E00', '#575757'
     fig, axes = plt.subplots(2, 2, figsize=(12, 9), gridspec_kw={'height_ratios': [0.8, 1.2]})
-    fig.subplots_adjust(left=.08, right=.96, top=.87, bottom=.16, hspace=.65, wspace=.35)
-    fig.suptitle('同じ評定者を共有すると、能力差の不確実性はどう変わるか', fontsize=19, y=.965)
-    fig.text(.5, .917, '2人 × 2評定者 × 2基準の保存小例 ｜ 較正値は固定', ha='center', fontsize=12)
+    fig.subplots_adjust(left=.08, right=.96, top=.87, bottom=.20, hspace=.65, wspace=.50)
+    fig.suptitle('Shared raters and uncertainty in ability differences', fontsize=19, y=.965)
+    fig.text(.5, .917, '2 persons × 2 raters × 2 criteria | Fixed calibration | Development illustration', ha='center', fontsize=11)
 
     for ax, shared in zip(axes[0], (True, False)):
         ax.set(xlim=(0, 1), ylim=(0, 1)); ax.axis('off')
-        ax.set_title('A  共有評定者効果（系列R）' if shared else 'B  人×評定者の局所効果（構造図）', loc='left', pad=10)
+        ax.set_title('A  Shared rater effects' if shared else 'B  Person–rater local effects', loc='left', pad=10)
         if shared:
             nodes = [(0.3, 'u₁', blue), (0.7, 'u₂', blue)]
             edges = [(x, target) for x, _, _ in nodes for target in (.25, .75)]
@@ -182,12 +177,12 @@ def plot():
             ax.text(x, .8, label, ha='center', va='center', fontsize=16,
                     bbox={'boxstyle': 'circle,pad=.35', 'fc': 'white', 'ec': color, 'lw': 1.4})
         for x, person in ((.25, 'P1'), (.75, 'P2')):
-            ax.text(x, .15, person + 'の応答\n（評定者1・2）', ha='center', va='center',
+            ax.text(x, .15, person + ' responses\n(raters 1 and 2)', ha='center', va='center',
                     bbox={'boxstyle': 'round,pad=.4', 'fc': '#F3F3F3', 'ec': 'none'})
-        ax.text(.5, -.12, '各uは二人の応答に共有' if shared else '各γは一人の応答だけに共有', ha='center', color=neutral)
+        ax.text(.5, -.12, 'Each u is shared across persons' if shared else 'Each γ belongs to one person–rater pair', ha='center', color=neutral, fontsize=11)
 
     ax = axes[1, 0]
-    ax.set_title('C  能力の共同事後分布', loc='left', pad=12)
+    ax.set_title('C  Joint posterior of ability', loc='left', pad=12)
     for data, color, style in ((density, blue, '-'), (product, orange, '--')):
         ordered = np.argsort(data.ravel())[::-1]
         probability = (data * np.outer(widths, widths)).ravel()[ordered]
@@ -199,25 +194,25 @@ def plot():
              grid[np.searchsorted(np.cumsum(marginal_y * widths), .002)])
     hi = max(grid[np.searchsorted(np.cumsum(marginal_x * widths), .998)],
              grid[np.searchsorted(np.cumsum(marginal_y * widths), .998)])
-    ax.set(xlim=(lo, hi), ylim=(lo, hi), xlabel='P1の能力 θ₁（logit）', ylabel='P2の能力 θ₂（logit）', aspect='equal')
-    ax.text(.03, .97, f"事後相関 ρ = {values['correlation']:.3f}", transform=ax.transAxes, va='top')
+    ax.set(xlim=(lo, hi), ylim=(lo, hi), xlabel='P1 ability, θ₁ (logits)', ylabel='P2 ability, θ₂ (logits)', aspect='equal')
+    ax.text(.03, .97, f"Posterior ρ = {values['correlation']:.3f}", transform=ax.transAxes, va='top')
     ax.grid(alpha=.15)
 
     ax = axes[1, 1]
-    ax.set_title('D  能力差 θ₁ − θ₂ の標準偏差', loc='left', pad=12)
+    ax.set_title('D  SD of the ability difference θ₁ − θ₂', loc='left', pad=12)
     sds = [values['difference_sd'], values['difference_sd_without_covariance']]
     ax.barh([1, 0], sds, color=[blue, orange], height=.4)
     for y, value in zip([1, 0], sds):
         ax.text(value + .025, y, f'{value:.3f}', va='center', fontsize=14)
-    ax.set(yticks=[1, 0], yticklabels=['共分散を保持', '共分散を0と扱う'], xlabel='事後標準偏差（logit）',
+    ax.set(yticks=[1, 0], yticklabels=['Covariance\nretained', 'Covariance\nomitted'], xlabel='Posterior standard deviation (logits)',
            xlim=(0, max(sds) * 1.22), ylim=(-.6, 1.6))
     ax.spines[['top', 'right']].set_visible(False)
-    ax.text(.02, -.28, '同じ周辺分布のまま、依存だけを除いた比較', transform=ax.transAxes, fontsize=11)
+    ax.text(.5, -.27, 'Same marginals; only dependence is removed', transform=ax.transAxes, ha='center', fontsize=10.5)
     fig.legend([Line2D([0], [0], color=blue, lw=2), Line2D([0], [0], color=orange, lw=2, ls='--')],
-               ['共有モデルの共同事後分布', 'その周辺分布の積（Bのモデルの結果ではない）'],
-               loc='lower center', bbox_to_anchor=(.5, .072), ncol=2, frameon=False, fontsize=11)
-    fig.text(.5, .036, '等高線：各分布の約50%・90%最高密度領域。小例の説明用であり、被覆性能の結果ではない。',
-             ha='center', fontsize=10.5, color=neutral)
+               ['Joint posterior under the shared-rater model', 'Product of its marginals (not a fit of model B)'],
+               loc='lower center', bbox_to_anchor=(.5, .041), ncol=1, frameon=False, fontsize=10.5)
+    fig.text(.5, .023, 'Contours: approximate 50% and 90% highest-density regions. Development evidence, not a package plot API.',
+             ha='center', fontsize=10, color=neutral)
     for suffix in ('.png', '.pdf'):
         fig.savefig(HERE.with_suffix(suffix), dpi=180, facecolor='white')
     plt.close(fig)

@@ -173,6 +173,10 @@ versus .954 for the product of the same marginals. The latter is a dependence-
 omission comparison, not a refit of the local-effect model or a design ranking.
 PNG/PDF and the checked numerical record are retained; posterior-scoring R APIs
 and interval qualification remain separate work.
+The figure uses English labels and is explicitly a development illustration,
+not a public mfrmr plotting feature. No result-object plot method or namespace
+entry was added. The existing `^inst/validation$` build-ignore rule excludes
+these research assets from the source package.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and
