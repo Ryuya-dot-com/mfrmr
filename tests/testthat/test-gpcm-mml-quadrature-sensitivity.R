@@ -22,7 +22,8 @@ gpcm_quadrature_fixture <- local({
         fit,
         data,
         quad_points = c(5L, 7L),
-        theta_points = 41L
+        theta_points = 41L,
+        adaptive_quad_points = c(15L, 31L)
       )
       cached <<- list(data = data, fit = fit, sensitivity = sensitivity)
     }
@@ -42,6 +43,15 @@ test_that("GPCM quadrature sensitivity separates numerical evidence", {
   expect_identical(nrow(sensitivity$slopes), 8L)
   expect_identical(names(sensitivity$fits), c("q5", "q7"))
   expect_identical(sensitivity$fits$q5, fixture$fit)
+  expect_equal(nrow(sensitivity$quadrature_review), 12L * 2L * 2L)
+  expect_true(all(sensitivity$quadrature_review$Status == "computed"))
+  scored <- predict_mfrm_units(
+    fixture$fit, fixture$data, readiness_policy = "review", scoring_quad_points = 5L,
+    adaptive_quad_points = c(15L, 31L)
+  )
+  retained <- sensitivity$quadrature_review[sensitivity$quadrature_review$FixedNodes == 5L, ]
+  rownames(retained) <- NULL
+  expect_equal(scored$quadrature_review, retained, tolerance = 1e-12)
 
   reference <- sensitivity$summary$IsReference
   expect_identical(reference, c(TRUE, FALSE))

@@ -66,7 +66,8 @@ integer.}
 
 \item{scoring_quad_points}{Number of Gauss-Hermite nodes used only for this
 scoring call. Passed to \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and independent of the
-fit-time quadrature order.}
+fit-time quadrature order. Fixed or adaptive integration is inherited
+from \code{fit}.}
 
 \item{readiness_policy}{Source-fit readiness policy passed to
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}. Estimated-population fits currently require
@@ -128,8 +129,9 @@ many-facet plausible-values system with all ConQuest-style extensions.
 \section{What this does not justify}{
 
 This helper does not update the calibration, estimate new non-person facet
-levels, or provide exact future true values. It samples from the fixed-grid
-posterior implied by the existing fitted-model scoring basis.
+levels, or provide exact future true values. It samples from the quadrature-
+grid posterior implied by the existing fitted-model scoring basis, using
+fixed or Person-specific adaptive nodes according to the fit's setting.
 }
 
 \section{References}{

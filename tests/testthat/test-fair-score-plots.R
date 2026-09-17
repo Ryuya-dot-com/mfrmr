@@ -1,9 +1,9 @@
 test_that("fair-score derivatives match the actual reference transformation", {
   for (model in c("RSM", "PCM")) {
     fit <- make_toy_fit(model = model, maxit = 20)
-    dx <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
     # Nonzero person mean distinguishes FairM from FairZ on non-person rows.
     fit$facets$person$Estimate <- fit$facets$person$Estimate + 0.7
+    dx <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "legacy")
     for (metric in c("FairM", "FairZ")) {
       p <- plot_fair_average(fit, diagnostics = dx, metric = metric, show_ci = TRUE, draw = FALSE)
       d <- p$data$data
@@ -14,8 +14,10 @@ test_that("fair-score derivatives match the actual reference transformation", {
         if (!length(at)) next
         plus$measures$Estimate[at] <- plus$measures$Estimate[at] + 1e-5
         minus$measures$Estimate[at] <- minus$measures$Estimate[at] - 1e-5
-        a <- fair_average_table(fit, diagnostics = plus)$raw_by_facet[[d$Facet[i]]]
-        b <- fair_average_table(fit, diagnostics = minus)$raw_by_facet[[d$Facet[i]]]
+        # Perturb only the internal transformation: public reports reject
+        # diagnostic measures that no longer match the fitted analysis.
+        a <- mfrmr:::calc_fair_average_bundle(fit, plus)$raw_by_facet[[d$Facet[i]]]
+        b <- mfrmr:::calc_fair_average_bundle(fit, minus)$raw_by_facet[[d$Facet[i]]]
         numerical <- abs((a[[metric]][match(d$Level[i], a$Level)] - b[[metric]][match(d$Level[i], b$Level)]) / 2e-5)
         expect_equal(derivative[i], unname(numerical), tolerance = 1e-7)
       }

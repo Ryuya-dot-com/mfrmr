@@ -21,6 +21,526 @@ Related internal records:
 - `gpcm-model-identity-contract-0.2.3.csv`
 - `mfrmr-internal-strategic-roadmap.html`
 
+## 2026-09-15 random-effects MFRM direction
+
+The user explicitly asked to consider random-effects MFRM in the roadmap,
+grounded in their Zotero library. This gives sampled-facet generalization and
+rating dependence an explicit research priority. It does not admit a new
+estimator, change 0.2.4 support, or supersede the existing statistical review
+with a new implementation task. The public sequence remains in `ROADMAP.md`.
+
+### Literature actually consulted for this update
+
+Zotero searches for `random`, `rater` and `Noortgate` located the items below;
+their detailed metadata and abstracts were retrieved. Publisher abstracts
+were cross-checked where accessible, and the author-hosted Van den Noortgate
+et al. PDF was consulted for its crossed-model formulation (pp. 369–373).
+This update is a conceptual scope review, not a new page-by-page reading of
+all five papers or an estimator replication. The historical 57-PDF count above
+is not increased by these metadata/abstract checks. The local CLI probe was
+sandbox-blocked; the connected Zotero tools successfully read the library.
+No library item was added or changed.
+
+| Zotero item | Paper | Finding relevant to the roadmap | Limit of transfer |
+| --- | --- | --- | --- |
+| `PIRB4IPC` | Wang, W.-C., & Wilson, M. (2005). *Exploring Local Item Dependence Using a Random-Effects Facet Model*. Applied Psychological Measurement, 29(4), 296–318. [DOI](https://doi.org/10.1177/0146621605276281) | Direct many-facet motivation for modeling local dependence. Their reported simulations found overestimated reliability when that dependence was ignored. | This does not validate a model with only population-level random rater severity, nor establish coverage for mfrmr. Exact random-effect ownership needs full specification. |
+| `MAVG5T7H` | Van den Noortgate, W., De Boeck, P., & Meulders, M. (2003). *Cross-Classification Multilevel Logistic Models in Psychometrics*. Journal of Educational and Behavioral Statistics, 28(4), 369–386. [DOI](https://doi.org/10.3102/10769986028004369) | Random Persons and random items can be crossed owners of responses; the observation design and population targets determine the model. | The binary formulation is a reference for a matched reduction, not validation of a polytomous random-rater estimator. |
+| `3J8P34UD` | De Boeck, P. (2008). *Random Item IRT Models*. Psychometrika, 73(4), 533–559. [DOI](https://doi.org/10.1007/s11336-008-9092-x) | Item populations and explanatory item effects provide substantive reasons to model item variation. | Random-item motivation alone does not make every rubric criterion or rater exchangeable. |
+| `TL9JNYMS` | Patz, R. J., Junker, B. W., Johnson, M. S., & Mariano, L. T. (2002). *The Hierarchical Rater Model for Rated Test Items and its Application to Large-Scale Educational Assessment Data*. Journal of Educational and Behavioral Statistics, 27(4), 341–384. [DOI](https://doi.org/10.3102/10769986027004341) | An unobserved discrete response and a rating process distinguish proficiency from rater severity/consistency; the paper discusses G-theory relationships. | HRM changes the response-generating model. It is not a synonym for a Gaussian random severity added to MFRM. |
+| `RKATRUHA` | Huang, S., Luo, J. (J.), & Cai, L. (2023). *An Explanatory Multidimensional Random Item Effects Rating Scale Model*. Educational and Psychological Measurement, 83(6), 1229–1248. [DOI](https://doi.org/10.1177/00131644221140906) | A rating-scale extension explicitly treats crossed effects and uses an adapted MH-RM estimator. | Its preliminary recovery evidence is model-specific. It does not transfer existing one-Person quadrature or require starting with multidimensional ability. |
+
+Additional Zotero metadata inspected: Leckie and Baird (2011), `5DUKPFDD`,
+DOI `10.1111/j.1745-3984.2011.00152.x` (no abstract in the retrieved record),
+and Xiao, Patz and Wilson (2026), `L59KNN8X`, DOI `10.1111/bmsp.70034`.
+Neither is used to claim that a random-effects MFRM has superior recovery.
+
+### The user problem and distinct model choices
+
+A program rotating raters needs to distinguish performance with the observed
+raters from performance with new raters sampled from a defined pool. A program
+scoring several rubric criteria on the same response also needs to know how
+much independent information those ratings add. These are concrete questions
+for discovery; representative operational data and practically important
+performance thresholds are still needed before a production route is chosen.
+
+Population random severity `b_r` is shared across Persons rated by rater r.
+A local effect `u_pr` is shared only within a Person–Rater pair, where repeated
+tasks/criteria make it potentially estimable. They have different covariance
+patterns and generalization targets. A Person–Task response effect shared by
+several raters is another possible ownership pattern. No one of these is
+silently substituted for another or labeled a substantive ability dimension.
+
+Current source separates these from:
+
+- MML integration over Person abilities with fixed non-Person facets
+  (`man/fit_mfrm.Rd`, fixed-effects assumption);
+- post-hoc facet shrinkage (`R/api-shrinkage.R`), whose reported shrinkage SE
+  treats the estimated prior variance as known;
+- nesting/ICC audits (`R/api-hierarchical-audit.R`); and
+- the public observed-score Gaussian main-effects G/D-study.
+
+None jointly estimates the proposed crossed random-facet response likelihood.
+
+### Sampled-rater candidate and verification sequence
+
+The first sampled-facet candidate is one observed RSM scale, unit weights, scalar random
+rater severity, fixed task/criterion effects and the declared Person
+distribution. Use connected ratings with multiple Persons per rater and
+overlap across raters. Exclude slope estimation, new anchor semantics and
+interaction variance from this initial candidate. A binary reduction provides
+a small matched GLMM/reference calculation before the polytomous likelihood.
+Do not substitute a cumulative-logit model for the adjacent-category RSM/PCM.
+
+1. **Define the target and probability model.** Declare the rater population,
+   fixed facets, ability-scale constraints and category support. Separate
+   observed-rater conditional prediction from new-rater marginal prediction.
+   Integrating over a new rater's distribution is generally different from
+   plugging in severity zero; include uncertainty in the learned distribution.
+2. **Verify a small joint likelihood.** A rater effect shared by Persons couples
+   their contributions after marginalization. Repeating an independent rater
+   integral inside each Person's likelihood changes the model. Compare a
+   matching external estimator and an independent tiny joint integral before
+   selecting a production backend or extending quadrature. Verify label
+   permutations and the variance-zero limit: absent rater heterogeneity, not
+   the model with arbitrary freely estimated fixed rater severities.
+3. **Probe information and recovery.** Vary rater count separately from ratings
+   per rater, overlap/workload imbalance, zero/near-zero variance, extreme
+   responses and sparse or disconnected designs. Check informative assignment,
+   non-normal/heterogeneous severity populations and omitted local dependence.
+   A shared population assumption can produce finite estimates without
+   restoring design-based information; preserve warnings and failure counts.
+4. **Evaluate the actual use.** Compare bias/RMSE for structural parameters and
+   Persons, interval coverage, prediction for held-out Persons and held-out
+   raters separately, and error in the specified operational decision. A random
+   rating-row split does not test generalization to a new rater. If rater
+   monitoring is the decision, check that shrinkage does not conceal the
+   meaningful severity differences being monitored.
+5. **Extend only for an identified question.** Add PCM, random tasks or one
+   separately identified local-dependence component when the first candidate
+   and the operational problem justify it. HRM, random discriminations and
+   general multidimensional fitting remain separate choices.
+
+For this sampled-rater lane, the first tangible deliverable is a matched example plus a small discriminating
+simulation protocol, with acceptance rules fixed before a confirmation run.
+Reuse existing data, probability-check and reporting machinery where the
+likelihood and target match. Prefer an external analysis/export or narrow
+adapter to a new solver if that answers the actual user decision. No generic
+registry, public argument or large simulation is added by this update.
+
+### G-theory, reporting and timing
+
+Both random-effects MFRM and G-theory need a declaration of which facets are
+sampled versus held fixed. Their coefficients are not interchangeable:
+logit-scale variance components do not automatically produce observed-score
+G/Phi, especially with nonlinear response functions and interactions. A future
+planning route must define the reported score/decision and simulate or derive
+its performance under the declared number of new raters/tasks. A constant
+Criterion count alone does not make Criterion statistically fixed.
+
+Reports must state the response family, fixed/random owners and populations,
+variance estimates and uncertainty, integration/estimation method, dependence
+structure, allocation/missingness assumptions and observed/new-rater target.
+Person intervals must distinguish conditioning on a point calibration from
+propagating uncertainty in rater and population parameters. Anchored observed
+raters and new random raters need separate future scoring identities.
+
+0.2.4 retains its existing-route validation and portable-calibration scope.
+After that review, random-effects problem specification and external microcase
+work may accompany 0.2.5 multiple-scale planning. Implementation and API
+admission have no promised version; any 0.3-or-later integration depends on the
+evidence, user value and migration review. Multiple scales are not a
+mathematical prerequisite for a single-scale random-effects model. The dated
+research results and restrictions below retain their original dispositions.
+
+## 2026-09-15 covariance as a model element
+
+The follow-up user request prioritizes random-facet/testlet covariance as part
+of the declared model. This develops the existing `random_blocks`, `incidence`
+and `local_dependence` vocabulary below; it does not add a second universal
+registry or a public API. It refines the initial numerical qualification order:
+Person-local testlet blocks first, followed by the separate shared-rater case
+specified above. Both remain research candidates.
+
+### TAM source check and its precise implication
+
+The installed TAM version is `4.3.25` (the CRAN source DESCRIPTION spells it
+`4.3-25`). On 2026-09-15, local function inspection and the
+[CRAN source mirror](https://github.com/cran/TAM/blob/master/R/tam.mml.mfr.R)
+confirm that `tam.mml.mfr()` has no `userfct.variance` argument or `...`, and
+assigns `userfct.variance <- NULL` internally. Supplying the argument directly
+returns an unused-argument error before fitting. Its `variance.fixed`,
+`variance.inits`, `Q` and `B` arguments still exist; absence of the callback
+does not mean that this interface has no covariance controls.
+
+The [author-maintained TAM documentation](https://alexanderrobitzsch.github.io/TAM/reference/tam.mml.html)
+exposes the callback and `variance.Npars` in `tam.mml()`. Example 17 includes
+independent and constrained correlated-testlet models and a reduced-basis
+subdimension model. Thus this is an interface/integration limitation, not a
+package-wide impossibility or sufficient reason to write a new solver.
+Explicit `A`/`B`/`Q` translation or a different external route can be considered,
+with response identities, facet coding, constraints, missingness and weight
+semantics verified on a small matched case. No translated model was fitted in
+this source/API check.
+
+The following read-only check was run successfully against installed TAM:
+
+```r
+stopifnot(!"userfct.variance" %in% names(formals(TAM::tam.mml.mfr)),
+          "userfct.variance" %in% names(formals(TAM::tam.mml)))
+callback_error <- tryCatch(
+  TAM::tam.mml.mfr(matrix(c(0, 1, 1, 0), 2), userfct.variance = identity),
+  error = conditionMessage
+)
+stopifnot(grepl("unused argument", callback_error, fixed = TRUE))
+```
+
+### Minimal model declaration
+
+The covariance is a parameter of the response-generating distribution. Its
+meaning must be recoverable from the model object rather than inferred from a
+user function, an optimizer setting or the empirical correlation of EAPs.
+Existing measurement, analysis and evidence identities retain their separate
+roles; record only fields required by the admitted example.
+
+| Model information | Meaning to preserve |
+| --- | --- |
+| Effect role and owner | General ability, testlet, rater severity or declared interaction; which unit receives one draw and which rows share it. A shared testlet label does not imply one global effect across Persons. |
+| Incidence and loadings | Named response-to-effect map, coefficients and signs, fixed facet design, category kernel, and any declared zero-sum basis. Loading columns are not inferred from facet names alone. |
+| Population covariance | Named coordinates and blocks, free/fixed variances, zero covariances, shared parameters or other specified equalities, distributional assumptions and population target. |
+| Identification and boundaries | Ability scale and orthogonality constraints, identifiable basis/rank, PSD domain, permitted exact-zero or structurally singular blocks, and implications for interpretation. |
+| Parameter mapping | Mapping from free coordinates to the named covariance and its derivatives; parameter counts follow that mapping and identification, not a manually supplied number of matrix entries. Boundary inference needs separate justification. |
+| Scoring and object identity | Which effects are conditioned on or integrated out, existing versus new owners, treatment of unknown testlet labels, and uncertainty in learned population/calibration parameters. Preserve these through save/reload, tables and export. |
+
+This defines semantic first-class support, not immediate support for every
+covariance family or combination. Start with one independent block and one
+explicitly identified correlated block. A callback that merely returns a
+matrix does not establish the likelihood, constraints, parameter derivatives,
+effective parameter count or prediction target.
+
+### Positive definiteness is not identification
+
+For a centered Gaussian Person ability `g_p` and testlet effects `u_pt`, the
+response predictor contains `g_p + u_pt`. If the testlet covariance is
+unrestricted and the ability variance is estimated, a shared testlet component
+can trade off with ability variance. For example, both decompositions
+
+- `Var(g) = 0.6`, `Cov(u) = 0.4 I`; and
+- `Var(g) = 0.7`, `Cov(u) = 0.4 I - 0.1 J` for three testlets
+
+are positive definite and induce identical predictor covariance; `J` is the
+all-ones matrix. General ability and testlet effects are independent in both.
+With equal means and the same fixed response kernel, these Gaussian
+predictors have the same distribution. The observed likelihood therefore
+cannot select between these two decompositions. This is a constructed
+identification counterexample, not a recovery or software-equivalence result.
+
+The following base-R check was run; the maximum predictor-covariance
+difference was exactly zero, and the two testlet blocks' minimum eigenvalues
+were 0.4 and 0.1:
+
+```r
+Q <- cbind(1, diag(3))[rep(1:3, each = 2), ]
+S1 <- diag(c(0.6, rep(0.4, 3)))
+S2 <- matrix(0, 4, 4)
+S2[1, 1] <- 0.7
+S2[-1, -1] <- 0.4 * diag(3) - 0.1 * matrix(1, 3, 3)
+stopifnot(min(eigen(S1, symmetric = TRUE)$values) > 0,
+          min(eigen(S2, symmetric = TRUE)$values) > 0,
+          max(abs(Q %*% S1 %*% t(Q) - Q %*% S2 %*% t(Q))) < 1e-12)
+```
+
+Specify the identification before fitting: for example, independent testlet
+effects, or an explicit constrained covariance/basis with general-ability
+orthogonality. Check the resulting likelihood/information rank and the actual
+measurement design. Do not impose all possible constraints simultaneously or
+claim that a numerically SPD matrix alone suffices. A declared zero-sum testlet
+vector is represented in its lower-dimensional basis, with a PSD covariance
+in the original coordinates. Adding a variance floor or smoothing eigenvalues
+is not an exact implementation of that model. Estimation covariance for free
+parameters, structural population covariance and posterior score covariance
+must have distinct output names and uses.
+
+### Qualification order and output consequences
+
+1. **Person-local independent testlets with fixed MFRM facets.** One scale,
+   unit slopes and weights, known membership, sufficient within/across-testlet
+   observations. Fit the joint ability/testlet vector within each Person;
+   Persons remain independent under this specification. Use a matched TAM
+   testlet/design case and an independent tiny integral. Verify likelihood,
+   gradients, zero-testlet reduction and label/basis transformations before
+   considering recovery or reporting promotion.
+2. **One constrained correlated-testlet structure.** Declare general-ability
+   separation, covariance equalities and any reduced basis. Check implied
+   response/predictor covariance, effective coordinates, singular boundaries,
+   independent versus correlated reductions, and same-case integration
+   sensitivity. Recovery/coverage must include absent and misspecified
+   dependence, missing testlets and weak information. Arbitrary named-testlet
+   covariance does not justify prediction for an unseen testlet.
+3. **Shared random-rater severity.** Retain the sampled-rater candidate above,
+   but use its genuinely crossed joint marginal likelihood: an effect shared
+   by Persons cannot be integrated independently for each Person. Qualify a
+   suitable external backend or joint algorithm separately. The Person-local
+   testlet reference is not evidence for this different factorization.
+
+Any future comparison must use the same response data, likelihood,
+identification and integration target. AIC or related penalties use the actual
+free model parameters; row count is not automatically the BIC sample size for
+crossed data, and variance-boundary tests do not inherit an ordinary chi-square
+reference distribution. Posterior means, SEs, scoring, reliability/planning
+and portable-object replay must retain the covariance and its prediction target.
+The existing observed-score G/D-study is not silently redefined by these blocks.
+
+The public roadmap now treats random-facet/testlet covariance as a model
+element rather than a numerical-control extension. Current production APIs,
+0.2.4 eligibility and the later-version promises are unchanged. No production
+estimator, generic registry, new dependency or simulation batch was added.
+
+## 2026-09-15 crossed-effects and process-model refinement
+
+The user now explicitly asks to refine flexible crossed random effects,
+van der Linden hierarchical response-time models and drift diffusion models.
+This updates the research priorities described as parked in the historical
+overlay below; it does not authorize a production model, reopen a completed
+simulation denominator, or make these directions 0.2.4 release requirements.
+The existing D1, D3 and E1 slices are refined below rather than replaced with a
+universal modeling framework. All new acceptance checks here are prospective.
+
+### Evidence consulted and its limits
+
+This targeted update used Zotero metadata/abstracts, the earlier page-specific
+review in sections 6 and 11, and primary publication/software pages. It is not
+an additional full-PDF review and does not change the 57-PDF evidence count.
+
+| Source and Zotero key | Contribution to this decision |
+| --- | --- |
+| [Huang and Cai (2024)](https://doi.org/10.3102/10769986231193351), `ZEL5USGR` | A concrete cross-classified IRT application and a modified MH-RM algorithm; its preliminary recovery evidence does not qualify arbitrary owner/loadings/covariance combinations. |
+| [van der Linden (2007)](https://doi.org/10.1007/s11336-006-1478-z), `5U2MKKGM` | Separate response/time models with hierarchical person and item distributions. The illustrated normal-ogive/lognormal model is a reference formulation, not evidence for an implemented MFRM extension. |
+| [Ratcliff and McKoon (2008)](https://doi.org/10.1162/neco.2008.12-06-420), `MUEDISV7` | Two-choice decision experiments distinguish information quality, response caution and bias; a process claim needs a task that can test those interpretations. |
+| [Kang, De Boeck and Ratcliff (2022)](https://doi.org/10.1007/s11336-021-09819-5), `EXP739XF` | Diffusion IRT with capacity and starting-point variability addresses conditional accuracy-time dependence. This does not imply that every restricted DDM reproduces those dependence patterns. |
+| [Lerche, Voss and Nagler (2017)](https://doi.org/10.3758/s13428-016-0740-2), `KX5JWVEW` | Trial-count and optimization-criterion study identified for later design review. The Zotero record has no abstract; no universal minimum trial count is inferred from this bibliographic check. |
+
+The [Stan 2.39 Wiener guide](https://mc-stan.org/docs/stan-users-guide/wiener_diffusion_model.html)
+was checked for the four-parameter kernel, upper/lower-boundary transformation
+and joint density normalization. It supplies a candidate numerical reference,
+not an already installed or qualified mfrmr backend. Its parameter convention
+must be matched explicitly before any comparison. No dependency was added.
+
+### Questions, first studies and decisions
+
+| Track | User's question | First bounded study and reason | Evidence needed for a useful answer |
+| --- | --- | --- | --- |
+| Crossed random facets | Does a measure generalize to another rater or task, and how does one facet's variability depend on an observed condition? | Follow the earlier local-testlet qualification with shared scalar random-rater severity; then admit a sampled-task block, an identified interaction, and a within-owner random slope one at a time. Each changes a known aspect of sharing or generalization. | Recover population variation and uncertainty, including near-zero variance, imbalance and sparse links; test prediction holding out whole raters/tasks as required by the target. Row-wise holdout alone tests a different target. |
+| Hierarchical response time | Can item responses and working times distinguish proficiency from speed and improve their estimation? | Fixed item/facet effects, one qualified RSM/PCM response kernel, lognormal times, one ability and one speed per Person. Begin with one response observation per event so repeated ratings do not introduce an unqualified dependence model. | Compare response-only and joint estimation on the same data-generating conditions using bias, interval coverage and predictive calibration, including zero covariance and misspecified time dependence. Improvement is an empirical question, not a consequence of adding data. |
+| Diffusion process | Are longer decision times explained by weaker evidence, more cautious decisions or longer nondecision processing? | A suitable two-choice task with both choices and trial times; qualify a restricted four-parameter kernel before a small hierarchical person/item structure. A speed-versus-accuracy instruction manipulation can test the caution interpretation when the design supports it. | Recover the intended parameters and intervals; reproduce choice proportions and both choice-specific RT distributions; distinguish parameter tradeoffs, model misspecification and insufficient information. Good fit alone does not establish the cognitive interpretation. |
+
+For crossed facets, "freely specified" means declaring eligible owners,
+coefficients, covariance restrictions and prediction targets. For example,
+Rater can own severity and an observed Criterion contrast, with a covariance
+between those coefficients; Task can own a separate difficulty effect; and
+Person-by-Rater can own a repeated-cell interaction. Covariance between
+unrelated Rater and Task IDs is not a generic matrix option: a joint population
+or shared higher-level unit would need a separate definition. Person ability
+already has an owner and must not be duplicated as another intercept.
+
+The number of observations, levels and repeated cells, within-owner predictor
+variation, connectedness and confounding determine the information available.
+A fitted variance at zero, a weakly informed correlation, and a nonidentified
+decomposition are different outcomes. A prior can regularize a weak design but
+does not establish design-based identification. Declaration validation must
+explain the problem rather than silently dropping a block or changing the target.
+
+### Common meanings, separate likelihoods
+
+Reuse the existing proposed random-block, event and prediction vocabulary only
+where a concrete model needs it. The hierarchy can eventually describe an
+ability-speed vector owned by Person, severity/scoring-speed effects owned by
+Rater, or transformed diffusion parameters owned by Person/Item. These blocks
+retain different meanings and constraints. In particular, a lognormal speed
+parameter is not a diffusion drift rate or boundary separation.
+
+A timed response has its own event identity. Joining it to several criterion
+or rater rows must not multiply the time likelihood. Rater scoring time instead
+belongs to a scoring event, normally involving both Rater and the response
+being scored. It is not respondent working speed. Recording start/end rules,
+units, censoring and actor IDs is necessary before a joint-model example can
+be scientifically interpretable. A mean RT or total test duration is not an
+automatic substitute for the required trial/event records.
+
+van der Linden's original hierarchy includes item as well as person parameter
+distributions. The initial fixed-item-effects slice deliberately limits that
+hierarchy; later sampled-item accuracy/time covariance requires its own
+crossed-owner likelihood and new-item prediction study. Person ability-speed
+covariance is a between-person association, not evidence for the causal effect
+of speeding up a particular person. Conditional independence of response and
+time in the baseline is an assumption to check, not a property established by
+an observed score-time correlation.
+
+DDM supplies a joint density for choice and first-passage time. Multiplying it
+by a separate IRT probability for the same choice would count that outcome
+twice. Conversely, substituting a Wiener time density into D1 without its choice
+and boundary coding changes the model. Standard two-boundary DDM is not an
+ordinal rating kernel. Recoding a multi-option item as correct/incorrect or
+attaching essay duration to a rubric score does not establish its process
+assumptions; multi-alternative or staged rating decisions need separate models.
+
+### Sequence and deliverables
+
+1. **Preserve the 0.2.4 closure and the existing version direction.** These
+   research tracks add no release blocker or promised 0.2.5/0.3.0 feature.
+2. **Prioritize covariance and crossed-facet meaning.** The next design
+   deliverable is one concrete rating design, its sharing/likelihood map and
+   observed-versus-new-facet prediction target. Retain the earlier numerical
+   order: local independent testlets, one identified correlated structure,
+   shared random rater, then qualified further crossed blocks.
+3. **Admit the base time study when a real timed workflow is specified.**
+   Freeze event/actor mapping and D1's response/time kernels before selecting
+   a matched backend. This need not wait for every crossed-effect extension.
+4. **Keep DDM as a separate decision-process study.** First establish a
+   suitable two-choice task and D1a's reference checks. Hierarchical/crossed
+   extensions follow the bounded kernel; combining arbitrary crossed effects,
+   time dependence and diffusion variability is not the first experiment.
+
+Each later study must retain failed fits in its denominator, report numerical
+and Monte Carlo error, test sensitivity appropriate to its estimator, and state
+which use cases remain unsupported. Reporting must retain effect owners,
+population covariance versus posterior uncertainty, time/choice conventions,
+parameter constraints, priors if used, effective numbers of units/events,
+missingness/censoring policy, estimation diagnostics and prediction target.
+Model comparison requires the same observed outcomes and held-out unit: a
+response-only likelihood cannot be compared directly by raw AIC to a joint
+choice-and-time likelihood. No new solver or general public formula API is
+justified until the corresponding bounded study needs it.
+
+## 2026-09-15 sirt and immer scope audit
+
+The user asked to incorporate sirt and immer into the crossed-effects and
+process-model direction. This audit refines package relationships at the
+function/model level. It adds no dependency, adapter or estimator and does not
+change any earlier numerical comparison disposition.
+
+### Sources and inspected versions
+
+Installed versions are sirt `4.2.133` and immer `1.5.13`, corresponding to the
+CRAN versions [sirt 4.2-133](https://cran.r-project.org/package=sirt) and
+[immer 1.5-13](https://cran.r-project.org/package=immer), checked on 2026-09-15.
+The audit inspected installed help, exported arguments and relevant loaded R
+function bodies, with official function documentation as the public reference.
+It did not audit every compiled routine or run a fitting/recovery study.
+
+The Zotero record `QHAI3EXM` for Robitzsch and Steinfeld's *Item response models
+for human ratings: Overview, estimation methods, and implementation in R*
+provides an abstract but no year. The authors' institutional publication record
+and the [2018 publisher PDF](https://www.psychologie-aktuell.com/fileadmin/download/ptam/1-2018_20180323/6_PTAM_IRMHR_Main__2018-03-13_1416.pdf)
+resolve the bibliographic year. Targeted passages on model classes and software
+were consulted, not all 38 PDF pages. The paper distinguishes many-facet,
+covariance-structure and hierarchical rater models; its 2018 software inventory
+does not replace the installed-version audit. This review does not increase the
+earlier 57-PDF full-review count.
+
+### Function-level relationships
+
+| Route | Model/estimation meaning | Candidate role and boundary |
+| --- | --- | --- |
+| [sirt `rm.facets`](https://alexanderrobitzsch.github.io/sirt/reference/rm.facets.html) | Unidimensional facet MML with optional item/rater discrimination, estimated on a Person grid; rater coefficients are fixed population parameters rather than a learned random-rater distribution. | Unit-slope PCM/facet comparison after exact mapping. Its trait coefficient is the product of item/rater slopes, severity enters separately, and default slopes are bounded at 0.05--10. General free-slope agreement with mfrmr is not established. |
+| [sirt `rm.sdt`](https://search.r-project.org/CRAN/refmans/sirt/html/rm.sdt.html) | HRM-SDT with a latent ideal category and a signal-detection rating layer, fitted by EM; the latent response may use GPCM or GRM. | Alternative rating-mechanism study. Thresholds and discrimination in this rating layer are not automatically random-rater population variation or diffusion parameters. |
+| [immer `immer_hrm`](https://alexanderrobitzsch.github.io/immer/reference/immer_hrm.html) and `immer_hrm_simulate` | Patz-type latent response followed by a rating kernel with shift `phi` and dispersion `psi`, estimated by Metropolis-Hastings MCMC; a matching simulator is provided. | Reference for the discrete consensus-response HRM. Neither `psi` nor a prior SD for `phi` is a jointly estimated variance across a population of new raters. This is a different rating kernel from HRM-SDT. |
+| [sirt `mcmc.2pno.ml`](https://search.r-project.org/CRAN/refmans/sirt/html/mcmc.2pno.ml.html) | Specified random-item and multilevel models, including learned item hyperparameters and item-by-group variation; binary normal-ogive and normal-response routes. | A real random-effects reference, not merely post-fit shrinkage. Group/Person/Item ownership, hyperpriors and response link must match. Its group vector and variance options are not an arbitrary crossed-facet formula/covariance interface. |
+| [sirt `mcmc.3pno.testlet`](https://search.r-project.org/CRAN/refmans/sirt/html/mcmc.3pno.testlet.html) | Binary normal-ogive testlet MCMC; Person-by-Testlet effects, testlet-specific variances, optional slopes and guessing. | Useful bounded local-dependence reference. A shared rater effect across Persons, correlated testlet covariance and polytomous RSM/PCM require separate specifications. |
+| [sirt `xxirt`](https://search.r-project.org/CRAN/refmans/sirt/html/xxirt.html) | User-defined item functions and latent distributions, equality constraints and ML/PML options under conditional local independence. | Candidate for a small discrete-response latent-model prototype. A flexible response function does not by itself change the cross-Person marginalization or provide a continuous choice-time likelihood. |
+| immer `immer_cml`, `immer_ccml`, `immer_jml` | Conditional, pairwise composite-conditional and joint PCM objectives; JML correction modes are separate. | Reuse the existing structural-comparison restrictions. Conditioned-out Person/distribution parameters and unlike objective values cannot become MML validation. |
+| sirt `testlet.marginalized` | Computes transformed marginal item parameters from supplied testlet parameters, including a TAM object. | Post-fit transformation, not an estimator or independent second fit. Preserve the input model and approximation convention before using its output in scoring comparisons. |
+
+The existing [external-comparison eligibility record](external-comparison-eligibility-contract-record-0.2.3.md),
+[GPCM external preflight](gpcm-owner-external-reproducibility-preflight-p1t-record-0.2.3.md)
+and [immer conditional-estimand record](immer-conditional-estimand-eligibility-record-0.2.3.md)
+already define relevant restrictions. They remain unchanged; this roadmap does
+not relabel those source/structural findings as newly passed numerical tests.
+
+### Source findings that affect model matching
+
+1. **A link label is insufficient.** In sirt 4.2-133,
+   `mcmc.2pno.ml(link="logit")` selects the documented binary normal-ogive
+   route. Its latent-response sampler uses `pnorm`/`qnorm`, and its deviance
+   helper uses `pnorm`, not `plogis`. The following version-bound check was run
+   successfully. It verifies a helper's likelihood convention, not recovery or
+   the correctness of the entire sampler.
+
+   ```r
+   stopifnot(as.character(packageVersion("sirt")) == "4.2.133")
+   f <- getFromNamespace(".mcmc.deviance.2pl", "sirt")
+   dev <- f(aM = matrix(1, 1, 1), bM = matrix(0, 1, 1), theta = 1,
+            dat = matrix(1, 1, 1), dat.resp = matrix(1, 1, 1),
+            weights = NULL, eps = 0)
+   stopifnot(abs(dev + 2 * log(pnorm(1))) < 1e-12,
+             abs(dev + 2 * log(plogis(1))) > 0.1)
+   ```
+
+   The helper returned `0.345507558047`, matching the probit deviance;
+   the logistic value at the same predictor is `0.626523375036`. No constant
+   logistic/probit scale approximation establishes exact model identity.
+2. **Bayesian parameters do not imply learned facet covariance.** The inspected
+   `immer:::prior_hrm` supplies prior locations/SDs for `phi` and `psi`; the
+   sampler updates those rating parameters and the Person distribution.
+   This is not a hyperparameter update estimating a sampled-rater covariance.
+   Any such extension needs its own model and new-rater prediction study.
+3. **Quadrature conventions differ.** `rm.facets` defaults to 30 equally spaced
+   points from -9 to 9 and normal-density weights normalized over that grid.
+   These are not the same rule as 30 Gauss-Hermite nodes. Its Person SD is
+   estimated, so comparison with a fixed standard-normal calibration requires
+   a justified scale/distribution match and grid-range/resolution sensitivity.
+4. **Reusable components are not necessarily independent evidence.** CRAN lists
+   sirt as importing TAM, and immer as importing sirt and TAM. The inspected
+   `immer_hrm` calls sirt for MCMC summaries; `immer_hrm_simulate` uses sirt
+   cumulative-probability/sampling helpers. `testlet.marginalized` can consume
+   TAM estimates. These findings neither prove all solvers identical nor justify
+   counting package names as independent replications; the probability,
+   estimation, simulation and scoring paths need separate provenance.
+
+### Consequences for crossed effects, RT and DDM
+
+The generic existence of random-item or hierarchical rater estimation is not a
+new mfrmr contribution. The proposed contribution is a coherent many-facet
+workflow that preserves the chosen effect owners, population covariance,
+identification, anchors, observation events and prediction target through
+diagnostics, uncertainty, reporting and saved-object use. Whether a native
+solver is needed remains an empirical implementation decision.
+
+No dedicated hierarchical response-time or diffusion route was identified in
+the audited exported interfaces and installed help topics of these versions.
+`rm.sdt` is a signal-detection rating model, not DDM. `xxirt` exposes a
+discrete-item interface, and its preprocessing derives category counts from
+responses; custom item functions alone do not establish continuous RT support.
+These are scope findings, not a proof that extensions using these packages are
+impossible. The RT and DDM tracks retain their separate event/actor and joint
+likelihood requirements from the preceding refinement.
+
+### Revised next steps
+
+1. Start with documentation/export and one model-matched reference case. Reuse
+   the existing comparison eligibility rules for categories, constraints,
+   anchors, priors/penalties, parameter spaces, objectives and prediction
+   targets. Report eligibility separately from numerical agreement.
+2. For testlets, keep the unit-weight RSM/TAM comparison as the primary planned
+   route. A binary probit reference using sirt is a distinct additional study;
+   it cannot validate the RSM kernel by changing a link label. For random items,
+   first map one `mcmc.2pno.ml` structure; it does not license an arbitrary
+   Person-by-Rater-by-Task model.
+3. For repeated ratings, freeze whether the question calls for Gaussian local
+   dependence, a Patz consensus-rating kernel or HRM-SDT. Compare these as
+   competing explanations on the same rating/event data, rather than expecting
+   equal parameter estimates from different mechanisms. Use independent
+   probability calculations before a same-package simulator/fitter recovery
+   study, and include posterior uncertainty and prior sensitivity for MCMC.
+4. Add a narrow optional adapter only after repeated demand and a qualified
+   mapping. Keep backend identity, diagnostics and scoring limits visible;
+   importing coefficients does not create a native mfrmr fit, portable anchors
+   or G/D-study validity. Evaluate the separately identified RT/DDM backends
+   when their bounded process study is ready.
+
+Only the source/helper and document checks above were performed in this update.
+No model fitting, MCMC convergence, recovery, cross-engine equivalence or new
+release eligibility was established.
+
 ## 2026-09-01 controlling execution overlay
 
 This overlay controls current sequencing. It supersedes stale task ordering
@@ -1567,11 +2087,23 @@ lognormal time model. It requires:
 - positive time precision and an SPD ability-speed covariance; and
 - process outputs that cannot be mistaken for descriptive QC flags.
 
-Required reductions include zero ability-speed covariance to the factorized
-second-level model and unit conversion that shifts only time intensity. Person
-and rater time actors need different simulation designs; a rater-time claim
-requires crossed/linking stress cases. GPCM and GRM plug-ins receive their own
-recovery gates after the base process passes.
+The 2026-09-15 refinement starts with fixed item/facet effects, retains the
+qualified response scale identification, and fixes the speed mean and loading
+convention (`log(time) = time_intensity - speed + error`). A larger speed means
+shorter expected log time. The initial numeric study has one response per event;
+a later many-rater event needs both its response dependence and its single time
+contribution specified. Joining the same timed event to additional rating rows
+must not duplicate that time contribution.
+
+Required reductions include zero ability-speed covariance to a factorized
+response/time marginal likelihood in the baseline with no other shared random
+blocks. Adding item or rater cross-outcome covariance changes that reduction.
+Unit conversion shifts time intensity by the log conversion factor while
+preserving latent scores and correlations; densities on the original time
+scale include the corresponding Jacobian. Person and rater time actors need
+different simulation designs; a rater-time claim requires crossed/linking
+stress cases. GPCM and GRM plug-ins receive their own recovery gates after the
+base process passes.
 
 The base slice treats response/time missingness explicitly but does not yet
 claim nonignorable omission modeling. Only after D1 and the E1 event graph pass
@@ -1581,6 +2113,53 @@ as a competing response/omission clock, with fixed item order and a declared
 test limit. Reductions to response-only, response-plus-time, NRI-only, and
 OI-only mechanisms, plus misspecified-missingness negative controls, are
 required before any joint model can affect ability reporting.
+
+### D1a. Bounded diffusion decision-process study
+
+Added on 2026-09-15 as a separate research candidate, not a new `model=` value
+in `fit_mfrm()`. The first task must support a two-boundary decision account and
+provide event-level choice and time, actor/item/condition IDs, time units,
+choice-to-boundary mapping and the observation/censoring rule. Both correct and
+incorrect responses belong in the intended two-choice likelihood. Arbitrary
+post-hoc trimming or retaining only correct times changes the observation model.
+
+Begin with the four-parameter Wiener kernel: drift `v`, boundary separation
+`a > 0`, relative starting point `0 < w < 1`, and nondecision time `t0`, with a
+fixed within-trial diffusion scale. A task-justified restriction such as
+`w = 0.5` may precede estimating every parameter. Keep the initial hierarchy
+small; random person/item effects on transformed parameters and their
+covariances are additional identification questions. Do not interpret every
+drift coefficient as Rasch ability or every boundary as rater severity.
+
+The minimal reference qualification must establish:
+
+- agreement of both boundary densities with a matched independent reference,
+  including small/large times and extreme parameter values;
+- joint normalization after summing over choices and integrating over time;
+  each boundary density alone integrates to its choice probability;
+- boundary reversal invariance under `w -> 1 - w` and `v -> -v`, with the
+  associated choice recoding;
+- positive decision time `time - t0` for uncensored observations, and explicit
+  handling/refusal of rounded, censored and contaminated observations;
+- reduction from any later across-trial variability extension to the bounded
+  kernel when those variability parameters are zero; and
+- recovery and uncertainty across prespecified trial counts, low error rates,
+  weak drift, sparse person/item incidence and parameter tradeoffs. No single
+  universal minimum trial count is asserted.
+
+Model-fit review compares both choice-specific time distributions, choice
+proportions and conditional accuracy-time patterns. Kang et al.'s variability
+extensions motivate targeted alternatives; they do not establish that a basic
+DDM captures every such pattern. A diffusion likelihood does not reduce to
+D1's lognormal model simply by setting one covariance to zero.
+
+Numerical settings follow the selected engine: check density approximation
+tolerances and gradients, then optimization-start sensitivity or, for Bayesian
+estimation, prior sensitivity, chain diagnostics and simulation-based
+calibration. Existing Wiener implementations should be assessed before writing
+a kernel. Time-unit, diffusion-scale and prior transformations must agree in
+cross-software comparisons. This study has not been run; no DDM support or
+recovery claim follows from the roadmap.
 
 ### D2. Rater-bundle local-dependence slice
 
@@ -1600,7 +2179,8 @@ Create typed random blocks for the two or more owner units, separate from fixed
 facets and content traits. Start with one scalar latent effect per side and
 strongly constrained loadings. Required reductions and negative controls:
 
-- random variance zero reduces to the corresponding fixed/base model;
+- random variance zero removes that centered random block while retaining the
+  declared fixed terms; it does not yield arbitrary fitted fixed facet effects;
 - row and column label permutations preserve likelihood;
 - sparse/disconnected incidence fails or returns an explicit weak-information
   status; and
@@ -1608,6 +2188,18 @@ strongly constrained loadings. Required reductions and negative controls:
   in the expected direction.
 
 Do not describe two crossed owners as a two-dimensional ability.
+
+The 2026-09-15 refinement makes the user-facing target explicit declaration of
+crossed/nested owners, eligible random coefficients and within-owner covariance.
+Admission remains staged: scalar intercepts, an identified interaction, then
+observed-covariate random slopes. Nested IDs must be scoped to their parent;
+interaction owners require an incidence map. A random slope on an observed
+predictor is not a random discrimination loading on latent ability.
+Checks include within-owner predictor variation, duplicate Person effects,
+fixed/random confounding and variance/correlation boundary behavior. Unknown
+combinations fail with their unsupported condition rather than silently
+changing the model. Reordering owner labels or equivalent design columns must
+preserve predictions after the declared parameter transformation.
 
 The slice also distinguishes finite observed facets from sampled populations.
 Reliability/generalizability calculations declare the target item/rater/cluster

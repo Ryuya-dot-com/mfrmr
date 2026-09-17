@@ -18,7 +18,8 @@ predict_mfrm_units(
   scoring_quad_points = 31L,
   readiness_policy = c("error", "review"),
   n_draws = 0,
-  seed = NULL
+  seed = NULL,
+  adaptive_quad_points = NULL
 )
 }
 \arguments{
@@ -68,7 +69,8 @@ scored persons lacking complete covariates and records that omission in
 
 \item{scoring_quad_points}{Number of Gauss-Hermite nodes used only for this
 scoring call. It is independent of the quadrature order used while fitting
-\code{fit}; the default is 31 and values below 2 are refused.}
+\code{fit}; the default is 31 and values below 2 are refused.
+The fixed or adaptive integration mode is inherited from \code{fit}.}
 
 \item{readiness_policy}{How a source fit that is not scoring-ready is
 handled. \code{"error"} (default) refuses scoring. \code{"review"} permits an
@@ -83,6 +85,13 @@ regenerated with explicit review before summary or export.}
 per scored person. Use 0 to skip draws.}
 
 \item{seed}{Optional seed for reproducible posterior draws.}
+
+\item{adaptive_quad_points}{Optional vector of at least two distinct integer
+orders >= 3, for example \code{c(31, 61)}. Adds \code{quadrature_review}, comparing
+a fixed-prior grid with grids centered and scaled to each Person's
+posterior. Calibration parameters and the prior are held fixed. Inspect
+both fixed/adaptive differences and movement between adaptive orders;
+this diagnostic does not replace estimates, intervals, draws, or readiness.}
 }
 \value{
 An object of class \code{mfrm_unit_prediction} with components:
@@ -92,6 +101,8 @@ An object of class \code{mfrm_unit_prediction} with components:
 \item \code{row_review}: row-level preparation review for \code{new_data}
 \item \code{population_review}: optional person-level omission review for
 latent-regression scoring
+\item \code{quadrature_review}, \code{quadrature_overview}: optional unrounded numerical
+integration comparison and its compact overview
 \item \code{input_data}: cleaned canonical scoring rows retained from \code{new_data}
 \item \code{person_data}: cleaned or supplied person-level background data used for
 latent-regression scoring; \code{NULL} otherwise
@@ -110,7 +121,8 @@ partially observed persons via Expected A Posteriori (EAP) summaries on a
 quadrature grid.
 
 When the original fit uses ordinary \code{method = "MML"}, the posterior
-summaries are taken under that fitted MML calibration. When the original fit
+summaries use that fitted MML calibration and a standard normal scoring
+prior, unless a population model was fitted. When the original fit
 uses the latent-regression MML branch, the scoring prior is the fitted
 conditional normal population model \eqn{\theta \mid x \sim
 N(x^\top\hat\beta, \hat\sigma^2)}, so the returned summaries are
@@ -159,8 +171,17 @@ original \code{JML} fit itself estimated a population model.
 \itemize{
 \item \code{estimates} contains posterior EAP summaries for each person in
 \code{new_data}.
-\item \code{Lower} and \code{Upper} are quadrature-grid posterior interval bounds at the
-requested \code{interval_level}.
+\item \code{Lower} and \code{Upper} are continuous equal-tail posterior interval bounds at
+the requested \code{interval_level}, computed by numerical CDF inversion.
+EAP, SD, and optional draws still use the selected quadrature rule.
+These intervals condition on the fitted calibration and scoring prior,
+including any estimated population coefficients and variance. They exclude
+uncertainty from estimating calibration or population parameters; they are
+not confidence intervals at each fixed true Person ability.
+Their interpretation also depends on the scoring prior: a new population
+with a different ability mean, spread or shape can have different coverage.
+More quadrature points check numerical approximation under the same prior;
+they do not establish that this prior matches the new population.
 \item \code{SD} is posterior uncertainty under the fitted scoring basis used for
 scoring.
 \item \code{draws}, when requested, contains approximate plausible values on the
@@ -168,6 +189,11 @@ fitted quadrature grid.
 \item \code{population_review}, when present, records whether scored persons were
 omitted because their background data were incomplete for a
 latent-regression fit.
+\item \code{quadrature_review}, when requested, retains unrounded per-Person
+fixed/adaptive log-marginal, EAP and posterior-SD differences, changes
+between adaptive orders, and computation status/reasons. \code{summary()} also
+supplies a compact \code{quadrature_overview}. A \code{computed} status does not
+certify accuracy; inspect the differences and any unavailable rows.
 }
 }
 

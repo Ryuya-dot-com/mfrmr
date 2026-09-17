@@ -67,7 +67,8 @@ The helper writes:
 \itemize{
 \item summary CSVs from \code{summary(x)} such as overview, status, triage, plot
 routes, next actions, mapping, and replay-code lines;
-\item collected \code{x$tables} as CSV files;
+\item collected \code{x$tables} as CSV files (tables with no columns are omitted;
+zero-row tables with defined columns retain their headers);
 \item optional report artifacts from \code{mfrm_report(x)}, including report-index,
 evidence-summary, and reporting-template CSVs plus Markdown and HTML;
 \item a lightweight HTML report equivalent to \code{mfrm_results(x, output = "html")}
@@ -97,31 +98,37 @@ Wright-map first screen.
 }
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-results <- mfrm_results(fit)
 
+res <- mfrm_results(fit)
+
+# Create a new temporary folder for this example's files
+# For your own analysis, use a permanent folder you can write to
+output_dir <- tempfile("mfrmr-example-")
 exported <- export_mfrm_results(
-  results,
-  output_dir = tempdir(),
-  prefix = "mfrmr_results_example",
+  res,
+  output_dir = output_dir,
   preset = "starter",
-  overwrite = TRUE,
-  acknowledge_sensitive = TRUE # The packaged example is synthetic.
+  acknowledge_sensitive = TRUE # These data are synthetic; exports retain IDs
 )
-exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
+
+# Locate the files and check whether any plots could not be exported
+output_dir
+exported$written_files[, c("Component", "Path")]
+exported$plot_errors
+# Open index.html in this folder to read the report
 }
 }
 \seealso{

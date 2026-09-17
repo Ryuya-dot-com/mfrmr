@@ -24,6 +24,12 @@ test_that("MML EM checkpoint writes a file when supplied", {
   expect_identical(saved$schema_id, "mfrmr_mml_em_checkpoint")
   expect_identical(saved$schema_version, 2L)
   expect_identical(saved$identity$engine_stage, "pure_em")
+  expect_identical(saved$identity$quadrature_identity$rule,
+                   "gauss_hermite_standard_normal_recurrence_v2")
+  legacy_identity <- saved$identity
+  legacy_identity$quadrature_identity$rule <- "gauss_hermite_standard_normal_golub_welsch_v1"
+  expect_error(mfrmr:::mfrm_validate_checkpoint_payload(saved, legacy_identity),
+               "checkpoint identity does not match", fixed = TRUE)
   expect_true(nzchar(saved$identity$data_objective_fingerprint))
   expect_true(is.numeric(saved$par))
   expect_identical(

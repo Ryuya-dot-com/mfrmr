@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-10.
+Status: repository-only maintainer plan, refined 2026-09-12.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -65,6 +65,90 @@ qualification → 7. GPCM/JML, secondary-route audit and UX checks can proceed
 independently when their inputs are ready. A research extension becomes a
 release prerequisite only if its claim is retained in the released product;
 existing public claims cannot be hidden in the future-version backlog.
+
+#### 2026-09-12: High-order Gauss-Hermite zero weights — open numerical issue
+
+**Status: reproduced, unresolved.** Track this under work package 1 (shared
+numerical contract) and work package 4 (scoring/calibration consequences).
+The finding was observed during the Python/mfrmr MML review on September 11
+and reproduced from the unchanged development source on September 12. It
+needs a scoped resolution before retaining affected high-order scoring claims
+in the 0.2.4 release; increasing the quadrature order alone is not a remedy.
+
+**Bound source and runtime.** mfrmr `0.2.4.9000`, source commit
+`6dfba8258403cb0ab2f86979e78b31519753e82f`; R `4.6.1`,
+`aarch64-apple-darwin23`, LAPACK `3.12.1`, R's `libRblas.0.dylib`.
+The SHA-256 of `R/mfrm_core.R` is
+`b2f78488f251f80f3a3f705b10c41631cbe7e6ba5b3e1cca284cf5660a1000e1`.
+The installed `mfrmr` was `0.2.3.1` and was not used as the development
+implementation. The source function was evaluated in isolation.
+
+| Quadrature order | Zero weights returned by mfrmr | Sum of corresponding positive NumPy weights in the September 11 comparison |
+| --- | ---: | ---: |
+| 31 | 0 | 0 |
+| 61 | 4 | `7.42e-37` |
+| 121 | 36 | `2.18e-36` |
+| 181 | 74 | `2.47e-37` |
+
+These counts are observations on the bound runtime, not a platform-independent
+specification. The comparison used NumPy `2.4.2` `hermgauss`, transformed to
+standard-normal nodes and weights. Absolute node/weight agreement and normal
+moment checks do not establish relative accuracy of tiny weights or of small
+Person-pattern marginal probabilities. For unit-weight discrete response
+likelihoods, omitted terms have a small absolute contribution because each
+conditional likelihood is at most one; relative and log-likelihood errors
+still require evaluation at the actual response patterns.
+
+**Trace and consequence.** The shared
+[`gauss_hermite_normal()`](../../R/mfrm_core.R) constructs weights from squared
+first-row eigenvector entries. Exact Gauss-Hermite weights are positive, but
+this implementation returns zeros at the orders above. The precise numerical
+mechanism has not been attributed; do not label it binary64 underflow without
+checking the eigensolver and squaring stages. Fitting and fitted-object scoring
+consume this shared rule. Separately,
+[`mfrmr_extract_calibration_draft()`](../../R/core-fixed-calibration.R)
+stores the generated scoring weights unchanged, while calibration review
+rejects `any(weights <= 0)` with `QUADRATURE_WEIGHTS_INVALID`. The generated
+Q61/Q121/Q181 weights fail that predicate; Q31 passes it. This is a reproduced
+generator/validation mismatch, not a new end-to-end calibration API test.
+Fit-time and scoring quadrature orders remain distinct; the default scoring
+order is 31, so a high-order fit does not itself imply this scoring failure.
+
+Reproduce from the development root with `Rscript --vanilla`:
+
+```r
+env <- new.env(parent = baseenv())
+for (e in parse("R/mfrm_core.R")) {
+  if (is.call(e) && identical(e[[1]], as.name("<-")) &&
+      identical(e[[2]], as.name("gauss_hermite_normal"))) eval(e, env)
+}
+q <- c(31L, 61L, 121L, 181L)
+zeros <- vapply(q, function(n) sum(env$gauss_hermite_normal(n)$weights == 0), integer(1))
+data.frame(q = q, zero_weights = zeros, strictly_positive = zeros == 0L)
+```
+
+**Next checks and closure.**
+
+- [ ] Attribute the lost weights and assess a stable shared generation method;
+  preserve the standard-normal rule and inspect every fitting/scoring caller.
+  Do not substitute arbitrary epsilon weights or silently relax positivity.
+- [ ] Verify positive finite normalized weights, symmetry, moments and tiny
+  weights against an independent numerical construction over the supported
+  orders, with explicit platform/range limits. Include Q31 as a regression
+  control and Q61/Q121/Q181 as observed development cases.
+- [ ] Assess likelihood, gradient, EAP and posterior-SD effects on retained
+  extreme/long-pattern microcases; distinguish fixed-parameter reevaluation
+  from reoptimization. Use a qualified log-centered continuous integral where
+  needed; small absolute weight differences alone do not close this check.
+- [ ] Exercise fitted-object scoring and the portable extraction → review →
+  validation → freezing → scoring route with separately selected fit/scoring
+  orders. Resolve the generated-weight/validation mismatch and retain the
+  existing calibration-readiness and inferential restrictions.
+
+This entry records a finding, not a fix or qualification. It does not attribute
+the historical TAM discrepancies or Python stationarity issue to these zeros,
+rewrite frozen evidence, or promote numerical/coverage/release readiness.
+
 
 #### Uncertainty targets that must not be merged
 

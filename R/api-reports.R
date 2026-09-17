@@ -1190,30 +1190,28 @@ fit_measures_table <- function(x,
 #' @seealso [fit_mfrm()], [describe_mfrm_data()], [specifications_report()],
 #'   [mfrmr_reports_and_tables], [mfrmr_compatibility_layer]
 #' @examples
-#' ratings <- load_mfrmr_data("example_operational")
+#' \donttest{
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' out <- data_quality_report(
-#'   fit,
-#'   data = ratings,
-#'   person = "Person",
-#'   facets = c("Rater", "Criterion"),
-#'   score = "Score"
-#' )
-#' summary(out)
-#' p_dq <- plot(out, draw = FALSE)
-#' p_dq$data$plot
+#'
+#' # Review the input-data checks recorded with this fit
+#' quality <- data_quality_report(fit)
+#' summary(quality)
+#'
+#' # Draw the data-quality overview
+#' plot(quality)
+#' }
 #' @export
 data_quality_report <- function(fit,
                                 data = NULL,
@@ -4042,7 +4040,9 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' Build a precision review report
 #'
 #' @param fit Output from [fit_mfrm()].
-#' @param diagnostics Optional output from [diagnose_mfrm()].
+#' @param diagnostics Optional matching output from [diagnose_mfrm()].
+#'   Recompute it after refitting; mismatched or outdated readiness records
+#'   are rejected.
 #'
 #' @details
 #' This helper summarizes how `mfrmr` derived SE, CI, and reliability values
@@ -4093,25 +4093,26 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' @seealso [diagnose_mfrm()], [facet_statistics_report()], [reporting_checklist()]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-#' out <- precision_review_report(fit, diagnostics = diag)
-#' summary(out)
+#'
+#' # Review support for standard errors, intervals, and reliability summaries
+#' diagnostics <- diagnose_mfrm(fit)
+#' precision <- precision_review_report(fit, diagnostics = diagnostics)
+#' review <- summary(precision)
+#' review$checks # Check statuses and reasons before making precision claims
 #' }
-#' @name precision_review_report
 #' @export
 precision_review_report <- function(fit, diagnostics = NULL) {
   if (!inherits(fit, "mfrm_fit")) {
@@ -4120,6 +4121,8 @@ precision_review_report <- function(fit, diagnostics = NULL) {
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics,
+                                             helper = "precision_review_report()")
 
   profile_tbl <- as.data.frame(diagnostics$precision_profile %||% data.frame(), stringsAsFactors = FALSE)
   checks_tbl <- as.data.frame(precision_review(diagnostics, required = FALSE) %||% data.frame(), stringsAsFactors = FALSE)
@@ -4919,6 +4922,9 @@ plot_bias_interaction <- function(x,
 #'
 #' When bias results or PCA diagnostics are not supplied, those sections
 #' are omitted from the narrative rather than producing placeholder text.
+#' Reporting reuses stored residual PCA results and does not compute omitted
+#' overall or facet-specific analyses. Request the intended scope with
+#' `diagnose_mfrm(..., residual_pca = "overall")`, `"facet"`, or `"both"` first.
 #'
 #' @section Typical workflow:
 #' 1. Build diagnostics (and optional bias results). For `RSM` / `PCM`
@@ -4953,50 +4959,40 @@ plot_bias_interaction <- function(x,
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examples
 #' \donttest{
-#' # Minimal APA-output example using a JML fit and lightweight diagnostics.
-#' toy <- load_mfrmr_data("example_core")
-#' # A balanced slice retains every Rater and Criterion while running quickly.
-#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
-#' fit_quick <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "JML", maxit = 30
-#' )
-#' diag_quick <- diagnose_mfrm(fit_quick,
-#'   residual_pca = "none",
-#'   diagnostic_mode = "legacy"
-#' )
-#' apa_quick <- build_apa_outputs(fit_quick, diag_quick)
-#' nchar(apa_quick$report_text) > 0
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", quad_points = 7, maxit = 30
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' diag <- diagnose_mfrm(fit, residual_pca = "both", diagnostic_mode = "both")
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Prepare draft wording from the fitted model and diagnostics
 #' apa <- build_apa_outputs(
 #'   fit,
-#'   diag,
+#'   diagnostics = diagnostics,
 #'   context = list(
-#'     assessment = "Toy writing task",
+#'     assessment = "Synthetic writing assessment",
 #'     setting = "Demonstration dataset",
-#'     scale_desc = "0-2 rating scale",
+#'     scale_desc = "1-4 rating scale",
 #'     rater_facet = "Rater"
 #'   )
 #' )
-#' s_apa <- summary(apa)
-#' s_apa$overview
-#' # Look for: `SentenceCount` non-zero in every section that the run
-#' #   should support (Method / Results / fit / reliability / bias).
-#' #   Zero counts mean that section's prose is empty and the
-#' #   manuscript will need to fill it manually.
-#' chk <- reporting_checklist(fit, diagnostics = diag)
-#' head(chk$checklist[, c("Section", "Item", "DraftReady", "NextAction")])
-#' # Look for: rows with `DraftReady = "yes"` are ready to paste into
-#' #   the manuscript. `"no"` rows tell you which helper / setting
-#' #   needs to run before that paragraph can be drafted, via
-#' #   `NextAction`. Aim for every Visual Displays / Reliability /
-#' #   Diagnostics row to be `"yes"` before submitting.
-#' cat(apa$report_text)
-#' apa$section_map[, c("SectionId", "Available")]
 #'
+#' # Check which sections are supported, then read the draft
+#' apa_review <- summary(apa)
+#' apa_review$content_checks
+#' cat(apa$report_text)
+#' # Adapt the text to the study question, design, and evidence before using it
 #' }
 #' @section Input validation:
 #' `fit` must be an `mfrm_fit` object from [fit_mfrm()].
@@ -9758,30 +9754,31 @@ resolve_summary_bundle_table_selection <- function(bundle, which = NULL) {
 #' @seealso [fit_mfrm()], [diagnose_mfrm()], [build_apa_outputs()],
 #'   [reporting_checklist()], [mfrmr_reporting_and_apa]
 #' @examples
+#' \donttest{
+#' # Load the package and example ratings
+#' library(mfrmr)
 #' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", quad_points = 7, maxit = 30
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' tbl <- apa_table(fit, which = "summary", caption = "Model summary", note = "Toy example")
-#' tbl_facets <- apa_table(fit, which = "summary", branch = "facets")
-#' fit_bundle <- build_summary_table_bundle(summary(fit))
-#' tbl_from_summary <- apa_table(fit_bundle, which = "facet_overview")
-#' summary(tbl)
-#' p <- plot(tbl, draw = FALSE)
-#' p_facets <- plot(tbl_facets, type = "numeric_profile", draw = FALSE)
-#' p$data$plot
-#' p_facets$data$plot
-#' if (interactive()) {
-#'   plot(
-#'     tbl,
-#'     type = "numeric_profile",
-#'     main = "APA Table Numeric Profile (Customized)",
-#'     palette = c(numeric_profile = "#2b8cbe", grid = "#d9d9d9"),
-#'     label_angle = 45
-#'   )
+#'
+#' # Turn one summary table into a table with a caption and note
+#' results <- summary(fit)
+#' tbl <- apa_table(results, which = "facet_overview",
+#'                  caption = "Distribution of estimates within each facet")
+#' tbl # Prints the table, caption, and note
+#'
+#' # Extract the ordinary data frame for further formatting or export
+#' tbl$table
+#' # This table summarizes facets; use as.data.frame(fit) for individual estimates
 #' }
-#' tbl$note
 #' @export
 apa_table <- function(x,
                       which = NULL,
@@ -9800,6 +9797,9 @@ apa_table <- function(x,
   source_type <- "data.frame"
   resolved_which <- NULL
 
+  if (inherits(x, "mfrm_fit") && !is.null(diagnostics)) {
+    mfrm_results_validate_diagnostics_identity(x, diagnostics, helper = "apa_table()")
+  }
   summary_bundle_classes <- summary_table_bundle_supported_summary_classes()
 
   if (inherits(x, "mfrm_summary_table_bundle")) {
@@ -10722,6 +10722,8 @@ build_visual_summaries <- function(fit,
                                    whexact = FALSE,
                                    branch = c("original", "facets")) {
   stop_if_gpcm_out_of_scope(fit, "build_visual_summaries()")
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics,
+                                             helper = "build_visual_summaries()")
   branch <- match.arg(tolower(as.character(branch[1])), c("original", "facets"))
   style <- ifelse(branch == "facets", "facets_manual", "original")
 

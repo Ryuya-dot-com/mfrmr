@@ -41,22 +41,21 @@ public_documentation_files <- function(pkg_root) {
   ))
 }
 
-test_that("the public guide starts from data, fit, summary, and required Wright output", {
+test_that("the public guide starts from data, fit, plot, and summary", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
   readme <- paste(readLines(file.path(pkg_root, "README.md"), warn = FALSE),
                   collapse = "\n")
 
-  data_pos <- regexpr("dat <- load_mfrmr_data", readme, fixed = TRUE)[1]
+  data_pos <- regexpr("toy <- load_mfrmr_data", readme, fixed = TRUE)[1]
   fit_pos <- regexpr("fit <- fit_mfrm", readme, fixed = TRUE)[1]
-  summary_pos <- regexpr("fit_summary <- summary", readme, fixed = TRUE)[1]
-  wright_pos <- regexpr("required native wright map", tolower(readme),
-                        fixed = TRUE)[1]
+  plot_pos <- regexpr("plot(fit)", readme, fixed = TRUE)[1]
+  summary_pos <- regexpr("results <- summary(fit)", readme, fixed = TRUE)[1]
 
-  expect_true(all(c(data_pos, fit_pos, summary_pos, wright_pos) > 0L))
+  expect_true(all(c(data_pos, fit_pos, plot_pos, summary_pos) > 0L))
   expect_lt(data_pos, fit_pos)
-  expect_lt(fit_pos, summary_pos)
-  expect_lt(summary_pos, wright_pos)
+  expect_lt(fit_pos, plot_pos)
+  expect_lt(plot_pos, summary_pos)
   expect_match(readme, "method = \"MML\"", fixed = TRUE)
 })
 

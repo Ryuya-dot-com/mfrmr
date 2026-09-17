@@ -46,6 +46,8 @@ resolve_mfrm_export_context <- function(x,
   if (!is.list(diagnostics) || is.null(diagnostics$obs)) {
     stop("`diagnostics` must be output from diagnose_mfrm().", call. = FALSE)
   }
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics,
+                                             helper = gpcm_helper)
 
   list(
     fit = fit,
@@ -197,6 +199,7 @@ build_replay_fit_mfrm_lines <- function(replay_inputs,
     emit("reltol", as.numeric(ri$reltol %||% 1e-6)),
     emit("optimizer", as.character(ri$optimizer %||% "auto")),
     emit("mml_engine", as.character(ri$mml_engine %||% "direct")),
+    emit("mml_integration", as.character(ri$mml_integration %||% "fixed")),
     emit("facet_shrinkage", as.character(ri$facet_shrinkage %||% "none"))
   )
 
@@ -704,6 +707,7 @@ build_mfrm_manifest <- function(fit,
     maxit = as.integer(est_ctl$maxit %||% NA_integer_),
     reltol = as.numeric(est_ctl$reltol %||% NA_real_),
     quad_points = as.integer(est_ctl$quad_points %||% NA_integer_),
+    mml_integration = as.character(est_ctl$mml_integration %||% "fixed"),
     optimizer_requested = as.character(est_ctl$optimizer_requested %||% NA_character_),
     optimizer_used = as.character(est_ctl$optimizer_used %||% NA_character_)
   ))
@@ -1168,6 +1172,12 @@ build_mfrm_session_info_table <- function() {
 #' The source readiness row is not copied into the replayed fit. The generated
 #' script recomputes readiness and warns when its fit-level decision fields do
 #' not match the source record.
+#' Identifier columns are read as text, preserving leading zeros and literal
+#' `"NA"` labels. Original column names and factor coding in exported
+#' person-level background data are retained. Stored diagnostic settings are
+#' replayed as well; older diagnostic objects may not retain interaction
+#' selection or PCA limits, so rerun [diagnose_mfrm()] before exporting them
+#' when those settings matter.
 #'
 #' If `ScriptMode` is `"facets"`, the script replays the higher-level
 #' [run_mfrm_facets()] workflow. If it is `"fit"`, the script uses
@@ -1192,9 +1202,16 @@ build_mfrm_session_info_table <- function() {
 #' @seealso [build_mfrm_manifest()], [export_mfrm_bundle()], [run_mfrm_facets()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
 #' replay <- build_mfrm_replay_script(fit, data_file = "your_data.csv")
 #' replay$summary[, c("ScriptMode", "ResidualPCA", "BiasPairs")]
 #' cat(substr(replay$script, 1, 120))
@@ -1239,11 +1256,24 @@ build_mfrm_replay_script <- function(fit,
     score = "Score",
     weight = NULL
   )
+  replay_id_columns <- unique(as.character(c(src$person, src$facets)))
+  replay_column_classes <- stats::setNames(rep("character", length(replay_id_columns)), replay_id_columns)
   est_ctl <- cfg$estimation_control %||% list()
   anchor_tables <- extract_anchor_tables(cfg)
   anchor_df <- as.data.frame(anchor_tables$anchors %||% data.frame(), stringsAsFactors = FALSE)
   group_anchor_df <- as.data.frame(anchor_tables$groups %||% data.frame(), stringsAsFactors = FALSE)
   residual_pca_mode <- infer_export_residual_pca_mode(diagnostics)
+  diagnostic_args <- diagnostics$replay_inputs %||% list(
+    diagnostic_mode = diagnostics$diagnostic_mode %||% "both",
+    fit_df_method = diagnostics$fit_standardization$PrimaryFitDfMethod %||% "engine",
+    whexact = identical(diagnostics$fit_standardization$ZSTDTransform,
+                       fit_zstd_transform_label(TRUE))
+  )
+  diagnostic_args$residual_pca <- residual_pca_mode
+  diagnostic_call <- paste0("diagnostics <- diagnose_mfrm(fit, ", paste(
+    vapply(names(diagnostic_args), function(nm) paste0(
+      nm, " = ", render_r_object_literal(diagnostic_args[[nm]])
+    ), character(1)), collapse = ", "), ")")
   bias_pairs <- export_extract_bias_pairs(bias_results)
   include_diagnostics <- TRUE
   population_prediction <- export_validate_optional_object(
@@ -1361,7 +1391,9 @@ build_mfrm_replay_script <- function(fit,
       render_r_object_literal(source_readiness$parameters)
     ),
     "",
-    paste0("data <- utils::read.csv(", render_r_object_literal(as.character(data_file[1])), ", stringsAsFactors = FALSE)")
+    paste0("data <- utils::read.csv(", render_r_object_literal(as.character(data_file[1])),
+           ", stringsAsFactors = FALSE, check.names = FALSE, na.strings = \"\", colClasses = ",
+           render_r_object_literal(replay_column_classes), ")")
   )
 
   lines <- c(
@@ -1406,8 +1438,6 @@ build_mfrm_replay_script <- function(fit,
 	    paste0("  facets = ", render_r_object_literal(as.character(mapping$facets %||% src$facets)), ","),
 	    paste0("  score = ", render_r_object_literal(as.character(mapping$score %||% src$score)), ","),
 	    paste0("  weight = ", if (!is.null(mapping$weight %||% src$weight)) render_r_object_literal(as.character(mapping$weight %||% src$weight)) else "NULL", ","),
-      paste0("  rating_min = ", render_r_object_literal(as.integer(cfg$rating_min %||% NA_integer_)), ","),
-      paste0("  rating_max = ", render_r_object_literal(as.integer(cfg$rating_max %||% NA_integer_)), ","),
 	    paste0("  keep_original = ", render_r_object_literal(isTRUE(cfg$keep_original)), ","),
 	    paste0("  model = ", render_r_object_literal(as.character(cfg$model %||% "RSM")), ","),
 	    paste0("  method = ", render_r_object_literal(as.character(replay_method)), ","),
@@ -1421,22 +1451,23 @@ build_mfrm_replay_script <- function(fit,
       paste0("  maxit = ", render_r_object_literal(as.integer(est_ctl$maxit %||% 400L)), ","),
       paste0("  reltol = ", render_r_object_literal(as.numeric(est_ctl$reltol %||% 1e-6)), ","),
       paste0("  optimizer = ", render_r_object_literal(as.character(est_ctl$optimizer_requested %||% "auto")), ","),
+      paste0("  mml_engine = ", render_r_object_literal(as.character(est_ctl$mml_engine_requested %||% "direct")), ","),
+      paste0("  mml_integration = ", render_r_object_literal(as.character(est_ctl$mml_integration %||% "fixed")), ","),
       paste0("  top_n_interactions = ", render_r_object_literal(as.integer(top_n_interactions))),
       ")",
       "fit <- run$fit",
       "diagnostics <- run$diagnostics"
     )
-    if (residual_pca_mode != "none") {
-      lines <- c(
-        lines,
-        paste0("diagnostics <- diagnose_mfrm(fit, residual_pca = ", render_r_object_literal(residual_pca_mode), ")")
-      )
-    }
+    lines <- c(lines, diagnostic_call)
   } else {
       if (isTRUE(fit_population$active) &&
           !is.null(fit_population_person_table_replay) &&
           is.data.frame(fit_population_person_table_replay)) {
         if (!is.null(fit_person_data_file)) {
+          person_column_classes <- vapply(fit_population_person_table_replay,
+            function(x) if (is.character(x) || is.factor(x)) "character" else NA_character_,
+            character(1))
+          person_column_classes[fit_population_person_id] <- "character"
           lines <- c(
             lines,
             "",
@@ -1454,7 +1485,7 @@ build_mfrm_replay_script <- function(fit,
             "  }",
             "}",
             "if (identical(replay_script_path, '') && length(replay_script_file) > 0) {",
-            "  replay_script_path <- sub('^--file=', '', replay_script_file[1])",
+            "  replay_script_path <- gsub('~+~', ' ', sub('^--file=', '', replay_script_file[1]), fixed = TRUE)",
             "}",
             "replay_script_dir <- if (is.character(replay_script_path) && length(replay_script_path) == 1L && nzchar(replay_script_path)) {",
             "  dirname(normalizePath(replay_script_path, winslash = '/', mustWork = FALSE))",
@@ -1464,9 +1495,23 @@ build_mfrm_replay_script <- function(fit,
             paste0(
               "fit_person_data <- utils::read.csv(file.path(replay_script_dir, ",
               render_r_object_literal(basename(fit_person_data_file)),
-              "), stringsAsFactors = FALSE)"
+              "), stringsAsFactors = FALSE, check.names = FALSE, na.strings = \"\", colClasses = ",
+              render_r_object_literal(person_column_classes), ")"
             )
           )
+          factor_columns <- names(fit_population_person_table_replay)[vapply(
+            fit_population_person_table_replay, is.factor, logical(1))]
+          for (column in factor_columns) {
+            source_column <- fit_population_person_table_replay[[column]]
+            target_column <- paste0("fit_person_data[[", render_r_object_literal(column), "]]")
+            lines <- c(lines, paste0(target_column, " <- factor(", target_column,
+              ", levels = ", render_r_object_literal(levels(source_column)),
+              ", ordered = ", render_r_object_literal(is.ordered(source_column)), ")"))
+            if (!is.null(attr(source_column, "contrasts"))) {
+              lines <- c(lines, paste0("attr(", target_column, ", \"contrasts\") <- ",
+                render_r_object_literal(attr(source_column, "contrasts"))))
+            }
+          }
         } else {
           lines <- c(
             lines,
@@ -1508,7 +1553,7 @@ build_mfrm_replay_script <- function(fit,
         lines,
         "",
         "# Diagnostics",
-        paste0("diagnostics <- diagnose_mfrm(fit, residual_pca = ", render_r_object_literal(residual_pca_mode), ")")
+        diagnostic_call
       )
     }
   }
@@ -1878,6 +1923,9 @@ conquest_overlap_mfrmr_fit_status <- function(fit) {
 }
 
 validate_conquest_overlap_fit <- function(fit) {
+  if (mfrmr_adaptive_integration(fit$config)) {
+    stop("The ConQuest overlap bundle currently requires a fixed-grid MML fit.", call. = FALSE)
+  }
   cfg <- fit$config %||% list()
   pop <- fit$population %||% list()
   method <- toupper(as.character(cfg$method_input %||% cfg$method %||% NA_character_))
@@ -6202,6 +6250,7 @@ export_write_summary_table_bundles <- function(summary_table_bundles,
   }
 
   write_csv_local <- function(df, filename, component) {
+    if (is.null(df) || NCOL(df) == 0L) return(invisible(NULL))
     path <- file.path(output_dir, filename)
     if (file.exists(path) && !overwrite) {
       stop("File already exists: ", path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)

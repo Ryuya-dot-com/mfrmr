@@ -836,18 +836,6 @@ prepare_mfrm_prediction_population <- function(fit,
   )
 }
 
-posterior_quantile_on_grid <- function(nodes, probs, p) {
-  ord <- order(nodes)
-  nodes_ord <- nodes[ord]
-  probs_ord <- probs[ord]
-  cum <- cumsum(probs_ord)
-  hit <- which(cum >= p)[1]
-  if (is.na(hit)) {
-    return(utils::tail(nodes_ord, 1))
-  }
-  nodes_ord[hit]
-}
-
 compute_person_posterior_summary <- function(idx,
                                              config,
                                              params,
@@ -875,10 +863,11 @@ compute_person_posterior_summary <- function(idx,
   person_int <- idx$person
   n_nodes <- length(quad$nodes)
   score_k <- idx$score_k
-  quad_basis <- resolve_person_quadrature_basis(
-    quad = quad,
-    population_spec = population_spec,
-    person_count = length(person_labels)
+  quad_basis <- if (mfrmr_adaptive_integration(config)) {
+    mfrmr_adaptive_quadrature_basis(idx, config, params, quad, base_eta,
+      population_spec = population_spec, person_count = length(person_labels))
+  } else resolve_person_quadrature_basis(
+    quad = quad, population_spec = population_spec, person_count = length(person_labels)
   )
   person_nodes <- quad_basis$nodes
 
@@ -957,17 +946,8 @@ compute_person_posterior_summary <- function(idx,
   nodes_mat <- quad_basis$nodes[person_ids, , drop = FALSE]
   eap <- rowSums(nodes_mat * post_w)
   sd_eap <- sqrt(rowSums((nodes_mat - eap)^2 * post_w))
-  alpha <- max(min((1 - interval_level) / 2, 0.5), 0)
-  lower <- vapply(
-    seq_len(n_persons),
-    function(i) posterior_quantile_on_grid(nodes_mat[i, ], post_w[i, ], alpha),
-    numeric(1)
-  )
-  upper <- vapply(
-    seq_len(n_persons),
-    function(i) posterior_quantile_on_grid(nodes_mat[i, ], post_w[i, ], 1 - alpha),
-    numeric(1)
-  )
+  intervals <- mfrmr_person_posterior_intervals(idx, config, params, base_eta,
+    person_labels, population_spec, interval_level)
 
   obs_n <- as.integer(rowsum(rep(1L, n), person_int, reorder = FALSE)[, 1])
   weight_n <- as.numeric(rowsum(if (is.null(idx$weight)) rep(1, n) else idx$weight,
@@ -977,8 +957,8 @@ compute_person_posterior_summary <- function(idx,
     Person = aligned_person_labels,
     Estimate = eap,
     SD = sd_eap,
-    Lower = lower,
-    Upper = upper,
+    Lower = intervals[, "Lower"],
+    Upper = intervals[, "Upper"],
     Observations = obs_n,
     WeightedN = weight_n
   )
@@ -1188,6 +1168,7 @@ prediction_validate_population_output <- function(x) {
 #' @param scoring_quad_points Number of Gauss-Hermite nodes used only for this
 #'   scoring call. It is independent of the quadrature order used while fitting
 #'   `fit`; the default is 31 and values below 2 are refused.
+#'   The fixed or adaptive integration mode is inherited from `fit`.
 #' @param readiness_policy How a source fit that is not scoring-ready is
 #'   handled. `"error"` (default) refuses scoring. `"review"` permits an
 #'   explicitly review-only fitted-object calculation and labels the returned
@@ -1199,6 +1180,12 @@ prediction_validate_population_output <- function(x) {
 #' @param n_draws Optional number of quadrature-grid posterior draws to return
 #'   per scored person. Use 0 to skip draws.
 #' @param seed Optional seed for reproducible posterior draws.
+#' @param adaptive_quad_points Optional vector of at least two distinct integer
+#'   orders >= 3, for example `c(31, 61)`. Adds `quadrature_review`, comparing
+#'   a fixed-prior grid with grids centered and scaled to each Person's
+#'   posterior. Calibration parameters and the prior are held fixed. Inspect
+#'   both fixed/adaptive differences and movement between adaptive orders;
+#'   this diagnostic does not replace estimates, intervals, draws, or readiness.
 #'
 #' @details
 #' `predict_mfrm_units()` is the **individual-unit companion** to
@@ -1208,7 +1195,8 @@ prediction_validate_population_output <- function(x) {
 #' quadrature grid.
 #'
 #' When the original fit uses ordinary `method = "MML"`, the posterior
-#' summaries are taken under that fitted MML calibration. When the original fit
+#' summaries use that fitted MML calibration and a standard normal scoring
+#' prior, unless a population model was fitted. When the original fit
 #' uses the latent-regression MML branch, the scoring prior is the fitted
 #' conditional normal population model \eqn{\theta \mid x \sim
 #' N(x^\top\hat\beta, \hat\sigma^2)}, so the returned summaries are
@@ -1254,8 +1242,17 @@ prediction_validate_population_output <- function(x) {
 #' @section Interpreting output:
 #' - `estimates` contains posterior EAP summaries for each person in
 #'   `new_data`.
-#' - `Lower` and `Upper` are quadrature-grid posterior interval bounds at the
-#'   requested `interval_level`.
+#' - `Lower` and `Upper` are continuous equal-tail posterior interval bounds at
+#'   the requested `interval_level`, computed by numerical CDF inversion.
+#'   EAP, SD, and optional draws still use the selected quadrature rule.
+#'   These intervals condition on the fitted calibration and scoring prior,
+#'   including any estimated population coefficients and variance. They exclude
+#'   uncertainty from estimating calibration or population parameters; they are
+#'   not confidence intervals at each fixed true Person ability.
+#'   Their interpretation also depends on the scoring prior: a new population
+#'   with a different ability mean, spread or shape can have different coverage.
+#'   More quadrature points check numerical approximation under the same prior;
+#'   they do not establish that this prior matches the new population.
 #' - `SD` is posterior uncertainty under the fitted scoring basis used for
 #'   scoring.
 #' - `draws`, when requested, contains approximate plausible values on the
@@ -1263,6 +1260,11 @@ prediction_validate_population_output <- function(x) {
 #' - `population_review`, when present, records whether scored persons were
 #'   omitted because their background data were incomplete for a
 #'   latent-regression fit.
+#' - `quadrature_review`, when requested, retains unrounded per-Person
+#'   fixed/adaptive log-marginal, EAP and posterior-SD differences, changes
+#'   between adaptive orders, and computation status/reasons. `summary()` also
+#'   supplies a compact `quadrature_overview`. A `computed` status does not
+#'   certify accuracy; inspect the differences and any unavailable rows.
 #'
 #' @section What this does not justify:
 #' This helper does not update the original calibration, estimate new non-person
@@ -1298,6 +1300,8 @@ prediction_validate_population_output <- function(x) {
 #' - `row_review`: row-level preparation review for `new_data`
 #' - `population_review`: optional person-level omission review for
 #'   latent-regression scoring
+#' - `quadrature_review`, `quadrature_overview`: optional unrounded numerical
+#'   integration comparison and its compact overview
 #' - `input_data`: cleaned canonical scoring rows retained from `new_data`
 #' - `person_data`: cleaned or supplied person-level background data used for
 #'   latent-regression scoring; `NULL` otherwise
@@ -1339,7 +1343,9 @@ predict_mfrm_units <- function(fit,
                                scoring_quad_points = 31L,
                                readiness_policy = c("error", "review"),
                                n_draws = 0,
-                               seed = NULL) {
+                               seed = NULL,
+                               adaptive_quad_points = NULL) {
+  adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be output from fit_mfrm().", call. = FALSE)
   }
@@ -1432,6 +1438,7 @@ predict_mfrm_units <- function(fit,
 
   notes <- c(
     calibration_note,
+    "Intervals invert the continuous posterior CDF and condition on the point calibration and scoring prior; uncertainty from estimating calibration or population parameters is excluded.",
     "Non-person facets in `new_data` must already exist in the fitted calibration.",
     "Overlapping person IDs are treated as labels in `new_data`; the original fitted person estimates are not updated."
   )
@@ -1486,7 +1493,7 @@ predict_mfrm_units <- function(fit,
     )
   }
 
-  structure(
+  out <- structure(
     list(
       estimates = scored$estimates,
       draws = scored$draws,
@@ -1499,7 +1506,9 @@ predict_mfrm_units <- function(fit,
         n_draws = n_draws,
         quad_points = as.integer(quad_points),
         scoring_quad_points = as.integer(quad_points),
-        scoring_algorithm = "quadrature_eap_v1",
+        scoring_algorithm = if (mfrmr_adaptive_integration(fit$config)) {
+          "adaptive_quadrature_eap_v2"
+        } else "quadrature_eap_v2",
         readiness_policy = readiness_policy,
         source_scoring_ready = isTRUE(source_readiness$ready),
         source_scoring_status = source_readiness$status,
@@ -1537,6 +1546,15 @@ predict_mfrm_units <- function(fit,
     ),
     class = "mfrm_unit_prediction"
   )
+  if (!is.null(adaptive_quad_points)) {
+    out$quadrature_review <- mfrmr_adaptive_quadrature_review(
+      idx, fit$config, params, quad, prepared$prep$levels$Person,
+      adaptive_quad_points, population_spec = population_ready$spec
+    )
+    out$settings$adaptive_quad_points <- adaptive_quad_points
+    out$notes <- c(out$notes, mfrmr_adaptive_quadrature_note())
+  }
+  out
 }
 
 #' Summarize posterior unit scoring output
@@ -1595,6 +1613,10 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
     notes = object$notes %||% character(0),
     digits = digits
   )
+  if (!is.null(object$quadrature_review)) {
+    out$quadrature_review <- object$quadrature_review
+    out$quadrature_overview <- mfrmr_adaptive_quadrature_overview(object$quadrature_review)
+  }
   class(out) <- "summary.mfrm_unit_prediction"
   out
 }
@@ -1615,6 +1637,10 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
   }
 
   cat("mfrmr Unit Prediction Summary\n")
+  if (!is.null(x$quadrature_overview)) {
+    cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
+    print(x$quadrature_overview, row.names = FALSE)
+  }
   if (!is.null(x$estimates) && nrow(x$estimates) > 0) {
     cat("\nPosterior estimates\n")
     print(round_df(as.data.frame(preview_df(x$estimates))), row.names = FALSE)
@@ -1673,7 +1699,8 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'   [predict_mfrm_units()] for the accompanying EAP summary table.
 #' @param scoring_quad_points Number of Gauss-Hermite nodes used only for this
 #'   scoring call. Passed to [predict_mfrm_units()] and independent of the
-#'   fit-time quadrature order.
+#'   fit-time quadrature order. Fixed or adaptive integration is inherited
+#'   from `fit`.
 #' @param readiness_policy Source-fit readiness policy passed to
 #'   [predict_mfrm_units()]. Estimated-population fits currently require
 #'   `"review"`; the returned notes and eligibility labels retain that restriction.
@@ -1710,8 +1737,9 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'
 #' @section What this does not justify:
 #' This helper does not update the calibration, estimate new non-person facet
-#' levels, or provide exact future true values. It samples from the fixed-grid
-#' posterior implied by the existing fitted-model scoring basis.
+#' levels, or provide exact future true values. It samples from the quadrature-
+#' grid posterior implied by the existing fitted-model scoring basis, using
+#' fixed or Person-specific adaptive nodes according to the fit's setting.
 #'
 #' @section References:
 #' The underlying posterior scoring follows the usual quadrature-based EAP
@@ -1797,7 +1825,7 @@ sample_mfrm_plausible_values <- function(fit,
   draw_note <- if (identical(pred$settings$posterior_basis %||% "", "population_model")) {
     "These draws are sampled from the fitted population-model posterior implied by the latent-regression MML branch."
   } else if (identical(fit_method, "MML")) {
-    "These draws are sampled from the fixed quadrature-grid posterior under the existing MML calibration."
+    "These draws are sampled from the quadrature-grid posterior under the existing MML calibration and its fixed or adaptive integration setting."
   } else {
     "These draws are sampled from a fitted-object quadrature-grid posterior built from the fitted JML parameters and a standard normal reference prior."
   }

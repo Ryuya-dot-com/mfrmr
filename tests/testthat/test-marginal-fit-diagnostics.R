@@ -23,6 +23,18 @@ fit_for_marginal_fit_tests <- function(model = c("RSM", "PCM", "GPCM")) {
   list(data = dat, fit = fit)
 }
 
+test_that("native-encoded Unicode identifiers survive marginal diagnostics", {
+  skip_if_not(isTRUE(l10n_info()[["UTF-8"]]))
+  dat <- load_mfrmr_data("example_operational")
+  dat$Rater <- paste0("\u8a55\u4fa1\u8005_", dat$Rater)
+  Encoding(dat$Rater) <- "unknown"
+  fit <- fit_mfrm(dat, "Person", c("Rater", "Criterion"), "Score", method = "MML")
+  diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
+  expect_true(isTRUE(diag$marginal_fit$pairwise$available))
+  expect_setequal(as.character(fit$prep$data$Rater), enc2utf8(dat$Rater))
+  expect_gt(nrow(diag$marginal_fit$pairwise$pair_stats), 0L)
+})
+
 test_that("strict marginal fit diagnostics are available for MML RSM, PCM, and GPCM", {
   for (model in c("RSM", "PCM", "GPCM")) {
     obj <- fit_for_marginal_fit_tests(model)

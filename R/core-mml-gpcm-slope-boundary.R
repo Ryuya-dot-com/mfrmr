@@ -79,7 +79,7 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
       complete = isTRUE(complete),
       scope_complete = isTRUE(scope_complete),
       structural_identification_complete = FALSE,
-      fixed_quadrature_certificate = TRUE,
+      fixed_quadrature_certificate = !mfrmr_adaptive_integration(config),
       continuous_integral_certificate = FALSE,
       readiness_effect = "none_instrumentation_only",
       target_status = target_status,
@@ -112,6 +112,12 @@ audit_mfrm_mml_gpcm_slope_boundary <- function(
     return(finish(
       "not_applicable_estimator", TRUE, FALSE,
       "The audit is specific to the fixed-quadrature MML objective."
+    ))
+  }
+  if (mfrmr_adaptive_integration(config)) {
+    return(finish(
+      "not_evaluated_adaptive_quadrature", FALSE, FALSE,
+      "The fixed-node log-slope ray certificate does not apply to moving adaptive nodes."
     ))
   }
 

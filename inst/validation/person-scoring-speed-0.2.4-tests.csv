@@ -1,0 +1,15 @@
+Platform,Suite,Test,Blocks,Passed,Failed,Errors,Warnings,Skipped
+macos,installed-targeted,prediction,21,165,0,0,0,0
+macos,installed-targeted,fixed-calibration-lifecycle,26,243,0,0,0,0
+macos,installed-targeted,adaptive-fitting,4,73,0,0,0,0
+macos,installed-targeted,posterior-intervals,3,21,0,0,0,0
+macos,installed-targeted,calibration-public-api,11,153,0,0,0,0
+macos,installed-targeted,adaptive-quadrature-review,5,101,0,0,0,0
+macos,R-CMD-check-light,cran-light-filter,,673,0,0,0,3
+linux,installed-targeted,prediction,21,165,0,0,0,0
+linux,installed-targeted,fixed-calibration-lifecycle,26,243,0,0,0,0
+linux,installed-targeted,adaptive-fitting,4,73,0,0,0,0
+linux,installed-targeted,posterior-intervals,3,21,0,0,0,0
+linux,installed-targeted,calibration-public-api,11,153,0,0,0,0
+linux,installed-targeted,adaptive-quadrature-review,5,101,0,0,0,0
+linux,R-CMD-check-light,cran-light-filter,,673,0,0,0,3

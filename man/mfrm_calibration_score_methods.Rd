@@ -57,6 +57,8 @@ or \code{"monochrome"}.}
 \code{print()} returns its input invisibly. \code{summary()} returns a
 \code{summary.mfrm_calibration_score} containing
 \code{overview}, \code{estimates}, \code{review}, \code{row_review}, \code{settings}, and \code{notes}.
+When adaptive integration was requested and scored rows exist, it also
+retains unrounded \code{quadrature_review} and a compact \code{quadrature_overview}.
 \code{plot()} returns an \code{mfrm_plot_data} with the selected plotting table,
 selection accounting, unplotted Person dispositions, interpretation
 guidance, and plotting settings.

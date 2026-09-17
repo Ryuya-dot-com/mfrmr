@@ -119,27 +119,31 @@ Points are colored by facet for easy identification.
 
 \examples{
 \donttest{
+# Load the package and example ratings
+library(mfrmr)
 toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "MML", model = "RSM",
-                quad_points = 7, maxit = 30)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-p <- plot_bubble(fit, diagnostics = diag, draw = FALSE)
-head(p$data$table[, c("Facet", "Level", "Estimate", "Infit", "Outfit")])
-# Look for (default `view = "measure"`): bubbles inside the shaded
-#   0.5-1.5 fit-review band. Bubbles above the band are underfit
-#   (noisy elements); below the band are overfit (overly predictable).
-#
-# For the Winsteps Table 30 layout pass `view = "infit_outfit"`:
-p_io <- plot_bubble(fit, diagnostics = diag, view = "infit_outfit",
-                     draw = FALSE)
-p_io$data$view
-# Look for: bubbles clustered inside the central [0.5, 1.5] x [0.5, 1.5]
-#   square. Points outside the upper-right corner have both Infit
-#   AND Outfit > 1.5 (consistent underfit); points outside the
-#   lower-left have both < 0.5 (consistent overfit). Bubble size in
-#   this view defaults to N (observation count) so the visual
-#   weighting matches how seriously the misfit should be taken.
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare facet estimates (horizontal axis) with Infit (vertical axis)
+plot_bubble(fit, diagnostics = diagnostics)
+# Above the review band: more response variation than expected; below: less
+# By default, larger bubbles indicate greater precision, not greater misfit
+
+# Optional: compare Infit (horizontal) and Outfit (vertical) directly
+plot_bubble(fit, diagnostics = diagnostics, view = "infit_outfit")
+# Here bubble size represents observation count; bands are review aids
 }
 }
 \seealso{

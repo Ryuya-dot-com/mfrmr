@@ -45,7 +45,8 @@ score_mfrm_calibration(
   weight = NULL,
   interval_level = 0.95,
   missing_response = "error",
-  event_id = NULL
+  event_id = NULL,
+  adaptive_quad_points = NULL
 )
 }
 \arguments{
@@ -60,7 +61,10 @@ current time.}
 
 \item{scoring_quad_points}{Integer quadrature order of at least 2 used for
 later artifact scoring. It is independent of the fit-time quadrature and
-defaults to 31.}
+defaults to 31. The fixed or adaptive integration mode is inherited from
+the source fit and stored in the artifact's scoring algorithm identity.
+With adaptive scoring, stored nodes and weights define the base Hermite
+rule; their person-specific locations are recomputed for each new batch.}
 
 \item{quadrature_review}{An \code{mfrm_quadrature_sensitivity} from
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} for the same data and model. \code{fit} must be
@@ -94,6 +98,16 @@ input columns.}
 and 1.}
 
 \item{missing_response}{Either \code{"error"} or \code{"omit"}.}
+
+\item{adaptive_quad_points}{Optional vector of at least two distinct integer
+orders >= 3, for example \code{c(31, 61)}, used only by
+\code{score_mfrm_calibration()}. Adds an unrounded \code{quadrature_review} comparing
+stored-grid results with mode/curvature-adapted integration for each Person.
+Inspect both fixed/adaptive differences and changes between adaptive orders.
+The artifact, reported scores/intervals and readiness are unchanged;
+adaptive results are diagnostics conditional on the same point calibration.
+Only Persons with scored responses have numerical review rows. \code{Status = "computed"} means the calculation finished, not that accuracy is certified;
+an unavailable row retains the reason in \code{Detail}.}
 }
 \value{
 \code{extract_mfrm_calibration()}, \code{validate_mfrm_calibration()},
@@ -104,6 +118,9 @@ structured refusals, with zero rows for an acceptable object.
 \code{save_mfrm_calibration()} invisibly returns the normalized path.
 \code{score_mfrm_calibration()} returns an \code{mfrm_calibration_score} containing
 estimates plus row and Person dispositions and scoring identities.
+When requested and scored rows exist, \code{quadrature_review} contains the
+fixed/adaptive comparison; \code{summary()} preserves it and adds a compact
+\code{quadrature_overview}.
 }
 \description{
 These functions implement a strict lifecycle for a saved, versioned
@@ -133,6 +150,10 @@ conditional on the frozen point calibration and its recorded fixed
 standard-normal prior. They do not include calibration-parameter
 uncertainty. Loading validates structure and semantic consistency, but does
 not authenticate an artifact from an untrusted source.
+New v2 scoring algorithms invert the continuous posterior CDF for equal-tail
+intervals. EAP and SD retain the stored quadrature rule. Saved v1 artifacts
+preserve their discrete grid interval endpoints and carry a note that the
+continuous posterior mass can differ from the requested interval level.
 }
 \seealso{
 \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}}, \link{mfrm_calibration_score_methods}

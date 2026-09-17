@@ -25,7 +25,8 @@ run_mfrm_facets(
   reltol = 1e-09,
   optimizer = c("auto", "BFGS", "L-BFGS-B"),
   mml_engine = c("direct", "em", "hybrid"),
-  top_n_interactions = 20L
+  top_n_interactions = 20L,
+  mml_integration = c("fixed", "adaptive")
 )
 
 mfrmRFacets(
@@ -47,7 +48,8 @@ mfrmRFacets(
   maxit = 400,
   reltol = 1e-09,
   mml_engine = c("direct", "em", "hybrid"),
-  top_n_interactions = 20L
+  top_n_interactions = 20L,
+  mml_integration = c("fixed", "adaptive")
 )
 }
 \arguments{
@@ -95,6 +97,10 @@ for smaller JML fits.}
 only when \code{method = "MML"}.}
 
 \item{top_n_interactions}{Number of rows for interaction diagnostics.}
+
+\item{mml_integration}{MML integration mode passed to \code{\link[=fit_mfrm]{fit_mfrm()}}:
+\code{"fixed"} (default) or \code{"adaptive"}. Adaptive integration requires the
+direct MML engine.}
 }
 \value{
 A list with components:

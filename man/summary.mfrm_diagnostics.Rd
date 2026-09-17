@@ -116,25 +116,30 @@ before comparing legacy and strict outputs.
 
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-s <- summary(diag, top_n = 3)
-s$decision
-s$key_warnings
-s$top_fit
+
+# Check model fit and the support for standard errors and intervals
+diagnostics <- diagnose_mfrm(fit)
+diagnostic_summary <- summary(diagnostics)
+diagnostic_summary$decision
+
+diagnostic_summary$key_warnings # Issues to investigate, if present
+diagnostic_summary$top_fit      # Most unusual residual-based fit statistics
+
+# Distinguish residual-based checks from marginal model checks
+diagnostic_summary$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
 }
 }
 \seealso{

@@ -151,7 +151,7 @@ test_that("default GPCM MML estimates the common population scale", {
     fixed = TRUE
   )))
   expect_true(any(grepl(
-    "Integration: fixed non-adaptive Gauss-Hermite (Golub-Welsch), q=7",
+    "Integration: fixed non-adaptive Gauss-Hermite, q=7",
     fit_console_text,
     fixed = TRUE
   )))
@@ -182,7 +182,7 @@ test_that("default GPCM MML estimates the common population scale", {
     fixed = TRUE
   )))
   expect_true(any(grepl(
-    "Integration: fixed non-adaptive Gauss-Hermite (Golub-Welsch), q=7",
+    "Integration: fixed non-adaptive Gauss-Hermite, q=7",
     summary_console_text,
     fixed = TRUE
   )))

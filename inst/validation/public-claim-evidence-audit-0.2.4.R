@@ -1,11 +1,14 @@
 # Repository-only current-source audit; no statistical or release pass is issued.
-# From the package root:
-# Rscript inst/validation/public-claim-evidence-audit-0.2.4.R /tmp/mfrmr-claim-audit
+# The default inventory preserves the September 9 snapshot. For current
+# declarations, run the successor wrapper from the package root:
+# Rscript inst/validation/claim-reconciliation-0.2.4.R /tmp/mfrmr-claim-audit
 
-public_claim_evidence_audit <- function(output_directory) {
+public_claim_evidence_audit <- function(
+    output_directory,
+    inventory_file = "inst/validation/public-claim-evidence-inventory-0.2.4.csv") {
   stopifnot(file.exists("DESCRIPTION"), requireNamespace("pkgload", quietly = TRUE))
   inventory <- utils::read.csv(
-    "inst/validation/public-claim-evidence-inventory-0.2.4.csv",
+    inventory_file,
     stringsAsFactors = FALSE
   )
   ns <- readLines("NAMESPACE", warn = FALSE)

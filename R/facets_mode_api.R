@@ -194,6 +194,9 @@ infer_facets_mode_mapping <- function(dat, person = NULL, facets = NULL, score =
 #'   out_mml$fit$summary[, c("Model", "Method", "MethodUsed")]
 #' }
 #' }
+#' @param mml_integration MML integration mode passed to [fit_mfrm()]:
+#'   `"fixed"` (default) or `"adaptive"`. Adaptive integration requires the
+#'   direct MML engine.
 #' @export
 run_mfrm_facets <- function(data,
                             person = NULL,
@@ -214,11 +217,13 @@ run_mfrm_facets <- function(data,
                             reltol = 1e-9,
                             optimizer = c("auto", "BFGS", "L-BFGS-B"),
                             mml_engine = c("direct", "em", "hybrid"),
-                            top_n_interactions = 20L) {
+                            top_n_interactions = 20L,
+                            mml_integration = c("fixed", "adaptive")) {
   model <- toupper(match.arg(model))
   method <- toupper(match.arg(method))
   optimizer <- match.arg(optimizer)
   mml_engine <- tolower(match.arg(mml_engine))
+  mml_integration <- match.arg(mml_integration)
 
   dat <- normalize_facets_mode_data(data)
   mapping <- infer_facets_mode_mapping(
@@ -251,7 +256,8 @@ run_mfrm_facets <- function(data,
     maxit = as.integer(maxit),
     reltol = as.numeric(reltol),
     optimizer = optimizer,
-    mml_engine = mml_engine
+    mml_engine = mml_engine,
+    mml_integration = mml_integration
   )
 
   diagnostics <- diagnose_mfrm(fit, top_n_interactions = as.integer(top_n_interactions))
@@ -264,7 +270,7 @@ run_mfrm_facets <- function(data,
       "person", "score", "facets", "weight",
       "model", "method_input", "method_used", "step_facet", "noncenter_facet",
       "dummy_facets", "positive_facets", "keep_original", "quad_points",
-      "maxit", "reltol", "optimizer", "mml_engine", "top_n_interactions"
+      "maxit", "reltol", "optimizer", "mml_engine", "mml_integration", "top_n_interactions"
     ),
     value = c(
       mapping$person,
@@ -284,6 +290,7 @@ run_mfrm_facets <- function(data,
       as.character(as.numeric(reltol)),
       optimizer,
       mml_engine,
+      mml_integration,
       as.character(as.integer(top_n_interactions))
     ),
     stringsAsFactors = FALSE
@@ -325,7 +332,8 @@ mfrmRFacets <- function(data,
                         maxit = 400,
                         reltol = 1e-9,
                         mml_engine = c("direct", "em", "hybrid"),
-                        top_n_interactions = 20L) {
+                        top_n_interactions = 20L,
+                        mml_integration = c("fixed", "adaptive")) {
   run_mfrm_facets(
     data = data,
     person = person,
@@ -345,6 +353,7 @@ mfrmRFacets <- function(data,
     maxit = maxit,
     reltol = reltol,
     mml_engine = mml_engine,
+    mml_integration = mml_integration,
     top_n_interactions = top_n_interactions
   )
 }

@@ -27,23 +27,28 @@ dashboards, or report assembly.
 }
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
-plot_data_components(fit, type = "pathway")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-curves <- category_curves_report(fit, theta_points = 51)
-plot_data_components(curves, type = "category_probability")
-
-toy$ResponseTime <- 10 + seq_len(nrow(toy)) \%\% 6 + as.numeric(toy$Score)
-rt <- response_time_review(
-  toy,
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  time = "ResponseTime"
+  method = "MML",
+  model = "RSM"
 )
-plot_data_components(plot_response_time_review(rt, draw = FALSE))
+
+# Discover which tables the default Wright map provides without drawing it
+plot_data_components(fit)
+
+# Extract one of the listed components
+locations <- plot_data(fit, component = "locations")
+head(locations)
+
+# A different plot type has different reusable tables
+plot_data_components(fit, type = "ccc")
 }
 }

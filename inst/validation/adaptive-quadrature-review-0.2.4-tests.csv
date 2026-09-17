@@ -1,0 +1,159 @@
+platform,execution,file,context,test,nb,failed,skipped,error,warning,user,system,real,passed
+macOS R 4.6.1,pkgload,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 policy matrix separates refusal omission and review,9,0,FALSE,FALSE,0,0.00900000000000034,0.003,0.0159999999999982,9
+macOS R 4.6.1,pkgload,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 result identity binds every conditional score,3,0,FALSE,FALSE,0,0.00399999999999956,0.002,0.004999999999999,3
+macOS R 4.6.1,pkgload,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 review closes CORE-04 but keeps public and optional lanes closed,11,0,FALSE,FALSE,0,0.00900000000000034,0.002,0.0109999999999992,11
+macOS R 4.6.1,pkgload,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 contract source cannot fit score persist or launch,4,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00400000000000134,4
+macOS R 4.6.1,pkgload,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,record exposes completed G3 without public promotion,3,0,FALSE,FALSE,0,0.000999999999999446,0,0.00200000000000244,3
+macOS R 4.6.1,pkgload,test-fixed-calibration-g5-disposition.R,fixed-calibration-g5-disposition,G5 narrows portable calibration without relabelling fitted GPCM,7,0,FALSE,FALSE,0,0.00299999999999834,0,0.00399999999999778,7
+macOS R 4.6.1,pkgload,test-fixed-calibration-g5-disposition.R,fixed-calibration-g5-disposition,public release prose does not expose 0.2.4 gate mechanics,3,0,FALSE,FALSE,0,0.0779999999999994,0.006,0.0829999999999984,3
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,RSM draft contains expanded calibration state and no fit payload,18,0,FALSE,FALSE,0,0.193,0.006,0.198999999999998,18
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,PCM draft stores every owner-specific step at full precision,7,0,FALSE,FALSE,0,0.208,0.004,0.213000000000001,7
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,normalized direct and group anchors become typed declarations,7,0,FALSE,FALSE,0,0.185,0.006,0.192,7
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,RSM interaction coordinates retain the complete identified matrix,9,0,FALSE,FALSE,0,0.276,0.00700000000000001,0.283999999999999,9
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,validation and freezing are immutable registered transitions,13,0,FALSE,FALSE,0,0.0340000000000007,0.004,0.0359999999999978,13
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,canonical RDS persistence is lossless and refuses overwrite,5,0,FALSE,FALSE,0,0.0380000000000003,0.002,0.0399999999999991,5
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,mutations fail closed with stable refusal codes,11,0,FALSE,FALSE,0,0.048,0.00399999999999995,0.0519999999999996,11
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,"load rejects corrupt, partial, altered, and newer artifacts",5,0,FALSE,FALSE,0,0.0199999999999996,0.002,0.0219999999999985,5
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,source readiness and optional lanes do not inherit core eligibility,6,0,FALSE,FALSE,0,0.0180000000000007,0.002,0.0200000000000031,6
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,portable scoring grid is independent of a one-point source fit grid,7,0,FALSE,FALSE,0,0.196000000000002,0.003,0.198,7
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,high scoring orders survive the full calibration lifecycle,23,0,FALSE,FALSE,0,0.154999999999998,0.00800000000000001,0.163,23
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,calibration print and summary expose scope without source Persons,16,0,FALSE,FALSE,0,0.0560000000000009,0.003,0.059000000000001,16
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,portable artifacts use a user-facing support profile contract,7,0,FALSE,FALSE,0,0.0169999999999995,0.002,0.0189999999999984,7
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,fixed-calibration implementation helpers remain unexported,1,0,FALSE,FALSE,0,0.00100000000000122,0,0.00100000000000122,1
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,artifact coordinates independently reproduce RSM and PCM fit scoring,11,0,FALSE,FALSE,0,0.312000000000001,0.005,0.318000000000001,11
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,an independent direct oracle reproduces one-row RSM scoring,6,0,FALSE,FALSE,0,0.0279999999999987,0.002,0.0299999999999976,6
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,interaction artifacts score from their complete stored cell matrix,1,0,FALSE,FALSE,0,0.0279999999999987,0.001,0.0289999999999999,1
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,"artifact scoring is row-order, chunk-order, score-map, RNG, and option invariant",6,0,FALSE,FALSE,0,0.0799999999999983,0.003,0.0839999999999996,6
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,artifact scoring fails closed with stable input and operational codes,12,0,FALSE,FALSE,0,0.0560000000000009,0.004,0.0599999999999987,12
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,operational scoring applies an explicit missing-response policy,18,0,FALSE,FALSE,0,0.0450000000000017,0.004,0.0500000000000007,18
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,event identifiers distinguish intentional repeated observations,5,0,FALSE,FALSE,0,0.0309999999999988,0.001,0.032,5
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,endpoint and sparse EAP scores carry explicit conditional dispositions,14,0,FALSE,FALSE,0,0.032,0.003,0.0350000000000001,14
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,every operational score carries calibration and basis identities,10,0,FALSE,FALSE,0,0.036999999999999,0.003,0.0409999999999968,10
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,supersession and retirement create immutable terminal lineage records,16,0,FALSE,FALSE,0,0.0749999999999993,0.006,0.0800000000000018,16
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,provenance and event-chain mutations fail semantic review,5,0,FALSE,FALSE,0,0.0359999999999978,0.002,0.0380000000000003,5
+macOS R 4.6.1,pkgload,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,artifact scorer and lifecycle functions remain unexported,1,0,FALSE,FALSE,0,0.00100000000000122,0.001,0.00199999999999889,1
+macOS R 4.6.1,pkgload,test-gauss-hermite-weights.R,gauss-hermite-weights,high-order normal quadrature retains relatively accurate tail weights,33,0,FALSE,FALSE,0,0.0430000000000028,0.00800000000000001,0.0500000000000007,33
+macOS R 4.6.1,pkgload,test-gauss-hermite-weights.R,gauss-hermite-weights,quadrature refuses invalid orders and unrepresentable weights,10,0,FALSE,FALSE,0,0.0259999999999998,0.001,0.027000000000001,10
+macOS R 4.6.1,pkgload,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,GPCM quadrature sensitivity separates numerical evidence,23,0,FALSE,FALSE,0,0.975999999999999,0.015,0.993000000000002,23
+macOS R 4.6.1,pkgload,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,quadrature summaries and APA tables remain non-decisional,11,0,FALSE,FALSE,0,0.032,0.002,0.0350000000000001,11
+macOS R 4.6.1,pkgload,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,same-data and scope contracts fail closed,5,0,FALSE,FALSE,0,0.00900000000000034,0.001,0.00999999999999801,5
+macOS R 4.6.1,pkgload,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,refit conditions are retained without error suppression,4,0,FALSE,FALSE,0,0.00600000000000023,0.001,0.00600000000000023,4
+macOS R 4.6.1,pkgload,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,the public diagnostic has no machine-identity dependency,2,0,FALSE,FALSE,0,0.00700000000000145,0,0.00799999999999912,2
+macOS R 4.6.1,pkgload,test-mml-quadrature-sensitivity.R,mml-quadrature-sensitivity,RSM and PCM expose continuous same-data quadrature movement,24,0,FALSE,FALSE,0,0.762,0.0099999999999999,0.777999999999999,24
+macOS R 4.6.1,pkgload,test-mml-quadrature-sensitivity.R,mml-quadrature-sensitivity,RSM quadrature probabilities retain fitted interactions,4,0,FALSE,FALSE,0,0.388999999999999,0.004,0.393000000000001,4
+macOS R 4.6.1,pkgload,test-mml-quadrature-sensitivity.R,mml-quadrature-sensitivity,the general entry point keeps the GPCM-specific scope guard,1,0,FALSE,FALSE,0,0.00300000000000011,0.001,0.00300000000000011,1
+macOS R 4.6.1,pkgload,test-adaptive-quadrature-review.R,adaptive-quadrature-review,adaptive review resolves narrow and tail posteriors without changing the fixed grid,16,0,FALSE,FALSE,0,0.26,0.01,0.277,16
+macOS R 4.6.1,pkgload,test-adaptive-quadrature-review.R,adaptive-quadrature-review,adaptive review validates orders and retains failed Persons,11,0,FALSE,FALSE,0,0.0409999999999999,0.006,0.0489999999999999,11
+macOS R 4.6.1,pkgload,test-adaptive-quadrature-review.R,adaptive-quadrature-review,adaptive review honors transformed priors and zero observation weights,4,0,FALSE,FALSE,0,0.00700000000000012,0.001,0.00800000000000001,4
+macOS R 4.6.1,pkgload,test-adaptive-quadrature-review.R,adaptive-quadrature-review,public fit and artifact scoring share an optional unrounded review,34,0,FALSE,FALSE,0,4.619,0.039,4.669,34
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units returns posterior summaries and optional draws,14,0,FALSE,FALSE,0,0.174,0.004,0.178000000000001,14
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units supports explicit column remapping and weights,7,0,FALSE,FALSE,0,0.326,0.00299999999999997,0.329000000000001,7
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,prediction draws are reproducible for a fixed seed,2,0,FALSE,FALSE,0,0.156000000000001,0.002,0.157999999999999,2
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units rejects unseen facet levels,1,0,FALSE,FALSE,0,0.148999999999999,0.001,0.15,1
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units requires person_data when latent-regression scoring uses covariates,1,0,FALSE,FALSE,0,1.387,0.016,1.406,1
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units scores latent-regression fits under the fitted population model,23,0,FALSE,FALSE,0,1.517,0.02,1.538,23
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,latent-regression prediction reuses categorical model-matrix levels,8,0,FALSE,FALSE,0,0.209,0.00700000000000001,0.216999999999999,8
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,latent-regression prediction can omit scored persons with incomplete background data,11,0,FALSE,FALSE,0,1.365,0.019,1.385,11
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,latent-regression prediction errors on incomplete covariates under the default policy,1,0,FALSE,FALSE,0,1.353,0.016,1.37,1
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,latent-regression scoring changes scored contrasts relative to legacy MML,5,0,FALSE,FALSE,0,1.52,0.017,1.542,5
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units supports intercept-only latent-regression scoring without person_data,13,0,FALSE,FALSE,0,0.243,0.004,0.247,13
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units supports JML PCM calibrations with custom facet names,10,0,FALSE,FALSE,0,0.314,0.005,0.318999999999999,10
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units supports bounded GPCM fixed-calibration scoring,10,0,FALSE,FALSE,0,0.242999999999999,0.00499999999999995,0.247,10
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,predict_mfrm_units respects stored score mapping from compressed fits,3,0,FALSE,FALSE,0,0.156000000000002,0.001,0.157,3
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,sample_mfrm_plausible_values exposes fixed-calibration posterior draws,11,0,FALSE,FALSE,0,0.174999999999997,0.003,0.178000000000001,11
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,sample_mfrm_plausible_values requires positive draw count,1,0,FALSE,FALSE,0,0.157,0.001,0.158999999999999,1
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,prediction preprocessing audits missing responses and refuses invalid weights,11,0,FALSE,FALSE,0,0.164999999999999,0.003,0.167000000000002,11
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,unit scoring fails closed for non-ready fits unless review is explicit,4,0,FALSE,FALSE,0,0.16,0.001,0.161999999999999,4
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,estimated-population scoring cannot bypass unresolved source validity,20,0,FALSE,FALSE,0,0.849999999999998,0.011,0.861999999999998,20
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,scoring quadrature is explicit and cannot degenerate to one point,3,0,FALSE,FALSE,0,0.158999999999999,0.001,0.160999999999998,3
+macOS R 4.6.1,pkgload,test-prediction.R,prediction,prediction integer validation does not leak coercion warnings,6,0,FALSE,FALSE,0,0.155999999999999,0.001,0.158000000000001,6
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,portable calibration exports only the reviewed public workflow,2,0,FALSE,FALSE,0,0.00700000000000001,0.001,0.00900000000000001,2
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,public capability matrix states the bounded artifact envelope,17,0,FALSE,FALSE,0,0.024,0.004,0.028,17
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,public lifecycle is explicit and artifact scoring performs no refit,16,0,FALSE,FALSE,0,0.698,0.018,0.718,16
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,portable score methods foreground review and conditional uncertainty,21,0,FALSE,FALSE,0,0.0369999999999999,0.005,0.042,21
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,portable score plots preserve selection and non-scored dispositions,42,0,FALSE,FALSE,0,0.437,0.023,0.467,42
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,portable score print handles a batch with no score coordinates,4,0,FALSE,FALSE,0,0.0110000000000001,0.001,0.0129999999999999,4
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,public loader explicitly refuses incompatible schema fixtures,6,0,FALSE,FALSE,0,0.0110000000000001,0.003,0.014,6
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,public extraction refusals give actionable non-internal alternatives,12,0,FALSE,FALSE,0,0.0089999999999999,0.003,0.0109999999999999,12
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,public extraction requires user-reviewed highest-grid fit,6,0,FALSE,FALSE,0,0.048,0.004,0.0529999999999999,6
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,public documentation surfaces share the bounded calibration wording,19,0,FALSE,FALSE,0,0.01,0.00199999999999999,0.014,19
+macOS R 4.6.1,installed,test-calibration-public-api.R,calibration-public-api,installed public API scores a saved artifact in a fresh process,8,0,FALSE,FALSE,0,0.01,0.003,0.364,8
+Linux R 4.3.2,installed,test-adaptive-quadrature-review.R,adaptive-quadrature-review,adaptive review resolves narrow and tail posteriors without changing the fixed grid,16,0,FALSE,FALSE,0,0.117000000000004,0.002,0.121000000000002,16
+Linux R 4.3.2,installed,test-adaptive-quadrature-review.R,adaptive-quadrature-review,adaptive review validates orders and retains failed Persons,11,0,FALSE,FALSE,0,0.0339999999999989,0,0.0339999999999989,11
+Linux R 4.3.2,installed,test-adaptive-quadrature-review.R,adaptive-quadrature-review,adaptive review honors transformed priors and zero observation weights,4,0,FALSE,FALSE,0,0.00900000000000034,0,0.00900000000000034,4
+Linux R 4.3.2,installed,test-adaptive-quadrature-review.R,adaptive-quadrature-review,public fit and artifact scoring share an optional unrounded review,34,0,FALSE,FALSE,0,3.053,0.037,3.103,34
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,portable calibration exports only the reviewed public workflow,2,0,FALSE,FALSE,0,0.00300000000000011,0,0.00300000000000011,2
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,public capability matrix states the bounded artifact envelope,17,0,FALSE,FALSE,0,0.0210000000000008,0,0.0210000000000008,17
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,public lifecycle is explicit and artifact scoring performs no refit,16,0,FALSE,FALSE,0,0.434000000000005,0.000999999999999987,0.436999999999998,16
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,portable score methods foreground review and conditional uncertainty,21,0,FALSE,FALSE,0,0.0359999999999943,0.004,0.0410000000000039,21
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,portable score plots preserve selection and non-scored dispositions,42,0,FALSE,FALSE,0,0.378,0.012,0.405999999999999,42
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,portable score print handles a batch with no score coordinates,4,0,FALSE,FALSE,0,0.0120000000000005,0.002,0.0129999999999981,4
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,public loader explicitly refuses incompatible schema fixtures,6,0,FALSE,FALSE,0,0.0130000000000052,0.001,0.0129999999999981,6
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,public extraction refusals give actionable non-internal alternatives,12,0,FALSE,FALSE,0,0.00999999999999801,0.001,0.0110000000000028,12
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,public extraction requires user-reviewed highest-grid fit,6,0,FALSE,FALSE,0,0.046999999999997,0.002,0.0519999999999996,6
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,public documentation surfaces share the bounded calibration wording,19,0,FALSE,FALSE,0,0.0219999999999985,0.004,0.027000000000001,19
+Linux R 4.3.2,installed,test-calibration-public-api.R,calibration-public-api,installed public API scores a saved artifact in a fresh process,8,0,FALSE,FALSE,0,0.0130000000000052,0.002,0.341000000000001,8
+Linux R 4.3.2,installed,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 policy matrix separates refusal omission and review,9,0,FALSE,FALSE,0,0.0100000000000051,0.001,0.0130000000000052,9
+Linux R 4.3.2,installed,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 result identity binds every conditional score,3,0,FALSE,FALSE,0,0.00399999999999778,0.001,0.00499999999999545,3
+Linux R 4.3.2,installed,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 review closes CORE-04 but keeps public and optional lanes closed,11,0,FALSE,FALSE,0,0.0110000000000028,0.00399999999999999,0.0150000000000006,11
+Linux R 4.3.2,installed,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,G3 contract source cannot fit score persist or launch,4,0,FALSE,FALSE,0,0.00500000000000256,0,0.00600000000000023,4
+Linux R 4.3.2,installed,test-fixed-calibration-g3-scoring.R,fixed-calibration-g3-scoring,record exposes completed G3 without public promotion,3,0,FALSE,FALSE,0,0.00300000000000011,0,0.00399999999999778,3
+Linux R 4.3.2,installed,test-fixed-calibration-g5-disposition.R,fixed-calibration-g5-disposition,G5 narrows portable calibration without relabelling fitted GPCM,7,0,FALSE,FALSE,0,0.00600000000000023,0,0.0069999999999979,7
+Linux R 4.3.2,installed,test-fixed-calibration-g5-disposition.R,fixed-calibration-g5-disposition,public release prose does not expose 0.2.4 gate mechanics,3,0,FALSE,FALSE,0,0.110999999999997,0.00600000000000001,0.146999999999998,3
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,RSM draft contains expanded calibration state and no fit payload,18,0,FALSE,FALSE,0,0.234000000000002,0.00499999999999999,0.240000000000002,18
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,PCM draft stores every owner-specific step at full precision,7,0,FALSE,FALSE,0,0.231999999999999,0.002,0.234999999999999,7
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,normalized direct and group anchors become typed declarations,7,0,FALSE,FALSE,0,0.212000000000003,0.001,0.214000000000006,7
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,RSM interaction coordinates retain the complete identified matrix,9,0,FALSE,FALSE,0,0.379000000000005,0.00700000000000001,0.387,9
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,validation and freezing are immutable registered transitions,13,0,FALSE,FALSE,0,0.0390000000000015,0,0.0390000000000015,13
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,canonical RDS persistence is lossless and refuses overwrite,5,0,FALSE,FALSE,0,0.0319999999999965,0.001,0.0330000000000013,5
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,mutations fail closed with stable refusal codes,11,0,FALSE,FALSE,0,0.0380000000000038,0.004,0.0420000000000016,11
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,"load rejects corrupt, partial, altered, and newer artifacts",5,0,FALSE,FALSE,0,0.019999999999996,0.001,0.0210000000000008,5
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,source readiness and optional lanes do not inherit core eligibility,6,0,FALSE,FALSE,0,0.0210000000000008,0,0.0210000000000008,6
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,portable scoring grid is independent of a one-point source fit grid,7,0,FALSE,FALSE,0,0.207000000000001,0.003,0.212000000000003,7
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,high scoring orders survive the full calibration lifecycle,23,0,FALSE,FALSE,0,0.151999999999994,0.003,0.157000000000004,23
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,calibration print and summary expose scope without source Persons,16,0,FALSE,FALSE,0,0.0499999999999972,0,0.0510000000000019,16
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,portable artifacts use a user-facing support profile contract,7,0,FALSE,FALSE,0,0.0219999999999985,0.001,0.0239999999999938,7
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,fixed-calibration implementation helpers remain unexported,1,0,FALSE,FALSE,0,0.00200000000000244,0,0.00199999999999534,1
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,artifact coordinates independently reproduce RSM and PCM fit scoring,11,0,FALSE,FALSE,0,0.0760000000000005,0.002,0.0800000000000054,11
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,an independent direct oracle reproduces one-row RSM scoring,6,0,FALSE,FALSE,0,0.0289999999999964,0,0.0289999999999964,6
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,interaction artifacts score from their complete stored cell matrix,1,0,FALSE,FALSE,0,0.0260000000000034,0.001,0.0259999999999962,1
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,"artifact scoring is row-order, chunk-order, score-map, RNG, and option invariant",6,0,FALSE,FALSE,0,0.078000000000003,0.001,0.0799999999999983,6
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,artifact scoring fails closed with stable input and operational codes,12,0,FALSE,FALSE,0,0.0640000000000001,0.003,0.0680000000000049,12
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,operational scoring applies an explicit missing-response policy,18,0,FALSE,FALSE,0,0.046999999999997,0.001,0.0489999999999995,18
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,event identifiers distinguish intentional repeated observations,5,0,FALSE,FALSE,0,0.0339999999999989,0,0.0349999999999966,5
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,endpoint and sparse EAP scores carry explicit conditional dispositions,14,0,FALSE,FALSE,0,0.0360000000000014,0.003,0.0399999999999991,14
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,every operational score carries calibration and basis identities,10,0,FALSE,FALSE,0,0.0349999999999966,0.001,0.036999999999999,10
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,supersession and retirement create immutable terminal lineage records,16,0,FALSE,FALSE,0,0.0700000000000003,0.001,0.070999999999998,16
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,provenance and event-chain mutations fail semantic review,5,0,FALSE,FALSE,0,0.036999999999999,0,0.036999999999999,5
+Linux R 4.3.2,installed,test-fixed-calibration-lifecycle.R,fixed-calibration-lifecycle,artifact scorer and lifecycle functions remain unexported,1,0,FALSE,FALSE,0,0.00199999999999534,0,0.000999999999997669,1
+Linux R 4.3.2,installed,test-gauss-hermite-weights.R,gauss-hermite-weights,high-order normal quadrature retains relatively accurate tail weights,33,0,FALSE,FALSE,0,0.0470000000000041,0.002,0.0499999999999972,33
+Linux R 4.3.2,installed,test-gauss-hermite-weights.R,gauss-hermite-weights,quadrature refuses invalid orders and unrepresentable weights,10,0,FALSE,FALSE,0,0.0279999999999987,0,0.027000000000001,10
+Linux R 4.3.2,installed,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,GPCM quadrature sensitivity separates numerical evidence,23,0,FALSE,FALSE,0,0.949000000000005,0.004,0.956000000000003,23
+Linux R 4.3.2,installed,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,quadrature summaries and APA tables remain non-decisional,11,0,FALSE,FALSE,0,0.0210000000000008,0.002,0.0229999999999961,11
+Linux R 4.3.2,installed,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,same-data and scope contracts fail closed,5,0,FALSE,FALSE,0,0.00999999999999801,0,0.0100000000000051,5
+Linux R 4.3.2,installed,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,refit conditions are retained without error suppression,4,0,FALSE,FALSE,0,0.00500000000000256,0.001,0.00600000000000023,4
+Linux R 4.3.2,installed,test-gpcm-mml-quadrature-sensitivity.R,gpcm-mml-quadrature-sensitivity,the public diagnostic has no machine-identity dependency,2,0,FALSE,FALSE,0,0.00399999999999778,0.001,0.00600000000000023,2
+Linux R 4.3.2,installed,test-mml-quadrature-sensitivity.R,mml-quadrature-sensitivity,RSM and PCM expose continuous same-data quadrature movement,24,0,FALSE,FALSE,0,0.789999999999999,0.003,0.795999999999999,24
+Linux R 4.3.2,installed,test-mml-quadrature-sensitivity.R,mml-quadrature-sensitivity,RSM quadrature probabilities retain fitted interactions,4,0,FALSE,FALSE,0,0.401000000000003,0,0.402000000000001,4
+Linux R 4.3.2,installed,test-mml-quadrature-sensitivity.R,mml-quadrature-sensitivity,the general entry point keeps the GPCM-specific scope guard,1,0,FALSE,FALSE,0,0.00300000000000011,0,0.00300000000000011,1
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units returns posterior summaries and optional draws,14,0,FALSE,FALSE,0,0.189,0.00399999999999998,0.193999999999996,14
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units supports explicit column remapping and weights,7,0,FALSE,FALSE,0,0.183,0.003,0.188000000000002,7
+Linux R 4.3.2,installed,test-prediction.R,prediction,prediction draws are reproducible for a fixed seed,2,0,FALSE,FALSE,0,0.184000000000005,0,0.185000000000002,2
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units rejects unseen facet levels,1,0,FALSE,FALSE,0,0.172999999999995,0.001,0.176000000000002,1
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units requires person_data when latent-regression scoring uses covariates,1,0,FALSE,FALSE,0,1.398,0.005,1.404,1
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units scores latent-regression fits under the fitted population model,23,0,FALSE,FALSE,0,1.465,0.004,1.47,23
+Linux R 4.3.2,installed,test-prediction.R,prediction,latent-regression prediction reuses categorical model-matrix levels,8,0,FALSE,FALSE,0,0.233999999999995,0.001,0.236000000000004,8
+Linux R 4.3.2,installed,test-prediction.R,prediction,latent-regression prediction can omit scored persons with incomplete background data,11,0,FALSE,FALSE,0,1.435,0.005,1.44,11
+Linux R 4.3.2,installed,test-prediction.R,prediction,latent-regression prediction errors on incomplete covariates under the default policy,1,0,FALSE,FALSE,0,1.411,0.005,1.417,1
+Linux R 4.3.2,installed,test-prediction.R,prediction,latent-regression scoring changes scored contrasts relative to legacy MML,5,0,FALSE,FALSE,0,1.636,0.00899999999999998,1.646,5
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units supports intercept-only latent-regression scoring without person_data,13,0,FALSE,FALSE,0,0.262999999999998,0.003,0.266999999999996,13
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units supports JML PCM calibrations with custom facet names,10,0,FALSE,FALSE,0,0.295999999999999,0.001,0.305000000000007,10
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units supports bounded GPCM fixed-calibration scoring,10,0,FALSE,FALSE,0,0.264000000000003,0.001,0.266999999999996,10
+Linux R 4.3.2,installed,test-prediction.R,prediction,predict_mfrm_units respects stored score mapping from compressed fits,3,0,FALSE,FALSE,0,0.177,0.002,0.18,3
+Linux R 4.3.2,installed,test-prediction.R,prediction,sample_mfrm_plausible_values exposes fixed-calibration posterior draws,11,0,FALSE,FALSE,0,0.186,0.001,0.187999999999995,11
+Linux R 4.3.2,installed,test-prediction.R,prediction,sample_mfrm_plausible_values requires positive draw count,1,0,FALSE,FALSE,0,0.175000000000004,0,0.176000000000002,1
+Linux R 4.3.2,installed,test-prediction.R,prediction,prediction preprocessing audits missing responses and refuses invalid weights,11,0,FALSE,FALSE,0,0.189999999999998,0.002,0.192999999999998,11
+Linux R 4.3.2,installed,test-prediction.R,prediction,unit scoring fails closed for non-ready fits unless review is explicit,4,0,FALSE,FALSE,0,0.182000000000002,0,0.183,4
+Linux R 4.3.2,installed,test-prediction.R,prediction,estimated-population scoring cannot bypass unresolved source validity,20,0,FALSE,FALSE,0,0.698,0.004,0.708999999999996,20
+Linux R 4.3.2,installed,test-prediction.R,prediction,scoring quadrature is explicit and cannot degenerate to one point,3,0,FALSE,FALSE,0,0.170999999999999,0.002,0.174999999999997,3
+Linux R 4.3.2,installed,test-prediction.R,prediction,prediction integer validation does not leak coercion warnings,6,0,FALSE,FALSE,0,0.188000000000002,0.001,0.189999999999998,6

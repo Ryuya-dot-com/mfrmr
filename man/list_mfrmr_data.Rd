@@ -51,13 +51,18 @@ Every bundled dataset is synthetic rather than empirical.
 }
 
 \examples{
-keys <- list_mfrmr_data()
-keys
-list_mfrmr_data(details = TRUE)[, c(
-  "Key", "PrimaryUse", "Design", "CountBasis"
-)]
-d <- load_mfrmr_data("example_operational")
-head(d)
+library(mfrmr)
+
+# See the names accepted by load_mfrmr_data()
+list_mfrmr_data()
+
+# Compare the purpose and design of the available datasets
+catalog <- list_mfrmr_data(details = TRUE)
+catalog[, c("Key", "PrimaryUse", "Design")]
+
+# Choose one dataset
+toy <- load_mfrmr_data("example_operational")
+head(toy)
 }
 \seealso{
 \code{\link[=load_mfrmr_data]{load_mfrmr_data()}}, \link{ej2021_data}

@@ -1,0 +1,20 @@
+Phase,Check,Measured,Required,Maximum,Limit,Pass
+Q121 preflight,IndependentObjective,32,32,8.61973603605293e-09,1e-06,TRUE
+Q121 preflight,IndependentGradient,32,32,1.21249904078232e-07,1e-07,FALSE
+Q121 preflight,GradientStep,32,32,2.40607533896764e-08,1e-07,TRUE
+Q121 preflight,ReferenceGradient,32,32,9.97727589435726e-05,1e-04,TRUE
+Q121 preflight,ScoringOrder,32,32,7.52458351183094e-09,1e-06,TRUE
+Q121 preflight,ReferenceMoment,32,32,7.524577294582e-09,1e-06,TRUE
+Q121 preflight,ReferenceTail,32,32,1.88225476871473e-12,1e-06,TRUE
+Q121 preflight,DirectLookup,32,32,2.66453525910038e-15,1e-08,TRUE
+Q241 preflight,IndependentObjective,32,32,4.54747350886464e-13,1e-06,TRUE
+Q241 preflight,IndependentGradient,32,32,1.58923398885236e-08,1e-07,TRUE
+Q241 preflight,GradientStep,32,32,1.93356441968717e-08,1e-07,TRUE
+Q241 preflight,ReferenceGradient,32,32,9.97689042492311e-05,1e-04,TRUE
+Q241 preflight,ScoringOrder,32,32,1.06581410364015e-14,1e-06,TRUE
+Q241 preflight,ReferenceMoment,32,32,9.47852907273727e-14,1e-06,TRUE
+Q241 preflight,ReferenceTail,32,32,1.88228252429035e-12,1e-06,TRUE
+Q241 preflight,DirectLookup,32,32,1.99840144432528e-15,1e-08,TRUE
+Main Q241,ObjectiveChange,4096,4096,3.0604496714659e-10,1e-06,TRUE
+Main Q241,Gradient241,4096,4096,9.99239644106415e-05,0.0001,TRUE
+Main Q241,Gradient321,4096,4096,9.99239643814874e-05,0.0001,TRUE

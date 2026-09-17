@@ -494,8 +494,11 @@ test_that("public extraction requires user-reviewed highest-grid fit", {
   )
 })
 
-test_that("installed public surfaces share the bounded calibration wording", {
+test_that("public documentation surfaces share the bounded calibration wording", {
   root <- normalizePath(find.package("mfrmr"), winslash = "/")
+  readme <- file.path(root, "README.md")
+  if (!file.exists(readme)) readme <- testthat::test_path("..", "..", "README.md")
+  skip_if_not(file.exists(readme), "README requires the source tree on this R installation.")
   article_candidates <- file.path(
     root,
     c(
@@ -504,14 +507,14 @@ test_that("installed public surfaces share the bounded calibration wording", {
     )
   )
   article <- article_candidates[file.exists(article_candidates)][1L]
-  expect_true(file.exists(file.path(root, "README.md")))
+  expect_true(file.exists(readme))
   expect_true(file.exists(file.path(root, "NEWS.md")))
   expect_length(article, 1L)
   expect_true(!is.na(article) && file.exists(article))
 
   text <- list(
     README = paste(
-      readLines(file.path(root, "README.md"), warn = FALSE), collapse = "\n"
+      readLines(readme, warn = FALSE), collapse = "\n"
     ),
     NEWS = paste(
       readLines(file.path(root, "NEWS.md"), warn = FALSE), collapse = "\n"
@@ -565,7 +568,7 @@ test_that("installed public API scores a saved artifact in a fresh process", {
     "library(mfrmr)",
     "calibration <- load_mfrm_calibration(args[2L])",
     "rows <- readRDS(args[3L])",
-    "result <- score_mfrm_calibration(calibration, rows)",
+    "result <- score_mfrm_calibration(calibration, rows, adaptive_quad_points = c(15L, 31L))",
     "saveRDS(result, args[4L], version = 3)"
   )
   expect_false(any(grepl(":::|mfrmr_", script)))
@@ -590,4 +593,6 @@ test_that("installed public API scores a saved artifact in a fresh process", {
   expect_s3_class(result, "mfrm_calibration_score")
   expect_identical(result$settings$calibration_id, "public-api-rsm")
   expect_identical(result$settings$engine_identity, "artifact_coordinates_v1")
+  expect_equal(nrow(result$quadrature_review), nrow(result$estimates) * 2L)
+  expect_true(all(result$quadrature_review$Status == "computed"))
 })

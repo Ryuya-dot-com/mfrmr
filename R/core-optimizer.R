@@ -273,6 +273,9 @@ mfrm_optimizer_stage_is_better <- function(candidate, current) {
 # call pattern makes that reuse worthwhile.
 make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
                                        reuse_probability_workspace = TRUE) {
+  adaptive_evaluate <- if (identical(method, "MML") && mfrmr_adaptive_integration(config)) {
+    mfrmr_make_adaptive_mml_evaluator(idx, config, sizes, length(quad$nodes))
+  } else NULL
   cached_par <- NULL
   cached_value <- NULL
   cached_gradient <- NULL
@@ -297,6 +300,14 @@ make_mfrm_direct_evaluator <- function(method, cache, idx, config, sizes, quad,
     logprob_bundle <<- NULL
     posterior_bundle <<- NULL
     shared_evaluations <<- shared_evaluations + 1L
+
+    if (!is.null(adaptive_evaluate)) {
+      result <- adaptive_evaluate(par)
+      cached_value <<- result$value
+      cached_gradient <<- result$gradient
+      gradient_builds <<- gradient_builds + 1L
+      return(invisible(NULL))
+    }
 
     if (identical(method, "JML")) {
       if (isTRUE(reuse_probability_workspace)) {
@@ -819,7 +830,7 @@ mfrm_checkpoint_identity <- function(idx, config, sizes, quad_points,
     population_identity =
       mfrm_checkpoint_fingerprint(config$population_spec %||% list()),
     quadrature_identity = list(
-      rule = "gauss_hermite_standard_normal_golub_welsch_v1",
+      rule = "gauss_hermite_standard_normal_recurrence_v2",
       order = as.integer(quad_points),
       nodes = as.numeric(quadrature$nodes),
       weights = as.numeric(quadrature$weights)
@@ -1334,6 +1345,11 @@ run_mfrm_optimization <- function(start,
                                   suppress_convergence_warning = FALSE,
                                   checkpoint = NULL) {
   requested_engine <- normalize_mml_engine(config$estimation_control$mml_engine_requested %||% "direct")
+  if (mfrmr_adaptive_integration(config) &&
+      (!identical(method, "MML") || !identical(requested_engine, "direct") || !is.null(checkpoint))) {
+    stop("`mml_integration = 'adaptive'` requires MML with the direct engine and no checkpoint.",
+         call. = FALSE)
+  }
   engine_plan <- resolve_mml_engine_plan(
     method = method,
     model = config$model,

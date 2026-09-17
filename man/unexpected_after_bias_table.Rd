@@ -25,7 +25,9 @@ unexpected_after_bias_table(
 
 \item{prob_max}{Maximum observed-category probability cutoff.}
 
-\item{top_n}{Maximum number of rows to return.}
+\item{top_n}{Maximum number of ranked rows to return in \code{table}.
+Summary counts, percentages, and before/after comparisons use all flagged
+observations, regardless of this display limit.}
 
 \item{rule}{Flagging rule: \code{"either"} or \code{"both"}.}
 }

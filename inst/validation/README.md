@@ -17,6 +17,45 @@ maintainer sequencing, local-tool identities, candidate gates, and validation
 operations. Other files in this directory may add evidence or preserve history
 but do not broaden current API scope.
 
+Start with the [integrated claim/evidence ledger, 2026-09-14](claim-reconciliation-0.2.4.md)
+for the latest assessment of all 18 public claim groups. It reconciles 373
+current namespace declarations, separates repaired defects from remaining
+statistical questions, and records the bounded current-source checks and
+release consequences. Earlier records below retain their original outcomes
+and source identities; they are not blanket current-source approvals.
+
+The [current-source FairZ review](fairz-current-review-0.2.4.md) repairs mixed
+fit/diagnostic input in fair-average tables and plots, corrects their help
+column descriptions, and reruns the frozen 40-dataset preflight. Reporting
+round trips retain diagnostic-only intervals. The subsequent
+[confirmation](fairz-confirmation-status-0.2.4.md) is paused at the user's
+request with 450/20,000 datasets checkpointed; it has no statistical disposition.
+
+The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
+compares five new starts with each of four saved adaptive-Q61 solutions and
+checks specified slope/variance directions against continuous integration.
+It also fixes convergence prose that incorrectly called numerical convergence
+unknown when formal inference still required review. Statistical eligibility
+and global-optimization claims are unchanged.
+
+The [GPCM continuous-integration follow-up](gpcm-continuous-integration-0.2.4.md)
+checks 120 fixed-point/rule combinations and 24 public refits. All four
+adaptive-Q61 refits meet the recorded continuous-reference tolerances, while
+even adaptive Q301 is insufficient for two earlier wide-slope points.
+Convergence, integration accuracy and statistical readiness remain distinct.
+
+The [paired-owner GPCM kernel audit, 2026-09-15](gpcm-paired-owner-kernel-0.2.4.md)
+adds 48 finite-point JML/MML checks with both slope owners, five categories,
+sparse observations and unequal weights. Numerical kernel agreement is
+supported; substantial fixed-quadrature order sensitivity remains. This is
+not a recovery, interval-coverage or release-acceptance result.
+
+The subsequent [fit/diagnostics identity repair](estimator-output-identity-repair-0.2.4.md)
+closes a reporting defect found in the GPCM/JML follow-up: MML diagnostics
+could give a JML lightweight summary a positive formal-inference decision.
+Shared checks now reject mixed or stale diagnostics across the documented
+summary, precision, APA, fit-plot and fit-level export routes.
+
 The [plot UX review](plot-ux-record-0.2.4.md) records the graphics-state repair,
 visual examples, and focused regression checks completed before resuming
 long simulation work.

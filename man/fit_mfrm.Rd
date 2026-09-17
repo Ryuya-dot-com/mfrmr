@@ -44,7 +44,8 @@ fit_mfrm(
   shrink_person = FALSE,
   attach_diagnostics = FALSE,
   checkpoint = NULL,
-  gpcm_mml_identification = c("free_population", "fixed_standard_normal")
+  gpcm_mml_identification = c("free_population", "fixed_standard_normal"),
+  mml_integration = c("fixed", "adaptive")
 )
 }
 \arguments{
@@ -184,6 +185,8 @@ that numerical integration is adequate. \cr
 no single order is adequate for every response pattern.
 }
 Quadrature adequacy depends on the fitted distribution and score support.
+Orders whose weights cannot all be represented as positive finite doubles
+produce an error; increasing the order indefinitely is not supported.
 Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare the same model and data on
 user-selected grids before portable calibration and whenever numerical
 movement could affect a consequential result. The helper reports
@@ -321,6 +324,21 @@ is then a substantive relative-discrimination restriction rather than an
 identification requirement. This argument does not change JML, whose
 geometric-mean-one slope constraint is required to identify its freely
 estimated person coordinates.}
+
+\item{mml_integration}{Numerical integration for MML: \code{"fixed"} (default)
+uses a common Gauss-Hermite grid relative to each person's normal prior;
+\code{"adaptive"} centers and scales the grid at each person's posterior mode
+on every objective evaluation. Adaptive fitting uses the gradient of the
+moving-node objective, including changes in its center and width. It
+requires \code{method = "MML"}, \code{mml_engine = "direct"}, and no checkpoint.
+The choice also controls the fitted likelihood, Hessian, posterior person
+summaries, fitted-object scoring, and supported portable calibration.
+\code{quad_points} remains the order; neither integration mode guarantees
+adequate accuracy at a particular order. Compare orders before reporting.
+Adaptive fits with nonlinear coordinates have no completed probability-
+map identification audit; GPCM also lacks an adaptive slope-boundary audit.
+These fits remain review-only for formal parameter inference. ConQuest exports
+currently require fixed integration.}
 }
 \value{
 An object of class \code{mfrm_fit} (named list) with:
@@ -410,11 +428,22 @@ from \code{\link[stats:optim]{stats::optim()}}; EM additionally records engine-s
 }
 }
 \description{
-This is the package entry point. It wraps \code{mfrm_estimate()} and defaults to
-\code{method = "MML"}. Any number of facet columns can be supplied via \code{facets}.
+Estimate person abilities while accounting for rater severity and other
+influences on scores, such as criterion difficulty. A facet is one such
+source of variation; its levels are the individual raters or criteria.
+Each data row is one rating. Supply its column names with \code{person},
+\code{facets}, and \code{score}, as in the complete example below.
+The default is \code{method = "MML"} (marginal maximum likelihood).
 The \code{RSM} / \code{PCM} branches are the package's many-facet Rasch-family
 reference route; the bounded \code{GPCM} branch is available where explicitly
 documented.
+In the example, \code{toy} stores the data and \code{fit} stores the fitted model.
+Quoted column names such as \code{"Person"} must match the data, including case.
+For your own CSV, see the "Use your own CSV" section of
+\code{vignette("mfrmr-workflow", package = "mfrmr")}. If the vignette is not
+installed, \link{mfrmr_workflow_methods} and \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} explain the
+input checks. Pass the reviewed rating data frame to \code{data}, not the object
+returned by \code{describe_mfrm_data()}.
 }
 \details{
 Data must be in \strong{long format} (one row per observed rating event).
@@ -808,6 +837,15 @@ reporting results.
 conditional-normal latent population model, not as a post hoc regression
 on EAP or MLE scores.
 }
+
+For an intercept-only model, \code{population_formula = ~ 1} estimates a single
+population mean and variance. Training still requires a one-row-per-person
+ID table in \code{person_data}. Adjusting these two moments retains a normal
+population shape; it does not learn skewness or establish that the training
+population represents the people who will receive scores. New-Person
+intervals condition on the estimated calibration and population parameters
+and exclude uncertainty from estimating them. Current population-model
+scoring remains a review workflow; see \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 }
 
 \section{Latent-regression standard-error caveat}{
@@ -1109,27 +1147,35 @@ problems in multivariate analysis}. Psychometrika, 52(3), 333-343.
 }
 
 \examples{
-# Each quoted role below is a column name in the long-format data.
-ratings <- load_mfrmr_data("example_operational")
-names(ratings)
+\donttest{
+# Load the package
+library(mfrmr)
 
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30,
-  reltol = 1e-11
+  method = "MML",
+  model = "RSM"
 )
-fit_review <- summary(fit, profile = "fit", detail = "brief")
-fit_review$decision
-fit_review$overview[, c("Model", "Method", "FitReadiness", "InferenceReady")]
 
-# This seven-point grid keeps the example short. Use the default 31-point
-# grid, and a denser sensitivity check when needed, for substantive work.
-plot(fit, type = "wright", draw = FALSE)$name
+# Plot the results (Wright map)
+plot(fit)
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},

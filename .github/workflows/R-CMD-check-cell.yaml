@@ -63,6 +63,25 @@ jobs:
             . validation-results/release-check
         shell: bash
 
+      - name: International input and moved-folder replay
+        run: |
+          check_root <- "validation-results/release-check"
+          checked_library <- file.path(check_root, "check", "mfrmr.Rcheck")
+          .libPaths(c(normalizePath(checked_library), .libPaths()))
+          library(mfrmr)
+          source("inst/validation/user-data-stress-0.2.4.R")
+          output <- file.path(check_root, "portability")
+          inputs <- run_user_data_stress(
+            file.path(output, "inputs"), seeds = 20260913L,
+            only = c("nonstandard_columns", "unicode_long_labels")
+          )
+          archives <- run_user_data_archive_stress(
+            file.path(output, "archives"), library = checked_library
+          )
+          stopifnot(nrow(inputs) == 2L, all(inputs$Passed),
+                    nrow(archives) == 8L, all(archives$Passed))
+        shell: Rscript {0}
+
       - name: Upload check results
         if: always()
         uses: actions/upload-artifact@v4
@@ -71,6 +90,7 @@ jobs:
           path: |
             validation-results/release-check/check
             validation-results/release-check/release-check-receipt.rds
+            validation-results/release-check/portability
           if-no-files-found: ignore
 
       - name: Repository validation review

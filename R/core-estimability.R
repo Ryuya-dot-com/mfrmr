@@ -1977,6 +1977,12 @@ audit_mfrm_mml_observed_pattern_score <- function(
   if (!identical(config$method, "MML") ||
       length(nonlinear_blocks) == 0L) return(base)
 
+  if (mfrmr_adaptive_integration(config)) {
+    base$status <- "not_evaluated_adaptive_quadrature"
+    base$detail <- "The fixed-grid response-pattern probability audit has not been validated for adaptive integration."
+    return(base)
+  }
+
   if (person_rows <= 0L || free_dimension <= 0L ||
       person_rows > as.integer(max_persons) ||
       free_dimension > as.integer(max_free_dimension) ||
@@ -2301,6 +2307,12 @@ audit_mfrm_mml_all_pattern_information <- function(
   if (!identical(config$method, "MML") ||
       length(nonlinear_blocks) == 0L) return(base)
 
+  if (mfrmr_adaptive_integration(config)) {
+    base$status <- "not_evaluated_adaptive_quadrature"
+    base$detail <- "The fixed-grid all-pattern probability identity has not been validated for adaptive integration."
+    return(base)
+  }
+
   if (!isTRUE(unit_weights)) {
     base$status <- "not_evaluated_nonunit_row_weights"
     base$detail <- paste(
@@ -2548,7 +2560,9 @@ mfrmr_classify_nonlinear_local_estimability <- function(audit, config) {
     probability_model_scope = if (identical(method, "JML")) {
       "conditional_response_given_retained_person_coordinates"
     } else if (identical(method, "MML")) {
-      "implemented_fixed_quadrature_marginal_model"
+      if (mfrmr_adaptive_integration(config)) {
+        "implemented_adaptive_quadrature_objective"
+      } else "implemented_fixed_quadrature_marginal_model"
     } else {
       "unsupported_estimator"
     },
@@ -2579,6 +2593,16 @@ mfrmr_classify_nonlinear_local_estimability <- function(audit, config) {
     )
   )
   if (length(nonlinear_blocks) == 0L) return(base)
+
+  if (identical(method, "MML") && mfrmr_adaptive_integration(config)) {
+    base$reason_codes <- "adaptive_quadrature_probability_map_not_validated"
+    base$detail <- paste(
+      "The fixed-grid nonlinear probability-map certificate has not been",
+      "validated for pattern-dependent adaptive nodes. Likelihood and",
+      "gradient agreement do not establish this identification certificate."
+    )
+    return(base)
+  }
 
   classify_source <- function(source, basis, rank_field, nullity_field,
                               derivative_status, full_rank_reason,

@@ -10,7 +10,8 @@ mml_quadrature_sensitivity(
   data,
   quad_points = c(31L, 41L),
   theta_range = c(-4, 4),
-  theta_points = 161L
+  theta_points = 161L,
+  adaptive_quad_points = NULL
 )
 
 gpcm_mml_quadrature_sensitivity(
@@ -18,7 +19,8 @@ gpcm_mml_quadrature_sensitivity(
   data,
   quad_points = c(31L, 41L),
   theta_range = c(-4, 4),
-  theta_points = 161L
+  theta_points = 161L,
+  adaptive_quad_points = NULL
 )
 }
 \arguments{
@@ -31,12 +33,20 @@ differ, but changed observations fail closed.}
 
 \item{quad_points}{At least two distinct positive integers, including the
 quadrature count stored on \code{fit}. The default \code{c(31, 41)} is a comparison
-starting point, not a claim that either grid is adequate for the data.}
+starting point, not a claim that either grid is adequate for the data.
+Refits retain the source fit's fixed or adaptive integration mode.}
 
 \item{theta_range}{Two finite values defining the common ability grid used
 for fitted category-probability comparison.}
 
 \item{theta_points}{Number of common-grid ability points; at least 21.}
+
+\item{adaptive_quad_points}{Optional vector of at least two distinct integer
+orders >= 3, for example \code{c(31, 61)}. Adds a per-Person
+\code{quadrature_review} at each fit's fixed parameters, comparing a fixed-prior
+grid with mode/curvature-adapted grids. This separates integration error
+from parameter changes during refitting. Inspect changes between adaptive
+orders too; neither grid is certified exact.}
 }
 \value{
 An object of class \code{mfrm_quadrature_sensitivity} containing:
@@ -44,6 +54,10 @@ An object of class \code{mfrm_quadrature_sensitivity} containing:
 \item \code{summary}: one comparison row per quadrature grid relative to the original
 fit, including likelihood, measurement-coordinate, probability, EAP, and
 posterior-SD changes;
+\item \code{quadrature_review}: when requested, unrounded per-Person fixed/adaptive
+log-marginal, EAP and posterior-SD differences, adaptive-order changes,
+mode/curvature and computation status. Unavailable rows retain their reason.
+\code{summary()} also supplies a compact \code{quadrature_overview};
 \item \code{runs}: likelihood, gradient, curvature, population-scale, and readiness
 details for each fit;
 \item \code{slopes}: relative-slope estimates and raw diagnostic SEs;
@@ -89,7 +103,7 @@ fit <- fit_mfrm(
   quad_points = 31
 )
 sensitivity <- mml_quadrature_sensitivity(
-  fit, toy, quad_points = c(31, 41)
+  fit, toy, quad_points = c(31, 41), adaptive_quad_points = c(31, 61)
 )
 summary(sensitivity)
 # Preserve small numerical differences when preparing the sensitivity table.

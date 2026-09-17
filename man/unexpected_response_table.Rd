@@ -22,7 +22,8 @@ unexpected_response_table(
 
 \item{prob_max}{Maximum observed-category probability cutoff.}
 
-\item{top_n}{Maximum number of rows to return.}
+\item{top_n}{Maximum number of ranked rows to return in \code{table}.
+Summary counts and percentages always use all flagged observations.}
 
 \item{rule}{Flagging rule: \code{"either"} (default) or \code{"both"}.}
 }
@@ -51,7 +52,8 @@ severity score for sorting.
 \section{Interpreting output}{
 
 \itemize{
-\item \code{summary}: prevalence of unexpected responses under current thresholds.
+\item \code{summary}: prevalence of unexpected responses under current thresholds,
+before limiting the displayed rows with \code{top_n}.
 \item \code{table}: ranked row-level diagnostics for case review.
 \item \code{thresholds}: active cutoffs and flagging rule.
 }
@@ -105,16 +107,24 @@ The \code{summary} data.frame contains:
 
 \examples{
 \donttest{
-toy_full <- load_mfrmr_data("example_core")
-toy_people <- unique(toy_full$Person)[1:12]
-toy <- toy_full[toy_full$Person \%in\% toy_people, , drop = FALSE]
-fit <- suppressWarnings(
-  fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
-summary(t4)
-p_t4 <- plot(t4, draw = FALSE)
-p_t4$data$plot
+diagnostics <- diagnose_mfrm(fit)
+unexpected <- unexpected_response_table(
+  fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
+)
+unexpected$summary # Counts and percentages for all flagged observations
+unexpected$table   # Only the five highest-ranked cases
+plot(unexpected)
+# The rule is exploratory: inspect the scoring context before changing a rating
 }
 }
 \seealso{

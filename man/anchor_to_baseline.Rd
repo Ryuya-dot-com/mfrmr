@@ -19,6 +19,7 @@ anchor_to_baseline(
   model = NULL,
   method = NULL,
   anchor_policy = "warn",
+  mml_integration = NULL,
   ...
 )
 
@@ -54,6 +55,9 @@ the same persons are intentionally constrained across runs.}
 
 \item{anchor_policy}{How to handle anchor issues: \code{"warn"}, \code{"error"},
 \code{"silent"}.}
+
+\item{mml_integration}{MML integration mode passed to \code{\link[=fit_mfrm]{fit_mfrm()}}. \code{NULL}
+inherits the baseline fit's mode for MML; JML uses \code{"fixed"}.}
 
 \item{...}{For \code{anchor_to_baseline()}, additional arguments passed to
 \code{\link[=fit_mfrm]{fit_mfrm()}}. Ignored by the S3 print and summary methods on this page.}

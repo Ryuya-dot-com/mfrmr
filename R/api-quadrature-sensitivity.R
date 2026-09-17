@@ -159,6 +159,7 @@ mfrmr_gqs_refit_arguments <- function(fit, data, nodes) {
       replay$min_obs_per_category %||% 10
     ),
     quad_points = as.integer(nodes),
+    mml_integration = as.character(control$mml_integration %||% "fixed"),
     maxit = as.integer(replay$maxit %||% control$maxit %||% 400L),
     reltol = as.numeric(replay$reltol %||% control$reltol %||% 1e-9),
     optimizer = as.character(
@@ -659,9 +660,16 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' @param quad_points At least two distinct positive integers, including the
 #'   quadrature count stored on `fit`. The default `c(31, 41)` is a comparison
 #'   starting point, not a claim that either grid is adequate for the data.
+#'   Refits retain the source fit's fixed or adaptive integration mode.
 #' @param theta_range Two finite values defining the common ability grid used
 #'   for fitted category-probability comparison.
 #' @param theta_points Number of common-grid ability points; at least 21.
+#' @param adaptive_quad_points Optional vector of at least two distinct integer
+#'   orders >= 3, for example `c(31, 61)`. Adds a per-Person
+#'   `quadrature_review` at each fit's fixed parameters, comparing a fixed-prior
+#'   grid with mode/curvature-adapted grids. This separates integration error
+#'   from parameter changes during refitting. Inspect changes between adaptive
+#'   orders too; neither grid is certified exact.
 #'
 #' @details
 #' This is an explicit refit diagnostic: neither [summary.mfrm_fit()] nor
@@ -685,6 +693,10 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #' - `summary`: one comparison row per quadrature grid relative to the original
 #'   fit, including likelihood, measurement-coordinate, probability, EAP, and
 #'   posterior-SD changes;
+#' - `quadrature_review`: when requested, unrounded per-Person fixed/adaptive
+#'   log-marginal, EAP and posterior-SD differences, adaptive-order changes,
+#'   mode/curvature and computation status. Unavailable rows retain their reason.
+#'   `summary()` also supplies a compact `quadrature_overview`;
 #' - `runs`: likelihood, gradient, curvature, population-scale, and readiness
 #'   details for each fit;
 #' - `slopes`: relative-slope estimates and raw diagnostic SEs;
@@ -706,7 +718,7 @@ mfrmr_gqs_condition_rows <- function(nodes, capture) {
 #'   quad_points = 31
 #' )
 #' sensitivity <- mml_quadrature_sensitivity(
-#'   fit, toy, quad_points = c(31, 41)
+#'   fit, toy, quad_points = c(31, 41), adaptive_quad_points = c(31, 61)
 #' )
 #' summary(sensitivity)
 #' # Preserve small numerical differences when preparing the sensitivity table.
@@ -718,15 +730,19 @@ mml_quadrature_sensitivity <- function(
     data,
     quad_points = c(31L, 41L),
     theta_range = c(-4, 4),
-    theta_points = 161L) {
+    theta_points = 161L,
+    adaptive_quad_points = NULL) {
   mfrmr_gqs_run(
     fit, data, quad_points, theta_range, theta_points,
-    allowed_models = c("RSM", "PCM", "GPCM")
+    allowed_models = c("RSM", "PCM", "GPCM"),
+    adaptive_quad_points = adaptive_quad_points
   )
 }
 
 mfrmr_gqs_run <- function(
-    fit, data, quad_points, theta_range, theta_points, allowed_models) {
+    fit, data, quad_points, theta_range, theta_points, allowed_models,
+    adaptive_quad_points = NULL) {
+  adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
   contract <- mfrmr_gqs_validate(
     fit, data, quad_points, theta_range, theta_points, allowed_models
   )
@@ -851,6 +867,7 @@ mfrmr_gqs_run <- function(
       model = contract$model,
       reference_nodes = contract$reference_nodes,
       quad_points = contract$quad_points,
+      mml_integration = fit$config$estimation_control$mml_integration %||% "fixed",
       theta_range = contract$theta_range,
       theta_points = contract$theta_points,
       response_contract = "same_semantically_canonical_prepared_rows",
@@ -877,6 +894,22 @@ mfrmr_gqs_run <- function(
       )
     )
   )
+  if (!is.null(adaptive_quad_points)) {
+    out$quadrature_review <- do.call(rbind, lapply(fits, function(candidate) {
+      config <- candidate$config
+      idx <- build_indices(candidate$prep, config$step_facet, config$slope_facet,
+                           config$interaction_specs)
+      params <- expand_params(candidate$opt$par, build_param_sizes(config), config)
+      nodes <- as.integer(config$estimation_control$quad_points)
+      mfrmr_adaptive_quadrature_review(
+        idx, config, params, gauss_hermite_normal(nodes),
+        candidate$prep$levels$Person, adaptive_quad_points
+      )
+    }))
+    rownames(out$quadrature_review) <- NULL
+    out$settings$adaptive_quad_points <- adaptive_quad_points
+    out$notes <- c(out$notes, mfrmr_adaptive_quadrature_note())
+  }
   class(out) <- c("mfrm_quadrature_sensitivity", "list")
   out
 }
@@ -888,10 +921,11 @@ gpcm_mml_quadrature_sensitivity <- function(
     data,
     quad_points = c(31L, 41L),
     theta_range = c(-4, 4),
-    theta_points = 161L) {
+    theta_points = 161L,
+    adaptive_quad_points = NULL) {
   mfrmr_gqs_run(
     fit, data, quad_points, theta_range, theta_points,
-    allowed_models = "GPCM"
+    allowed_models = "GPCM", adaptive_quad_points = adaptive_quad_points
   )
 }
 
@@ -949,6 +983,10 @@ summary.mfrm_quadrature_sensitivity <- function(object, ...) {
     conditions = as.data.frame(object$conditions, stringsAsFactors = FALSE),
     notes = object$notes
   )
+  if (!is.null(object$quadrature_review)) {
+    out$quadrature_review <- object$quadrature_review
+    out$quadrature_overview <- mfrmr_adaptive_quadrature_overview(object$quadrature_review)
+  }
   class(out) <- c("summary.mfrm_quadrature_sensitivity", "list")
   out
 }
@@ -961,6 +999,11 @@ print.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
   numeric <- vapply(display, is.numeric, logical(1))
   display[numeric] <- lapply(display[numeric], round, digits = digits)
   print(display, row.names = FALSE)
+  if (!is.null(x$quadrature_review)) {
+    cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
+    print(mfrmr_adaptive_quadrature_overview(x$quadrature_review), row.names = FALSE)
+    cat("Inspect $quadrature_review for adaptive-order changes and unavailable rows.\n")
+  }
   cat(
     "No automatic stability classification or readiness change is applied.\n"
   )
@@ -980,5 +1023,10 @@ print.summary.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
   numeric <- vapply(comparison, is.numeric, logical(1))
   comparison[numeric] <- lapply(comparison[numeric], round, digits = digits)
   print(comparison, row.names = FALSE)
+  if (!is.null(x$quadrature_overview)) {
+    cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
+    print(x$quadrature_overview, row.names = FALSE)
+    cat("Inspect $quadrature_review for adaptive-order changes and unavailable rows.\n")
+  }
   invisible(x)
 }

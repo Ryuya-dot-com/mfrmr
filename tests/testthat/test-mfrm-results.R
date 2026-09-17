@@ -1,3 +1,27 @@
+test_that("CSV export omits undefined tables and preserves defined empty tables", {
+  res <- structure(list(tables = list(
+    undefined = data.frame(),
+    defined = data.frame(Level = character(), Estimate = numeric()),
+    observed = data.frame(Level = "R01", Estimate = 0.2)
+  )), class = "mfrm_results")
+  out <- tempfile("mfrmr-empty-table-")
+  on.exit(unlink(out, recursive = TRUE), add = TRUE)
+  exported <- export_mfrm_results(res, output_dir = out,
+                                  include = c("tables", "manifest"),
+                                  acknowledge_sensitive = TRUE)
+  expect_false(any(exported$written_files$Component == "table_undefined"))
+  for (name in c("defined", "observed")) {
+    path <- exported$written_files$Path[exported$written_files$Component == paste0("table_", name)]
+    expect_length(path, 1L)
+    csv <- read.csv(path)
+    expect_identical(names(csv), names(res$tables[[name]]))
+    expect_equal(nrow(csv), nrow(res$tables[[name]]))
+  }
+  manifest <- read.csv(exported$written_files$Path[exported$written_files$Component == "written_files"])
+  expect_false(any(manifest$Component == "table_undefined"))
+  expect_true(all(file.exists(manifest$Path)))
+})
+
 test_that("mfrm_results only soft-fails typed availability conditions", {
   unavailable <- mfrmr:::mfrm_results_safe(
     mfrmr:::stop_mfrm_results_unavailable("Expected capability boundary.")

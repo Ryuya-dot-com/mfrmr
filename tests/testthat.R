@@ -11,11 +11,15 @@ is_cran_check <- local({
 })
 
 cran_light_tests <- c(
+  "adaptive-fitting",
+  "adaptive-quadrature-review",
   "cran-smoke",
   "compatibility-aliases",
   "compiled-header-contract",
   "data-and-citation",
   "example-datasets",
+  "gauss-hermite-weights",
+  "posterior-intervals",
   "mml-cpp11-backend",
   "missing-codes-integration",
   "bundle-summary-privacy",

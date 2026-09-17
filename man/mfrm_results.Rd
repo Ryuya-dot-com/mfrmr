@@ -84,6 +84,11 @@ while \code{InterpretationStatus} marks them as review-only. The returned object
 also carries
 \code{next_actions} and \code{input$reproducible_code} so users can move from the
 comprehensive first screen to explicit reporting or replay code.
+The examples call this object \code{res} to distinguish it from
+\code{results <- summary(fit)} in the quick start. Use \code{mfrm_report(res)} and
+\code{export_mfrm_results(res)} for reporting and export; those functions need
+the comprehensive results object. If diagnostics were already computed,
+pass them with \code{diagnostics = diagnostics} to reuse them.
 }
 \section{Include presets}{
 
@@ -202,26 +207,28 @@ interactive session.
 
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-results <- mfrm_results(fit)
 
-results_review <- summary(results, view = "brief")
-results_review$decision
-results_review$next_actions
-plot(results, type = "wright", draw = FALSE)$name
+# Build the fuller results object, including diagnostics
+res <- mfrm_results(fit)
+review <- summary(res)
+review$decision
+review$next_actions
+
+# Draw the Wright map
+plot(res)
 }
 }
 \seealso{

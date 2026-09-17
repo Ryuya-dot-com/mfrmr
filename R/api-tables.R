@@ -76,17 +76,27 @@
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' ir <- interrater_agreement_table(fit, rater_facet = "Rater")
-#' # One-row overview: ExactAgreement, ExpectedExactAgreement, MeanCorr,
-#' # RaterSeparation, and RaterReliability are the headline reportable
-#' # statistics.
-#' ir$summary
-#' # Per-pair detail (Rater1 vs Rater2 with Exact, Adjacent, Corr, MAD).
-#' head(ir$pairs)
-#' p_ir <- plot(ir, draw = FALSE)
-#' p_ir$data$plot
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compare ratings of the same person on the same criterion
+#' agreement <- interrater_agreement_table(fit, rater_facet = "Rater")
+#' agreement$summary
+#' agreement$pairs[, c("Rater1", "Rater2", "N", "Exact", "Corr", "MeanDiff")]
+#' # N is the number of matched ratings; Exact is the fraction with identical scores
+#' # MeanDiff = Rater1 minus Rater2: positive means Rater1 assigned higher scores
+#' # These observed-score comparisons are distinct from fitted rater severity
 #' }
 #' @export
 interrater_agreement_table <- function(fit,
@@ -322,7 +332,8 @@ facets_chisq_table <- function(fit,
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param abs_z_min Absolute standardized-residual cutoff.
 #' @param prob_max Maximum observed-category probability cutoff.
-#' @param top_n Maximum number of rows to return.
+#' @param top_n Maximum number of ranked rows to return in `table`.
+#'   Summary counts and percentages always use all flagged observations.
 #' @param rule Flagging rule: `"either"` (default) or `"both"`.
 #'
 #' @details
@@ -335,7 +346,8 @@ facets_chisq_table <- function(fit,
 #' severity score for sorting.
 #'
 #' @section Interpreting output:
-#' - `summary`: prevalence of unexpected responses under current thresholds.
+#' - `summary`: prevalence of unexpected responses under current thresholds,
+#'   before limiting the displayed rows with `top_n`.
 #' - `table`: ranked row-level diagnostics for case review.
 #' - `thresholds`: active cutoffs and flagging rule.
 #'
@@ -386,16 +398,24 @@ facets_chisq_table <- function(fit,
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' toy_full <- load_mfrmr_data("example_core")
-#' toy_people <- unique(toy_full$Person)[1:12]
-#' toy <- toy_full[toy_full$Person %in% toy_people, , drop = FALSE]
-#' fit <- suppressWarnings(
-#'   fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
 #' )
-#' t4 <- unexpected_response_table(fit, abs_z_min = 1.5, prob_max = 0.4, top_n = 5)
-#' summary(t4)
-#' p_t4 <- plot(t4, draw = FALSE)
-#' p_t4$data$plot
+#' diagnostics <- diagnose_mfrm(fit)
+#' unexpected <- unexpected_response_table(
+#'   fit, diagnostics = diagnostics, abs_z_min = 1.5, prob_max = 0.4, top_n = 5
+#' )
+#' unexpected$summary # Counts and percentages for all flagged observations
+#' unexpected$table   # Only the five highest-ranked cases
+#' plot(unexpected)
+#' # The rule is exploratory: inspect the scoring context before changing a rating
 #' }
 #' @export
 unexpected_response_table <- function(fit,
@@ -422,7 +442,6 @@ unexpected_response_table <- function(fit,
     rating_min = fit$prep$rating_min,
     abs_z_min = abs_z_min,
     prob_max = prob_max,
-    top_n = top_n,
     rule = rule
   )
   summary_tbl <- summarize_unexpected_response_table(
@@ -434,7 +453,7 @@ unexpected_response_table <- function(fit,
   )
 
   out <- list(
-    table = tbl,
+    table = utils::head(tbl, max(1L, as.integer(top_n))),
     summary = summary_tbl,
     thresholds = list(
       abs_z_min = abs_z_min,
@@ -448,7 +467,8 @@ unexpected_response_table <- function(fit,
 #' Build an adjusted-score reference table bundle
 #'
 #' @param fit Output from [fit_mfrm()].
-#' @param diagnostics Optional output from [diagnose_mfrm()].
+#' @param diagnostics Optional output from [diagnose_mfrm()] for this `fit`.
+#'   Matching saved diagnostics are reusable; recompute them after refitting.
 #' @param facets Optional subset of facets.
 #' @param totalscore Include all observations for score totals (`TRUE`) or apply
 #'   legacy extreme-row exclusion (`FALSE`).
@@ -505,7 +525,7 @@ unexpected_response_table <- function(fit,
 #' justified.
 #'
 #' Standard errors on the fair-average value itself are opt-in for MML
-#' bounded `GPCM` fits via `fair_se = TRUE`. The original `SE`,
+#' bounded `GPCM` fits via `fair_se = TRUE`. The
 #' `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE` columns
 #' retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
 #' uncertainty is reported under distinct columns such as `Fair(M) S.E.`,
@@ -514,7 +534,8 @@ unexpected_response_table <- function(fit,
 #' @section Interpreting output:
 #' - `stacked`: cross-facet table for global comparison.
 #' - `by_facet`: per-facet formatted tables for reporting.
-#' - `raw_by_facet`: unformatted values for custom analyses/plots.
+#' - `raw_by_facet`: unformatted values for custom analyses/plots; identifiers
+#'   use the column `Level`.
 #' - `settings`: scoring-transformation and filtering options used.
 #'
 #' Observed-vs-fair gaps also reflect person mix and assignment. They are
@@ -526,27 +547,26 @@ unexpected_response_table <- function(fit,
 #' 3. Visualize with [plot_fair_average()].
 #'
 #' @section Output columns:
-#' The `stacked` data.frame contains:
+#' The `stacked` data.frame contains the following columns, selected by
+#' `reference`, `label_style`, and `fair_se`:
 #' \describe{
 #'   \item{Facet}{Facet name for this row.}
-#'   \item{Level}{Element label within the facet.}
+#'   \item{Element}{Element label within the facet.}
 #'   \item{Obsvd Average}{Observed raw-score average.}
 #'   \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
 #'   \item{Fair(Z) Average}{Expected score at a zero reference environment, not a z-score.}
 #'   \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 #'   \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `AdjustedAverage` when `fair_se = TRUE` and available.}
 #'   \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `StandardizedAdjustedAverage` when `fair_se = TRUE` and available.}
-#'   \item{Measure}{Estimated logit measure for this level.}
-#'   \item{SE}{Compatibility alias for the model-based standard error.}
+#'   \item{Measure}{Estimated facet measure, transformed by `umean` and `uscale`.}
 #'   \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for `Model S.E.` and `Real S.E.`.}
 #'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 #' }
 #'
 #' @section Standard-error caveat (read before quoting CIs):
-#' The `SE`, `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
+#' The `Model S.E.`, `ModelBasedSE`, `Real S.E.`, and `FitAdjustedSE`
 #' columns in this table are the **measure-level** standard errors of the
-#' underlying facet element (the same SE that would appear in
-#' `summary(fit)$facets`), rescaled by `uscale` to the reported Measure units.
+#' underlying facet element, rescaled by `abs(uscale)` to the reported Measure units.
 #' Fair scores remain on the fitted internal score scale. They are **not** delta-method standard errors of the fair-average
 #' values themselves. When `fair_se = TRUE`, the distinct `Fair(M) S.E.` /
 #' `Fair(Z) S.E.` columns are computed by
@@ -555,7 +575,7 @@ unexpected_response_table <- function(fit,
 #' \eqn{\mathrm{E}[X \mid \theta_p, j^\star]}. This is a structural
 #' covariance calculation: MML person EAP estimates are conditioned on rather
 #' than included in the Hessian, so person rows receive unavailable fair-average
-#' SEs. **Do not use the measure-level `SE` / `Model S.E.` columns as
+#' SEs. **Do not use the measure-level `ModelBasedSE` / `Model S.E.` columns as
 #' \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
 #' fair-average value.**
 #' `FairCIEligible` is `FALSE` for these diagnostic intervals; numerical
@@ -578,15 +598,30 @@ unexpected_response_table <- function(fit,
 #' @seealso [diagnose_mfrm()], [unexpected_response_table()], [displacement_table()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' t12 <- fair_average_table(fit, udecimals = 2)
-#' t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
-#' summary(t12)
-#' p_t12 <- plot(t12, draw = FALSE)
-#' p_t12$data$plot
-#' }
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
 #'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Compare observed person means with model-based scores on a common reference
+#' fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
+#'                            reference = "mean", label_style = "native")
+#' head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
+#' # FairM uses the mean reference for the other facets; it is in score units
+#' # It is a conditional model prediction, not a guarantee of fairness
+#' }
 #' @section References:
 #' - Linacre, J. M. (1989). *Many-Facet Rasch Measurement*. MESA Press.
 #' - Linacre, J. M. (1994). *Many-facet Rasch Measurement* (2nd ed.).
@@ -636,6 +671,8 @@ fair_average_table <- function(fit,
   if (is.null(diagnostics$obs) || is.null(diagnostics$measures)) {
     stop("`diagnostics` must include both `obs` and `measures`.")
   }
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics,
+                                            helper = "fair_average_table()")
 
   bundle <- calc_fair_average_bundle(
     res = fit,
@@ -969,6 +1006,13 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' - `threshold_table` for adjacent-step gaps and ordering within each
 #'   `StepFacet`.
 #'
+#' For MML step uncertainty, inspect
+#' `diagnostics$parameter_uncertainty$steps` from [diagnose_mfrm()]. A bare fit
+#' supplies point estimates to `threshold_table`; passing separate diagnostics
+#' here does not attach their SEs or intervals to that table. Check `SE_Status`
+#' and, when present, `CIEligible` / `CIUse` before reporting intervals. Retain
+#' `StepFacet` for PCM threshold families. A facet-location SE is not a step SE.
+#'
 #' @section Typical workflow:
 #' 1. Fit model: [fit_mfrm()].
 #' 2. Build diagnostics: [diagnose_mfrm()].
@@ -999,7 +1043,8 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'
 #' The `threshold_table` data.frame contains:
 #' \describe{
-#'   \item{Step}{Step label (e.g., "1-2", "2-3").}
+#'   \item{Step}{Step label (e.g., `Step_1`, `Step_2`). Use `LowerCategory`
+#'     and `UpperCategory` to identify the corresponding score transition.}
 #'   \item{Estimate}{Estimated threshold/step difficulty (logits).}
 #'   \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
 #'     threshold sets.}
@@ -1034,26 +1079,27 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   [mfrmr_visual_diagnostics]
 #' @examples
 #' \donttest{
-#' ratings <- load_mfrmr_data("example_operational")
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
 #' fit <- fit_mfrm(
-#'   data = ratings,
+#'   data = toy,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
-#'   rating_min = 1,
-#'   rating_max = 4,
 #'   method = "MML",
-#'   model = "RSM",
-#'   quad_points = 7,
-#'   maxit = 30,
-#'   reltol = 1e-11
+#'   model = "RSM"
 #' )
-#' t8 <- rating_scale_table(fit)
-#' summary(t8)
-#' summary(t8)$summary
-#' p_t8 <- plot(t8, draw = FALSE)
-#' p_t8$data$plot
 #'
+#' # Review category use and the fitted transitions between scores
+#' categories <- rating_scale_table(fit)
+#' review <- summary(categories)
+#' review$summary
+#'
+#' # Bars show observed counts; the line shows model-expected counts
+#' plot(categories)
 #' }
 #' @section References:
 #' - Andrich, D. (1978). *A rating formulation for ordered response
@@ -1414,7 +1460,9 @@ bias_count_table <- function(bias_results,
 #' @param diagnostics Optional output from [diagnose_mfrm()] for baseline comparison.
 #' @param abs_z_min Absolute standardized-residual cutoff.
 #' @param prob_max Maximum observed-category probability cutoff.
-#' @param top_n Maximum number of rows to return.
+#' @param top_n Maximum number of ranked rows to return in `table`.
+#'   Summary counts, percentages, and before/after comparisons use all flagged
+#'   observations, regardless of this display limit.
 #' @param rule Flagging rule: `"either"` or `"both"`.
 #'
 #' @details
@@ -1511,7 +1559,6 @@ unexpected_after_bias_table <- function(fit,
     rating_min = fit$prep$rating_min,
     abs_z_min = abs_z_min,
     prob_max = prob_max,
-    top_n = top_n,
     rule = rule
   )
   if (nrow(tbl) > 0 && "Row" %in% names(tbl) && "BiasAdjustment" %in% names(obs_adj)) {
@@ -1533,10 +1580,10 @@ unexpected_after_bias_table <- function(fit,
     diagnostics = diagnostics,
     abs_z_min = abs_z_min,
     prob_max = prob_max,
-    top_n = max(top_n, nrow(obs_adj)),
+    top_n = 1,
     rule = rule
   )
-  baseline_n <- if (is.null(baseline$table)) NA_integer_ else nrow(baseline$table)
+  baseline_n <- baseline$summary$UnexpectedN
   after_n <- nrow(tbl)
   summary_tbl <- summary_tbl |>
     mutate(
@@ -1547,7 +1594,7 @@ unexpected_after_bias_table <- function(fit,
     )
 
   out <- list(
-    table = tbl,
+    table = utils::head(tbl, max(1L, as.integer(top_n))),
     summary = summary_tbl,
     thresholds = list(
       abs_z_min = abs_z_min,

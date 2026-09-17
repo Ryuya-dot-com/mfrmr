@@ -200,6 +200,8 @@ mfrmr_calibration_score_overview <- function(x) {
 #' @return `print()` returns its input invisibly. `summary()` returns a
 #'   `summary.mfrm_calibration_score` containing
 #'   `overview`, `estimates`, `review`, `row_review`, `settings`, and `notes`.
+#'   When adaptive integration was requested and scored rows exist, it also
+#'   retains unrounded `quadrature_review` and a compact `quadrature_overview`.
 #'   `plot()` returns an `mfrm_plot_data` with the selected plotting table,
 #'   selection accounting, unplotted Person dispositions, interpretation
 #'   guidance, and plotting settings.
@@ -303,6 +305,10 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
     notes = object$notes %||% character(0),
     digits = digits
   )
+  if (!is.null(object$quadrature_review)) {
+    out$quadrature_review <- object$quadrature_review
+    out$quadrature_overview <- mfrmr_adaptive_quadrature_overview(object$quadrature_review)
+  }
   class(out) <- c("summary.mfrm_calibration_score", "list")
   out
 }
@@ -349,6 +355,10 @@ print.summary.mfrm_calibration_score <- function(x, ...) {
   mfrmr_validate_calibration_score_summary(x)
   overview <- x$overview[1L, , drop = FALSE]
   cat("mfrmr Portable Calibration Score Summary\n")
+  if (!is.null(x$quadrature_overview)) {
+    cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
+    print(x$quadrature_overview, row.names = FALSE)
+  }
   print_wrapped_line(paste0("Calibration: ", overview$CalibrationId))
   print_wrapped_line(
     paste0("Model / estimator: ", overview$Model, " / ", overview$Estimator)

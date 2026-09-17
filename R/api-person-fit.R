@@ -76,10 +76,10 @@
 #'     explicit caveat.}
 #' }
 #'
-#' Under the conditional-independence assumption of the MFRM, `lz` is
-#' asymptotically standard normal. Practical reporting thresholds:
-#' |lz| > 1.96 flags a person at the 5% level; |lz| > 2.58 at the
-#' 1% level. When
+#' The `5pct` and `1pct` flag names refer to standard-normal reference cutoffs:
+#' |lz| > 1.96 and |lz| > 2.58. Treat them as screening thresholds, not a
+#' guarantee of those false-positive rates for fitted person scores.
+#' Read `ReportCaveat` and `lz_star_status` with every flagged result. When
 #' `lz_star_status == "computed_jml_conditional_calibration"`, `lz_star`
 #' applies Snijders' estimated-ability correction for JML person estimates,
 #' conditional on the fitted non-person parameters. This does not propagate
@@ -118,19 +118,32 @@
 #' @seealso [diagnose_mfrm()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none",
-#'                       diagnostic_mode = "legacy")
-#' pf <- compute_person_fit_indices(diag, fit = fit)
-#' head(pf)
-#' summary(pf)
-#' # Look for: |lz| > 1.96 (5% level) flags a person whose response
-#' #   pattern is statistically inconsistent with the model; > 2.58 is
-#' #   a 1% flag. lz_star is populated for JML/fixed-effect person
-#' #   estimates and left NA for MML/EAP estimates. Use ReportIndex /
-#' #   ReviewStatus for a compact report-ready reading.
+#' # Load the package and example ratings
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # Fit the model
+#' fit <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # Compute diagnostics once for the following checks
+#' diagnostics <- diagnose_mfrm(fit)
+#'
+#' # Screen for unusual person response patterns
+#' person_fit <- compute_person_fit_indices(diagnostics, fit = fit)
+#' head(person_fit[, c("Person", "N", "ReportIndex", "ReportValue", "ReviewStatus")])
+#'
+#' # Inspect flagged persons and the limitations of their reported index
+#' subset(person_fit, ReportFlag,
+#'        c("Person", "ReportValue", "ReviewReason", "ReportCaveat"))
+#' # With MML/EAP scores, lz_star is unavailable; lz is an uncorrected screening index
+#' # A flag alone does not establish invalid responses or justify excluding a person
 #' }
 #' @export
 compute_person_fit_indices <- function(diagnostics, fit = NULL) {

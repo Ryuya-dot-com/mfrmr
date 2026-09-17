@@ -107,6 +107,17 @@ test_that("plot_rater_severity_profile produces CI whiskers", {
   }
 })
 
+test_that("severity profile captions and legends describe only visible bands", {
+  with_bands <- plot_rater_severity_profile(.fit, diagnostics = .diag, draw = FALSE)
+  without_bands <- plot_rater_severity_profile(.fit, diagnostics = .diag,
+                                              show_bands = FALSE, draw = FALSE)
+  expect_match(with_bands$data$subtitle, "shaded guides", fixed = TRUE)
+  expect_false(grepl("band|guide|0.5|1.0", without_bands$data$subtitle))
+  expect_true(any(with_bands$data$legend$role == "band"))
+  expect_false(any(without_bands$data$legend$role == "band"))
+  expect_equal(with_bands$data$data, without_bands$data$data)
+})
+
 test_that("plot_rater_severity_profile validates ci_level", {
   expect_error(
     plot_rater_severity_profile(.fit, ci_level = -0.5, draw = FALSE),

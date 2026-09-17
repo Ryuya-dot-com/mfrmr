@@ -222,6 +222,18 @@ test_that("predict_mfrm_units scores latent-regression fits under the fitted pop
     person_data = swapped_person_data,
     n_draws = 0
   )
+  reviewed <- predict_mfrm_units(
+    fixture$fit, fixture$new_units, readiness_policy = "review",
+    person_data = fixture$person_data, n_draws = 3, seed = 17,
+    adaptive_quad_points = c(15L, 31L)
+  )
+  expect_identical(reviewed$estimates, pred$estimates)
+  expect_identical(reviewed$draws, pred$draws)
+  expect_true(all(reviewed$quadrature_review$Status == "computed"))
+  expect_equal(reviewed$quadrature_review$FixedEAP[
+                 match(pred$estimates$Person, reviewed$quadrature_review$Person)],
+               unname(pred$estimates$Estimate), tolerance = 1e-12)
+  expect_identical(reviewed$settings$source_scoring_ready, FALSE)
   pv <- sample_mfrm_plausible_values(
     fixture$fit, readiness_policy = "review",
     fixture$new_units,
@@ -728,7 +740,7 @@ test_that("scoring quadrature is explicit and cannot degenerate to one point", {
     fixture$fit, fixture$new_units, scoring_quad_points = 17
   )
   expect_identical(scored$settings$quad_points, 17L)
-  expect_identical(scored$settings$scoring_algorithm, "quadrature_eap_v1")
+  expect_identical(scored$settings$scoring_algorithm, "quadrature_eap_v2")
 })
 
 test_that("prediction integer validation does not leak coercion warnings", {

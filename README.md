@@ -11,46 +11,9 @@ with a documented bounded `GPCM` extension. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
 
-For GPCM, *bounded* refers to the documented model and workflow scope; it does
-not mean finite parameter box constraints. Unsupported combinations and
-inference states are reported explicitly rather than silently treated as
-ordinary estimates.
-
-The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
-reproducibility, network review, and reporting support. It is not a general
-FACETS replacement: each `fit_mfrm()` call uses one response-model family and
-one observed score scale, and the current public API does not provide mixed
-response families, multiple independent rating scales, general threshold
-anchoring, or online calibration updates. Portable fixed-calibration artifacts
-are available only for one-scale `RSM`/`PCM` `MML` fits under the fixed
-standard-normal scoring basis. Posterior scoring from an existing fitted
-object is a separate, wider analysis route.
-
-The recommended workflow is:
-
-```text
-long-format data + describe_mfrm_data()
-  -> fit_mfrm(method = "MML")
-  -> print(fit) / summary(fit)$decision
-  -> if ready: summary(profile = "facets")
-     if review/blocked: follow summary(fit)$decision$NextAction
-  -> native Wright map with uncertainty
-  -> focused diagnostics
-  -> report and export
-```
-
-The native Wright map is the required first fitted-scale figure in this
-workflow. A separate FACETS-style renderer is available when a familiar
-asterisk ruler and labelled category transitions are useful.
-
-The three basic fitted-object methods have deliberately different jobs:
-`print(fit)` is a compact triage view, `summary(fit)` is the canonical
-structured review surface, and `plot(fit, draw = FALSE)` returns reusable plot
-data. The printed `Decision` and structured `summary(fit)$decision` are the
-common first-read for RSM, PCM, and bounded GPCM. All three methods carry the
-same model/readiness basis; fitted-model plots also
-retain a `scale_contract` table so the latent-coordinate and discrimination
-scales are not inferred from axis labels alone.
+Start with the quick start below: load data, fit a model, draw a plot, and
+inspect the summary. The complete workflow then covers data checks,
+diagnostics, and reporting.
 
 Package website: <https://ryuya-dot-com.github.io/mfrmr/>
 
@@ -84,97 +47,230 @@ remotes::install_github(
 )
 ```
 
-Load the package, inspect the six-step beginner route, and list the installed
-guides:
+## Quick start
+
+This example estimates person abilities while accounting for rater severity
+and criterion difficulty. A *facet* is a source of variation in scores; here,
+`Rater` and `Criterion` are facets, and individual raters and criteria are their
+*levels*. The data are synthetic, with one row per rating and scores from 1 to 4.
+
+`head(toy)` shows the first six rows. The quoted column names in `fit_mfrm()`
+are case-sensitive; `Study` and `Group` are extra labels unused by this model.
+`MML` selects marginal maximum likelihood; `RSM` selects a rating-scale model
+with shared category thresholds (the transitions between adjacent scores).
 
 ```r
+# Load the package
 library(mfrmr)
-mfrmr_output_guide("beginner")[, c(
-  "Question", "MainFunction", "NextStep"
-)]
-browseVignettes("mfrmr")
+
+# Load example ratings and look at the first six rows
+toy <- load_mfrmr_data("example_operational")
+head(toy)
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Plot the results (Wright map)
+plot(fit)
+
+# Save the summary, then display its tables
+results <- summary(fit)
+results$person_overview # One row summarizing person ability estimates
+results$facet_overview  # One row per facet: number of levels, mean, SD, range
+
+# Check the interpretation status and recommended next step
+results$decision
 ```
 
-For the shortest end-to-end explanation, open
+`<-` saves an object without printing it. Here `toy` holds the data, `fit`
+holds the model, and `results` holds its summary. `$` selects a named part:
+`results$person_overview` displays just that table. Enter `results` to print
+the full summary.
+
+The Wright map displays the estimates in logits, the model's measurement units,
+rather than the original 1-to-4 scores. With this example's default orientation,
+higher person estimates mean higher ability; higher rater estimates mean
+stricter ratings, and higher criterion estimates mean greater difficulty.
+
+The overview tables describe distributions: `person_overview` has one row for
+all 48 persons, and `facet_overview` has one row for each facet. `Mean`/`MeanEstimate`
+is the average, `SD`/`SDEstimate` is the spread, and `Min`/`Max` or
+`MinEstimate`/`MaxEstimate` give the endpoints. Rater and criterion means are
+constrained to zero here; their SDs and ranges show differences among levels.
+
+### Inspect individual estimates
+
+```r
+estimates <- as.data.frame(fit)
+head(subset(estimates, Facet == "Person")) # First six persons
+subset(estimates, Facet == "Rater")       # All raters
+subset(estimates, Facet == "Criterion")   # All criteria
+```
+
+`Facet` identifies the type of estimate, `Level` identifies the person, rater,
+or criterion, and `Estimate` is its value in logits.
+
+### Check what needs review
+
+Read `results$decision`, especially `Why` and `NextAction`, before interpreting
+or reporting estimates. `FormalInference = "No"` in this first summary can
+mean that precision has not yet been reviewed; it does not necessarily mean
+that fitting failed. The default summary does not compute diagnostics.
+
+```r
+diagnostics <- diagnose_mfrm(fit)
+diagnostic_summary <- summary(diagnostics)
+diagnostic_summary$decision
+```
+
+For your own data, follow [Use your own CSV](#use-your-own-csv) below.
+For reporting, `res <- mfrm_results(fit, diagnostics = diagnostics)`
+builds a comprehensive object that reuses the checks above. Pass `res` to
+`mfrm_report()` or `export_mfrm_results()`; `results` remains the basic summary.
+
+For a guide to the next steps, open
 `help("mfrmr_workflow_methods", package = "mfrmr")` or
 `vignette("mfrmr-workflow", package = "mfrmr")`. Use
 `help("mfrmr_visual_diagnostics", package = "mfrmr")` when choosing a figure
 and `help("mfrmr_reporting_and_apa", package = "mfrmr")` when moving from a
 reviewed fit to tables and manuscript-draft output.
 
-## Portable fixed calibration
-
-An eligible `RSM` or `PCM` `MML` fit can be converted into a versioned
-calibration artifact, validated, frozen, saved, and applied to new Persons
-without retaining the source fit or training responses:
-
-The following template assumes an eligible `fit`, its original `training_data`,
-and `new_responses` with matching facet labels and score coding. The portable
-calibration vignette below supplies a complete example defining these objects.
-
-```r
-q_review <- mml_quadrature_sensitivity(
-  fit, training_data, quad_points = c(31, 61)
-)
-summary(q_review) # You decide whether the observed movement is acceptable.
-fit_for_calibration <- q_review$fits$q61
-
-draft <- extract_mfrm_calibration(
-  fit_for_calibration, quadrature_review = q_review
-)
-review_mfrm_calibration(draft)
-
-validated <- validate_mfrm_calibration(draft)
-calibration <- freeze_mfrm_calibration(validated)
-save_mfrm_calibration(calibration, "reviewed-calibration.rds")
-
-# This can run in a new R session.
-calibration <- load_mfrm_calibration("reviewed-calibration.rds")
-scores <- score_mfrm_calibration(calibration, new_responses)
-summary(scores)
-plot(scores, type = "interval", preset = "publication")
-```
-
-Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
-and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
-example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
-artifact display contract and `help("mfrm_calibration_score_methods",
-package = "mfrmr")` for score summaries and plots. Estimated-population and
-latent-regression MML, JML, and bounded GPCM
-remain fitted-object-only routes; they do not create portable calibration
-artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
-frozen point calibration and recorded prior. Their intervals exclude
-calibration-parameter uncertainty, and loading validates consistency rather
-than authenticating files from untrusted sources. Review every
-`scored_review` or `not_scored` disposition before using estimates. The score
-plot is a batch-review display, not evidence that the source calibration fits
-or transports to a new population.
-
 ## Data format
 
-`fit_mfrm()` expects one row per observed rating event. At minimum, the data
-need:
+Each row records **one score given by one rater to one person on one
+criterion**. The same person therefore appears on several rows:
 
-- one person identifier;
-- one or more non-person facet columns;
-- one ordered numeric score column.
+| Person | Rater | Criterion | Score |
+| --- | --- | --- | --- |
+| 001 | R1 | Content | 3 |
+| 001 | R1 | Style | 2 |
+| 001 | R2 | Content | 4 |
+| 001 | R2 | Style | 3 |
 
-For example:
+These four rows illustrate the layout, not a dataset for estimating a model.
+Keep the complete set of ratings for your analysis. Use consistent IDs across
+rows; `001` identifies the same person each time. `Score` contains the ordered
+integer categories from the rubric, not person totals or averages across raters.
+Use a blank cell or `NA` for a missing rating; zero is a score if your rubric
+includes zero. Do not add zeros for ratings that were never assigned.
+
+At least one non-person facet is required. This example uses two; choose
+columns that represent your design. If criteria occupy separate spreadsheet
+columns, see the reshaping example in the workflow vignette.
+
+## Use your own CSV
+
+Export the rating sheet as **CSV UTF-8**, with column names in the first row.
+For the four-column layout above, run:
 
 ```r
-head(data.frame(
-  Person = c("P01", "P01", "P02", "P02"),
-  Rater = c("R1", "R2", "R1", "R2"),
-  Criterion = c("Content", "Content", "Content", "Content"),
-  Score = c(3, 2, 2, 3)
-))
+library(mfrmr)
+
+# Select your CSV file in the file dialog
+csv_path <- file.choose()
+ratings <- read.csv(
+  csv_path,
+  colClasses = "character",
+  na.strings = c("", "NA"),
+  check.names = FALSE,
+  fileEncoding = "UTF-8-BOM"
+)
+head(ratings)
+names(ratings)
+table(ratings$Score, useNA = "ifany")
 ```
 
-Facet identifiers may be character or factor columns. Scores must represent
-ordered categories. Use `NA` for missing responses, or document and recode
-special missing-value codes before fitting. The design need not be fully
-crossed, but it must contain enough links among persons and facet levels to
-support the intended comparisons.
+For a reusable script, replace `file.choose()` with a quoted path such as
+`"data/ratings.csv"`, relative to the folder shown by `getwd()`.
+Reading columns as text preserves IDs such as `001`; `mfrmr` converts numeric
+score strings such as `"3"` for estimation. The missing tokens above apply to
+all columns; adjust them if, for example, `NA` is a legitimate identifier.
+
+The names in `person`, `facets`, and `score` must match `names(ratings)` exactly.
+For a file headed `Student`, `Judge`, `Task`, and `Rating`, use
+`person = "Student"`, `facets = c("Judge", "Task")`, and `score = "Rating"`
+in **both** calls below, and inspect `ratings$Rating` above.
+
+### Check the data before fitting
+
+```r
+data_review <- describe_mfrm_data(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  keep_original = TRUE
+)
+data_review$row_retention
+data_review$missing_by_column
+data_review$score_distribution
+data_review$design_connectivity
+```
+
+Set `rating_min` and `rating_max` from the **rubric**, even if nobody received
+the lowest or highest score. The values above describe a 1-to-4 rubric.
+`keep_original = TRUE` preserves its category structure. Check `DroppedRows`
+for excluded rows and `RawN` for category counts. Missing scores or required
+IDs remove that rating row, not automatically the person's other ratings.
+The package does not fill missing ratings. If an internal category has no
+observations, fitting with this setting stops: review the data and rubric
+before changing the categories.
+
+`Components = 1` indicates that a facet's levels are connected through shared
+persons. More than one component needs design review before comparing levels
+across components. This check alone does not establish model identification.
+The vignette's **If a check stops you** section covers missing-value codes,
+unexpected row loss, and common input errors.
+
+### Fit and read the results
+
+After resolving the data-review findings, use the same columns and score scale:
+
+```r
+csv_fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  keep_original = TRUE,
+  method = "MML",
+  model = "RSM"
+)
+csv_diagnostics <- diagnose_mfrm(csv_fit)
+csv_results <- summary(csv_fit, diagnostics = csv_diagnostics)
+csv_results$decision
+
+plot(csv_fit)
+csv_estimates <- as.data.frame(csv_fit)
+head(subset(csv_estimates, Facet == "Person"))
+subset(csv_estimates, Facet == "Rater")
+subset(csv_estimates, Facet == "Criterion")
+```
+
+Read `Why` and `NextAction` before using the estimates. With these default
+settings, higher person estimates mean higher ability, higher rater estimates
+mean stricter ratings, and higher criterion estimates mean greater difficulty.
+The values are in logits; a difference in estimates alone does not establish
+statistical significance. For custom facet names, also change the `Facet`
+filters above, for example from `"Rater"` to `"Judge"`; person rows retain
+`Facet == "Person"`.
+
+Open `vignette("mfrmr-workflow", package = "mfrmr")` for a runnable practice
+CSV, a wide-to-long example, and troubleshooting. The complete workflow below
+returns to the packaged data to illustrate further review and reporting.
+
+## Further data considerations
 
 ### Response type and frequencies
 
@@ -877,6 +973,71 @@ case-EAP files contain identifiers and person-level estimates. The helper warns
 when writing these files and creates `*_privacy_notice.csv`. Store the bundle in
 an approved restricted location and pseudonymize or redact it as required
 before sharing.
+
+## Model scope
+
+For GPCM, *bounded* refers to the documented model and workflow scope; it does
+not mean finite parameter box constraints. Unsupported combinations and
+inference states are reported explicitly rather than silently treated as
+ordinary estimates.
+
+The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
+reproducibility, network review, and reporting support. It is not a general
+FACETS replacement: each `fit_mfrm()` call uses one response-model family and
+one observed score scale, and the current public API does not provide mixed
+response families, multiple independent rating scales, general threshold
+anchoring, or online calibration updates. Portable fixed-calibration artifacts
+are available only for one-scale `RSM`/`PCM` `MML` fits under the fixed
+standard-normal scoring basis. Posterior scoring from an existing fitted
+object is a separate, wider analysis route.
+
+## Portable fixed calibration
+
+An eligible `RSM` or `PCM` `MML` fit can be converted into a versioned
+calibration artifact, validated, frozen, saved, and applied to new Persons
+without retaining the source fit or training responses:
+
+The following template assumes an eligible `fit`, its original `training_data`,
+and `new_responses` with matching facet labels and score coding. The portable
+calibration vignette below supplies a complete example defining these objects.
+
+```r
+q_review <- mml_quadrature_sensitivity(
+  fit, training_data, quad_points = c(31, 61)
+)
+summary(q_review) # You decide whether the observed movement is acceptable.
+fit_for_calibration <- q_review$fits$q61
+
+draft <- extract_mfrm_calibration(
+  fit_for_calibration, quadrature_review = q_review
+)
+review_mfrm_calibration(draft)
+
+validated <- validate_mfrm_calibration(draft)
+calibration <- freeze_mfrm_calibration(validated)
+save_mfrm_calibration(calibration, "reviewed-calibration.rds")
+
+# This can run in a new R session.
+calibration <- load_mfrm_calibration("reviewed-calibration.rds")
+scores <- score_mfrm_calibration(calibration, new_responses)
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
+```
+
+Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
+and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
+example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
+artifact display contract and `help("mfrm_calibration_score_methods",
+package = "mfrmr")` for score summaries and plots. Estimated-population and
+latent-regression MML, JML, and bounded GPCM
+remain fitted-object-only routes; they do not create portable calibration
+artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
+frozen point calibration and recorded prior. Their intervals exclude
+calibration-parameter uncertainty, and loading validates consistency rather
+than authenticating files from untrusted sources. Review every
+`scored_review` or `not_scored` disposition before using estimates. The score
+plot is a batch-review display, not evidence that the source calibration fits
+or transports to a new population.
 
 ## Model and interpretation boundaries
 

@@ -121,27 +121,33 @@ Treat this dashboard as a screening layer; follow up with dedicated helpers
 
 \examples{
 \donttest{
-# Build the plotting data without opening a graphics device.
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:3], ]
-fit_quick <- suppressWarnings(
-  fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-           method = "JML", maxit = 3)
-)
-qc_quick <- plot_qc_dashboard(fit_quick, draw = FALSE)
-names(qc_quick$data)
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-qc <- plot_qc_dashboard(fit, draw = FALSE)
-qc$data$panels$Status
-# Look for: a row whose `Status` is "OK" for each panel that
-#   the run should support. "WARN" / "REVIEW" rows tell you which
-#   downstream helper to run next (e.g. `plot_unexpected()`,
-#   `plot_residual_pca()`); the dashboard is a triage screen, not
-#   a publication figure on its own.
-if (interactive()) {
-  plot_qc_dashboard(fit, rater_facet = "Rater")
-}
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Read the interpretation status before reviewing the quality-control (QC) panels
+review <- summary(diagnostics)
+review$decision
+
+# Draw the dashboard and save its data
+qc <- plot_qc_dashboard(fit, diagnostics = diagnostics)
+
+# Inspect the counts behind the category panel
+qc$data$category_stats[, c("Category", "Count", "ExpectedCount")]
+# Use focused plots such as plot_marginal_fit(diagnostics) to investigate a panel
 }
 }
 \seealso{

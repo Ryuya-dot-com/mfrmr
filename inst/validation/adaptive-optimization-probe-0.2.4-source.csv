@@ -1,0 +1,6 @@
+path,sha256
+inst/validation/adaptive-optimization-probe-0.2.4.R,4bce944eae0c52e0ed06dffefa3abf43f61cab1e513814eae09d64cfe910a6fc
+inst/validation/adaptive-quadrature-review-0.2.4.R,88e9605d116a17404fb1faf98775a5fe6374135948812747220d4984d046198a
+R/core-adaptive-quadrature.R,a7b1bf82eacf1c86095a4f25736395c2d715e830be398020db26041defe032d7
+R/mfrm_core.R,cbbbe0bf18253500a59ce383206ab9be3db170aa47f36ec68e782408f01d5fd5
+R/core-optimizer.R,096830d67c7ae577dce93c112d30f9a0ea8ac3d65296b3a190c3b15503dd803b

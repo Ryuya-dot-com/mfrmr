@@ -23,7 +23,8 @@ fair_average_table(
 \arguments{
 \item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
-\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}.}
+\item{diagnostics}{Optional output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} for this \code{fit}.
+Matching saved diagnostics are reusable; recompute them after refitting.}
 
 \item{facets}{Optional subset of facets.}
 
@@ -103,7 +104,7 @@ or as an operational scoring rule unless that convention is substantively
 justified.
 
 Standard errors on the fair-average value itself are opt-in for MML
-bounded \code{GPCM} fits via \code{fair_se = TRUE}. The original \code{SE},
+bounded \code{GPCM} fits via \code{fair_se = TRUE}. The
 \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE} columns
 retain the same meaning as for PCM (scaled facet-measure SEs); fair-average
 uncertainty is reported under distinct columns such as \verb{Fair(M) S.E.},
@@ -114,7 +115,8 @@ uncertainty is reported under distinct columns such as \verb{Fair(M) S.E.},
 \itemize{
 \item \code{stacked}: cross-facet table for global comparison.
 \item \code{by_facet}: per-facet formatted tables for reporting.
-\item \code{raw_by_facet}: unformatted values for custom analyses/plots.
+\item \code{raw_by_facet}: unformatted values for custom analyses/plots; identifiers
+use the column \code{Level}.
 \item \code{settings}: scoring-transformation and filtering options used.
 }
 
@@ -133,18 +135,18 @@ descriptive follow-up prompts, not standalone evidence of rater bias.
 
 \section{Output columns}{
 
-The \code{stacked} data.frame contains:
+The \code{stacked} data.frame contains the following columns, selected by
+\code{reference}, \code{label_style}, and \code{fair_se}:
 \describe{
 \item{Facet}{Facet name for this row.}
-\item{Level}{Element label within the facet.}
+\item{Element}{Element label within the facet.}
 \item{Obsvd Average}{Observed raw-score average.}
 \item{Fair(M) Average}{Model-adjusted reference average on the reported score scale.}
 \item{Fair(Z) Average}{Expected score at a zero reference environment, not a z-score.}
 \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{AdjustedAverage} when \code{fair_se = TRUE} and available.}
 \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{StandardizedAdjustedAverage} when \code{fair_se = TRUE} and available.}
-\item{Measure}{Estimated logit measure for this level.}
-\item{SE}{Compatibility alias for the model-based standard error.}
+\item{Measure}{Estimated facet measure, transformed by \code{umean} and \code{uscale}.}
 \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for \verb{Model S.E.} and \verb{Real S.E.}.}
 \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 }
@@ -152,10 +154,9 @@ The \code{stacked} data.frame contains:
 
 \section{Standard-error caveat (read before quoting CIs)}{
 
-The \code{SE}, \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE}
+The \verb{Model S.E.}, \code{ModelBasedSE}, \verb{Real S.E.}, and \code{FitAdjustedSE}
 columns in this table are the \strong{measure-level} standard errors of the
-underlying facet element (the same SE that would appear in
-\code{summary(fit)$facets}), rescaled by \code{uscale} to the reported Measure units.
+underlying facet element, rescaled by \code{abs(uscale)} to the reported Measure units.
 Fair scores remain on the fitted internal score scale. They are \strong{not} delta-method standard errors of the fair-average
 values themselves. When \code{fair_se = TRUE}, the distinct \verb{Fair(M) S.E.} /
 \verb{Fair(Z) S.E.} columns are computed by
@@ -164,7 +165,7 @@ threshold parameters, and the slope parameters through the gradient of
 \eqn{\mathrm{E}[X \mid \theta_p, j^\star]}. This is a structural
 covariance calculation: MML person EAP estimates are conditioned on rather
 than included in the Hessian, so person rows receive unavailable fair-average
-SEs. \strong{Do not use the measure-level \code{SE} / \verb{Model S.E.} columns as
+SEs. \strong{Do not use the measure-level \code{ModelBasedSE} / \verb{Model S.E.} columns as
 \eqn{\pm 1.96 \cdot \mathrm{SE}} confidence-interval bounds on the
 fair-average value.}
 \code{FairCIEligible} is \code{FALSE} for these diagnostic intervals; numerical
@@ -205,15 +206,30 @@ slope-aware extension.)
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-t12 <- fair_average_table(fit, udecimals = 2)
-t12_native <- fair_average_table(fit, reference = "mean", label_style = "native")
-summary(t12)
-p_t12 <- plot(t12, draw = FALSE)
-p_t12$data$plot
-}
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare observed person means with model-based scores on a common reference
+fair <- fair_average_table(fit, diagnostics = diagnostics, facets = "Person",
+                           reference = "mean", label_style = "native")
+head(fair$raw_by_facet$Person[, c("Level", "ObservedAverage", "FairM")])
+# FairM uses the mean reference for the other facets; it is in score units
+# It is a conditional model prediction, not a guarantee of fairness
+}
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=unexpected_response_table]{unexpected_response_table()}}, \code{\link[=displacement_table]{displacement_table()}}

@@ -1,0 +1,35 @@
+Check,Passed,Units,MaxError,Detail
+equal clusters use calibration-level MCSE,True,1,NA,
+paired cluster differences preserve covariance,True,1,NA,
+stratum ratio retains zero-count clusters,True,1,NA,
+RSM independent known-calibration posterior,True,1,2.12410089517334e-11,
+RSM same seeded abilities and responses,True,1,NA,
+RSM source truth independent of fitted coordinates,True,1,NA,
+PCM independent known-calibration posterior,True,1,2.46361056555067e-11,
+PCM same seeded abilities and responses,True,1,NA,
+PCM source truth independent of fitted coordinates,True,1,NA,
+completed cell resumes without changing 256 results,True,256,,
+different source payload rejected before new fits,True,1,,"identical(readRDS(metadata), meta) is not TRUE"
+Streaming aggregation preserves counts.csv,True,1,,
+Streaming aggregation preserves runs.csv,True,1,,
+Streaming aggregation preserves summary.csv,True,1,,
+Streaming aggregation preserves replicate-metrics.csv,True,1,,
+preflight planned datasets complete,True,40,,
+preflight public scoring available without errors/warnings,True,40,,
+preflight numerical criteria,True,40,2.94130586553365e-09,MaxError column is Q61/Q121 objective difference; full diagnostics are retained in runs.csv.
+main planned datasets complete,True,2048,,
+main public scoring available without errors/warnings,True,2048,,
+main numerical criteria,True,2048,2.06227923627011e-08,MaxError column is Q61/Q121 objective difference; full diagnostics are retained in runs.csv.
+macos artifact replay cell 1,True,27,1.11022302462516e-15,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 2,True,27,1.11022302462516e-15,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 3,True,27,1.11022302462516e-15,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 4,True,27,1.55431223447522e-15,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 5,True,27,1.55431223447522e-15,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 6,True,27,1.77635683940025e-15,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 7,True,27,9.99200722162641e-16,Includes 6 scored_review profiles; stored scoring order 31.
+macos artifact replay cell 8,True,27,8.88178419700125e-16,Includes 6 scored_review profiles; stored scoring order 31.
+linux artifact replay cell 1,True,27,4.44089209850063e-16,Includes 6 scored_review profiles; stored scoring order 31.
+linux artifact replay cell 5,True,27,4.44089209850063e-16,Includes 6 scored_review profiles; stored scoring order 31.
+Independent reconstruction from saved responses and abilities,True,2048,0,
+Estimated scoring uses fitted parameters,True,2048,,
+Direct bulk scoring agrees with profile lookup,True,9,1.55431223447522e-15,

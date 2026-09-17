@@ -1,0 +1,6 @@
+"Platform","R","OS","Commit","TarballSHA256","Errors","Warnings","Notes","InputScenarios","ArchiveScenarios"
+"macos-release","R version 4.6.1 (2026-06-24)","macOS Tahoe 26.6.2","805d6ae34dae0026d93259e4e0d62d6c4a97c1c1","d3ff80be1d7d3516057c16582049692f93fed3fc881b729b5243a3ddf743ba0e",0,0,0,2,8
+"ubuntu-devel","R Under development (unstable) (2026-09-12 r90533)","Ubuntu 24.04.5 LTS","805d6ae34dae0026d93259e4e0d62d6c4a97c1c1","4ce9e20e58b84df4882879df940154288a11cca8272aac0812b0de26b60ee11a",0,0,0,2,8
+"ubuntu-oldrel-1","R version 4.5.3 (2026-03-11)","Ubuntu 24.04.5 LTS","805d6ae34dae0026d93259e4e0d62d6c4a97c1c1","a8a37b078495d9d1269177aec2b414774f1ab45bc2ec6fb0c6ab9a19881e607f",0,0,0,2,8
+"ubuntu-release","R version 4.6.1 (2026-06-24)","Ubuntu 24.04.5 LTS","805d6ae34dae0026d93259e4e0d62d6c4a97c1c1","b423c51f997e7963db2702dca2c885b3212b1082630e416dc14f3ae6d5ce61b1",0,0,0,2,8
+"windows-release","R version 4.6.1 (2026-06-24 ucrt)","Windows Server 2022 x64 (build 26100)","805d6ae34dae0026d93259e4e0d62d6c4a97c1c1","e5a492d08bbcee50006587b920fbb496def55b08c5a6f5a6b39a7b5aef47beff",0,0,0,2,8

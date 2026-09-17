@@ -308,6 +308,7 @@ resolve_dff_refit_controls <- function(fit) {
     min_obs_per_element = as.numeric(replay$min_obs_per_element %||% 30),
     min_obs_per_category = as.numeric(replay$min_obs_per_category %||% 10),
     quad_points = as.integer(replay$quad_points %||% control$quad_points %||% 31L),
+    mml_integration = as.character(control$mml_integration %||% "fixed"),
     maxit = as.integer(replay$maxit %||% control$maxit %||% 400L),
     reltol = as.numeric(replay$reltol %||% control$reltol %||% 1e-9),
     optimizer = as.character(
@@ -1251,7 +1252,8 @@ analyze_dif <- function(...) {
       maxit = refit_controls$maxit,
       reltol = refit_controls$reltol,
       optimizer = refit_controls$optimizer,
-      mml_engine = refit_controls$mml_engine
+      mml_engine = refit_controls$mml_engine,
+      mml_integration = refit_controls$mml_integration
     )
     # Capture the anchor-review issue messages emitted while refitting
     # the subgroup so a silent anchor_policy no longer hides
@@ -1496,6 +1498,7 @@ analyze_dif <- function(...) {
                   refit_slope_facet = refit_controls$slope_facet,
                   refit_optimizer = refit_controls$optimizer,
                   refit_mml_engine = refit_controls$mml_engine,
+                  refit_mml_integration = refit_controls$mml_integration,
                   functioning_label = functioning_label)
   )
   class(out) <- c("mfrm_dff", "mfrm_dif", class(out))
@@ -3679,6 +3682,8 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' head(res$drift[, c("Facet", "Level", "Drift", "Flag")])
 #' res$baseline_anchors[1:3, ]
 #' }
+#' @param mml_integration MML integration mode passed to [fit_mfrm()]. `NULL`
+#'   inherits the baseline fit's mode for MML; JML uses `"fixed"`.
 anchor_to_baseline <- function(new_data, baseline_fit,
                                person, facets, score,
                                anchor_facets = NULL,
@@ -3686,6 +3691,7 @@ anchor_to_baseline <- function(new_data, baseline_fit,
                                weight = NULL,
                                model = NULL, method = NULL,
                                anchor_policy = "warn",
+                               mml_integration = NULL,
                                ...) {
   # Validate baseline_fit
   stopifnot(inherits(baseline_fit, "mfrm_fit"))
@@ -3693,6 +3699,11 @@ anchor_to_baseline <- function(new_data, baseline_fit,
   # Inherit model/method from baseline if not specified
   if (is.null(model))  model  <- baseline_fit$config$model
   if (is.null(method)) method <- baseline_fit$config$method
+  if (is.null(mml_integration)) {
+    mml_integration <- if (identical(toupper(method), "MML")) {
+      baseline_fit$config$estimation_control$mml_integration %||% "fixed"
+    } else "fixed"
+  }
 
   # Extract anchor table from baseline
   anchor_tbl <- make_anchor_table(baseline_fit, facets = anchor_facets,
@@ -3705,7 +3716,8 @@ anchor_to_baseline <- function(new_data, baseline_fit,
   # Fit new data with anchors
   new_fit <- fit_mfrm(new_data, person = person, facets = facets, score = score,
                       weight = weight, model = model, method = method,
-                      anchors = anchor_tbl, anchor_policy = anchor_policy, ...)
+                      anchors = anchor_tbl, anchor_policy = anchor_policy,
+                      mml_integration = mml_integration, ...)
 
   # Compute diagnostics
   baseline_diag <- diagnose_mfrm(baseline_fit)

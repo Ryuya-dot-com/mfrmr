@@ -41,29 +41,34 @@ current `MML` path targets the marginal likelihood
 \[
 L(\beta) = \prod_{n=1}^{N} \int p(\mathbf{x}_n \mid \theta, \beta) g(\theta) \, d\theta
 \approx
-\prod_{n=1}^{N} \sum_{q=1}^{Q} w_q \, p(\mathbf{x}_n \mid \theta_q, \beta),
+\prod_{n=1}^{N} \sum_{q=1}^{Q} w_{nq}(\beta) \, p(\mathbf{x}_n \mid \theta_{nq}(\beta), \beta),
 \]
 
-where \((\theta_q, w_q)\) are Gauss-Hermite nodes and weights. In `mfrmr`, the
+where \((\theta_{nq}, w_{nq})\) are the integration nodes and weights for Person
+\(n\). In `mfrmr`, the
 integral is approximated with Gauss-Hermite quadrature, the marginal
 log-likelihood is optimized from the same shared kernel, and person summaries
 are computed post hoc from the posterior bundle. When a latent-regression
 population model is active, the package uses person-specific transformed nodes
 derived from the same quadrature basis rather than one unconditional fixed
-grid.
+grid. With `mml_integration = "adaptive"`, nodes also follow each Person's
+posterior mode and width at every proposed parameter vector. Adjusted weights
+include the normal-density ratio and change of scale, so the approximation
+still targets the original integral. The gradient includes changes in the
+nodes and weights.
 
 The posterior weight for person \(n\) at node \(q\) is
 
 \[
 \omega_{nq} =
-\frac{w_q \, p(\mathbf{x}_n \mid \theta_q, \hat{\beta})}
-{\sum_{r=1}^{Q} w_r \, p(\mathbf{x}_n \mid \theta_r, \hat{\beta})}.
+\frac{w_{nq} \, p(\mathbf{x}_n \mid \theta_{nq}, \hat{\beta})}
+{\sum_{r=1}^{Q} w_{nr} \, p(\mathbf{x}_n \mid \theta_{nr}, \hat{\beta})}.
 \]
 
 Expected a posteriori (EAP) scoring then uses
 
 \[
-\hat{\theta}_n^{\mathrm{EAP}} = \sum_{q=1}^{Q} \theta_q \, \omega_{nq}.
+\hat{\theta}_n^{\mathrm{EAP}} = \sum_{q=1}^{Q} \theta_{nq} \, \omega_{nq}.
 \]
 
 This is the kernel that now feeds `logLik`, the gradient, EAP summaries, and
@@ -76,12 +81,53 @@ For the `RSM` / `PCM` MML branch:
 - the person distribution is integrated with Gauss-Hermite quadrature
 - `mml_engine = "direct"` uses gradient-based direct optimization of the
   marginal log-likelihood
-- `mml_engine = "em"` and `mml_engine = "hybrid"` are also available for
-  `RSM` / `PCM`; bounded `GPCM` uses the direct engine regardless of that
-  option
+- `mml_engine = "em"` and `mml_engine = "hybrid"` are available for supported
+  `RSM` / `PCM` configurations with fixed integration; `GPCM` uses the direct
+  engine
+- adaptive integration requires the direct engine without checkpoints;
+  nonlinear identification and GPCM boundary evidence remain incomplete
 - person summaries are reported post-hoc from the integrated posterior
 
 This is the implemented MML-engine scope.
+
+## When estimates change with quadrature order
+
+A small optimizer gradient shows that the fitted approximation is near a
+stationary point. It does not establish the accuracy of the integral. When
+estimates or posterior SDs move as the order increases, one available option
+is to refit using adaptive integration and check its order sensitivity too:
+
+```{r adaptive-order-review}
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+fit_adaptive <- fit_mfrm(
+  data = toy, person = "Person", facets = c("Rater", "Criterion"),
+  score = "Score", method = "MML", model = "RSM",
+  mml_integration = "adaptive", quad_points = 31
+)
+quadrature_review <- mml_quadrature_sensitivity(
+  fit_adaptive, toy, quad_points = c(31, 61)
+)
+summary(quadrature_review)
+```
+
+The review refits the same data with the same integration mode. Keep every
+candidate and inspect changes in calibration parameters and Person scoring;
+two nearby orders alone are not an accuracy certificate. For an external
+comparison, also check the other program's integration range and density,
+the population distribution, constraints, and response weights.
+
+Scoring can have separate numerical controls. For example, ConQuest uses
+`p_nodes` for its Monte Carlo approximation of Person posterior means and SDs;
+its estimation `nodes` setting does not control that calculation. Record
+`p_nodes` and the random seed when comparing these scores, and examine
+sensitivity to both. See the [ConQuest command reference (`set` and `show`)](https://conquestmanual.acer.org/s4-00.html).
+
+In a paper, report the integration mode and order, population assumptions,
+optimizer settings and termination evidence, and the sensitivity analysis.
+Calibration-parameter standard errors and Person posterior SDs answer different
+questions. Stable numerical results or agreement between programs do not
+establish confidence-interval coverage or remove stored readiness limitations.
 
 ## Numerical readiness and bounded polishing
 
@@ -100,9 +146,10 @@ EM retains its relative log-likelihood stopping result but must also pass the
 same terminal-gradient check; use the direct engine for bounded gradient
 polishing when an EM fit remains under numerical review.
 
-Read `summary(fit)$readiness` as separate criteria. `InferenceReady` and the
-Numerical row describe numerical optimization, not the design, stability,
-diagnostic, or reporting decision. A small gradient cannot repair a
+Read `summary(fit)$readiness` as separate criteria. The Numerical row describes
+numerical optimization; `InferenceReady` requires all stored fit-readiness
+components to pass. Formal precision support is assessed separately through
+`diagnose_mfrm()` and the summary's decision table. A small gradient cannot repair a
 disconnected measurement graph or a boundary-separated facet level.
 
 ### Choosing the iteration ceiling
@@ -128,7 +175,7 @@ expectations. For a grouped summary \(g\) and category \(c\),
 \[
 \mathbb{E}_{\hat{\beta}}(N_{gc}) =
 \sum_{n=1}^{N} \sum_{q=1}^{Q}
-\omega_{nq} \, I(n \in g) \, P(X_n = c \mid \theta_q, \hat{\beta}).
+\omega_{nq} \, I(n \in g) \, P(X_n = c \mid \theta_{nq}, \hat{\beta}).
 \]
 
 The corresponding residual compares the observed count to that

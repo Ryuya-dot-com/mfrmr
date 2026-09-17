@@ -191,6 +191,10 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' standard-normal prior. They do not include calibration-parameter
 #' uncertainty. Loading validates structure and semantic consistency, but does
 #' not authenticate an artifact from an untrusted source.
+#' New v2 scoring algorithms invert the continuous posterior CDF for equal-tail
+#' intervals. EAP and SD retain the stored quadrature rule. Saved v1 artifacts
+#' preserve their discrete grid interval endpoints and carry a note that the
+#' continuous posterior mass can differ from the requested interval level.
 #'
 #' @param fit An eligible `mfrm_fit` produced by [fit_mfrm()].
 #' @param calibration_id Optional nonempty calibration identifier.
@@ -199,7 +203,10 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   current time.
 #' @param scoring_quad_points Integer quadrature order of at least 2 used for
 #'   later artifact scoring. It is independent of the fit-time quadrature and
-#'   defaults to 31.
+#'   defaults to 31. The fixed or adaptive integration mode is inherited from
+#'   the source fit and stored in the artifact's scoring algorithm identity.
+#'   With adaptive scoring, stored nodes and weights define the base Hermite
+#'   rule; their person-specific locations are recomputed for each new batch.
 #' @param quadrature_review An `mfrm_quadrature_sensitivity` from
 #'   [mml_quadrature_sensitivity()] for the same data and model. `fit` must be
 #'   the exact highest-grid fit stored in this object. The package checks this
@@ -221,6 +228,16 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #' @param interval_level Central posterior interval level, strictly between 0
 #'   and 1.
 #' @param missing_response Either `"error"` or `"omit"`.
+#' @param adaptive_quad_points Optional vector of at least two distinct integer
+#'   orders >= 3, for example `c(31, 61)`, used only by
+#'   `score_mfrm_calibration()`. Adds an unrounded `quadrature_review` comparing
+#'   stored-grid results with mode/curvature-adapted integration for each Person.
+#'   Inspect both fixed/adaptive differences and changes between adaptive orders.
+#'   The artifact, reported scores/intervals and readiness are unchanged;
+#'   adaptive results are diagnostics conditional on the same point calibration.
+#'   Only Persons with scored responses have numerical review rows. `Status =
+#'   "computed"` means the calculation finished, not that accuracy is certified;
+#'   an unavailable row retains the reason in `Detail`.
 #'
 #' @return `extract_mfrm_calibration()`, `validate_mfrm_calibration()`,
 #'   `freeze_mfrm_calibration()`, `supersede_mfrm_calibration()`,
@@ -230,6 +247,9 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'   `save_mfrm_calibration()` invisibly returns the normalized path.
 #'   `score_mfrm_calibration()` returns an `mfrm_calibration_score` containing
 #'   estimates plus row and Person dispositions and scoring identities.
+#'   When requested and scored rows exist, `quadrature_review` contains the
+#'   fixed/adaptive comparison; `summary()` preserves it and adds a compact
+#'   `quadrature_overview`.
 #'
 #' @seealso [mml_quadrature_sensitivity()], [mfrm_calibration_score_methods]
 #'   for concise review and visualization of returned score batches.
@@ -312,7 +332,8 @@ score_mfrm_calibration <- function(calibration,
                                    weight = NULL,
                                    interval_level = 0.95,
                                    missing_response = "error",
-                                   event_id = NULL) {
+                                   event_id = NULL,
+                                   adaptive_quad_points = NULL) {
   mfrmr_score_calibration(
     calibration = calibration,
     new_data = new_data,
@@ -322,6 +343,7 @@ score_mfrm_calibration <- function(calibration,
     weight = weight,
     interval_level = interval_level,
     missing_response = missing_response,
-    event_id = event_id
+    event_id = event_id,
+    adaptive_quad_points = adaptive_quad_points
   )
 }

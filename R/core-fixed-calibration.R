@@ -973,8 +973,10 @@ mfrmr_extract_calibration_draft <- function(fit, calibration_id = NULL,
       type = "fixed_standard_normal",
       prior_mean = 0,
       prior_sd = 1,
-      scoring_algorithm = "quadrature_eap_v1",
-      quadrature_rule = "gauss_hermite_standard_normal_golub_welsch_v1",
+      scoring_algorithm = if (mfrmr_adaptive_integration(fit$config)) {
+        "adaptive_quadrature_eap_v2"
+      } else "quadrature_eap_v2",
+      quadrature_rule = "gauss_hermite_standard_normal_recurrence_v2",
       quadrature_order = as.integer(quad_points),
       nodes = as.numeric(quad$nodes),
       weights = as.numeric(quad$weights)
@@ -1400,16 +1402,21 @@ mfrmr_review_calibration <- function(x) {
       !identical(x$scoring_basis$prior_sd, 1)) {
     add("SCORING_PRIOR_INVALID", "scoring_basis.prior_mean", "core prior must be exactly N(0,1)")
   }
-  if (!identical(x$scoring_basis$scoring_algorithm, "quadrature_eap_v1")) {
+  if (!is.character(x$scoring_basis$scoring_algorithm) ||
+      length(x$scoring_basis$scoring_algorithm) != 1L ||
+      !x$scoring_basis$scoring_algorithm %in% c("quadrature_eap_v1", "adaptive_quadrature_eap_v1",
+                                              "quadrature_eap_v2", "adaptive_quadrature_eap_v2")) {
     add(
       "SCORING_BASIS_UNSUPPORTED", "scoring_basis.scoring_algorithm",
-      "core scoring algorithm must be exactly quadrature_eap_v1"
+      "scoring algorithm must be a registered fixed or adaptive quadrature EAP algorithm"
     )
   }
-  if (!identical(
-    x$scoring_basis$quadrature_rule,
-    "gauss_hermite_standard_normal_golub_welsch_v1"
-  )) {
+  if (!is.character(x$scoring_basis$quadrature_rule) ||
+      length(x$scoring_basis$quadrature_rule) != 1L ||
+      !x$scoring_basis$quadrature_rule %in% c(
+        "gauss_hermite_standard_normal_golub_welsch_v1",
+        "gauss_hermite_standard_normal_recurrence_v2"
+      )) {
     add("QUADRATURE_RULE_INVALID", "scoring_basis.quadrature_rule", "quadrature rule identity is not registered")
   }
   order <- x$scoring_basis$quadrature_order
@@ -1977,7 +1984,9 @@ mfrmr_score_calibration <- function(calibration,
                                     weight = NULL,
                                     interval_level = 0.95,
                                     missing_response = "error",
-                                    event_id = NULL) {
+                                    event_id = NULL,
+                                    adaptive_quad_points = NULL) {
+  adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
   review <- mfrmr_review_calibration(calibration)
   mfrmr_calibration_abort_review(review)
   if (!inherits(calibration, "mfrm_calibration")) {
@@ -2267,6 +2276,7 @@ mfrmr_score_calibration <- function(calibration,
     SchemaVersion = integer(0), ScoringBasis = character(0),
     stringsAsFactors = FALSE
   )
+  quadrature_review <- NULL
   if (any(scored_row)) {
     scoring_rows <- which(scored_row)
     scored_raw <- raw[scoring_rows, , drop = FALSE]
@@ -2293,6 +2303,22 @@ mfrmr_score_calibration <- function(calibration,
       internal_score[scoring_rows] - calibration$response$rating_min
     )
     scored_weights <- weights[scoring_rows]
+    review_idx <- list(person = person_index, score_k = score_k,
+      weight = scored_weights,
+      step_idx = if (identical(calibration$model$family, "PCM")) {
+        scored_facet_index[[calibration$model$step_owner]]
+      } else NULL)
+    review_config <- list(model = calibration$model$family,
+      n_cat = calibration$response$n_categories, n_person = length(person_labels))
+    review_params <- list(steps = materialized$shared_steps, steps_mat = materialized$owned_steps)
+    adaptive <- startsWith(calibration$scoring_basis$scoring_algorithm, "adaptive_")
+    basis <- if (adaptive) mfrmr_adaptive_quadrature_basis(
+      review_idx, review_config, review_params,
+      list(nodes = nodes, weights = prior_weights), base_eta
+    ) else resolve_person_quadrature_basis(
+      list(nodes = nodes, weights = prior_weights), person_count = length(person_labels)
+    )
+    person_nodes <- basis$nodes
     k_values <- 0:(calibration$response$n_categories - 1L)
     log_likelihood <- matrix(
       0, nrow = length(person_labels), ncol = length(nodes),
@@ -2311,7 +2337,7 @@ mfrmr_score_calibration <- function(calibration,
       }
       cumulative_step <- c(0, cumsum(step_values))
       for (node in seq_along(nodes)) {
-        logits <- k_values * (nodes[node] + base_eta[row]) - cumulative_step
+        logits <- k_values * (person_nodes[person_index[row], node] + base_eta[row]) - cumulative_step
         maximum <- max(logits)
         observed_log_probability <- logits[score_k[row] + 1L] -
           (maximum + log(sum(exp(logits - maximum))))
@@ -2321,7 +2347,8 @@ mfrmr_score_calibration <- function(calibration,
       }
     }
 
-    log_posterior <- sweep(log_likelihood, 2L, log(prior_weights), "+")
+    log_posterior <- if (adaptive) log_likelihood + basis$log_weights else
+      sweep(log_likelihood, 2L, log(prior_weights), "+")
     posterior <- matrix(NA_real_, nrow(log_posterior), ncol(log_posterior))
     for (i in seq_len(nrow(log_posterior))) {
       maximum <- max(log_posterior[i, ])
@@ -2336,21 +2363,33 @@ mfrmr_score_calibration <- function(calibration,
       )
     }
 
-    estimate <- as.vector(posterior %*% nodes)
+    estimate <- if (adaptive) rowSums(posterior * person_nodes) else as.vector(posterior %*% nodes)
     posterior_sd <- vapply(seq_along(person_labels), function(i) {
-      sqrt(sum(posterior[i, ] * (nodes - estimate[i])^2))
+      sqrt(sum(posterior[i, ] * (person_nodes[i, ] - estimate[i])^2))
     }, numeric(1))
     alpha <- (1 - interval_level) / 2
     lower <- vapply(seq_along(person_labels), function(i) {
-      mfrmr_calibration_grid_quantile(nodes, posterior[i, ], alpha)
+      mfrmr_calibration_grid_quantile(person_nodes[i, ], posterior[i, ], alpha)
     }, numeric(1))
     upper <- vapply(seq_along(person_labels), function(i) {
-      mfrmr_calibration_grid_quantile(nodes, posterior[i, ], 1 - alpha)
+      mfrmr_calibration_grid_quantile(person_nodes[i, ], posterior[i, ], 1 - alpha)
     }, numeric(1))
+    if (endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")) {
+      intervals <- mfrmr_person_posterior_intervals(review_idx, review_config, review_params,
+        base_eta, person_labels, interval_level = interval_level)
+      lower <- intervals[, "Lower"]; upper <- intervals[, "Upper"]
+    }
     observations <- tabulate(person_index, nbins = length(person_labels))
     weighted_n <- as.numeric(rowsum(
       scored_weights, person_index, reorder = FALSE
     )[, 1])
+    if (!is.null(adaptive_quad_points)) {
+      quadrature_review <- mfrmr_adaptive_quadrature_review(
+        review_idx, review_config, review_params,
+        list(nodes = nodes, weights = prior_weights), person_labels,
+        adaptive_quad_points, base_eta = base_eta
+      )
+    }
     edge_nodes <- unique(c(1L, ncol(posterior)))
     edge_mass <- rowSums(posterior[, edge_nodes, drop = FALSE])
     endpoint_status <- vapply(seq_along(person_labels), function(i) {
@@ -2430,7 +2469,7 @@ mfrmr_score_calibration <- function(calibration,
   )]
   input_data$Score <- score_values
   input_data$Weight <- weights
-  structure(
+  out <- structure(
     list(
       estimates = estimates,
       row_review = data.frame(
@@ -2489,12 +2528,23 @@ mfrmr_score_calibration <- function(calibration,
         "Posterior summaries use only the frozen calibration artifact and supplied response rows.",
         "All estimates are posterior EAP values; endpoint results are not finite JML maxima.",
         "Posterior SD and intervals are conditional on the frozen point calibration and exclude calibration-parameter uncertainty.",
+        if (endsWith(calibration$scoring_basis$scoring_algorithm, "_v2")) {
+          "Intervals invert the continuous posterior CDF; EAP and SD retain the stored quadrature rule."
+        } else {
+          "This legacy v1 artifact retains discrete quadrature-grid interval endpoints; their continuous posterior mass can differ from the requested level."
+        },
         "Prior sensitivity is not evaluated in the fixed-basis scoring call.",
         "No fit, training data, refit, RNG, or ambient option is consulted."
       )
     ),
     class = c("mfrm_calibration_score", "list")
   )
+  if (!is.null(adaptive_quad_points)) {
+    out$quadrature_review <- quadrature_review
+    out$settings$adaptive_quad_points <- adaptive_quad_points
+    out$notes <- c(out$notes, mfrmr_adaptive_quadrature_note())
+  }
+  out
 }
 
 mfrmr_validate_calibration_method_input <- function(x, arg = "object") {

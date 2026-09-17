@@ -61,6 +61,52 @@
 #'   `fit_readiness`, `notes` and display `settings`. `source_plots` preserves
 #'   the native draw-free payloads and their exclusions/interpretation metadata.
 #' @seealso [plot.mfrm_fit()], [as_ggplot()], [compare_mfrm()]
+#' @examples
+#' \donttest{
+#' # Load one dataset for both models
+#' library(mfrmr)
+#' toy <- load_mfrmr_data("example_operational")
+#'
+#' # RSM: shared category thresholds
+#' fit_rsm <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "RSM"
+#' )
+#'
+#' # PCM: separate category thresholds for each criterion
+#' fit_pcm <- fit_mfrm(
+#'   data = toy,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   method = "MML",
+#'   model = "PCM",
+#'   step_facet = "Criterion"
+#' )
+#'
+#' # Compare fitted locations; drawing requires the optional ggplot2 package
+#' # If needed, install it once with install.packages("ggplot2")
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   plot_compare_mfrm(fit_rsm, fit_pcm, labels = c("RSM", "PCM"))
+#'
+#'   # Run separately: compare score-category probabilities for one criterion
+#'   plot_compare_mfrm(
+#'     fit_rsm, fit_pcm,
+#'     type = "ccc",
+#'     curve_groups = "Content",
+#'     labels = c("RSM", "PCM")
+#'   )
+#' }
+#'
+#' # Plot data are available even without ggplot2
+#' paired <- plot_compare_mfrm(fit_rsm, fit_pcm, draw = FALSE)
+#' head(paired$data$differences)
+#' # Differences are PCM minus RSM; no difference SE or significance test is computed
+#' }
 #' @export
 plot_compare_mfrm <- function(reference, comparison, type = c("wright", "ccc"),
                               view = c("comparison", "difference"),

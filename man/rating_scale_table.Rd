@@ -76,6 +76,13 @@ Then inspect:
 \item \code{threshold_table} for adjacent-step gaps and ordering within each
 \code{StepFacet}.
 }
+
+For MML step uncertainty, inspect
+\code{diagnostics$parameter_uncertainty$steps} from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. A bare fit
+supplies point estimates to \code{threshold_table}; passing separate diagnostics
+here does not attach their SEs or intervals to that table. Check \code{SE_Status}
+and, when present, \code{CIEligible} / \code{CIUse} before reporting intervals. Retain
+\code{StepFacet} for PCM threshold families. A facet-location SE is not a step SE.
 }
 
 \section{Typical workflow}{
@@ -115,7 +122,8 @@ Structured score-support caveats for retained zero-count categories.}
 
 The \code{threshold_table} data.frame contains:
 \describe{
-\item{Step}{Step label (e.g., "1-2", "2-3").}
+\item{Step}{Step label (e.g., \code{Step_1}, \code{Step_2}). Use \code{LowerCategory}
+and \code{UpperCategory} to identify the corresponding score transition.}
 \item{Estimate}{Estimated threshold/step difficulty (logits).}
 \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
 threshold sets.}
@@ -156,26 +164,27 @@ interpreting the \code{summary(t8)$summary} flags in the bounded
 
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-t8 <- rating_scale_table(fit)
-summary(t8)
-summary(t8)$summary
-p_t8 <- plot(t8, draw = FALSE)
-p_t8$data$plot
 
+# Review category use and the fitted transitions between scores
+categories <- rating_scale_table(fit)
+review <- summary(categories)
+review$summary
+
+# Bars show observed counts; the line shows model-expected counts
+plot(categories)
 }
 }
 \seealso{

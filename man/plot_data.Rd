@@ -32,39 +32,29 @@ one.
 }
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-# A balanced slice retains every Rater and Criterion while running quickly.
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", maxit = 30)
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
 
-wright_plot_data <- plot_data(fit, type = "wright")
-names(wright_plot_data)
-
-wright_table <- plot_data(fit, type = "wright", component = "locations")
-head(wright_table)
-
-curves <- category_curves_report(fit, theta_points = 51)
-curve_long <- plot_data(curves, component = "plot_long")
-head(curve_long[, c("PlotType", "Theta", "Series", "Value")])
-
-pathway_long <- plot_data(fit, type = "pathway", component = "pathway_long")
-head(pathway_long[, c("Layer", "CurveGroup", "Theta", "Value")])
-pathway_fit <- plot_data(fit, type = "pathway", component = "fit_measures")
-head(pathway_fit[, c("Facet", "Level", "Infit", "Outfit", "FitStatus")])
-
-# Re-render one component with your own styling while keeping the
-# package-generated data and interpretation metadata.
-expected <- pathway_long[pathway_long$Layer == "expected_score", , drop = FALSE]
-plot(expected$Theta, expected$Value, type = "l",
-     xlab = "Theta", ylab = "Expected score",
-     main = "Custom expected-score pathway")
-abline(v = 0, lty = 2, col = "grey60")
-
-info <- compute_information(fit, theta_points = 51)
-sem_long <- plot_data(
-  plot_information(info, type = "sem", draw = FALSE),
-  component = "plot_long"
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
 )
-head(sem_long[, c("Metric", "Theta", "Value", "DisplayedByDefault")])
+
+# Draw the Wright map and keep its reusable data
+wright <- plot(fit)
+
+# Extract the plotted locations as a table
+locations <- plot_data(wright, component = "locations")
+head(locations)
+
+# For table extraction alone, no graphics device is needed
+locations_only <- plot_data(fit, component = "locations")
+head(locations_only)
 }
 }

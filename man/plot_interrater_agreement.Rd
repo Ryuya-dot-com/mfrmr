@@ -61,16 +61,17 @@ comparisons reflect identical rating targets.
 
 \strong{Exact agreement} is the proportion of matched observations where
 both raters assigned the same category score.  The \strong{expected
-agreement} line shows the proportion expected by chance given each
-rater's marginal category distribution, providing a baseline.
+agreement} line shows the proportion expected under the fitted model,
+averaging products of category probabilities over matched rating contexts.
+It is a model-based baseline, not a chance-corrected agreement coefficient.
 
 \strong{Pairwise correlation} is the Pearson correlation between scores
 assigned by each rater pair on matched observations.
 
-The \strong{difference plot} decomposes disagreement into systematic bias
-(mean signed difference on x-axis: positive = Rater 1 more severe)
+The \strong{difference plot} describes directional score differences
+(mean signed difference on x-axis: positive = Rater 1 assigned higher scores)
 and total inconsistency (mean absolute difference on y-axis).  Points
-near the origin indicate both low bias and low inconsistency.
+near the origin indicate both small mean differences and low inconsistency.
 
 The \code{context_facets} parameter specifies which facets define "the
 same rating target" (e.g., Criterion).  When \code{NULL}, all non-rater
@@ -89,7 +90,8 @@ pair.  Reference line at \code{corr_warn}.  Ordered by correlation
 ordering of persons between raters.}
 \item{\code{"difference"}}{Scatter plot.  X-axis: mean signed score
 difference (Rater 1 \eqn{-} Rater 2); positive values indicate
-Rater 1 is more severe.  Y-axis: mean absolute difference
+Rater 1 assigned higher scores. This observed-score contrast is distinct
+from the fitted rater-severity parameter. Y-axis: mean absolute difference
 (overall disagreement magnitude).  Points colored red when
 flagged.  Vertical reference at 0.}
 }
@@ -99,7 +101,7 @@ flagged.  Vertical reference at 0.}
 
 Pairs below \code{exact_warn} and/or \code{corr_warn} should be prioritized for
 rater calibration review.  On the difference plot, points far from the
-origin along the x-axis indicate systematic bias; points high on the
+origin along the x-axis indicate directional score differences; points high on the
 y-axis indicate large inconsistency regardless of direction.
 }
 
@@ -121,21 +123,27 @@ For a plot-selection guide and a longer walkthrough, see
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-p <- plot_interrater_agreement(fit, rater_facet = "Rater", draw = FALSE)
-if (interactive()) {
-  plot_interrater_agreement(
-    fit,
-    rater_facet = "Rater",
-    draw = TRUE,
-    plot_type = "exact",
-    main = "Inter-rater Agreement (Customized)",
-    palette = c(ok = "#2b8cbe", flag = "#cb181d"),
-    label_angle = 45,
-    preset = "publication"
-  )
-}
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compare observed exact agreement with its model-expected baseline
+plot_interrater_agreement(fit, rater_facet = "Rater")
+# Bars show observed agreement; connected circles show model-expected agreement
+
+# Optional: compare the direction and magnitude of observed-score differences
+plot_interrater_agreement(fit, rater_facet = "Rater", plot_type = "difference")
+# Positive horizontal values mean Rater1 assigned higher scores than Rater2
 }
 }
 \seealso{

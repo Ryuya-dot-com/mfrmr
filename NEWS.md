@@ -1,6 +1,131 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Fair-average tables and plots now also reject diagnostics from a different
+  fitted analysis. This prevents mixing one fit's thresholds with another
+  fit's measures and standard errors when computing FairM/FairZ.
+
+* Report narratives now describe numerical convergence separately from formal
+  inference readiness. A converged fit awaiting statistical review no longer
+  has its convergence described as unknown.
+
+* Fit summaries, precision reviews, APA tables, Wright/pathway plots, visual
+  reports and fit-level export helpers now check that supplied diagnostics
+  belong to the fit and its current readiness state. Previously, MML diagnostics
+  could incorrectly give a JML summary a positive formal-inference decision.
+  Custom table captions/notes cannot bypass the check. Matching saved
+  diagnostics remain reusable; recompute diagnostics after refitting.
+
+* Continuous RSM/PCM Person intervals reuse the existing compiled likelihood
+  kernel when enabled. CDF evaluations omit unused category probabilities;
+  integration tolerances and the moment/gradient calculations are unchanged.
+
+* New fitted-object Person intervals and newly created portable calibrations
+  invert the continuous posterior CDF. Selecting interval endpoints directly
+  from quadrature nodes could give incorrect posterior mass even with accurate
+  EAP and SD. Scoring algorithm v2 identifies this change; saved v1 calibrations
+  retain their original grid-interval calculation and an explicit note. EAP,
+  SD, fitting and grid-based plausible-value draws are unchanged. Intervals
+  remain conditional on the point calibration and exclude its uncertainty.
+
+## Documentation
+
+* Manuscript examples now pass the same diagnostics to tables and Wright maps,
+  save full-precision CSVs with separate captions/notes and a PNG, and include
+  input data for fit replay. Results-archive guidance distinguishes rebuilding
+  results from refitting the original analysis.
+
+* Introductory help examples, README, and the workflow vignette now start with
+  loading data, fitting with default MML settings, `plot(fit)`, and
+  `summary(fit)`. Overview tables are distinguished from individual estimates;
+  diagnostic and reporting routes follow the basic example.
+* Beginner examples now show the input rows, explain saved summaries, and
+  select person, rater, and criterion estimates explicitly. Follow-up examples
+  use the same default MML setup, draw the intended figures, distinguish basic
+  summaries from comprehensive results, and show where exported files are saved.
+
+* Follow-up examples now connect default MML fits to model comparison,
+  diagnostic plots, score summaries, APA tables, and CSV export. Reporting
+  checklist examples use logical flags and describe draft availability rather
+  than permission to paste text unchanged. Agreement-plot guidance now matches
+  the observed-score difference direction and model-expected agreement baseline.
+* README and the workflow vignette now connect the packaged example to a user's
+  own CSV: rating-row layout, identifier preservation, column mapping, declared
+  score categories, missing-data review, and interpretation of individual
+  estimates. The vignette adds a runnable CSV round trip, wide-to-long example,
+  and input troubleshooting before the advanced workflow.
+* Data-check and missing-code help now distinguish input missingness,
+  replacement counts, retained rows, and full versus summary table names.
+  Examples show which data to reuse after cleaning. Guidance on extreme scores
+  now distinguishes MML posterior person scoring from fixed non-person facets.
+* The workflow and reporting vignettes reuse one fit for actual diagnostic
+  tables and figures. A manuscript coverage map connects reporting topics to
+  package outputs and author-supplied study information. Worked reporting
+  examples show estimates with uncertainty and distinguish severity, fit,
+  separation reliability, and agreement; the example rubric is correctly 1–4.
+* Reporting examples now include a short Methods and Results write-up,
+  residual denominators, MML step SEs and intervals from existing diagnostics,
+  and observed-versus-fair scores with an explicit reference. Guidance based
+  on published reporting examples distinguishes separation, strata, and
+  posterior-variance EAP reliability and identifies the relevant score units.
+
 ## Reliability and reproducibility
+
+* `fit_mfrm(mml_integration = "adaptive")` uses posterior-mode/curvature
+  Gauss-Hermite integration with moving-node gradients for direct MML.
+  Likelihood, covariance, person scoring, refit sensitivity and replay retain
+  the integration mode; supported portable calibrations store an explicit
+  adaptive scoring identity. Fixed integration remains the default. Adaptive
+  EM/checkpoints, nonlinear probability-map identification certificates and
+  fixed-node GPCM boundary certificates are not supported.
+
+* Quadrature sensitivity, fitted-object prediction, and portable-calibration
+  scoring accept optional `adaptive_quad_points`, comparing the fixed grid
+  with posterior-mode/curvature-adapted grids at unchanged parameters and
+  prior. Unrounded per-Person log-marginal, EAP and posterior-SD differences,
+  adaptive-order changes, and failure reasons remain available for review.
+  This diagnostic leaves estimates, intervals, draws, and readiness unchanged.
+
+* Gauss-Hermite weights now use a scaled Hermite recurrence, preserving tiny
+  positive weights lost by the eigensolver at high orders. Fitting, posterior
+  scoring, and portable calibration share the corrected rule. New artifacts
+  identify the revised algorithm; existing valid calibration grids remain
+  readable. Orders whose weights cannot all be represented as positive finite
+  doubles fail explicitly instead of silently dropping quadrature nodes.
+
+* Replay CSV imports preserve literal identifiers (including leading zeros and
+  `"NA"`), non-syntactic column names, and latent-regression factor levels and
+  contrasts. Background-data paths also work with spaces in command-line runs.
+* Diagnostics retain their replay settings, including fit standardization,
+  interaction selection, and PCA limits. FACETS-workflow replay uses supported
+  arguments and preserves the requested MML engine.
+* Weighted APA reports distinguish retained rating rows from the sum of
+  observation weights. Visual count summaries use retained rows as well.
+* Identifier text is normalized to UTF-8 during data preparation so native-encoded
+  non-Latin labels do not fail in marginal diagnostic sorting.
+* Rater-severity profiles reserve space for complete labels and explain when
+  the device is too narrow. FACETS-style maps warn about crowded facet labels;
+  visual help explains font selection for non-Latin text.
+
+* Results and summary-table archives omit tables with no column definitions instead of writing
+  empty CSVs that `read.csv()` cannot read. Defined zero-row tables retain
+  their column headers.
+
+* Rater-severity profiles omit band descriptions and legend entries when
+  `show_bands = FALSE`. Band guidance is descriptive and no longer implies
+  operational interchangeability or a training decision.
+
+* APA design text now reports each facet's own level count. APA and visual
+  reporting reuse stored residual PCA results without silently computing
+  omitted overall or facet-specific analyses.
+
+* Unexpected-response counts and percentages now use all flagged observations
+  before applying the table's `top_n` limit. This also corrects default
+  diagnostic summaries and bias-adjustment comparisons, where truncation
+  could previously understate prevalence or overstate the reduction in flags.
+
+* Category-count plots in rating-scale, category-structure, and QC displays
+  now include expected counts in the vertical range, preventing the expected
+  line from being clipped when it exceeds the tallest observed bar.
 
 * Fair-average summaries now use FairZ values and SEs when `reference = "zero"`,
   with an explicit `FairMetric`. Requested fair-score intervals carry separate

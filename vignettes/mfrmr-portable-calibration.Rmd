@@ -127,7 +127,9 @@ rm(fit, quadrature_review, draft, validated, frozen, training, synthetic)
 invisible(gc())
 
 calibration <- load_mfrm_calibration(artifact_file)
-scores <- score_mfrm_calibration(calibration, new_rows)
+scores <- score_mfrm_calibration(
+  calibration, new_rows, adaptive_quad_points = c(31, 61)
+)
 summary(scores)
 
 plot(
@@ -166,6 +168,81 @@ These displays review a returned score batch. They do not establish source-fit
 quality, reliability, calibration transport, or validity. Every interval and
 posterior SD remains conditional on the frozen point calibration and excludes
 calibration-parameter uncertainty.
+
+A small edge mass does not guarantee accurate integration: a narrow posterior
+can fall between nodes near the middle of the grid. The optional
+`adaptive_quad_points` above adds a separate numerical comparison, placing
+nodes around each scored Person's posterior mode and scaling their spacing
+to its local width. It holds the calibration parameters and prior fixed.
+
+```{r score-integration-review}
+summary(scores)$quadrature_overview
+# Keep full precision when inspecting individual differences.
+head(scores$quadrature_review[c(
+  "Person", "AdaptiveNodes", "EAPChange", "PosteriorSDChange",
+  "AdaptiveEAPChangeFromPrevious", "AdaptiveSDChangeFromPrevious", "Status"
+)])
+```
+
+Check fixed-versus-adaptive differences and changes between adaptive orders,
+including log-marginal likelihood contributions in the full table. Observation
+weights, when supplied, enter the likelihood as in the original scoring call.
+The first adaptive order
+has no previous order, so its change columns are `NA`. A `computed` status
+means the calculation finished; it does not certify accuracy. An `unavailable`
+row retains the reason in `Detail`. Persons with no scored responses remain
+in the ordinary disposition review and have no numerical integration row.
+Archive the full table with the score batch when reporting numerical checks.
+The comparison does not replace returned scores, intervals, or the artifact's
+stored grid, and it does not change readiness. Use the same option in
+`predict_mfrm_units()` or `mml_quadrature_sensitivity()` to review a fitted
+object; the latter also retains its separate comparison of refitted models.
+
+To use adapted grids during fitting and subsequent scoring, set
+`mml_integration = "adaptive"` in the `fit_mfrm()` call above. The direct MML
+engine then updates the grids while estimating parameters. The refit review
+retains this mode, and the frozen artifact records
+`scoring_algorithm = "adaptive_quadrature_eap_v2"`. Its stored nodes and weights
+define the base Hermite rule; scoring places that rule around each new Person's
+posterior. A small edge mass on an adapted grid is still not an accuracy
+certificate. Keep the order comparison and report the integration mode.
+Ordinary fitting defaults to `mml_integration = "fixed"`, and existing fixed-grid
+artifacts retain their scoring algorithm.
+
+New v2 scoring uses continuous equal-tail posterior intervals: a 95% interval
+leaves 2.5% of the continuous posterior below each lower endpoint and above
+each upper endpoint. EAP and SD still use the stored quadrature rule. Older
+v1 artifacts retain their discrete grid endpoints for reproducibility and
+carry a note that their continuous posterior mass may differ from the requested
+level. A frozen point calibration's intervals exclude calibration-parameter
+uncertainty; they do not guarantee 95% coverage at every fixed true ability.
+
+The scoring prior is also an assumption about the target population. For
+example, a new population with a wider ability distribution than the recorded
+standard normal prior can have less than 95% of its true abilities inside
+these intervals, even when the numerical integration is accurate. Increasing
+the quadrature order checks approximation under the same prior; it does not
+establish that this prior fits the new population. Report the scoring prior
+and explain its relevance to the population receiving scores, alongside the
+calibration and integration settings.
+
+An intercept-only normal population fitted to training data can adjust the
+scoring mean and variance, but it does not learn a skewed population shape.
+Its score intervals still condition on the estimated calibration and population
+parameters and exclude uncertainty from estimating them. Training and scoring
+populations also need not match. Such fitted-object scoring currently requires
+`readiness_policy = "review"` in `predict_mfrm_units()` and cannot be exported
+as a portable calibration; see the latent-regression workflow in `?fit_mfrm`.
+
+For example, a calibration may come from last year's cohort while this year's
+cohort has a different ability distribution. With an intercept-only population
+model, scoring the new response batch retains the fitted mean and variance;
+it does not estimate a new batch population. Source readiness alone therefore
+does not establish that the prior represents this year's people. Identify the
+training and scoring cohorts in the report, explain why the scoring prior can
+be applied to the new cohort, and examine sensitivity when that assumption is
+uncertain. A larger training sample can estimate last year's population more
+precisely without resolving a difference between the two populations.
 
 For a separate scoring script, the essential code is:
 

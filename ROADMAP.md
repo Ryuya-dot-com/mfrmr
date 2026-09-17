@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-10.
+Status: public roadmap, updated 2026-09-15.
 
 This roadmap describes the package's intended user-facing direction. It is not
 a promise of release dates. Completed changes are documented in `NEWS.md`.
@@ -60,7 +60,31 @@ that require further work. It does not automatically repeat every historical
 simulation. Numerical agreement, parameter recovery, uncertainty calibration,
 and correct refusal of unsupported inference are distinct results.
 
-### Current evidence and unresolved decisions — 2026-09-10
+### Current evidence reconciliation — 2026-09-14
+
+The [integrated ledger](inst/validation/claim-reconciliation-0.2.4.md) reconciles
+all 18 claim groups against current source and subsequent evidence. The public
+inventory now includes 182 exports and 191 S3 registrations; the additional
+entry is `plot_compare_mfrm()`. Mapping every entry is not individual claim
+validation or release approval.
+
+Facet-equivalence covariance/readiness defects and the Gauss–Hermite zero-weight
+defect have been repaired. Adaptive RSM/PCM comparisons with TAM and bounded
+native ConQuest comparisons supply numerical evidence within their recorded
+conditions. Person-scoring evidence now distinguishes estimated calibration,
+learned populations and transport. Formal population inference and fair-score
+intervals do not acquire support from those Person experiments.
+
+The next work is to close exact retained uncertainty/output claims, settle the
+small FairZ/DRF and full-model GPCM/JML questions, then run the necessary
+claim-specific confirmations and final-source checks. Public G/D-study,
+shrinkage, imports and descriptive routes remain in this review. The FairZ
+20,000-dataset main study has since started and is
+[paused at the user's request at 450/20,000 saved datasets](inst/validation/fairz-confirmation-status-0.2.4.md).
+The population-parameter 80,000-dataset main study remains unrun.
+No statistical or release pass is issued by the reconciliation.
+
+### Earlier evidence snapshot — 2026-09-10
 
 Read the status by claim and condition, not by number of functions, plots or
 successful fits. The public goal is a defensible workflow from rating design
@@ -168,9 +192,13 @@ passes numerical/refit checks and the minimal DRF workflow has been exercised.
 The [fresh-seed coverage supplement](inst/validation/fairz-coverage-record-0.2.4.md)
 has a prespecified protocol and 40 preliminary datasets checked on the recorded
 source; the planned
-20,000-dataset main study remains unrun (about four serial hours initially
-budgeted). Execution is paused for the help/README audit; source identity must
-be reconciled after documentation changes before resuming numerical work.
+20,000-dataset main study has started and is now paused at the user's request
+with 450 datasets saved. The earlier help/README pause is historical;
+documentation and reporting checks have since advanced. The
+[current-source FairZ review](inst/validation/fairz-current-review-0.2.4.md)
+reconciles its target, reruns the matching 40-dataset preflight, and repairs
+mixed fit/diagnostic inputs in fair-average tables and plots. Those checks
+do not establish coverage or qualify public Fair Score intervals.
 The separate DRF confirmation still needs location and linking
 alignment. Mean-reference FairM, Person
 intervals and paired refit changes have separate targets; their uncertainty
@@ -214,6 +242,143 @@ runs. A profile limit does not by itself correct finite-item JML bias.
 The GPCM limitation is substantive, not merely a user-interface restriction.
 Slope identification, boundary behavior, and portable scale identity require a
 stronger contract than the RSM/PCM workflow currently provides.
+
+## Random-effects MFRM and testlet covariance
+
+A distinct post-0.2.4 research direction is to model variation across sampled
+raters or tasks, and dependence among ratings sharing a response or facet.
+The practical questions are whether conclusions generalize to new raters or
+tasks, how little-observed raters can be estimated with partial pooling, and
+whether repeated ratings provide less independent information than an
+additive model assumes.
+
+Two structures need separate specifications:
+
+- **Sampled facet effects:** a rater severity or task difficulty drawn from a
+  declared population, with the same effect shared wherever that rater or task
+  occurs. This requires joint estimation of the population variation and the
+  other model parameters.
+- **Local-dependence effects:** a Person-by-Rater, Person-by-Task or response
+  effect shared by a declared set of repeated ratings. These answer a different
+  question from variation in average rater severity and need enough repeated
+  observations to identify their contribution.
+
+Current MML integrates the Person distribution; the other facets are fitted
+as fixed effects. Existing empirical-Bayes facet shrinkage is a post-fit
+adjustment, not a jointly estimated random-facet MFRM. These existing routes
+retain their meaning. Additional random effects also do not by themselves
+establish multiple substantive ability dimensions or a G-theory coefficient.
+
+Random-facet and testlet covariance belong in the declared model, including
+the effect owner, response-to-effect mapping, covariance constraints and
+generalization target. They must survive fitting, scoring, reporting and saved
+object replay. A covariance callback hidden in optimizer controls cannot by
+itself specify those meanings. Structural random-effect covariance is also
+different from the sampling covariance of estimated parameters.
+
+The initial numerical qualification order is a single-scale, unit-weight RSM
+with fixed facets and a small Person-local testlet block; a separately
+identified correlated-testlet structure; then the distinct crossed random-rater
+case. Independent testlet variances are a special case of the model declaration,
+not a reason to discard the covariance structure. General ability and testlet
+effects require explicit identification constraints; positive definiteness
+alone does not identify their decomposition.
+
+In the testlet case, each Person has their own testlet-effect vector with a
+shared population covariance. In the random-rater case, one rater effect is
+shared across Persons. The latter changes the joint marginalization and cannot
+be implemented by giving every Person a fresh copy of that rater effect.
+The first sampled-rater candidate retains fixed task/criterion effects and no
+interactions. PCM, random tasks and further dependence structures follow
+validated use cases. A hierarchical rater model with an unobserved consensus
+response remains a separate model choice.
+
+The longer-term target is user-declared crossed and nested random structures:
+for example, sampled raters and tasks, a Person-by-Rater interaction, or
+rater-specific effects of an observed criterion contrast. Users should be able
+to choose these structures explicitly, with a readable explanation of which
+observations share each effect and which populations predictions concern.
+An observed-covariate random slope is different from a discrimination loading
+on latent ability; each needs its own identification and validation.
+
+This flexibility is admitted in stages: scalar crossed effects, identified
+interaction blocks, then random slopes and covariance among coefficients owned
+by the same unit. Crossed and nested IDs, repeated-cell information, sparse
+incidence and confounding with fixed terms must be checked. The Person ability
+effect must not be added twice, and unrelated owners do not acquire an arbitrary
+covariance merely by appearing in the same formula. Unsupported combinations
+receive a specific explanation. A syntactically valid declaration is not
+evidence that a model is estimable or that its numerical route is qualified.
+
+TAM offers useful matched reference routes: `tam.mml.mfr()` does not directly
+accept `userfct.variance`, while `tam.mml()` documents structured testlet
+examples. This is a difference between interfaces, not a claim that TAM cannot
+model testlets. mfrmr's proposed responsibility is to preserve the complete
+many-facet model and prediction meaning across its user workflow; an external
+backend or explicit design-matrix translation remains an option after exact
+model matching. See the [source check and covariance specification](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md#2026-09-15-covariance-as-a-model-element).
+
+Before a public implementation is admitted, the review must establish the
+joint likelihood, identification, variance-boundary behavior and computational
+accuracy, then evaluate recovery and uncertainty under small rater pools,
+unequal workloads, sparse links and misspecified allocation/distributions.
+Prediction must distinguish observed raters from new raters; a new rater is not
+silently assigned severity zero. Planning must specify which facets are
+resampled and how many are used, keeping observed-score G/D-study coefficients
+separate from latent-model variance summaries.
+
+The [Zotero-grounded research note](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md#2026-09-15-random-effects-mfrm-direction)
+records the literature, source distinctions and proposed verification steps.
+This direction adds no 0.2.4 release requirement or promised implementation
+version. Its initial design/comparison work can accompany later multiple-scale
+planning after the existing-route review; neither extension establishes the
+other. Public support follows evidence and an explicit scope decision.
+
+## Response time and decision processes
+
+These are two distinct research directions with different scientific questions:
+
+| Direction | Question and initial scope |
+| --- | --- |
+| Hierarchical response time, following van der Linden | How are proficiency and working speed related, and does using both responses and times improve inference under the stated model? Start with one qualified response kernel, a lognormal time model and a Person ability-speed covariance, with fixed item/facet effects. |
+| Drift diffusion model (DDM) | In a suitable two-choice task, do differences arise from evidence accumulation, decision caution, response bias or nondecision time? Start with a separately validated choice-and-time likelihood and a bounded trial-level design. |
+
+The van der Linden baseline separates the response and time distributions
+conditional on ability and speed, then relates their person parameters through
+a population covariance. An RSM/PCM many-facet extension needs its own evidence;
+it is not a replication of the original normal-ogive example. Random item
+accuracy-time covariance and random-rater scoring-time effects are later,
+separately qualified extensions. A between-person ability-speed correlation
+does not identify the causal effect of asking a person to work faster.
+
+The data must identify the timed actor, event, time unit and observation window.
+A respondent's production time belongs to their response event, even when
+several raters score that response; it contributes one time observation.
+A rater's scoring time belongs to a different event and concerns a different
+latent speed. Missing time, a recorded timeout and an event never started must
+remain distinguishable. The current `response_time_review()` stays descriptive.
+
+DDM jointly models which boundary is reached and when; it is not a replacement
+distribution for the lognormal component alone. Ordinary polytomous ratings,
+multi-option responses recoded as correct/incorrect, and whole-essay completion
+times do not by themselves establish a two-boundary decision process. Such uses
+need a justified process model and event data. Initial DDM work must preserve
+both choices and their times, identify the diffusion scale, check correct/error
+time distributions, and evaluate parameter recovery and uncertainty under the
+intended trial counts. Model parameters are not automatically MFRM ability or
+rater-severity scores.
+
+Crossed random effects are the core generalization priority. The response-time
+track can progress independently once a concrete timed workflow and event
+mapping are available. DDM remains a separate research track requiring a
+suitable decision task; it does not depend on implementing every crossed model.
+Share established effect/event meanings and reporting conventions where useful,
+but qualify each likelihood and computational route separately. Existing
+backends should be compared before considering a new solver.
+
+The [crossed-effects and process-model refinement](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md#2026-09-15-crossed-effects-and-process-model-refinement)
+records the Zotero sources, entry conditions and validation questions. These
+directions have no promised release version and add no 0.2.4 release blocker.
 
 ## Generalizability theory
 
@@ -299,13 +464,45 @@ merely to offer another interface to the same estimand.
 | --- | --- | --- | --- |
 | TAM | Broad MML/JML IRT, GPCM, multidimensional, latent-regression, plausible-value, and multifacet routes | Independent comparator or external analysis route after the measurement, estimation, and scoring specifications are matched | A TAM compatibility mode or clone of its solver and design-matrix engine |
 | mirt | Broad unidimensional/multidimensional IRT, GPCM/GRM, mixed-effects and stochastic estimation routes | First external oracle for response-family, slope, and multidimensional questions outside the bounded `mfrmr` core | Reimplementing MIRT, GRM, mixture, or stochastic engines without a named many-facet use case |
-| immer | Hierarchical rater models and CML/CCML/JML partial-credit models for multiple ratings | Alternative-estimand and sensitivity route for hierarchical-rater or conditional-likelihood questions | Calling an HRM, CML, or bias-corrected JML result numerically equivalent to the bounded `mfrmr` GPCM |
+| sirt | Facet MML (`rm.facets`), HRM-SDT (`rm.sdt`), random-item/multilevel and testlet MCMC, and custom discrete IRT (`xxirt`) | Function-specific comparison or reuse candidate for fixed facets, alternative rating mechanisms, restricted random effects and local dependence | Treating its product-slope model as the same GPCM, or treating flexible item functions as an already qualified arbitrary crossed-effects or RT engine |
+| immer | Patz-type HRM and simulation, plus CML/CCML/JML partial-credit models for multiple ratings | Reference for a latent consensus-rating mechanism; structural PCM comparisons with estimator/correction differences preserved | Equating an HRM with Gaussian random-rater severity, or comparing conditional/composite objectives directly with MML/JML |
 | simr | Simulation-based power analysis for `lme4` mixed models | External route for power of a model-matched mixed-model hypothesis | Reusing GLMM power as MFRM recovery, anchor/link, fit-screening, or scoring evidence |
+
+For the random-effects direction, sirt is more than a fixed-facet comparator:
+`mcmc.2pno.ml()` already provides specified random-item and multilevel
+structures, and `mcmc.3pno.testlet()` supplies Person-local testlet effects.
+These are useful restricted reference routes, with their response links,
+priors, loadings and effect owners retained. They do not establish a general
+correlated, polytomous Person-by-Rater-by-Task implementation. Likewise,
+`rm.facets()` estimates rater-specific coefficients, while `immer_hrm()`
+models ratings through a latent response; neither description by itself
+establishes estimation of a sampled-rater population covariance.
+
+The RT/DDM track requires separate evaluation. sirt's `rm.sdt()` concerns
+signal detection in ratings, not a first-passage-time decision model. Its
+`xxirt()` allows custom item functions and latent distributions within a
+documented discrete-response, locally independent formulation; this is a
+candidate for bounded latent-response experiments, not evidence of an existing
+continuous-time or shared-crossed-owner implementation. No dedicated
+hierarchical RT or DDM route was identified in the audited sirt/immer public
+interfaces and help topics. This is a version-specific scope finding.
+
+Package names do not establish computational independence: immer imports sirt
+and TAM, and sirt imports TAM. Comparisons must identify which routines actually
+compute probabilities, fit parameters and score Persons. A helper transforming
+TAM testlet estimates is not a second independent fit. An external backend
+retains its own statistical identity and readiness; it is not silently coerced
+into a native mfrmr fit or portable calibration object.
 
 The default order is documentation or export, then one matched external
 microcase, then a narrow adapter only if users repeatedly need the same
 translation. New dependencies and new package-native engines require evidence
 that these smaller routes cannot answer the intended decision.
+
+The [sirt/immer scope audit](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md#2026-09-15-sirt-and-immer-scope-audit)
+records the checked versions, model distinctions, existing comparison records
+and the next bounded reference studies. This updates research planning without
+adding dependencies or claiming new fitted-model agreement.
 
 ## Version direction
 
@@ -316,9 +513,10 @@ that these smaller routes cannot answer the intended decision.
 | 0.3.0 | Consolidate APIs, object schemas, compatibility and migration policy, examples, and reproducible performance evidence for the validated routes. |
 | 1.0.0 | Release a deliberately bounded stable core with documented support conditions, statistical evidence, output restrictions, and maintenance commitments. |
 
-Portable GPCM, multidimensional estimation, multivariate G-theory, and new
-response families remain conditional research directions without a promised
-release version. Each requires a concrete analysis need, a model and estimand
+Random-effects MFRM, hierarchical response-time and diffusion models, portable
+GPCM, multidimensional estimation, multivariate G-theory, and new response
+families remain conditional research directions without a promised release
+version. Each requires a concrete analysis need, a model and estimand
 specification, independent verification, and appropriate statistical evidence
 before public implementation is promoted. These extensions do not displace
 verification of functionality already exposed to users.
@@ -345,6 +543,8 @@ Version 0.2.4 is not intended to provide:
 - portable GPCM calibration;
 - portable JML calibration;
 - portable interaction calibration;
+- jointly estimated random-rater or random-task MFRM;
+- joint response-time or diffusion-model estimation;
 - automatic cross-scale linking;
 - multiple observed scales in one portable calibration;
 - exported multivariate G-theory analysis; or

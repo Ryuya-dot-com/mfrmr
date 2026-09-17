@@ -114,30 +114,28 @@ final estimation/reporting.
 }
 
 \examples{
-ratings <- load_mfrmr_data("example_operational")
+\donttest{
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-out <- data_quality_report(
-  fit,
-  data = ratings,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score"
-)
-summary(out)
-p_dq <- plot(out, draw = FALSE)
-p_dq$data$plot
+
+# Review the input-data checks recorded with this fit
+quality <- data_quality_report(fit)
+summary(quality)
+
+# Draw the data-quality overview
+plot(quality)
+}
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}, \code{\link[=specifications_report]{specifications_report()}},

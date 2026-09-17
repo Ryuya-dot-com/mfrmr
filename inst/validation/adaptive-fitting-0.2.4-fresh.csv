@@ -1,0 +1,5 @@
+platform,model,reader_status,score_error,artifact_score_identical,artifact_algorithm,prediction_algorithm,posterior_draws
+macos,RSM,0,6.66133814775094e-16,TRUE,adaptive_quadrature_eap_v1,adaptive_quadrature_eap_v1,20
+macos,PCM,0,8.88178419700125e-16,TRUE,adaptive_quadrature_eap_v1,adaptive_quadrature_eap_v1,20
+linux,RSM,0,0,TRUE,adaptive_quadrature_eap_v1,adaptive_quadrature_eap_v1,20
+linux,PCM,0,0,TRUE,adaptive_quadrature_eap_v1,adaptive_quadrature_eap_v1,20

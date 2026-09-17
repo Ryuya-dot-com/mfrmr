@@ -38,6 +38,75 @@ local({
 # build_visual_warning_map
 # ============================================================================
 
+test_that("APA design prose uses each facet's own level count", {
+  apa <- build_apa_outputs(.fit, .diag)
+  text <- gsub("[[:space:]]+", " ", apa$report_text)
+  counts <- lengths(.fit$config$facet_levels)
+  expect_gt(length(unique(counts)), 1L)
+  for (facet in names(counts)) {
+    expect_match(text, paste0(facet, " (n = ", counts[[facet]], ")"), fixed = TRUE)
+  }
+})
+
+test_that("weighted reports distinguish observed rows from the weight sum", {
+  dat <- load_mfrmr_data("example_operational")
+  dat$Weight <- rep(c(1, 0.5, 2, 1, 0), length.out = nrow(dat))
+  fit <- suppressWarnings(fit_mfrm(dat, "Person", c("Rater", "Criterion"),
+                                   "Score", weight = "Weight", method = "MML"))
+  diag <- diagnose_mfrm(fit, residual_pca = "none")
+  apa <- build_apa_outputs(fit, diag)
+  rows <- nrow(diag$obs)
+  weights <- sum(diag$obs$Weight)
+  expect_equal(apa$contract$metadata$n_obs, rows)
+  expect_equal(apa$contract$metadata$weight_sum, weights)
+  expect_match(gsub("[[:space:]]+", " ", apa$report_text),
+               paste0("was fit to ", rows, " observations"), fixed = TRUE)
+  expect_match(apa$report_text, "sum of observation weights", fixed = TRUE)
+  smap <- mfrmr:::build_visual_summary_map(fit, diag)
+  expect_true(any(grepl(paste0("Observations: N = ", rows), smap$wright_map, fixed = TRUE)))
+  wmap <- mfrmr:::build_visual_warning_map(fit, diag,
+                                          thresholds = list(n_obs_min = mean(c(rows, weights))))
+  expect_true(any(grepl("Small number of observations", wmap$wright_map, fixed = TRUE)))
+})
+
+test_that("reporting uses only stored residual PCA analyses", {
+  calls <- 0L
+  unexpected_pca <- function(...) {
+    calls <<- calls + 1L
+    stop("Reporting must not compute residual PCA")
+  }
+  local_mocked_bindings(
+    compute_pca_overall = unexpected_pca,
+    compute_pca_by_facet = unexpected_pca,
+    .package = "mfrmr"
+  )
+  for (mode in c("none", "overall", "facet", "both")) {
+    diag <- .diag
+    diag$residual_pca_mode <- mode
+    has_overall <- mode %in% c("overall", "both")
+    has_facet <- mode %in% c("facet", "both")
+    if (!has_overall) diag$residual_pca_overall <- NULL
+    if (!has_facet) diag$residual_pca_by_facet <- NULL
+
+    apa <- build_apa_outputs(.fit, diag)
+    text <- gsub("[[:space:]]+", " ", apa$report_text)
+    expect_identical(apa$contract$availability$has_pca_overall, has_overall)
+    expect_identical(apa$contract$availability$has_pca_by_facet, has_facet)
+    expect_identical(grepl("overall standardized residual matrix", text), has_overall)
+    expect_identical(grepl("Facet-specific exploratory residual PCA showed", text), has_facet)
+    if (mode == "none") expect_false(grepl("PCA", text))
+
+    smap <- mfrmr:::build_visual_summary_map(.fit, diag)
+    wmap <- mfrmr:::build_visual_warning_map(.fit, diag)
+    expect_identical(any(grepl("Overall residual PCA PC1:", smap$residual_pca_overall)), has_overall)
+    expect_identical(any(grepl("Top facet PC1", wmap$residual_pca_by_facet)), has_facet)
+    pca <- mfrmr:::safe_residual_pca(diag)
+    if (has_overall) expect_identical(pca$overall, .diag$residual_pca_overall)
+    if (has_facet) expect_identical(pca$by_facet, .diag$residual_pca_by_facet)
+  }
+  expect_identical(calls, 0L)
+})
+
 test_that("build_visual_warning_map returns all expected visual keys", {
   wmap <- mfrmr:::build_visual_warning_map(.fit, .diag)
   expected_keys <- c(
@@ -249,7 +318,7 @@ test_that("build_apa_outputs validates fit, diagnostics, context, and bias input
 test_that("apa_table uses the same APA contract validation when contract metadata is needed", {
   expect_error(
     mfrmr::apa_table(.fit, which = "summary", diagnostics = list()),
-    "requires `diagnostics` to be an `mfrm_diagnostics` object",
+    "`diagnostics` must be an mfrm_diagnostics object",
     fixed = TRUE
   )
   expect_error(
@@ -393,6 +462,29 @@ test_that("summarize_convergence_metrics produces text from summary row", {
     text <- mfrmr:::summarize_convergence_metrics(summary_row[1, , drop = FALSE])
     expect_true(is.character(text))
   }
+})
+
+test_that("convergence prose separates numerical checks from inference readiness", {
+  row <- data.frame(
+    Converged = TRUE, ConvergenceSeverity = "pass",
+    ConvergenceStatus = "converged", InferenceReady = FALSE,
+    ReadinessContractVersion = mfrmr:::mfrmr_readiness_contract_version(),
+    FitReadiness = "review", Method = "MML"
+  )
+  expect_false(mfrmr:::mfrm_convergence_state(row)$inference_ready)
+  expect_match(mfrmr:::summarize_convergence_metrics(row),
+               "met the numerical convergence checks", fixed = TRUE)
+  row$ConvergenceSeverity <- "review"
+  row$ConvergenceStatus <- "converged_gradient_review"
+  expect_match(mfrmr:::summarize_convergence_metrics(row),
+               "terminal gradient requires review", fixed = TRUE)
+  row$ConvergenceStatus <- "reviewable_warning"
+  expect_match(mfrmr:::summarize_convergence_metrics(row),
+               "reviewable optimizer warning", fixed = TRUE)
+  row$Converged <- FALSE
+  row$ConvergenceStatus <- "not_converged"
+  expect_match(mfrmr:::summarize_convergence_metrics(row),
+               "did not meet the package convergence checks", fixed = TRUE)
 })
 
 # ============================================================================

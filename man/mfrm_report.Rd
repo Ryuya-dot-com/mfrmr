@@ -116,23 +116,25 @@ and drift/equating claims require multiple fitted forms or waves.
 }
 \examples{
 \donttest{
-ratings <- load_mfrmr_data("example_operational")
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
 fit <- fit_mfrm(
-  data = ratings,
+  data = toy,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
-  rating_min = 1,
-  rating_max = 4,
   method = "MML",
-  model = "RSM",
-  quad_points = 7,
-  maxit = 30,
-  reltol = 1e-11
+  model = "RSM"
 )
-results <- mfrm_results(fit)
 
-report <- mfrm_report(results)
+# Build results, then turn them into a report
+res <- mfrm_results(fit)
+report <- mfrm_report(res)
+
+# Read the report and the issues to address
 summary(report, view = "reader")
 report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 }

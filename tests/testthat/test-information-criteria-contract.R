@@ -434,8 +434,11 @@ test_that("fitted-object IC comparison audits weights, legacy state, and identit
     use.names = FALSE
   ))))
   expect_warning(
-    constant_comparison <- compare_mfrm(A = fit_constant, B = fit_constant),
-    "not eligible for the common information-criterion panel"
+    expect_warning(
+      constant_comparison <- compare_mfrm(A = fit_constant, B = fit_constant),
+      "not eligible for the common information-criterion panel"
+    ),
+    "requires optimizer or convergence review"
   )
   expect_false(any(constant_comparison$table$ICComparable))
 

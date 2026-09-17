@@ -438,28 +438,43 @@ gpcm_planning_scope_rationale <- function() {
 }
 
 # Gauss-Hermite nodes/weights for standard normal integration
-# Based on Golub-Welsch for Hermite polynomials
+# Golub-Welsch nodes and Christoffel weights from scaled Hermite polynomials.
 # Returns nodes and weights for phi(x) dx
 #   integral f(x) phi(x) dx \approx sum w_i f(x_i)
 gauss_hermite_normal <- function(n) {
-  if (n < 1) stop("Gauss-Hermite quadrature requires n >= 1 quadrature points. ",
+  if (!is.numeric(n) || length(n) != 1L || !is.finite(n) ||
+      n < 1 || n != floor(n) || n > .Machine$integer.max) {
+    stop("Gauss-Hermite quadrature requires integer n >= 1 quadrature points. ",
                    "Check the 'quad_points' argument.", call. = FALSE)
+  }
   if (n == 1) {
     return(list(nodes = 0, weights = 1))
   }
   i <- seq_len(n - 1)
-  a <- rep(0, n)
-  b <- sqrt(i / 2)
   jmat <- matrix(0, nrow = n, ncol = n)
-  diag(jmat) <- a
-  jmat[cbind(seq_len(n - 1), seq_len(n - 1) + 1)] <- b
-  jmat[cbind(seq_len(n - 1) + 1, seq_len(n - 1))] <- b
-  eig <- eigen(jmat, symmetric = TRUE)
-  nodes <- eig$values
-  weights <- sqrt(pi) * (eig$vectors[1, ]^2)
-  # Convert from exp(-x^2) to standard normal
-  nodes <- sqrt(2) * nodes
-  weights <- weights / sqrt(pi)
+  jmat[cbind(i, i + 1)] <- sqrt(i)
+  jmat[cbind(i + 1, i)] <- sqrt(i)
+  nodes <- eigen(jmat, symmetric = TRUE, only.values = TRUE)$values
+  nodes <- (nodes - rev(nodes)) / 2
+
+  # The eigensolver can zero tiny first-row eigenvector entries. Instead use
+  # w(x) = 1 / sum_{k=0}^{n-1} p_k(x)^2, p_k = He_k / sqrt(k!).
+  # Multiplying p_k by exp(-x^2/4) keeps the recurrence and squared sum finite.
+  previous <- exp(-nodes^2 / 4)
+  current <- nodes * previous
+  squares <- previous^2 + current^2
+  if (n > 2) for (k in 2:(n - 1)) {
+    next_value <- (nodes * current - sqrt(k - 1) * previous) / sqrt(k)
+    previous <- current
+    current <- next_value
+    squares <- squares + current^2
+  }
+  weights <- exp(-nodes^2 / 2 - log(squares))
+  if (any(!is.finite(weights)) || any(weights <= 0)) {
+    stop("Gauss-Hermite weights cannot all be represented as positive finite ",
+         "doubles at this order; reduce 'quad_points'.", call. = FALSE)
+  }
+  weights <- weights / sum(weights)
   list(nodes = nodes, weights = weights)
 }
 
@@ -534,6 +549,7 @@ resolve_person_quadrature_basis <- function(quad,
                                             population_spec = NULL,
                                             person_ids = NULL,
                                             person_count = NULL) {
+  if (!is.null(quad$person_basis)) return(quad$person_basis)
   if (is.null(person_ids)) {
     n_persons <- as.integer(person_count %||% 0L)
     person_ids <- seq_len(max(0L, n_persons))
@@ -1937,6 +1953,11 @@ mfrm_mml_logprob_bundle <- function(idx,
                                     step_cum = NULL,
                                     include_probs = FALSE,
                                     include_linear_part = FALSE) {
+  if (mfrmr_adaptive_integration(config)) {
+    quad$person_basis <- mfrmr_adaptive_quadrature_basis(
+      idx, config, params, quad, base_eta
+    )
+  }
   if (mfrm_use_cpp11_backend(config, include_linear_part = include_linear_part)) {
     return(mfrm_mml_logprob_bundle_cpp11(
       idx = idx,
@@ -2340,6 +2361,10 @@ mfrm_grad_mml_core <- function(params, base_eta, idx, config, sizes, quad,
                                posterior_bundle = NULL) {
   n <- length(idx$score_k)
   if (n == 0) return(rep(0, sum(unlist(sizes))))
+  if (mfrmr_adaptive_integration(config)) {
+    evaluate <- mfrmr_make_adaptive_mml_evaluator(idx, config, sizes, length(quad$nodes))
+    return(evaluate(collapse_expanded_params(params, config))$gradient)
+  }
   score_k <- idx$score_k
   weight <- idx$weight
   population_spec <- materialize_population_spec(config, params)
@@ -3569,7 +3594,7 @@ mfrm_ic_integration_evaluation_id <- function(method, config) {
     config$estimation_control$quad_points %||% NA_integer_
   ))
   paste0(
-    "mfrmr_ghq_normal_v1:q=",
+    if (mfrmr_adaptive_integration(config)) "mfrmr_aghq_normal_v1:q=" else "mfrmr_ghq_normal_v1:q=",
     if (is.finite(quad_points)) quad_points else "unknown"
   )
 }
@@ -3880,6 +3905,9 @@ build_estimation_summary <- function(model, method, prep, config, sizes, opt,
     Model = model,
     Method = public_mfrm_method_label(method),
     MethodUsed = method,
+    MMLIntegration = if (identical(method, "MML")) {
+      config$estimation_control$mml_integration %||% "fixed"
+    } else "not_applicable_jml",
     ICContractVersion = ic$ICContractVersion,
     N = ic$N,
     ResponseRows = ic$ResponseRows,
@@ -4169,7 +4197,8 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
                           quad_points = 15, maxit = 400, reltol = 1e-9,
                           optimizer = "auto",
                           mml_engine = "direct",
-                          checkpoint = NULL) {
+                          checkpoint = NULL,
+                          mml_integration = "fixed") {
   # Internal validation instrumentation. The option is deliberately absent
   # from the public fitting API because elapsed time is volatile metadata, not
   # part of the statistical result. When enabled, timings are attached only
@@ -4276,6 +4305,7 @@ mfrm_estimate <- function(data, person_col, facet_cols, score_col,
     maxit = as.integer(maxit),
     reltol = as.numeric(reltol),
     quad_points = as.integer(quad_points),
+    mml_integration = match.arg(mml_integration, c("fixed", "adaptive")),
     optimizer_requested = normalize_mfrm_optimizer(optimizer),
     mml_engine_requested = normalize_mml_engine(mml_engine),
     checkpoint = checkpoint
@@ -5056,7 +5086,6 @@ calc_unexpected_response_table <- function(obs_df,
                                            rating_min,
                                            abs_z_min = 2,
                                            prob_max = 0.30,
-                                           top_n = 100,
                                            rule = c("either", "both")) {
   rule <- match.arg(tolower(rule), c("either", "both"))
   if (is.null(obs_df) || nrow(obs_df) == 0 || is.null(probs) || nrow(probs) != nrow(obs_df)) {
@@ -5136,11 +5165,10 @@ calc_unexpected_response_table <- function(obs_df,
   )
   keep_cols <- keep_cols[keep_cols %in% names(out)]
 
-  top_n <- max(1L, as.integer(top_n))
+  # Keep all flagged rows until callers have computed prevalence summaries.
   out |>
     arrange(desc(.data$Severity), desc(abs(.data$StdResidual)), .data$ObsProb) |>
-    select(dplyr::all_of(keep_cols)) |>
-    slice_head(n = top_n)
+    select(dplyr::all_of(keep_cols))
 }
 
 summarize_unexpected_response_table <- function(unexpected_tbl,
@@ -9143,6 +9171,11 @@ compute_mml_parameter_covariance <- function(res) {
     cache$ensure(par)
     mfrm_grad_mml_cached(cache, idx, config, sizes, quad)
   }
+  if (mfrmr_adaptive_integration(config)) {
+    evaluator <- make_mfrm_direct_evaluator("MML", cache, idx, config, sizes, quad)
+    fn <- function(par, idx, config, sizes, quad) evaluator$value(par)
+    gr <- function(par, idx, config, sizes, quad) evaluator$gradient(par)
+  }
 
   hess <- tryCatch(
     stats::optimHess(
@@ -10298,7 +10331,6 @@ mfrm_diagnostics <- function(res,
     rating_min = res$prep$rating_min,
     abs_z_min = unexpected_abs_z_min,
     prob_max = unexpected_prob_max,
-    top_n = 100,
     rule = unexpected_rule
   )
   unexpected_summary <- summarize_unexpected_response_table(
@@ -10437,6 +10469,15 @@ mfrm_diagnostics <- function(res,
   list(
     obs = obs_df,
     facet_names = res$config$facet_names,
+    replay_inputs = list(
+      interaction_pairs = interaction_pairs,
+      top_n_interactions = top_n_interactions,
+      whexact = whexact,
+      fit_df_method = fit_df_method,
+      diagnostic_mode = diagnostic_mode,
+      residual_pca = residual_pca,
+      pca_max_factors = pca_max_factors
+    ),
     diagnostic_mode = diagnostic_mode,
     diagnostic_basis = diagnostic_basis_tbl,
     fit_standardization = fit_standardization,
@@ -10466,7 +10507,7 @@ mfrm_diagnostics <- function(res,
     interactions = interaction_tbl,
     interrater = interrater_tbl,
     unexpected = list(
-      table = unexpected_tbl,
+      table = utils::head(unexpected_tbl, 100L),
       summary = unexpected_summary,
       thresholds = list(
         abs_z_min = unexpected_abs_z_min,

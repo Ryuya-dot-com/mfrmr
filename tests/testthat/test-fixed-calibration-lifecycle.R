@@ -430,7 +430,7 @@ test_that("portable scoring grid is independent of a one-point source fit grid",
   expect_identical(fit$config$estimation_control$quad_points, 1L)
   expect_identical(draft$scoring_basis$quadrature_order, 31L)
   expect_identical(
-    draft$scoring_basis$scoring_algorithm, "quadrature_eap_v1"
+    draft$scoring_basis$scoring_algorithm, "quadrature_eap_v2"
   )
 
   validated <- mfrmr:::mfrmr_validate_calibration_draft(
@@ -457,6 +457,37 @@ test_that("portable scoring grid is independent of a one-point source fit grid",
     )
   )
   expect_identical(err$code, "QUADRATURE_ORDER_INVALID")
+})
+
+test_that("high scoring orders survive the full calibration lifecycle", {
+  fixture <- fixed_calibration_fit_fixture("RSM")
+  rows <- fixed_calibration_scoring_rows(fixture$data)
+  for (n in c(61L, 121L, 181L)) {
+    draft <- mfrmr:::mfrmr_extract_calibration_draft(
+      fixture$fit, scoring_quad_points = n
+    )
+    expect_identical(draft$scoring_basis$quadrature_order, n)
+    expect_identical(draft$scoring_basis$quadrature_rule,
+                     "gauss_hermite_standard_normal_recurrence_v2")
+    expect_true(all(draft$scoring_basis$weights > 0))
+    expect_equal(nrow(mfrmr:::mfrmr_review_calibration(draft)), 0L)
+    frozen <- mfrmr:::mfrmr_freeze_calibration(
+      mfrmr:::mfrmr_validate_calibration_draft(draft)
+    )
+    portable <- mfrmr:::mfrmr_score_calibration(frozen, rows)
+    fitted <- predict_mfrm_units(fixture$fit, rows, scoring_quad_points = n)
+    expect_equal(portable$estimates$Person, fitted$estimates$Person)
+    expect_equal(portable$estimates$Estimate, unname(fitted$estimates$Estimate),
+                 tolerance = 1e-12)
+    expect_equal(portable$estimates$SD, unname(fitted$estimates$SD), tolerance = 1e-12)
+  }
+  legacy <- draft
+  legacy$scoring_basis$quadrature_rule <- "gauss_hermite_standard_normal_golub_welsch_v1"
+  expect_false("QUADRATURE_RULE_INVALID" %in%
+                 mfrmr:::mfrmr_review_calibration(legacy)$Code)
+  legacy$scoring_basis$weights[1] <- 0
+  expect_true("QUADRATURE_WEIGHTS_INVALID" %in%
+                mfrmr:::mfrmr_review_calibration(legacy)$Code)
 })
 
 test_that("calibration print and summary expose scope without source Persons", {
@@ -644,8 +675,25 @@ test_that("an independent direct oracle reproduces one-row RSM scoring", {
 
   expect_equal(scored$estimates$Estimate, oracle_estimate, tolerance = 1e-15)
   expect_equal(scored$estimates$SD, oracle_sd, tolerance = 1e-15)
-  expect_equal(scored$estimates$Lower, oracle_quantile(0.10), tolerance = 0)
-  expect_equal(scored$estimates$Upper, oracle_quantile(0.90), tolerance = 0)
+  density <- function(theta) vapply(theta, function(value) {
+    logits <- category * (value + base_eta) - cumulative_step
+    p <- exp(logits - max(logits))
+    p[score_k+1L] / sum(p) * dnorm(value)
+  }, 0)
+  mass <- integrate(density, -12, 12, rel.tol=1e-11)$value
+  cdf <- function(value) integrate(density, -12, value, rel.tol=1e-11)$value / mass
+  expect_equal(cdf(scored$estimates$Lower), 0.10, tolerance=1e-8)
+  expect_equal(cdf(scored$estimates$Upper), 0.90, tolerance=1e-8)
+
+  # Historical algorithm identities still reproduce their original grid bounds.
+  legacy <- fixture$draft
+  legacy$scoring_basis$scoring_algorithm <- "quadrature_eap_v1"
+  legacy$integrity$semantic_components <- mfrmr:::mfrmr_calibration_semantic_components(legacy)
+  legacy <- mfrmr:::mfrmr_freeze_calibration(mfrmr:::mfrmr_validate_calibration_draft(legacy))
+  old <- mfrmr:::mfrmr_score_calibration(legacy,row,interval_level=0.80)
+  expect_equal(old$estimates$Lower,oracle_quantile(0.10),tolerance=0)
+  expect_equal(old$estimates$Upper,oracle_quantile(0.90),tolerance=0)
+  expect_match(paste(old$notes,collapse=" "),"legacy v1")
 })
 
 test_that("interaction artifacts score from their complete stored cell matrix", {

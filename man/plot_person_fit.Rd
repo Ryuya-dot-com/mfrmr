@@ -64,11 +64,27 @@ review (overfit / underfit) using
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-p <- plot_person_fit(fit, draw = FALSE)
-head(p$data$data)
+# Load the package and example ratings
+library(mfrmr)
+toy <- load_mfrmr_data("example_operational")
+
+# Fit the model
+fit <- fit_mfrm(
+  data = toy,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  method = "MML",
+  model = "RSM"
+)
+
+# Compute diagnostics once for the following checks
+diagnostics <- diagnose_mfrm(fit)
+
+# Compare each person's Infit and Outfit with the reference value of 1
+plot_person_fit(fit, diagnostics = diagnostics)
+# Values above 1 indicate more response variation than expected, below 1 less
+# The reference bands flag patterns for review, not automatic exclusion
 }
 }
 \seealso{
