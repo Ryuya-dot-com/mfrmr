@@ -1873,10 +1873,13 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 
   design_summary <- tibble::tibble()
   if (nrow(results_tbl) > 0) {
-    # Failed fits/diagnostics have no facet rows. Keep their run records in
-    # the denominator used by summaries, plots and design recommendations.
-    for (name in c("Observations", "MaxRatingsPerRater")) {
-      if (!name %in% names(rep_tbl)) rep_tbl[[name]] <- rep(NA_real_, nrow(rep_tbl))
+    # Failed fits/diagnostics have no facet rows. Keep all run records for
+    # convergence, workload and assignment summaries.
+    run_defaults <- c(list(Observations = NA_real_, MaxRatingsPerRater = NA_real_,
+      RaterComponents = NA_integer_, CriterionComponents = NA_integer_),
+      simulation_sparse_overview_fields(NULL))
+    for (name in names(run_defaults)) {
+      if (!name %in% names(rep_tbl)) rep_tbl[[name]] <- rep(run_defaults[[name]], nrow(rep_tbl))
     }
     run_summary <- rep_tbl |>
       dplyr::group_by(.data$design_id) |>
@@ -1886,6 +1889,19 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
         McseConvergenceRate = simulation_mcse_proportion(.data$Converged %in% TRUE),
         MaxRatings = max(.data$Observations),
         MaxRatingsPerRater = max(.data$MaxRatingsPerRater),
+        MaxRaterComponents = max(.data$RaterComponents),
+        MaxCriterionComponents = max(.data$CriterionComponents),
+        DisconnectedReps = sum(.data$RaterComponents > 1L | .data$CriterionComponents > 1L, na.rm = TRUE),
+        SparseDesignActive = any(.data$SparseDesignActive %in% TRUE, na.rm = TRUE),
+        MeanDesignDensity = design_eval_safe_mean(.data$DesignDensity),
+        MeanPlannedMissingRate = design_eval_safe_mean(.data$PlannedMissingRate),
+        MeanLinkPersons = design_eval_safe_mean(.data$LinkPersons),
+        MeanLinkFractionActual = design_eval_safe_mean(.data$LinkFractionActual),
+        MeanLinkRatersPerPerson = design_eval_safe_mean(.data$LinkRatersPerPerson),
+        MeanMinCommonPersonsPerRaterPair = design_eval_safe_mean(.data$MinCommonPersonsPerRaterPair),
+        MaxZeroCommonRaterPairs = if (all(is.na(.data$ZeroCommonRaterPairs))) NA_integer_ else max(.data$ZeroCommonRaterPairs, na.rm = TRUE),
+        MaxRaterPairsBelowTarget = if (all(is.na(.data$RaterPairsBelowTarget))) NA_integer_ else max(.data$RaterPairsBelowTarget, na.rm = TRUE),
+        TargetCommonPersonsPerRaterPair = if (all(is.na(.data$TargetCommonPersonsPerRaterPair))) NA_integer_ else max(.data$TargetCommonPersonsPerRaterPair, na.rm = TRUE),
         .groups = "drop"
       )
     design_summary <- results_tbl |>
@@ -1917,16 +1933,6 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
         McseElapsedSec = simulation_mcse_mean(.data$ElapsedSec),
         MeanMinCategoryCount = mean(.data$MinCategoryCount, na.rm = TRUE),
         McseMinCategoryCount = simulation_mcse_mean(.data$MinCategoryCount),
-        SparseDesignActive = any(.data$SparseDesignActive %in% TRUE, na.rm = TRUE),
-        MeanDesignDensity = design_eval_safe_mean(.data$DesignDensity),
-        MeanPlannedMissingRate = design_eval_safe_mean(.data$PlannedMissingRate),
-        MeanLinkPersons = design_eval_safe_mean(.data$LinkPersons),
-        MeanLinkFractionActual = design_eval_safe_mean(.data$LinkFractionActual),
-        MeanLinkRatersPerPerson = design_eval_safe_mean(.data$LinkRatersPerPerson),
-        MeanMinCommonPersonsPerRaterPair = design_eval_safe_mean(.data$MinCommonPersonsPerRaterPair),
-        MaxZeroCommonRaterPairs = if (all(is.na(.data$ZeroCommonRaterPairs))) NA_integer_ else max(.data$ZeroCommonRaterPairs, na.rm = TRUE),
-        MaxRaterPairsBelowTarget = if (all(is.na(.data$RaterPairsBelowTarget))) NA_integer_ else max(.data$RaterPairsBelowTarget, na.rm = TRUE),
-        TargetCommonPersonsPerRaterPair = if (all(is.na(.data$TargetCommonPersonsPerRaterPair))) NA_integer_ else max(.data$TargetCommonPersonsPerRaterPair, na.rm = TRUE),
         .groups = "drop"
       ) |>
       dplyr::left_join(run_summary, by = "design_id") |>
@@ -5007,6 +5013,9 @@ simulation_evaluate_design_cell <- function(design,
     }
 
     max_ratings_per_rater <- max(table(sim[[row_facet_names[1]]]))
+    connectivity <- audit_mfrm_connectivity(sim, expected_design = NULL,
+      facets = row_facet_names)$summary
+    components <- connectivity$Components[match(row_facet_names, connectivity$Facet)]
     t0 <- proc.time()[["elapsed"]]
     fit_args <- list(
       data = sim,
@@ -5057,6 +5066,8 @@ simulation_evaluate_design_cell <- function(design,
       raters_per_person = design$raters_per_person,
       Observations = nrow(sim),
       MaxRatingsPerRater = max_ratings_per_rater,
+      RaterComponents = components[1],
+      CriterionComponents = components[2],
       MinCategoryCount = min_category_count,
       SparseDesignActive = sparse_fields$SparseDesignActive,
       DesignDensity = sparse_fields$DesignDensity,
@@ -5390,6 +5401,10 @@ simulation_evaluate_design_cell <- function(design,
 #'   `MaxRatingsPerRater` is the largest row count for a single rater-like facet
 #'   level. One row is one person-rater-criterion rating, regardless of `Weight`.
 #'   These workload counts are retained even when fitting or diagnostics fail.
+#'   `RaterComponents` and `CriterionComponents` count connected components
+#'   in each generated Person-facet assignment graph, using the same audit as
+#'   [describe_mfrm_data()]. They refer to the rater-like and criterion-like
+#'   roles even when custom facet names are used, and also survive failures.
 #'   Failed fits retain the condition class,
 #'   failure component, and category-support state/reason codes when available;
 #'   a completely failed design still returns the documented zero-row
@@ -5708,7 +5723,9 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
       planning_constraints = planning_constraints,
       planning_schema = planning_schema,
       gpcm_boundary = gpcm_boundary,
-      notes = unique(c(design_eval_build_notes(results), gpcm_notes)),
+      notes = unique(c(design_eval_summarize_results(
+        results, rep_overview, design_variable_aliases
+      )$notes, gpcm_notes)),
       settings = list(
         reps = reps,
         score_levels = score_levels,
@@ -5780,6 +5797,13 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' failed runs. A rating is one generated person-rater-criterion row; weights
 #' do not multiply workload. A maximum is `NA` when any replication lacks
 #' that count, including older evaluations without per-rater workload records.
+#'
+#' `MaxRaterComponents` and `MaxCriterionComponents` give the largest
+#' Person-facet component count across all recorded assignments; a missing
+#' count makes its maximum `NA`. `DisconnectedReps` counts replications with
+#' a recorded disconnection in either graph. Zero known disconnections does
+#' not establish connectedness when records are missing. Sparse-design
+#' summaries also use all run records, including failures.
 #'
 #' @return An object of class `summary.mfrm_design_evaluation` with components:
 #' - `overview`: run-level overview
@@ -6110,6 +6134,11 @@ plot.mfrm_design_evaluation <- function(x,
 #' @param max_ratings_per_rater Optional upper bound on rating rows assigned
 #'   to any one rater-like facet level in each evaluated replication. Supply
 #'   a non-negative whole number, or `NULL` (default) to impose no limit.
+#' @param require_connected Logical; require both generated Person-facet
+#'   assignment graphs to be connected in every recorded replication
+#'   (default `TRUE`). This covers both non-person facets regardless of which
+#'   performance metrics are selected through `facets`. Set `FALSE` only to
+#'   explicitly omit this structural screen; the recorded status is retained.
 #'
 #' @details
 #' This helper converts a design-study summary into a simple planning table.
@@ -6128,6 +6157,27 @@ plot.mfrm_design_evaluation <- function(x,
 #' The convergence threshold uses all recorded replications, including
 #' failures that returned no facet metrics, as summarized by
 #' [summary.mfrm_design_evaluation()].
+#'
+#' The connectivity screen uses generated assignments, including failed fits
+#' and diagnostic runs. `ConnectivityStatus` is `"disconnected"` if any
+#' recorded graph is disconnected, `"connected"` if both graphs are connected
+#' in every replication, and `"not_assessed"` otherwise. With the default
+#' `require_connected = TRUE`, only `"connected"` passes. Older saved objects
+#' without component counts cannot pass this screen; re-summarizing alone
+#' cannot recover the missing assignment evidence.
+#'
+#' This is a conservative screen for comparisons supported by shared-person
+#' assignments, not a test of full model identification or adequate precision.
+#' MML population assumptions can supply information beyond these connections;
+#' disabling the screen does not validate that assumption-based comparison.
+#' Connections may be indirect, so a rater pair without common persons is
+#' not by itself evidence of a disconnected design. `LinkReviewStatus` and
+#' `LinkReviewReason` carry the separate sparse-design overlap review:
+#' `"review"` flags a missing overlap count, a pair without common persons,
+#' or a pair below its recorded target; `"ok"` means those recorded checks
+#' pass, and `"not_assessed"`
+#' means no sparse overlap target was assessed. They do not change `Pass`;
+#' overlap counts alone do not establish precision or a universal minimum.
 #'
 #' Workload limits apply to the maxima across all recorded replications,
 #' including failed fits and diagnostic runs. One rating is one generated
@@ -6155,7 +6205,9 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `design_table`: design-level aggregated checks, including design-variable
 #'   alias columns when applicable, `MaxRatings`, `MaxRatingsPerRater`, and
 #'   workload checks `RatingsPass` and `RaterWorkloadPass`. Its `Pass` requires
-#'   both the facet-level checks and the active workload limits to pass.
+#'   the facet-level checks, active workload limits, and `ConnectivityPass`.
+#'   Component maxima, `DisconnectedReps`, `ConnectivityStatus`, and the
+#'   separate `LinkReviewStatus` / `LinkReviewReason` explain structural checks.
 #' - `recommended`: the first passing design after ranking
 #' - `thresholds`: thresholds used in the recommendation
 #' - `design_variable_aliases`: accepted public aliases for design variables
@@ -6163,7 +6215,8 @@ plot.mfrm_design_evaluation <- function(x,
 #' - `planning_scope`: explicit record of the current planning contract
 #' - `planning_constraints`: explicit record of mutable/locked design variables
 #' - `planning_schema`: structured planning metadata
-#' - `caveats`: fixed-effects interpretation and suggested post-fit reviews
+#' - `caveats`: fixed-effects and connectivity interpretations and suggested
+#'   post-fit reviews
 #' @seealso [evaluate_mfrm_design()], [summary.mfrm_design_evaluation], [plot.mfrm_design_evaluation]
 #' @examples
 #' \donttest{
@@ -6191,7 +6244,11 @@ recommend_mfrm_design <- function(x,
                                   min_convergence_rate = 1,
                                   prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion"),
                                   max_ratings = NULL,
-                                  max_ratings_per_rater = NULL) {
+                                  max_ratings_per_rater = NULL,
+                                  require_connected = TRUE) {
+  if (!is.logical(require_connected) || length(require_connected) != 1L || is.na(require_connected)) {
+    stop("`require_connected` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
   limits <- list(max_ratings = max_ratings, max_ratings_per_rater = max_ratings_per_rater)
   for (name in names(limits)) {
     limit <- limits[[name]]
@@ -6210,9 +6267,18 @@ recommend_mfrm_design <- function(x,
 
   design_summary <- tibble::as_tibble(design_summary)
   if (nrow(design_summary) == 0) stop("No design summary rows available.")
-  for (name in c("MaxRatings", "MaxRatingsPerRater")) {
+  for (name in c("MaxRatings", "MaxRatingsPerRater", "MaxRaterComponents",
+                 "MaxCriterionComponents", "DisconnectedReps")) {
     if (!name %in% names(design_summary)) design_summary[[name]] <- NA_real_
   }
+  link_review <- simulation_sparse_design_review_fields(design_summary)
+  sparse_active <- if ("SparseDesignActive" %in% names(design_summary)) {
+    design_summary$SparseDesignActive %in% TRUE
+  } else rep(FALSE, nrow(design_summary))
+  link_review$LinkReviewStatus[!sparse_active] <- "not_assessed"
+  link_review$LinkReviewReason[!sparse_active] <- "No sparse rater-pair overlap target was assessed."
+  design_summary$LinkReviewStatus <- link_review$LinkReviewStatus
+  design_summary$LinkReviewReason <- link_review$LinkReviewReason
 
   if (missing(facets)) {
     facets <- x$settings$facet_names %||% x$facet_names %||%
@@ -6268,6 +6334,11 @@ recommend_mfrm_design <- function(x,
       MinConvergenceRate = min(.data$ConvergenceRate, na.rm = TRUE),
       MaxRatings = dplyr::first(.data$MaxRatings),
       MaxRatingsPerRater = dplyr::first(.data$MaxRatingsPerRater),
+      MaxRaterComponents = dplyr::first(.data$MaxRaterComponents),
+      MaxCriterionComponents = dplyr::first(.data$MaxCriterionComponents),
+      DisconnectedReps = dplyr::first(.data$DisconnectedReps),
+      LinkReviewStatus = dplyr::first(.data$LinkReviewStatus),
+      LinkReviewReason = dplyr::first(.data$LinkReviewReason),
       FacetsPassing = sum(.data$Pass, na.rm = TRUE),
       FacetsRequired = length(facets),
       Pass = all(facets %in% .data$Facet) && all(.data$Pass),
@@ -6277,11 +6348,17 @@ recommend_mfrm_design <- function(x,
 
   design_table <- design_table |>
     dplyr::mutate(
+      ConnectivityStatus = dplyr::case_when(
+        .data$DisconnectedReps > 0 | .data$MaxRaterComponents > 1 | .data$MaxCriterionComponents > 1 ~ "disconnected",
+        .data$MaxRaterComponents == 1 & .data$MaxCriterionComponents == 1 ~ "connected",
+        TRUE ~ "not_assessed"
+      ),
+      ConnectivityPass = !require_connected | .data$ConnectivityStatus == "connected",
       RatingsPass = if (is.null(max_ratings)) TRUE else
         is.finite(.data$MaxRatings) & .data$MaxRatings <= max_ratings,
       RaterWorkloadPass = if (is.null(max_ratings_per_rater)) TRUE else
         is.finite(.data$MaxRatingsPerRater) & .data$MaxRatingsPerRater <= max_ratings_per_rater,
-      Pass = .data$Pass & .data$RatingsPass & .data$RaterWorkloadPass
+      Pass = .data$Pass & .data$RatingsPass & .data$RaterWorkloadPass & .data$ConnectivityPass
     ) |>
     dplyr::arrange(dplyr::desc(.data$Pass), !!!rlang::syms(prefer))
 
@@ -6315,6 +6392,7 @@ recommend_mfrm_design <- function(x,
         min_convergence_rate = min_convergence_rate,
         max_ratings = max_ratings,
         max_ratings_per_rater = max_ratings_per_rater,
+        require_connected = require_connected,
         prefer = prefer
       ),
       design_variable_aliases = design_variable_aliases,
@@ -6324,6 +6402,13 @@ recommend_mfrm_design <- function(x,
       planning_schema = simulation_object_planning_schema(x),
       caveats = list(
         fixed_effects = fixed_effects_note,
+        connectivity = paste(
+          "Person-facet connectedness is a structural screen, not proof of identification or adequate precision.",
+          "Connections can be indirect; a rater pair without common persons does not imply a disconnected design.",
+          "LinkReviewStatus reports recorded sparse overlap targets and does not change Pass.",
+          if (require_connected) "Every recorded assignment must pass the connectivity screen." else
+            "The connectivity requirement was explicitly disabled; recommendations may include disconnected or unassessed designs."
+        ),
         post_fit_review = c(
           "facet_small_sample_review(fit)",
           "analyze_hierarchical_structure(data, facets)",

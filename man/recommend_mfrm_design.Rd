@@ -14,7 +14,8 @@ recommend_mfrm_design(
   min_convergence_rate = 1,
   prefer = c("n_person", "raters_per_person", "n_rater", "n_criterion"),
   max_ratings = NULL,
-  max_ratings_per_rater = NULL
+  max_ratings_per_rater = NULL,
+  require_connected = TRUE
 )
 }
 \arguments{
@@ -46,6 +47,12 @@ evaluated replication. Supply a non-negative whole number, or \code{NULL}
 \item{max_ratings_per_rater}{Optional upper bound on rating rows assigned
 to any one rater-like facet level in each evaluated replication. Supply
 a non-negative whole number, or \code{NULL} (default) to impose no limit.}
+
+\item{require_connected}{Logical; require both generated Person-facet
+assignment graphs to be connected in every recorded replication
+(default \code{TRUE}). This covers both non-person facets regardless of which
+performance metrics are selected through \code{facets}. Set \code{FALSE} only to
+explicitly omit this structural screen; the recorded status is retained.}
 }
 \value{
 A list of class \code{mfrm_design_recommendation} with:
@@ -55,7 +62,9 @@ alias columns when applicable
 \item \code{design_table}: design-level aggregated checks, including design-variable
 alias columns when applicable, \code{MaxRatings}, \code{MaxRatingsPerRater}, and
 workload checks \code{RatingsPass} and \code{RaterWorkloadPass}. Its \code{Pass} requires
-both the facet-level checks and the active workload limits to pass.
+the facet-level checks, active workload limits, and \code{ConnectivityPass}.
+Component maxima, \code{DisconnectedReps}, \code{ConnectivityStatus}, and the
+separate \code{LinkReviewStatus} / \code{LinkReviewReason} explain structural checks.
 \item \code{recommended}: the first passing design after ranking
 \item \code{thresholds}: thresholds used in the recommendation
 \item \code{design_variable_aliases}: accepted public aliases for design variables
@@ -63,7 +72,8 @@ both the facet-level checks and the active workload limits to pass.
 \item \code{planning_scope}: explicit record of the current planning contract
 \item \code{planning_constraints}: explicit record of mutable/locked design variables
 \item \code{planning_schema}: structured planning metadata
-\item \code{caveats}: fixed-effects interpretation and suggested post-fit reviews
+\item \code{caveats}: fixed-effects and connectivity interpretations and suggested
+post-fit reviews
 }
 }
 \description{
@@ -86,6 +96,27 @@ then fewer raters, then fewer criteria).
 The convergence threshold uses all recorded replications, including
 failures that returned no facet metrics, as summarized by
 \code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}.
+
+The connectivity screen uses generated assignments, including failed fits
+and diagnostic runs. \code{ConnectivityStatus} is \code{"disconnected"} if any
+recorded graph is disconnected, \code{"connected"} if both graphs are connected
+in every replication, and \code{"not_assessed"} otherwise. With the default
+\code{require_connected = TRUE}, only \code{"connected"} passes. Older saved objects
+without component counts cannot pass this screen; re-summarizing alone
+cannot recover the missing assignment evidence.
+
+This is a conservative screen for comparisons supported by shared-person
+assignments, not a test of full model identification or adequate precision.
+MML population assumptions can supply information beyond these connections;
+disabling the screen does not validate that assumption-based comparison.
+Connections may be indirect, so a rater pair without common persons is
+not by itself evidence of a disconnected design. \code{LinkReviewStatus} and
+\code{LinkReviewReason} carry the separate sparse-design overlap review:
+\code{"review"} flags a missing overlap count, a pair without common persons,
+or a pair below its recorded target; \code{"ok"} means those recorded checks
+pass, and \code{"not_assessed"}
+means no sparse overlap target was assessed. They do not change \code{Pass};
+overlap counts alone do not establish precision or a universal minimum.
 
 Workload limits apply to the maxima across all recorded replications,
 including failed fits and diagnostic runs. One rating is one generated

@@ -141,6 +141,10 @@ alias columns when applicable. \code{Observations} counts generated rating rows;
 \code{MaxRatingsPerRater} is the largest row count for a single rater-like facet
 level. One row is one person-rater-criterion rating, regardless of \code{Weight}.
 These workload counts are retained even when fitting or diagnostics fail.
+\code{RaterComponents} and \code{CriterionComponents} count connected components
+in each generated Person-facet assignment graph, using the same audit as
+\code{\link[=describe_mfrm_data]{describe_mfrm_data()}}. They refer to the rater-like and criterion-like
+roles even when custom facet names are used, and also survive failures.
 Failed fits retain the condition class,
 failure component, and category-support state/reason codes when available;
 a completely failed design still returns the documented zero-row

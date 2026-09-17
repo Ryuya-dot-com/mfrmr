@@ -61,6 +61,13 @@ and individual rater workload across all recorded replications, including
 failed runs. A rating is one generated person-rater-criterion row; weights
 do not multiply workload. A maximum is \code{NA} when any replication lacks
 that count, including older evaluations without per-rater workload records.
+
+\code{MaxRaterComponents} and \code{MaxCriterionComponents} give the largest
+Person-facet component count across all recorded assignments; a missing
+count makes its maximum \code{NA}. \code{DisconnectedReps} counts replications with
+a recorded disconnection in either graph. Zero known disconnections does
+not establish connectedness when records are missing. Sparse-design
+summaries also use all run records, including failures.
 }
 \examples{
 \donttest{

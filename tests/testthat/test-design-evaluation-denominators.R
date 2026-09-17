@@ -31,6 +31,7 @@ design_evaluation_denominator_fixture <- function() {
     rep = rep(1:10, 3),
     RunOK = c(TRUE, rep(FALSE, 9), rep(TRUE, 10), rep(FALSE, 10)),
     Converged = c(TRUE, rep(FALSE, 9), rep(TRUE, 10), rep(FALSE, 10)),
+    RaterComponents = 1L, CriterionComponents = 1L,
     ElapsedSec = 0
   )
   structure(list(results = dplyr::bind_rows(available, complete),
@@ -190,7 +191,122 @@ test_that("actual unweighted assignment counts survive fit and diagnostic failur
     n_criterion = 2, raters_per_person = 2, reps = 2, seed = 123, progress = FALSE)
   expect_equal(x$rep_overview$Observations, c(13, 13))
   expect_equal(x$rep_overview$MaxRatingsPerRater, c(8, 8))
+  expect_equal(x$rep_overview$RaterComponents, c(1L, 1L))
+  expect_equal(x$rep_overview$CriterionComponents, c(1L, 1L))
   expect_identical(x$rep_overview$ErrorComponent, c("fit", "diagnostics"))
   expect_false(any(x$rep_overview$RunOK))
   expect_equal(nrow(x$results), 0)
+})
+
+test_that("connectivity and sparse overlap screens retain failed-run evidence", {
+  x <- design_evaluation_denominator_fixture()
+  x$rep_overview$SparseDesignActive <- TRUE
+  x$rep_overview$MinCommonPersonsPerRaterPair <- 3L
+  x$rep_overview$ZeroCommonRaterPairs <- 0L
+  x$rep_overview$RaterPairsBelowTarget <- 0L
+  x$rep_overview$TargetCommonPersonsPerRaterPair <- 2L
+  # Only a failed D1 replication falls below the requested overlap target.
+  x$rep_overview$MinCommonPersonsPerRaterPair[10] <- 1L
+  x$rep_overview$RaterPairsBelowTarget[10] <- 1L
+  overlap <- recommend_mfrm_design(x, min_convergence_rate = .1)
+  expect_identical(overlap$recommended$design_id, "D1")
+  expect_identical(overlap$recommended$ConnectivityStatus, "connected")
+  expect_identical(overlap$recommended$LinkReviewStatus, "review")
+  expect_match(overlap$recommended$LinkReviewReason, "below the requested")
+
+  x$rep_overview$RaterComponents[10] <- 2L
+  for (object in list(x, summary(x))) {
+    rec <- recommend_mfrm_design(object, min_convergence_rate = .1)
+    partial <- rec$design_table[rec$design_table$design_id == "D1", ]
+    expect_equal(partial$MaxRaterComponents, 2)
+    expect_equal(partial$MaxCriterionComponents, 1)
+    expect_equal(partial$DisconnectedReps, 1)
+    expect_identical(partial$ConnectivityStatus, "disconnected")
+    expect_false(partial$ConnectivityPass)
+    expect_identical(rec$recommended$design_id, "D2")
+    explicit <- recommend_mfrm_design(object, min_convergence_rate = .1,
+      require_connected = FALSE)
+    expect_identical(explicit$recommended$design_id, "D1")
+    expect_identical(explicit$recommended$ConnectivityStatus, "disconnected")
+    expect_false(explicit$thresholds$require_connected)
+    expect_match(explicit$caveats$connectivity, "explicitly disabled")
+  }
+  # Unknown records must not hide a disconnection already observed elsewhere.
+  x$rep_overview$RaterComponents[9] <- NA_integer_
+  rec <- recommend_mfrm_design(x, min_convergence_rate = .1)
+  expect_identical(rec$design_table$ConnectivityStatus[rec$design_table$design_id == "D1"], "disconnected")
+  x$rep_overview$RaterComponents <- 1L
+  x$rep_overview$CriterionComponents[10] <- 2L
+  rec <- recommend_mfrm_design(x, facets = "Rater", min_convergence_rate = .1)
+  expect_identical(rec$recommended$design_id, "D2")
+  expect_identical(rec$design_table$ConnectivityStatus[rec$design_table$design_id == "D1"], "disconnected")
+})
+
+test_that("missing connectivity records cannot pass the default screen", {
+  x <- design_evaluation_denominator_fixture()
+  x$rep_overview$RaterComponents <- NULL
+  x$rep_overview$CriterionComponents <- NULL
+  old_summary <- summary(x)
+  old_summary$design_summary$MaxRaterComponents <- NULL
+  old_summary$design_summary$MaxCriterionComponents <- NULL
+  old_summary$design_summary$DisconnectedReps <- NULL
+  for (object in list(x, summary(x), old_summary)) {
+    rec <- recommend_mfrm_design(object)
+    expect_equal(nrow(rec$recommended), 0)
+    expect_true(all(rec$design_table$ConnectivityStatus == "not_assessed"))
+    expect_identical(recommend_mfrm_design(object, require_connected = FALSE)$recommended$design_id, "D2")
+  }
+  for (value in list(NULL, NA, 1, "TRUE", c(TRUE, FALSE))) {
+    expect_error(recommend_mfrm_design(x, require_connected = value), "`require_connected` must be")
+  }
+})
+
+test_that("assignment topology reaches recommendations independently of fit metrics", {
+  captured <- NULL
+  # Hold fit quality constant to isolate the public design/recommendation path.
+  testthat::local_mocked_bindings(
+    fit_mfrm = function(data, ...) { captured <<- data; list() },
+    mfrm_inference_ready = function(...) TRUE,
+    diagnose_mfrm = function(...) list(
+      reliability = data.frame(Facet = c("Judge", "Task"), Levels = c(4, 2),
+        Separation = 3, Strata = 4, Reliability = .9, MeanInfit = 1, MeanOutfit = 1),
+      fit = data.frame(Facet = c("Judge", "Task"), InfitZSTD = 0, OutfitZSTD = 0),
+      measures = data.frame(Facet = rep(c("Judge", "Task"), c(4, 2)),
+        Level = c(paste0("J", 1:4), "T1", "T2"), Estimate = 0)
+    ),
+    .package = "mfrmr"
+  )
+  assignments <- list(
+    disconnected = c("J1", "J2", "J1", "J2", "J3", "J4", "J3", "J4"),
+    cycle = c("J1", "J2", "J2", "J3", "J3", "J4", "J4", "J1")
+  )
+  for (name in names(assignments)) {
+    roster <- data.frame(TemplatePerson = rep(paste0("P", 1:4), each = 2),
+      Judge = assignments[[name]])
+    skeleton <- merge(roster, data.frame(Task = c("T1", "T2")), by = NULL)
+    skeleton$TemplatePersonReuse <- TRUE
+    spec <- build_mfrm_sim_spec(n_person = 4, n_rater = 4, n_criterion = 2,
+      raters_per_person = 2, rater_sd = 0, criterion_sd = 0,
+      facet_names = c("Judge", "Task"), assignment = "skeleton", design_skeleton = skeleton)
+    expect_warning(x <- evaluate_mfrm_design(sim_spec = spec, n_person = 4, n_rater = 4,
+      n_criterion = 2, raters_per_person = 2, reps = 1, seed = 123, progress = FALSE), NA)
+    review <- describe_mfrm_data(captured, person = "Person", facets = c("Judge", "Task"),
+      score = "Score", rating_min = 1, rating_max = 4, keep_original = TRUE,
+      include_agreement = FALSE)
+    expect_equal(c(x$rep_overview$RaterComponents, x$rep_overview$CriterionComponents),
+      review$design_connectivity$Components)
+    expect_equal(x$rep_overview$Observations, 16)
+    expect_equal(x$rep_overview$MaxRatingsPerRater, 4)
+    rec <- recommend_mfrm_design(x)
+    expect_true(all(rec$facet_table$Pass))
+    expect_identical(rec$design_table$ConnectivityStatus,
+      if (name == "cycle") "connected" else "disconnected")
+    expect_equal(nrow(rec$recommended), if (name == "cycle") 1L else 0L)
+    if (name == "cycle") {
+      # J1/J3 and J2/J4 have no direct overlap, but indirect links connect all.
+      pairs <- data.frame(Person = captured$Person, Rater = captured$Judge)
+      links <- mfrmr:::simulation_sparse_rater_pair_table(pairs, paste0("J", 1:4))
+      expect_equal(sum(links$CommonPersons == 0), 2)
+    }
+  }
 })

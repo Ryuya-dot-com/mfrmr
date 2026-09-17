@@ -1,5 +1,19 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Design recommendations now require connected Person-rater and
+  Person-criterion assignments by default (`require_connected = TRUE`).
+  Evaluation records component counts before fitting, and the screen includes
+  failed runs. Disconnected or unassessed designs cannot pass unless the
+  requirement is explicitly disabled; saved objects without component counts
+  are unassessed. Sparse overlap reviews are shown separately and now include
+  failed runs. Indirect connections remain valid: a pair without common
+  persons is not automatically a disconnected design, and connectedness alone
+  does not establish model identification or sufficient precision.
+
+* Design-evaluation notes now use aggregated run summaries. Passing raw facet
+  results to the notes helper previously caused missing-column warnings and
+  omitted the corresponding convergence and performance notes.
+
 * Design recommendations now require results for every requested facet in
   each candidate design. Previously, a design missing a requested facet
   could pass on its remaining facet alone. `FacetsMissing` identifies absent
