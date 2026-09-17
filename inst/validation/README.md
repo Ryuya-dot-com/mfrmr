@@ -88,6 +88,14 @@ contrast. The conditional posterior variance also changes with calibration,
 so the sensitivity term is not labeled a corrected SE. The variance-zero case
 retains only fixed-zero submodel sensitivity; full-model intervals remain
 unavailable. Existing fits and external/package checks were reused.
+The [conditional posterior quantile step](local-testlet-posterior-quantiles-0.2.4.md)
+qualifies 19 person and five ability-difference distributions, including exact
+normal controls. All 129 checks pass; one boundary contrast needs an extra
+midpoint-quadrature refinement. Continuous equal-tail intervals are compared
+with mean +/- 1.96 SD, whose posterior probabilities range from 94.89% to 95.00%
+in these saved examples. Extreme-score rows show unequal normal-interval tails.
+This is a known-calibration reference, not repeated-sampling coverage or an
+estimated-calibration interval qualification.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

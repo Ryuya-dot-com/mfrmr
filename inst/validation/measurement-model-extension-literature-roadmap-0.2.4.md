@@ -377,6 +377,17 @@ parameter-aware inference then needs either a declared posterior or a sampling
 and refitting scheme, with variance-boundary handling and separate coverage
 targets for individual abilities and their differences.
 
+The [conditional quantile reference](local-testlet-posterior-quantiles-0.2.4.md)
+now resolves 24 selected person/contrast distributions with 129 passing checks.
+Continuous CDF integration and an independent convolution check qualify the
+equal-tail calculation. A boundary contrast alone needs further midpoint
+quadrature refinement. Mean +/- 1.96 SD contains about 94.89%--95.00% posterior
+probability in these examples, although extreme-score rows have unequal tails.
+This supports moving the next study to estimated-calibration performance while
+retaining the known-calibration result as its paired reference. Posterior mass
+at fixed parameters is not an empirical coverage rate; variance-boundary
+inference and shared-calibration effects remain separate requirements.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,
