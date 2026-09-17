@@ -490,6 +490,16 @@ intervals or larger crossed design has been implemented or qualified. The
 next numerical step is joint ability moments and covariance in the same small
 example, preserving dependence through the shared-rater posterior.
 
+For the user's visualization request, a [Python joint-posterior reference and
+figure](shared-rater-posterior-visual-0.2.4.md) subsequently completed that small
+moment calculation. Nineteen checks pass, including the reverse integration
+order, zero-variance covariance and numerical normalization of the plotted
+density. The example has posterior correlation .157 and ability-difference
+SD .876; dropping only covariance while retaining the same marginals gives
+.954. This is an illustrative dependence comparison, not a refit of the local
+model, interval coverage evidence, or a rating-design performance result.
+The posterior-scoring R implementation and larger crossed designs remain open.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

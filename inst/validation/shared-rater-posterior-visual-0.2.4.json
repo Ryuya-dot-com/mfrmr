@@ -1,0 +1,145 @@
+{
+  "scope": "Fixed-calibration posterior for one saved response example; not interval coverage or model ranking",
+  "source_sha256": {
+    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development/inst/validation/shared-rater-posterior-visual-0.2.4.py": "4ec4d8d1f5892767e33a483074e1f7ec272a6b1d3026227be464890bc32f8a84",
+    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/research-notes/2026-09-17-random-effects-rating-design/model-sharing-check.py": "ab03f6c182a427713ed8046d259edd31923e3be18295fe2701d6f8d9cfed8e9e",
+    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/research-notes/2026-09-17-random-effects-rating-design/model-sharing-check.json": "f5af899295ac9da2508fc3f8b24e2c53810bf563fc549d8dacf0f26dcc9610cb",
+    "/Users/tohokusla/Dropbox/MFRM_Application/mfrmr/development/inst/validation/shared-rater-fixed-point-0.2.4-values.csv": "2672665c53a8f76ec0e9a2dcfddea02099dd12425e8d6ae81b3541289caa2437"
+  },
+  "loglik": -7.618451151235055,
+  "mean": [
+    -0.6682122268574512,
+    0.08927425819587492
+  ],
+  "covariance": [
+    [
+      0.4663223498162603,
+      0.07156754634610141
+    ],
+    [
+      0.07156754634610141,
+      0.44425722611953794
+    ]
+  ],
+  "correlation": 0.15723736680702557,
+  "difference_mean": -0.757486485053326,
+  "difference_variance": 0.7674444832435954,
+  "difference_sd": 0.8760390877372969,
+  "difference_sd_without_covariance": 0.9542429333957879,
+  "checks": [
+    {
+      "check": "q41_q81_loglik",
+      "error": 7.105427357601002e-15,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "q41_q81_mean",
+      "error": 1.0548506512719769e-13,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "q41_q81_covariance",
+      "error": 1.2734258092450546e-13,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "saved_R_q41_loglik",
+      "error": 1.7763568394002505e-15,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "q41_posterior_mass",
+      "error": 0.0,
+      "tolerance": 1e-12,
+      "pass": true
+    },
+    {
+      "check": "saved_R_q81_loglik",
+      "error": 5.329070518200751e-15,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "q81_posterior_mass",
+      "error": 1.1102230246251565e-16,
+      "tolerance": 1e-12,
+      "pass": true
+    },
+    {
+      "check": "reverse_integral_loglik",
+      "error": 0.0,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "total_expectation",
+      "error": 3.3306690738754696e-16,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "total_covariance",
+      "error": 5.551115123125783e-17,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "total_difference_variance",
+      "error": 4.440892098500626e-16,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "covariance_positive_semidefinite",
+      "error": 0.0,
+      "tolerance": 1e-12,
+      "pass": true
+    },
+    {
+      "check": "zero_rater_covariance",
+      "error": 1.1030142090299958e-18,
+      "tolerance": 1e-12,
+      "pass": true
+    },
+    {
+      "check": "zero_rater_saved_loglik",
+      "error": 2.3765931445041133e-09,
+      "tolerance": 1e-07,
+      "pass": true
+    },
+    {
+      "check": "plot_density_integral",
+      "error": 2.220446049250313e-15,
+      "tolerance": 1e-06,
+      "pass": true
+    },
+    {
+      "check": "plot_mean",
+      "error": 1.4432899320127035e-15,
+      "tolerance": 1e-06,
+      "pass": true
+    },
+    {
+      "check": "plot_covariance",
+      "error": 8.326672684688674e-16,
+      "tolerance": 1e-06,
+      "pass": true
+    },
+    {
+      "check": "product_marginals_covariance",
+      "error": 4.828736129737951e-18,
+      "tolerance": 1e-10,
+      "pass": true
+    },
+    {
+      "check": "product_retains_marginal_variances",
+      "error": 1.7208456881689926e-15,
+      "tolerance": 1e-06,
+      "pass": true
+    }
+  ]
+}

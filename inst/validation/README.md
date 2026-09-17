@@ -164,6 +164,15 @@ one-rater adaptive integral, missing observations and input limits also pass.
 This is a joint-likelihood reference, not an estimator or posterior-scoring API;
 joint ability moments are the next separate step. The active Series L sources
 and inputs are unchanged.
+The [shared-rater posterior figure](shared-rater-posterior-visual-0.2.4.md)
+now visualizes the sharing structure, joint ability density and ability-difference
+SD for that same fixed-calibration example. A separate Python reference passes
+19 checks, including reversed integration order and plot-density normalization.
+Its posterior correlation is .157; the difference SD is .876 with covariance,
+versus .954 for the product of the same marginals. The latter is a dependence-
+omission comparison, not a refit of the local-effect model or a design ranking.
+PNG/PDF and the checked numerical record are retained; posterior-scoring R APIs
+and interval qualification remain separate work.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and
