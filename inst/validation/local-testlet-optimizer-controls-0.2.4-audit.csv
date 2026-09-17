@@ -1,0 +1,10 @@
+"Check","Pass"
+"frozen sources and input unchanged",TRUE
+"two unchanged-control bridges agree exactly",TRUE
+"record lineage retained",TRUE
+"all 69 unique planned outcomes retained",TRUE
+"six controls and seventeen original failures per setting",TRUE
+"total projected-gradient target preserved under scaling",TRUE
+"all attempts retain the original common start",TRUE
+"every returned point gets its higher-order evaluation",TRUE
+"final ready label includes native, score and reference gates",TRUE

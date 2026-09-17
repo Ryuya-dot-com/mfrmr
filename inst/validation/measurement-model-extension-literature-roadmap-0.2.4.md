@@ -402,6 +402,20 @@ the saved 17 non-ready fits, with successful controls and original outcomes
 preserved. Increasing coverage replication comes after that numerical obstacle;
 shared random-rater estimation and rating-design comparisons remain separate.
 
+The [optimizer-control comparison](local-testlet-optimizer-controls-0.2.4.md)
+has now completed 69 planned fits plus two unchanged-control bridges. Scaling
+by N and a gradient-focused stopping policy together resolve the saved 17
+failures and preserve all six selected successful controls; all 23 final
+points satisfy higher-order likelihood, moment and score checks. Each change
+alone leaves a distinct obstacle, supporting their joint use in the next
+independent pilot. Nine accounting/lineage audits pass, and all original and
+new failed paths remain recorded. The setting is selected on these data, so
+their repaired fits are not pooled into the previous coverage result. The
+next step uses independent generated data for estimated-calibration performance
+instead of adding further optimizer variants to the same examples without a
+new discrepancy. Public support and statistical-interval eligibility are
+unchanged.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

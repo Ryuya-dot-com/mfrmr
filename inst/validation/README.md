@@ -107,6 +107,16 @@ people/pairs and dataset-cluster MCSEs, but the substantial fit selection
 precludes interval qualification. The next step is a bounded optimization
 follow-up using these saved failures before increasing replication. No prior
 full-package, TAM or FairZ experiments were repeated.
+That [optimizer-control follow-up](local-testlet-optimizer-controls-0.2.4.md)
+is now complete. On the 17 saved failures and six successful controls,
+scaling alone resolves eight failures but loses one control; changing the
+stopping policy alone resolves the 14 score failures but retains all three
+trial-integration errors. Combining both resolves all 17 and preserves all
+six controls, including exact-zero and large-variance examples. All 23 points
+pass the higher-order reference checks. Two unchanged-control bridges match
+exactly, and nine saved-evidence audits pass. This closes the bounded numerical
+repair and selects a setting for independent data; the old coverage results
+remain separate, and no production model is qualified by the selected fits.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

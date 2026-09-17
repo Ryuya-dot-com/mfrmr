@@ -1,0 +1,4 @@
+"Setting","Planned","Completed","Ready","ResolvedOriginalFailures","ReadyControls","PreservedControls","CaptureErrors","WarningTrials","NativeNonzero","ScoreNotReady","LowerLikelihood","TrialsTouchingArtificialBounds","MedianFitSeconds","CandidateForIndependentPilot"
+"scaled",23,23,13,8,5,5,0,0,0,10,0,0,5.18,FALSE
+"gradient",23,23,20,14,6,6,3,0,0,0,0,23,4.56100000000001,FALSE
+"scaled_gradient",23,23,23,17,6,6,0,0,0,0,0,0,5.19,TRUE
