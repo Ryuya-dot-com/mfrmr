@@ -27,18 +27,21 @@ The current bottleneck is deciding which exact estimates, intervals and
 decisions the existing evidence supports. More functions, passing assertions
 or simulation rows do not resolve an unspecified claim. Use this order:
 
-1. Bind the current package behavior to the committed baseline with the full
-   packaged tests and the existing input/replay scenarios. Record software
-   failures separately from statistical limitations. This checkpoint precedes
-   the eventual final-source platform check and does not replace it.
-2. Complete the already frozen FairZ experiment after the user's explicit
-   September 17 resumption instruction. The source/backend/plan/seed/result
-   checks matched all 40 preflight and 450 saved confirmation datasets.
-   Original processes had ended; resume the same assigned seeds from disk.
-   Retain the 20,000-dataset stopping rule, unavailable attempts, adverse
-   results and Monte Carlo uncertainty. The joint-covariance research
-   candidate is distinct from public conditional plot intervals; completing
-   its study does not automatically promote public `FairCIEligible`.
+1. Resolve the six failures in the completed full package check: five
+   fit-plot diagnostic-identity errors and one GPCM extreme-score residual
+   variance error. The check recorded 18,281 passes, 38 warnings and 44 skips;
+   the existing input/replay scenarios passed. Record software failures
+   separately from statistical limitations and recheck after fixes. This
+   checkpoint does not replace the eventual final-source platform check.
+2. Apply the [completed FairZ confirmation](fairz-confirmation-results-0.2.4.md)
+   to its exact claim: all 20,000 assigned datasets were retained after the
+   user's verified September 17 resumption, and frozen adjudication supports
+   five primary cells while three remain review. All final source/backend/
+   plan/seed/result checks and the output audit passed. Preserve the three
+   unresolved coverage results and their Monte Carlo uncertainty; do not
+   extend the finished study until it passes. The joint-covariance research
+   candidate remains distinct from public conditional plot intervals and
+   does not automatically promote public `FairCIEligible`.
 3. Resolve the DRF generator's location and group-mean alignment in small
    null/non-null cases before allocating its confirmation or the separate
    population study. The population main remains 0/80,000; Person-scoring
@@ -59,7 +62,7 @@ existing evidence can be reused? An inconclusive result remains unresolved;
 do not change seeds, thresholds or scope to manufacture a pass. Research
 extensions in the later roadmap do not enter this execution queue by default.
 
-Live FairZ progress and the preserved pause history are recorded in
+FairZ completion and the preserved pause history are recorded in
 [the existing confirmation status](fairz-confirmation-status-0.2.4.md).
 Local check and restart logs are retained under
 `validation-results/checkpoint-20260917/`.

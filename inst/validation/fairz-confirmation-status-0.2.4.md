@@ -1,8 +1,21 @@
 # FairZ confirmation status — updated 2026-09-17
 
-**Running: resumed from 450/20,000 saved datasets on September 17 after the
-user explicitly requested source/state verification and resumption.**
-No statistical disposition or public Fair Score interval promotion is issued.
+**Completed: all 20,000 planned datasets were retained and adjudicated on
+September 17.** The frozen primary rules yield five supported cells and
+three review cells; none is concern. See the
+[final results and retained evidence](fairz-confirmation-results-0.2.4.md).
+Public Fair Score interval eligibility remains unchanged (`FairCIEligible = false`).
+
+All eight final states and the matching preflight passed the existing
+source/backend/plan/seed/shape validation. Four nonready fits retained their
+assigned identities and unavailable intervals; execution errors, ready
+numerical conflicts and verification failures were zero. The 24-configuration
+output audit also passed. Completion is not a package or release pass.
+
+## September 17 resumption record
+
+The study resumed from 450 saved datasets after the user explicitly requested
+source/state verification and resumption.
 
 The original three processes had ended, and a process scan found no other
 FairZ writer. The existing validators confirmed identical source payload,

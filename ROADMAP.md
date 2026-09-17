@@ -79,10 +79,12 @@ The next work is to close exact retained uncertainty/output claims, settle the
 small FairZ/DRF and full-model GPCM/JML questions, then run the necessary
 claim-specific confirmations and final-source checks. Public G/D-study,
 shrinkage, imports and descriptive routes remain in this review. The FairZ
-20,000-dataset main study has since started. On September 17 the user requested
-resumption from its 450 saved datasets after source and checkpoint verification;
-[current progress and the earlier pause](inst/validation/fairz-confirmation-status-0.2.4.md)
-are recorded separately. No partial coverage result is a qualification.
+20,000-dataset main study completed on September 17 after verified resumption
+from 450 saved datasets. The [frozen adjudication](inst/validation/fairz-confirmation-results-0.2.4.md)
+supports five primary cells and leaves three under review; public Fair Score
+interval eligibility remains unchanged. The
+[execution and earlier pause](inst/validation/fairz-confirmation-status-0.2.4.md)
+are recorded separately.
 The population-parameter 80,000-dataset main study remains unrun.
 No statistical or release pass is issued by the reconciliation.
 

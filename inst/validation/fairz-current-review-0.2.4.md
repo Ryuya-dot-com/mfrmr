@@ -4,7 +4,9 @@ Date: 2026-09-15. C12/C17 follow-up to the
 [integrated ledger](claim-reconciliation-0.2.4.md).
 This review repairs a reporting defect and checks the frozen study against
 current source. It does not establish interval coverage or release readiness.
-The 20,000-dataset confirmation remains unrun.
+The 20,000-dataset confirmation was unrun at the date of this preparation
+review. It subsequently completed on September 17; see the
+[final frozen adjudication](fairz-confirmation-results-0.2.4.md).
 
 ## Reporting question and repair
 

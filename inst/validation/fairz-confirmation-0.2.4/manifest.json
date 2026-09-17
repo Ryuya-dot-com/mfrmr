@@ -1,0 +1,17 @@
+{
+  "date": "2026-09-17",
+  "source_commit": "fe8220ce",
+  "backend_md5": "59d00f20719463739c7fcd191e4d28da",
+  "R_version": "4.6.1",
+  "platform": "aarch64-apple-darwin23",
+  "confirmation_datasets": 20000,
+  "preflight_datasets_excluded": 40,
+  "raw_checkpoint_directory": "validation-results/fairz-current-20260915/final-current/confirmation",
+  "source_and_plan_validation": "All eight confirmation states and matching preflight validated using frozen runner before final summary.",
+  "files": {
+    "output-checks.csv": "5039797029f68bf02cebeb92b82ddc3a3834e4b8898eaff45da58c78b9808aa8",
+    "paired.csv": "c6f16fb68076e3b95f5abacd67d83250b00140050f81e0a4a031214ffbcecadb",
+    "runs.csv": "14206b4054d0258b546b2410a96acd27d0e1fa3de1ed5d92392f857ef8cbfe13",
+    "summary.csv": "9aabe74868db2e1adb0324c57e5a4ab13cb14b62554d5be21345ceeac9125ca9"
+  }
+}
