@@ -43,9 +43,16 @@ mixed fit/diagnostic inputs in fair-average tables and plots and reconciles
 the fixed-reference candidate with a matching 40-dataset preflight. Saved
 outputs, label variants and CSV routes retain the diagnostic restrictions.
 This advances C12/C17 preparation. The subsequent
-[confirmation](fairz-confirmation-status-0.2.4.md) is paused at the user's
-request with 450/20,000 datasets saved; public Fair Score interval eligibility
-remains false. Earlier checkpoint tables below retain their original counts.
+[confirmation](fairz-confirmation-status-0.2.4.md) was paused with 450/20,000
+datasets saved. On September 17 the user requested resumption after source
+and saved-state verification; those identity checks passed. Public Fair Score
+interval eligibility remains false. Earlier checkpoint tables below retain
+their original counts; the machine-readable ledger includes later follow-ups.
+
+The [September 17 maintainer sequence](internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
+uses committed baseline `fe8220ce` and supersedes stale execution instructions
+below. Completing a numerical repair or resuming a study does not close the
+corresponding statistical claim.
 
 The main workflow, documentation and many numerical/output repairs are well
 advanced. The remaining work is to resolve the evidence and restrictions for

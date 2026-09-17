@@ -28,8 +28,11 @@ The [current-source FairZ review](fairz-current-review-0.2.4.md) repairs mixed
 fit/diagnostic input in fair-average tables and plots, corrects their help
 column descriptions, and reruns the frozen 40-dataset preflight. Reporting
 round trips retain diagnostic-only intervals. The subsequent
-[confirmation](fairz-confirmation-status-0.2.4.md) is paused at the user's
-request with 450/20,000 datasets checkpointed; it has no statistical disposition.
+[confirmation](fairz-confirmation-status-0.2.4.md) was paused with 450/20,000
+datasets checkpointed. The user requested resumption on September 17 after
+source and saved-state checks, which passed; it has no statistical disposition.
+The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
+binds the consolidated development work to commit `fe8220ce`.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

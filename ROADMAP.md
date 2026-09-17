@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-15.
+Status: public roadmap, updated 2026-09-17.
 
 This roadmap describes the package's intended user-facing direction. It is not
 a promise of release dates. Completed changes are documented in `NEWS.md`.
@@ -79,10 +79,18 @@ The next work is to close exact retained uncertainty/output claims, settle the
 small FairZ/DRF and full-model GPCM/JML questions, then run the necessary
 claim-specific confirmations and final-source checks. Public G/D-study,
 shrinkage, imports and descriptive routes remain in this review. The FairZ
-20,000-dataset main study has since started and is
-[paused at the user's request at 450/20,000 saved datasets](inst/validation/fairz-confirmation-status-0.2.4.md).
+20,000-dataset main study has since started. On September 17 the user requested
+resumption from its 450 saved datasets after source and checkpoint verification;
+[current progress and the earlier pause](inst/validation/fairz-confirmation-status-0.2.4.md)
+are recorded separately. No partial coverage result is a qualification.
 The population-parameter 80,000-dataset main study remains unrun.
 No statistical or release pass is issued by the reconciliation.
+
+The September 17 development checkpoint `fe8220ce` consolidates the subsequent
+implementation, documentation and validation work. The
+[maintainer's current decision sequence](inst/validation/internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
+prioritizes reproducible current-source behavior, the frozen FairZ study, and
+the unresolved claim-specific questions before final release-source checks.
 
 ### Earlier evidence snapshot — 2026-09-10
 
@@ -192,12 +200,13 @@ passes numerical/refit checks and the minimal DRF workflow has been exercised.
 The [fresh-seed coverage supplement](inst/validation/fairz-coverage-record-0.2.4.md)
 has a prespecified protocol and 40 preliminary datasets checked on the recorded
 source; the planned
-20,000-dataset main study has started and is now paused at the user's request
-with 450 datasets saved. The earlier help/README pause is historical;
-documentation and reporting checks have since advanced. The
+20,000-dataset main study resumed on September 17 from 450 saved datasets
+after the user's request and source/state verification. The earlier pauses
+are historical; live progress is in the linked confirmation status.
+Documentation and reporting checks have since advanced. The
 [current-source FairZ review](inst/validation/fairz-current-review-0.2.4.md)
-reconciles its target, reruns the matching 40-dataset preflight, and repairs
-mixed fit/diagnostic inputs in fair-average tables and plots. Those checks
+reconciles its target, reruns the matching 40-dataset preliminary checks, and
+repairs mixed fit/diagnostic inputs in fair-average tables and plots. Those checks
 do not establish coverage or qualify public Fair Score intervals.
 The separate DRF confirmation still needs location and linking
 alignment. Mean-reference FairM, Person

@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-12.
+Status: repository-only maintainer plan, refined 2026-09-17.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -8,6 +8,61 @@ tool identities, and validation operations. `NEWS.md` records completed
 user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
+
+## 2026-09-17: committed baseline and next decisions
+
+Commit `fe8220ce` preserves the 257 previously modified/untracked files as one
+development checkpoint. The working tree was clean immediately afterward;
+ignored raw validation bundles and saved confirmation checkpoints were kept.
+This is a reproducible development baseline, not a release candidate approval.
+
+The September 10 work packages below remain the scope/dependency map. Read
+their original status statements alongside the later
+[claim ledger](claim-reconciliation-0.2.4.md) and dated follow-ups. In particular,
+the high-order zero-weight defect is repaired, Person interval construction has
+changed, and FairZ is no longer an unstarted experiment. Historical numerical
+findings and failures remain evidence, not instructions to repeat completed work.
+
+The current bottleneck is deciding which exact estimates, intervals and
+decisions the existing evidence supports. More functions, passing assertions
+or simulation rows do not resolve an unspecified claim. Use this order:
+
+1. Bind the current package behavior to the committed baseline with the full
+   packaged tests and the existing input/replay scenarios. Record software
+   failures separately from statistical limitations. This checkpoint precedes
+   the eventual final-source platform check and does not replace it.
+2. Complete the already frozen FairZ experiment after the user's explicit
+   September 17 resumption instruction. The source/backend/plan/seed/result
+   checks matched all 40 preflight and 450 saved confirmation datasets.
+   Original processes had ended; resume the same assigned seeds from disk.
+   Retain the 20,000-dataset stopping rule, unavailable attempts, adverse
+   results and Monte Carlo uncertainty. The joint-covariance research
+   candidate is distinct from public conditional plot intervals; completing
+   its study does not automatically promote public `FairCIEligible`.
+3. Resolve the DRF generator's location and group-mean alignment in small
+   null/non-null cases before allocating its confirmation or the separate
+   population study. The population main remains 0/80,000; Person-scoring
+   evidence cannot supply its missing population-parameter coverage.
+4. Continue exact-model GPCM/JML and decision-bearing secondary-route review
+   where independent of FairZ. Specify the remaining target and model before
+   another numerical experiment. Close each retained subclaim with scoped
+   evidence or a verified restriction; inherited public functionality remains
+   part of the review.
+5. Reconcile historical structural evidence to any changed calculation before
+   deciding that it must be rerun. Freeze the final source only after the
+   retained claims/restrictions close, then run the five-platform matrix and
+   release checks on that source.
+
+At each checkpoint ask: which user result changes, which unresolved question
+does this work answer, what decision follows each possible result, and what
+existing evidence can be reused? An inconclusive result remains unresolved;
+do not change seeds, thresholds or scope to manufacture a pass. Research
+extensions in the later roadmap do not enter this execution queue by default.
+
+Live FairZ progress and the preserved pause history are recorded in
+[the existing confirmation status](fairz-confirmation-status-0.2.4.md).
+Local check and restart logs are retained under
+`validation-results/checkpoint-20260917/`.
 
 ## 2026-09-09: 0.2.4 validation before release
 
@@ -67,6 +122,12 @@ release prerequisite only if its claim is retained in the released product;
 existing public claims cannot be hidden in the future-version backlog.
 
 #### 2026-09-12: High-order Gauss-Hermite zero weights — open numerical issue
+
+**Historical entry; superseded by the
+[verified repair](gauss-hermite-weight-repair-0.2.4.md).** The original finding
+and proposed checks below are preserved as recorded on September 12. They do
+not describe a currently unresolved zero-weight implementation defect;
+design-specific integration adequacy remains a separate question.
 
 **Status: reproduced, unresolved.** Track this under work package 1 (shared
 numerical contract) and work package 4 (scoring/calibration consequences).
