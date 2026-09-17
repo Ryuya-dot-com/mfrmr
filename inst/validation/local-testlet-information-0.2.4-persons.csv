@@ -1,0 +1,5 @@
+"Persons","LogLik","PartitionError","Seconds","InputStatus"
+1,-8.28534791788142,0,0.14500000000001,"ready_for_bounded_search"
+7,-38.6900434625777,5.55111512312578e-17,0.827999999999975,"ready_for_bounded_search"
+17,-87.741193040046,1.11022302462516e-16,1.82499999999999,"ready_for_bounded_search"
+120,-608.093910893926,7.25598915804135e-16,12.635,"ready_for_bounded_search"

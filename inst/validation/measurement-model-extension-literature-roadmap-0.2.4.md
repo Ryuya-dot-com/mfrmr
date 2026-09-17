@@ -342,6 +342,19 @@ solutions. This remains a six-person/two-rater research prototype: uncertainty,
 general-size computation, recovery, coverage and shared random-rater estimation
 still need their own qualification. No public model API is introduced.
 
+The [subsequent information/person-count step](local-testlet-information-0.2.4.md)
+qualifies joint observed curvature at the two positive-variance solutions and
+conditional structural curvature at exact zero. Scores and independently
+differenced TAM likelihoods agree; nearby nuisance profiles agree with the
+Schur complement. Seventy-two checks also verify the retained solutions and
+person partitioning through 120 rows. The person-count restriction is removed
+from the research evaluator, while two raters/three criteria remain fixed.
+Curvature SE candidates include nuisance covariance but have no validated
+interval coverage. A repeated response table supports the scaling identities,
+not repeated-sampling performance. The reference evaluation takes about 12.6
+seconds at 120 rows/GH181 in this run, so kernel efficiency is the next bounded
+implementation step before a recovery/coverage simulation.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

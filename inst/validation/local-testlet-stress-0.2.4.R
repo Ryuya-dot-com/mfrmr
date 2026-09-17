@@ -22,16 +22,17 @@ stress_logsum <- function(x) {
 }
 
 stress_reference <- function(fixture, parameters, variance, order) {
+  n_person <- nrow(fixture$response)
   rule <- stress_normal_rule(order)
   theta <- rule$nodes
   gamma <- if (variance == 0) 0 else sqrt(variance) * theta
   gamma_weights <- if (variance == 0) 1 else rule$weights
   ng <- length(gamma)
-  loglik <- numeric(6)
-  gradient <- matrix(0, 6, 6)
-  moments <- matrix(0, 6, 6, dimnames = list(rownames(fixture$response),
+  loglik <- numeric(n_person)
+  gradient <- matrix(0, n_person, 6)
+  moments <- matrix(0, n_person, 6, dimnames = list(rownames(fixture$response),
     c('ThetaMean', 'ThetaSD', 'Gamma1Mean', 'Gamma1SD', 'Gamma2Mean', 'Gamma2SD')))
-  for (p in 1:6) {
+  for (p in seq_len(n_person)) {
     factors <- scores <- means <- seconds <- vector('list', 2)
     for (r in 1:2) {
       conditional <- matrix(0, order, ng)
@@ -140,7 +141,7 @@ stress_tam <- function(case, nodes, template) {
     identical(as.character(fit$pid), rownames(case$fixture$response)),
     identical(dim(fit$A), dim(A)), identical(dim(fit$B), dim(B)),
     max(abs(fit$A - A)) == 0, max(abs(fit$B - B)) == 0)
-  moments <- matrix(0, 6, 6)
+  moments <- matrix(0, nrow(case$fixture$response), 6)
   if (dimension == 1) moments[, 1:2] <- as.matrix(fit$person[, c('EAP', 'SD.EAP')])
   else for (d in 1:3) moments[, 2 * d - (1:0)] <-
     as.matrix(fit$person[, c(paste0('EAP.Dim', d), paste0('SD.EAP.Dim', d))]) *

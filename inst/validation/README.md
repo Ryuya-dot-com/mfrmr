@@ -63,6 +63,14 @@ points agree with TAM. One retained boundary refinement had a line-search stop;
 aligning its stopping tolerance with the checked score accuracy resolves it in
 five targeted comparisons. The old stop remains recorded. General estimation,
 uncertainty, recovery and planning performance are still unqualified.
+The [local-information and person-count qualification](local-testlet-information-0.2.4.md)
+adds 72 passing numerical checks for joint curvature, nuisance covariance,
+nearby profile curvature and person counts 1/7/17/120. Estimating the local
+variance increases threshold curvature SEs by 15% and 23% in the two small
+positive-variance examples. Exact zero retains only conditional fixed-variance
+curvature, with ordinary full-model intervals unavailable. The N=120 repeated
+table checks arithmetic and evaluation cost, not recovery or coverage; its
+12.6-second reference evaluation motivates kernel efficiency before large runs.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

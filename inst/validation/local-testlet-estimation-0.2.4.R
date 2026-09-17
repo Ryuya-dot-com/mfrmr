@@ -4,7 +4,7 @@ source('inst/validation/local-testlet-stress-0.2.4.R')
 
 testlet_estimation_input <- function(fixture) {
   y <- fixture$response
-  if (!is.matrix(y) || !identical(dim(y), c(6L, 6L)) ||
+  if (!is.matrix(y) || !is.numeric(y) || ncol(y) != 6L ||
       !all(y[!is.na(y)] %in% 0:2)) return('unsupported_response')
   observed <- y[!is.na(y)]
   if (!length(observed)) return('no_observations')
@@ -19,7 +19,7 @@ testlet_estimation_input <- function(fixture) {
 testlet_zero_variance_score <- function(fixture, parameters, order) {
   rule <- stress_normal_rule(order)
   total <- 0
-  for (p in 1:6) {
+  for (p in seq_len(nrow(fixture$response))) {
     logconditional <- numeric(order)
     curvature <- numeric(order)
     for (r in 1:2) {

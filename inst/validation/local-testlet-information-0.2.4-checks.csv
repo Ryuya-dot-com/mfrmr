@@ -1,0 +1,73 @@
+"Case","Quantity","Error","Tolerance","Pass"
+"original","saved_point_bridge",0,1e-09,TRUE
+"original","score_asymmetry_121 0.001",5.13592732790516e-08,1e-05,TRUE
+"original","score_information_121 0.001",3.82363978590483e-07,1e-05,TRUE
+"original","score_asymmetry_121 5e-04",1.28397563943151e-08,1e-05,TRUE
+"original","score_information_121 5e-04",6.42069851363543e-09,1e-05,TRUE
+"original","score_asymmetry_181 0.001",5.13591643979359e-08,1e-05,TRUE
+"original","score_information_181 0.001",3.82364177431427e-07,1e-05,TRUE
+"original","score_asymmetry_181 5e-04",1.28391996283681e-08,1e-05,TRUE
+"original","score_information_181 5e-04",6.41959981418403e-09,1e-05,TRUE
+"original","tam_information_step_1",1.06653868958695e-07,1e-05,TRUE
+"original","tam_information_step_2",6.03236739449287e-08,1e-05,TRUE
+"original","positive_definite",0,0,TRUE
+"original","covariance_step_1",1.86069883517711e-07,1e-05,TRUE
+"original","expanded_se_step_1",9.30349460803725e-08,1e-05,TRUE
+"original","covariance_step_2",1.66028965540479e-07,1e-05,TRUE
+"original","expanded_se_step_2",8.30144792907106e-08,1e-05,TRUE
+"original","schur_covariance_identity",2.22044604925031e-16,1e-10,TRUE
+"original","profile_nuisance_1_1",3.44657818930616e-07,1e-05,TRUE
+"original","profile_nuisance_1_2",3.03982264824275e-07,1e-05,TRUE
+"original","profile_schur_1",5.70459953201929e-05,0.001,TRUE
+"original","profile_nuisance_2_1",6.86452346299049e-07,1e-05,TRUE
+"original","profile_nuisance_2_2",6.92891476195001e-07,1e-05,TRUE
+"original","profile_schur_2",1.40326536011148e-05,0.001,TRUE
+"clustered","saved_point_bridge",0,1e-09,TRUE
+"clustered","score_asymmetry_121 0.001",1.14377271515463e-08,1e-05,TRUE
+"clustered","score_information_121 0.001",4.45371299839792e-08,1e-05,TRUE
+"clustered","score_asymmetry_121 5e-04",2.85861220924067e-09,1e-05,TRUE
+"clustered","score_information_121 5e-04",1.43019170813143e-09,1e-05,TRUE
+"clustered","score_asymmetry_181 0.001",1.14377616991841e-08,1e-05,TRUE
+"clustered","score_information_181 0.001",4.45371522439508e-08,1e-05,TRUE
+"clustered","score_asymmetry_181 5e-04",2.86072871592576e-09,1e-05,TRUE
+"clustered","score_information_181 5e-04",1.43036435796288e-09,1e-05,TRUE
+"clustered","tam_information_step_1",4.33737942860444e-08,1e-05,TRUE
+"clustered","tam_information_step_2",3.54778029384994e-08,1e-05,TRUE
+"clustered","positive_definite",0,0,TRUE
+"clustered","covariance_step_1",6.78223276504047e-08,1e-05,TRUE
+"clustered","expanded_se_step_1",3.39111644320766e-08,1e-05,TRUE
+"clustered","covariance_step_2",1.3995733058597e-07,1e-05,TRUE
+"clustered","expanded_se_step_2",6.99786677493819e-08,1e-05,TRUE
+"clustered","schur_covariance_identity",2.22044604925031e-16,1e-10,TRUE
+"clustered","profile_nuisance_1_1",5.23236946547989e-08,1e-05,TRUE
+"clustered","profile_nuisance_1_2",7.81524906456887e-08,1e-05,TRUE
+"clustered","profile_schur_1",6.75099970319781e-05,0.001,TRUE
+"clustered","profile_nuisance_2_1",8.28349157405706e-07,1e-05,TRUE
+"clustered","profile_nuisance_2_2",3.78087681163208e-08,1e-05,TRUE
+"clustered","profile_schur_2",1.68534886300087e-05,0.001,TRUE
+"boundary","saved_point_bridge",0,1e-09,TRUE
+"boundary","score_asymmetry_121 0.001",4.91950975145582e-13,1e-05,TRUE
+"boundary","score_information_121 0.001",1.0627572908625e-07,1e-05,TRUE
+"boundary","score_asymmetry_121 5e-04",2.16060877413813e-13,1e-05,TRUE
+"boundary","score_information_121 5e-04",9.18255357880509e-11,1e-05,TRUE
+"boundary","score_asymmetry_181 0.001",3.35734108565075e-13,1e-05,TRUE
+"boundary","score_information_181 0.001",1.06278169910592e-07,1e-05,TRUE
+"boundary","score_asymmetry_181 5e-04",6.04559196359709e-13,1e-05,TRUE
+"boundary","score_information_181 5e-04",3.02279598179855e-13,1e-05,TRUE
+"boundary","tam_information_step_1",1.24078691206591e-07,1e-05,TRUE
+"boundary","tam_information_step_2",1.27118755956796e-07,1e-05,TRUE
+"boundary","positive_definite",0,0,TRUE
+"boundary","covariance_step_1",1.52682464328278e-07,1e-05,TRUE
+"boundary","expanded_se_step_1",6.20393398875763e-08,1e-05,TRUE
+"boundary","covariance_step_2",1.27118740115899e-07,1e-05,TRUE
+"boundary","expanded_se_step_2",6.3559372098787e-08,1e-05,TRUE
+"boundary","profile_nuisance_1e-04",1.28325728053263e-09,1e-05,TRUE
+"boundary","profile_nuisance_5e-05",3.10639400731363e-10,1e-05,TRUE
+"boundary","boundary_profile_right_score",8.22953865053933e-08,1e-04,TRUE
+"N1","partition_invariance",0,1e-09,TRUE
+"N7","partition_invariance",5.55111512312578e-17,1e-09,TRUE
+"N17","partition_invariance",1.11022302462516e-16,1e-09,TRUE
+"N120","partition_invariance",7.25598915804135e-16,1e-09,TRUE
+"N120","information_times_20",1.98285832198053e-13,1e-08,TRUE
+"N120","se_divided_by_sqrt20",6.99440505513849e-14,1e-08,TRUE
+"N120","tam_likelihood_moments",3.47313289239537e-10,1e-06,TRUE
