@@ -1,0 +1,7 @@
+"Check","Value","Comparison","Pass"
+"zero_score_original","4.04835932512002","4.04835926886449",TRUE
+"zero_score_clustered","10.0001430763144","10.0001429460406",TRUE
+"empty_all","no_observations","no_observations",TRUE
+"all_zero","no_finite_location_mle","no_finite_location_mle",TRUE
+"all_two","no_finite_location_mle","no_finite_location_mle",TRUE
+"unobserved_rater","fixed_effect_rank_deficient","fixed_effect_rank_deficient",TRUE

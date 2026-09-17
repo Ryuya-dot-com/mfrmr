@@ -1,0 +1,3 @@
+"Case","Grid","LogLikError","MomentError","ProbabilityError","Pass","Error","Warnings"
+"original","n41_r7",1.73692171756556e-11,1.61268443044094e-10,6.66133814775094e-16,TRUE,"",""
+"clustered","n41_r7",2.1600499167107e-12,8.07700573091097e-11,5.55111512312578e-16,TRUE,"",""
