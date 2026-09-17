@@ -117,6 +117,17 @@ pass the higher-order reference checks. Two unchanged-control bridges match
 exactly, and nine saved-evidence audits pass. This closes the bounded numerical
 repair and selects a setting for independent data; the old coverage results
 remain separate, and no production model is qualified by the selected fits.
+The [independent calibration pilot](local-testlet-independent-pilot-0.2.4.md)
+then fixes those controls and completes 40 new datasets without fit or scoring
+failures. All 6,080 method/target events are available, and 20 saved-evidence
+audits pass. At N=24, plug-in person coverage is 3.33 and 2.92 percentage points
+below the oracle (MCSEs 1.36 and 1.87 points); the N=120 observed differences
+are smaller. Four pairs per dataset give much less precise contrast results,
+including uninformative zero empirical MCSEs. Replication projections suggest
+700 datasets per cell as a fixed-size candidate if that pairing design is
+retained; evaluating more prespecified pairs per fit is a separate efficiency
+question to settle in the main protocol. The ten-replicate cells do not
+qualify intervals, and the main study has not started.
 
 The [GPCM initial-value and finite-path follow-up](gpcm-start-boundary-0.2.4.md)
 compares five new starts with each of four saved adaptive-Q61 solutions and

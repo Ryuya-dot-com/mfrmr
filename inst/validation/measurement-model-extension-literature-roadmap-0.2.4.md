@@ -416,6 +416,22 @@ instead of adding further optimizer variants to the same examples without a
 new discrepancy. Public support and statistical-interval eligibility are
 unchanged.
 
+The [independent-data pilot](local-testlet-independent-pilot-0.2.4.md) now
+completes all 40 new datasets under fixed controls, with no fitting/reference/
+scoring failures and all 6,080 method/target events available. Twenty audits
+pass. At N=24, plug-in-minus-oracle person coverage is -3.33 and -2.92
+percentage points, with dataset-cluster MCSEs of 1.36 and 1.87 points; at
+N=120 the observed differences are +.33 and -.08 points. No general sample-size
+effect or interval qualification follows from ten datasets per cell. Pair
+coverage uses only 40 pairs per cell and drives the finite replication
+projections in three cells. With that four-pair design, 700 datasets per cell
+is a concrete planning candidate, subject to a frozen main-study protocol;
+zero empirical variance in some pair metrics cannot certify its adequacy.
+The next decision is how many prespecified pairs to score per fit and how many
+independent calibration datasets to generate. Further optimizer variants are
+unmotivated by this run; parameter-aware inference and shared random-rater
+models remain distinct later steps.
+
 ## 2026-09-15 crossed-effects and process-model refinement
 
 The user now explicitly asks to refine flexible crossed random effects,

@@ -1,9 +1,9 @@
-# Read-only aggregation of the frozen pilot; no fitting or scoring reruns.
+# Shared read-only calibration-pilot aggregation; no fitting or scoring reruns.
 source('inst/validation/person-estimated-calibration-0.2.4-summary.R')
 
-testlet_pilot_summarize <- function() {
-  prefix <- 'inst/validation/local-testlet-calibration-pilot-0.2.4'
-  output <- 'validation-results/local-testlet-calibration-pilot-20260917'
+testlet_pilot_summarize <- function(
+    prefix = 'inst/validation/local-testlet-calibration-pilot-0.2.4',
+    output = 'validation-results/local-testlet-calibration-pilot-20260917') {
   plan <- readRDS(file.path(output, 'plan.rds'))
   paths <- file.path(output, paste0(plan$manifest$ID, '-result.rds'))
   stopifnot(all(file.exists(paths)))
@@ -122,8 +122,9 @@ testlet_pilot_summarize <- function() {
   audit <- do.call(rbind, checks)
   for (name in c('status', 'rows', 'counts', 'summaries', 'paired', 'replicate_rows', 'scoring', 'audit'))
     write.csv(get(name), paste0(prefix, '-', name, '.csv'), row.names = FALSE)
-  summary_sources <- tools::md5sum(c(paste0(prefix, '-summary.R'),
-    'inst/validation/person-estimated-calibration-0.2.4-summary.R'))
+  summary_sources <- tools::md5sum(unique(c(paste0(prefix, '-summary.R'),
+    'inst/validation/local-testlet-calibration-pilot-0.2.4-summary.R',
+    'inst/validation/person-estimated-calibration-0.2.4-summary.R')))
   evidence <- list(plan = plan, summary_sources = summary_sources, status = status, rows = rows,
     counts = counts, summaries = summaries, paired = paired, replicate_rows = replicate_rows, scoring = scoring, audit = audit,
     preflight_archive = if (file.exists(file.path(output, 'initial-generation-plan.rds')))
@@ -136,6 +137,7 @@ testlet_pilot_summarize <- function() {
   print(scoring)
   print(audit)
   stopifnot(all(audit$Pass))
+  invisible(evidence)
 }
 
 if (sys.nframe() == 0L) testlet_pilot_summarize()
