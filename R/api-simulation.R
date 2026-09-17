@@ -1873,12 +1873,20 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
 
   design_summary <- tibble::tibble()
   if (nrow(results_tbl) > 0) {
+    # Failed fits/diagnostics have no facet rows. Keep their run records in
+    # the denominator used by summaries, plots and design recommendations.
+    run_summary <- rep_tbl |>
+      dplyr::group_by(.data$design_id) |>
+      dplyr::summarize(
+        Reps = dplyr::n(),
+        ConvergenceRate = mean(.data$Converged %in% TRUE),
+        McseConvergenceRate = simulation_mcse_proportion(.data$Converged %in% TRUE),
+        .groups = "drop"
+      )
     design_summary <- results_tbl |>
       dplyr::group_by(dplyr::across(dplyr::all_of(grouping_vars))) |>
       dplyr::summarize(
-        Reps = dplyr::n(),
-        ConvergenceRate = mean(.data$Converged, na.rm = TRUE),
-        McseConvergenceRate = simulation_mcse_proportion(.data$Converged),
+        AvailableReps = dplyr::n(),
         MeanSeparation = mean(.data$Separation, na.rm = TRUE),
         SdSeparation = design_eval_safe_sd(.data$Separation),
         McseSeparation = simulation_mcse_mean(.data$Separation),
@@ -1916,6 +1924,7 @@ design_eval_summarize_results <- function(results, rep_overview, design_variable
         TargetCommonPersonsPerRaterPair = if (all(is.na(.data$TargetCommonPersonsPerRaterPair))) NA_integer_ else max(.data$TargetCommonPersonsPerRaterPair, na.rm = TRUE),
         .groups = "drop"
       ) |>
+      dplyr::left_join(run_summary, by = "design_id") |>
       dplyr::arrange(!!!rlang::syms(arrange_vars))
     design_summary <- simulation_append_design_alias_columns(design_summary, design_variable_aliases)
   }
@@ -5746,6 +5755,15 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' - severity recovery RMSE
 #' - mean misfit rate
 #'
+#' `Reps`, `ConvergenceRate`, and `McseConvergenceRate` use all recorded
+#' replications for each design, including fit and diagnostic failures.
+#' Only a recorded `Converged = TRUE` counts as converged. `AvailableReps`
+#' counts the replications with returned results for that facet; performance
+#' means still use the available metric values. Designs with no returned
+#' facet results have no performance-summary rows and cannot be recommended.
+#' To update an older saved summary, call `summary()` again on the original
+#' evaluation object; no simulation or refitting is needed.
+#'
 #' @return An object of class `summary.mfrm_design_evaluation` with components:
 #' - `overview`: run-level overview
 #' - `design_summary`: aggregated design-by-facet metrics, with design-variable
@@ -6076,6 +6094,9 @@ plot.mfrm_design_evaluation <- function(x,
 #' If multiple designs pass, the helper returns the smallest one according to
 #' `prefer` (by default: fewer persons first, then fewer ratings per person,
 #' then fewer raters, then fewer criteria).
+#' The convergence threshold uses all recorded replications, including
+#' failures that returned no facet metrics, as summarized by
+#' [summary.mfrm_design_evaluation()].
 #'
 #' @section Typical workflow:
 #' 1. Run [evaluate_mfrm_design()].

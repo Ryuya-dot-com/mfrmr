@@ -46,6 +46,15 @@ design planning, especially:
 \item severity recovery RMSE
 \item mean misfit rate
 }
+
+\code{Reps}, \code{ConvergenceRate}, and \code{McseConvergenceRate} use all recorded
+replications for each design, including fit and diagnostic failures.
+Only a recorded \code{Converged = TRUE} counts as converged. \code{AvailableReps}
+counts the replications with returned results for that facet; performance
+means still use the available metric values. Designs with no returned
+facet results have no performance-summary rows and cannot be recommended.
+To update an older saved summary, call \code{summary()} again on the original
+evaluation object; no simulation or refitting is needed.
 }
 \examples{
 \donttest{

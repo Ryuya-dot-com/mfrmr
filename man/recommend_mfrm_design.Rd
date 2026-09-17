@@ -67,6 +67,9 @@ selected thresholds simultaneously.
 If multiple designs pass, the helper returns the smallest one according to
 \code{prefer} (by default: fewer persons first, then fewer ratings per person,
 then fewer raters, then fewer criteria).
+The convergence threshold uses all recorded replications, including
+failures that returned no facet metrics, as summarized by
+\code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}.
 }
 \section{Typical workflow}{
 

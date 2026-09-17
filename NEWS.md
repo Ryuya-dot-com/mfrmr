@@ -1,5 +1,12 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Design-evaluation summaries, plots, and recommendations now include failed
+  fits and diagnostic runs in the convergence-rate denominator. Previously,
+  one successful run and nine failures could be reported as 100% convergence
+  and pass a design recommendation. `Reps` now counts all recorded runs;
+  `AvailableReps` counts returned facet results. Re-summarize an existing
+  evaluation object to apply the correction without refitting.
+
 * Direct MML optimization now rejects trial points whose population variance
   overflows or underflows after log-scale transformation. This fixes an abort
   in a five-category GPCM fit with all-maximum responses. L-BFGS-B can also
