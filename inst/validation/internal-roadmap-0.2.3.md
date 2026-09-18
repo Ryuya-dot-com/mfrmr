@@ -70,10 +70,13 @@ or simulation rows do not resolve an unspecified claim. Use this order:
    before qualifying that omnibus test; local full rank alone is insufficient.
    The [joint-null follow-up](interval-drf-preflight-record-0.2.4.md#september-18-follow-up-regularity-at-the-joint-null-and-comparison-reasons)
    now verifies continuous-integral local information at zero interaction in
-   the four retained pairs. Reuse it and the earlier population reviews to
-   define the supported design, solution/boundary/integration conditions and
-   missing sampling evidence. The only failed comparison requirement is
-   inference readiness; warning text now reports that reason accurately.
+   the four retained pairs. The [scoped qualification decision](interval-drf-preflight-record-0.2.4.md#september-18-scope-decision-qualify-the-omnibus-comparison-separately)
+   fixes the initial complete-rating, two-group omnibus target, numerical
+   requirements and null-size/availability margins. Automatic nesting now
+   checks that the Person-aligned population design is shared. Next check
+   paired joint-model stationarity, refit stability and relevant variance
+   alternatives before freezing its own sampling protocol. The 80,000-case
+   population-interval study is a separate target, not a prerequisite.
    Retain screening-only claims and legitimate group-mean-only DRF null controls.
    No new DRF confirmation was launched. The separate population main remains 0/80,000;
    Person-scoring evidence cannot supply its missing parameter coverage.

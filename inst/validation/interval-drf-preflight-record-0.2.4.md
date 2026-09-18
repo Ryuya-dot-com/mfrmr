@@ -254,6 +254,100 @@ omnibus interaction testing from individual Person intervals and per-rater
 screens. No estimator switch, new inference API, readiness override or broad
 simulation follows from this audit.
 
+## September 18 scope decision: qualify the omnibus comparison separately
+
+The first qualification target is a **same-family RSM/PCM marginal-likelihood
+comparison of relative Rater-by-Group effects**, with both groups' ability
+means estimated in both hypotheses. Start with the already studied design:
+three raters, two criteria, three categories and two externally defined groups,
+with every Person rated in all six cells. Persons are independent; responses
+are conditionally independent given ability. Row weights are one, slopes are
+fixed at one, and there are no estimated external anchors, additional
+interactions, response-dependent exclusions or adaptive assignments. This is
+the scope to qualify, not a newly approved public test or evidence for every
+parameter setting within it.
+
+Use `population_formula = ~ Group` with one common, estimated positive
+conditional-normal variance and Group as a zero-fixed dummy facet. Both
+models retain the same category and identification constraints. The null sets
+the two free zero-margin Rater-by-Group coordinates to zero; the alternative
+estimates them. All other free parameters are nuisance parameters and are
+reestimated in both models. An overall group location difference belongs to
+the population regression. The test asks whether relative rater effects vary
+between groups; it does not locate a particular biased rater, validate a
+Person interval or test whether population variance is zero.
+
+The following requirements make the remaining decision finite and explicit:
+
+| Requirement | Evidence already available | Remaining requirement for this target |
+| --- | --- | --- |
+| Same comparison target | Four null embeddings preserve likelihood exactly; two added coordinates; same observed data and constraints | Enforce shared population design in automatic nesting review; repaired below |
+| Regular marginal model at the null | Independent continuous information is full rank at the four retained null points, including nuisance-adjusted interaction information | Retain the interior-variance and regular-model assumptions; review boundary, ambiguous or weak-information cases instead of clearing them from scaled rank alone |
+| Qualified likelihood maximization | Independent likelihood evaluation agrees in the eight joint fits; earlier additive-population studies qualify full gradients and information at their own solutions | Verify all-coordinate stationarity and paired refit stability for this joint target, including the embedded null as an alternative-model start and relevant variance-boundary alternatives; do not transfer additive-only source-selection conclusions |
+| Numerical precision of the comparison | Whole-pattern continuous integration agrees at the retained null points | Reuse the existing 1e-6 objective and 1e-4 full-gradient audit bounds in a bounded paired-fit preflight; evaluate both models on the same grid and distinguish same-vector integration error from refitting movement. No universal quadrature count is inferred |
+| Calibration of the actual omnibus decision | No repeated-sample evidence for this LRT yet | Evaluate its own null rejection and availability, including zero DRF with different group ability means; residual-screen flags and coordinate interval coverage do not answer this question |
+
+For the initial sampling qualification, use nominal alpha .05 and judge each
+prespecified null cell separately: its 95% exact binomial interval for the
+rejection rate among numerically available comparisons must lie in [.04,.06],
+and the 95% exact lower bound on availability must be at least .99. These are
+maintainer acceptance margins for approximately nominal size and usable
+output, not consequences of Wilks' theorem. Retain every assigned attempt,
+errors, boundary/review cases and numerical disagreements. Report rejection
+among available comparisons and rejection divided by all assigned trials
+separately; an unavailable test is not a successful non-rejection. Unresolved
+computable numerical disagreements prevent acceptance. Nonzero-DRF cases
+report effect recovery and power with Monte Carlo uncertainty; no favorable
+power result can compensate for a failed null cell. Fix the cell design,
+replication counts and numerical failure policy before sampling, after the
+bounded paired-fit preflight. Do not extend a run until it passes.
+The candidate statistic is `2 * (logLik_alternative - logLik_null)`, with a
+chi-square reference of dimension two under the stated regular assumptions.
+During qualification its numerical availability must be recorded separately
+from the currently false production readiness flag. Diagnostic computation
+does not change that flag or publish an approved test; the comparison's
+own numerical/boundary failure policy must be frozen before generating trials.
+
+The existing 80,000-dataset population-interval plan has different targets,
+a continuous covariate and no DRF interaction. Its completion is neither
+necessary nor sufficient for this LRT decision, and that plan remains intact.
+Likewise, Person posterior intervals, FairZ coverage and per-rater multiplicity
+are separate claims. Future support for this comparison must not silently
+approve those outputs through a shared readiness flag. Sparse/disconnected
+ratings, group-specific variances and non-normal populations need their own
+scope decisions; they are not added automatically to this first qualification.
+
+### Repair of the population-model nesting gap
+
+The existing structural classifier did not inspect `population_spec`. A
+metadata-only counterexample at `14015db` kept the response-model labels and
+interaction extension but changed the alternative's population design; it
+still returned `eligible = TRUE`. Replacing its estimated population with a
+fixed one also passed. These were classifier probes, not new fitted models
+or demonstrations of an erroneous public p-value: the existing readiness
+guard continued to withhold estimated-population LRTs.
+
+`audit_compare_mfrm_nesting()` now requires both populations to be fixed, or
+both estimated-normal designs to have the same declared columns and values
+aligned to the same Person IDs. Row/column storage permutations are aligned;
+estimated coefficients and variances are deliberately not compared. Changed
+or unavailable designs return `population_model_unverified`. Other equivalent
+recodings may require separate review under this conservative rule; rejection
+by the classifier is not a proof of mathematical non-nesting. This condition
+is specific to the supported structural LRT patterns, not a requirement that
+all IC comparisons use identical covariate models. No inference gate is relaxed.
+
+The new structural regression case and affected interaction, RSM/PCM and
+bounded-GPCM comparison cases pass (64 expectations, no errors or warnings).
+All four genuine saved joint comparisons are identical to the preceding
+warning-repair replay, including their retained unavailable LRTs. The edited
+Rd passes `tools::checkRd()`. Inputs are unchanged; the focused runner, results,
+replays and identities are retained in
+`validation-results/drf-comparison-scope-20260918/`. No new simulation or
+population/DRF statistical refit was run, and the package-wide suite was not
+repeated. The next numerical work is the paired-fit preflight specified above,
+not the unrelated population-interval main study.
+
 ## Repairs and output-path findings
 
 Two demonstrated defects were corrected at their shared implementations:

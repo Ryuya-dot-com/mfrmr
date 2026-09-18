@@ -2353,6 +2353,46 @@ audit_compare_mfrm_nesting <- function(fits, labels) {
     ))
   }
 
+  # For the supported response-model restrictions, require a shared population
+  # model. Compare the declared design at the same Persons; coefficients and
+  # variance are reestimated under each hypothesis.
+  population_designs <- lapply(fits, function(fit) {
+    pop <- fit$config$population_spec %||% list()
+    if (!isTRUE(pop$active)) return(list(active = FALSE))
+    persons <- as.character(fit$prep$levels$Person %||% character(0))
+    design <- pop$design_matrix
+    columns <- pop$design_columns
+    lookup <- pop$person_lookup
+    if (!is.matrix(design) || !is.numeric(design) || ncol(design) == 0L ||
+        length(persons) == 0L || anyNA(persons) || anyDuplicated(persons) ||
+        !is.character(columns) || length(columns) != ncol(design) ||
+        anyNA(columns) || anyDuplicated(columns) ||
+        !is.numeric(lookup) || length(lookup) != length(persons) ||
+        any(!is.finite(lookup)) || any(lookup != floor(lookup)) ||
+        any(lookup < 1L | lookup > nrow(design))) return(NULL)
+    design <- design[lookup[order(persons, method = "radix")],
+                     order(columns, method = "radix"), drop = FALSE]
+    if (any(!is.finite(design))) return(NULL)
+    list(active = TRUE, persons = sort(persons, method = "radix"),
+         columns = sort(columns, method = "radix"),
+         design = matrix(as.numeric(design), nrow = length(persons)))
+  })
+  if (any(vapply(population_designs, is.null, logical(1))) ||
+      !identical(population_designs[[1]], population_designs[[2]])) {
+    return(list(
+      eligible = FALSE,
+      reason = paste(
+        "A shared population model could not be verified.",
+        "Automatic nesting requires the same fixed population or the same",
+        "estimated-normal population design (declared columns and values",
+        "aligned by Person). Changed or unavailable designs require separate review."
+      ),
+      simpler = NA_character_,
+      complex = NA_character_,
+      relation = "population_model_unverified"
+    ))
+  }
+
   model_pair <- toupper(c(sigs[[1]]$model, sigs[[2]]$model))
   interaction_sets <- lapply(sigs, function(sig) {
     sort(unique(as.character(sig$facet_interactions %||% character(0))))
@@ -4828,6 +4868,14 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #' Cross-method comparisons, comparisons that change anchors/dummying/centering,
 #' and same-family comparisons that do not add fixed interaction terms are not
 #' automatically promoted to LRT claims.
+#'
+#' Automatic nesting also requires a shared population specification: either
+#' both fits use the fixed standard-normal population or both use the same
+#' estimated-normal design, with the same declared columns and design values
+#' aligned by Person. Coefficient and variance estimates may differ. Row and
+#' column permutations are aligned; other recodings, changed designs, and
+#' unavailable design metadata require separate review. Passing this check
+#' does not grant inference readiness to an estimated-population fit.
 #'
 #' The **likelihood-ratio test (LRT)** is reported only when exactly two
 #' models are supplied, `nested = TRUE`, the structural nesting review passes, and the

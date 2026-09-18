@@ -104,6 +104,14 @@ Cross-method comparisons, comparisons that change anchors/dummying/centering,
 and same-family comparisons that do not add fixed interaction terms are not
 automatically promoted to LRT claims.
 
+Automatic nesting also requires a shared population specification: either
+both fits use the fixed standard-normal population or both use the same
+estimated-normal design, with the same declared columns and design values
+aligned by Person. Coefficient and variance estimates may differ. Row and
+column permutations are aligned; other recodings, changed designs, and
+unavailable design metadata require separate review. Passing this check
+does not grant inference readiness to an estimated-population fit.
+
 The \strong{likelihood-ratio test (LRT)} is reported only when exactly two
 models are supplied, \code{nested = TRUE}, the structural nesting review passes, and the
 difference in the number of parameters is positive:

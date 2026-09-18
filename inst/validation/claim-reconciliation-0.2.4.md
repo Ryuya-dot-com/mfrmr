@@ -130,8 +130,16 @@ also finds full continuous-integral information rank at all four embedded
 zero-interaction points and positive nuisance-adjusted interaction information.
 Only inference readiness fails among the implemented comparison requirements;
 this is not a finding of nonidentification or optimizer failure. Comparison
-warnings now identify the fits and their actual readiness reasons. Formal
-comparison support still needs a scoped population-model acceptance decision.
+warnings now identify the fits and their actual readiness reasons. This left
+a scoped population-model acceptance decision pending.
+
+The subsequent [qualification decision](interval-drf-preflight-record-0.2.4.md#september-18-scope-decision-qualify-the-omnibus-comparison-separately)
+specifies the first omnibus target and separates its size/availability evidence
+from population-coordinate and Person-interval coverage. It also repairs an
+automatic nesting gap: population designs must match by Person, while nuisance
+estimates may differ. Existing legitimate comparisons and their readiness
+restrictions are preserved. This closes that structural-classification defect,
+not the omnibus test's inferential qualification (C02/C10/C15 remain open).
 
 ### Original reconciliation checkpoint
 

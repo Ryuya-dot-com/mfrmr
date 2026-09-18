@@ -1,5 +1,10 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Automatic nesting review now checks that the population specification is
+  shared. Adding a fixed interaction no longer passes this review when the
+  population design also changes or cannot be verified. Person and column
+  permutations are aligned, and nuisance estimates may differ between fits.
+
 * Model-comparison warnings report the affected fits and recorded inference
   readiness reasons, distinguishing estimability review from numerical
   convergence. Likelihoods, comparison eligibility and LRT calculations are
