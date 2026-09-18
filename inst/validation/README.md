@@ -39,8 +39,10 @@ all six software failures: the complete packaged suite has 18,406 passes,
 has 0 errors/warnings/notes. Twelve same-data FairZ comparisons preserve the
 original results, including the four non-ready fits; historical confirmation
 files and their source identities remain unchanged.
-The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-17-committed-baseline-and-next-decisions)
-binds the consolidated development work to commit `fe8220ce`.
+The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-18-current-priorities-and-completion-decisions)
+separates 0.2.4 claim closure, the next joint-DRF study specification, and staged
+rating-design/random-rater extensions. The `fe8220ce` consolidation remains
+the earlier development checkpoint, not the identity of all subsequent work.
 
 For future-model research, the [person-local testlet reference](local-testlet-tam-reference-0.2.4.md)
 matches a fixed-parameter RSM with Person/Rater dependence to TAM's A/B design.
@@ -282,24 +284,24 @@ identifies the generator's location-alignment issue before any DRF power study.
 The [FairZ confirmation preparation](fairz-coverage-record-0.2.4.md) freezes
 eight cells × 2,500 fresh datasets, reuses the existing MC metrics and
 independent generator, and passes 40 matching-source preflight datasets.
-It records native-backend identity, tested checkpoints/resume and about
-3.7 serial core hours for the planned main run; confirmation remains unrun.
-Execution is paused by user instruction for the
-[documentation audit](documentation-before-simulation-0.2.4.md). The original
-preflight remains historical evidence; revised documentation sources require
-source reconciliation before a future computational continuation.
+It records native-backend identity, tested checkpoints/resume and the original
+budget of about 3.7 serial core hours. The subsequent user-requested pause for
+the [documentation audit](documentation-before-simulation-0.2.4.md), verified
+resumption and [completed confirmation](fairz-confirmation-results-0.2.4.md)
+remain separate execution records. The preparation entry is historical;
+it is not an instruction to restart or repeat the finished study.
 
 The [2026-09-10 integrated work queue](internal-roadmap-0.2.3.md#2026-09-10-integrated-work-queue)
-consolidates the current Fair Score, population, DRF/interaction, GPCM/JML and
-UX work. It identifies dependencies, interval targets, concrete completion
-checks and measured versus unmeasured computing budgets. Existing protocols
-and historical results retain their original identities.
+records the earlier Fair Score, population, DRF/interaction, GPCM/JML and UX
+dependencies and budgets. The September 18 current-priorities section replaces
+its execution order; existing protocols and results retain their identities.
 
 Start current 0.2.4 release planning with the
-[2026-09-09 validation-before-release sequence](internal-roadmap-0.2.3.md#2026-09-09-024-validation-before-release).
-It maps the available TAM, GPCM, JML, quadrature, and output-restriction evidence
-to the required current-source claim review, missing numerical/statistical
-validation, and final release checks. The historical filename is retained;
+[2026-09-18 priorities and completion decisions](internal-roadmap-0.2.3.md#2026-09-18-current-priorities-and-completion-decisions).
+It maps the current evidence to retained-claim decisions, remaining statistical
+qualification and final-source checks, with explicit extension dependencies.
+The September 9 release principles remain recorded below it. The historical
+filename is retained;
 older 0.2.3 distribution priorities and individual records' next-action text
 do not override this dated sequence. No historical result is reclassified.
 

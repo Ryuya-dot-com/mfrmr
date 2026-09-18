@@ -9,6 +9,142 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-18: current priorities and completion decisions
+
+This is the active execution order. It supersedes the September 17 next-action
+list and September 10 work queue below, while preserving their evidence and
+frozen protocols. The [public roadmap](../../ROADMAP.md) owns feature promises;
+the [claim ledger](claim-reconciliation-0.2.4.md) owns evidence/dispositions.
+Use these existing records, not a second task registry. This refinement changes
+planning only: no new simulation, API eligibility, release approval or backend
+selection follows from it.
+
+### Release outcome and current baseline
+
+The 0.2.4 outcome is a defensible existing many-facet workflow plus portable
+fixed-normal RSM/PCM MML calibration and new-Person scoring. Every retained
+public claim, including inherited GPCM/JML and secondary routes, must have a
+supported scope or an implemented, verified restriction. An unqualified new
+method may be deferred; an incorrect existing calculation cannot be closed
+by renaming it descriptive. Restricting or withdrawing a previously exposed
+decision also requires clear user-facing documentation and compatibility
+handling. None of the 18 claim groups is newly closed by this roadmap.
+
+Reuse the following evidence before proposing another experiment:
+
+- FairZ: all 20,000 assigned datasets are complete; five primary cells are
+  supported and three remain review. Preserve the finished-study adjudication
+  and the subsequent source-bridge checks. Public eligibility remains false.
+- Joint DRF: four saved RSM/PCM pairs have continuous-reference null information
+  and q121 stationarity/start/zero-boundary evidence. Retain the two q61 PCM
+  gradient-agreement failures. This is numerical evidence, not null-size
+  calibration or a universal quadrature/global-maximization guarantee.
+- Portable scoring: conditional uncertainty/identity columns and the installed
+  separate-process scoring path have been checked. Final-source applicability,
+  complete operational workflows and release-wide closure remain necessary.
+- Software: reuse the September 17 full packaged check and subsequent focused
+  checks according to their source scope. They are not final-source approval
+  for all later changes. The prior five-platform check is also source-bound.
+- Population-coordinate intervals: the separate main study remains 0/80,000.
+  It is neither a prerequisite for the omnibus DRF LRT nor automatically
+  launched when its numerical work finishes.
+- Extensions: local-dependence and shared-rater references remain research
+  evidence. Additional brms/MCMC is paused; no evidence is reclassified as
+  frequentist calibration or operational design qualification.
+
+### Ordered deliverables and decision rules
+
+| Order / claims | Deliverable and user consequence | Entry condition | Completion or stop decision |
+| --- | --- | --- | --- |
+| 1. Joint DRF study specification — C01/C02/C10/C15 | Freeze the protocol for deciding whether relative rater effects differ by group while estimating group ability means in both hypotheses. | The four-pair numerical preflight is complete; reuse it. | Fix generating truth/identification, cells, targets, replicate counts justified by acceptance probability/Monte Carlo precision, seeds, pilot/main separation, numerical availability, boundary/failure policy and measured resource budget before main draws. A frozen runnable specification and a bounded execution preflight complete this step, not a passing null result. |
+| 2. FairZ public disposition — C05/C12/C17 | Decide whether a bounded joint-covariance result can be offered or should remain outside 0.2.4; settle the existing conditional output's exact promise. | Use the finished 20,000-dataset study and source applicability bridge; no new study is automatic. | Either implement a defensible target/use-condition rule and qualify its outputs, or preserve enforced diagnostic/unavailable limits and defer the new inferential claim. The five supported cells do not justify a general sample-size cutoff. Retain all three review cells without extending their counts. |
+| 3. Core and portable workflow closure — C01/C02/C05/C06/C07/C08/C17 | Close supported calibration, anchoring, compatible new-Person scoring and scale-preserving reporting. | Current fixes and existing numerical/statistical records. Can proceed during an admitted DRF run. | Trace evidence and restrictions through fit → calibration extraction → save/load in a fresh process → score → summary/export. Include incompatible categories/levels, changed anchors, legacy objects and fitting versus scoring settings. Recompute only a demonstrated source-applicability gap; stored conditional intervals must not acquire calibration/transport coverage claims. |
+| 4. GPCM/JML disposition — C03/C04/C05/C16 | Resolve what users may interpret under each existing slope owner, estimator and correction convention. | Existing full-model kernels, boundary/stationarity and comparison records; no dependency on FairZ or DRF success. | List exact remaining subclaims, then select only the missing matched calculation or study. Close them with evidence or enforced restrictions, including downstream scoring/SE/interval behavior. Do not rerun mismatched item-only comparators or use a returned optimizer code as inferential qualification. |
+| 5. Other decision/output claims — C08/C09/C10/C11/C13/C14/C15/C16/C17/C18 | Resolve linking/equivalence, residual and fit flags, design recommendations, G/D projections, shrinkage, imports and descriptive summaries. | Use the existing ledger; prioritize paths that turn a number into a decision. | Verify the actual formula/target, all-attempt denominators, unavailable states and summary/export propagation. Correct errors or enforce the chosen scope. Observed-score G/D coefficients, post-hoc shrinkage and imported SEs do not become latent random-facet inference. |
+| 6. Joint DRF study adjudication — C02/C10/C15/C17 | Decide whether the scoped omnibus comparison earns a public inferential route. | Frozen step 1 plus its successful execution preflight; statistical results have not been used to select the specification. | Apply the already fixed null-size/availability margins per cell. A pass permits a separate output/API decision; it does not complete it. Review/failure preserves unavailability and triggers a named method or scope decision, not automatic extra repetitions or relaxed criteria. |
+| 7. Result integration and release candidate — all retained groups | Make every kept estimate, interval and decision agree with its help and complete user workflow. | Dispositions from steps 2–6, including any explicit deferral of the new DRF/FairZ method, and closure of all other retained claims. | No unresolved material calculation/output defect or unassigned inferential claim. Scope changes are implemented and tested, not merely written in the ledger. Freeze one candidate and its compatibility/release notes. |
+| 8. Final source and release decision — all retained groups | Verify the exact distributable package and decide readiness. | Frozen candidate from step 7. | Full packaged suite (`NOT_CRAN=true`), examples/vignettes, package checks and the established five-environment matrix: macOS/current R, Windows/current R, Linux/current/old-release/development R. Record identities, warnings/skips and saved-object behavior. A later affected change requires the corresponding checks again. Publication is a separate action. |
+
+The next concrete deliverable is step 1. At its execution boundary, move to
+step 2 rather than making more saved-fit examples. Steps 3–5 can proceed while
+an admitted study runs; they are independent work, not reasons to wait for a
+background result. A reproducible public calculation/readiness defect takes
+priority over research throughput. Step 6 runs when its evidence is available.
+Only the parts of step 6 actually retained as public claims block step 7.
+
+### DRF protocol boundary and success/failure branches
+
+The initial target remains the [scoped complete-rating, two-group RSM/PCM
+omnibus comparison](interval-drf-preflight-record-0.2.4.md#september-18-scope-decision-qualify-the-omnibus-comparison-separately):
+same data and population design, two added zero-margin interaction coordinates,
+all nuisance parameters reestimated, positive common normal variance and unit
+weights. Include zero DRF with different group means. It does not qualify
+per-rater attribution, estimated-population intervals or sparse designs.
+
+Keep nominal alpha .05 and the existing per-null-cell criteria: the exact 95%
+binomial interval for rejection among numerically available comparisons must
+be wholly within [.04,.06], and the exact 95% availability lower bound must be
+at least .99. Report all-assigned rejection separately. These are maintainer
+acceptance margins, not an assertion that the procedure already meets them.
+Choose counts prospectively to support that decision, not by borrowing the
+FairZ count or checking a point estimate alone. Power/effect recovery are
+secondary and cannot compensate for a null or numerical failure.
+
+Use q121 as the first candidate rule on the recorded numerical evidence; do
+not assume it is sufficient everywhere. Before sampling, freeze which
+independent integration/gradient/start/boundary checks apply to each attempt,
+the exact allowed numerical retries and terminal unavailable reasons. Keep
+the existing 1e-6 NLL, 1e-4 full-gradient and 1e-7 gradient-agreement audit
+bounds unless a separate, justified prospective revision is made. Independent
+numerical checks are not the same as repeating the package regression suite.
+Unresolved computable numerical disagreement prevents study acceptance.
+
+A numerical preflight failure returns to its specific computational issue
+before main execution. A statistical review/failure after execution retains
+the original study and withheld inference; any alternative calibration method
+or broader design requires a new specification with an explicit reason.
+Successful scoped calibration still requires a comparison-specific eligibility
+and output decision. Never set a global readiness flag merely to expose this
+LRT, because that could approve unrelated SEs, intervals and predictions.
+
+### Subsequent extensions and dependencies
+
+| Track | First useful bounded result | Gate to the next stage |
+| --- | --- | --- |
+| Fixed-facet rating design | Within explicit total/per-rater cost, compare declared facet or Person targets across allocations, including failures and weak links. | Reuse current assignment/workload/connectivity APIs; choose a target with qualified uncertainty. Ability-difference intervals wait for their own calibration/covariance evidence, not necessarily for a random-rater estimator. |
+| Frequentist shared-rater MFRM | A declared adjacent-category RSM with one rater effect shared across Persons, fixed criterion/task effects and an explicit Person population. | Fix observed/new-rater targets and marginal-likelihood/prediction uncertainty; compare exact matched existing engines before a new implementation. Existing two-rater fixed-point evidence is a starting reference, not a scalable estimator or CI validation. |
+| Design for replacement raters | Equal-cost allocation comparisons for the same Persons and prespecified Person differences under an explicitly sampled rater population. | Requires the matching shared-rater model and joint prediction route. Preserve paired covariance and all-attempt availability; use the saved layouts/target table with layout B's known confounding and C as a negative control. |
+| Model breadth | PCM random facets, sampled tasks, local/correlated testlets, crossed/nested interactions and random slopes. | Admit one concrete user question at a time after its target/identification is specified. The entire correlated-testlet family is not a mandatory prerequisite for a scalar shared-rater model. |
+| Scale and API consolidation | Explicit scale identifiers/separate-scale routing, then stable schemas/migration and maintenance of validated routes. | Post-0.2.4 scope decision and user need; multiple-scale routing and random-rater research do not establish or require each other. |
+| Deferred research | Multivariate G-theory, hierarchical response time, diffusion models, portable GPCM and other response families. | A concrete measurement use case, suitable data and a separate evidence plan. No automatic assignment to 0.2.4, 0.3.0 or 1.0.0. |
+
+The [measurement-extension decision](measurement-extension-next-decisions-0.2.4.md)
+retains the literature and completed references. Its historical brms and
+local-testlet next-action paragraphs are not active instructions. Core MML/JML
+remains frequentist; an EAP posterior after calibration is not full Bayesian
+calibration, and ordinal cumulative-link ML is not the same polytomous
+adjacent-category model. No estimator/dependency choice is made by this plan.
+
+### Work limits and evidence reuse
+
+Use the claim ledger to record supported scope, enforced restriction or
+deferred new claim, with an actual evidence/output consequence. Before adding
+work, state the user result it could change, the unresolved question, the
+smallest sufficient evidence and what each outcome would decide. Stop a
+branch that cannot change such a decision. This is a prioritization rule,
+not permission to omit necessary statistical verification or explanation.
+
+Keep at most one new expensive qualification study active by default; existing
+authorized runs retain their own instructions. Freeze attempted counts and
+measure time/storage on the bounded execution preflight before committing a
+new study budget. Reuse saved inputs/results when the question allows it.
+Do not rerun FairZ, launch the population 80,000 by association, add internal
+plots, rewrite a solver, or repeat the full suite merely to fill waiting time.
+Investigate detailed logs after a failure; on success inspect summaries and
+source identities. Final-source checks remain required even when earlier
+component checks passed. Calendar estimates follow measured cost and resolved
+dependencies, not a promised release date.
+
 ## 2026-09-18: measurement purpose before engine expansion
 
 The user's scope review prompted a [reassessment of the brms research direction](measurement-extension-next-decisions-0.2.4.md).
@@ -23,6 +159,9 @@ estimator follows automatically from pausing brms. This is a scope correction,
 not a new simulation requirement or a change to historical results.
 
 ## 2026-09-17: committed baseline and next decisions
+
+Historical checkpoint and evidence. Its next-action order is superseded by
+the September 18 current-priorities section above.
 
 Commit `fe8220ce` preserves the 257 previously modified/untracked files as one
 development checkpoint. The working tree was clean immediately afterward;
@@ -118,9 +257,11 @@ Local check and restart logs are retained under
 
 ## 2026-09-09: 0.2.4 validation before release
 
-This is the controlling maintainer sequence for 0.2.4, adopted following the
+This records the original maintainer sequence for 0.2.4, adopted following the
 user's review of the TAM comparison and the outstanding GPCM/JML uncertainty
-questions. The historical filename is retained to avoid a second internal
+questions. The September 18 current-priorities section now controls execution;
+the release principles and historical evidence below remain applicable.
+The historical filename is retained to avoid a second internal
 roadmap. The 0.2.3 distribution-first policy below applies to that release;
 its instruction to run no further external confirmation does not govern 0.2.4.
 Likewise, the next-action statement in the September 7 quadrature-remedy
@@ -133,10 +274,11 @@ is the actual 0.2.4 public claim surface, including inherited functionality.
 
 ### 2026-09-10 integrated work queue
 
-This is the active local queue, combining the user's global and local review
+This is the historical local queue, combining the user's global and local review
 requests after the Fair Score follow-up. The five release gates below remain
-controlling. Later chronological evidence sections explain how the project
-arrived here; they do not create competing "next" tasks. The initial planning
+applicable; the September 18 current-priorities section replaces this execution
+order. Later evidence sections explain how the project arrived here; they do
+not create competing "next" tasks. The initial planning
 revision performed no new simulation or publication; the execution follow-up
 below records subsequent work without expanding inferential support.
 Frozen protocols, counts, thresholds, seeds and historical dispositions remain
