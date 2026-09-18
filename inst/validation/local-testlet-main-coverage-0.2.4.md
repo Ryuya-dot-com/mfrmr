@@ -177,6 +177,13 @@ Pair differences require shared calibration covariance, and zero-variance
 boundary behavior must be addressed. Correction selection remains a separate
 inferential decision.
 
+The subsequent [bounded numerical follow-up](local-testlet-main-failures-0.2.4.md)
+is now complete. Aligning the optimizer's stopping target with the existing
+final score criterion resolves the eight stops and preserves four successful
+controls. Tighter outer integration resolves the pair's mass discrepancy;
+P90 remains intentionally unresolved under the original cutoff band. These
+selected-case diagnostics leave every main-study result above unchanged.
+
 ## Evidence and review
 
 The reviewed CSVs are byte-for-byte copies of the completed runner outputs:

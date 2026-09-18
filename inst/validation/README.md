@@ -147,6 +147,12 @@ person coverage is lower than the matched oracle by 1.278 pp at N=24 and
 differences are reported separately. All 24 primary MCSE goals are met.
 These results motivate separate numerical follow-up and calibration-uncertainty
 work, without qualifying public intervals or revising the completed experiment.
+The [bounded failure follow-up](local-testlet-main-failures-0.2.4.md) subsequently
+resolves all eight optimizer stops by aligning internal and final score
+thresholds, preserving four successful controls and the original solutions.
+Tighter outer integration resolves the pair's mass discrepancy; the person
+near a coverage cutoff remains intentionally unresolved. The main results
+are unchanged, and calibration-uncertainty correction remains separate work.
 During execution, the [interpretation and next-work note](measurement-extension-next-decisions-0.2.4.md)
 maps its eight coverage differences to questions and subsequent decisions,
 defines a bounded shared-rater likelihood implementation, and supplies common
