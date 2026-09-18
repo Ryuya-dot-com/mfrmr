@@ -1,0 +1,10 @@
+"Check","Pass"
+"source_and_input_identity",TRUE
+"complete_chains",TRUE
+"no_divergences",TRUE
+"no_treedepth_hits",TRUE
+"chain_ebfmi",TRUE
+"rhat_and_ess",TRUE
+"moment_mcse",TRUE
+"moment_agreement",TRUE
+"contrast_identity",TRUE
