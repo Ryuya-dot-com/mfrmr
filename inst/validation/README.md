@@ -153,6 +153,14 @@ thresholds, preserving four successful controls and the original solutions.
 Tighter outer integration resolves the pair's mass discrepancy; the person
 near a coverage cutoff remains intentionally unresolved. The main results
 are unchanged, and calibration-uncertainty correction remains separate work.
+The September 18 update to the [next-work decision](measurement-extension-next-decisions-0.2.4.md)
+selects brms/Stan joint-posterior inference as the first external reference
+candidate for calibration-aware work. The [executable bridge](random-effects-brms-bridge-0.2.4.R)
+maps saved local-dependence and shared-rater data to the adjacent-category
+model, preserves owner identities, and matches conditional probabilities
+with a maximum discrepancy of about 2.22e-16. Generated Stan syntax passes. Posterior sampling, prior
+sensitivity, interval performance and operational cost remain untested;
+this introduces no public API or package dependency.
 During execution, the [interpretation and next-work note](measurement-extension-next-decisions-0.2.4.md)
 maps its eight coverage differences to questions and subsequent decisions,
 defines a bounded shared-rater likelihood implementation, and supplies common
