@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-17.
+Status: repository-only maintainer plan, refined 2026-09-18.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -8,6 +8,19 @@ tool identities, and validation operations. `NEWS.md` records completed
 user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
+
+## 2026-09-18: measurement purpose before engine expansion
+
+The user's scope review prompted a [reassessment of the brms research direction](measurement-extension-next-decisions-0.2.4.md).
+The planned additional Bayesian joint-versus-conditional fits are removed from
+the active queue. Preserve completed research evidence; it does not validate
+existing MML/JML inference or define the package's next required feature.
+Resume the existing claim/restriction decisions below. Future extensions must
+first specify a measurement use case, probability model, estimand and inference
+framework before choosing an engine. Ordinal cumulative-link ML and adjacent-
+category RSM/PCM are different models; neither ordinal adoption nor a new native
+estimator follows automatically from pausing brms. This is a scope correction,
+not a new simulation requirement or a change to historical results.
 
 ## 2026-09-17: committed baseline and next decisions
 

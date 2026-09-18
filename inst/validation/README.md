@@ -153,9 +153,13 @@ thresholds, preserving four successful controls and the original solutions.
 Tighter outer integration resolves the pair's mass discrepancy; the person
 near a coverage cutoff remains intentionally unresolved. The main results
 are unchanged, and calibration-uncertainty correction remains separate work.
-The September 18 update to the [next-work decision](measurement-extension-next-decisions-0.2.4.md)
-selects brms/Stan joint-posterior inference as the first external reference
-candidate for calibration-aware work. The [executable bridge](random-effects-brms-bridge-0.2.4.R)
+The earlier September 18 [next-work decision](measurement-extension-next-decisions-0.2.4.md)
+selected brms/Stan joint-posterior inference as an external research reference.
+The subsequent user-requested scope review removes further Bayesian fits from
+the active queue and restores the priority of existing measurement and inference
+claims. The research results below remain evidence for their stated models;
+they do not validate current MML/JML uncertainty or require an engine change.
+The [executable bridge](random-effects-brms-bridge-0.2.4.R)
 maps saved local-dependence and shared-rater data to the adjacent-category
 model, preserves owner identities, and matches conditional probabilities
 with a maximum discrepancy of about 2.22e-16. Generated Stan syntax passes.
