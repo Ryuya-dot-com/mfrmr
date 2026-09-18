@@ -1,0 +1,19 @@
+"Check","Pass"
+"all unique planned datasets",TRUE
+"frozen sources and data unchanged",TRUE
+"record lineage matches manifest",TRUE
+"all attempted target rows retained",TRUE
+"no unavailable event relabeled as noncoverage",TRUE
+"coverage follows continuous CDF event",TRUE
+"nonready fits keep every plugin target unavailable",TRUE
+"generator identities",TRUE
+"cluster MCSE helper bridge",TRUE
+"zero-count cluster retained",TRUE
+"cell person/pair denominators",TRUE
+"paired denominators cannot exceed either method",TRUE
+"saved scoring attempts satisfy numerical gates",TRUE
+"all 1200 fixed main datasets retained",TRUE
+"all 201600 assigned method targets retained",TRUE
+"fixed controls and start retained",TRUE
+"saved readiness agrees with fitting and reference gates",TRUE
+"reporting sources unchanged",TRUE

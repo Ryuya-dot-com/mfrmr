@@ -1,5 +1,16 @@
 # Main coverage study: execution record
 
+**Completed and reviewed, 2026-09-18.** All 1,200 datasets were attempted by
+04:03:10 JST; final aggregation and its saved audit completed at 04:03:31.
+There are 1,192 fit/reference-ready datasets, with eight native optimizer
+stops retained as failures and two additional unresolved plug-in scoring
+targets. All 201,600 assigned method/target rows remain in the results.
+The [final results and development decision](local-testlet-main-coverage-0.2.4.md)
+report availability, coverage comparisons and achieved precision. The frozen
+source/input identities and final evidence hash were verified at review.
+The launch and continuation details below describe the completed run; another
+execution is not needed.
+
 Started **2026-09-17 20:54:52 JST**, following explicit user authorization to
 proceed to the main study. The [frozen protocol](local-testlet-main-coverage-0.2.4-protocol.md)
 and 1,200-seed manifest are unchanged: four cells, 300 datasets per cell,

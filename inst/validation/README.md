@@ -138,14 +138,16 @@ N=120 would raise that estimate to 17.44 hours without reducing the selected
 replication count. An ideal-oracle MCSE benchmark is reported separately from
 the empirical projections. The [main protocol](local-testlet-main-coverage-0.2.4-protocol.md)
 and new seed manifest are frozen. The [main execution](local-testlet-main-coverage-0.2.4-execution.md)
-started on 2026-09-17 at 20:54:52 JST; all 1,200 datasets were generated and
-verified before fitting. It runs in the background with separate stage
-checkpoints and automatic final aggregation after the fixed manifest completes.
-The startup check found seven completed datasets with all 504 targets available;
-this is a progress snapshot, not a final performance result.
-The selected allocation is a pilot-based planning decision, not a precision
-guarantee or public interval qualification.
-While that run continues, the [interpretation and next-work note](measurement-extension-next-decisions-0.2.4.md)
+started on 2026-09-17 at 20:54:52 JST and completed final aggregation on
+2026-09-18 at 04:03:31. The [main results](local-testlet-main-coverage-0.2.4.md)
+retain all 1,200 datasets, including eight native optimizer stops and two
+additional unresolved scoring targets. At positive local variance, plug-in
+person coverage is lower than the matched oracle by 1.278 pp at N=24 and
+0.380 pp at N=120; zero-variance cells do not show the same pattern. Pair
+differences are reported separately. All 24 primary MCSE goals are met.
+These results motivate separate numerical follow-up and calibration-uncertainty
+work, without qualifying public intervals or revising the completed experiment.
+During execution, the [interpretation and next-work note](measurement-extension-next-decisions-0.2.4.md)
 maps its eight coverage differences to questions and subsequent decisions,
 defines a bounded shared-rater likelihood implementation, and supplies common
 Series D evaluation targets without generating responses. The code review
@@ -154,7 +156,7 @@ at known calibration. The allocation review also records that all 80 heavily
 rated people in B belong to C's first reference group; group contrasts must
 therefore retain exposure information. The new target tables contain 240
 people and 120 disjoint candidate pairs, with 12 marked for a future pilot.
-They do not alter the active main-study targets or establish design performance.
+They do not alter the main-study targets or establish design performance.
 The [Series R fixed-point implementation](shared-rater-fixed-point-0.2.4.md)
 now passes 15 bounded checks using the saved two-person/two-rater example.
 Its Q41/Q81 log likelihoods agree with the Python reference within 7.11e-15,
@@ -162,7 +164,7 @@ and it preserves the 0.42524 log-likelihood difference from incorrectly
 redrawing raters for each person. Zero variance, owner relabeling, the saved
 one-rater adaptive integral, missing observations and input limits also pass.
 This is a joint-likelihood reference, not an estimator or posterior-scoring API;
-joint ability moments are the next separate step. The active Series L sources
+joint ability moments are the next separate step. The frozen Series L sources
 and inputs are unchanged.
 The [shared-rater posterior figure](shared-rater-posterior-visual-0.2.4.md)
 now visualizes the sharing structure, joint ability density and ability-difference
