@@ -5,6 +5,9 @@
   refits. It also identifies the multiple-comparison family and clarifies
   that Holm adjustment does not establish error-rate control for the current
   approximate screening statistics. Calculations and eligibility are unchanged.
+  The subsequent null-statistic audit also distinguishes equality of EAP-based
+  mean residuals from absence of DFF; an SE correction alone cannot equate
+  these hypotheses.
 
 * Portable score summaries retain the existing estimate and uncertainty basis
   columns and calibration identifiers in their estimates tables. Extracted

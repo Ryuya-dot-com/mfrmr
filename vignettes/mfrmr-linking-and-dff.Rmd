@@ -129,6 +129,13 @@ anchors alone do not address an omitted group difference. Review these
 assumptions before interpreting a screen positive as evidence about a rater
 or criterion.
 
+Representing group ability differences is necessary for a suitable population
+model, but does not turn the current residual screen into a calibrated DFF
+test. MML residuals evaluate expected scores at EAP ability estimates. Because
+the response function is nonlinear, a no-DFF model can still have different
+mean residuals across groups. This concerns the null being tested as well as
+its standard error.
+
 The default Holm adjustment covers all returned facet-level/group-pair rows
 in one call. Its error-rate guarantee requires valid unadjusted p-values;
 that condition has not been established for these approximate screens.

@@ -61,10 +61,15 @@ or simulation rows do not resolve an unspecified claim. Use this order:
 3. Apply the [September 18 DRF location/scope decision](interval-drf-preflight-record-0.2.4.md#september-18-drf-scope-and-location-decision):
    compensated facet centering preserves probabilities but shifts population
    means; the old executions are not matched fixed-population null evidence.
-   Retain screening-only public claims. Before a future error-rate study,
-   specify a matched null/alternative separately from group-mean
-   misspecification and review the complete refit/linking target. No new DRF
-   confirmation was launched. The separate population main remains 0/80,000;
+   The subsequent [null-statistic audit](interval-drf-preflight-record-0.2.4.md#september-18-follow-up-which-null-does-the-statistic-test)
+   shows that EAP-based residual differences need not be centered even with
+   correctly modeled group means and zero DRF. An SE-only repair is insufficient.
+   Existing joint MML fits separate population means from relative Rater-by-Group
+   effects and match independent continuous likelihoods, but public LRTs remain
+   withheld. Resolve the marginal estimability/population/comparison contract
+   before qualifying that omnibus test; local full rank alone is insufficient.
+   Retain screening-only claims and legitimate group-mean-only DRF null controls.
+   No new DRF confirmation was launched. The separate population main remains 0/80,000;
    Person-scoring evidence cannot supply its missing parameter coverage.
 4. Continue exact-model GPCM/JML and decision-bearing secondary-route review
    where independent of FairZ. Specify the remaining target and model before

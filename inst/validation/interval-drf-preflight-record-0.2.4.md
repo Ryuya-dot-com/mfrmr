@@ -62,6 +62,113 @@ Parsed executable R expressions are identical to the baseline, and the edited
 Rd passes `tools::checkRd()`. No statistical or full-suite rerun was needed for
 these documentation changes.
 
+## September 18 follow-up: which null does the statistic test?
+
+The [prespecified addendum](interval-drf-preflight-protocol-0.2.4.md#september-18-addendum-null-statistic-and-existing-likelihood-route)
+and [executable audit](drf-null-statistic-audit-0.2.4.R) address a prerequisite
+to calibration: whether no DRF implies zero expected residual contrast.
+Evidence is retained under `validation-results/drf-null-statistic-20260918/`.
+
+### Residual route: a centering problem precedes the SE problem
+
+Write `m_i(theta)` for the conditional expected score. The current MML route
+uses `e_i = Y_i - m_i(E[theta | Y])`. In general this differs from
+`u_i = Y_i - E[m_i(theta) | Y]`. With known, correctly specified calibration
+and population distribution, iterated expectation gives `E[u_i] = 0`.
+It gives no corresponding identity for `e_i`, because the response function
+is nonlinear. This is the distinction between evaluating the response
+function at EAP and integrating it; the latter expectation is also the term
+obtained when differentiating the marginal likelihood for an additive response
+effect. These conditional expectations are part of MML, without placing
+Bayesian priors on the unknown calibration parameters.
+
+The audit enumerates all 64 binary patterns for three raters and two criteria,
+with identical response parameters in both groups and true ability means 0
+and 0.6. Calibration and both population distributions are known. Continuous
+integration, not Monte Carlo replication, supplies each pattern's probability
+and posterior moments. The numerical results are:
+
+| Rater | Expected EAP residual contrast A minus B | Expected integrated-residual contrast | Current variance proxy / actual variance, equal group sizes |
+| --- | ---: | ---: | ---: |
+| R1 | 0.007775446 | 1.04e-16 | 1.322893 |
+| R2 | 0.009617873 | 7.85e-17 | 1.353816 |
+| R3 | 0.009978909 | 5.33e-17 | 1.365927 |
+
+Each group's pattern probabilities sum to one within the 1e-9 tolerance.
+The variance denominator uses the full pattern-weighted variance of a Person's
+two-rating mean residual, so within-Person dependence is retained. The proxy
+is the expected sum of the two fitted Bernoulli variances divided by four.
+Here it is *larger* than the actual variance. That does not remove the nonzero
+null mean: with independent Persons and known parameters, the group-average
+contrast converges to the displayed nonzero value as its SE shrinks.
+
+This is a counterexample to equating the EAP residual contrast's zero null
+with absence of DRF. It is not a finite-sample false-positive estimate for the
+whole fitted-package procedure. It also shows why substituting a cluster SE
+or a normal tail area for the current t tail area is not a complete repair.
+Simply substituting integrated residuals would still require the correct
+covariance, nuisance-parameter treatment and null calibration.
+
+The current SE sums model response variances, whereas ordinary
+[Welch testing](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/t.test.html)
+uses estimated sample variances. The response-row `N - 1` values used by the
+current Welch-Satterthwaite formula have not been derived as degrees of
+freedom for these model-variance estimates or for the fitted residuals.
+
+### Refit route: shared anchor uncertainty need not only widen intervals
+
+Let `a_hat` be the baseline anchor estimates and `d_fixed` the contrast that
+would be obtained if true anchors were fixed. A first-order expansion gives
+`d_hat ~= d_fixed + D (a_hat - a)`, with `D` the difference between the two
+subgroup estimators' sensitivities to anchors. Its variance contains
+`Var(d_fixed) + D Var(a_hat) D' + 2 Cov(d_fixed, a_hat) D'`.
+The current `SE1^2 + SE2^2` does not supply those shared-estimation terms.
+Cancellation and cross-covariance mean their omission has no universal
+direction. For genuinely external fixed anchors and disjoint Person groups,
+regular, correctly specified MML may support an asymptotic normal comparison;
+it does not automatically justify a Student t reference with response-row
+degrees of freedom. The existing linked screen is not such a derivation.
+
+### Existing joint MML route and the remaining public blocker
+
+A direct likelihood target is `H0: gamma_rg = 0`, where gamma is the
+zero-margin Rater-by-Group interaction and both models estimate the same
+Group population regression and common latent residual variance. Common group
+shifts belong to the population model; gamma describes relative rater
+departures. For three raters and two groups the alternative adds two free
+coordinates. Reestimate all nuisance parameters under both hypotheses.
+An LRT uses twice the maximized log-likelihood difference, with a chi-square
+reference of dimension two only under the usual regularity assumptions.
+An efficient score test would instead require the marginal score and the
+nuisance-adjusted information `I_gg - I_gn solve(I_nn) I_ng`; the current
+EAP residual/Welch statistic supplies neither. Likelihood comparisons are
+also an established route in [TAM](https://alexanderrobitzsch.github.io/TAM/reference/anova.tam.html),
+but that documentation does not validate mfrmr's implementation.
+
+No new engine or public API was created. The existing `fit_mfrm()` route,
+with Group included as a zero-fixed dummy facet, `population_formula = ~ Group`
+and optional `facet_interactions = "Rater:Group"`, fit all four saved datasets.
+The eight q61 fits agreed with an independent continuous likelihood to at
+most 3.56e-8 NLL, below the prespecified 1e-5 tolerance. Each comparison adds
+exactly two free coordinates. Twice the raw likelihood improvements were
+1.024391 / 1.771481 for the RSM/PCM ability-shift-only datasets and
+1.808580 / 19.083642 for the RSM/PCM DRF datasets. These four single-dataset
+values are not error-rate or power estimates.
+
+**All four public LRTs were withheld.** The fitted objects retain
+`design_rank_not_evaluated` and `InferenceReady = FALSE`: the linear
+estimability audit excludes the nonlinear `log_sigma2` coordinate. The
+separate local marginal-rank checks are diagnostic and do not change that
+readiness decision. We did not override it or manufacture public p-values.
+The next implementation decision is how the existing marginal estimability,
+population and comparison contracts can support this joint likelihood target;
+local rank or a finite likelihood alone does not settle that decision.
+The original four data files remain unchanged, and source/input hashes and
+all returned fits, comparison warnings and unavailable results are retained.
+Public explanatory comments were updated after the audit. Parsed executable
+R expressions remain identical to its source baseline, and the edited Rd
+passes `tools::checkRd()`; no full-suite rerun was warranted.
+
 ## Repairs and output-path findings
 
 Two demonstrated defects were corrected at their shared implementations:

@@ -4,6 +4,38 @@ Repository-only bounded follow-up to priorities 0–2 in the active internal
 roadmap. This protocol is written before running the cases below. It does not
 replace the earlier Fair Score pilot or authorize a coverage confirmation.
 
+## September 18 addendum: null statistic and existing likelihood route
+
+Before another error-rate study, check whether the residual statistic is
+centered under a no-DRF model. Enumerate all 64 binary response patterns for
+one Person rated by three raters (-0.4, 0, 0.4) on two criteria (-0.3, 0.3).
+Steps are zero, weights one and responses conditionally independent. Both
+groups share every response parameter; abilities follow N(0,1) and N(0.6,1).
+Treat calibration and both population distributions as known to isolate the
+EAP substitution from parameter-estimation error. Integrate over the real
+line with base R `integrate()` (relative tolerance 1e-10, absolute 1e-12).
+Calculate exact-pattern-weighted residual means, Person-level covariance and
+the variance proxy used by the current residual screen. Contrast evaluation
+at posterior mean ability with posterior integration of expected scores.
+Check pattern probabilities sum to one and the integrated residual means
+are zero within 1e-9. Report either result for the EAP substitution; this is
+a deterministic reference calculation, not an empirical false-positive rate.
+
+Then reuse the four saved final RSM/PCM `group_mean_only` and `drf` datasets
+without resampling. Fit nested joint MML models with `population_formula =
+~ Group`, `dummy_facets = "Group"`, and respectively no interaction versus
+`facet_interactions = "Rater:Group"`. Both fits retain the same facets,
+scores, population regression and common estimated variance. All nuisance
+parameters are reestimated in both models. The joint null is zero rater-by-
+group interaction; the full 3-by-2 interaction adds two free coordinates.
+Use q61/maxit200/reltol1e-10 and existing public `compare_mfrm(nested = TRUE)`
+without overriding readiness or comparison restrictions. Check likelihoods
+by independent continuous integration at retained estimates (absolute NLL
+difference <=1e-5), nesting and parameter counts. Retain all errors and
+unavailable outputs; no favorable p-value is a pass criterion. This is an
+existing-workflow feasibility check, not qualification of finite-sample
+chi-square calibration or a new per-rater decision API.
+
 ## Questions and design
 
 1. Does the fixed-reference, non-Person FairZ joint-delta calculation retain

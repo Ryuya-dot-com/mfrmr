@@ -516,6 +516,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' that population assumption; linking anchors do not estimate subgroup ability
 #' distributions. A screen positive can therefore reflect an inadequately
 #' represented group difference as well as differential facet functioning.
+#' For MML, observation expectations are evaluated at each Person's EAP
+#' ability, rather than integrated over the conditional ability distribution.
+#' This nonlinear substitution can produce different mean residuals across
+#' groups even under a correctly specified no-DFF model. A zero mean-residual
+#' contrast and absence of differential functioning are therefore distinct
+#' null hypotheses; correcting the SE alone does not make them equivalent.
 #'
 #' Two methods are available:
 #'
