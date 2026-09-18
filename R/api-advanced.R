@@ -469,7 +469,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 
 #' Differential facet functioning analysis
 #'
-#' Tests whether the difficulty of facet levels differs across a grouping
+#' Screens whether the difficulty of facet levels differs across a grouping
 #' variable (e.g., whether rater severity differs for male vs. female
 #' examinees, or whether item difficulty differs across rater subgroups).
 #'
@@ -510,6 +510,13 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' for Group A than Group B at the same ability level, the measurement
 #' scale is no longer group-invariant.
 #'
+#' Differences between group ability distributions are not themselves DFF.
+#' Residual screens inherit the fitted model's ability and population
+#' assumptions. With fixed-standard-normal RSM/PCM MML, subgroup refits retain
+#' that population assumption; linking anchors do not estimate subgroup ability
+#' distributions. A screen positive can therefore reflect an inadequately
+#' represented group difference as well as differential facet functioning.
+#'
 #' Two methods are available:
 #'
 #' **Residual method** (`method = "residual"`): Uses the existing fitted
@@ -519,8 +526,9 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' \deqn{z = \frac{\sum (X_{obs} - E_{exp})}{\sqrt{\sum \mathrm{Var}}}}
 #' Pairwise contrasts between groups compare the mean observed-minus-expected
 #' difference for each facet level, with uncertainty summarized by a
-#' Welch/Satterthwaite approximation. This method is fast, stable with small
-#' subsets, and does not require re-estimation. Because the resulting contrast
+#' Welch/Satterthwaite approximation. This method reuses the fitted model
+#' without re-estimation; small subsets can still yield sparse or unstable
+#' contrasts. Because the resulting contrast
 #' is not a logit-scale parameter difference, the residual method is treated as
 #' a screening procedure rather than an ETS-style classifier.
 #'
@@ -557,9 +565,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' replicate covariance contract is required before formal refit inference.
 #'
 #' Multiple comparisons are adjusted using Holm's step-down procedure by
-#' default, which controls the family-wise error rate without assuming
-#' independence.  Alternative methods (e.g., `"BH"` for false discovery
-#' rate) can be specified via `p_adjust`.
+#' default, jointly across the returned facet-level/group-pair rows in this
+#' call. Holm's family-wise error control requires valid unadjusted p-values;
+#' the approximate screening tail areas here have not been shown to meet that
+#' requirement. Adjustment therefore does not establish an error-rate guarantee
+#' or formal inference eligibility. Alternative adjustments can be specified
+#' via `p_adjust`; see [stats::p.adjust()] for their assumptions.
 #'
 #' @section Choosing a method:
 #' In most first-pass DFF screening, start with `method = "residual"`. It is

@@ -58,10 +58,14 @@ or simulation rows do not resolve an unspecified claim. Use this order:
    extend the finished study until it passes. The joint-covariance research
    candidate remains distinct from public conditional plot intervals and
    does not automatically promote public `FairCIEligible`.
-3. Resolve the DRF generator's location and group-mean alignment in small
-   null/non-null cases before allocating its confirmation or the separate
-   population study. The population main remains 0/80,000; Person-scoring
-   evidence cannot supply its missing population-parameter coverage.
+3. Apply the [September 18 DRF location/scope decision](interval-drf-preflight-record-0.2.4.md#september-18-drf-scope-and-location-decision):
+   compensated facet centering preserves probabilities but shifts population
+   means; the old executions are not matched fixed-population null evidence.
+   Retain screening-only public claims. Before a future error-rate study,
+   specify a matched null/alternative separately from group-mean
+   misspecification and review the complete refit/linking target. No new DRF
+   confirmation was launched. The separate population main remains 0/80,000;
+   Person-scoring evidence cannot supply its missing parameter coverage.
 4. Continue exact-model GPCM/JML and decision-bearing secondary-route review
    where independent of FairZ. Specify the remaining target and model before
    another numerical experiment. Close each retained subclaim with scoped

@@ -1,5 +1,11 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* DFF documentation distinguishes group ability differences from differential
+  functioning and states the population assumptions retained by subgroup
+  refits. It also identifies the multiple-comparison family and clarifies
+  that Holm adjustment does not establish error-rate control for the current
+  approximate screening statistics. Calculations and eligibility are unchanged.
+
 * Portable score summaries retain the existing estimate and uncertainty basis
   columns and calibration identifiers in their estimates tables. Extracted
   tables and CSV exports therefore preserve the conditional interpretation of

@@ -92,6 +92,30 @@ It adds no statistical coverage evidence and does not close C07/C17 as a whole
 or replace the final-source package/platform checks. No new calibration study,
 full-suite rerun or development visualization was needed.
 
+An installed-source follow-up at `6459a95` built and installed mfrmr in an
+isolated temporary library using the available dependencies. The previously
+skipped fresh-process artifact-scoring test passed all eight expectations,
+without warnings or skips. A first whole-file installed run had 141 passes
+but failed its vignette lookup because the build intentionally used
+`--no-build-vignettes`; it is not recorded as a whole-file pass. An initial
+attempt to isolate the test also failed in reporter initialization before
+the test body ran. The final run used the unchanged fixture and target test
+through `testthat::test_file()`. Build/install logs and both unsuccessful
+attempts are retained with the successful log under
+`validation-results/portable-installed-20260918/`. This completes that specific
+installed-process check, not a new full package check.
+
+### September 18 follow-up: DRF interpretation (C10/C15)
+
+The [location and scope decision](interval-drf-preflight-record-0.2.4.md#september-18-drf-scope-and-location-decision)
+resolves the algebraic treatment of facet centering using all 22 saved cases.
+It separates a future matched fixed-population null from population
+misspecification and preserves the original executions. Public DFF help now
+keeps group ability differences distinct from differential functioning and
+removes unsupported small-subset and multiple-comparison error-control claims.
+The current scope remains screening; a matched null/power study and formal
+inferential qualification are not completed by this documentation repair.
+
 ### Original reconciliation checkpoint
 
 - The current `NAMESPACE` has **182 exports and 191 S3 registrations (373

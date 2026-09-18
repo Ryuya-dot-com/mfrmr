@@ -23,7 +23,7 @@ This vignette covers the package-native route for:
 - checking whether a design is connected enough for a common scale
 - exporting anchor candidates from an existing fit
 - screening differential facet functioning (DFF)
-- deciding when subgroup contrasts are descriptive versus formally comparable
+- deciding whether subgroup contrasts are linked and available for screening
 
 For a broader workflow guide, see `vignette("mfrmr-workflow", package = "mfrmr")`.
 For the shorter help-page map, see
@@ -120,6 +120,19 @@ parameter calibration error should not be mistaken for zero uncertainty
 
 Residual DFF is the fast screening route. It is useful for triage, but it is
 not automatically a logit-scale inferential contrast.
+
+A group with higher average ability can score higher without differential
+functioning. DFF concerns a facet difference at the same ability. Residual
+screens inherit the fitted population assumptions, and fixed-standard-normal
+RSM/PCM subgroup refits do not estimate group ability distributions. Linking
+anchors alone do not address an omitted group difference. Review these
+assumptions before interpreting a screen positive as evidence about a rater
+or criterion.
+
+The default Holm adjustment covers all returned facet-level/group-pair rows
+in one call. Its error-rate guarantee requires valid unadjusted p-values;
+that condition has not been established for these approximate screens.
+Adjusted values remain screening evidence.
 
 ```{r dff-residual}
 dff_resid <- analyze_dff(

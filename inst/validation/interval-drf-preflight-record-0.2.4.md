@@ -7,6 +7,61 @@ This record adds target/output mappings to existing C05/C06/C07/C10/C12/C17
 claim groups. It does not replace the 181-export inventory or close every
 output route. No release or large confirmation was performed.
 
+## September 18: DRF scope and location decision
+
+**Retain the public residual and linked-refit routes as screening only.**
+The question is whether a facet functions differently at the same ability,
+not whether the two groups have different ability distributions. See the
+[Riley (2011) study](https://www.rasch.org/rmt/rmt252d.htm) for this distinction;
+its dichotomous Winsteps/Mantel-Haenszel results are not validation of mfrmr's
+residual or linked-refit statistics.
+
+The 22 saved final cases were reconciled at source baseline `6459a95` without
+new responses or fits. For the original rater and criterion effects, let
+`a = mean(r) + mean(c)`. Replacing them by `r - mean(r)` and `c - mean(c)`
+preserves `eta = theta - r - c + signals` only if theta is also replaced by
+`theta - a`. Consequently the conditional population means on the centered
+facet scale are `-a` in Group A and `Delta - a` in Group B, where `Delta` is
+the injected common ability shift. This population mean is not the empirical
+mean of the particular simulated theta sample.
+
+In the saved cases, the Group A means range from -0.462399 to 0.489953;
+the Group B maximum is 0.752045 when the 0.6 shift is present. Compensated
+centering preserves eta to 8.89e-16 and category probabilities to 3.34e-16.
+Centering only the facets changes a category probability by as much as
+0.162102. The saved additive fits center both facets and the step profiles
+while fixing the population to N(0,1). Thus silent recentering does not turn
+these existing executions into matched-model null evidence. The original
+objects and their hashes are unchanged. The read-only script, per-case rows
+and hashes are retained in `validation-results/drf-scope-review-20260918/`.
+
+This resolves the algebraic location question and sets the next-study boundary:
+
+* A matched fixed-population null must generate centered facet effects and
+  step profiles explicitly, independent N(0,1) Person abilities, and no group
+  ability shift. Do not force the realized Person sample mean or SD to 0/1.
+  A DRF alternative can then add the declared zero-sum rater deviations while
+  retaining the same ability distribution, assignment and linking procedure.
+* A group ability shift fitted with the fixed N(0,1) model is a separate
+  population-misspecification condition. It cannot supply nominal null
+  calibration for the matched model. A model that represents the group shift
+  answers a different comparison; current explicit population-model refits
+  remain refused by `analyze_dff(method = "refit")`.
+* The original 22 cases remain execution evidence. Neither this reconciliation
+  nor a minimum anchor count establishes false-positive rates or power. No
+  error-rate confirmation has been run, and no inference eligibility changes.
+
+Public `analyze_dff()` help and the linking vignette now explain the group-ability
+distinction, remove the unsupported small-subset stability assurance, and state
+the actual adjustment family: all returned facet-level/group-pair rows in one
+call. Holm's error-control theorem requires valid input p-values; applying
+[`stats::p.adjust()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/p.adjust.html)
+to the current approximate screening tail areas does not establish that
+requirement. The implementation already keeps formal eligibility false.
+Parsed executable R expressions are identical to the baseline, and the edited
+Rd passes `tools::checkRd()`. No statistical or full-suite rerun was needed for
+these documentation changes.
+
 ## Repairs and output-path findings
 
 Two demonstrated defects were corrected at their shared implementations:
