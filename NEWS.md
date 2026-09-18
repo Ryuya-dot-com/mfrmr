@@ -1,5 +1,10 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Model-comparison warnings report the affected fits and recorded inference
+  readiness reasons, distinguishing estimability review from numerical
+  convergence. Likelihoods, comparison eligibility and LRT calculations are
+  unchanged.
+
 * DFF documentation distinguishes group ability differences from differential
   functioning and states the population assumptions retained by subgroup
   refits. It also identifies the multiple-comparison family and clarifies

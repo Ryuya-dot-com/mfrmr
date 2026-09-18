@@ -36,6 +36,30 @@ unavailable outputs; no favorable p-value is a pass criterion. This is an
 existing-workflow feasibility check, not qualification of finite-sample
 chi-square calibration or a new per-rater decision API.
 
+## September 18 follow-up: information at the joint null
+
+The fitted alternative's local rank does not establish regularity at zero
+interaction. Reuse the four saved joint-fit pairs from the preceding addendum;
+do not generate data or refit. Embed each null vector in the alternative by
+matching the complete coordinate maps and setting only the two interaction
+coordinates to zero. Check likelihood equality within 1e-8 and retain the
+existing public comparison decisions and every unmet comparison condition.
+
+At these four embedded-null points enumerate the two complete six-rating,
+three-category group designs. Independently implement the constrained RSM/PCM
+probabilities and normal integration, using total-score sufficiency to reuse
+the 13 integrals per group. Central-difference the log pattern probabilities
+at absolute steps 1e-4 and 5e-5. Check probability sums (1e-9), expected scores
+(1e-7), step agreement (1e-7), and agreement with the existing q61 all-pattern
+information (absolute entry discrepancy 1e-5); retain any failures unchanged.
+Report unscaled rank at relative tolerances 1e-12, 1e-10 and 1e-8, and the
+two eigenvalues of interaction information adjusted for all nuisance
+coordinates. Positive information is a retained-point regularity diagnostic,
+not global identification, a boundary certificate or finite-sample LRT
+calibration. No p-values or inference-readiness promotion are authorized by
+this check. A warning-only repair may replay the saved comparisons; its
+regression check must preserve withheld results and numerical values.
+
 ## Questions and design
 
 1. Does the fixed-reference, non-Person FairZ joint-delta calculation retain

@@ -5142,6 +5142,19 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   }
   conv_vals <- tbl$InferenceReady
   all_converged <- length(conv_vals) > 0 && all(!is.na(conv_vals) & as.logical(conv_vals))
+  inference_review_reason <- if (!all_converged) {
+    pending <- which(is.na(conv_vals) | !as.logical(conv_vals))
+    details <- vapply(pending, function(i) {
+      reason <- mfrmr_get_readiness_record(fits[[i]])$fit$ReasonCodes
+      reason <- as.character(reason[1L] %||% NA_character_)
+      if (is.na(reason) || !nzchar(reason)) reason <- "reason_not_recorded"
+      paste0(labels[i], " [", reason, "]")
+    }, character(1))
+    paste0("Inference readiness is not satisfied: ",
+           paste(details, collapse = "; "), ".")
+  } else {
+    ""
+  }
   all_current_contract <- nrow(tbl) > 0L &&
     all(!is.na(tbl$ICContractVersion) &
           tbl$ICContractVersion == mfrm_ic_contract_version())
@@ -5206,7 +5219,7 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     }
     if (!all_converged) {
       warning(
-        "At least one compared model requires optimizer or convergence review. ",
+        inference_review_reason, " ",
         "IC ranking, weights, and likelihood-ratio testing were suppressed.",
         call. = FALSE
       )
@@ -5322,14 +5335,13 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     } else if (!ic_comparable) {
       lrt_status <- "not_computed"
       lrt_reason <- paste(
-        "Models do not share the same formal MML likelihood basis,",
-        "current selectable IC contract, observation set, integration identity,",
-        "and convergence status."
+        "Not all comparison requirements are satisfied: formal MML likelihood basis,",
+        "current selectable IC contract, common observation set and integration identity,",
+        "and inference readiness."
       )
+      if (!all_converged) lrt_reason <- paste(lrt_reason, inference_review_reason)
       warning(
-        "`nested = TRUE` was requested, but the models do not share the same ",
-        "formal MML likelihood basis, current selectable IC contract, observation set, ",
-        "integration identity, and convergence status. LRT was not computed.",
+        "`nested = TRUE` was requested. ", lrt_reason, " LRT was not computed.",
         call. = FALSE
       )
     } else if (!isTRUE(nesting_review$eligible)) {

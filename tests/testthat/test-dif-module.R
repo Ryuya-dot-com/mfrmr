@@ -967,13 +967,30 @@ test_that("compare_mfrm suppresses IC ranking when a fit is marked unconverged",
 
   expect_warning(
     comp <- compare_mfrm(RSM = fit, PCM = fit2),
-    "optimizer or convergence review"
+    "Inference readiness is not satisfied: PCM/JML .*optimizer_review_required"
   )
 
   expect_false(isTRUE(comp$comparison_basis$ic_comparable))
   expect_false(isTRUE(comp$comparison_basis$all_converged))
   expect_true(all(is.na(comp$table$Delta_AIC)))
   expect_true(all(is.na(comp$table$AkaikeWeight)))
+
+  # Numerical convergence cannot clear a separate estimability restriction.
+  fit2 <- mark_test_inference_ready(fit2)
+  fit2$readiness$fit$InferenceReady[1] <- FALSE
+  fit2$readiness$fit$EstimabilityState[1] <- "not_evaluated"
+  fit2$readiness$fit$ReasonCodes[1] <- "design_rank_not_evaluated"
+  expect_warning(
+    comp_lrt <- compare_mfrm(RSM = fit, PCM = fit2, nested = TRUE),
+    "Inference readiness is not satisfied: PCM/JML .*design_rank_not_evaluated"
+  )
+  expect_true(all(comp_lrt$table$Converged))
+  expect_false(comp_lrt$comparison_basis$all_inference_ready)
+  expect_identical(comp_lrt$comparison_basis$lrt_status, "not_computed")
+  expect_null(comp_lrt$lrt)
+  expect_match(comp_lrt$comparison_basis$lrt_reason, "design_rank_not_evaluated")
+  expect_equal(comp_lrt$table$LogLik, comp$table$LogLik)
+  expect_equal(comp_lrt$table$AIC, comp$table$AIC)
 })
 
 test_that("compare_mfrm requires the same prepared response data for IC ranking", {

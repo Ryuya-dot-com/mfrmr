@@ -169,6 +169,91 @@ Public explanatory comments were updated after the audit. Parsed executable
 R expressions remain identical to its source baseline, and the edited Rd
 passes `tools::checkRd()`; no full-suite rerun was warranted.
 
+## September 18 follow-up: regularity at the joint null and comparison reasons
+
+The previous full-rank alternative fits did not answer whether information
+becomes singular when the interaction is zero. The
+[follow-up protocol](interval-drf-preflight-protocol-0.2.4.md#september-18-follow-up-information-at-the-joint-null)
+and [saved-fit runner](drf-joint-null-information-0.2.4.R) address that question
+without new response data or fitting. Evidence is under
+`validation-results/drf-joint-null-information-20260918/`.
+
+Source tracing identifies one failed comparison requirement in all four
+pairs: `all_inference_ready`. Structural nesting, observation identity,
+constraints, IC contract and integration identity all pass, and all eight
+optimizer return codes report convergence. The legacy comparison-basis field
+`all_converged` aliases inference readiness, unlike the table's optimizer-code
+`Converged` column. The variance coordinate makes
+the additive audit incomplete; the local marginal classifier deliberately
+does not promote readiness. This is a conservative support restriction, not
+a finding that these four models are unidentified or fail to converge.
+The earlier [population identification](population-identifiability-review-record-0.2.4.md)
+and [output-eligibility](population-output-contract-record-0.2.4.md) reviews
+already explain why automatically clearing every estimated-population model
+would be unsound. Those studies were not repeated.
+
+Matching parameter maps embeds each null vector in its alternative with
+only the two interaction coordinates set to zero. The likelihood equality
+error is zero in all four cases. Independent whole-line normal integration
+and central differences then evaluate all 729 patterns per group, with the
+retained Person counts weighting the information. The resulting interaction
+information is `I_gg - I_gn solve(I_nn) I_ng`, with every other free coordinate
+treated as nuisance, including population regression and log variance.
+
+| Saved dataset | Full information rank | Interaction information eigenvalues |
+| --- | ---: | ---: |
+| RSM group mean only | 9/9 | 58.14559, 187.79453 |
+| PCM group mean only | 10/10 | 70.06584, 211.50258 |
+| RSM DRF | 9/9 | 66.16215, 194.42716 |
+| PCM DRF | 10/10 | 73.12621, 223.92076 |
+
+All ranks agree at the three prespecified tolerances. Continuous and package
+information differ by at most 6.82e-9 per entry; derivative-step differences
+are at most 6.27e-10. Probability, expected-score and likelihood checks also
+pass their frozen bounds. Thus these embedded-null points have positive
+local information under the continuous marginal model; the result is not
+merely full rank at a fitted nonzero interaction. Eigenvalue magnitudes refer
+to the recorded coordinates and sample counts, not a general readiness cutoff.
+The first attempt omitted interaction specifications when rebuilding indices;
+it stopped before producing results. Its source and error log are retained.
+
+For the present target, the two interaction coordinates can vary in both
+directions around zero. Testing them does not itself put the nuisance
+population variance at zero. Under an interior, locally regular marginal
+model, independent Persons with adequate representation of both groups,
+and consistent likelihood maximization, the dimension difference supports
+an asymptotic chi-square reference with two degrees of freedom. The distinction
+between this regular case and latent-model singularities or variance-boundary
+tests follows the conditions discussed by
+[Chen, Moustaki and Zhang (2020)](https://arxiv.org/html/2008.03971v2).
+Applying those conditions here is our model-specific reasoning; their paper
+does not validate this implementation. The four retained-point calculations
+do not prove global uniqueness, exclude competitive boundary paths, or
+establish finite-sample size. A latent variable alone is neither a reason to
+reject the chi-square route nor a license to use it.
+
+The production change is limited to `compare_mfrm()` explanations. IC and LRT
+warnings now name the fits and the recorded readiness reasons rather than
+attributing every restriction to optimizer/convergence review. All four
+saved comparison objects are identical after replay except for `lrt_reason`;
+every LRT remains withheld. The numerical audit precedes this message-only
+edit, and its source/input hashes are retained. Selected comparison tests
+cover ordinary computation, unsupported comparisons, invalid likelihoods,
+and the separation of numerical convergence from estimability review. Final
+expectations pass; the existing category-support and JML-IC fixture warnings
+remain recorded. Harness setup, label-matching and warning-accounting errors
+are retained separately; only the affected test case was rerun.
+Affected weighting, legacy-object and model-choice reporting checks also
+pass. The package-wide suite and earlier statistical studies were not rerun.
+
+The next substantive decision is a scoped acceptance rule for estimated-
+population MML comparisons: specify the supported design, target, solution
+and integration checks, and which remaining boundary/sampling evidence is
+needed. This should reuse the existing population reviews and distinguish
+omnibus interaction testing from individual Person intervals and per-rater
+screens. No estimator switch, new inference API, readiness override or broad
+simulation follows from this audit.
+
 ## Repairs and output-path findings
 
 Two demonstrated defects were corrected at their shared implementations:

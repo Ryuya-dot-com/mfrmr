@@ -99,7 +99,7 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   )))
   expect_true(any(grepl("automatic operational-scoring decision", review$key_warnings, fixed = TRUE)))
   expect_true(any(grepl(
-    "requires optimizer or convergence review",
+    "Inference readiness is not satisfied",
     review$comparison_warnings,
     fixed = TRUE
   )))

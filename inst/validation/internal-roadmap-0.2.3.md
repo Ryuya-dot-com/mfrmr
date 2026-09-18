@@ -68,6 +68,12 @@ or simulation rows do not resolve an unspecified claim. Use this order:
    effects and match independent continuous likelihoods, but public LRTs remain
    withheld. Resolve the marginal estimability/population/comparison contract
    before qualifying that omnibus test; local full rank alone is insufficient.
+   The [joint-null follow-up](interval-drf-preflight-record-0.2.4.md#september-18-follow-up-regularity-at-the-joint-null-and-comparison-reasons)
+   now verifies continuous-integral local information at zero interaction in
+   the four retained pairs. Reuse it and the earlier population reviews to
+   define the supported design, solution/boundary/integration conditions and
+   missing sampling evidence. The only failed comparison requirement is
+   inference readiness; warning text now reports that reason accurately.
    Retain screening-only claims and legitimate group-mean-only DRF null controls.
    No new DRF confirmation was launched. The separate population main remains 0/80,000;
    Person-scoring evidence cannot supply its missing parameter coverage.

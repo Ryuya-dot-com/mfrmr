@@ -125,6 +125,14 @@ the existing joint-MML API on four saved datasets reproduce continuous-integral 
 within 3.56e-8, but all four public LRTs remain unavailable under the current
 estimability contract. No finite-sample error-rate or power claim is added.
 
+The [joint-null follow-up](interval-drf-preflight-record-0.2.4.md#september-18-follow-up-regularity-at-the-joint-null-and-comparison-reasons)
+also finds full continuous-integral information rank at all four embedded
+zero-interaction points and positive nuisance-adjusted interaction information.
+Only inference readiness fails among the implemented comparison requirements;
+this is not a finding of nonidentification or optimizer failure. Comparison
+warnings now identify the fits and their actual readiness reasons. Formal
+comparison support still needs a scoped population-model acceptance decision.
+
 ### Original reconciliation checkpoint
 
 - The current `NAMESPACE` has **182 exports and 191 S3 registrations (373
