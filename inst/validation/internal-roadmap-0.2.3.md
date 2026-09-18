@@ -73,9 +73,13 @@ or simulation rows do not resolve an unspecified claim. Use this order:
    the four retained pairs. The [scoped qualification decision](interval-drf-preflight-record-0.2.4.md#september-18-scope-decision-qualify-the-omnibus-comparison-separately)
    fixes the initial complete-rating, two-group omnibus target, numerical
    requirements and null-size/availability margins. Automatic nesting now
-   checks that the Person-aligned population design is shared. Next check
-   paired joint-model stationarity, refit stability and relevant variance
-   alternatives before freezing its own sampling protocol. The 80,000-case
+   checks that the Person-aligned population design is shared. The
+   [paired-fit numerical preflight](interval-drf-preflight-record-0.2.4.md#september-18-follow-up-paired-joint-fit-numerical-stability)
+   now verifies q121 full stationarity, start stability and inferior checked
+   zero-variance solutions for the four saved pairs. Two q61 PCM gradient
+   discrepancies remain recorded; q121 resolves them, without any inference
+   promotion or universal grid guarantee. Next freeze the omnibus sampling
+   cells, replication counts and numerical failure rule. The 80,000-case
    population-interval study is a separate target, not a prerequisite.
    Retain screening-only claims and legitimate group-mean-only DRF null controls.
    No new DRF confirmation was launched. The separate population main remains 0/80,000;

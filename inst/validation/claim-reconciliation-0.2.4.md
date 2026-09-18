@@ -141,6 +141,15 @@ estimates may differ. Existing legitimate comparisons and their readiness
 restrictions are preserved. This closes that structural-classification defect,
 not the omnibus test's inferential qualification (C02/C10/C15 remain open).
 
+The [paired-fit numerical preflight](interval-drf-preflight-record-0.2.4.md#september-18-follow-up-paired-joint-fit-numerical-stability)
+then qualifies full-coordinate stationarity and start stability at q121 in
+the four saved pairs; checked zero-variance solutions have worse likelihoods.
+Two original q61 PCM vectors fail the strict gradient-agreement bound, and
+those outcomes remain visible alongside the successful q121 comparisons.
+There are no new response datasets or production readiness changes. Next
+freeze the omnibus sampling cells, replicate counts and numerical failure
+policy; procedure-level null calibration remains absent.
+
 ### Original reconciliation checkpoint
 
 - The current `NAMESPACE` has **182 exports and 191 S3 registrations (373

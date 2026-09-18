@@ -348,6 +348,79 @@ population/DRF statistical refit was run, and the package-wide suite was not
 repeated. The next numerical work is the paired-fit preflight specified above,
 not the unrelated population-interval main study.
 
+## September 18 follow-up: paired joint-fit numerical stability
+
+The prespecified saved-data panel is complete. It reuses the four joint bundles
+without generating responses: eight retained q61 evaluations, 20 q121 direct
+MML reoptimizations, and 16 exact-zero-variance nuisance reoptimizations. The
+q121 starts are retained/zero for each null and retained/zero/embedded-null
+for each alternative. Both models reestimate all their free nuisance
+coordinates. These are optimizer-level likelihood checks using the stored
+configuration and prepared data, not newly approved public fit objects.
+
+All assigned rows returned, with no warnings or optimizer-stage errors. Every
+q121 refit and every zero-boundary nuisance refit satisfies the fixed numerical
+bounds. The largest independent full-gradient norm among q121 refits is
+2.81e-5 (bound 1e-4); its largest analytic/reference difference is 3.45e-9
+(bound 1e-7). Independent NLL agreement is within 2.28e-13 (bound 1e-6).
+Gradients differentiate pattern log probabilities before weighting/summing;
+the finest two step sizes agree within 9.44e-9 for the q121 refits. These
+checks include the log-variance coordinate.
+
+| Saved dataset | q121 candidate twice-log-likelihood improvement | Largest range across paired q121 starts | Zero-variance NLL disadvantage, null / alternative |
+| --- | ---: | ---: | ---: |
+| RSM, group means differ, zero DRF | 1.024390817 | 4.27e-11 | 26.451 / 26.599 |
+| PCM, group means differ, zero DRF | 1.771480969 | 6.22e-11 | 39.075 / 39.374 |
+| RSM, injected DRF | 1.808579541 | 1.13e-10 | 24.831 / 25.063 |
+| PCM, injected DRF | 19.083642173 | 3.61e-11 | 25.534 / 28.317 |
+
+The table uses independent continuous-integral NLLs at the returned vectors.
+`NLL` in the row artifacts and the likelihood-change columns in `pairs.csv`
+likewise refer to that reference. The raw package objectives and q61/q121
+same-vector evaluations remain separately in each row's RDS. Replaying them
+in `paired-evaluation-grids.csv` gives a maximum q121/reference difference
+of 6.83e-13 in the paired statistic. The largest retained-to-q121 coordinate
+change is 6.51e-7; the largest change in the continuously evaluated paired
+statistic is 1.76e-11. Thus integration error and movement after reoptimization
+are distinguished, rather than comparing two different quantities as one error.
+
+The original q61 PCM `group_mean_only` null and alternative **fail** the
+stricter analytic/reference gradient-agreement criterion: differences are
+4.33e-7 and 4.78e-7, above 1e-7. Their full gradients still satisfy 1e-4 and
+their NLL errors remain below 3.56e-8. Both discrepancies disappear at q121
+at the same vectors; all q121 reoptimizations also pass. The q61 failures are
+retained, not reclassified by their small effect on the paired likelihood
+difference. This supports using q121 as the starting rule for the next scoped
+study, with numerical failure handling; it does not certify q121 universally.
+
+At zero variance, independent conditional probabilities agree within 3.42e-13
+and all nuisance-gradient norms are below 8.43e-5. Changing the unused
+log-variance placeholder between -32, 0 and 32 changes NLL by exactly zero.
+The two boundary starts agree within 1.52e-10. Each boundary solution is worse
+than its positive-variance counterpart by 24.83--39.38 NLL units; positive
+refits estimate variances 0.7427--1.0550. This excludes the checked zero-variance
+competitors. It is not a proof of a global maximum, an upper/joint variance
+boundary analysis, or evidence for rare/sparse configurations outside this panel.
+
+Artifacts, row-level optimizer stages, warnings/errors, source/input hashes
+and session information are retained in
+`validation-results/drf-joint-fit-stability-20260918/`, with the execution log
+alongside it. The runner is `drf-joint-fit-stability-0.2.4.R`. The prior pattern
+reference was made sourceable and extended to additive and exact-zero models;
+its prior positive-variance reference replay is identical. Production R code,
+the saved input bundles and their hashes are unchanged from `666c757`; no
+package-wide tests, completed information audits or response simulations were
+repeated. The numerical panel itself verifies the changed repository-only code.
+
+The bounded paired-fit numerical requirement is met at q121 for these four
+datasets. Public inference readiness remains false, and no p-value is qualified
+by this result. The next decision is to freeze the omnibus study's generating
+cells, replication counts and numerical availability/failure rule against the
+already fixed size and availability margins. A zero-DRF case with different
+group means is required. Neither repeating this panel nor the separate
+80,000-dataset population-coordinate interval study substitutes for that
+procedure-level null calibration.
+
 ## Repairs and output-path findings
 
 Two demonstrated defects were corrected at their shared implementations:

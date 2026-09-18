@@ -1,21 +1,12 @@
 # Saved-fit diagnostic, not a fitting or inference API. Run from package root.
 # Scope and bounds: interval-drf-preflight-protocol-0.2.4.md.
-args <- commandArgs(TRUE)
-stopifnot(length(args) == 2L, dir.exists(args[1]), dir.exists(args[2]))
-pkgload::load_all('.', quiet = TRUE)
-paths <- file.path(args[1], paste0(c('RSM-group_mean_only', 'PCM-group_mean_only',
-  'RSM-drf', 'PCM-drf'), '-joint.rds'))
-sources <- c(list.files('R', '[.]R$', full.names = TRUE),
-  'inst/validation/drf-joint-null-information-0.2.4.R',
-  'inst/validation/interval-drf-preflight-protocol-0.2.4.md')
-hashes <- tools::md5sum(c(paths, sources))
-
 # Independent constrained category model: no package expansion/probability helper.
-pattern_logp <- function(par, map, model, design, patterns, group) {
+pattern_logp <- function(par, map, model, design, patterns, group, zero_variance = FALSE) {
   block <- function(name) par[map$OptimizerIndex[map$Block == name]]
   rater <- c(block('Rater'), -sum(block('Rater')))
   criterion <- c(block('Criterion'), -sum(block('Criterion')))
-  gamma <- c(block('interactions'), -sum(block('interactions')))
+  gamma <- if (any(map$Block == 'interactions'))
+    c(block('interactions'), -sum(block('interactions'))) else rep(0, 3L)
   offset <- -rater[design$Rater] - criterion[design$Criterion] +
     gamma[design$Rater] * if (group == 'A') 1 else -1
   step <- block('steps')
@@ -27,6 +18,11 @@ pattern_logp <- function(par, map, model, design, patterns, group) {
   # part is therefore y * offset - first_step * I(y == 1).
   constant <- as.vector(patterns %*% offset - (patterns == 1) %*% first_step)
   total <- rowSums(patterns)
+  if (zero_variance) {
+    one <- mu + offset - first_step; two <- 2 * (mu + offset)
+    hi <- pmax(0, one, two)
+    return(constant + total * mu - sum(hi + log(exp(-hi) + exp(one-hi) + exp(two-hi))))
+  }
   log_mass <- vapply(0:12, function(s) {
     log(integrate(function(theta) {
       eta <- outer(theta, offset, '+')
@@ -46,6 +42,16 @@ score_difference <- function(fn, par, h) {
   }, numeric(length(fn(par))))
 }
 
+drf_joint_null_information <- function(input, output) {
+args <- c(input, output)
+stopifnot(dir.exists(input), dir.exists(output))
+pkgload::load_all('.', quiet = TRUE)
+paths <- file.path(input, paste0(c('RSM-group_mean_only', 'PCM-group_mean_only',
+  'RSM-drf', 'PCM-drf'), '-joint.rds'))
+sources <- c(list.files('R', '[.]R$', full.names = TRUE),
+  'inst/validation/drf-joint-null-information-0.2.4.R',
+  'inst/validation/interval-drf-preflight-protocol-0.2.4.md')
+hashes <- tools::md5sum(c(paths, sources))
 results <- lapply(paths, function(path) {
   x <- readRDS(path); null <- x$fits$null; fit <- x$fits$alternative
   map <- fit$config$estimability_audit$mml_observed_pattern_score$parameter_map
@@ -137,3 +143,10 @@ write.csv(data.frame(File = names(hashes), MD5 = unname(hashes)),
   file.path(args[2], 'source-input-md5.csv'), row.names = FALSE)
 writeLines(capture.output(sessionInfo()), file.path(args[2], 'session-info.txt'))
 stopifnot(identical(hashes, tools::md5sum(names(hashes))))
+invisible(results)
+}
+
+if (sys.nframe() == 0L) {
+  args <- commandArgs(TRUE); stopifnot(length(args) == 2L)
+  drf_joint_null_information(args[1], args[2])
+}

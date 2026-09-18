@@ -169,3 +169,47 @@ The final run has 22 unique datasets, including the same original 18.
 Expect finite conditional refit screens for cases 10/11; formal eligibility
 must still be false. Do not alter the linking threshold or count reruns as
 independent evidence. Save every returned table before checking its assertion.
+
+## September 18 paired joint-DRF numerical preflight (before execution)
+
+Reuse the four saved RSM/PCM `group_mean_only` and `drf` joint bundles in
+`validation-results/drf-null-statistic-20260918/`. Generate no responses.
+The question is whether the two maximized marginal likelihoods are numerically
+stable enough to take into the separately scoped omnibus sampling study.
+
+Evaluate all eight retained q61 solutions. Reoptimize at q121 with the existing
+direct MML optimizer, maxit400/reltol1e-12 and its existing bounded polishing:
+each null uses its retained vector and an all-zero vector (variance one);
+each alternative additionally uses the retained null embedded by coordinate
+name with only its two interaction coordinates zero. This is 20 free refits.
+At variance exactly zero, fix the log-variance placeholder to zero and use
+q1 (node zero, weight one); optimize every other coordinate from the retained
+and all-zero starts with the existing boundary optimizer: 16 nuisance refits.
+This panel has 44 rows including the eight retained evaluations. It is a finite
+start/boundary comparison, not a proof of a global maximum or an upper-variance
+boundary analysis. Preserve every optimizer stage, warning and error.
+
+Use the independent constrained RSM/PCM all-pattern likelihood already used
+in the null-information audit, summing observed-pattern log probabilities.
+At zero variance evaluate conditional probabilities directly at each group's
+mean. For every returned vector, check NLL against the independent reference
+within 1e-6, and differentiate pattern log probabilities before summing to
+avoid cancellation. Use central steps 1e-4, 5e-5 and 2.5e-5; the last two
+gradient estimates must agree within 1e-7. Independent full-gradient norm
+must be <=1e-4, and analytic/reference gradient difference <=1e-7. The
+boundary uses nuisance coordinates only and is never called full-stationary.
+Verify its objective is unchanged by placeholder log variances -32, 0, 32.
+
+At each positive-variance vector also evaluate both q61 and q121, separating
+same-vector integration error from actual refit movement. Keep q61 failures
+visible even if q121 qualifies. Within each model the q121 starts must agree
+in independent NLL within 1e-6; report coordinate movement without treating
+it as a universal parameter tolerance. Check null-to-alternative embedding
+at the retained start and use identical integration rules for paired changes.
+The corresponding candidate twice-log-likelihood improvements must agree
+within 4e-6 (two models, each with absolute NLL tolerance 1e-6). Each boundary's
+two starts must agree within 1e-6 and its best NLL must exceed the positive
+candidate by more than 1e-6 to exclude that observed zero-variance competitor.
+An unresolved failed/refit-conflicting candidate blocks proceeding to sampling;
+do not increase grids or replace starts until success. Record numerical
+eligibility separately from public inference readiness, which remains false.
