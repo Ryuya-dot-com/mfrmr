@@ -176,6 +176,8 @@ mfrmr_calibration_score_overview <- function(x) {
 #' `unplotted_dispositions` component.
 #'
 #' The summary object retains every returned score and review disposition.
+#' Its estimates table preserves the available estimate and uncertainty basis
+#' columns and calibration identifiers when extracted or written to CSV.
 #' Its print method shows at most ten rows from each table so routine console
 #' output stays compact. Base and ggplot2 renderers distinguish scored and
 #' review states by shape as well as colour.
@@ -247,7 +249,9 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
   estimate_columns <- intersect(
     c(
       "Person", "Estimate", "SD", "Lower", "Upper", "Observations",
-      "WeightedN", "Disposition", "ReasonCodes", "ReadinessStatus"
+      "WeightedN", "Disposition", "ReasonCodes", "ReadinessStatus",
+      "EstimateBasis", "UncertaintyBasis", "CalibrationId", "SchemaVersion",
+      "ScoringBasis"
     ),
     names(estimates)
   )

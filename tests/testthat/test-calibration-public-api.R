@@ -182,6 +182,25 @@ test_that("portable score methods foreground review and conditional uncertainty"
     "Person", "Estimate", "SD", "Lower", "Upper", "Observations",
     "Disposition", "ReasonCodes"
   ) %in% names(summarized$estimates)))
+  semantic_columns <- c(
+    "Person", "Disposition", "EstimateBasis", "UncertaintyBasis",
+    "CalibrationId", "SchemaVersion", "ScoringBasis"
+  )
+  expect_identical(
+    summarized$estimates[semantic_columns], scored$estimates[semantic_columns]
+  )
+  score_columns <- c("Estimate", "SD", "Lower", "Upper")
+  expect_identical(
+    summarized$estimates[score_columns],
+    round(scored$estimates[score_columns], digits = 2)
+  )
+  csv_path <- tempfile(fileext = ".csv")
+  on.exit(unlink(csv_path), add = TRUE)
+  utils::write.csv(summarized$estimates, csv_path, row.names = FALSE)
+  exported <- utils::read.csv(csv_path, stringsAsFactors = FALSE)
+  expect_identical(
+    exported[semantic_columns], scored$estimates[semantic_columns]
+  )
   expect_true(all(summarized$review$Disposition == "scored_review"))
   expect_true(any(grepl("<mfrm_calibration_score>", printed, fixed = TRUE)))
   expect_true(any(grepl(
@@ -366,6 +385,7 @@ test_that("portable score print handles a batch with no score coordinates", {
     fixed = TRUE
   )
   malformed_summary <- summary(scored)
+  expect_identical(malformed_summary$estimates, scored$estimates)
   malformed_summary$estimates$Person <- NULL
   expect_error(
     print(malformed_summary),

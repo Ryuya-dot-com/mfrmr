@@ -1,5 +1,10 @@
 # mfrmr 0.2.4.9000 (development version)
 
+* Portable score summaries retain the existing estimate and uncertainty basis
+  columns and calibration identifiers in their estimates tables. Extracted
+  tables and CSV exports therefore preserve the conditional interpretation of
+  the intervals. Score estimates, SDs, and interval values are unchanged.
+
 * Design recommendations now require connected Person-rater and
   Person-criterion assignments by default (`require_connected = TRUE`).
   Evaluation records component counts before fitting, and the screen includes

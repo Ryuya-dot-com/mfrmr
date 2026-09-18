@@ -67,6 +67,33 @@ completion; no overall completion percentage is assigned.
 
 ## What this reconciliation established
 
+### September 18 follow-up: portable score summary tables (C07/C17)
+
+On source baseline `d1c363d`, `summary(scores)$estimates` dropped the existing
+`EstimateBasis`, `UncertaintyBasis`, `CalibrationId`, `SchemaVersion` and
+`ScoringBasis` columns. The complete summary already retained interpretation
+notes, but extracting its table lost these row-level fields. The summary now
+preserves the available columns, including in empty score tables; console
+previews and scoring calculations are unchanged.
+
+The saved RSM and PCM objects in
+`validation-results/person-estimated-calibration-20260914/linux-artifact-replay/cell-01.rds`
+and `cell-05.rds` reproduced the loss. Replaying their summaries locally after
+the repair preserved all prior columns and other summary components exactly;
+both 27-Person tables retained the five fields through CSV round trips. The
+saved objects were unchanged. The affected `test-calibration-public-api.R`
+file passed 149 expectations with no failures or warnings and one expected
+skip requiring a check-installed package. New regression checks cover the
+summary/CSV fields, score rounding and the empty-table schema.
+
+This closes the identified table-output defect. Intervals remain conditional
+on the frozen point calibration and exclude calibration-parameter uncertainty.
+It adds no statistical coverage evidence and does not close C07/C17 as a whole
+or replace the final-source package/platform checks. No new calibration study,
+full-suite rerun or development visualization was needed.
+
+### Original reconciliation checkpoint
+
 - The current `NAMESPACE` has **182 exports and 191 S3 registrations (373
   declarations)**. The old inventory has 372. The missing declaration was
   `plot_compare_mfrm()`, now mapped to C02/C03/C04/C05/C17. All current function
