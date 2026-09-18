@@ -164,9 +164,16 @@ uses one fixed run of four chains and 32,000 retained joint draws on the saved
 two-person/two-rater example. All seven mean/covariance/contrast moments meet
 the prespecified MCSE and agreement criteria, with no divergences and maximum
 R-hat 1.000155. The paired difference SD is 0.87790 (reference 0.87604),
-versus 0.95497 when dropping the same sample's covariance. Unknown-calibration
-inference, prior sensitivity, interval performance and operational cost remain
-untested; this introduces no public API or package dependency.
+versus 0.95497 when dropping the same sample's covariance.
+The [unknown-calibration prior pilot](shared-rater-prior-pilot-0.2.4.md) then
+fits one paired 240-person/12-rater realization in A and D under four priors.
+All eight fits pass chain diagnostics and take about 48--51 seconds each.
+Selected pair-mean changes are at most .0381 baseline posterior SD; the
+rater population SD is more sensitive to its prior scale. Two variance upper
+endpoints miss the prespecified MCSE goal and remain unavailable, while all
+person and selected-pair intervals meet numerical precision goals. This is
+not repeated-data interval performance, a default-prior qualification or a
+design ranking. Neither study adds a public API or package dependency.
 During execution, the [interpretation and next-work note](measurement-extension-next-decisions-0.2.4.md)
 maps its eight coverage differences to questions and subsequent decisions,
 defines a bounded shared-rater likelihood implementation, and supplies common
