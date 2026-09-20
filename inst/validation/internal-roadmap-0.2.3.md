@@ -174,10 +174,16 @@ It supersedes the ordered queue below. No new large study is launched.
    The clean, fully rendered development archive excludes test PDFs/internal
    records and passes its own standard check. Source identities and Windows
    line-ending differences are verified. The September 13 matrix is historical.
-   Next: assess the formal 0.2.4 candidate against the existing scoped claim
-   decisions, reconcile release metadata and `cran-comments.md` with these
-   results, and check the exact versioned submission archive. The current
-   checked version remains `0.2.4.9000`; no publication follows from CI success.
+   September 21: version/date/status and submission text are aligned for an
+   unreleased 0.2.4 candidate. The additional CRAN examples expose a D-study
+   column-selection display failure, repaired by preserving existing result
+   metadata; coefficient calculations and stale-result guards are unchanged.
+   The exact revised archive passes `R CMD check --as-cran`, including
+   additional examples and PDF/HTML manuals, with zero errors/warnings and one
+   NOTE about seven updates in six months. Initial failures are retained.
+   CRAN still lists 0.2.3.1 with no reverse dependencies. Next: verify the
+   revised candidate's hosted matrix, preserving the earlier matrix as the
+   previous source's evidence. Publication/submission has not occurred.
    Preserve the claim ledger's restrictions; do not turn every unresolved
    research extension into a requirement for this bounded release.
    Documentation consistency is not statistical claim closure or release approval.

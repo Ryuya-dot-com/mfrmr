@@ -606,6 +606,16 @@ mfrm_d_study <- function(x,
 }
 
 #' @export
+`[.mfrm_d_study` <- function(x, ...) {
+  out <- NextMethod("[")
+  if (is.data.frame(out)) {
+    metadata <- setdiff(names(attributes(x)), c("names", "row.names", "class"))
+    for (name in metadata) attr(out, name) <- attr(x, name, exact = TRUE)
+  }
+  out
+}
+
+#' @export
 print.mfrm_d_study <- function(x, ...) {
   validate_gtheory_output(x)
   cat("mfrmr D-study projection\n")
@@ -622,7 +632,9 @@ print.mfrm_d_study <- function(x, ...) {
     cat("\n")
   }
   shown <- as.data.frame(x)
-  shown$ResidualScaling <- gtheory_scaling_label(shown$ResidualScaling)
+  if ("ResidualScaling" %in% names(shown)) {
+    shown$ResidualScaling <- gtheory_scaling_label(shown$ResidualScaling)
+  }
   shown <- shown[, setdiff(names(shown), c("GStatus", "PhiStatus", "IdentificationStatus", "BoundaryFit", "IdentificationNote")), drop = FALSE]
   print.data.frame(shown, row.names = FALSE, ...)
   print_wrapped_line("Observed-score planning projections hold estimated variance components fixed. They do not establish cut-score accuracy or an adequate rating design.")

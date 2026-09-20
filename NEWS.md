@@ -1,4 +1,4 @@
-# mfrmr 0.2.4.9000 (development version)
+# mfrmr 0.2.4
 
 This version adds reusable calibration and new-Person scoring, and corrects
 uncertainty, subgroup comparisons and design recommendations in existing workflows.
@@ -73,6 +73,11 @@ and action needed for each affected workflow.
   current capability statements.
 
 ## Changes affecting existing analyses
+
+* Selecting rows or columns from a D-study table now preserves its calculation
+  and interpretation information. Printing selected columns no longer mistakes
+  a newly computed result for an older saved result. Coefficients are unchanged;
+  older results still require regeneration as described in the help.
 
 * Interrater summaries now retain unavailable comparisons and report the number
   of classified pairs. Expected agreement is withheld when category probabilities

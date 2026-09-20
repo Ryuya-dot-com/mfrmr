@@ -1,13 +1,13 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-20. This roadmap describes the direction
+Status: public roadmap, updated 2026-09-21. This roadmap describes the direction
 of development; release dates are not promised.
 See [NEWS](NEWS.md) for implemented changes and the
 [README](README.md) for current usage and interpretation limits.
 
 ## Current releases
 
-mfrmr 0.2.4.9000 is under development and has not been released.
+mfrmr 0.2.4 is a release candidate and has not been released.
 The README describes this working version; use `packageVersion("mfrmr")`
 and the help shipped with your installation for its available functionality.
 

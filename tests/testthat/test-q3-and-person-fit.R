@@ -463,6 +463,15 @@ test_that("D-study does not replace missing variance by zero or guess identifica
   ds <- mfrm_d_study(gt, grid)
   expect_equal(ds$RelativeErrorVariance, c(.1, .05))
   expect_equal(ds$AbsoluteErrorVariance, c(.35, .2))
+  columns <- c("n_Rater", "n_Criterion", "G", "Phi", "GStatus", "PhiStatus",
+               "IdentificationStatus")
+  selected <- ds[, columns]
+  expect_equal(lapply(selected, identity), lapply(ds, identity)[columns])
+  expect_identical(attr(selected, "calculation_version"), 2L)
+  expect_identical(attr(selected, "residual_scaling"), attr(ds, "residual_scaling"))
+  expect_output(print(selected), "Observed-score planning projections", fixed = TRUE)
+  expect_equal(ds[, "G"], ds$G)
+  expect_identical(attr(ds[1L, , drop = FALSE], "calculation_version"), 2L)
   factor_grid <- grid; factor_grid$Rater <- factor(grid$Rater)
   expect_equal(mfrm_d_study(gt, factor_grid)$G, ds$G)
   expect_error(mfrm_d_study(gt, data.frame(Rater = 2.5, Criterion = 4)), "positive finite integers")
@@ -479,6 +488,7 @@ test_that("D-study does not replace missing variance by zero or guess identifica
   stale <- ds; attr(stale, "calculation_version") <- NULL
   expect_error(print(stale), "Recreate mfrm_generalizability", fixed = TRUE)
   expect_error(plot(stale, draw = FALSE), "Recreate mfrm_generalizability", fixed = TRUE)
+  expect_error(print(stale[, columns]), "Recreate mfrm_generalizability", fixed = TRUE)
   printed <- paste(capture.output(print(ds)), collapse = "\n")
   expect_false(grepl("at_or_above_|highest_order|identified", printed))
 })

@@ -33,6 +33,11 @@ for commit `ff5df7c`, including the complete Ubuntu-release suite. Both complete
 suites retain 19,431 passes, zero failures, 42 existing warnings and 44 skips.
 A clean, fully rendered development archive excludes generated test PDFs and
 internal validation files and passes its own standard package check.
+The September 21 versioned-candidate follow-up runs `--as-cran`, including
+additional examples and PDF/HTML manuals. It repairs a D-study subset/display
+failure and passes the exact 0.2.4 archive with zero errors/warnings and one
+submission-history NOTE. Its updated namespace list and stale-result refusal
+are tested; the changed candidate still needs its own hosted matrix.
 
 The [September 20 structural-SE source review](mml-structural-source-applicability-0.2.4.md)
 reconstructs the original sampling-study source and verifies current numerical

@@ -24,8 +24,8 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the `0.2.4.9000` development version. Functions and
-options shown here may differ from an installed release; check
+This README describes the `0.2.4` release candidate, which has not been released.
+Functions and options shown here may differ from an installed release; check
 `packageVersion("mfrmr")` and the help shipped with that installation.
 For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
 before reusing saved diagnostics, scores or reports.

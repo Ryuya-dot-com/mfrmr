@@ -1,4 +1,4 @@
-# September 20 candidate workflow and package checks
+# September 20–21 candidate workflow and package checks
 
 This record binds the portable-workflow replay and package checks to source
 archives. It preserves initial failures and distinguishes local environments
@@ -306,3 +306,70 @@ decisions, reconcile release metadata and the CRAN submission text with these
 results, then check the exact versioned submission archive. The checked package
 is still `0.2.4.9000`, not the final 0.2.4 submission archive. Do not launch new
 research studies or broaden statistical claims merely to finish release work.
+
+## September 21: versioned candidate and additional CRAN checks
+
+The user's instruction to continue candidate preparation follows the verified
+September 20 matrix. A local branch,
+`development/0.2.4-release-candidate-20260921`, starts at result-record commit
+`15e2404637bd16fe80176f838454b688350e3f96`. DESCRIPTION, NEWS, CITATION and the
+introductory README/roadmap statements now identify **0.2.4 as an unreleased
+candidate**, dated September 21. The public baseline remains 0.2.3.1. This
+preparation does not reuse the August transition's approval or the September 6
+G6 decision for a different source, close the 18 statistical claim groups,
+issue a new G4 receipt, or perform publication/submission. The retained scope
+and deferred inferential extensions remain those in the current claim ledger.
+
+The initial versioned archive has SHA256
+`ed36ad77156b0892f77fe4172c7dec14b208ca51ce6eeeadafad1ba5a64b0ce1`.
+Its `NOT_CRAN=false R CMD check --as-cran` runs additional `donttest` examples
+and both PDF/HTML manual checks. It exposes a real D-study display defect:
+`mfrm_d_study()` computes a current result, but the documented column selection
+loses its calculation/interpretation attributes while retaining its S3 class.
+Printing that selection then falsely reports an older saved result. The
+initial check ends with one ERROR and one NOTE; the CRAN-light tests still
+have 673 passes, no failures/warnings and three skips. The failed archive and
+logs are preserved under `validation-results/release-candidate-20260921/initial-as-cran/`.
+
+A D-study subset method now delegates indexing to the standard data-frame
+method and retains existing metadata on data-frame results. Vector extraction
+keeps the standard dropping behavior. Printing handles a selected table that
+omits the residual-scaling column. The stale-result guard is unchanged, and
+subsetting a genuinely old result does not manufacture a current version.
+The parsed G-study constructor, D-study calculation and stale-result validation
+functions are identical to the tested baseline. Their numerical evidence is
+reused; no estimator, variance formula, decision threshold or statistical scope
+is changed. The focused Q3/person-fit/G-D file passes 115 expectations with no
+failures, warnings or skips, including the documented selection and retained
+stale-result refusal.
+
+The first repair archive, SHA256
+`751e0f5a750555e87fc2842ab93c0ec8b22ca57bd8f875fc7ebd3dbd918085fc`,
+passes all additional examples and both manual checks. Its sole ERROR is the
+namespace test's expected list missing the deliberately registered subset
+method. The explicit list is updated; exact-set checking remains unchanged,
+and all four namespace expectations pass. This failed check is retained under
+`repaired/`, rather than counted as a clean candidate check.
+
+The resulting archive, SHA256
+`21da85a5270290226a338a5235d5d758b700aa06bc8fa1b76a83b3e58d847e67`,
+is retained under `final/`. Of the 537 reference files, 531 are byte-identical.
+The six changed files are NAMESPACE, NEWS, README, the G/D adapter and its two
+test files; DESCRIPTION separately carries candidate version/date/status.
+No generated test PDF or internal validation directory is included. Its
+exact-archive `NOT_CRAN=false R CMD check --as-cran` exits with status 0:
+**0 errors, 0 warnings and 1 NOTE**. All additional `donttest` examples,
+673 CRAN-light expectations (zero failures/warnings, three intended skips),
+vignette rebuild and PDF/HTML manual generation pass. The sole NOTE concerns
+the submission history below. Logs and source comparisons are retained under
+`final/`. The September 20 hosted matrix still belongs to `ff5df7c`, not this
+changed candidate; a new hosted matrix is required to claim exact-candidate
+platform coverage.
+
+The official CRAN source index was retrieved at `2026-09-20T22:39:26Z`
+(September 21 JST). It reports public version 0.2.3.1 and zero direct reverse
+Depends, Imports, LinkingTo, Suggests and Enhances relationships. The index,
+its hash and the five-field result are retained in the September 21 evidence
+directory. CRAN incoming feasibility also reports seven updates in the past
+six months; that submission-history NOTE is retained in the submission text,
+with the concrete correctness/reporting reasons for this update.
