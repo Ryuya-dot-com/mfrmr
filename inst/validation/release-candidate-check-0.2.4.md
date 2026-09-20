@@ -212,6 +212,18 @@ mirror returned 404. The same version's source `.tar.gz` uses gzip and lists
 successfully. The macOS cell now requests `flextable=?source`, using pak's
 [documented downstream source parameter](https://pak.r-lib.org/reference/pak_package_sources.html#parameters).
 The workflow's warnings-as-failures and repository-review checks remain active.
+The packaging/CI correction is commit
+`b7ec0e2cc9d172ef2d6a677fc7dae6b7f7be5cb5`. The user authorized this and further
+necessary CI repairs/result records on the same validation branch. Its new run,
+[35509977343](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35509977343),
+stopped at the same installation stage on `knitr_1.52.tgz`; the log confirms
+that the flextable source override was applied. A range-request inspection of
+all 143 binary URLs in the original install plan identifies exactly three
+Zstandard archives: flextable, knitr and xfun. All requests succeeded, and
+their four-byte signatures are retained in `macos-archive-formats.csv` under
+`hosted-35509977343/`. The macOS source override now covers these three packages.
+All runtime, packaged test and help files are identical to
+`a8a1836`; only the exclusion rule, CI workflow and this internal record differ.
 
 The local macOS arm64 R 4.6.1 run and Ubuntu 22.04 arm64 R 4.3.2 container are
 separate environment observations. The existing Linux image identity and

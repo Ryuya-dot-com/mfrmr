@@ -51,13 +51,13 @@ jobs:
         with:
           # Invalidate compiled-package caches after the runner TBB ABI change.
           cache-version: "2"
-          # The macOS flextable 0.10.1 binary uses compression pak cannot read.
+          # Source builds avoid Zstandard macOS binaries unsupported by stable pak.
           extra-packages: |
             any::digest
             any::pkgbuild
             any::rcmdcheck
             any::testthat
-            ${{ runner.os == 'macOS' && 'flextable=?source' || '' }}
+            ${{ runner.os == 'macOS' && 'flextable=?source, knitr=?source, xfun=?source' || '' }}
           needs: check
 
       - name: Exact source-tarball R CMD check (G4 confirmation held)
