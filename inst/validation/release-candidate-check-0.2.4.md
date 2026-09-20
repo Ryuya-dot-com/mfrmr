@@ -31,19 +31,23 @@ candidate. Its successful log and archive are under `packaging/`. The first
 build failed because a pre-existing output archive was moved while R was
 copying the source directory. That old archive/initial inspection and failed
 log are retained separately; the successful build ran from an isolated output
-directory and was inspected only after completion.
+directory and was inspected only after completion. The pre-existing archive
+was restored to its original repository-root location without overwriting a
+new file.
 
 | Archive | SHA256 | Role |
 | --- | --- | --- |
 | Initial | `09b0f07db2ade6e79e7c5656aa1429e1c6e8c8a2c51dd10214118b59b0fc8bdb` | Unmodified September 20 descriptive-review archive |
 | Display correction (`final/`) | `a9ba0ae478ecbd789dd854a9aa3b7d04c847a745520101af32f30225aa414ec5` | Quadrature-summary print correction and NEWS |
 | Tutorial correction (`docs/`) | `babce34dfb72c825455cf19e1c7a88e9aeddf0854f5613fbf8306d9c35f6db7e` | Availability-aware residual-PCA example and NEWS |
-| Test repair (`repaired/`) | `c4be942084a1892d98096519ddba3b7079a8a73002770c4fd4f2a4d343ccf297` | Current candidate; 20 existing test files corrected |
+| Test repair (`repaired/`) | `c4be942084a1892d98096519ddba3b7079a8a73002770c4fd4f2a4d343ccf297` | Full local check; 20 existing test files corrected; includes the generated test PDF |
+| Clean build (`clean/`) | `643a84202795f380309b1039e671a2eba9b812589f1af3c7f75552867bfa4fbd` | Fully rendered development candidate from `ff5df7c`; no generated test PDF |
 
-Each archive and its source-file comparison are retained. All 538 packaged
-working files match their corresponding candidate (generated DESCRIPTION
-metadata is treated separately). `inst/validation` and `validation-results`
-are excluded from all four archives. The second-to-third comparison confirms
+Each archive and its source-file comparison are retained. For the first four
+archives, all 538 packaged working files match their corresponding candidate
+(generated DESCRIPTION metadata is treated separately).
+`inst/validation` and `validation-results`
+are excluded from all five archives. The second-to-third comparison confirms
 that every R source, native source and packaged test is byte-identical; only
 NEWS, DESCRIPTION metadata and the visual-diagnostics vignette/source/output
 files differ. Full-suite evidence may therefore be reused for that unchanged
@@ -52,6 +56,19 @@ example and vignette checks. These are distinct executions, not one invented
 full-check result for a different archive. The final test-repair archive differs
 from the tutorial candidate only in those 20 test files and generated DESCRIPTION
 metadata; all production and documentation content is identical.
+
+The clean archive is built from `git archive` of
+`ff5df7cb90cbe09b47da290d4922f04f76ffd042` in an isolated directory with
+`NOT_CRAN=false R CMD build --no-manual source`. All 537 reference source,
+test and help files are byte-identical to the repaired archive. The vignettes
+are built successfully, and neither a generated `Rplots.pdf` nor internal
+validation files are present. Its own standard `NOT_CRAN=false R CMD check
+--no-manual` exits with status 0 and **0 errors, 0 warnings and 0 notes**,
+including examples and vignette rebuild. The test transcript records
+**673 passes, 0 failures, 0 warnings and 3 intentional CRAN skips**.
+The archive, source identity, build/check logs and test transcript are retained
+in `clean/`. The full-suite results below concern their separately identified
+archives; they are reused only for the identical executable/test source.
 
 ## Reproduced defects
 
@@ -148,9 +165,8 @@ After repair, the 11 shared-failure files pass **1,515 expectations with zero
 failures, warnings or skips** on macOS against the check-installed production
 code. The 20-file Linux follow-up passes **2,886 expectations with zero failures
 or warnings and eight solver-dependent skips**. These targeted runs reuse the successful remainder of the complete runs and do not relabel the
-original full runs as clean. A clean complete run of the final archive remains
-part of the hosted Ubuntu-release check; the local follow-up is deliberately
-reported as a staged repair, not a fabricated single-run full-suite success.
+original full runs as clean. These were staged repairs; the subsequent clean
+complete macOS run below is a separate execution of the repaired archive.
 
 The 42 macOS full-test warnings comprise 39 existing category-support warnings,
 two FACETS-label device-size warnings and one JML information-criterion warning.
@@ -170,6 +186,17 @@ The final test-repair archive passes standard `NOT_CRAN=false R CMD check
 suite records **673 passes, 0 failures, 0 warnings and 3 intentional skips**.
 The exact archive, check log and test transcript are retained in `repaired/`.
 This is not the full packaged-suite selector.
+
+The same repaired archive subsequently passes a complete `NOT_CRAN=true
+R CMD check --no-manual` on macOS with **0 errors, 0 warnings and 0 notes**.
+Its full test transcript records **19,431 passes, 0 failures, 42 warnings and
+44 skips**. The warning families/counts are unchanged: 39 category-support,
+two FACETS-device-size and one JML information-criterion warning. The examples
+and vignette rebuild also complete successfully. The check exits with status 0;
+logs, transcript, warning counts and hashes are retained in
+`repaired/full-macos/`. This run is bound to `c4be942...ccf297`, including the
+local generated PDF identified above; the hosted clean-checkout build excludes
+that PDF and must retain its own archive identity and check result.
 
 The isolated Linux follow-up initially omitted the existing serialized-0.2.2
 fixture from its copied test directory. That file is present in the package
@@ -191,7 +218,7 @@ The established matrix is macOS release (prerequisite), Windows release,
 Ubuntu devel, Ubuntu release and Ubuntu oldrel-1. Ubuntu release runs the full
 `NOT_CRAN=true` tier; the other hosted cells run the CRAN-light selection.
 
-The latest successful hosted run is
+The prior verified hosted run is
 [34758410726](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/34758410726),
 created September 13 for commit
 `805d6ae34dae0026d93259e4e0d62d6c4a97c1c1`. All five jobs succeeded for that
@@ -224,15 +251,58 @@ their four-byte signatures are retained in `macos-archive-formats.csv` under
 `hosted-35509977343/`. The macOS source override now covers these three packages.
 All runtime, packaged test and help files are identical to
 `a8a1836`; only the exclusion rule, CI workflow and this internal record differ.
+The consolidated dependency correction is commit
+`ff5df7cb90cbe09b47da290d4922f04f76ffd042`, checked by
+[35510248066](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35510248066).
+All five jobs complete successfully. The final job finishes at
+`2026-09-20T13:55:18Z`; the run JSON confirms the expected source commit and
+five successful jobs. All receipts identify that commit and tree
+`97a282167eb227ffacbef370e17db33bfc4de56a`, and each receipt's check-log hash
+matches the downloaded file. Every package check has **0 errors, 0 warnings
+and 0 notes**. Each cell also passes both international-input cases and all
+eight moved-folder archive replays.
+
+| Hosted environment | R version | Suite | Pass | Fail | Test warnings | Skips |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| macOS release | 4.6.1 | CRAN-light | 673 | 0 | 0 | 3 |
+| Windows release | 4.6.1 | CRAN-light | 673 | 0 | 0 | 3 |
+| Ubuntu devel | 2026-09-19 r90572 | CRAN-light | 673 | 0 | 0 | 3 |
+| Ubuntu release | 4.6.1 | Complete | 19,431 | 0 | 42 | 44 |
+| Ubuntu oldrel-1 | 4.5.3 | CRAN-light | 673 | 0 | 0 | 3 |
+
+Ubuntu release's 42 test-warning messages and counts match the local complete
+macOS run exactly: 39 category-support, two FACETS-device-size and one JML
+information-criterion warning. The three CRAN-light skips are intentional;
+the complete suite's 44 skips remain recorded, not counted as successes.
+
+| Hosted environment | Checked source-tarball SHA256 from receipt |
+| --- | --- |
+| macOS release | `c8f8b401cd02c0f7553e63ad0784308afc27451def4c7769deba2c0828fb5108` |
+| Windows release | `e18a708c525d921fec13c12fe79fb93e96dffa3753cc55f8d6a59c2a3500b017` |
+| Ubuntu devel | `30de2b9f17f8f90109b5209cd876e1c8e2f939f802bdb2a5a8b1c8702be416f7` |
+| Ubuntu release | `b106a629c450f7318c7b2fb5cdf0102fdc306c1168a218cde93f6e9ed723bed9` |
+| Ubuntu oldrel-1 | `f0be39109232813b2cc1ec7e58e6e25e0cbf84376c6db10ccbc05c753459570b` |
+
+All 537 reference source files are byte-identical in macOS and all three
+Ubuntu check sources. Windows has 26 byte-identical files and 511 UTF-8 text
+files differing only in CRLF line endings; normalization to LF matches every
+reference hash. No checked source contains the generated PDF. These distinctions
+are retained in `source-comparison.csv`; the five verified receipts, test counts
+and portability results are summarized in `verified-cells.csv` under
+`hosted-35510248066/`. Per-environment build metadata and rendered output retain
+their separate archive identities above.
 
 The local macOS arm64 R 4.6.1 run and Ubuntu 22.04 arm64 R 4.3.2 container are
 separate environment observations. The existing Linux image identity and
 installed package versions are retained. It lacks `kableExtra`, `flextable`,
 `mirt`, `TAM`, `eRm` and `lpSolve`; unavailable optional paths must remain
 explicitly skipped/unassessed. It is not a substitute for the hosted R-version
-matrix. All five current-candidate cells remain pending in
-`platform-matrix.csv`.
+matrix. `platform-matrix.csv` now records all five completed and verified hosted
+cells as passing. The result-record update changes only three excluded
+maintainer Markdown files; the tested source identity remains `ff5df7c`.
 
-Next: bind the repaired candidate to the hosted five-environment matrix,
-including one clean complete packaged-suite run of that exact candidate. Do not launch new research studies or
-broaden statistical claims merely to finish package validation.
+Next: assess formal 0.2.4 candidate readiness against the existing scoped claim
+decisions, reconcile release metadata and the CRAN submission text with these
+results, then check the exact versioned submission archive. The checked package
+is still `0.2.4.9000`, not the final 0.2.4 submission archive. Do not launch new
+research studies or broaden statistical claims merely to finish release work.

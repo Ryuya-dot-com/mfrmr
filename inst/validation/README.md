@@ -27,9 +27,12 @@ and source identities; they are not blanket current-source approvals.
 The [September 20 candidate checks](release-candidate-check-0.2.4.md) verify
 portable scoring across fresh sessions and Mac/Linux, correct two public-output
 issues, and retain the failed full runs alongside their targeted test repairs.
-The final archive passes the standard Mac check. A clean complete-suite run
-of that final archive and the current-source hosted matrix remain pending;
-local/historical results do not stand in for them.
+The repaired archive passes both standard and complete Mac checks with zero
+package-check errors, warnings or notes. All five hosted environments also pass
+for commit `ff5df7c`, including the complete Ubuntu-release suite. Both complete
+suites retain 19,431 passes, zero failures, 42 existing warnings and 44 skips.
+A clean, fully rendered development archive excludes generated test PDFs and
+internal validation files and passes its own standard package check.
 
 The [September 20 structural-SE source review](mml-structural-source-applicability-0.2.4.md)
 reconstructs the original sampling-study source and verifies current numerical

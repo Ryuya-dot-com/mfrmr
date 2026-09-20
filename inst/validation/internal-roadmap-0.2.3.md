@@ -161,12 +161,23 @@ It supersedes the ordered queue below. No new large study is launched.
    an unconditional PCA plot in the incomplete-design tutorial. Complete runs
    exposed stale tests and undeclared optional-solver preconditions: the repaired
    files pass 1,515 Mac and 2,886 Linux expectations (eight Linux dependency
-   skips). The final archive passes the standard Mac package check, with all
-   source identities and original failures retained. These staged repairs are
-   not a clean complete-suite run of the final archive.
-   Next: bind the repaired candidate to the established five-environment CI,
-   including the complete packaged suite on Ubuntu release. Current-source
-   hosted results remain unavailable; the September 13 matrix is historical.
+   skips). The repaired archive now passes both standard and complete Mac
+   package checks with zero errors/warnings/notes; its complete suite has
+   19,431 passes, no failures, 42 existing warnings and 44 skips. Source
+   identities and original failures are retained. Local test-generated PDF
+   output is now excluded from builds, and Mac CI installs three dependencies
+   from source because their current binary compression is unsupported by pak.
+   All five hosted environments now pass for `ff5df7c` in run `35510248066`,
+   with zero package-check errors/warnings/notes. The complete Ubuntu-release
+   suite also has 19,431 passes, zero failures, 42 existing warnings and 44
+   skips. Each hosted cell passes the two input and eight archive-replay cases.
+   The clean, fully rendered development archive excludes test PDFs/internal
+   records and passes its own standard check. Source identities and Windows
+   line-ending differences are verified. The September 13 matrix is historical.
+   Next: assess the formal 0.2.4 candidate against the existing scoped claim
+   decisions, reconcile release metadata and `cran-comments.md` with these
+   results, and check the exact versioned submission archive. The current
+   checked version remains `0.2.4.9000`; no publication follows from CI success.
    Preserve the claim ledger's restrictions; do not turn every unresolved
    research extension into a requirement for this bounded release.
    Documentation consistency is not statistical claim closure or release approval.
