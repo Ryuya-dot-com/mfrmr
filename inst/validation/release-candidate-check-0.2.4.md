@@ -8,9 +8,30 @@ disposition or authorize publication.
 ## Source identity
 
 Evidence root: `validation-results/release-candidate-20260920/`.
-The working branch is `development/0.2.4`, based on
-`ff0675b8d54aa51f4f24ffc6948a460f1d7261a1`, with uncommitted changes.
-The base commit is not the identity of the candidate's modified source.
+The archives were built from uncommitted changes on `development/0.2.4`,
+based on `ff0675b8d54aa51f4f24ffc6948a460f1d7261a1`. The base commit is not
+the identity of the candidate's modified source. The repaired candidate is now
+saved in commit `a8a1836fdd2a7edeafb74bfe1aeb8d3febc0cc31` on
+`development/0.2.4-prerelease-validation-20260920`. Before committing, all 538
+packaged working-file hashes and the repaired archive hash were verified again.
+The only subsequent pre-commit change was to the excluded public roadmap:
+"valid-time denominators" now states the number of observations with valid
+times. The existing 48-expectation public-wording check and source/lifecycle
+review pass. Package source and archive contents are unchanged.
+
+The subsequent commit-to-archive comparison distinguishes 537 committed files,
+all byte-identical, from one Git-ignored local `tests/testthat/Rplots.pdf`.
+That generated plot was included in the local archive but is absent from a
+clean checkout. `.Rbuildignore` is corrected to exclude `Rplots.pdf` at any
+depth, preventing future local builds from distributing test-device output.
+This packaging correction does not alter executable source, tests or help.
+An actual `R CMD build --no-manual --no-build-vignettes` confirms the exclusion;
+this packaging-only archive is not a replacement for the fully rendered
+candidate. Its successful log and archive are under `packaging/`. The first
+build failed because a pre-existing output archive was moved while R was
+copying the source directory. That old archive/initial inspection and failed
+log are retained separately; the successful build ran from an isolated output
+directory and was inspected only after completion.
 
 | Archive | SHA256 | Role |
 | --- | --- | --- |
@@ -175,7 +196,22 @@ The latest successful hosted run is
 created September 13 for commit
 `805d6ae34dae0026d93259e4e0d62d6c4a97c1c1`. All five jobs succeeded for that
 source. Its JSON is retained, but none is represented as current-candidate
-coverage. The current source has not been committed or sent to hosted CI.
+coverage. The current candidate was sent to the dedicated validation branch
+after the user explicitly authorized this payload and destination, resolving
+the initial automatic approval rejection. The new run is
+[35509420965](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35509420965),
+created September 20 for commit
+`a8a1836fdd2a7edeafb74bfe1aeb8d3febc0cc31`. Its first attempt stopped during
+dependency installation: pak could not recognize the downloaded macOS
+`flextable_0.10.1.tgz` archive. No package check ran, and the remaining matrix
+was skipped after the macOS prerequisite failed. The failed log and job JSON
+are retained under `hosted-35509420965/`. A same-commit second attempt failed
+at the same dependency, before package checks. Direct retrieval from the logged
+CRAN mirror confirms Zstandard bytes in the `.tgz` file; the alternate Mac
+mirror returned 404. The same version's source `.tar.gz` uses gzip and lists
+successfully. The macOS cell now requests `flextable=?source`, using pak's
+[documented downstream source parameter](https://pak.r-lib.org/reference/pak_package_sources.html#parameters).
+The workflow's warnings-as-failures and repository-review checks remain active.
 
 The local macOS arm64 R 4.6.1 run and Ubuntu 22.04 arm64 R 4.3.2 container are
 separate environment observations. The existing Linux image identity and

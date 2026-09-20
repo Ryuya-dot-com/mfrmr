@@ -7,7 +7,7 @@
 ^\.{2}Rcheck$
 ^mfrmr\.Rcheck$
 ^mfrmr_[0-9.]+\.tar\.gz$
-^Rplots[.]pdf$
+(^|/)Rplots[.]pdf$
 ^src/.*[.](o|so|dll|dylib)$
 ^src/.*[.](gcda|gcno|gcov)$
 ^src/symbols[.]rds$
