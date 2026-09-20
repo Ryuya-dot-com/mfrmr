@@ -97,6 +97,15 @@ new_mfrm_plot_data <- function(name, data) {
 #' @export
 print.mfrm_plot_data <- function(x, ...) {
   data <- x$data %||% list()
+  if (x$name %in% c("dif_summary", "dif_heatmap", "fair_average")) {
+    cat(data$title %||% "Group and adjusted-score plot", "\n")
+    if (!is.null(data$subtitle) && nzchar(data$subtitle)) cat(data$subtitle, "\n")
+    if (is.data.frame(data$notes) && "Text" %in% names(data$notes)) {
+      for (line in unique(data$notes$Text)) cat(paste(strwrap(line), collapse = "\n"), "\n")
+    }
+    cat("Use `plot_data()` to extract the plotted values.\n")
+    return(invisible(x))
+  }
   cat("<mfrm_plot_data>\n")
   cat("  name     : ", x$name %||% "<unnamed>", "\n", sep = "")
   if (!is.null(data$title) && nzchar(data$title)) {
@@ -753,6 +762,7 @@ resolve_fair_bundle <- function(x,
     ))
   }
   if (is.list(x) && all(c("raw_by_facet", "by_facet", "stacked") %in% names(x))) {
+    validate_fair_measure_basis(x)
     return(x)
   }
   stop("`x` must be an mfrm_fit object or output from fair_average_table().")
@@ -801,6 +811,7 @@ resolve_interrater_bundle <- function(x,
     ))
   }
   if (is.list(x) && all(c("summary", "pairs", "settings") %in% names(x))) {
+    validate_descriptive_bundle(x, "mfrm_interrater")
     return(x)
   }
   stop("`x` must be an mfrm_fit object or output from interrater_agreement_table().")
@@ -832,6 +843,7 @@ resolve_strict_marginal_plot_bundle <- function(x,
   if (inherits(x, "mfrm_fit")) {
     diagnostics <- diagnostics %||%
       diagnose_mfrm(x, residual_pca = "none", diagnostic_mode = "both")
+    mfrm_results_validate_diagnostics_identity(x, diagnostics, helper = "marginal diagnostic plots")
   } else if (inherits(x, "mfrm_diagnostics") || (is.list(x) && !is.null(x$marginal_fit))) {
     diagnostics <- x
   } else {
@@ -839,6 +851,7 @@ resolve_strict_marginal_plot_bundle <- function(x,
   }
 
   marginal_fit <- diagnostics$marginal_fit %||% NULL
+  validate_marginal_coverage(marginal_fit)
   if (!is.list(marginal_fit)) {
     stop(
       "Strict marginal diagnostics are not available. Run diagnose_mfrm(..., diagnostic_mode = \"both\") first.",
@@ -928,7 +941,11 @@ format_marginal_pair_label <- function(facet, level1, level2) {
 #'
 #' The `"std_residual"` view ranks cells by the absolute standardized residual
 #' from posterior-integrated expected category counts. The `"prop_diff"` view
-#' ranks the same cells by the signed observed-minus-expected proportion gap.
+#' ranks cells by the absolute observed-minus-expected proportion gap and plots
+#' their signed gaps. Both views apply the facet filter before ranking all cells.
+#' The returned `full_table` retains all candidate rows; `retention` records
+#' available/unavailable values for the selected metric. Undefined values are
+#' not zero residuals, and grey bars/labels indicate unavailable values or flags.
 #'
 #' Use this plot after `summary(diagnostics)` indicates strict marginal flags.
 #' The display is exploratory: it highlights which facet/category cells deserve
@@ -1007,13 +1024,14 @@ plot_marginal_fit <- function(x,
   )
 
   bundle <- resolve_strict_marginal_plot_bundle(x, diagnostics = diagnostics, require_pairwise = FALSE)
-  tbl <- as.data.frame(bundle$marginal_fit$top_cells %||% data.frame(), stringsAsFactors = FALSE)
+  tbl <- as.data.frame(dplyr::bind_rows(bundle$marginal_fit$step_or_scale$cell_stats,
+                                        bundle$marginal_fit$facet_level$cell_stats))
   if (nrow(tbl) == 0) {
     stop("No strict marginal cell rows are available for plotting.", call. = FALSE)
   }
   if (!is.null(facet)) {
     facet <- as.character(facet[1])
-    tbl <- tbl[as.character(tbl$Facet %||% "") == facet, , drop = FALSE]
+    tbl <- tbl[as.character(tbl$Facet %||% "") %in% facet, , drop = FALSE]
   }
   if (nrow(tbl) == 0) {
     stop("No strict marginal cell rows matched the requested `facet` filter.", call. = FALSE)
@@ -1024,7 +1042,9 @@ plot_marginal_fit <- function(x,
   } else {
     abs(suppressWarnings(as.numeric(tbl$PropDiff)))
   }
-  ord <- order(metric_vals, decreasing = TRUE, na.last = NA)
+  metric_vals[!is.finite(metric_vals)] <- NA_real_
+  retention <- data.frame(Candidates = nrow(tbl), Available = sum(is.finite(metric_vals)), Unavailable = sum(!is.finite(metric_vals)))
+  ord <- order(metric_vals, decreasing = TRUE, na.last = TRUE)
   use <- ord[seq_len(min(length(ord), top_n))]
   sub <- tbl[use, , drop = FALSE]
   sub$CellLabel <- mapply(
@@ -1042,13 +1062,15 @@ plot_marginal_fit <- function(x,
   } else {
     suppressWarnings(as.numeric(sub$PropDiff))
   }
-  flagged <- as.logical(sub$FlaggedAbsZ %||% FALSE)
+  flagged <- as.logical(sub$FlaggedAbsZ %||% rep(NA, nrow(sub)))
   cols <- ifelse(
     flagged,
     pal["flag"],
     ifelse(values >= 0, pal["positive"], pal["negative"])
   )
 
+  cols[is.na(flagged) | !is.finite(values)] <- "grey70"
+  values[!is.finite(values)] <- NA_real_
   abs_z_warn <- as.numeric(bundle$marginal_fit$thresholds$abs_z_warn %||% 2)
   plot_title <- switch(
     plot_type,
@@ -1056,17 +1078,8 @@ plot_marginal_fit <- function(x,
     prop_diff = "Strict marginal category gaps"
   )
   if (!is.null(main)) plot_title <- as.character(main[1])
-  plot_subtitle <- if (identical(plot_type, "std_residual")) {
-    sprintf(
-      "Latent-integrated first-order counts; exploratory screen; top %d cells by |StdResidual|.",
-      nrow(sub)
-    )
-  } else {
-    sprintf(
-      "Latent-integrated first-order counts; exploratory screen; top %d cells by |Observed - Expected| proportion gap.",
-      nrow(sub)
-    )
-  }
+  plot_subtitle <- sprintf("Posterior-expected screen; %d displayed from %d cells; %d selected-metric values unavailable.",
+                           nrow(sub), nrow(tbl), retention$Unavailable)
   plot_legend <- if (identical(plot_type, "std_residual")) {
     new_plot_legend(
       label = c("Positive residual", "Negative residual", "Flagged cell"),
@@ -1082,6 +1095,7 @@ plot_marginal_fit <- function(x,
       value = c(pal["positive"], pal["negative"], pal["flag"])
     )
   }
+  plot_legend <- rbind(plot_legend, new_plot_legend(label = "Value or classification unavailable", role = "status", aesthetic = "bar", value = "grey70"))
   plot_reference <- if (identical(plot_type, "std_residual")) {
     new_reference_lines(
       axis = c("h", "h", "h"),
@@ -1102,8 +1116,9 @@ plot_marginal_fit <- function(x,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    barplot_rot45(
+    mids <- barplot_rot45(
       height = values,
+      ylim = range(c(-1, 1, values), finite = TRUE),
       labels = sub$CellLabel,
       col = cols,
       main = plot_title,
@@ -1117,6 +1132,9 @@ plot_marginal_fit <- function(x,
       label_width = 28L,
       add_grid = TRUE
     )
+    graphics::mtext(sprintf("%d of %d metric values available; %d unavailable.",
+                           retention$Available, retention$Candidates, retention$Unavailable), side = 3, line = 0.3, cex = 0.7)
+    if (anyNA(values)) graphics::text(mids[is.na(values)], 0, "Unavailable", cex = 0.7, pos = 3)
     graphics::abline(h = 0, lty = 1, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.75))
     if (identical(plot_type, "std_residual")) {
       graphics::abline(h = c(-abs_z_warn, abs_z_warn), lty = 2, col = grDevices::adjustcolor(style$neutral, alpha.f = 0.9))
@@ -1136,6 +1154,8 @@ plot_marginal_fit <- function(x,
       plot = plot_type,
       table = sub,
       full_table = tbl,
+      coverage = bundle$marginal_fit$coverage,
+      retention = retention,
       summary = bundle$marginal_fit$summary,
       facet_summary = bundle$marginal_fit$facet_level$summary_stats,
       step_summary = bundle$marginal_fit$step_or_scale$summary_stats,
@@ -1172,14 +1192,19 @@ plot_marginal_fit <- function(x,
 #' The `"exact"` view ranks level pairs by the absolute exact-agreement
 #' standardized residual. The `"adjacent"` view uses the adjacent-agreement
 #' standardized residual instead. Both are exploratory corroboration screens for
-#' strict marginal-fit flags.
+#' strict marginal-fit flags. Selection uses all pairs within the requested
+#' facet, not a preselected list for the other metric. `retention` counts
+#' available/unavailable metric values, while `full_table` retains all candidates.
+#' Grey bars/labels indicate unavailable values or classifications.
 #'
 #' @section Interpreting output:
 #' - Positive bars mean the observed agreement exceeded the posterior-expected
 #'   agreement for that level pair.
 #' - Negative bars mean the observed agreement fell below the posterior-expected
 #'   agreement.
-#' - Red bars indicate the pair exceeded the current strict-warning threshold.
+#' - Red bars indicate an available standardized-residual or agreement-gap
+#'   rule was crossed. A missing companion rule does not cancel a known crossing.
+#'   These are descriptive cutoffs without calibrated error rates.
 #'
 #' @section Typical workflow:
 #' 1. Fit with [fit_mfrm()] using `method = "MML"` for `RSM` / `PCM`.
@@ -1245,13 +1270,13 @@ plot_marginal_pairwise <- function(x,
   )
 
   bundle <- resolve_strict_marginal_plot_bundle(x, diagnostics = diagnostics, require_pairwise = TRUE)
-  tbl <- as.data.frame(bundle$marginal_fit$pairwise$top_pairs %||% data.frame(), stringsAsFactors = FALSE)
+  tbl <- as.data.frame(bundle$marginal_fit$pairwise$pair_stats %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(tbl) == 0) {
     stop("No strict pairwise local-dependence rows are available for plotting.", call. = FALSE)
   }
   if (!is.null(facet)) {
     facet <- as.character(facet[1])
-    tbl <- tbl[as.character(tbl$Facet %||% "") == facet, , drop = FALSE]
+    tbl <- tbl[as.character(tbl$Facet %||% "") %in% facet, , drop = FALSE]
   }
   if (nrow(tbl) == 0) {
     stop("No strict pairwise rows matched the requested `facet` filter.", call. = FALSE)
@@ -1262,7 +1287,9 @@ plot_marginal_pairwise <- function(x,
   } else {
     abs(suppressWarnings(as.numeric(tbl$AdjacentStdResidual)))
   }
-  ord <- order(metric_vals, decreasing = TRUE, na.last = NA)
+  metric_vals[!is.finite(metric_vals)] <- NA_real_
+  retention <- data.frame(Candidates = nrow(tbl), Available = sum(is.finite(metric_vals)), Unavailable = sum(!is.finite(metric_vals)))
+  ord <- order(metric_vals, decreasing = TRUE, na.last = TRUE)
   use <- ord[seq_len(min(length(ord), top_n))]
   sub <- tbl[use, , drop = FALSE]
   sub$PairLabel <- mapply(
@@ -1279,11 +1306,13 @@ plot_marginal_pairwise <- function(x,
     suppressWarnings(as.numeric(sub$AdjacentStdResidual))
   }
   flagged <- if (identical(metric, "exact")) {
-    as.logical(sub$FlaggedExact %||% FALSE)
+    as.logical(sub$FlaggedExact %||% rep(NA, nrow(sub)))
   } else {
-    as.logical(sub$FlaggedAdjacent %||% FALSE)
+    as.logical(sub$FlaggedAdjacent %||% rep(NA, nrow(sub)))
   }
   cols <- ifelse(flagged, pal["flag"], pal["ok"])
+  cols[is.na(flagged) | !is.finite(values)] <- "grey70"
+  values[!is.finite(values)] <- NA_real_
   abs_z_warn <- as.numeric(bundle$marginal_fit$thresholds$abs_z_warn %||% 2)
 
   plot_title <- switch(
@@ -1292,17 +1321,15 @@ plot_marginal_pairwise <- function(x,
     adjacent = "Strict pairwise adjacent-agreement screening scores"
   )
   if (!is.null(main)) plot_title <- as.character(main[1])
-  plot_subtitle <- sprintf(
-    "Exploratory local-dependence follow-up; top %d level pairs by |%s StdResidual|.",
-    nrow(sub),
-    if (identical(metric, "exact")) "Exact" else "Adjacent"
-  )
+  plot_subtitle <- sprintf("Posterior-expected agreement screen; %d displayed from %d level pairs; %d selected-metric values unavailable.",
+                           nrow(sub), nrow(tbl), retention$Unavailable)
   plot_legend <- new_plot_legend(
-    label = c("Within current warning band", "Flagged level pair"),
+    label = c("No available rule crossed", "Flagged level pair"),
     role = c("status", "status"),
     aesthetic = c("bar", "bar"),
     value = c(pal["ok"], pal["flag"])
   )
+  plot_legend <- rbind(plot_legend, new_plot_legend(label = "Value or classification unavailable", role = "status", aesthetic = "bar", value = "grey70"))
   plot_reference <- new_reference_lines(
     axis = c("h", "h", "h"),
     value = c(-abs_z_warn, 0, abs_z_warn),
@@ -1313,8 +1340,9 @@ plot_marginal_pairwise <- function(x,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    barplot_rot45(
+    mids <- barplot_rot45(
       height = values,
+      ylim = range(c(-1, 1, values), finite = TRUE),
       labels = sub$PairLabel,
       col = cols,
       main = plot_title,
@@ -1328,6 +1356,9 @@ plot_marginal_pairwise <- function(x,
       label_width = 30L,
       add_grid = TRUE
     )
+    graphics::mtext(sprintf("%d of %d metric values available; %d unavailable.",
+                           retention$Available, retention$Candidates, retention$Unavailable), side = 3, line = 0.3, cex = 0.7)
+    if (anyNA(values)) graphics::text(mids[is.na(values)], 0, "Unavailable", cex = 0.7, pos = 3)
     graphics::abline(h = 0, lty = 1, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.75))
     graphics::abline(h = c(-abs_z_warn, abs_z_warn), lty = 2, col = grDevices::adjustcolor(style$neutral, alpha.f = 0.9))
     graphics::legend(
@@ -1345,6 +1376,8 @@ plot_marginal_pairwise <- function(x,
       plot = metric,
       table = sub,
       full_table = tbl,
+      coverage = bundle$marginal_fit$pairwise$coverage,
+      retention = retention,
       summary = bundle$marginal_fit$pairwise$facet_summary,
       pair_stats = bundle$marginal_fit$pairwise$pair_stats,
       guidance = bundle$marginal_fit$guidance,
@@ -1488,8 +1521,12 @@ plot_unexpected <- function(x,
     top_n = top_n,
     rule = rule
   )
+  validate_unexpected_coverage(bundle)
   tbl <- as.data.frame(bundle$table, stringsAsFactors = FALSE)
   if (nrow(tbl) == 0) {
+    if (!isTRUE(bundle$summary$UnavailableObservations[1] == 0)) {
+      stop("No responses were flagged, but some responses could not be classified; inspect the screening summary.", call. = FALSE)
+    }
     stop("No unexpected responses were flagged under the current thresholds.")
   }
   tbl <- tbl[seq_len(min(nrow(tbl), top_n)), , drop = FALSE]
@@ -1737,10 +1774,18 @@ plot_fair_average <- function(x,
     fair_df <- fair_df[as.character(fair_df$Facet) %in% as.character(facet), , drop = FALSE]
     if (!nrow(fair_df)) stop("Requested `facet` was not found in fair-average output.")
   }
+  mean_reference_unavailable <- identical(metric, "FairM") &&
+    any(grepl("mean Person measure is unbounded", fair_df$FairMReference, fixed = TRUE))
   finite <- is.finite(fair_df[[metric]]) & is.finite(fair_df[[if (plot_type == "measure") "Measure" else "ObservedAverage"]])
   excluded <- fair_df[!finite, , drop = FALSE]
   fair_df <- fair_df[finite, , drop = FALSE]
-  if (!nrow(fair_df)) stop("No finite fair-average rows available.")
+  if (!nrow(fair_df)) {
+    if (mean_reference_unavailable) stop(paste(
+      "FairM is unavailable because the mean JML Person measure is unbounded.",
+      "Use metric = \"FairZ\" for a zero-reference summary."
+    ), call. = FALSE)
+    stop("No finite fair-average rows available.")
+  }
   fair_df$Gap <- fair_df$ObservedAverage - fair_df[[metric]]
   ci_note <- NULL
   if (isTRUE(show_ci)) {
@@ -1789,7 +1834,7 @@ plot_fair_average <- function(x,
     fair_df$CI_Eligible <- FALSE
     fair_df$CI_ReportingUse <- ifelse(unavailable, "unavailable", "diagnostic_only")
     ci_note <- paste0(round(100 * ci_level), "% approximate intervals. ", ci_note,
-      " Full-refit coverage unverified; ", sum(unavailable), " row(s) unavailable.",
+      " These intervals omit some sources of estimation uncertainty; ", sum(unavailable), " row(s) unavailable.",
       if (plot_type == "difference") " Observed averages treated as fixed; these are not gap confidence intervals." else "")
   }
   groups <- unique(as.character(fair_df$Facet))
@@ -1822,12 +1867,17 @@ plot_fair_average <- function(x,
     "Points show a model-based transformation, not independent validation. Do not pool correlations across facets.")
   if ((bundle$settings$xtreme %||% 0) > 0) score_note <- paste(score_note,
     "xtreme changes the displayed Measure only; fair scores are unchanged and conditional intervals unavailable.")
+  if (mean_reference_unavailable) score_note <- paste(score_note,
+    "Non-Person FairM rows are unavailable because the mean JML Person measure is unbounded; FairZ uses a zero reference.")
+  interval_caption <- if (plot_type == "difference") {
+    "Approximate fair-score intervals; observed means held fixed."
+  } else "Approximate fair-score intervals omit some estimation uncertainty."
   out <- new_mfrm_plot_data("fair_average", list(
     plot = plot_type, metric = metric, data = fair_df, plot_data = plot_df,
     excluded = excluded, settings = bundle$settings, ci_note = ci_note,
     title = switch(plot_type, difference = paste("Observed -", metric),
       scatter = paste("Observed vs", metric), measure = paste("Measure and", metric)),
-    subtitle = if (isTRUE(show_ci)) "Approximate intervals; see returned notes for uncertainty scope." else reference_note,
+    subtitle = if (isTRUE(show_ci)) interval_caption else reference_note,
     caption = NULL, display = list(show_title = isTRUE(show_title), show_notes = isTRUE(show_notes)),
     xlab = switch(plot_type, difference = paste("Observed -", metric), scatter = paste(metric, "(internal score)"),
       measure = if (report_scale == 1 && report_origin == 0) "Measure (logits)" else "Measure (reporting units)"),
@@ -1864,7 +1914,7 @@ plot_fair_average <- function(x,
     graphics::points(plot_df$X, plot_df$Y, pch = plot_df$Shape, col = plot_df$Color)
     if (plot_type != "difference" && length(groups) > 1L) graphics::legend("topleft", legend = groups,
       col = encoding$Color, pch = encoding$Shape, bty = "n", cex = 0.8)
-    if (isTRUE(show_notes)) graphics::mtext(if (isTRUE(show_ci)) "Approximate intervals; uncertainty scope in returned notes." else paste(metric, "reference:", if (metric == "FairM") "mean" else "zero", "| Internal score coding"),
+    if (isTRUE(show_notes)) graphics::mtext(if (isTRUE(show_ci)) interval_caption else paste(metric, "reference:", if (metric == "FairM") "mean" else "zero", "| Internal score coding"),
       side = 1, line = 4.5, cex = 0.72)
   }
   invisible(out)
@@ -2259,11 +2309,12 @@ plot_interrater_agreement <- function(x,
     stop("Inter-rater table does not include required columns.")
   }
 
-  ord_exact <- order(tbl$Exact, na.last = NA)
+  order_value <- if (plot_type == "corr") tbl$Corr else tbl$Exact
+  ord_exact <- order(order_value, na.last = TRUE)
   use <- ord_exact[seq_len(min(length(ord_exact), top_n))]
   sub <- tbl[use, , drop = FALSE]
   labels <- truncate_axis_label(paste0(sub$Rater1, " | ", sub$Rater2), width = 28L)
-  cols <- if ("Flag" %in% names(sub)) ifelse(sub$Flag, pal["flag"], pal["ok"]) else pal["ok"]
+  cols <- if ("Flag" %in% names(sub)) ifelse(is.na(sub$Flag), style$neutral, ifelse(sub$Flag, pal["flag"], pal["ok"])) else pal["ok"]
   plot_title <- switch(
     plot_type,
     exact = "Inter-rater exact agreement",
@@ -2272,6 +2323,8 @@ plot_interrater_agreement <- function(x,
   )
   if (!is.null(main)) plot_title <- as.character(main[1])
   plot_subtitle <- paste0("Rater facet: ", as.character(bundle$settings$rater_facet %||% rater_facet %||% "auto"))
+  available_n <- sum(is.finite(if (plot_type == "corr") tbl$Corr else if (plot_type == "difference") tbl$MeanDiff else tbl$Exact))
+  plot_subtitle <- paste0(plot_subtitle, "; ", available_n, " / ", nrow(tbl), " pairs available; remaining pairs are unassessed.")
   plot_legend <- switch(
     plot_type,
     exact = new_plot_legend(
@@ -2310,7 +2363,7 @@ plot_interrater_agreement <- function(x,
         main = plot_title,
         ylab = "Exact agreement",
         label_angle = label_angle,
-        mar_bottom = 8.2
+        mar_bottom = 8.2, ylim = c(0, 1)
       )
       exp_vals <- suppressWarnings(as.numeric(sub$ExpectedExact))
       if (any(is.finite(exp_vals))) {
@@ -2319,11 +2372,9 @@ plot_interrater_agreement <- function(x,
       }
       graphics::abline(h = exact_warn, lty = 2, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.65))
     } else if (plot_type == "corr") {
-      corr_ord <- order(tbl$Corr, na.last = NA)
-      use_corr <- corr_ord[seq_len(min(length(corr_ord), top_n))]
-      sub_corr <- tbl[use_corr, , drop = FALSE]
-      lbl_corr <- truncate_axis_label(paste0(sub_corr$Rater1, " | ", sub_corr$Rater2), width = 28L)
-      col_corr <- if ("Flag" %in% names(sub_corr)) ifelse(sub_corr$Flag, pal["flag"], pal["ok"]) else pal["ok"]
+      sub_corr <- sub
+      lbl_corr <- labels
+      col_corr <- cols
       barplot_rot45(
         height = suppressWarnings(as.numeric(sub_corr$Corr)),
         labels = lbl_corr,
@@ -2331,15 +2382,19 @@ plot_interrater_agreement <- function(x,
         main = plot_title,
         ylab = "Correlation",
         label_angle = label_angle,
-        mar_bottom = 8.2
+        mar_bottom = 8.2, ylim = c(-1, 1)
       )
       graphics::abline(h = corr_warn, lty = 2, col = grDevices::adjustcolor(style$foreground, alpha.f = 0.65))
+    } else if (!any(is.finite(tbl$MeanDiff) & is.finite(tbl$MAD))) {
+      graphics::plot.new()
+      graphics::title(main = plot_title)
+      graphics::text(0.5, 0.5, "No matched-score differences are available.")
     } else {
       graphics::plot(
         x = suppressWarnings(as.numeric(tbl$MeanDiff)),
         y = suppressWarnings(as.numeric(tbl$MAD)),
         pch = 16,
-        col = if ("Flag" %in% names(tbl)) ifelse(tbl$Flag, pal["flag"], pal["ok"]) else pal["ok"],
+        col = if ("Flag" %in% names(tbl)) ifelse(is.na(tbl$Flag), style$neutral, ifelse(tbl$Flag, pal["flag"], pal["ok"])) else pal["ok"],
         xlab = "Mean score difference (Rater1 - Rater2)",
         ylab = "Mean absolute difference",
         main = plot_title
@@ -2349,11 +2404,15 @@ plot_interrater_agreement <- function(x,
     }
   }
 
+  if (isTRUE(draw)) graphics::mtext(plot_subtitle, side = 3, line = 0.2, cex = 0.65)
+
   out <- new_mfrm_plot_data(
     "interrater",
     list(
       plot = plot_type,
       pairs = tbl,
+      table = if (plot_type == "difference") tbl else sub,
+      notes = bundle$notes,
       summary = bundle$summary,
       settings = bundle$settings,
       title = plot_title,
@@ -3693,6 +3752,7 @@ print.mfrm_fit <- function(x, ...) {
       print_fit_decision_section(fit_summary$decision)
     }
     if (!is.null(fit_summary)) {
+      print_wrapped_line(fit_summary$estimation_note %||% character(0))
       mml_contract_lines <- mfrm_mml_integration_console_lines(fit_summary)
       if (length(mml_contract_lines) > 0L) {
         print_wrapped_line(mml_contract_lines)
@@ -3707,27 +3767,17 @@ print.mfrm_fit <- function(x, ...) {
       }
       print_wrapped_line(sprintf(
         "Scale: %s | Discrimination: %s%s",
-        scale_contract$CoordinateBasis[1],
-        scale_contract$SlopeBasis[1],
+        switch(as.character(scale_contract$CoordinateBasis[1]),
+          joint_person_coordinate_scale = "jointly estimated Person measures",
+          fixed_standard_normal = "fixed standard-normal population",
+          estimated_population_scale = "estimated population",
+          "see fitted scale settings"),
+        if (identical(as.character(scale_contract$Model[1]), "GPCM"))
+          "relative slopes with geometric mean 1" else "fixed at 1",
         population_text
       ))
       if (identical(as.character(scale_contract$Model[1]), "GPCM")) {
-        finite_box <- if (isTRUE(scale_contract$GpcmFiniteParameterBox[1])) {
-          "yes"
-        } else {
-          "no"
-        }
-        print_wrapped_line(sprintf(
-          "GPCM estimator: %s | Statistical penalty: %s | Finite parameter box: %s",
-          scale_contract$GpcmEstimatorFamily[1],
-          scale_contract$GpcmStatisticalPenalty[1],
-          finite_box
-        ))
-        print_wrapped_line(sprintf(
-          "GPCM kernel: %s | Slope action: %s",
-          scale_contract$GpcmModelFamily[1],
-          scale_contract$GpcmSlopeAction[1]
-        ))
+        print_wrapped_line(mfrm_gpcm_console_lines(scale_contract))
       }
     }
     ic_lines <- mfrm_ic_console_lines(x$summary, digits = 3L)
@@ -3752,10 +3802,7 @@ print.mfrm_fit <- function(x, ...) {
         status_label
       ))
       if (!decision_available) {
-        print_wrapped_line(sprintf(
-          "Formal inference: %s",
-          ifelse(convergence$inference_ready, "Ready", "Not ready")
-        ))
+        print_wrapped_line("Formal inference: not established; the interpretation decision is unavailable.")
       }
     }
     if (isTRUE(x$config$attached_diagnostics)) {

@@ -91,7 +91,7 @@ for bounded \code{GPCM})
 \code{fit_readiness_parameters}: the source fit's versioned readiness decision;
 diagnostic computation does not override a blocked or review-only fit
 \item \code{marginal_fit}: optional strict marginal-fit companion based on
-posterior-expected first-order category counts
+posterior-expected first-order category counts, with classification coverage
 \item \code{residual_pca_overall}: optional overall PCA object
 \item \code{residual_pca_by_facet}: optional facet PCA objects
 \item \code{replay_inputs}: diagnostic settings retained for reproducible export,
@@ -113,6 +113,27 @@ silently replacing it. The legacy path is a compatibility-oriented
 residual/EAP stack, whereas the strict marginal path targets
 latent-integrated first-order category counts. When \code{diagnostic_mode = "both"}, the output includes a \code{diagnostic_basis} guide so downstream
 tables and summaries can distinguish these targets.
+
+Marginal expected counts integrate over each Person's posterior conditioned
+on the same observed responses, holding fitted calibration fixed. They are
+not expectations from an independent replication or a prior-only population
+margin. First-order residual scales use \code{sum(w^2 * p * (1-p))}; pairwise
+scales use the analogous formula with products of row weights. These scales
+omit cross-response/opportunity covariance and calibration-parameter
+uncertainty. They are descriptive screens, not calibrated residual tests.
+
+Missing/invalid contributing probabilities, scores or weights withhold the
+affected complete-scope aggregate rather than selecting usable rows. Missing
+standardized residuals and flags remain \code{NA}. A known cutoff crossing stays
+flagged when a companion rule is unavailable. \code{marginal_fit$coverage} records
+classified/unclassified cells, groups and level pairs. Row/opportunity counts
+remain visible; zero-weight opportunities contribute no information.
+Available maxima are accompanied by classification/residual counts; they
+are not maxima over unavailable values. RMSDs require the complete scope.
+In PCM and GPCM, step-group summaries retain the declared \code{step_facet}.
+Regenerate older marginal diagnostics and downstream summaries/plots/exports
+from the existing fit and original diagnostic settings; no model refit is
+required.
 
 Choosing \code{diagnostic_mode}:
 \itemize{
@@ -243,12 +264,29 @@ single criterion.
 
 \code{SE} is kept as a compatibility alias for \code{ModelSE}. \code{RealSE} is a
 fit-adjusted companion defined as \code{ModelSE * sqrt(max(Infit, 1))}.
-Reliability tables report model and fit-adjusted bounds from observed
-variance, error variance, and true variance; \code{JML} entries should still be
-treated as exploratory. Separation, strata, and reliability follow the
+Reliability tables report model and fit-adjusted indices from observed
+variance minus mean squared SE, truncated at zero. Fit-adjusted values are
+not confidence bounds; \code{JML} entries remain exploratory. Separation, strata, and reliability follow the
 Wright & Masters (1982) conventions:
 \eqn{G = \mathrm{TrueSD}/\mathrm{RMSE}},
 \eqn{R = G^2 / (1 + G^2)}, and \eqn{H = (4G + 1) / 3}.
+
+Tables record finite-estimate counts and the available SEs on those same
+levels. Non-finite estimates are excluded from the spread and SE summaries.
+If any finite estimate lacks a valid SE, reliability, separation, strata and
+error-adjusted spread are unavailable, rather than combining different sets
+of levels. Excluded levels or incomplete uncertainty prevent a facet summary
+from supporting formal reporting. For EAP Persons, this separation-based
+index is distinct from posterior-variance EAP reliability. High rater
+separation means distinguishable rater measures, not high rater agreement.
+
+Facet SEs from a regularized information matrix or an observation-table
+fallback remain diagnostic approximations. They are labelled explicitly and
+cannot authorize ordinary confidence-interval reporting. Numerical convergence
+is reviewed separately from support for inference; switching from JML to MML
+does not by itself establish valid SEs or intervals. Recompute older diagnostic
+objects with \code{diagnose_mfrm(fit)} before reporting; the existing fit can be used
+without refitting the model.
 }
 
 \section{Typical workflow}{

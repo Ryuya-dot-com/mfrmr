@@ -71,6 +71,23 @@ response-time distributions, distributional rapid/slow flags, and person /
 facet / score-level response-time patterns for screening and reporting
 context.
 }
+\details{
+Supply one row per timed event. A respondent's production time must not be
+repeated for every rater or criterion that scores that response; rater
+scoring time is a different observation. This helper does not model repeated
+events, censoring or a speed-accuracy relationship.
+
+Numeric factor labels are interpreted as times, not factor codes. Group
+summaries retain \code{InputRows}, valid timed rows (\code{N}) and \code{ExcludedRows}.
+Rates describe valid rows only; groups with no valid times remain present
+with unavailable statistics. Missing facet or score labels are omitted from
+that grouping. Sample quantiles and user-specified cutoffs are descriptive;
+they do not diagnose rapid guessing, effort or rater quality. Equal cutoffs
+can flag the same event in both tails when times are tied. \code{FlaggedGroups}
+counts distinct groups, while \code{Flags} counts rapid/slow rule crossings.
+Recreate older reviews from the original timing data before summary or
+plotting; no MFRM refit is needed.
+}
 \examples{
 toy <- load_mfrmr_data("example_core")
 toy$ResponseTime <- 12 + as.numeric(factor(toy$Person)) * 0.4 +

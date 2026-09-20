@@ -11,11 +11,13 @@ run_qc_pipeline(
   thresholds = NULL,
   rater_facet = NULL,
   include_bias = TRUE,
-  bias_results = NULL
+  bias_results = NULL,
+  separation_facets = NULL
 )
 }
 \arguments{
-\item{fit}{Output from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
+\item{fit}{Native output from \code{\link[=fit_mfrm]{fit_mfrm()}}. Imported measurement tables
+do not contain the response-level information required by this pipeline.}
 
 \item{diagnostics}{Output from \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}. Computed automatically if NULL.}
 
@@ -25,11 +27,17 @@ or \code{"lenient"}.}
 \item{thresholds}{Named list to override individual thresholds.}
 
 \item{rater_facet}{Character name of the rater facet for inter-rater check
-(auto-detected if NULL).}
+(detected from rater-like facet names if NULL; otherwise supply it explicitly).}
 
 \item{include_bias}{If \code{TRUE} and bias available in diagnostics, check DIF/bias.}
 
 \item{bias_results}{Optional pre-computed bias results from \code{\link[=estimate_bias]{estimate_bias()}}.}
+
+\item{separation_facets}{Character names of non-Person facets whose levels
+you intend to distinguish. Reliability/separation thresholds apply only to
+these facets. With the default \code{NULL}, these two checks are not requested;
+they do not affect the overall verdict. For example, use \code{"Criterion"}
+only when distinguishing criterion difficulties is a substantive goal.}
 }
 \value{
 Object of class \code{mfrm_qc_pipeline} with verdicts, overall status,
@@ -42,15 +50,33 @@ and DIF/bias into a single pass/warn/fail report.
 }
 \details{
 The pipeline evaluates 10 quality checks and assigns a verdict
-(Pass / Warn / Fail) to each.  The overall status is the most severe
-verdict across all checks.  Diagnostics are computed automatically via
+(Pass / Warn / Fail / Skip) to each. The overall status is the most severe
+verdict among checks marked \code{AffectsOverall}. Unrequested differentiation
+and bias checks, and inapplicable rater-agreement checks, are excluded.
+Missing information for an applicable check cannot produce Pass.
+Diagnostics are computed automatically via
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} if not supplied.
+
+All thresholds are screening rules, not universal statistical acceptance
+criteria. High rater separation indicates distinguishable rater measures,
+not high agreement; low separation may reflect similar rater severity.
+Select \code{separation_facets} only when differentiation is the intended target.
+A Pass does not establish model validity, adequate SEs, or anchor invariance.
 
 Reliability and separation are used here as QC signals. In \code{mfrmr},
 \code{Reliability} / \code{Separation} are model-based facet indices and
-\code{RealReliability} / \code{RealSeparation} provide more conservative lower bounds.
+\code{RealReliability} / \code{RealSeparation} use fit-inflated SEs. They are smaller
+or equal on the same levels; they are not statistical confidence bounds.
 For \code{MML}, these rely on model-based \code{ModelSE} values for non-person facets;
-for \code{JML}, they remain exploratory approximations.
+for \code{JML}, they remain exploratory approximations. Reliability and separation
+come from the same variance decomposition; they are not independent evidence.
+
+Category counts are sums of observation weights when weights are used.
+Threshold ordering compares adjacent numbered steps within each threshold
+family; missing steps or families require review. Equal estimates are
+nondecreasing within numerical tolerance. A binary scale has no adjacent
+threshold comparison, so its category screen evaluates counts only.
+These checks do not establish category adequacy or justify automatic merging.
 
 Three threshold presets are available via \code{threshold_profile}:\tabular{llll}{
    Aspect \tab strict \tab standard \tab lenient \cr
@@ -67,7 +93,7 @@ Three threshold presets are available via \code{threshold_profile}:\tabular{llll
 
 
 Individual thresholds can be overridden via the \code{thresholds} argument
-(a named list keyed by the internal threshold names shown above).
+(a named list using entries such as \code{global_fit_warn} or \code{reliability_pass}).
 
 For bounded \code{GPCM}, this pipeline is available as caveated operational
 triage over supported diagnostics. Its pass/warn/fail labels remain package
@@ -81,8 +107,8 @@ The 10 checks are:
 \enumerate{
 \item \strong{Convergence}: Did the model converge?
 \item \strong{Global fit}: Infit/Outfit MnSq within the current review band.
-\item \strong{Reliability}: Minimum non-person facet model reliability index.
-\item \strong{Separation}: Minimum non-person facet model separation index.
+\item \strong{Reliability}: Minimum index across explicitly selected differentiation facets.
+\item \strong{Separation}: Minimum index across those same selected facets.
 \item \strong{Element misfit}: Percentage of elements with Infit/Outfit
 outside the current review band.
 \item \strong{Unexpected responses}: Percentage of observations with
@@ -103,11 +129,12 @@ cross the screening threshold (if interaction results are available).
 \item \verb{$overall}: character string \code{"Pass"}, \code{"Warn"}, or \code{"Fail"}.
 \item \verb{$verdicts}: tibble with columns \code{Check}, \code{Verdict}, \code{Value}, and
 \code{Threshold} for each of the 10 checks.
-\item \verb{$details}: character vector of human-readable detail strings.
-\item \verb{$raw_details}: named list of per-check numeric details for
-programmatic access.
+\item \verb{$verdicts$Detail}: human-readable explanation of each assessment.
+\item \verb{$verdicts$AffectsOverall}: whether a check contributes to the overall result.
+\item \verb{$details}: named list of per-check numeric details for programmatic access.
 \item \verb{$recommendations}: character vector of actionable suggestions for
-checks that did not pass.
+checks that need review; suggestions do not prescribe deleting raters or
+collapsing categories automatically.
 \item \verb{$config}: records the threshold profile and effective thresholds.
 }
 }

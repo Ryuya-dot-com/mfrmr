@@ -1,6 +1,13 @@
 # Plot methods centered on fitted many-facet Rasch objects.
 
 .mfrm_fit_plot_readiness <- function(fit) {
+  if (inherits(fit, "mfrm_imported_fit")) {
+    .validate_imported_metric(fit)
+    return(list(status = "review_only", ready = FALSE,
+      detail = paste(fit$source$metric,
+        "Imported point estimates retain the source scale; import does not establish the model's suitability for inference."),
+      table = data.frame(Domain = "Source", Status = "imported_descriptive")))
+  }
   convergence <- mfrm_convergence_state(fit)
   stored <- as.data.frame(
     mfrmr_get_readiness_record(fit)$fit, stringsAsFactors = FALSE
@@ -259,6 +266,9 @@ step_index_from_label <- function(step_labels) {
 }
 
 build_step_curve_spec <- function(x) {
+  if (inherits(x, "mfrm_imported_fit")) {
+    stop("Imported absolute thresholds do not supply a native response-model contract. Use the source package for probability curves.", call. = FALSE)
+  }
   step_tbl <- x$steps
   if (is.null(step_tbl) || nrow(step_tbl) == 0 || !"Estimate" %in% names(step_tbl)) {
     stop("Step estimates are required for pathway/CCC plots.")
@@ -1462,8 +1472,13 @@ build_wright_map_data <- function(x,
   if (identical(plot_data$wright_style, "facets_style")) {
     settings <- plot_data$facets_style$settings
     footer_notes <- c(
-      sprintf("* = %s person(s); rows/logit = %d", settings$PersonsPerStar[1], settings$RowsPerLogit[1]),
-      "FACETS Table 6-style visual layout; estimates remain mfrmr estimates (not numerical equivalence).")
+      sprintf("* = %s person(s); rows/%s = %d", settings$PersonsPerStar[1],
+              if (is.null(plot_data$axis_label)) "logit" else "scale unit", settings$RowsPerLogit[1]),
+      if (is.null(plot_data$axis_label)) {
+        "FACETS Table 6-style visual layout; estimates remain mfrmr estimates (not numerical equivalence)."
+      } else {
+        "FACETS Table 6-style visual layout; estimates retain the source scale."
+      })
     if (isTRUE(show_ci)) footer_notes <- c(footer_notes,
       sprintf("Whiskers show %g%% mfrmr confidence intervals; triangles mark bounds beyond the displayed ruler.",
               round(100 * (plot_data$ci_level %||% 0.95))))
@@ -1500,7 +1515,9 @@ draw_wright_map <- function(plot_data,
     as.character(plot_data$wright_style %||% "native"),
     "facets_style"
   )
-  default_title <- if (isTRUE(facets_style)) {
+  default_title <- if (!is.null(plot_data$axis_label)) {
+    "Source person and item/design-cell estimates"
+  } else if (isTRUE(facets_style)) {
     "FACETS-style Wright map"
   } else {
     "Facet and step locations"
@@ -1577,7 +1594,7 @@ draw_wright_map <- function(plot_data,
     y = yr,
     type = "n",
     xlab = "Persons",
-    ylab = "Logit scale",
+    ylab = plot_data$axis_label %||% "Logit scale",
     main = "Persons",
     yaxt = "n"
   )
@@ -2888,9 +2905,10 @@ draw_step_plot <- function(step_tbl,
       grid = "#ececec"
     )
   )
-  x_idx <- step_index_from_label(step_tbl$Step)
-  ord <- order(x_idx)
-  step_tbl <- step_tbl[ord, , drop = FALSE]
+  step_tbl <- calc_step_order(step_tbl)
+  if (!nrow(step_tbl)) stop("No threshold estimates available.", call. = FALSE)
+  estimates <- ifelse(is.finite(step_tbl$Estimate), step_tbl$Estimate, NA_real_)
+  limits <- if (any(is.finite(estimates))) range(estimates, finite = TRUE) else c(-1, 1)
   old_mar <- graphics::par("mar")
   on.exit(graphics::par(mar = old_mar), add = TRUE)
   mar <- old_mar
@@ -2898,8 +2916,9 @@ draw_step_plot <- function(step_tbl,
   graphics::par(mar = mar)
   graphics::plot(
     x = seq_len(nrow(step_tbl)),
-    y = step_tbl$Estimate,
-    type = "b",
+    y = estimates,
+    ylim = limits,
+    type = "p",
     pch = 16,
     xaxt = "n",
     xlab = "",
@@ -2907,10 +2926,19 @@ draw_step_plot <- function(step_tbl,
     main = title,
     col = pal["step_line"]
   )
-  graphics::abline(h = pretty(step_tbl$Estimate, n = 5), col = pal["grid"], lty = 1)
+  graphics::abline(h = pretty(limits, n = 5), col = pal["grid"], lty = 1)
+  ends <- which(!is.na(step_tbl$Ordered))
+  if (length(ends)) {
+    graphics::segments(ends - 1L, estimates[ends - 1L], ends, estimates[ends], col = pal["step_line"])
+  }
+  if (anyNA(estimates)) {
+    graphics::text(which(is.na(estimates)), mean(limits), "Unavailable", cex = 0.7)
+  }
+  labels <- if (isTRUE(all(step_tbl$StepFacet == "Common"))) as.character(step_tbl$Step) else
+    paste(step_tbl$StepFacet, step_tbl$Step, sep = ": ")
   draw_rotated_x_labels(
     at = seq_len(nrow(step_tbl)),
-    labels = truncate_axis_label(step_tbl$Step, width = 16L),
+    labels = truncate_axis_label(labels, width = 24L),
     srt = label_angle,
     cex = 0.84,
     line_offset = 0.085
@@ -3301,13 +3329,24 @@ plot.mfrm_fit <- function(x,
   if (!inherits(x, "mfrm_fit")) {
     stop("`x` must be an mfrm_fit object from fit_mfrm().")
   }
+  if (inherits(x, "mfrm_imported_fit")) {
+    .validate_imported_metric(x)
+    if (!is.null(type) && !tolower(type[1L]) %in% "wright") {
+      stop("Imported fits support point-only Wright maps. Inspect source fit statistics in the imported tables; use the source package for model-dependent displays.", call. = FALSE)
+    }
+    if (isTRUE(show_ci)) {
+      stop("Source uncertainty estimates do not support a shared confidence-interval calculation. Inspect source-package intervals; imported Wright maps show point estimates only.", call. = FALSE)
+    }
+    show_ci <- FALSE
+  }
   for (arg in c("show_title", "show_notes")) {
     value <- get(arg)
     if (!is.logical(value) || length(value) != 1L || is.na(value)) {
       stop(sprintf("`%s` must be TRUE or FALSE.", arg), call. = FALSE)
     }
   }
-  show_ci_auto <- missing(show_ci) || is.null(show_ci)
+  show_ci_auto <- (missing(show_ci) || is.null(show_ci)) &&
+    !inherits(x, "mfrm_imported_fit")
   top_n <- suppressWarnings(as.numeric(top_n[1]))
   if (length(top_n) != 1L || is.na(top_n) || top_n <= 0) {
     stop("`top_n` must be a positive number or `Inf`.", call. = FALSE)
@@ -3352,6 +3391,12 @@ plot.mfrm_fit <- function(x,
     duplicated_named <- nzchar(data_names) & duplicated(data_names, fromLast = TRUE)
     data <- data[!duplicated_named]
     data$scale_contract <- mfrm_fit_scale_contract(x)
+    if (inherits(x, "mfrm_imported_fit")) {
+      data$axis_label <- "Source ability scale"
+      data$subtitle <- "Source person and item/design-cell estimates; point display only"
+      data$reference_lines <- new_reference_lines("h", 0, "Source scale zero", "dashed", "reference")
+      data$uncertainty_display <- "source_points_only"
+    }
     out <- new_mfrm_plot_data(name, data)
     out <- .mfrm_attach_plot_readiness(out, fit_plot_readiness)
     out$data$display <- list(show_title = show_title, show_notes = show_notes)
@@ -3385,7 +3430,8 @@ plot.mfrm_fit <- function(x,
     )
   }
 
-  se_tbl_ci <- if (isTRUE(show_ci) || !is.null(diagnostics)) {
+  se_tbl_ci <- if (!inherits(x, "mfrm_imported_fit") &&
+                   (isTRUE(show_ci) || !is.null(diagnostics))) {
     compute_se_for_plot(x, ci_level = ci_level, diagnostics = diagnostics)
   } else {
     NULL
@@ -3528,13 +3574,13 @@ plot.mfrm_fit <- function(x,
       )
     }
     legend_label <- c("Original estimate", "Shrunk estimate",
-                      "Shrinkage direction", "Sum-to-zero (reference)")
+                      "Shrinkage direction", "Zero shrinkage target")
     legend_role <- c("location", "location", "arrow", "reference")
     legend_aesthetic <- c("point", "point", "arrow", "line")
     legend_value <- c(style$accent_primary, style$accent_tertiary,
                       style$neutral, style$neutral)
     if (isTRUE(show_ci)) {
-      legend_label <- c(legend_label, sprintf("%g%% CI whisker",
+      legend_label <- c(legend_label, sprintf("%g%% plug-in band",
                                               round(100 * ci_level)))
       legend_role <- c(legend_role, "interval")
       legend_aesthetic <- c(legend_aesthetic, "line")
@@ -3544,13 +3590,11 @@ plot.mfrm_fit <- function(x,
       data = data_list$table,
       shrinkage_report = data_list$report,
       mode = data_list$mode,
+      interpretation = shrinkage_interpretation(),
       show_ci = isTRUE(show_ci),
       ci_level = if (isTRUE(show_ci)) ci_level else NA_real_,
       title = title %||% "Empirical-Bayes shrinkage",
-      subtitle = sprintf(
-        "Original (filled) vs shrunk (open) estimates; mode = %s",
-        data_list$mode
-      ),
+      subtitle = "Original and shrunk estimates; conditional adjustment only",
       preset = style$name,
       legend = new_plot_legend(
         label = legend_label,
@@ -3559,7 +3603,7 @@ plot.mfrm_fit <- function(x,
         value = legend_value
       ),
       reference_lines = new_reference_lines(
-        "v", 0, "Sum-to-zero reference", "dashed", "reference"
+        "v", 0, "Zero shrinkage target", "dashed", "reference"
       )
     ))
     if (isTRUE(draw)) {

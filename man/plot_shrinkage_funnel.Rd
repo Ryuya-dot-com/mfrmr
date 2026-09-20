@@ -24,11 +24,12 @@ shrinkage columns present).}
 
 \item{preset}{Visual preset.}
 
-\item{show_ci}{Logical. When \code{TRUE}, draw approximate confidence-interval
-whiskers for raw and shrunken estimates when \code{SE} / \code{ShrunkSE} evidence is
-available.}
+\item{show_ci}{Logical. When \code{TRUE}, draw descriptive normal bands from
+raw and plug-in shrunken SEs. These omit prior-variance uncertainty and
+cross-level covariance; zero width after full pooling is not perfect precision.}
 
-\item{ci_level}{Confidence level used when \code{show_ci = TRUE}; default 0.95.}
+\item{ci_level}{Nominal normal-band level when \code{show_ci = TRUE}; default
+0.95. This does not assert repeated-sampling coverage.}
 
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }

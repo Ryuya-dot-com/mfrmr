@@ -149,6 +149,10 @@ test_that("plot_dif_summary accepts mfrm_dff output", {
   expect_true(all(c("Pair", "Effect", "SE", "Classification", "Color") %in%
                     names(p$data$data)))
   expect_gte(nrow(p$data$data), 1L)
+  printed <- capture.output(print(p))
+  expect_false(any(grepl("mfrm_plot_data>|gpcm_boundary|ClassificationSystem|list [(].*slots", printed)))
+  expect_true(any(grepl("do not isolate differential functioning", printed)))
+
 })
 
 test_that("plot_dif_summary rejects non-DIF inputs", {
@@ -167,19 +171,21 @@ test_that("plot_dif_summary validates top_n", {
   expect_error(plot_dif_summary(dff, top_n = Inf, draw = FALSE), "`top_n`")
 })
 
-test_that("plot_dif_summary supports CI and threshold guides", {
+test_that("plot_dif_summary retains magnitude guides without residual confidence intervals", {
   dff <- suppressWarnings(suppressMessages(
     analyze_dff(.fit, diagnostics = .diag,
                 facet = "Rater", group = "Group",
                 data = .toy, method = "residual")
   ))
-  p <- plot_dif_summary(dff, draw = FALSE, ci_level = 0.90,
+  p <- plot_dif_summary(dff, draw = FALSE,
                         effect_thresholds = c(screen = 0.5),
                         effect_axis_label = "Screening contrast")
 
   expect_true(all(c("CI_Lower", "CI_Upper", "ClassificationSystem") %in%
                     names(p$data$data)))
-  expect_equal(p$data$settings$ci_level, 0.90)
+  expect_null(p$data$settings$ci_level)
+  expect_true(all(is.na(p$data$data$CI_Lower)))
+  expect_error(plot_dif_summary(dff, ci_level = .90, draw = FALSE), "Confidence intervals are unavailable")
   expect_equal(unname(p$data$settings$effect_thresholds), 0.5)
   expect_true(any(p$data$reference_lines$role == "threshold"))
   expect_true(is.data.frame(p$data$interpretation_guide))

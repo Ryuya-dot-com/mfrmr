@@ -51,7 +51,10 @@ from posterior-integrated expected exact and adjacent agreement.
 The \code{"exact"} view ranks level pairs by the absolute exact-agreement
 standardized residual. The \code{"adjacent"} view uses the adjacent-agreement
 standardized residual instead. Both are exploratory corroboration screens for
-strict marginal-fit flags.
+strict marginal-fit flags. Selection uses all pairs within the requested
+facet, not a preselected list for the other metric. \code{retention} counts
+available/unavailable metric values, while \code{full_table} retains all candidates.
+Grey bars/labels indicate unavailable values or classifications.
 }
 \section{Interpreting output}{
 
@@ -60,7 +63,9 @@ strict marginal-fit flags.
 agreement for that level pair.
 \item Negative bars mean the observed agreement fell below the posterior-expected
 agreement.
-\item Red bars indicate the pair exceeded the current strict-warning threshold.
+\item Red bars indicate an available standardized-residual or agreement-gap
+rule was crossed. A missing companion rule does not cancel a known crossing.
+These are descriptive cutoffs without calibrated error rates.
 }
 }
 

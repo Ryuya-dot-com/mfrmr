@@ -184,6 +184,13 @@ More quadrature points check numerical approximation under the same prior;
 they do not establish that this prior matches the new population.
 \item \code{SD} is posterior uncertainty under the fitted scoring basis used for
 scoring.
+\item Estimate tables retain \code{IntervalLevel} without rounding, the prior form,
+per-Person \code{PriorMean} and \code{PriorSD}, calibration method, interval method
+and uncertainty interpretation. \code{WeightedLikelihood} indicates whether
+any response contribution for that Person was raised to a non-unit weight.
+Such weights do not by themselves establish equivalent independent ratings
+or frequentist coverage. Draw tables retain their discrete-grid basis and
+the same prior and calibration interpretation.
 \item \code{draws}, when requested, contains approximate plausible values on the
 fitted quadrature grid.
 \item \code{population_review}, when present, records whether scored persons were
@@ -195,6 +202,13 @@ between adaptive orders, and computation status/reasons. \code{summary()} also
 supplies a compact \code{quadrature_overview}. A \code{computed} status does not
 certify accuracy; inspect the differences and any unavailable rows.
 }
+
+Re-summarize older results to recover recorded interval settings and readable
+notes without changing numerical scores. Prior means/SDs for older
+estimated-population results may be unavailable because those parameters
+were not retained in the result. Re-score with the existing fitted model
+to retain them; no calibration refit is needed. An unrecorded interval
+algorithm is labelled unavailable, not assumed to use continuous quantiles.
 }
 
 \section{What this does not justify}{

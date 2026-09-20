@@ -110,7 +110,7 @@ local({
     expect_error(mfrm_results(fits$JML_RSM, diagnostics = incomplete),
                  "fit/diagnostics mismatch")
     stale <- diagnostics$JML_RSM
-    stale$fit_readiness$InferenceReady <- FALSE
+    stale$fit_readiness$InferenceReady <- !stale$fit_readiness$InferenceReady
     expect_error(precision_review_report(fits$JML_RSM, stale),
                  "fit/diagnostics mismatch")
     legacy <- diagnostics$JML_RSM

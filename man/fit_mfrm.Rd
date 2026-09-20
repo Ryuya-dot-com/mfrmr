@@ -697,6 +697,18 @@ structural parameters: SEs reported under JML are observation-table
 approximations (\eqn{1/\sqrt{\sum \mathrm{Var}(X_{pi})}}) and are
 marked as exploratory in the diagnostics output.
 
+\code{fit_mfrm()} does not replace extreme response scores before JML fitting.
+For a freely estimated Person with all-minimum or all-maximum responses,
+the primary estimate is \code{-Inf} or \code{Inf}; a finite optimizer value is only
+a computational trace. Fixed Person anchors retain their supplied values,
+and coupled constraints require their own boundary review. A finite
+display from \code{fair_average_table(..., xtreme = ...)}, or placement at the
+end of a Wright map, does not change the fitted model or correct JML bias.
+When comparing software, report response-score adjustment and post-fit
+bias correction separately, including how the correction defines exposure
+when responses are missing or unequal across Persons. Matching the label
+"JML" alone does not establish matching estimates or uncertainty.
+
 Practical recommendation:
 \itemize{
 \item For manuscript or operational reporting, choose the estimator from the

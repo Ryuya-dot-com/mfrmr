@@ -157,7 +157,7 @@ test_that("fair_average_table() no longer hard-stops on GPCM fits", {
     "AdjustedAverageCI_Upper", "AdjustedAverageSEStatus"
   ) %in% names(s$preview)))
   expect_true(any(is.finite(s$preview$AdjustedAverageSE)))
-  expect_output(print(s), "FairSEAvailableRows")
+  expect_output(print(s), "Rows with SE")
 
   p <- plot_fair_average(fit, show_ci = TRUE, draw = FALSE)
   expect_true(all(c("CI_Lower", "CI_Upper", "CI_Method") %in% names(p$data$data)))
@@ -174,7 +174,9 @@ test_that("fair_average_table() no longer hard-stops on GPCM fits", {
   zs <- summary(zero)
   expect_equal(zs$summary$FairSEAvailableRows, sum(finite))
   expect_equal(zs$summary$FairMetric, "FairZ")
-  expect_output(print(zs), "FairCIEligible")
+  printed <- paste(capture.output(print(zs)), collapse = " ")
+  expect_false(grepl("FairCIEligible|FairSEStatus|FairSEMethod", printed))
+  expect_match(printed, "should not be used as confidence intervals for decisions", fixed = TRUE)
   tmp <- tempfile("fair-contract-")
   dir.create(tmp)
   on.exit(unlink(tmp, recursive = TRUE), add = TRUE)

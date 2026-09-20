@@ -177,8 +177,10 @@ nesting boundary; unsupported relations remain unsupported.
 \item PCM is the unit-slope response-kernel reduction of the bounded GPCM when
 both use the same explicit step owner. Nevertheless, the current automatic
 nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
-same-basis MML information criteria plus \code{\link[=build_weighting_review]{build_weighting_review()}} and
-inspect the recorded \code{PCM_in_GPCM_ic_only} relation instead.
+\code{\link[=build_weighting_review]{build_weighting_review()}} for descriptive score and weighting comparisons.
+Free-slope GPCM fits currently lack the inference checks required for IC
+ranking, even under MML. Raw criteria, when available, are diagnostic only;
+\code{PCM_in_GPCM_ic_only} records a structural relation, not permission to rank.
 \item Do not compare models fit to different datasets, different score codings,
 or materially different constraint systems as if they were commensurate.
 \item At large Person counts, a small systematic likelihood gain can dominate an
@@ -238,8 +240,9 @@ same prepared rows, explicit step owner, constraints, and MML quadrature
 setting. Use at least 31 common quadrature points for selectable ICs.
 \item Compare with \code{compare_mfrm(fit_pcm, fit_gpcm)} and start by checking
 \code{comparison$table$ICComparable}.
-\item Inspect \code{summary(comparison)} for AIC/BIC/SABIC diagnostics and, when
-appropriate, an LRT. PCM-versus-GPCM LRT is currently withheld.
+\item Inspect \code{summary(comparison)} for AIC/BIC/SABIC diagnostics and the reasons
+for withholding ranking or tests. Free-slope GPCM rankings and
+PCM-versus-GPCM LRTs are currently withheld.
 \item Use \code{build_weighting_review(fit_pcm, fit_gpcm)} to inspect which selected
 facet levels and information shares were reweighted by the slopes.
 }

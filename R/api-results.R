@@ -453,6 +453,9 @@ mfrm_results_mapping_table <- function(mapping) {
 }
 
 mfrm_results_resolve_input <- function(x, compute = c("auto", "never")) {
+  if (inherits(x, "mfrm_imported_fit")) {
+    stop("Comprehensive mfrmr reports require a native fit. Use summary(imported_fit) for source-scale tables or plot(imported_fit) for a point-only Wright map.", call. = FALSE)
+  }
   compute <- match.arg(tolower(as.character(compute[1])), c("auto", "never"))
   if (inherits(x, "mfrm_facets_run")) {
     return(list(
@@ -627,6 +630,7 @@ mfrm_results_validate_diagnostics_identity <- function(fit, diagnostics,
       call. = FALSE
     )
   }
+  validate_diagnostics_precision(diagnostics)
   if (inherits(fit, "mfrm_imported_fit") ||
       inherits(diagnostics, "mfrm_imported_diagnostics")) {
     matched <- inherits(fit, "mfrm_imported_fit") &&
@@ -6020,6 +6024,8 @@ export_mfrm_results <- function(x,
 #'   be inferred unambiguously from common names such as `Person` and `Score`;
 #'   remaining measurement columns must use recognizable facet-role names.
 #'   Ambiguous extra columns are rejected rather than guessed as facets.
+#'   Imported source-package fits use their own `summary()` and point-only
+#'   Wright map; comprehensive reports require a native mfrmr fit.
 #' @param include Result sections or purpose presets to include. Purpose
 #'   presets are `"standard"`, `"publication"`, `"validation"`, `"facets"`,
 #'   `"bias"`, `"misfit_review"`, `"linking"`, `"network"`,

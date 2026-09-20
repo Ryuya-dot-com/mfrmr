@@ -508,6 +508,18 @@
 #' approximations (\eqn{1/\sqrt{\sum \mathrm{Var}(X_{pi})}}) and are
 #' marked as exploratory in the diagnostics output.
 #'
+#' `fit_mfrm()` does not replace extreme response scores before JML fitting.
+#' For a freely estimated Person with all-minimum or all-maximum responses,
+#' the primary estimate is `-Inf` or `Inf`; a finite optimizer value is only
+#' a computational trace. Fixed Person anchors retain their supplied values,
+#' and coupled constraints require their own boundary review. A finite
+#' display from `fair_average_table(..., xtreme = ...)`, or placement at the
+#' end of a Wright map, does not change the fitted model or correct JML bias.
+#' When comparing software, report response-score adjustment and post-fit
+#' bias correction separately, including how the correction defines exposure
+#' when responses are missing or unequal across Persons. Matching the label
+#' "JML" alone does not establish matching estimates or uncertainty.
+#'
 #' Practical recommendation:
 #'
 #' - For manuscript or operational reporting, choose the estimator from the
@@ -4327,6 +4339,27 @@ make_anchor_table <- function(fit,
 #' "both"`, the output includes a `diagnostic_basis` guide so downstream
 #' tables and summaries can distinguish these targets.
 #'
+#' Marginal expected counts integrate over each Person's posterior conditioned
+#' on the same observed responses, holding fitted calibration fixed. They are
+#' not expectations from an independent replication or a prior-only population
+#' margin. First-order residual scales use `sum(w^2 * p * (1-p))`; pairwise
+#' scales use the analogous formula with products of row weights. These scales
+#' omit cross-response/opportunity covariance and calibration-parameter
+#' uncertainty. They are descriptive screens, not calibrated residual tests.
+#'
+#' Missing/invalid contributing probabilities, scores or weights withhold the
+#' affected complete-scope aggregate rather than selecting usable rows. Missing
+#' standardized residuals and flags remain `NA`. A known cutoff crossing stays
+#' flagged when a companion rule is unavailable. `marginal_fit$coverage` records
+#' classified/unclassified cells, groups and level pairs. Row/opportunity counts
+#' remain visible; zero-weight opportunities contribute no information.
+#' Available maxima are accompanied by classification/residual counts; they
+#' are not maxima over unavailable values. RMSDs require the complete scope.
+#' In PCM and GPCM, step-group summaries retain the declared `step_facet`.
+#' Regenerate older marginal diagnostics and downstream summaries/plots/exports
+#' from the existing fit and original diagnostic settings; no model refit is
+#' required.
+#'
 #' Choosing `diagnostic_mode`:
 #' - `"legacy"`: use when continuity with historical residual-based workflows is
 #'   the priority.
@@ -4441,12 +4474,29 @@ make_anchor_table <- function(fit,
 #'
 #' `SE` is kept as a compatibility alias for `ModelSE`. `RealSE` is a
 #' fit-adjusted companion defined as `ModelSE * sqrt(max(Infit, 1))`.
-#' Reliability tables report model and fit-adjusted bounds from observed
-#' variance, error variance, and true variance; `JML` entries should still be
-#' treated as exploratory. Separation, strata, and reliability follow the
+#' Reliability tables report model and fit-adjusted indices from observed
+#' variance minus mean squared SE, truncated at zero. Fit-adjusted values are
+#' not confidence bounds; `JML` entries remain exploratory. Separation, strata, and reliability follow the
 #' Wright & Masters (1982) conventions:
 #' \eqn{G = \mathrm{TrueSD}/\mathrm{RMSE}},
 #' \eqn{R = G^2 / (1 + G^2)}, and \eqn{H = (4G + 1) / 3}.
+#'
+#' Tables record finite-estimate counts and the available SEs on those same
+#' levels. Non-finite estimates are excluded from the spread and SE summaries.
+#' If any finite estimate lacks a valid SE, reliability, separation, strata and
+#' error-adjusted spread are unavailable, rather than combining different sets
+#' of levels. Excluded levels or incomplete uncertainty prevent a facet summary
+#' from supporting formal reporting. For EAP Persons, this separation-based
+#' index is distinct from posterior-variance EAP reliability. High rater
+#' separation means distinguishable rater measures, not high rater agreement.
+#'
+#' Facet SEs from a regularized information matrix or an observation-table
+#' fallback remain diagnostic approximations. They are labelled explicitly and
+#' cannot authorize ordinary confidence-interval reporting. Numerical convergence
+#' is reviewed separately from support for inference; switching from JML to MML
+#' does not by itself establish valid SEs or intervals. Recompute older diagnostic
+#' objects with `diagnose_mfrm(fit)` before reporting; the existing fit can be used
+#' without refitting the model.
 #'
 #' @section Typical workflow:
 #' 1. Start with `diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")`.
@@ -4487,7 +4537,7 @@ make_anchor_table <- function(fit,
 #'   `fit_readiness_parameters`: the source fit's versioned readiness decision;
 #'   diagnostic computation does not override a blocked or review-only fit
 #' - `marginal_fit`: optional strict marginal-fit companion based on
-#'   posterior-expected first-order category counts
+#'   posterior-expected first-order category counts, with classification coverage
 #' - `residual_pca_overall`: optional overall PCA object
 #' - `residual_pca_by_facet`: optional facet PCA objects
 #' - `replay_inputs`: diagnostic settings retained for reproducible export,
@@ -4556,6 +4606,9 @@ diagnose_mfrm <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
          "Got: ", paste(class(fit), collapse = "/"), ".", call. = FALSE)
+  }
+  if (inherits(fit, "mfrm_imported_fit")) {
+    stop("Native response-level diagnostics require a fit_mfrm() result. For imported fit statistics, re-import the source fit with compute_fit = TRUE.", call. = FALSE)
   }
   fit_df_method <- match_fit_df_method(fit_df_method)
   diagnostic_mode <- match.arg(diagnostic_mode)
@@ -4934,8 +4987,10 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #' - PCM is the unit-slope response-kernel reduction of the bounded GPCM when
 #'   both use the same explicit step owner. Nevertheless, the current automatic
 #'   nesting review does not authorize a PCM-versus-GPCM chi-square LRT. Use
-#'   same-basis MML information criteria plus [build_weighting_review()] and
-#'   inspect the recorded `PCM_in_GPCM_ic_only` relation instead.
+#'   [build_weighting_review()] for descriptive score and weighting comparisons.
+#'   Free-slope GPCM fits currently lack the inference checks required for IC
+#'   ranking, even under MML. Raw criteria, when available, are diagnostic only;
+#'   `PCM_in_GPCM_ic_only` records a structural relation, not permission to rank.
 #' - Do not compare models fit to different datasets, different score codings,
 #'   or materially different constraint systems as if they were commensurate.
 #' - At large Person counts, a small systematic likelihood gain can dominate an
@@ -4981,8 +5036,9 @@ mfrm_extract_fit_ic_contract <- function(fit, tolerance = 1e-10) {
 #'    setting. Use at least 31 common quadrature points for selectable ICs.
 #' 2. Compare with `compare_mfrm(fit_pcm, fit_gpcm)` and start by checking
 #'    `comparison$table$ICComparable`.
-#' 3. Inspect `summary(comparison)` for AIC/BIC/SABIC diagnostics and, when
-#'    appropriate, an LRT. PCM-versus-GPCM LRT is currently withheld.
+#' 3. Inspect `summary(comparison)` for AIC/BIC/SABIC diagnostics and the reasons
+#'    for withholding ranking or tests. Free-slope GPCM rankings and
+#'    PCM-versus-GPCM LRTs are currently withheld.
 #' 4. Use `build_weighting_review(fit_pcm, fit_gpcm)` to inspect which selected
 #'    facet levels and information shares were reweighted by the slopes.
 #'
@@ -5167,11 +5223,15 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     f <- fits[[i]]
     convergence <- mfrm_convergence_state(f)
     contract <- mfrm_extract_fit_ic_contract(f)
+    readiness <- mfrmr_get_readiness_record(f)$fit
     tibble::add_column(
       contract,
       Label = labels[i],
       Converged = convergence$code_converged,
       InferenceReady = convergence$inference_ready,
+      InferenceReview = if (convergence$inference_ready) "" else
+        as.character(mfrm_fit_decision_summary(readiness)$Why[1]),
+      ReadinessReasonCodes = as.character(readiness$ReasonCodes[1]),
       ConvergenceSeverity = convergence$severity,
       .before = 1L
     )
@@ -5193,10 +5253,7 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
   inference_review_reason <- if (!all_converged) {
     pending <- which(is.na(conv_vals) | !as.logical(conv_vals))
     details <- vapply(pending, function(i) {
-      reason <- mfrmr_get_readiness_record(fits[[i]])$fit$ReasonCodes
-      reason <- as.character(reason[1L] %||% NA_character_)
-      if (is.na(reason) || !nzchar(reason)) reason <- "reason_not_recorded"
-      paste0(labels[i], " [", reason, "]")
+      paste0(labels[i], ": ", sub("[.]$", "", tbl$InferenceReview[i]))
     }, character(1))
     paste0("Inference readiness is not satisfied: ",
            paste(details, collapse = "; "), ".")
@@ -5274,7 +5331,7 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     }
     if (!all_current_contract) {
       warning(
-        "At least one fit has a legacy, unknown, or incomplete information-criterion contract. ",
+        "At least one fit lacks current, complete information for comparing its information criteria. ",
         "LegacyAIC/LegacyBIC remain descriptive, but canonical ranking was suppressed; ",
         "refit under the current package before comparison.",
         call. = FALSE
@@ -5289,19 +5346,16 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
     }
     if (all_mml && all_current_contract && !all_ic_eligible) {
       warning(
-        "At least one MML fit is not eligible for the common information-criterion panel ",
-        "(`ICStatus`: ", paste(unique(tbl$ICStatus), collapse = ", "),
-        "). Non-unit observation weights and invalid likelihood contracts fail closed.",
+        "At least one MML fit cannot be ranked by information criteria. ",
+        "Check for non-unit observation weights or incomplete likelihood information.",
         call. = FALSE
       )
     }
     if (all_mml && all_current_contract && all_ic_eligible &&
         !all_ic_selectable) {
       warning(
-        "Information-criterion ranking is screening/review-only at the supplied ",
-        "quadrature tier(s) (`ICIntegrationTier`: ",
-        paste(unique(tbl$ICIntegrationTier), collapse = ", "),
-        "). Raw criteria remain visible, but deltas, weights, preferences, and ",
+        "Information-criterion ranking is unavailable at the supplied ",
+        "quadrature resolution. Raw criteria remain visible, but deltas, weights, preferences, and ",
         "LRT are suppressed below q = 31. Refit every candidate with a common ",
         "q >= 31 grid and check a denser grid when the decision is close.",
         call. = FALSE
@@ -5384,8 +5438,8 @@ compare_mfrm <- function(..., labels = NULL, warn_constraints = TRUE, nested = F
       lrt_status <- "not_computed"
       lrt_reason <- paste(
         "Not all comparison requirements are satisfied: formal MML likelihood basis,",
-        "current selectable IC contract, common observation set and integration identity,",
-        "and inference readiness."
+        "verified information criteria, common response data, constraints and",
+        "integration settings, and adequate support for inference."
       )
       if (!all_converged) lrt_reason <- paste(lrt_reason, inference_review_reason)
       warning(
@@ -5555,27 +5609,41 @@ print.summary.mfrm_comparison <- function(x, ...) {
   }
   display_cols <- c(
     "Label", "Model", "Method", "Persons", "Npar", "LogLik",
-    "AIC", "BIC", "SABIC", "Delta_AIC", "AkaikeWeight",
-    "Delta_BIC", "BICWeight", "Delta_SABIC", "SABICWeight",
-    "ICStatus", "ICIntegrationTier", "ICSelectable", "ICComparable",
-    "SABICComparable",
-    "InferenceReady"
+    "AIC", "BIC", "SABIC"
   )
-  if (any(!is.na(tbl$ICEligible) & !tbl$ICEligible) ||
-      any(tbl$ICContractState != "current", na.rm = TRUE)) {
+  if (isTRUE(x$comparison_basis$ic_comparable)) {
     display_cols <- c(
-      display_cols,
-      "WeightPolicy", "LegacyAIC", "LegacyBIC", "ICContractState",
-      "StoredICConsistent"
+      display_cols, "Delta_AIC", "AkaikeWeight", "Delta_BIC", "BICWeight",
+      "Delta_SABIC", "SABICWeight"
     )
   }
   display_cols <- intersect(display_cols, names(fmt_tbl))
   print(fmt_tbl[, display_cols, drop = FALSE], row.names = FALSE)
-  cat("  Full formula, sample-size, integration, and stored-value verification fields are in `$table`.\n")
+  print_wrapped_line("Full statistics, eligibility and numerical settings remain in `$table`.")
 
   if (!isTRUE(x$comparison_basis$ic_comparable)) {
-    cat("\nInformation-criterion ranking was suppressed because the models do not share\n")
-    cat("one current, selectable, verified MML likelihood, data, constraint, integration, and readiness basis.\n")
+    cat("\nInformation-criterion ranking is unavailable. Displayed criteria are descriptive only.\n")
+    reasons <- c(
+      all_mml = "Ranking requires MML fits; JML criteria are descriptive only.",
+      same_data = "Models must use the same response data.",
+      same_constraint_basis = "Models must use compatible score coding and constraints.",
+      all_current_contract = "Stored comparison information is incomplete or outdated; refit before comparing.",
+      all_stored_ic_consistent = "Stored criteria do not match the fitted values or numerical settings.",
+      all_ic_eligible = "One or more likelihoods are ineligible, for example because of non-unit observation weights.",
+      all_ic_selectable = "One or more fits lack eligible information criteria or sufficient quadrature resolution.",
+      same_integration_evaluation = "Models must use the same integration settings.",
+      all_inference_ready = "One or more models lack the checks required for statistical inference."
+    )
+    for (field in names(reasons)) {
+      if (field %in% c("all_ic_eligible", "all_ic_selectable") &&
+          !isTRUE(x$comparison_basis$all_mml)) next
+      if (identical(x$comparison_basis[[field]], FALSE)) print_wrapped_line(reasons[[field]])
+    }
+    if ("InferenceReview" %in% names(tbl)) {
+      for (i in which(!is.na(tbl$InferenceReview) & nzchar(tbl$InferenceReview))) {
+        print_wrapped_line(paste0(tbl$Label[i], ": ", tbl$InferenceReview[i]))
+      }
+    }
   } else if (!isTRUE(x$comparison_basis$sabic_comparable)) {
     cat("\nSABIC is displayed for sensitivity only; automatic SABIC selection is disabled\n")
     cat("at 22 or fewer Persons.\n")
@@ -5591,8 +5659,9 @@ print.summary.mfrm_comparison <- function(x, ...) {
     cat("\nLikelihood-ratio test was not reported.\n")
     if (!is.null(x$comparison_basis$lrt_status) &&
         !is.null(x$comparison_basis$lrt_reason)) {
-      cat("  LRT status:", x$comparison_basis$lrt_status, "\n")
-      cat("  Reason:", x$comparison_basis$lrt_reason, "\n")
+      if (nrow(tbl) != 2L || isTRUE(x$comparison_basis$ic_comparable)) {
+        print_wrapped_line(paste0("Reason: ", x$comparison_basis$lrt_reason))
+      }
     }
     review <- x$comparison_basis$nesting_review %||% list()
     if (!is.null(review$reason) && nzchar(review$reason)) {

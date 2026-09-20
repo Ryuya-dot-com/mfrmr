@@ -51,6 +51,10 @@ package's assignment/co-observation network: unlike the score-relation
 networks returned by \code{\link[=rater_network_analysis]{rater_network_analysis()}} and
 \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}, it can expose disconnected measurement
 subsets relevant to common-scale interpretation.
+\code{SourceSubsets}, \code{RetainedSubsets} and \code{ScopeComplete} record whether subset
+filters retained the full observed design. Connectedness of selected subsets
+cannot be generalized to omitted subsets. Recreate older design reviews
+from the existing fit and matching diagnostics to record this coverage.
 \code{plot(net, type = "centrality")}, \code{plot(net, type = "facet_summary")}, and
 \code{plot(net, type = "network")} provide immediate visual checks; use
 \code{draw = FALSE} to extract reusable plot data.

@@ -606,25 +606,6 @@ test_that("fit_mfrm works with MML method", {
 })
 
 # ============================================================================
-# ensure_positive_definite
-# ============================================================================
-
-test_that("ensure_positive_definite handles already positive definite matrix", {
-  epd <- mfrmr:::ensure_positive_definite
-  mat <- diag(3)
-  result <- epd(mat)
-  expect_equal(result, mat)
-})
-
-test_that("ensure_positive_definite attempts smoothing for non-PD matrix", {
-  epd <- mfrmr:::ensure_positive_definite
-  # Create a non-positive-definite matrix
-  mat <- matrix(c(1, 2, 2, 1), nrow = 2)
-  result <- epd(mat)
-  expect_true(is.matrix(result))
-})
-
-# ============================================================================
 # weighted_mean_safe
 # ============================================================================
 

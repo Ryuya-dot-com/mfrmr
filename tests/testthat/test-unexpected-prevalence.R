@@ -52,4 +52,19 @@ test_that("unexpected-response prevalence is independent of the display limit", 
   expect_equal(nrow(none$table), 0L)
   expect_equal(none$summary$UnexpectedN, 0L)
   expect_equal(none$summary$UnexpectedPercent, 0)
+
+  diagnostics$obs$StdResidual[1] <- NA_real_
+  partial <- unexpected_after_bias_table(fit, bias, diagnostics, prob_max = 0)
+  expect_equal(partial$summary$BaselineUnavailableObservations, 1)
+  expect_equal(partial$summary$UnavailableObservations, 0)
+  expect_true(is.na(partial$summary$ReducedBy))
+  expect_true(is.na(partial$summary$ReducedPercent))
+  expect_error(plot(partial, type = "comparison", draw = FALSE), "some responses could not be classified")
+  legacy <- preview
+  legacy$summary$UnavailableObservations <- NULL
+  expect_error(summary(legacy), "Recreate this unexpected-response result")
+  expect_error(plot(legacy, draw = FALSE), "Recreate this unexpected-response result")
+  legacy_summary <- summary(preview)
+  legacy_summary$summary$UnavailableObservations <- NULL
+  expect_error(print(legacy_summary), "Recreate this unexpected-response result")
 })

@@ -458,6 +458,8 @@ plot_facet_equivalence <- function(x,
     grand_mean = suppressWarnings(as.numeric(summary_tbl$GrandMean[1] %||% NA_real_)),
     equivalence_bound = suppressWarnings(as.numeric(settings$equivalence_bound %||% summary_tbl$EquivalenceBound[1] %||% NA_real_)),
     type = type,
+    title = paste0(as.character(settings$facet), ": deviation from facet mean"),
+    note = "Mean-deviation intervals do not establish pairwise equivalence.",
     inference_ready = TRUE,
     covariance_basis = settings$covariance_basis
   )
@@ -485,7 +487,7 @@ plot_facet_equivalence <- function(x,
       yaxt = "n",
       ylab = "",
       xlab = "Deviation from facet mean (logits)",
-      main = paste0(out$facet, ": facet equivalence"),
+      main = out$title,
       pch = 19,
       col = cols
     ), dots))
@@ -511,7 +513,7 @@ plot_facet_equivalence <- function(x,
       las = 2,
       ylim = c(0, 100),
       col = cols,
-      ylab = "% in ROPE",
+      ylab = "Normal reference mass within bound (%)",
       main = paste0(out$facet, ": descriptive grand-mean proximity"),
       ...
     )

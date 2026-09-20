@@ -301,7 +301,7 @@ when the rater count makes the bar-chart form of
 response-time screening by person, facet, and score category. Best for
 reviewing rapid/slow response patterns alongside MFRM diagnostics; it is
 not a joint speed-accuracy model and does not change fitted measures.}
-\item{\code{plot_local_dependence_heatmap()}}{Yen Q3-style heatmap of
+\item{\code{plot_local_dependence_heatmap()}}{Standardized, aggregated-residual Q3-style heatmap of
 pairwise residual correlations between facet levels. Best for
 exploratory local-dependence screening; pairs with very strong
 off-diagonal residual correlation merit content-level review.}

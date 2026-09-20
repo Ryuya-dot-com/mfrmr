@@ -23,7 +23,7 @@ the \code{cell_table} element
 is used (requires \code{method = "residual"}).}
 
 \item{metric}{Which metric to plot: \code{"obs_exp"} for observed-minus-expected
-average (default), \code{"t"} for the standardized residual / t-statistic,
+average (default), \code{"t"} for the descriptive scaled residual (not a t-test),
 or \code{"contrast"} for pairwise differential-functioning contrast (only for \code{mfrm_dff}
 objects with \code{dif_table}).}
 

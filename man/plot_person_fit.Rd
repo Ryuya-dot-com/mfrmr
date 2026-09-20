@@ -57,7 +57,7 @@ the report-ready \code{lz_star} / \code{lz} index instead.
 
 The default 0.5-1.5 envelope follows Linacre (2002) Rasch
 Measurement Transactions. Persons in the green centre are
-fit-acceptable; amber and red corners are candidates for misfit
+within the screening band; amber and red corners are candidates for
 review (overfit / underfit) using
 \code{\link[=unexpected_response_table]{unexpected_response_table()}} for follow-up.
 }

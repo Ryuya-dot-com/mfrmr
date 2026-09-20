@@ -29,10 +29,16 @@ mfrmr_gt_boundary_status <- function(fit_lmer,
     boundary_text,
     ignore.case = TRUE
   ))
+  opt <- fit_lmer@optinfo
+  convergence_review <- length(lmer_warnings) > 0L ||
+    any(unlist(opt$conv$opt) != 0, na.rm = TRUE) ||
+    length(opt$conv$lme4$messages) > 0L
   status <- if (isTRUE(singular_fit) || isTRUE(boundary_message)) {
     "boundary_or_singular_fit"
   } else if (is.na(singular_fit)) {
     "singularity_check_unavailable"
+  } else if (convergence_review) {
+    "convergence_review"
   } else {
     "identified"
   }
@@ -48,6 +54,7 @@ mfrmr_gt_boundary_status <- function(fit_lmer,
       "treat G/D-study coefficients as caveated until the fitted",
       "random-effects structure is reviewed."
     ),
+    convergence_review = "The mixed-model fit has unresolved convergence warnings; review its numerical stability before using G/D projections.",
     "No lme4 boundary or singular fit was detected."
   )
   list(
@@ -75,6 +82,23 @@ mfrmr_gt_classify_coef <- function(value,
     value >= 0.70 ~ "at_or_above_0.70_reference",
     TRUE ~ "below_0.70_reference"
   )
+}
+
+validate_gtheory_output <- function(x) {
+  version <- if (inherits(x, "mfrm_generalizability")) x$design$calculation_version else attr(x, "calculation_version")
+  if (!identical(version, 2L)) {
+    stop(paste("This saved G/D result used earlier variance handling.",
+      "Recreate mfrm_generalizability(fit) and any mfrm_d_study() results;",
+      "the MFRM fit need not be re-estimated."), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+gtheory_scaling_label <- function(x) {
+  labels <- c(highest_order = "Divide residual by all facet counts",
+              single_condition = "Divide residual by smallest facet count",
+              none = "Keep residual unchanged", sensitivity = "Compare three residual assumptions")
+  ifelse(x %in% names(labels), unname(labels[x]), x)
 }
 
 #' Generalizability-theory variance decomposition for an MFRM design
@@ -117,9 +141,11 @@ mfrmr_gt_classify_coef <- function(value,
 #' @section Interpretation:
 #' - `G` is appropriate for **relative** decisions (rank-ordering
 #'   persons): `G = sigma2(p) / (sigma2(p) + sigma2(Residual))`.
-#' - The reported `Phi` is appropriate for **absolute** decisions (cut-score
-#'   classification): `Phi = sigma2(p) / (sigma2(p) + sigma2(facet
+#' - The reported `Phi` describes dependability for **absolute** decisions:
+#'   `Phi = sigma2(p) / (sigma2(p) + sigma2(facet
 #'   main effects) + sigma2(Residual))`, before D-study scaling.
+#'   It does not estimate the probability of correct classification at a
+#'   particular cut score.
 #' - Use [mfrm_d_study()] to project `G` / `Phi` under planned numbers of
 #'   raters, items, criteria, or other random measurement facets.
 #' - Values of 0.70 and 0.80 are displayed as familiar planning references,
@@ -134,16 +160,19 @@ mfrmr_gt_classify_coef <- function(value,
 #' only (`Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual`); no
 #' explicit `(1 | Person:Rater)`, `(1 | Person:Criterion)`, or
 #' `(1 | Rater:Criterion)` interaction terms are estimated. All
-#' two-way and higher interaction variance is therefore folded into
-#' the `Residual` term -- the standard one-observation-per-cell
-#' approximation -- which can bias `G` downward when person x facet
-#' interactions are substantively large. This function reports the
+#' interactions are omitted. The residual combines unexplained variation;
+#' omitted interactions may also affect the fitted main-effect components.
+#' Their separate variances and correct averaging rates are not recovered. This function reports the
 #' one-observation-per-cell baseline. [mfrm_d_study()] applies D-study
 #' scaling, including residual-scaling sensitivity checks, to the same
 #' simplified variance-component decomposition.
 #' Because person-by-facet interaction terms are not estimated separately,
 #' D-study projections remain practical planning evidence rather than a
-#' replacement for a fully specified G-theory design.
+#' replacement for a fully specified G-theory design. Counts held constant in
+#' a D-study do not turn a random facet into a fixed-facet universe. Variance
+#' estimation uncertainty is not propagated to G/Phi. Component values are
+#' stored at full precision; rounding is only for display. Recreate older
+#' G/D results from the existing MFRM fit before reuse.
 #' Boundary or singular `lme4` fits are retained as diagnostic evidence but are
 #' not treated as decision-ready G/D-study evidence.
 #'
@@ -204,6 +233,10 @@ mfrm_generalizability <- function(fit,
     random_facets <- setdiff(facet_names, object_facet)
   }
   random_facets <- as.character(random_facets)
+  if (length(object_facet) != 1L || is.na(object_facet) ||
+      anyNA(random_facets) || anyDuplicated(c(object_facet, random_facets))) {
+    stop("The object facet and random facets must be distinct, non-missing names.", call. = FALSE)
+  }
   if (length(random_facets) == 0L) {
     stop("At least one non-person facet is required as a random ",
          "condition of measurement.", call. = FALSE)
@@ -220,8 +253,8 @@ mfrm_generalizability <- function(fit,
       data[[col]] <- as.factor(as.character(data[[col]]))
     }
   }
-  data$Score <- suppressWarnings(as.numeric(data$Score))
-  data <- data[is.finite(data$Score), , drop = FALSE]
+  data$Score <- suppressWarnings(as.numeric(if (is.factor(data$Score)) as.character(data$Score) else data$Score))
+  data <- data[is.finite(data$Score) & stats::complete.cases(data[, c(object_facet, random_facets), drop = FALSE]), , drop = FALSE]
 
   random_terms <- c(object_facet, random_facets)
   formula_str <- paste0(
@@ -258,12 +291,11 @@ mfrm_generalizability <- function(fit,
   vc <- as.data.frame(lme4::VarCorr(fit_lmer))
   vc <- vc[is.na(vc$var2), c("grp", "vcov")]
   total_var <- sum(vc$vcov, na.rm = TRUE)
-  zero_tol <- sqrt(.Machine$double.eps)
   var_components <- data.frame(
     Source = as.character(vc$grp),
-    Variance = round(as.numeric(vc$vcov), 6),
-    ProportionVariance = if (is.finite(total_var) && total_var > zero_tol) {
-      round(vc$vcov / total_var, 4)
+    Variance = as.numeric(vc$vcov),
+    ProportionVariance = if (is.finite(total_var) && total_var > 0) {
+      vc$vcov / total_var
     } else {
       rep(NA_real_, length(vc$vcov))
     },
@@ -281,7 +313,7 @@ mfrm_generalizability <- function(fit,
   sigma2_p <- as.numeric(v[object_facet] %||% NA_real_)
   sigma2_residual <- as.numeric(v["Residual"] %||% NA_real_)
   sigma2_main <- if (length(random_facets) > 0L) {
-    sum(as.numeric(v[random_facets] %||% 0), na.rm = TRUE)
+    sum(as.numeric(v[random_facets]))
   } else 0
   if (!is.finite(sigma2_p) || sigma2_p <= 0) {
     G_coef <- NA_real_
@@ -308,11 +340,12 @@ mfrm_generalizability <- function(fit,
       stringsAsFactors = FALSE
     ),
     design = list(
+      calculation_version = 2L,
       object_facet = object_facet,
       random_facets = random_facets,
       observed_levels = stats::setNames(
         vapply(c(object_facet, random_facets), function(col) {
-          dplyr::n_distinct(data[[col]])
+          dplyr::n_distinct(stats::model.frame(fit_lmer)[[col]])
         }, integer(1)),
         c(object_facet, random_facets)
       ),
@@ -346,7 +379,8 @@ mfrm_generalizability <- function(fit,
 #' @param design_grid Data frame or named list giving planned counts for each
 #'   random measurement facet. Column names may be the facet names themselves
 #'   (for example `Rater`) or `n_` plus the facet name (for example
-#'   `n_Rater`). When `NULL`, one row using the observed number of levels is
+#'   `n_Rater`). Counts must be positive integers. When `NULL`, one row using
+#'   the observed number of levels is
 #'   returned.
 #' @param object_facet,random_facets Passed to [mfrm_generalizability()] when
 #'   `x` is an `mfrm_fit`.
@@ -354,8 +388,8 @@ mfrm_generalizability <- function(fit,
 #'   when planned facet counts increase. `"highest_order"` treats the residual
 #'   as highest-order person-by-all-conditions/error variance and divides by
 #'   the product of planned counts. `"single_condition"` divides by the smallest
-#'   planned facet count, a conservative sensitivity check when unmodeled
-#'   person-by-one-facet interactions may dominate. `"none"` leaves the residual
+#'   planned facet count, a sensitivity assumption for variation associated
+#'   with the least-replicated condition. It is not a confidence bound. `"none"` leaves the residual
 #'   unscaled. `"sensitivity"` returns all three assumptions for each design
 #'   row.
 #' @param ... Additional arguments passed to [mfrm_generalizability()] when `x`
@@ -368,7 +402,10 @@ mfrm_generalizability <- function(fit,
 #' The residual term contains unmodeled person-by-facet and higher-order
 #' interaction variance in the current simplified G-study, so the selected
 #' `residual_scaling` assumption is reported explicitly. The relative-decision
-#' denominator uses only this scaled residual term.
+#' denominator uses only this scaled residual term. Missing or invalid required
+#' components leave the affected coefficient unavailable; they are not zero
+#' variance. These are point projections conditional on estimated components,
+#' not uncertainty bounds or automatic recommendations for sample size.
 #'
 #' This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 #' decomposition. If person-by-rater or person-by-item interactions are a
@@ -430,6 +467,7 @@ mfrm_d_study <- function(x,
   if (!inherits(x, "mfrm_generalizability")) {
     stop("`x` must be output from mfrm_generalizability() or an mfrm_fit object.", call. = FALSE)
   }
+  validate_gtheory_output(x)
 
   random_facets <- as.character(x$design$random_facets %||% character(0))
   if (length(random_facets) == 0L) {
@@ -471,13 +509,13 @@ mfrm_d_study <- function(x,
   }
 
   counts <- as.data.frame(
-    lapply(count_cols, function(col) suppressWarnings(as.numeric(design_grid[[col]]))),
+    lapply(count_cols, function(col) suppressWarnings(as.numeric(as.character(design_grid[[col]])))),
     stringsAsFactors = FALSE
   )
   names(counts) <- paste0("n_", random_facets)
   counts_matrix <- as.matrix(counts)
-  if (any(!is.finite(counts_matrix) | counts_matrix <= 0)) {
-    stop("All D-study facet counts must be positive finite numbers.", call. = FALSE)
+  if (any(!is.finite(counts_matrix) | counts_matrix <= 0 | counts_matrix != floor(counts_matrix))) {
+    stop("All D-study facet counts must be positive finite integers.", call. = FALSE)
   }
   scaling_levels <- if (identical(residual_scaling, "sensitivity")) {
     c("highest_order", "single_condition", "none")
@@ -493,10 +531,11 @@ mfrm_d_study <- function(x,
   }
 
   vc <- as.data.frame(x$variance_components, stringsAsFactors = FALSE)
+  if (anyDuplicated(vc$Source)) stop("Variance-component sources must be unique.", call. = FALSE)
   v <- stats::setNames(suppressWarnings(as.numeric(vc$Variance)), as.character(vc$Source))
+  v[!is.finite(v) | v < 0] <- NA_real_
   sigma2_p <- as.numeric(v[x$design$object_facet] %||% NA_real_)
   sigma2_residual <- as.numeric(v["Residual"] %||% NA_real_)
-  if (!is.finite(sigma2_residual)) sigma2_residual <- 0
   if (!is.finite(sigma2_p) || sigma2_p <= 0) {
     projected_g <- rep(NA_real_, nrow(counts))
     projected_phi <- rep(NA_real_, nrow(counts))
@@ -517,8 +556,7 @@ mfrm_d_study <- function(x,
     rel_error <- sigma2_residual / residual_divisor
     facet_main_error <- numeric(nrow(counts))
     for (facet in random_facets) {
-      sigma2_f <- as.numeric(v[facet] %||% 0)
-      if (!is.finite(sigma2_f)) sigma2_f <- 0
+      sigma2_f <- as.numeric(v[facet])
       facet_main_error <- facet_main_error + sigma2_f / counts[[paste0("n_", facet)]]
     }
     abs_error <- facet_main_error + rel_error
@@ -526,9 +564,9 @@ mfrm_d_study <- function(x,
     projected_phi <- sigma2_p / (sigma2_p + abs_error)
   }
 
-  identification_status <- as.character(x$design$identification_status %||% "identified")[1L]
+  identification_status <- as.character(x$design$identification_status %||% "review_required")[1L]
   if (is.na(identification_status) || !nzchar(identification_status)) {
-    identification_status <- "identified"
+    identification_status <- "review_required"
   }
   identification_note <- as.character(x$design$identification_note %||% "")[1L]
   boundary_fit <- isTRUE(x$design$boundary_fit)
@@ -554,6 +592,7 @@ mfrm_d_study <- function(x,
     )
   )
   attr(out, "object_facet") <- x$design$object_facet
+  attr(out, "calculation_version") <- 2L
   attr(out, "random_facets") <- random_facets
   attr(out, "residual_scaling") <- residual_scaling
   attr(out, "source") <- "mfrm_generalizability"
@@ -568,20 +607,25 @@ mfrm_d_study <- function(x,
 
 #' @export
 print.mfrm_d_study <- function(x, ...) {
+  validate_gtheory_output(x)
   cat("mfrmr D-study projection\n")
   cat("  Object of measurement:", attr(x, "object_facet") %||% NA_character_, "\n")
   cat("  Random facets:", paste(attr(x, "random_facets") %||% character(0), collapse = ", "), "\n\n")
   cat("  Estimand scale: observed numeric score\n")
-  cat("  Residual scaling:", attr(x, "residual_scaling") %||% paste(unique(x$ResidualScaling), collapse = ", "), "\n\n")
+  cat("  Residual assumption:", gtheory_scaling_label(attr(x, "residual_scaling") %||% unique(x$ResidualScaling)), "\n\n")
   if (!identical(attr(x, "identification_status") %||% "identified", "identified")) {
-    cat("  Identification status:", attr(x, "identification_status"), "\n")
+    cat("  Model fit requires review.\n")
     note <- attr(x, "identification_note") %||% ""
     if (nzchar(note)) {
       cat("  Note:", note, "\n")
     }
     cat("\n")
   }
-  print.data.frame(x, row.names = FALSE, ...)
+  shown <- as.data.frame(x)
+  shown$ResidualScaling <- gtheory_scaling_label(shown$ResidualScaling)
+  shown <- shown[, setdiff(names(shown), c("GStatus", "PhiStatus", "IdentificationStatus", "BoundaryFit", "IdentificationNote")), drop = FALSE]
+  print.data.frame(shown, row.names = FALSE, ...)
+  print_wrapped_line("Observed-score planning projections hold estimated variance components fixed. They do not establish cut-score accuracy or an adequate rating design.")
   cat("\n  Note: 0.70 and 0.80 are reference guides, not universal decision rules.\n")
   invisible(x)
 }
@@ -601,7 +645,16 @@ plot.mfrm_d_study <- function(x,
                               palette = NULL,
                               preset = c("standard", "publication", "compact", "monochrome"),
                               ...) {
+  validate_gtheory_output(x)
   type <- match.arg(type)
+  projection_note <- if (!identical(attr(x, "identification_status"), "identified")) {
+    "Model fit requires review; conditional observed-score projections only."
+  } else {
+    "Observed-score point projections; variance estimation uncertainty omitted."
+  }
+  display_labels <- function(z) vapply(strsplit(z, " / ", fixed = TRUE), function(parts) {
+    paste(gtheory_scaling_label(parts), collapse = " / ")
+  }, character(1))
   tbl <- as.data.frame(x, stringsAsFactors = FALSE)
   n_cols <- grep("^n_", names(tbl), value = TRUE)
   if (length(n_cols) == 0L) {
@@ -749,6 +802,8 @@ plot.mfrm_d_study <- function(x,
       series_tbl$Panel <- do.call(paste, c(series_tbl[, panel_vars, drop = FALSE], sep = " / "))
       panel_levels <- unique(series_tbl$Panel)
     }
+    series_tbl$Panel <- display_labels(series_tbl$Panel)
+    panel_levels <- unique(series_tbl$Panel)
     fill_values <- range(series_tbl$Value, na.rm = TRUE)
     fill_cols <- if (is.null(palette)) {
       if (identical(style$name, "monochrome")) {
@@ -837,6 +892,7 @@ plot.mfrm_d_study <- function(x,
             main = main %||% paste(metric_cols[1L], panel, sep = " / ")
           )
         }
+        graphics::mtext(projection_note, side = 1, line = 3, cex = 0.6)
       }
     }
     return(invisible(new_mfrm_plot_data(
@@ -854,7 +910,7 @@ plot.mfrm_d_study <- function(x,
         panel_by = panel_by %||% NA_character_,
         panel_grid = panel_grid %||% character(0),
         title = main %||% paste("D-study", metric_cols[1L], type),
-        subtitle = "Projection from simplified G-study variance components",
+        subtitle = projection_note,
         legend = new_plot_legend(
           label = metric_cols[1L],
           role = "metric",
@@ -887,6 +943,9 @@ plot.mfrm_d_study <- function(x,
     series_tbl$Panel <- "All designs"
     series_tbl$PanelRow <- "All designs"
     series_tbl$PanelCol <- "panel"
+  }
+  for (col in c("Series", "Panel", "PanelRow", "PanelCol")) {
+    series_tbl[[col]] <- display_labels(series_tbl[[col]])
   }
   series_levels <- unique(series_tbl$Series)
   if (is.null(palette)) {
@@ -946,6 +1005,7 @@ plot.mfrm_d_study <- function(x,
         main = main %||% panel_title
       )
       graphics::grid(col = style$grid)
+      graphics::mtext(projection_note, side = 1, line = 3, cex = 0.6)
       for (series in unique(s_panel$Series)) {
         s <- s_panel[s_panel$Series == series, , drop = FALSE]
         s <- s[order(s$X), , drop = FALSE]
@@ -981,7 +1041,7 @@ plot.mfrm_d_study <- function(x,
       panel_by = panel_by %||% NA_character_,
       panel_grid = panel_grid %||% character(0),
       title = main %||% if (identical(type, "coefficients")) "D-study G/Phi projection" else "D-study error variance projection",
-      subtitle = "Projection from simplified G-study variance components",
+      subtitle = projection_note,
       legend = new_plot_legend(
         label = series_levels,
         role = rep("series", length(series_levels)),
@@ -1006,20 +1066,21 @@ plot.mfrm_d_study <- function(x,
 
 #' @export
 print.mfrm_generalizability <- function(x, ...) {
+  validate_gtheory_output(x)
   cat("Generalizability-theory decomposition\n")
   cat(sprintf("  Object of measurement: %s\n",
               x$design$object_facet))
   cat(sprintf("  Random facets: %s\n",
               paste(x$design$random_facets, collapse = ", ")))
   cat("  Estimand scale: observed numeric score\n")
+  print_wrapped_line("This main-effects model does not separate person-by-facet interactions. G/Phi are point summaries; uncertainty in estimated variance components is omitted.")
   cat("\nVariance components\n")
-  print(x$variance_components, row.names = FALSE)
+  print(x$variance_components, row.names = FALSE, digits = 4)
   cat(sprintf("\nG (relative): %.3f | Phi (absolute): %.3f\n",
               as.numeric(x$coefficients$G),
               as.numeric(x$coefficients$Phi)))
   if (!identical(x$design$identification_status %||% "identified", "identified")) {
-    cat(sprintf("\nIdentification status: %s\n",
-                x$design$identification_status))
+    cat("\nModel fit requires review.\n")
     cat(x$design$identification_note, "\n")
   }
   if (length(x$design$lmer_warnings) > 0L) {

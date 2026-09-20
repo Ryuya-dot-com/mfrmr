@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-18.
+Status: repository-only maintainer plan, refined 2026-09-20.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -9,9 +9,182 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-19: existing public outputs before new tests
+
+This is the active execution order, following the user's acceptance of the
+release review and instruction to keep internal language out of user output.
+It supersedes the ordered queue below. No new large study is launched.
+
+1. Completed: the existing residual-comparison output defect is corrected
+   across pairwise/cell tables, summaries, reports, plots, saved results and
+   simulation rates. See the [September 19 record](claim-reconciliation-0.2.4.md#september-19-existing-residual-outputs-and-fairz-disposition).
+   Keep descriptive residual values; withdraw unqualified residual SE/t/p,
+   binary DFF classifications and interval displays. Preserve unavailable
+   rates as NA. Keep row-level interpretation in exported data and use plain
+   English in printed output, without exposing readiness/version codes.
+2. FairZ: defer the repository joint-covariance inferential candidate beyond
+   0.2.4. The finished 20,000-dataset confirmation, its five supported/three
+   review cells and all failures remain unchanged. Existing conditional
+   diagnostic outputs retain their calculation and false inferential
+   eligibility. This is a release-scope decision, not broad C12 closure.
+3. Portable scope/output follow-up completed: the roadmap now matches the
+   existing fixed-normal RSM/PCM two-way interaction workflow. Score tables
+   retain algorithm/interval level; normal output states the prior and interval
+   meaning without support-profile/review codes. Saved numerical results are
+   unchanged. See the [bounded workflow record](claim-reconciliation-0.2.4.md#september-19-portable-scope-and-interval-reporting-c07c17).
+   The subsequent [precision/comparison review](claim-reconciliation-0.2.4.md#september-19-precision-eligibility-and-comparison-reporting-c03c04c05c09c17)
+   corrects regularized/fallback facet-SE eligibility and separates numerical
+   convergence from inference in public reports. JML/GPCM comparison and
+   equivalence restrictions are retained. The subsequent
+   [JML-convention review](claim-reconciliation-0.2.4.md#september-19-jml-conventions-and-extreme-score-displays-c03c05c12c17)
+   retains uncorrected JML and exploratory uncertainty, distinguishes optional
+   display replacements from primary estimates, withdraws mismatched display
+   SEs, and makes non-Person FairM unavailable when its JML Person mean is
+   unbounded. No correction is selected from the historical pilots.
+   The [reliability and model-choice follow-up](claim-reconciliation-0.2.4.md#september-19-reliability-denominators-and-model-choice-output-c04c05c11c17)
+   now requires SEs on the finite-estimate population, exposes denominators,
+   preserves withheld values through QC and distinguishes numerical convergence
+   from GPCM inferential restrictions. Fit-adjusted indices are not confidence
+   bounds. Existing saved-fit numerical values are unchanged; missing-SE and
+   inconsistent-row cases are covered by direct regression checks.
+   The [QC/import/linking follow-up](claim-reconciliation-0.2.4.md#september-19-qc-decisions-imported-uncertainty-and-linking-displays-c05c08c11c16c17)
+   now makes facet differentiation opt-in, retains missing results as review,
+   checks PCM step order within each ladder and refuses mismatched diagnostics.
+   Imported marginal SEs no longer produce joint facet tests. Linking displays
+   explain omitted covariance and the conditional meaning of their flags.
+   Saved fits support a nine-case QC replay; no new uncertainty study is added.
+   The [G/D and shrinkage follow-up](claim-reconciliation-0.2.4.md#september-19-gd-projection-arithmetic-and-shrinkage-interpretation-c13c14c17)
+   preserves full variance precision, withholds affected projections when an
+   error component is missing and carries mixed-model numerical warnings into
+   coefficient review. Shrinkage reports now use eligible-pair denominators;
+   plots and Methods prose state their plug-in uncertainty limits. Small
+   counts alone no longer trigger a recommendation to shrink, and full pooling
+   with zero plug-in SE is not presented as perfect precision. Saved source
+   results require regeneration; existing point fits need no MFRM refit.
+   The [PCA/Q3/equivalence follow-up](claim-reconciliation-0.2.4.md#september-19-residual-correlation-computability-and-equivalence-displays-c09c11c17)
+   corrects doubled Q3 counts and retains unavailable comparisons. PCA now
+   refuses undefined or indefinite correlation matrices and incomplete
+   permutation references. Seven saved fits preserve available Q3 values and
+   19 valid PCA scopes; two sparse overall PCA scopes are deliberately withheld.
+   Equivalence calculations are unchanged; ordinary output separates pairwise
+   tests from mean-deviation plots and hides internal decision/basis codes.
+   The [person-fit and response-screening follow-up](claim-reconciliation-0.2.4.md#september-19-person-fit-availability-and-response-screening-c11c17)
+   removes the positive-probability floor, refuses selected-response person
+   statistics, retains unavailable flags and narrows the implemented ability
+   correction to numerically converged finite JML estimates with unit weights.
+   Person plots retain missing mean-square rows. Unexpected-response rates and
+   before/after reductions require complete classification; QC preserves
+   missing diagnostics as review. Ordinary output uses plain explanations.
+   Seven saved fits preserve available statistics within rounding error and
+   all unexpected-response rates, without MFRM refitting.
+   The [mean-square/ZSTD reporting follow-up](claim-reconciliation-0.2.4.md#september-19-mean-square-and-zstd-reporting-c11c17)
+   fixes inconsistent flag denominators, unavailable results reported as zero
+   flags or global failure, and rankings that mixed ZSTD with MnSq deviations.
+   Diagnostic summaries and exported tables retain classification coverage;
+   narrative interval counts use available eligible limits and plain language.
+   Seven saved fits preserve all 82 MnSq flags across 365 elements; no MFRM
+   refit or new error-rate study is used.
+   The [category/threshold follow-up](claim-reconciliation-0.2.4.md#september-19-category-usage-and-threshold-availability-c11c17)
+   retains missing category counts/fit flags and expected/available adjacent-step
+   comparisons, including absent declared families. Binary scales have no
+   applicable ordering comparison; equal steps are only descriptively
+   nondecreasing. Tables retain the full scale when unused rows are hidden;
+   threshold plots connect only adjacent values within a family. Ordinary
+   summaries use plain language. Seven saved fits preserve category values and
+   all available step gaps, without refitting.
+   The [marginal-fit follow-up](claim-reconciliation-0.2.4.md#september-19-marginal-fit-availability-and-reporting-c11c17)
+   preserves unavailable cells/context opportunities and classification coverage
+   through tables, prose, plots and exports. GPCM step groups follow the declared
+   owner; plots filter/rank all candidates under the requested metric. Plain
+   explanations identify same-response posterior expectations and omitted
+   covariance/calibration uncertainty. Five saved MML fits preserve the existing
+   numeric cells and all 12 pair flags; new GPCM groups match their existing
+   facet-level cells. No refitting or new calibration study is used.
+   The [portable consistency follow-up](claim-reconciliation-0.2.4.md#september-19-portable-review-consistency-and-source-applicability-c07c17)
+   now binds every retained review fit to its recorded order, common settings
+   and actual convergence. Valid anchors, interactions and adaptive scoring
+   remain supported. Four saved scoring algorithms retain exact numerical
+   results/settings/dispositions in a fresh process from the rebuilt archive;
+   CSV semantics and older-result summary recovery pass. No scoring or schema
+   change, uncertainty study or group-wide closure is implied.
+   The [external-import follow-up](claim-reconciliation-0.2.4.md#september-20-external-import-coordinates-and-source-uncertainty-c05c16c17)
+   corrects eRm easiness/cumulative coefficients, TAM category-logit mapping
+   and mirt rating-scale offsets. Unsupported source models are refused;
+   source EAP/SD and TAM WLE fit-statistic meanings remain explicit. TAM MFR
+   output is limited to combined response-design cell difficulties and retained
+   native coefficients. Imported summaries and point-only Wright maps preserve
+   source scales without native population/uncertainty assumptions; comprehensive
+   native reports and curves are refused. Saved source fits are reused without
+   refitting. This closes reproduced mapping defects, not an external-equivalence
+   or uncertainty claim group.
+   September 20 fitted-object scoring follow-up: score/draw tables retain prior,
+   weighting and conditional uncertainty meaning; empirical draw limits now use
+   the requested interval level. Native/imported scoring boundaries and learned-
+   population review restrictions are preserved. Saved-fit comparisons leave EAP,
+   SD, continuous bounds and draws unchanged. HTML no longer embeds raw manifests;
+   it shows model details and the public interpretation decision. See the current
+   C06/C17 ledger section and validation-results/person-scoring-output-20260920.
+   September 20 native-summary follow-up: one precision-aware interpretation
+   decision replaces contradictory full-view inference readiness. Population,
+   visual/workflow, GPCM and IC displays use readable explanations; structured
+   results, fit parameters and eligibility remain unchanged. Eight saved fits
+   support bounded replay without refitting. See the current C05/C17 summary
+   section and validation-results/model-summary-output-20260920.
+   September 20 documentation follow-up: NEWS, README and installed workflow
+   help now distinguish reprinting, rebuilding derived results, rescoring,
+   re-importing and refitting older native fits lacking current checks. The
+   public roadmap retains feature direction and limits without internal claims,
+   study counts or execution instructions. Stale shrinkage example, population-
+   scoring and GPCM-comparison guidance is corrected; numerical code is unchanged.
+   See the current public-scope/saved-analysis ledger section.
+   September 20 descriptive-output review: agreement retains unavailable
+   comparisons and full expected-agreement denominators; graph reviews retain
+   selected-subset coverage and undefined directional indices. Dependent-edge
+   Welch tests are withdrawn. Timing retains excluded groups and valid-row
+   denominators. Public labels and saved-result migration actions are explicit.
+   See the C18/C17 ledger section and validation-results/descriptive-reviews-20260920.
+   Reproduced defects are repaired; remaining statistical claims are not thereby
+   qualified. Reuse existing evidence before admitting additional experiments.
+   September 20 structural-source follow-up: the old fixed-q61 RSM/PCM SE
+   evidence has a verified source reconstruction and bounded numerical replay.
+   All 13 independent fixtures and 73 selected historical datasets meet the
+   original/replay numerical criteria. Fifteen optimizer eligibility changes
+   are reproduced by changing only quadrature; historical sampling rates keep
+   their original eligible denominators. Retain the supported structural-SE
+   implementation and its scoped evidence without promoting adaptive, weighted,
+   population, anchored or other uncertainty claims. See
+   [source applicability](mml-structural-source-applicability-0.2.4.md).
+4. The [September 20 candidate check](release-candidate-check-0.2.4.md)
+   verifies the portable save/move/fresh-process workflow, Mac/Linux score
+   transfer, saved algorithm replay and the existing international-input and
+   eight archive-replay cases. It repairs a leaked quadrature-summary code and
+   an unconditional PCA plot in the incomplete-design tutorial. Complete runs
+   exposed stale tests and undeclared optional-solver preconditions: the repaired
+   files pass 1,515 Mac and 2,886 Linux expectations (eight Linux dependency
+   skips). The final archive passes the standard Mac package check, with all
+   source identities and original failures retained. These staged repairs are
+   not a clean complete-suite run of the final archive.
+   Next: bind the repaired candidate to the established five-environment CI,
+   including the complete packaged suite on Ubuntu release. Current-source
+   hosted results remain unavailable; the September 13 matrix is historical.
+   Preserve the claim ledger's restrictions; do not turn every unresolved
+   research extension into a requirement for this bounded release.
+   Documentation consistency is not statistical claim closure or release approval.
+
+The new omnibus DRF LRT is deferred from the 0.2.4 release plan. Preserve the
+four-pair numerical evidence and prospective acceptance criteria below for a
+separately admitted future study. Neither it nor the 80,000-dataset population
+interval study is launched or required merely to complete this output repair.
+Public language describes observed-minus-expected scores, interval assumptions,
+missing results and user actions; research candidates, claim IDs, source hashes
+and review gates remain in these maintainer records.
+
 ## 2026-09-18: current priorities and completion decisions
 
-This is the active execution order. It supersedes the September 17 next-action
+Historical sequence; superseded by the September 19 entry above.
+
+
+This historical execution order superseded the September 17 next-action
 list and September 10 work queue below, while preserving their evidence and
 frozen protocols. The [public roadmap](../../ROADMAP.md) owns feature promises;
 the [claim ledger](claim-reconciliation-0.2.4.md) owns evidence/dispositions.

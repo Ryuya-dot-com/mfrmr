@@ -53,13 +53,19 @@ sample- and population-basis modes (paired with \code{precision_profile})
 screen across non-person facets
 \item \code{interrater}: inter-rater agreement / pairwise correlation / rater
 separation overview when a Rater facet is present
-\item \code{misfit_flagged}: rows flagged by the Infit / Outfit / ZSTD
-misfit thresholds active for this fit
+\item \code{misfit_flagged}: rows flagged by the Infit / Outfit mean-square band
+\item \code{fit_screening}: counts of all, classified and unclassified elements for
+the mean-square band and each ZSTD cutoff. Either available statistic
+crossing a cutoff flags the element; otherwise a missing statistic leaves
+it unclassified. Rates require every element to be classified. Nonfinite
+statistics and negative mean squares are unavailable, not passing values.
 \item \code{misfit_thresholds}: named numeric vector with the misfit
 \code{lower} / \code{upper} thresholds used to populate \code{misfit_flagged}
 \item \code{category_usage}: per-category response-frequency summary used
 to flag empty / collapsed categories
-\item \code{top_fit}: top \verb{|ZSTD|} rows
+\item \code{top_fit}: top maximum \verb{|ZSTD|} rows with both statistics available
+\item \code{marginal_coverage}: classified, unclassified and flagged category cells,
+groups and level pairs; counts of available flags do not describe missing results
 \item \code{marginal_fit}: optional strict marginal-fit overview when requested
 \item \code{top_marginal_cells}: largest strict marginal residual cells when requested
 \item \code{marginal_pairwise}: optional strict pairwise local-dependence overview
@@ -100,6 +106,10 @@ what each path means statistically.
 real bounds when available.
 \item \code{top_fit}: highest \verb{|ZSTD|} elements for immediate inspection.
 \item \code{flags}: compact counts for key warning domains.
+\item \code{fit_screening}: available classifications and unclassified elements for
+each mean-square/ZSTD rule. A known threshold crossing remains flagged
+even if the other statistic is missing. Recreate older summaries and
+reports from existing diagnostics; no MFRM refit is required.
 }
 }
 

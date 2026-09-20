@@ -22,6 +22,39 @@ console_output_internal_terms <- c(
   "input_source"
 )
 
+test_that("fit summaries keep one inference decision and readable scoring restrictions", {
+  fit <- make_toy_fit(method = "MML", maxit = 25)
+  s <- summary(fit, detail = "full", compute = "never")
+  # Reproduce the former contradiction: fit readiness alone printed Ready
+  # even when the precision-aware decision explicitly withheld inference.
+  s$overview$InferenceReady <- TRUE
+  s$decision$FormalInference <- "No"
+  s$decision$Why <- "Precision assumptions require review (tier: model_based)."
+  s$overview$Converged <- TRUE
+  s$overview$ConvergenceCode <- 1L
+  original <- serialize(s, NULL)
+  lines <- capture.output(returned <- print(s))
+  text <- paste(lines, collapse = " ")
+  expect_length(grep("Formal inference:", lines, fixed = TRUE), 1L)
+  expect_match(text, "Formal inference: No", fixed = TRUE)
+  expect_match(text, "Optimizer code 0: No", fixed = TRUE)
+  expect_false(grepl("legacy_mml|model_based|optimizer_gradient|ready_for_diagnostic_interpretation|source_fit_ready|not_applicable|LegacyConvergedBasis", text))
+  expect_match(text, "fixed standard normal Person distribution", fixed = TRUE)
+  expect_identical(serialize(s, NULL), original)
+  expect_identical(returned, s)
+
+  s$readiness$Status[1] <- "NEW_INTERNAL_STATE"
+  s$required_visual$InterpretationStatus[1] <- "NEW_INTERNAL_STATE"
+  lines <- capture.output(print(s))
+  expect_false(any(grepl("NEW_INTERNAL_STATE", lines, fixed = TRUE)))
+  expect_true(any(grepl("Review the stored result", lines, fixed = TRUE)))
+
+  jml <- summary(make_toy_fit(method = "JML", maxit = 25), detail = "full", compute = "never")
+  text <- gsub("[[:space:]]+", " ", paste(capture.output(print(jml)), collapse = " "))
+  expect_match(text, "does not estimate a normal population distribution", fixed = TRUE)
+  expect_false(grepl("legacy_mml|not_applicable_jml|source_fit_not_ready", text))
+})
+
 expect_public_console_output <- function(lines, person_ids = character(0)) {
   person_ids <- as.character(person_ids)
   person_ids <- person_ids[!is.na(person_ids) & nzchar(person_ids)]

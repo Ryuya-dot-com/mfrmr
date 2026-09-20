@@ -29,7 +29,8 @@ plot_dif_summary(
 
 \item{ci_level}{Optional confidence level for approximate normal
 intervals drawn from \verb{Effect +/- z * SE} when finite standard errors are
-available. Use \code{NULL} (default) to omit intervals.}
+available for linked refits. Residual comparisons require \code{NULL} (default)
+because their interval uncertainty is not established.}
 
 \item{effect_thresholds}{Optional numeric vector of absolute effect-size
 guide lines to draw at \verb{+/- threshold}. These are display aids, not ETS
@@ -45,19 +46,18 @@ columns \code{Pair}, \code{Effect}, \code{SE}, \code{Classification}, \code{Colo
 \description{
 Compact effect-size summary for a \code{\link[=analyze_dff]{analyze_dff()}} / \code{\link[=analyze_dif]{analyze_dif()}}
 result. Shows each contrast's signed effect size as a horizontal bar
-with a vertical reference at zero, coloured by the method-appropriate
-classification. Current residual and refit screening labels use the
-neutral colour; refit output does not receive ETS A/B/C labels.
+with a vertical reference at zero and a neutral colour. Residual comparisons
+do not provide differential-functioning tests or classifications.
 }
 \section{Interpreting output}{
 
 Bars are anchored at zero. Width corresponds to effect size on the
 contrast's native scale. For \code{method = "residual"}, this is the
-observed-minus-expected average screening contrast between groups. For
+observed-minus-expected average difference between groups, in score units. For
 \code{method = "refit"}, this is the subgroup parameter difference on the
 fitted logit scale when linking support allows a comparable contrast.
-Current DFF/DIF classifications are screening-only, so bars use the
-preset's neutral colour.
+Residual differences do not isolate differential functioning. Linked refit
+intervals omit estimated-anchor uncertainty and cross-refit covariance.
 }
 
 \examples{

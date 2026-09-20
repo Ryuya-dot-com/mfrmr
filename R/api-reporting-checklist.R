@@ -551,47 +551,17 @@ reporting_checklist <- function(fit,
       ),
       add_item(
         "Method Section",
-        "Empirical-Bayes shrinkage when small-N facets are present",
-        {
-          shrink_mode <- as.character(config$facet_shrinkage %||% "none")
-          sparse_n <- suppressWarnings(as.integer(
-            fit$summary$FacetSparseCount %||% NA_integer_
-          ))
-          # Ready if either (a) shrinkage was applied, or (b) there are no
-          # sparse facets so shrinkage isn't needed.
-          (!identical(shrink_mode, "none")) ||
-            (is.finite(sparse_n) && sparse_n == 0L)
-        },
-        detail = {
-          shrink_mode <- as.character(config$facet_shrinkage %||% "none")
-          sparse_n <- suppressWarnings(as.integer(
-            fit$summary$FacetSparseCount %||% NA_integer_
-          ))
-          if (!identical(shrink_mode, "none")) {
-            paste0(
-              "Shrinkage active: ", shrink_mode, ". See `fit$shrinkage_report`."
-            )
-          } else if (is.finite(sparse_n) && sparse_n == 0L) {
-            "No sparse facets detected; fixed-effects estimates are stable without shrinkage."
-          } else {
-            paste0(
-              "Sparse facet(s) detected (count = ", sparse_n,
-              ") but no shrinkage was applied. Consider ",
-              "`fit_mfrm(..., facet_shrinkage = 'empirical_bayes')`."
-            )
-          }
+        "Empirical-Bayes shrinkage choice and assumptions",
+        TRUE,
+        detail = if (!identical(as.character(config$facet_shrinkage %||% "none"), "none")) {
+          "A post-hoc zero-centered adjustment is recorded. Check its target, omitted covariance and conditional SEs; shrinkage does not establish adequate precision."
+        } else {
+          "Original fixed-effects estimates are retained. Small counts alone do not require shrinkage or establish that these estimates are stable."
         },
         source_component = "fit$config$facet_shrinkage + fit$shrinkage_report",
         severity = "recommended",
-        missing_action = paste0(
-          "Re-run with `facet_shrinkage = 'empirical_bayes'` or apply ",
-          "`apply_empirical_bayes_shrinkage(fit)` post-hoc when small-N ",
-          "facets are present."
-        ),
-        available_action = paste0(
-          "Report both the fixed-effects and shrunk estimates; cite ",
-          "Efron & Morris (1973) for the empirical-Bayes rationale."
-        )
+        missing_action = "Document whether zero-centered pooling is substantively appropriate for the facet and decision.",
+        available_action = "Report the chosen adjustment or absence of adjustment, original estimates, and uncertainty limitations."
       ),
       add_item(
         "Method Section",

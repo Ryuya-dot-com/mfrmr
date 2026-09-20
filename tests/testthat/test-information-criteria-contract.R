@@ -188,9 +188,8 @@ test_that("IC eligibility fails closed for JML, non-unit weights, and small-N SA
     mfrmr:::mfrm_ic_console_lines(as.data.frame(jml_contract)),
     collapse = " "
   )
-  expect_match(jml_text, "not eligible (descriptive_jml)", fixed = TRUE)
-  expect_match(jml_text, "Legacy descriptive AIC", fixed = TRUE)
-  expect_match(jml_text, "not part of the common MML ranking panel", fixed = TRUE)
+  expect_match(jml_text, "Information-criterion ranking is unavailable for JML", fixed = TRUE)
+  expect_false(grepl("descriptive_jml|Legacy descriptive AIC|Canonical", jml_text))
 
   small <- explicit
   small$data <- small$data[small$data$Person %in% paste0("P", 1:22), ]
@@ -433,13 +432,16 @@ test_that("fitted-object IC comparison audits weights, legacy state, and identit
     fit_constant$summary[1, c("AIC", "BIC", "SABIC")],
     use.names = FALSE
   ))))
-  expect_warning(
-    expect_warning(
-      constant_comparison <- compare_mfrm(A = fit_constant, B = fit_constant),
-      "not eligible for the common information-criterion panel"
-    ),
-    "Inference readiness is not satisfied"
+  warnings <- character()
+  constant_comparison <- withCallingHandlers(
+    compare_mfrm(A = fit_constant, B = fit_constant),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
   )
+  expect_true(any(grepl("cannot be ranked by information criteria", warnings)))
+  expect_true(any(grepl("Inference readiness is not satisfied", warnings)))
   expect_false(any(constant_comparison$table$ICComparable))
 
   varying_data <- data
@@ -469,7 +471,7 @@ test_that("fitted-object IC comparison audits weights, legacy state, and identit
   coarse_fit <- ic_test_ready(coarse_fit)
   expect_warning(
     coarse_comparison <- compare_mfrm(A = coarse_fit, B = coarse_fit),
-    "screening/review-only"
+    "unavailable at the supplied quadrature resolution"
   )
   expect_true(all(coarse_comparison$table$ICEligible))
   expect_false(any(coarse_comparison$table$ICSelectable))
@@ -495,7 +497,7 @@ test_that("fitted-object IC comparison audits weights, legacy state, and identit
   )] <- NULL
   expect_warning(
     legacy_comparison <- compare_mfrm(Current = fit_unweighted, Legacy = legacy),
-    "legacy, unknown, or incomplete"
+    "lacks current, complete information"
   )
   expect_false(any(legacy_comparison$table$ICComparable))
   expect_identical(

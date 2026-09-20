@@ -64,7 +64,8 @@ test_that("D-SIM-1 independently closes the public one-stratum formulas", {
         design = list(
           object_facet = "Person", random_facets = c("Item", "Replicate"),
           observed_levels = c(Person = 10L, Item = 2L, Replicate = 2L),
-          identification_status = "identified", boundary_fit = FALSE
+          identification_status = "identified", boundary_fit = FALSE,
+          calculation_version = 2L
         )
       ),
       class = c("mfrm_generalizability", "list")

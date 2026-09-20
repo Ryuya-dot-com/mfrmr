@@ -22,9 +22,10 @@ on demand when omitted.}
 \item{facet}{Facet whose levels are placed on both axes (default
 \code{"Rater"}).}
 
-\item{min_pairs}{Minimum number of shared response opportunities
-required to retain a pair. Pairs below the threshold are shown
-as \code{NA}.}
+\item{min_pairs}{Minimum number of persons with finite aggregated residuals
+at both levels; an integer of at least three. Unavailable pairs remain
+in the table with their overlap count and reason, and appear as \code{NA}
+in the matrix.}
 
 \item{preset}{Visual preset.}
 
@@ -32,16 +33,18 @@ as \code{NA}.}
 }
 \value{
 An \code{mfrm_plot_data} whose \code{data} slot bundles the symmetric
-residual \code{matrix}, the long-form \code{pairs} table, and the threshold
-used.
+residual \code{matrix}, one row per unordered pair in \code{pairs}, and the
+threshold used.
 }
 \description{
 Builds an N x N heatmap of pairwise standardized residuals between
 facet levels, computed from the diagnostics observation table.
 Cells with large absolute values flag pairs of facet elements (e.g.
 two raters, two items) whose residuals co-move more than the
-main-effects MFRM expects, which is the standard Yen Q3-style
-indicator of local response dependence.
+main-effects MFRM expects. Residuals are averaged within each Person
+and facet level before correlation. This is a Q3-style screen, distinct
+from raw-residual Yen Q3; no fixed correlation cutoff establishes local
+independence for this standardized, aggregated index.
 }
 \details{
 This helper complements \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}: the marginal
@@ -56,10 +59,8 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
                  method = "JML", maxit = 30)
 p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 dim(p$data$matrix)
-# Look for: |off-diagonal correlation| < 0.2 is the typical
-#   acceptable regime; values >= 0.3 (Yen 1984 / Marais 2013
-#   guideline) flag pairs that may share dependence beyond the
-#   main-effects MFRM. Inspect those cells in `diag$obs`.
+# Inspect large absolute correlations alongside shared-person counts.
+# Unavailable pairs are not evidence of local independence.
 }
 }
 \seealso{

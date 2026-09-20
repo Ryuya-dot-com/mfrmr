@@ -139,7 +139,10 @@ bounded \code{GPCM} remain available only through their fitted-object routes; se
 
 Before extraction, run \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} on user-selected grids
 and inspect its continuous differences. Pass the exact highest-grid fit in
-that object together with \code{quadrature_review}. This procedural requirement
+that object together with \code{quadrature_review}. The retained fits must use
+their recorded grid sizes and the same data, score map and fitting settings,
+including anchors and integration mode, and must all have converged.
+This procedural requirement
 does not declare the fit numerically stable: the package does not choose the
 application-specific tolerance or decide whether more grids are needed.
 Archive the review separately when it is part of the audit trail, because

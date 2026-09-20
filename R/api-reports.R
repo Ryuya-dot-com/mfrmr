@@ -1383,6 +1383,10 @@ subset_connectivity_report <- function(fit,
 #' networks returned by [rater_network_analysis()] and
 #' [rater_halo_network_analysis()], it can expose disconnected measurement
 #' subsets relevant to common-scale interpretation.
+#' `SourceSubsets`, `RetainedSubsets` and `ScopeComplete` record whether subset
+#' filters retained the full observed design. Connectedness of selected subsets
+#' cannot be generalized to omitted subsets. Recreate older design reviews
+#' from the existing fit and matching diagnostics to record this coverage.
 #' `plot(net, type = "centrality")`, `plot(net, type = "facet_summary")`, and
 #' `plot(net, type = "network")` provide immediate visual checks; use
 #' `draw = FALSE` to extract reusable plot data.
@@ -1564,7 +1568,7 @@ mfrm_network_analysis <- function(fit,
     Degree = as.numeric(degree),
     Strength = as.numeric(strength),
     Betweenness = as.numeric(betweenness),
-    Closeness = as.numeric(closeness),
+    Closeness = ifelse(is.finite(closeness), as.numeric(closeness), NA_real_),
     IsArticulationPoint = node_names %in% articulation_names,
     stringsAsFactors = FALSE
   ) |>
@@ -1649,6 +1653,9 @@ mfrm_network_analysis <- function(fit,
     NA_real_
   }
   summary_tbl <- data.frame(
+    SourceSubsets = sc$settings$source_subsets,
+    RetainedSubsets = sc$settings$retained_subsets,
+    ScopeComplete = sc$settings$source_subsets == sc$settings$retained_subsets,
     Nodes = igraph::vcount(graph),
     Edges = igraph::ecount(graph),
     Components = as.integer(comp$no),
@@ -1666,6 +1673,13 @@ mfrm_network_analysis <- function(fit,
   )
 
   caveats <- data.frame()
+  if (!isTRUE(summary_tbl$ScopeComplete[1])) {
+    caveats <- rbind(caveats, data.frame(
+      Area = "coverage", Severity = "review",
+      Message = "This graph covers selected subsets; its connectedness does not describe the complete observed design.",
+      stringsAsFactors = FALSE
+    ))
+  }
   if (!isTRUE(connected)) {
     caveats <- rbind(caveats, data.frame(
       Area = "connectedness",
@@ -2162,6 +2176,40 @@ print.summary.mfrm_peer_review_design_review <- function(x, ...) {
   invisible(x)
 }
 
+validate_descriptive_bundle <- function(x, kind) {
+  required <- switch(kind, mfrm_interrater = "ClassifiedPairs",
+    mfrm_rater_network = "DistanceBasis", mfrm_halo_network = "AvailablePairs")
+  if (nrow(as.data.frame(x$summary)) > 0L && !required %in% names(x$summary)) {
+    stop("Recreate this agreement or network result from the original fit and matching diagnostics to retain unavailable comparisons; no model refit is needed.", call. = FALSE)
+  }
+  invisible(x)
+}
+
+mfrm_descriptive_display <- function(table) {
+  table <- as.data.frame(table)
+  table <- table[, setdiff(names(table), c("ReviewUse", "Area")), drop = FALSE]
+  labels <- c(ok = "No configured flag", review = "Review needed", warning = "Flagged for review",
+    insufficient_data = "Insufficient information", high = "Important limitation", info = "Information",
+    severity_direction = "Observed score direction", agreement = "Agreement", disagreement = "Disagreement",
+    more_severe = "Lower scores", more_lenient = "Higher scores", balanced = "Balanced observed directions",
+    insufficient_directional_edges = "No directional comparison", halo = "Same rater", non_halo = "Other raters")
+  for (field in intersect(c("NetworkReviewStatus", "ReviewStatus", "Severity", "Mode", "RelativePattern", "EdgeType"), names(table))) {
+    values <- as.character(table[[field]])
+    mapped <- unname(labels[values])
+    mapped[is.na(mapped) & !is.na(values)] <- "Review stored details"
+    table[[field]] <- mapped
+  }
+  if ("WeightMetric" %in% names(table)) {
+    metrics <- c(Exact = "Exact agreement", Adjacent = "Agreement within one score unit", Corr = "Score correlation", MAD = "Mean absolute score difference",
+      OneMinusExact = "Fraction of unequal scores", AbsMeanDiff = "Absolute mean score difference",
+      DirectionalHigherProp = "Fraction of higher scores")
+    label <- unname(metrics[as.character(table$WeightMetric)])
+    label[is.na(label)] <- "Selected pair metric"
+    table$WeightMetric <- label
+  }
+  table
+}
+
 network_review_status <- function(summary_tbl) {
   summary_tbl <- as.data.frame(summary_tbl %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(summary_tbl) == 0L) {
@@ -2192,6 +2240,13 @@ network_review_status <- function(summary_tbl) {
   } else if (identical(connected, FALSE) || (is.finite(components) && components > 1L)) {
     status <- "warning"
     reason <- "The design graph has more than one connected component; interpret common-scale claims only with explicit linking or anchoring support."
+  } else if (!isTRUE(summary_tbl$ScopeComplete[1])) {
+    status <- "review"
+    reason <- "The graph covers selected subsets or its full-design coverage is not recorded; connectedness cannot be generalized to the complete design."
+  } else if (is.na(connected) || !is.finite(components) ||
+    !is.finite(articulation) || !is.finite(bridges)) {
+    status <- "review"
+    reason <- "Connectedness or vulnerability checks are unavailable; the design graph cannot receive a complete assessment."
   } else if ((is.finite(articulation) && articulation > 0L) ||
     (is.finite(bridges) && bridges > 0L)) {
     status <- "review"
@@ -2224,6 +2279,7 @@ network_review_overview <- function(summary_tbl) {
   } else {
     keep <- intersect(
       c(
+        "SourceSubsets", "RetainedSubsets", "ScopeComplete",
         "Nodes", "Edges", "Components", "Connected", "ArticulationPoints",
         "Bridges", "LargestComponentShare", "Density"
       ),
@@ -2439,7 +2495,7 @@ summary.mfrm_network_review <- function(object, digits = 3, top_n = 10, ...) {
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
   out <- list(
-    overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
+    overview = tibble::as_tibble(network_review_overview(object$network_summary)),
     network_summary = tibble::as_tibble(object$network_summary %||% tibble::tibble()),
     facet_summary = tibble::as_tibble(object$facet_summary %||% tibble::tibble()),
     top_central_nodes = tibble::as_tibble(network_review_top_rows(object$top_central_nodes, top_n = top_n)),
@@ -2462,42 +2518,43 @@ print.summary.mfrm_network_review <- function(x, ...) {
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
 
-  cat("mfrm Network Review Summary\n")
+  cat("mfrmr Network Review Summary\n")
+  overview <- network_review_overview(x$network_summary)
   if (is.data.frame(x$overview) && nrow(x$overview) > 0L) {
     cat("\nOverview\n")
-    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(overview), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$network_summary) && nrow(x$network_summary) > 0L) {
     cat("\nNetwork summary\n")
-    print(round_numeric_df(as.data.frame(x$network_summary), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$network_summary), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$facet_summary) && nrow(x$facet_summary) > 0L) {
     cat("\nFacet vulnerability summary\n")
-    print(round_numeric_df(as.data.frame(x$facet_summary), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$facet_summary), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$top_central_nodes) && nrow(x$top_central_nodes) > 0L) {
     cat("\nTop central nodes\n")
-    print(round_numeric_df(as.data.frame(x$top_central_nodes), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$top_central_nodes), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$top_cut_nodes) && nrow(x$top_cut_nodes) > 0L) {
     cat("\nArticulation nodes\n")
-    print(round_numeric_df(as.data.frame(x$top_cut_nodes), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$top_cut_nodes), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$top_bridge_edges) && nrow(x$top_bridge_edges) > 0L) {
     cat("\nBridge edges\n")
-    print(round_numeric_df(as.data.frame(x$top_bridge_edges), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$top_bridge_edges), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$sparse_review) && nrow(x$sparse_review) > 0L) {
     cat("\nSparse design review\n")
-    print(round_numeric_df(as.data.frame(x$sparse_review), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$sparse_review), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$peer_review) && nrow(x$peer_review) > 0L) {
     cat("\nPeer-review design\n")
-    print(round_numeric_df(as.data.frame(x$peer_review), digits = digits), row.names = FALSE)
+    print(round_numeric_df(mfrm_descriptive_display(x$peer_review), digits = digits), row.names = FALSE)
   }
   if (is.data.frame(x$caveats) && nrow(x$caveats) > 0L) {
     cat("\nCaveats\n")
-    print(as.data.frame(x$caveats), row.names = FALSE)
+    print(mfrm_descriptive_display(x$caveats), row.names = FALSE)
   }
   if (length(x$notes) > 0L) {
     cat("\nNotes\n")
@@ -2514,14 +2571,15 @@ rater_network_score_wide <- function(obs_df, facet_cols, rater_facet) {
   if (length(context_cols) == 0L) {
     return(list(wide = data.frame(), raters = character(), context_cols = character()))
   }
+  obs_df$.context <- dplyr::group_indices(
+    dplyr::group_by(obs_df, dplyr::across(dplyr::all_of(context_cols)))
+  )
   df <- obs_df |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(context_cols), as.character)) |>
-    tidyr::unite(".context", dplyr::all_of(context_cols), sep = "|", remove = FALSE) |>
     dplyr::select(".context", dplyr::all_of(rater_facet), "Observed", dplyr::any_of("Weight"))
   df$.Weight <- get_weights(df)
   df <- df |>
     dplyr::group_by(.data$.context, .data[[rater_facet]]) |>
-    dplyr::summarise(Score = weighted_mean(.data$Observed, .data$.Weight), .groups = "drop")
+    dplyr::summarise(Score = if (all(is.finite(.data$Observed))) weighted_mean(.data$Observed, .data$.Weight) else NA_real_, .groups = "drop")
   if (nrow(df) == 0L) {
     return(list(wide = data.frame(), raters = character(), context_cols = context_cols))
   }
@@ -2605,6 +2663,7 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
     MeanWeight = NA_real_,
     MeanDegree = NA_real_,
     MeanStrength = NA_real_,
+    DistanceBasis = "No rater comparisons available.",
     stringsAsFactors = FALSE
   )
   caveats <- data.frame(
@@ -2686,6 +2745,12 @@ empty_rater_network_bundle <- function(settings, source_interrater = NULL, messa
 #' reported `SeverityIndex` is positive for relatively severe raters and
 #' negative for relatively lenient raters, but it is on a network-analysis scale
 #' and should not be read as an MFRM severity logit.
+#' A rater without any retained directional comparisons has an unavailable
+#' index, not a balanced index. Zero or negative undirected weights remain in
+#' the pair table but do not form graph edges. Graph distances summarize
+#' reachable pairs only, so they do not describe distance across disconnected
+#' components. Recreate older network results from the existing fit and matching
+#' diagnostics with the original settings before summary, plotting or export.
 #'
 #' @return A bundle of class `mfrm_rater_network` containing:
 #' \describe{
@@ -2923,7 +2988,7 @@ rater_network_analysis <- function(fit,
       WeightMetric = weight_metric,
       stringsAsFactors = FALSE
     ) |>
-      dplyr::filter(is.finite(.data$Weight), .data$Weight >= min_weight)
+      dplyr::filter(is.finite(.data$Weight), .data$Weight > 0, .data$Weight >= min_weight)
   }
   edges <- edges |>
     dplyr::mutate(
@@ -2983,6 +3048,9 @@ rater_network_analysis <- function(fit,
   severity_ratio_raw <- suppressWarnings(as.numeric(strength_out) / as.numeric(strength_in))
   severity_ratio <- (as.numeric(strength_out) + severity_continuity) /
     (as.numeric(strength_in) + severity_continuity)
+  no_direction <- as.numeric(strength_out) + as.numeric(strength_in) == 0
+  severity_ratio_raw[no_direction] <- NA_real_
+  severity_ratio[no_direction] <- NA_real_
   severity_index <- if (directed) -log(severity_ratio) else rep(NA_real_, length(severity_ratio))
 
   node_metrics <- data.frame(
@@ -2994,7 +3062,7 @@ rater_network_analysis <- function(fit,
     InStrength = as.numeric(strength_in),
     OutStrength = as.numeric(strength_out),
     Betweenness = as.numeric(betweenness),
-    Closeness = as.numeric(closeness),
+    Closeness = ifelse(is.finite(closeness), as.numeric(closeness), NA_real_),
     SeverityRatioRaw = if (directed) severity_ratio_raw else NA_real_,
     SeverityRatio = if (directed) severity_ratio else NA_real_,
     SeverityIndex = severity_index,
@@ -3053,7 +3121,7 @@ rater_network_analysis <- function(fit,
     error = function(e) NA_real_
   )
   if (!is.finite(mean_dist)) mean_dist <- NA_real_
-  if (!is.finite(diameter)) diameter <- NA_real_
+  if (!is.finite(diameter) || igraph::ecount(graph) == 0L) diameter <- NA_real_
   summary_tbl <- data.frame(
     RaterFacet = rater_facet,
     Mode = mode,
@@ -3069,7 +3137,10 @@ rater_network_analysis <- function(fit,
     Components = as.integer(comp$no),
     Diameter = as.numeric(diameter),
     MeanDistance = as.numeric(mean_dist),
-    MeanSeverityIndex = if (directed) mean(node_metrics$SeverityIndex, na.rm = TRUE) else NA_real_,
+    MeanSeverityIndex = if (directed && any(is.finite(node_metrics$SeverityIndex))) mean(node_metrics$SeverityIndex[is.finite(node_metrics$SeverityIndex)]) else NA_real_,
+    AvailableDirectionalRaters = if (directed) sum(is.finite(severity_index)) else NA_integer_,
+    UnavailableDirectionalRaters = if (directed) sum(!is.finite(severity_index)) else NA_integer_,
+    DistanceBasis = "Reachable node pairs only; disconnected pairs are omitted.",
     SeverityContinuity = severity_continuity,
     ScoreDiffTolerance = score_diff_tolerance,
     MinPairN = min_pair_n,
@@ -3108,7 +3179,7 @@ rater_network_analysis <- function(fit,
     caveats <- rbind(caveats, data.frame(
       Area = "signed_weights",
       Severity = "review",
-      Message = "Negative correlations are retained in SignedWeight but truncated to zero for graph-weight centrality.",
+      Message = "Negative and zero correlations remain in the pair table but do not create graph edges; centrality uses positive weights only.",
       stringsAsFactors = FALSE
     ))
   }
@@ -3149,13 +3220,14 @@ halo_network_wide_scores <- function(obs_df, context_cols, rater_facet, criterio
   if (is.null(obs_df) || nrow(obs_df) == 0L || length(context_cols) == 0L) {
     return(list(wide = data.frame(), nodes = data.frame()))
   }
-  df <- obs_df |>
+  obs_df$.context <- dplyr::group_indices(
+    dplyr::group_by(obs_df, dplyr::across(dplyr::all_of(context_cols)))
+  )
+  node_ids <- unique(as.data.frame(obs_df[, c(rater_facet, criterion_facet), drop = FALSE]))
+  node_ids$.node <- make.unique(paste(node_ids[[rater_facet]], node_ids[[criterion_facet]], sep = "::"))
+  df <- dplyr::left_join(obs_df, node_ids, by = c(rater_facet, criterion_facet)) |>
     dplyr::mutate(
       dplyr::across(dplyr::all_of(c(context_cols, rater_facet, criterion_facet)), as.character)
-    ) |>
-    tidyr::unite(".context", dplyr::all_of(context_cols), sep = "|", remove = FALSE) |>
-    dplyr::mutate(
-      .node = paste(.data[[rater_facet]], .data[[criterion_facet]], sep = "::")
     ) |>
     dplyr::select(
       ".context", ".node", dplyr::all_of(rater_facet),
@@ -3173,7 +3245,7 @@ halo_network_wide_scores <- function(obs_df, context_cols, rater_facet, criterio
     as.data.frame(stringsAsFactors = FALSE)
   scores <- df |>
     dplyr::group_by(.data$.context, .data$.node) |>
-    dplyr::summarise(Score = weighted_mean(.data$Observed, .data$.Weight), .groups = "drop")
+    dplyr::summarise(Score = if (all(is.finite(.data$Observed))) weighted_mean(.data$Observed, .data$.Weight) else NA_real_, .groups = "drop")
   wide <- tryCatch(
     tidyr::pivot_wider(
       scores,
@@ -3276,6 +3348,8 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
     CriterionFacet = as.character(settings$criterion_facet %||% NA_character_),
     Nodes = 0L,
     PairRows = 0L,
+    AvailablePairs = 0L,
+    UnavailablePairs = 0L,
     Edges = 0L,
     HaloEdges = 0L,
     NonHaloEdges = 0L,
@@ -3370,11 +3444,20 @@ empty_halo_network_bundle <- function(settings, message = NULL) {
 #' The key descriptive comparison is the distribution of halo-edge weights
 #' versus non-halo-edge weights. A larger halo-edge distribution is consistent
 #' with a halo pattern, but this function deliberately reports it as a
-#' screening diagnostic. `MeanHaloWeight`, `MeanNonHaloWeight`, and the Welch
-#' comparison use all finite absolute correlations meeting `min_pair_n`, before
+#' screening diagnostic. `MeanHaloWeight` and `MeanNonHaloWeight`
+#' use all finite absolute correlations meeting `min_pair_n`, before
 #' adjusted-p, `min_abs_weight`, and sign filtering; the corresponding
-#' `MeanRetained*` columns describe the filtered graph. The Welch test is
-#' descriptive only because edge weights are clustered by rater and node.
+#' `MeanRetained*` columns describe the filtered graph. Candidate and unavailable
+#' pair counts accompany these available-pair means. An incomplete comparison
+#' cannot receive an unqualified no-flag assessment.
+#'
+#' `WelchT`, `WelchDF` and `WelchP` remain as unavailable compatibility columns.
+#' The correlations share observations, raters and nodes; an independent-sample
+#' test of their difference is not supplied. Pairwise correlation tail areas
+#' screen association under their sampling assumptions, not halo itself.
+#' No retained graph edges is not evidence that halo is absent; retain the
+#' originally specified thresholds. Recreate older network results from the
+#' existing fit and matching diagnostics before summary, plotting or export.
 #'
 #' @return A bundle of class `mfrm_halo_network` containing:
 #' \describe{
@@ -3469,6 +3552,8 @@ rater_halo_network_analysis <- function(fit,
   if (is.null(diagnostics$obs) || nrow(diagnostics$obs) == 0L) {
     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.", call. = FALSE)
   }
+
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "rater_halo_network_analysis()")
 
   known_facets <- c("Person", fit$config$facet_names)
   if (is.null(rater_facet) || !nzchar(as.character(rater_facet[1]))) {
@@ -3640,7 +3725,7 @@ rater_halo_network_analysis <- function(fit,
       NA_real_
     ),
     Betweenness = as.numeric(betweenness),
-    Closeness = as.numeric(closeness),
+    Closeness = ifelse(is.finite(closeness), as.numeric(closeness), NA_real_),
     stringsAsFactors = FALSE
   ) |>
     dplyr::arrange(
@@ -3671,14 +3756,6 @@ rater_halo_network_analysis <- function(fit,
   retained_weights <- pair_metrics[pair_metrics$RetainedByN & is.finite(pair_metrics$AbsEstimate), , drop = FALSE]
   halo_vals <- retained_weights$AbsEstimate[retained_weights$EdgeType == "halo"]
   non_halo_vals <- retained_weights$AbsEstimate[retained_weights$EdgeType == "non_halo"]
-  wt <- if (length(halo_vals) >= 2L && length(non_halo_vals) >= 2L) {
-    suppressWarnings(tryCatch(
-      stats::t.test(halo_vals, non_halo_vals),
-      error = function(e) NULL
-    ))
-  } else {
-    NULL
-  }
   review_pair_metrics <- pair_metrics[
     pair_metrics$RetainedByN &
       is.finite(pair_metrics$AbsEstimate), ,
@@ -3697,6 +3774,10 @@ rater_halo_network_analysis <- function(fit,
           as.character(review_pair_metrics$Rater2) == rater), ,
       drop = FALSE
     ]
+    expected_halo <- sum(pair_metrics$EdgeType == "halo" & pair_metrics$Rater1 == rater)
+    expected_non_halo <- sum(pair_metrics$EdgeType == "non_halo" &
+      (pair_metrics$Rater1 == rater | pair_metrics$Rater2 == rater))
+    unavailable_pairs <- expected_halo + expected_non_halo - nrow(halo_rows) - nrow(non_halo_rows)
     retained_halo <- halo_rows[halo_rows$RetainedEdge, , drop = FALSE]
     mean_halo <- if (nrow(halo_rows) > 0L) mean(halo_rows$AbsEstimate, na.rm = TRUE) else NA_real_
     mean_non_halo <- if (nrow(non_halo_rows) > 0L) mean(non_halo_rows$AbsEstimate, na.rm = TRUE) else NA_real_
@@ -3722,6 +3803,7 @@ rater_halo_network_analysis <- function(fit,
       retained_n > 0L ||
         mean_halo >= halo_weight_review ||
         (is.finite(halo_contrast) && halo_contrast >= halo_contrast_review) ~ "review",
+      unavailable_pairs > 0L || !is.finite(mean_non_halo) ~ "review",
       TRUE ~ "ok"
     )
     reason <- if (identical(status, "insufficient_data")) {
@@ -3736,8 +3818,15 @@ rater_halo_network_analysis <- function(fit,
         nrow(halo_rows)
       )
     }
+    if (unavailable_pairs > 0L || !is.finite(mean_non_halo)) {
+      reason <- paste(reason, "The same-rater or other-rater comparison is incomplete; absence of a flag is not evidence against halo.")
+    }
     data.frame(
       Rater = rater,
+      ExpectedHaloPairs = expected_halo,
+      UnavailableHaloPairs = expected_halo - nrow(halo_rows),
+      ExpectedIncidentNonHaloPairs = expected_non_halo,
+      UnavailableIncidentNonHaloPairs = expected_non_halo - nrow(non_halo_rows),
       HaloPairs = nrow(halo_rows),
       RetainedHaloEdges = retained_n,
       RetainedHaloShare = retained_share,
@@ -3770,6 +3859,8 @@ rater_halo_network_analysis <- function(fit,
     CriterionFacet = criterion_facet,
     Nodes = igraph::vcount(graph),
     PairRows = nrow(pair_metrics),
+    AvailablePairs = nrow(review_pair_metrics),
+    UnavailablePairs = nrow(pair_metrics) - nrow(review_pair_metrics),
     Edges = igraph::ecount(graph),
     HaloEdges = sum(edge_metrics$EdgeType == "halo", na.rm = TRUE),
     NonHaloEdges = sum(edge_metrics$EdgeType == "non_halo", na.rm = TRUE),
@@ -3789,9 +3880,11 @@ rater_halo_network_analysis <- function(fit,
     } else {
       NA_real_
     },
-    WelchT = if (!is.null(wt)) unname(wt$statistic) else NA_real_,
-    WelchDF = if (!is.null(wt)) unname(wt$parameter) else NA_real_,
-    WelchP = if (!is.null(wt)) wt$p.value else NA_real_,
+    WelchT = NA_real_,
+    WelchDF = NA_real_,
+    WelchP = NA_real_,
+    ComparisonMeaning = "Descriptive means of available correlations; no test of their difference.",
+    RatersUnassessed = sum(halo_summary_by_rater$ReviewStatus == "insufficient_data"),
     RatersWarning = sum(halo_summary_by_rater$ReviewStatus == "warning", na.rm = TRUE),
     RatersReview = sum(halo_summary_by_rater$ReviewStatus == "review", na.rm = TRUE),
     RatersOk = sum(halo_summary_by_rater$ReviewStatus == "ok", na.rm = TRUE),
@@ -3809,7 +3902,7 @@ rater_halo_network_analysis <- function(fit,
     Severity = c("review", "high"),
     Message = c(
       "Halo edges are same-rater cross-criterion correlations; they screen for halo-like score-profile similarity, not causal halo by themselves.",
-      "Welch halo/non-halo comparisons are descriptive because network edges are clustered and statistically dependent."
+      "No Welch test is provided for same-rater versus other-rater correlations: the correlations share observations and are dependent. Pairwise correlation tail areas are association screens under their sampling assumptions, not tests of halo."
     ),
     stringsAsFactors = FALSE
   )
@@ -3817,7 +3910,7 @@ rater_halo_network_analysis <- function(fit,
     caveats <- rbind(caveats, data.frame(
       Area = "empty_edges",
       Severity = "review",
-      Message = "No edges remained after adjusted-p and weight filtering; inspect pair_metrics or relax alpha/min_abs_weight for exploratory visualization.",
+      Message = "No edges remained under the specified association and weight thresholds. This does not establish absence of halo; inspect available and unavailable pair comparisons.",
       stringsAsFactors = FALSE
     ))
   }
@@ -4083,6 +4176,11 @@ build_fit_separation_reporting_basis <- function(fit, diagnostics) {
 #' 3. Use `summary()` to see whether the run supports model-based reporting
 #'    language or should remain in exploratory/screening mode.
 #'
+#' Regularized or fallback SEs remain diagnostic only. Numerical convergence
+#' does not establish inferential support. Older reports without the recorded
+#' regularization distinction must be recreated with `precision_review_report(fit)`;
+#' the existing fit can be reused without refitting.
+#'
 #' @return A named list with:
 #' - `profile`: one-row precision overview
 #' - `checks`: package-native precision review checks
@@ -4124,8 +4222,13 @@ precision_review_report <- function(fit, diagnostics = NULL) {
   mfrm_results_validate_diagnostics_identity(fit, diagnostics,
                                              helper = "precision_review_report()")
 
-  profile_tbl <- as.data.frame(diagnostics$precision_profile %||% data.frame(), stringsAsFactors = FALSE)
-  checks_tbl <- as.data.frame(precision_review(diagnostics, required = FALSE) %||% data.frame(), stringsAsFactors = FALSE)
+  profile_tbl <- as.data.frame(build_precision_profile(
+    fit, diagnostics$measures, diagnostics$reliability, diagnostics$facet_precision
+  ))
+  checks_tbl <- as.data.frame(audit_precision_outputs(
+    fit, diagnostics$measures, diagnostics$reliability,
+    diagnostics$facet_precision, profile_tbl
+  ))
   notes_tbl <- as.data.frame(diagnostics$approximation_notes %||% data.frame(), stringsAsFactors = FALSE)
   settings <- list(
     model = as.character(fit$summary$Model[1] %||% fit$config$model %||% NA_character_),
@@ -5971,7 +6074,7 @@ resolve_summary_table_bundle_input <- function(x,
 summary_table_bundle_required_components <- function(summary_class) {
   switch(as.character(summary_class %||% NA_character_),
     "summary.mfrm_fit" = c("overview", "reporting_map"),
-    "summary.mfrm_diagnostics" = c("overview", "reporting_map", "flags"),
+    "summary.mfrm_diagnostics" = c("overview", "reporting_map", "flags", "fit_screening", "marginal_coverage"),
     "summary.mfrm_precision_review" = c("overview", "summary", "profile", "checks", "fit_separation_basis"),
     "summary.mfrm_fit_measures" = c("overview", "summary", "status_summary", "table"),
     "summary.mfrm_facets_fit_review" = c("overview", "summary", "df_sensitivity", "guidance"),
@@ -6328,6 +6431,8 @@ summary_table_bundle_spec <- function(summary_obj) {
       title = "Diagnostics Summary Tables",
       tables = list(
         overview = summary_table_bundle_df(summary_obj$overview),
+        fit_screening = summary_table_bundle_df(summary_obj$fit_screening),
+        marginal_coverage = summary_table_bundle_df(summary_obj$marginal_coverage),
         overall_fit = summary_table_bundle_df(summary_obj$overall_fit),
         precision_profile = summary_table_bundle_df(summary_obj$precision_profile),
         precision_review = summary_table_bundle_df(summary_obj$precision_review),
@@ -6338,6 +6443,8 @@ summary_table_bundle_spec <- function(summary_obj) {
       ),
       roles = c(
         overview = "run_overview",
+        fit_screening = "flag_counts",
+        marginal_coverage = "flag_counts",
         overall_fit = "overall_fit",
         precision_profile = "precision_basis",
         precision_review = "precision_review",
@@ -6348,6 +6455,8 @@ summary_table_bundle_spec <- function(summary_obj) {
       ),
       descriptions = c(
         overview = "Run-level diagnostic coverage and precision tier.",
+        marginal_coverage = "Classified, unclassified and flagged marginal cells, groups and level pairs; unavailable results are not zero flags.",
+        fit_screening = "Classified, unclassified and flagged elements for each mean-square/ZSTD screen; rates require complete classification.",
         overall_fit = "Global fit statistics from the current diagnostic run.",
         precision_profile = "Precision basis and recommended interpretation tier.",
         precision_review = "Precision checks marked review/warn for manuscript caution.",
@@ -7122,7 +7231,7 @@ summary_table_bundle_spec <- function(summary_obj) {
       )
     },
     "summary.mfrm_network_review" = {
-      overview_tbl <- summary_table_bundle_df(summary_obj$overview)
+      overview_tbl <- summary_table_bundle_df(network_review_overview(summary_obj$network_summary))
       network_tbl <- summary_table_bundle_df(summary_obj$network_summary)
       facet_tbl <- summary_table_bundle_df(summary_obj$facet_summary)
       central_tbl <- summary_table_bundle_df(summary_obj$top_central_nodes)
@@ -10418,8 +10527,8 @@ plot.apa_table <- function(x,
 #'
 #' `profiles` contains thresholds used by warning logic
 #' (sample size, fit ratios, PCA cutoffs, etc.).
-#' `pca_reference_bands` contains literature-oriented descriptive bands used in
-#' summary text.
+#' `pca_reference_bands` contains uncalibrated descriptive references used in
+#' summary text; these are not dimensionality-test critical values.
 #'
 #' @section Interpreting output:
 #' - `profiles`: numeric threshold presets (`strict`, `standard`, `lenient`).
@@ -10600,8 +10709,9 @@ print.summary.mfrm_threshold_profiles <- function(x, ...) {
     print(round_numeric_df(as.data.frame(x$threshold_ranges), digits = digits), row.names = FALSE)
   }
   if (!is.null(x$pca_reference) && nrow(x$pca_reference) > 0) {
-    cat("\nPCA reference bands\n")
-    print(round_numeric_df(as.data.frame(x$pca_reference), digits = digits), row.names = FALSE)
+    cat("\nPCA descriptive reference values (uncalibrated)\n")
+    shown <- as.data.frame(x$pca_reference)[, c("Band", "Value"), drop = FALSE]
+    print(round_numeric_df(shown, digits = digits), row.names = FALSE)
   }
   if (length(x$notes) > 0) {
     cat("\nNotes\n")
@@ -11076,9 +11186,9 @@ build_contract_metric_review <- function(outputs, tol = 1e-8) {
 
     tt <- t81$threshold_table
     if (is.data.frame(tt) && nrow(tt) > 1 && "GapFromPrev" %in% names(tt)) {
-      gaps <- safe_num(tt$GapFromPrev)
-      monotonic_calc <- !any(gaps[is.finite(gaps)] < -tol)
-      monotonic_flag <- isTRUE(s$ThresholdMonotonic)
+      monotonic_calc <- summarize_threshold_order(calc_step_order(tt))$ThresholdMonotonic
+      if (!isTRUE(s$UnavailableThresholdComparisons == 0L)) monotonic_calc <- NA
+      monotonic_flag <- s$ThresholdMonotonic
       add_row("T8.1", "ThresholdMonotonic consistency", monotonic_flag == monotonic_calc, monotonic_flag, monotonic_calc)
     }
   }
@@ -13112,9 +13222,8 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' functioning analysis or interaction table. For `method = "refit"`, the
 #' report summarises linked screening contrasts and whether conditional plug-in
 #' uncertainty was available. For `method = "residual"`, it summarises
-#' screening-positive results, lists the specific levels and their direction,
-#' and includes a caveat about the distinction between construct-relevant
-#' variation and measurement bias.
+#' the availability and meaning of residual comparisons, without testing
+#' differential functioning or classifying comparisons as positive or negative.
 #'
 #' @param dif_result Output from [analyze_dff()] / [analyze_dif()]
 #'   (class `mfrm_dff` with compatibility class `mfrm_dif`) or
@@ -13132,13 +13241,14 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' standard errors condition on those anchors and omit baseline-anchor
 #' uncertainty and cross-refit covariance, so the report does not assign ETS
 #' labels or present refit rows as formal inference. The residual method also
-#' uses screening-positive versus screening-negative language.
+#' returns descriptive group differences without tests or binary classifications.
 #'
 #' @section Interpreting output:
 #' - `$narrative`: character scalar with the full narrative text.
 #' - `$counts`: named integer vector of method-appropriate counts.
 #' - `$large_dif`: an empty compatibility table for current refit output, or
-#'   screening-positive contrasts/cells (`method = "residual"`).
+#'   an empty table for residual comparisons. Interaction reports include only
+#'   cells above the requested absolute residual mean threshold, in score units.
 #' - `$gpcm_boundary`: for bounded `GPCM` inputs, a capability-boundary table
 #'   marking the narrative as caveated DFF screening output.
 #' - `$config`: analysis configuration inherited from the input.
@@ -13185,6 +13295,7 @@ collect_bias_screening_summary <- function(diagnostics = NULL, bias_results = NU
 #' }
 #' @export
 dif_report <- function(dif_result, ...) {
+  validate_dff_residual_output(dif_result)
   if (inherits(dif_result, "mfrm_dff") || inherits(dif_result, "mfrm_dif")) {
     .dif_report_from_dif(dif_result)
   } else if (inherits(dif_result, "mfrm_dif_interaction")) {
@@ -13254,82 +13365,23 @@ dif_report <- function(dif_result, ...) {
 
     lines <- c(
       lines,
-      "\nNo ETS A/B/C labels or formal refit decisions are produced by the current uncertainty contract. "
+      "\nThese comparisons do not provide formal tests of differential functioning. "
     )
   } else {
-    class_col <- dt$Classification %||% rep(NA_character_, nrow(dt))
-    n_positive <- sum(class_col == "Screen positive", na.rm = TRUE)
-    n_negative <- sum(class_col == "Screen negative", na.rm = TRUE)
-    n_na <- sum(is.na(class_col))
     n_total <- nrow(dt)
-
-    counts <- c(
-      Screen_positive = n_positive,
-      Screen_negative = n_negative,
-      Unclassified = n_na,
-      Total = n_total
+    n_available <- sum(is.finite(dt$Contrast))
+    counts <- c(Available = n_available, Unavailable = n_total - n_available, Total = n_total)
+    large_dif <- dt[FALSE, , drop = FALSE]
+    lines <- paste0(
+      "Mean observed-minus-expected scores were compared for the ", facet_name,
+      " facet across levels of ", group_name, ". ", n_available, " of ", n_total,
+      " group comparisons had sufficient observations to report a residual difference. ",
+      "Differences are in score units. They do not isolate differential functioning: ",
+      "group residual means can differ even when response parameters are the same. ",
+      "No p-values, confidence intervals or positive/negative classifications are provided."
     )
-    large_dif <- dt[class_col == "Screen positive", , drop = FALSE]
-
-    lines <- character()
-    lines <- c(lines, paste0(
-      functioning_label, " screening was conducted for the ",
-      facet_name, " facet across levels of ", group_name,
-      " using the ", method_label, " method. "
-    ))
-    lines <- c(lines, paste0(
-      "A total of ", n_total, " pairwise facet-level comparisons were evaluated. "
-    ))
-    lines <- c(lines, paste0(
-      n_positive, " comparison(s) were screening-positive and ",
-      n_negative, " were screening-negative based on the residual-contrast test. "
-    ))
-    if (n_na > 0) {
-      lines <- c(lines, paste0(
-        n_na, " comparison(s) were unclassified because of sparse data or unavailable statistics. "
-      ))
-    }
-
-    if (n_positive > 0) {
-      flagged_levels <- unique(as.character(large_dif$Level))
-      lines <- c(lines, paste0(
-        "\nThe following ", facet_name, " level(s) showed screening-positive residual contrasts: ",
-        paste(flagged_levels, collapse = ", "), ". "
-      ))
-      for (lev in flagged_levels) {
-        lev_rows <- large_dif[large_dif$Level == lev, , drop = FALSE]
-        for (r in seq_len(nrow(lev_rows))) {
-          direction <- if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] > 0) {
-            "higher"
-          } else if (is.finite(lev_rows$Contrast[r]) && lev_rows$Contrast[r] < 0) {
-            "lower"
-          } else {
-            "different"
-          }
-          lines <- c(lines, paste0(
-            "  - ", lev, ": ",
-            lev_rows$Group1[r], " vs ", lev_rows$Group2[r],
-            " (contrast = ", sprintf("%.3f", lev_rows$Contrast[r]),
-            " on the residual scale; ", lev_rows$Group1[r], " was ", direction, "). "
-          ))
-        }
-      }
-    } else {
-      lines <- c(
-        lines,
-        "\nNo pairwise contrasts were screening-positive under the residual-screening method. This does not by itself establish invariance or consistent functioning across groups. "
-      )
-    }
   }
 
-  lines <- c(lines, paste0(
-    "\nNote: The presence of differential functioning does not necessarily indicate measurement ",
-    "bias. Differential functioning may reflect construct-relevant variation ",
-    "(e.g., true group differences in the attribute being measured) rather ",
-    "than unwanted measurement bias. Substantive review is recommended to ",
-    "distinguish between these possibilities (cf. Eckes, 2011; McNamara & ",
-    "Knoch, 2012)."
-  ))
   gpcm_boundary <- dif_result$gpcm_boundary %||% data.frame()
   if (is.data.frame(gpcm_boundary) && nrow(gpcm_boundary) > 0L) {
     lines <- c(lines, paste0(
@@ -13364,23 +13416,21 @@ dif_report <- function(dif_result, ...) {
 
   n_total <- nrow(int_tbl)
   n_sparse <- sum(int_tbl$sparse, na.rm = TRUE)
-  n_flag_t <- sum(int_tbl$flag_t == TRUE, na.rm = TRUE)
   n_flag_bias <- sum(int_tbl$flag_bias == TRUE, na.rm = TRUE)
 
   counts <- c(
     Total = n_total, Sparse = n_sparse,
-    Flag_t = n_flag_t, Flag_bias = n_flag_bias
+    Flag_t = NA_integer_, Flag_bias = n_flag_bias
   )
 
   flagged_rows <- int_tbl[
-    (!is.na(int_tbl$flag_t) & int_tbl$flag_t) |
-      (!is.na(int_tbl$flag_bias) & int_tbl$flag_bias), ,
+    !is.na(int_tbl$flag_bias) & int_tbl$flag_bias, ,
     drop = FALSE
   ]
 
   lines <- character()
   lines <- c(lines, paste0(
-    functioning_label, " interaction screening was conducted for the ",
+    "Observed-minus-expected scores were summarized for the ",
     facet_name, " facet across levels of ", group_name,
     " using model-based residuals. "
   ))
@@ -13394,10 +13444,8 @@ dif_report <- function(dif_result, ...) {
     ))
   }
   lines <- c(lines, paste0(
-    n_flag_t, " cell(s) exceeded the |t| > ", cfg$abs_t_warn,
-    " threshold, and ", n_flag_bias,
-    " cell(s) exceeded the |Obs-Exp average| > ", cfg$abs_bias_warn,
-    " logit threshold. "
+    n_flag_bias, " cell(s) exceeded the absolute residual mean threshold of ",
+    cfg$abs_bias_warn, " score units. This is a magnitude comparison, not a test. "
   ))
 
   if (nrow(flagged_rows) > 0) {
@@ -13406,7 +13454,7 @@ dif_report <- function(dif_result, ...) {
       lines <- c(lines, paste0(
         "  - ", flagged_rows$Level[r], " x ", flagged_rows$GroupValue[r],
         ": Obs-Exp Avg = ", sprintf("%.3f", flagged_rows$ObsExpAvg[r]),
-        ", t = ", sprintf("%.2f", flagged_rows$t[r]),
+        ", scaled residual = ", sprintf("%.2f", flagged_rows$StdResidual[r]),
         " (N = ", flagged_rows$N[r], "). "
       ))
     }
@@ -13418,10 +13466,9 @@ dif_report <- function(dif_result, ...) {
   }
 
   lines <- c(lines, paste0(
-    "\nNote: The presence of differential functioning does not necessarily ",
-    "indicate measurement bias. Substantive review is recommended to ",
-    "distinguish between construct-relevant variation and unwanted bias ",
-    "(cf. Eckes, 2011; McNamara & Knoch, 2012)."
+    "\nResidual differences do not isolate differential functioning. Group residual ",
+    "means can differ even when response parameters are the same. No p-values ",
+    "or t-based classifications are provided."
   ))
   gpcm_boundary <- dif_result$gpcm_boundary %||% data.frame()
   if (is.data.frame(gpcm_boundary) && nrow(gpcm_boundary) > 0L) {
@@ -13448,7 +13495,8 @@ dif_report <- function(dif_result, ...) {
 
 #' @export
 print.mfrm_dif_report <- function(x, ...) {
-  cat("--- Differential Functioning Interpretation Report ---\n\n")
+  validate_dff_residual_output(x)
+  cat(if (identical(x$config$method, "residual")) "--- Group residual report ---\n\n" else "--- Subgroup comparison report ---\n\n")
   cat(x$narrative, "\n")
   .print_dff_gpcm_boundary(x$gpcm_boundary)
   invisible(x)
@@ -13456,6 +13504,7 @@ print.mfrm_dif_report <- function(x, ...) {
 
 #' @export
 summary.mfrm_dif_report <- function(object, ...) {
+  validate_dff_residual_output(object)
   out <- list(
     narrative = object$narrative,
     counts = object$counts,
@@ -13469,17 +13518,9 @@ summary.mfrm_dif_report <- function(object, ...) {
 
 #' @export
 print.summary.mfrm_dif_report <- function(x, ...) {
-  cat("--- Differential Functioning Report Summary ---\n")
-  cat("Facet:", x$config$facet, " | Group:", x$config$group, "\n\n")
-  cat("Classification counts:\n")
-  print(x$counts)
-  cat("\n")
-  if (nrow(x$large_dif) > 0) {
-    cat("Flagged levels:\n")
-    print(as.data.frame(x$large_dif), row.names = FALSE, digits = 3)
-  } else {
-    cat("No levels flagged.\n")
-  }
+  validate_dff_residual_output(x)
+  cat(x$narrative, "\n")
+
   .print_dff_gpcm_boundary(x$gpcm_boundary)
   invisible(x)
 }
@@ -13492,27 +13533,51 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' unexpected responses, category structure, connectivity, inter-rater agreement,
 #' and DIF/bias into a single pass/warn/fail report.
 #'
-#' @param fit Output from [fit_mfrm()].
+#' @param fit Native output from [fit_mfrm()]. Imported measurement tables
+#'   do not contain the response-level information required by this pipeline.
 #' @param diagnostics Output from [diagnose_mfrm()]. Computed automatically if NULL.
 #' @param threshold_profile Threshold preset: `"strict"`, `"standard"` (default),
 #'   or `"lenient"`.
 #' @param thresholds Named list to override individual thresholds.
 #' @param rater_facet Character name of the rater facet for inter-rater check
-#'   (auto-detected if NULL).
+#'   (detected from rater-like facet names if NULL; otherwise supply it explicitly).
 #' @param include_bias If `TRUE` and bias available in diagnostics, check DIF/bias.
 #' @param bias_results Optional pre-computed bias results from [estimate_bias()].
+#' @param separation_facets Character names of non-Person facets whose levels
+#'   you intend to distinguish. Reliability/separation thresholds apply only to
+#'   these facets. With the default `NULL`, these two checks are not requested;
+#'   they do not affect the overall verdict. For example, use `"Criterion"`
+#'   only when distinguishing criterion difficulties is a substantive goal.
 #'
 #' @details
 #' The pipeline evaluates 10 quality checks and assigns a verdict
-#' (Pass / Warn / Fail) to each.  The overall status is the most severe
-#' verdict across all checks.  Diagnostics are computed automatically via
+#' (Pass / Warn / Fail / Skip) to each. The overall status is the most severe
+#' verdict among checks marked `AffectsOverall`. Unrequested differentiation
+#' and bias checks, and inapplicable rater-agreement checks, are excluded.
+#' Missing information for an applicable check cannot produce Pass.
+#' Diagnostics are computed automatically via
 #' [diagnose_mfrm()] if not supplied.
+#'
+#' All thresholds are screening rules, not universal statistical acceptance
+#' criteria. High rater separation indicates distinguishable rater measures,
+#' not high agreement; low separation may reflect similar rater severity.
+#' Select `separation_facets` only when differentiation is the intended target.
+#' A Pass does not establish model validity, adequate SEs, or anchor invariance.
 #'
 #' Reliability and separation are used here as QC signals. In `mfrmr`,
 #' `Reliability` / `Separation` are model-based facet indices and
-#' `RealReliability` / `RealSeparation` provide more conservative lower bounds.
+#' `RealReliability` / `RealSeparation` use fit-inflated SEs. They are smaller
+#' or equal on the same levels; they are not statistical confidence bounds.
 #' For `MML`, these rely on model-based `ModelSE` values for non-person facets;
-#' for `JML`, they remain exploratory approximations.
+#' for `JML`, they remain exploratory approximations. Reliability and separation
+#' come from the same variance decomposition; they are not independent evidence.
+#'
+#' Category counts are sums of observation weights when weights are used.
+#' Threshold ordering compares adjacent numbered steps within each threshold
+#' family; missing steps or families require review. Equal estimates are
+#' nondecreasing within numerical tolerance. A binary scale has no adjacent
+#' threshold comparison, so its category screen evaluates counts only.
+#' These checks do not establish category adequacy or justify automatic merging.
 #'
 #' Three threshold presets are available via `threshold_profile`:
 #'
@@ -13529,7 +13594,7 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' | Bias fail (pct)   | 5       | 10       | 15      |
 #'
 #' Individual thresholds can be overridden via the `thresholds` argument
-#' (a named list keyed by the internal threshold names shown above).
+#' (a named list using entries such as `global_fit_warn` or `reliability_pass`).
 #'
 #' For bounded `GPCM`, this pipeline is available as caveated operational
 #' triage over supported diagnostics. Its pass/warn/fail labels remain package
@@ -13542,8 +13607,8 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' \enumerate{
 #'   \item **Convergence**: Did the model converge?
 #'   \item **Global fit**: Infit/Outfit MnSq within the current review band.
-#'   \item **Reliability**: Minimum non-person facet model reliability index.
-#'   \item **Separation**: Minimum non-person facet model separation index.
+#'   \item **Reliability**: Minimum index across explicitly selected differentiation facets.
+#'   \item **Separation**: Minimum index across those same selected facets.
 #'   \item **Element misfit**: Percentage of elements with Infit/Outfit
 #'         outside the current review band.
 #'   \item **Unexpected responses**: Percentage of observations with
@@ -13561,11 +13626,12 @@ print.summary.mfrm_dif_report <- function(x, ...) {
 #' - `$overall`: character string `"Pass"`, `"Warn"`, or `"Fail"`.
 #' - `$verdicts`: tibble with columns `Check`, `Verdict`, `Value`, and
 #'   `Threshold` for each of the 10 checks.
-#' - `$details`: character vector of human-readable detail strings.
-#' - `$raw_details`: named list of per-check numeric details for
-#'   programmatic access.
+#' - `$verdicts$Detail`: human-readable explanation of each assessment.
+#' - `$verdicts$AffectsOverall`: whether a check contributes to the overall result.
+#' - `$details`: named list of per-check numeric details for programmatic access.
 #' - `$recommendations`: character vector of actionable suggestions for
-#'   checks that did not pass.
+#'   checks that need review; suggestions do not prescribe deleting raters or
+#'   collapsing categories automatically.
 #' - `$config`: records the threshold profile and effective thresholds.
 #'
 #' @section Typical workflow:
@@ -13603,18 +13669,36 @@ run_qc_pipeline <- function(fit,
                             thresholds = NULL,
                             rater_facet = NULL,
                             include_bias = TRUE,
-                            bias_results = NULL) {
+                            bias_results = NULL,
+                            separation_facets = NULL) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm(). ",
       "Got: ", paste(class(fit), collapse = "/"), ".",
       call. = FALSE
     )
   }
+  if (inherits(fit, "mfrm_imported_fit")) {
+    stop("QC requires a native mfrmr fit with response-level diagnostics. Review imported tables with their source-package documentation.",
+         call. = FALSE)
+  }
   stop_if_gpcm_out_of_scope(fit, "run_qc_pipeline()")
 
   # -- compute diagnostics if needed --
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
+  }
+
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "run_qc_pipeline()")
+  if (!is.null(separation_facets) &&
+      (!is.character(separation_facets) || anyNA(separation_facets) ||
+       any(!separation_facets %in% fit$config$facet_names))) {
+    stop("`separation_facets` must name fitted non-Person facets whose levels you intend to distinguish.", call. = FALSE)
+  }
+  separation_facets <- unique(separation_facets)
+  if (!is.null(rater_facet) &&
+      (!is.character(rater_facet) || length(rater_facet) != 1L || is.na(rater_facet) ||
+       !rater_facet %in% fit$config$facet_names)) {
+    stop("`rater_facet` must name one fitted facet.", call. = FALSE)
   }
 
   # -- resolve threshold profile --
@@ -13707,6 +13791,9 @@ run_qc_pipeline <- function(fit,
   }
 
   verdicts <- character(10)
+  affects_overall <- rep(TRUE, 10)
+  affects_overall[c(3, 4)] <- length(separation_facets) > 0L
+  affects_overall[10] <- isTRUE(include_bias)
   values <- character(10)
   thresh <- character(10)
 
@@ -13724,19 +13811,11 @@ run_qc_pipeline <- function(fit,
   } else {
     "Warn"
   }
-  values[1] <- if (convergence$code_converged) {
-    if (converged) "Code 0; inference ready" else "Code 0; review required"
-  } else {
-    "Nonzero code; review required"
-  }
-  thresh[1] <- "Convergence severity = pass"
-  details[1] <- if (nzchar(convergence$detail)) {
-    convergence$detail
-  } else if (converged) {
-    "Optimizer diagnostics support inference-ready status."
-  } else {
-    "Optimizer diagnostics require review before inference."
-  }
+  readiness <- mfrmr_get_readiness_record(fit)$fit
+  numerical_ready <- identical(as.character(readiness$NumericalState[1]), "ready")
+  values[1] <- if (numerical_ready) "Numerical convergence passed" else "Numerical convergence requires review"
+  thresh[1] <- "Numerical and inference checks satisfied"
+  details[1] <- paste0(values[1], ". ", mfrm_fit_decision_summary(readiness)$Why[1])
   raw_details$convergence <- list(
     optimizer_code_zero = convergence$code_converged,
     inference_ready = converged,
@@ -13764,40 +13843,41 @@ run_qc_pipeline <- function(fit,
   }
 
   # ---- Check 2: Global Fit ----
-  infit_global <- as.numeric(diagnostics$overall_fit$Infit[1])
-  outfit_global <- as.numeric(diagnostics$overall_fit$Outfit[1])
-  if (is.na(infit_global)) infit_global <- 1.0
-  if (is.na(outfit_global)) outfit_global <- 1.0
+  infit_global <- as.numeric(diagnostics$overall_fit$Infit[1] %||% NA_real_)
+  outfit_global <- as.numeric(diagnostics$overall_fit$Outfit[1] %||% NA_real_)
 
-  gf_max <- max(infit_global, outfit_global, na.rm = TRUE)
-  gf_min <- min(infit_global, outfit_global, na.rm = TRUE)
+  gf_max <- max(infit_global, outfit_global)
+  gf_min <- min(infit_global, outfit_global)
 
-  if (gf_max > thr$global_fit_fail || gf_min < thr$global_fit_low) {
+  if (!all(is.finite(c(infit_global, outfit_global)))) {
+    verdicts[2] <- "Warn"
+  } else if (gf_max > thr$global_fit_fail || gf_min < thr$global_fit_low) {
     verdicts[2] <- "Fail"
   } else if (gf_max > thr$global_fit_warn) {
-    verdicts[2] <- "Warn"
-  } else if (gf_min < thr$global_fit_low) {
     verdicts[2] <- "Warn"
   } else {
     verdicts[2] <- "Pass"
   }
   values[2] <- sprintf("Infit=%.2f, Outfit=%.2f", infit_global, outfit_global)
   thresh[2] <- sprintf("[%.2f, %.2f]", thr$global_fit_low, thr$global_fit_warn)
-  details[2] <- sprintf("Global Infit=%.3f, Outfit=%.3f", infit_global, outfit_global)
+  details[2] <- if (all(is.finite(c(infit_global, outfit_global)))) {
+    sprintf("Global Infit=%.3f, Outfit=%.3f", infit_global, outfit_global)
+  } else "Global Infit or Outfit is unavailable; model fit was not cleared."
+
   raw_details$global_fit <- list(infit = infit_global, outfit = outfit_global)
   if (verdicts[2] != "Pass") {
     recommendations <- c(
       recommendations,
-      "Global fit indices fall outside the current review band. Investigate element-level misfit."
+      "Review global and element-level fit; unavailable values cannot establish adequate fit."
     )
   }
 
   # ---- Check 3: Reliability ----
   rel_tbl <- diagnostics$reliability
   if (!is.null(rel_tbl) && nrow(rel_tbl) > 0 && "Facet" %in% names(rel_tbl)) {
-    rel_non_person <- rel_tbl[rel_tbl$Facet != "Person", , drop = FALSE]
-    if (nrow(rel_non_person) > 0 && "Reliability" %in% names(rel_non_person)) {
-      min_rel <- min(rel_non_person$Reliability, na.rm = TRUE)
+    rel_non_person <- rel_tbl[rel_tbl$Facet %in% separation_facets, , drop = FALSE]
+    if (nrow(rel_non_person) == length(separation_facets) && nrow(rel_non_person) > 0 && "Reliability" %in% names(rel_non_person)) {
+      min_rel <- if (all(is.finite(rel_non_person$Reliability))) min(rel_non_person$Reliability) else NA_real_
     } else {
       min_rel <- NA_real_
     }
@@ -13808,34 +13888,34 @@ run_qc_pipeline <- function(fit,
   if (is.na(min_rel) || !is.finite(min_rel)) {
     verdicts[3] <- "Warn"
     values[3] <- "NA"
-    details[3] <- "Model reliability could not be computed"
+    details[3] <- "Model reliability is unavailable for one or more non-person facets"
   } else if (min_rel >= thr$reliability_pass) {
     verdicts[3] <- "Pass"
     values[3] <- fmt_num(min_rel)
-    details[3] <- sprintf("Min non-person model reliability = %.3f", min_rel)
+    details[3] <- sprintf("Minimum selected-facet reliability = %.3f", min_rel)
   } else if (min_rel >= thr$reliability_warn) {
     verdicts[3] <- "Warn"
     values[3] <- fmt_num(min_rel)
-    details[3] <- sprintf("Min non-person model reliability = %.3f (below %.2f)", min_rel, thr$reliability_pass)
+    details[3] <- sprintf("Minimum selected-facet reliability = %.3f (below %.2f)", min_rel, thr$reliability_pass)
   } else {
     verdicts[3] <- "Fail"
     values[3] <- fmt_num(min_rel)
-    details[3] <- sprintf("Min non-person model reliability = %.3f (below %.2f)", min_rel, thr$reliability_warn)
+    details[3] <- sprintf("Minimum selected-facet reliability = %.3f (below %.2f)", min_rel, thr$reliability_warn)
   }
   thresh[3] <- sprintf("Pass>=%.2f, Warn>=%.2f", thr$reliability_pass, thr$reliability_warn)
   raw_details$reliability <- list(min_reliability = min_rel, table = rel_tbl)
   if (verdicts[3] == "Fail") {
     recommendations <- c(
       recommendations,
-      "Low facet reliability. Consider increasing sample size or reducing measurement noise."
+      "The selected facets do not meet the requested differentiation criterion. Review both spread and SEs; this is not a rater-agreement assessment."
     )
   }
 
   # ---- Check 4: Separation ----
   if (!is.null(rel_tbl) && nrow(rel_tbl) > 0 && "Facet" %in% names(rel_tbl)) {
-    sep_non_person <- rel_tbl[rel_tbl$Facet != "Person", , drop = FALSE]
-    if (nrow(sep_non_person) > 0 && "Separation" %in% names(sep_non_person)) {
-      min_sep <- min(sep_non_person$Separation, na.rm = TRUE)
+    sep_non_person <- rel_tbl[rel_tbl$Facet %in% separation_facets, , drop = FALSE]
+    if (nrow(sep_non_person) == length(separation_facets) && nrow(sep_non_person) > 0 && "Separation" %in% names(sep_non_person)) {
+      min_sep <- if (all(is.finite(sep_non_person$Separation))) min(sep_non_person$Separation) else NA_real_
     } else {
       min_sep <- NA_real_
     }
@@ -13846,27 +13926,36 @@ run_qc_pipeline <- function(fit,
   if (is.na(min_sep) || !is.finite(min_sep)) {
     verdicts[4] <- "Warn"
     values[4] <- "NA"
-    details[4] <- "Model separation could not be computed"
+    details[4] <- "Model separation is unavailable for one or more non-person facets"
   } else if (min_sep >= thr$separation_pass) {
     verdicts[4] <- "Pass"
     values[4] <- fmt_num(min_sep)
-    details[4] <- sprintf("Min non-person model separation = %.3f", min_sep)
+    details[4] <- sprintf("Minimum selected-facet separation = %.3f", min_sep)
   } else if (min_sep >= thr$separation_warn) {
     verdicts[4] <- "Warn"
     values[4] <- fmt_num(min_sep)
-    details[4] <- sprintf("Min non-person model separation = %.3f (below %.2f)", min_sep, thr$separation_pass)
+    details[4] <- sprintf("Minimum selected-facet separation = %.3f (below %.2f)", min_sep, thr$separation_pass)
   } else {
     verdicts[4] <- "Fail"
     values[4] <- fmt_num(min_sep)
-    details[4] <- sprintf("Min non-person model separation = %.3f (below %.2f)", min_sep, thr$separation_warn)
+    details[4] <- sprintf("Minimum selected-facet separation = %.3f (below %.2f)", min_sep, thr$separation_warn)
   }
   thresh[4] <- sprintf("Pass>=%.2f, Warn>=%.2f", thr$separation_pass, thr$separation_warn)
   raw_details$separation <- list(min_separation = min_sep)
   if (verdicts[4] == "Fail") {
     recommendations <- c(
       recommendations,
-      "Low facet separation. Elements may not be distinguishable. Review facet design."
+      "Separation is below the requested differentiation criterion; consider whether distinguishing these facet levels is substantively necessary."
     )
+  }
+
+  if (!length(separation_facets)) {
+    verdicts[c(3, 4)] <- "Skip"
+    values[c(3, 4)] <- "Not requested"
+    thresh[c(3, 4)] <- "No differentiation target specified"
+    details[c(3, 4)] <- "No facet differentiation target specified; low rater separation is not evidence of poor agreement."
+  } else {
+    details[c(3, 4)] <- paste0(details[c(3, 4)], " (", paste(separation_facets, collapse = ", "), ").")
   }
 
   # ---- Check 5: Element Misfit ----
@@ -13876,16 +13965,18 @@ run_qc_pipeline <- function(fit,
     n_elements <- nrow(fit_tbl)
     flagged <- (fit_tbl$Infit > thr$misfit_high | fit_tbl$Outfit > thr$misfit_high |
       fit_tbl$Infit < thr$misfit_low | fit_tbl$Outfit < thr$misfit_low)
-    flagged[is.na(flagged)] <- FALSE
-    n_flagged <- sum(flagged)
-    misfit_pct <- 100 * n_flagged / n_elements
+    complete_fit <- all(is.finite(fit_tbl$Infit) & is.finite(fit_tbl$Outfit))
+    n_flagged <- sum(flagged, na.rm = TRUE)
+    misfit_pct <- if (complete_fit) 100 * n_flagged / n_elements else NA_real_
   } else {
     n_elements <- 0
     n_flagged <- 0
-    misfit_pct <- 0
+    misfit_pct <- NA_real_
   }
 
-  if (misfit_pct <= thr$misfit_warn_pct) {
+  if (!is.finite(misfit_pct)) {
+    verdicts[5] <- "Warn"
+  } else if (misfit_pct <= thr$misfit_warn_pct) {
     verdicts[5] <- "Pass"
   } else if (misfit_pct <= thr$misfit_fail_pct) {
     verdicts[5] <- "Warn"
@@ -13894,7 +13985,9 @@ run_qc_pipeline <- function(fit,
   }
   values[5] <- sprintf("%d/%d (%.1f%%)", n_flagged, n_elements, misfit_pct)
   thresh[5] <- sprintf("Pass<=%.0f%%, Fail>%.0f%%", thr$misfit_warn_pct, thr$misfit_fail_pct)
-  details[5] <- sprintf("%d of %d elements misfitting (%.1f%%)", n_flagged, n_elements, misfit_pct)
+  details[5] <- if (is.finite(misfit_pct)) {
+    sprintf("%d of %d elements misfitting (%.1f%%)", n_flagged, n_elements, misfit_pct)
+  } else "Element fit statistics are missing or incomplete; the misfit rate is unavailable."
   raw_details$element_misfit <- list(
     n_flagged = n_flagged, n_elements = n_elements,
     misfit_pct = misfit_pct
@@ -13902,19 +13995,28 @@ run_qc_pipeline <- function(fit,
   if (verdicts[5] != "Pass") {
     recommendations <- c(
       recommendations,
-      "Excessive element misfit detected. Review individual element fit statistics."
+      "Review individual element fit statistics and any unavailable values before interpreting the misfit rate."
     )
   }
 
   # ---- Check 6: Unexpected Responses ----
-  unexp_pct <- 0
-  if (!is.null(diagnostics$unexpected$summary) &&
-    "UnexpectedPercent" %in% names(diagnostics$unexpected$summary)) {
-    unexp_pct <- as.numeric(diagnostics$unexpected$summary$UnexpectedPercent[1])
+  unexpected_summary <- diagnostics$unexpected$summary
+  if (!all(c("EvaluatedObservations", "UnavailableObservations") %in% names(unexpected_summary)) &&
+      isTRUE(is.finite(unexpected_summary$UnexpectedPercent[1]))) {
+    controls <- diagnostics$unexpected$thresholds %||% list()
+    unexpected_summary <- unexpected_response_table(
+      fit, diagnostics, abs_z_min = controls$abs_z_min %||% 2,
+      prob_max = controls$prob_max %||% 0.30, rule = controls$rule %||% "either"
+    )$summary
   }
-  if (is.na(unexp_pct)) unexp_pct <- 0
+  unexp_pct <- as.numeric(unexpected_summary$UnexpectedPercent[1] %||% NA_real_)
+  unexp_missing <- as.numeric(unexpected_summary$UnavailableObservations[1] %||% NA_real_)
+  unexp_evaluated <- as.numeric(unexpected_summary$EvaluatedObservations[1] %||% NA_real_)
+  if (!isTRUE(unexp_missing == 0)) unexp_pct <- NA_real_
 
-  if (unexp_pct <= thr$unexpected_warn_pct) {
+  if (!is.finite(unexp_pct)) {
+    verdicts[6] <- "Warn"
+  } else if (unexp_pct <= thr$unexpected_warn_pct) {
     verdicts[6] <- "Pass"
   } else if (unexp_pct <= thr$unexpected_fail_pct) {
     verdicts[6] <- "Warn"
@@ -13923,68 +14025,54 @@ run_qc_pipeline <- function(fit,
   }
   values[6] <- fmt_pct(unexp_pct)
   thresh[6] <- sprintf("Pass<=%.0f%%, Fail>%.0f%%", thr$unexpected_warn_pct, thr$unexpected_fail_pct)
-  details[6] <- sprintf("%.1f%% unexpected responses", unexp_pct)
-  raw_details$unexpected <- list(unexpected_pct = unexp_pct)
+  details[6] <- if (is.finite(unexp_pct)) sprintf("%.1f%% unexpected responses", unexp_pct) else
+    sprintf("The unexpected-response rate is unavailable; %s responses evaluated and %s unavailable.",
+            fmt_num(unexp_evaluated, 0), fmt_num(unexp_missing, 0))
+  raw_details$unexpected <- list(unexpected_pct = unexp_pct,
+                                evaluated = unexp_evaluated, unavailable = unexp_missing)
   if (verdicts[6] != "Pass") {
     recommendations <- c(
       recommendations,
-      "High unexpected response rate. Inspect unexpected_response_table() for patterns."
+      "Inspect unexpected_response_table() for unusual responses and missing residual information."
     )
   }
 
   # ---- Check 7: Category Structure ----
-  step_est <- suppressWarnings(as.numeric(fit$steps$Estimate))
-  ordered_steps <- if (length(step_est) > 1) {
-    all(diff(step_est) > -sqrt(.Machine$double.eps), na.rm = TRUE)
-  } else {
-    TRUE
-  }
-
-  min_cat_count <- NA_real_
+  step_order <- calc_step_order(fit$steps, expected_steps = fit$config$n_cat - 1L,
+    expected_facets = fit$config$facet_levels[[fit$config$step_facet %||% ""]])
+  threshold_coverage <- summarize_threshold_order(step_order)
+  ordered_steps <- threshold_coverage$ThresholdMonotonic
   category_error <- NULL
-  category_available <- FALSE
-  tryCatch(
-    {
-      obs_df <- diagnostics$obs
-      if (!is.null(obs_df) && nrow(obs_df) > 0) {
-        category_available <- TRUE
-        observed <- if ("Observed" %in% names(obs_df)) {
-          suppressWarnings(as.numeric(obs_df$Observed))
-        } else {
-          suppressWarnings(as.numeric(obs_df$Score))
-        }
-        weights <- get_weights(obs_df)
-        all_categories <- seq(fit$prep$rating_min, fit$prep$rating_max)
-        counts <- numeric(length(all_categories))
-        idx <- match(observed, all_categories)
-        ok <- is.finite(idx) & is.finite(weights)
-        if (any(ok)) {
-          grouped <- split(weights[ok], idx[ok])
-          counts[as.integer(names(grouped))] <- vapply(grouped, sum, numeric(1))
-        }
-        min_cat_count <- min(counts, na.rm = TRUE)
-      }
-    },
+  category_usage <- tryCatch(
+    summarize_category_usage(calc_category_stats(diagnostics$obs, res = fit), low_count = thr$min_cat_count),
     error = function(e) {
       category_error <<- conditionMessage(e)
-      NULL
+      summarize_category_usage(NULL)
     }
   )
+  category_available <- category_usage$Categories > 0L && category_usage$UnavailableCounts == 0L
+  min_cat_count <- category_usage$MinCategoryCount
 
   cat_count_ok <- is.null(category_error) && isTRUE(category_available) &&
-    (is.na(min_cat_count) || min_cat_count >= thr$min_cat_count)
+    is.finite(min_cat_count) && min_cat_count >= thr$min_cat_count
 
   if (!is.null(category_error)) {
-    verdicts[7] <- "Skip"
+    verdicts[7] <- "Warn"
     details[7] <- paste0("Category counts could not be computed: ", category_error)
   } else if (!isTRUE(category_available)) {
-    verdicts[7] <- "Skip"
-    details[7] <- "Category counts were not available from diagnostics$obs."
+    verdicts[7] <- "Warn"
+    details[7] <- "Category counts were not available from the supplied observations."
+  } else if (isTRUE(threshold_coverage$NotApplicable)) {
+    verdicts[7] <- if (cat_count_ok) "Pass" else "Warn"
+    details[7] <- paste(threshold_order_note(threshold_coverage), sprintf("Minimum category count = %g.", min_cat_count))
+  } else if (is.na(ordered_steps) || !isTRUE(threshold_coverage$Unavailable == 0L)) {
+    verdicts[7] <- "Warn"
+    details[7] <- threshold_order_note(threshold_coverage)
   } else if (ordered_steps && cat_count_ok) {
     verdicts[7] <- "Pass"
     details[7] <- "Thresholds ordered"
     if (!is.na(min_cat_count)) {
-      details[7] <- sprintf("Thresholds ordered, min category count = %d", as.integer(min_cat_count))
+      details[7] <- sprintf("Thresholds ordered, min category count = %g", min_cat_count)
     }
   } else if (!ordered_steps && cat_count_ok) {
     verdicts[7] <- "Warn"
@@ -13992,42 +14080,47 @@ run_qc_pipeline <- function(fit,
   } else if (ordered_steps && !cat_count_ok) {
     verdicts[7] <- "Warn"
     details[7] <- sprintf(
-      "Thresholds ordered but min category count = %d (< %d)",
-      as.integer(min_cat_count), as.integer(thr$min_cat_count)
+      "Thresholds ordered but min category count = %g (< %g)",
+      min_cat_count, thr$min_cat_count
     )
   } else {
     verdicts[7] <- "Fail"
     details[7] <- sprintf(
-      "Thresholds disordered, min category count = %d (< %d)",
-      as.integer(min_cat_count), as.integer(thr$min_cat_count)
+      "Thresholds disordered, min category count = %g (< %g)",
+      min_cat_count, thr$min_cat_count
     )
   }
   values[7] <- sprintf(
-    "Ordered=%s, MinCount=%s",
-    if (ordered_steps) "Yes" else "No",
-    if (is.na(min_cat_count)) "NA" else as.character(as.integer(min_cat_count))
+    "Order=%s, minimum count=%s",
+    if (isTRUE(threshold_coverage$NotApplicable)) "Not applicable" else
+      if (is.na(ordered_steps)) "Unavailable" else if (ordered_steps) "Nondecreasing" else "Decreasing",
+    if (is.na(min_cat_count)) "NA" else as.character(min_cat_count)
   )
-  thresh[7] <- sprintf("Ordered + count>=%d", as.integer(thr$min_cat_count))
+  thresh[7] <- sprintf("Nondecreasing where applicable + count>=%g", thr$min_cat_count)
   raw_details$category_structure <- list(
     ordered = ordered_steps,
     min_cat_count = min_cat_count,
     available = category_available,
+    category_usage = category_usage,
+    threshold_coverage = threshold_coverage,
     error = category_error
   )
   if (verdicts[7] != "Pass") {
     recommendations <- c(
       recommendations,
-      "Category structure issues. Consider collapsing rating scale categories."
+      "Review category frequencies and each threshold ladder before changing the rating scale; missing information or disordered steps alone do not justify collapsing categories."
     )
   }
 
   # ---- Check 8: Connectivity ----
-  n_subsets <- 1L
+  n_subsets <- NA_integer_
   if (!is.null(diagnostics$subsets$summary) && nrow(diagnostics$subsets$summary) > 0) {
     n_subsets <- nrow(diagnostics$subsets$summary)
   }
 
-  if (n_subsets == 1L) {
+  if (!is.finite(n_subsets)) {
+    verdicts[8] <- "Warn"
+  } else if (n_subsets == 1L) {
     verdicts[8] <- "Pass"
   } else if (n_subsets == 2L) {
     verdicts[8] <- "Warn"
@@ -14036,9 +14129,10 @@ run_qc_pipeline <- function(fit,
   }
   values[8] <- as.character(n_subsets)
   thresh[8] <- "Pass=1, Warn=2, Fail>=3"
-  details[8] <- sprintf("%d disjoint subset(s)", n_subsets)
+  details[8] <- if (is.finite(n_subsets)) sprintf("%d disjoint subset(s)", n_subsets) else
+    "Connectivity information is unavailable."
   raw_details$connectivity <- list(n_subsets = n_subsets)
-  if (n_subsets > 1L) {
+  if (is.finite(n_subsets) && n_subsets > 1L) {
     recommendations <- c(
       recommendations,
       sprintf("Data has %d disjoint subsets. Measures are not directly comparable across subsets.", n_subsets)
@@ -14048,9 +14142,10 @@ run_qc_pipeline <- function(fit,
   # ---- Check 9: Inter-rater Agreement ----
   detected_rater <- rater_facet
   if (is.null(detected_rater)) {
-    detected_rater <- infer_default_rater_facet(fit$config$facet_names)
+    detected_rater <- infer_default_rater_facet(fit$config$facet_names, fallback_first = FALSE)
   }
 
+  affects_overall[9] <- !is.null(detected_rater)
   ira_pct <- NA_real_
   ira_available <- FALSE
   ira_error <- NULL
@@ -14205,16 +14300,17 @@ run_qc_pipeline <- function(fit,
     Verdict = verdicts,
     Value = values,
     Threshold = thresh,
-    Detail = details
+    Detail = details,
+    AffectsOverall = affects_overall
   )
 
   # -- overall verdict --
-  active_verdicts <- verdicts[verdicts != "Skip"]
+  active_verdicts <- verdicts[affects_overall]
   if (any(active_verdicts == "Fail")) {
     overall <- "Fail"
   } else if (any(active_verdicts == "Warn")) {
     overall <- "Warn"
-  } else if (any(verdicts == "Skip")) {
+  } else if (any(active_verdicts == "Skip")) {
     overall <- "Warn"
   } else {
     overall <- "Pass"
@@ -14236,17 +14332,32 @@ run_qc_pipeline <- function(fit,
     ),
     config = list(
       threshold_profile = threshold_profile,
-      thresholds = effective_thresholds
+      thresholds = effective_thresholds,
+      separation_facets = separation_facets,
+      screening_coverage_version = 3L
     )
   )
   class(out) <- c("mfrm_qc_pipeline", "list")
   out
 }
 
+validate_qc_pipeline_output <- function(x) {
+  if (!is.data.frame(x$verdicts) || !"AffectsOverall" %in% names(x$verdicts) ||
+      !identical(x$config$screening_coverage_version, 3L)) {
+    stop(paste(
+      "This saved QC result lacks current differentiation targets or response, category, and threshold coverage.",
+      "Recreate it with run_qc_pipeline(fit) using current diagnostics; no model refit is needed."
+    ), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' @export
 print.mfrm_qc_pipeline <- function(x, ...) {
+  validate_qc_pipeline_output(x)
   cat("--- QC Pipeline ---\n")
   cat("Overall:", x$overall, "\n\n")
+  print_wrapped_line("QC flags describe the selected screening rules. Pass does not establish validity or adequate uncertainty. Unrequested checks do not affect the overall result.")
   vt <- x$verdicts
   markers <- ifelse(vt$Verdict == "Pass", "[PASS]",
     ifelse(vt$Verdict == "Warn", "[WARN]",
@@ -14262,17 +14373,19 @@ print.mfrm_qc_pipeline <- function(x, ...) {
   }
   if (!is.null(x$gpcm_boundary) && nrow(as.data.frame(x$gpcm_boundary)) > 0) {
     cat("\nGPCM Boundary:\n")
-    print(as.data.frame(x$gpcm_boundary)[, c("Area", "Status"), drop = FALSE], row.names = FALSE)
+    print_wrapped_line("GPCM diagnostics remain descriptive where uncertainty is unqualified; QC does not establish model-selection or operational-scoring eligibility.")
   }
   invisible(x)
 }
 
 #' @export
 summary.mfrm_qc_pipeline <- function(object, ...) {
+  validate_qc_pipeline_output(object)
   out <- list(
     verdicts = object$verdicts,
     overall = object$overall,
     recommendations = object$recommendations,
+    config = object$config,
     gpcm_boundary = object$gpcm_boundary %||% data.frame(),
     pass_count = sum(object$verdicts$Verdict == "Pass"),
     warn_count = sum(object$verdicts$Verdict == "Warn"),
@@ -14285,8 +14398,10 @@ summary.mfrm_qc_pipeline <- function(object, ...) {
 
 #' @export
 print.summary.mfrm_qc_pipeline <- function(x, ...) {
+  validate_qc_pipeline_output(x)
   cat("--- QC Pipeline Summary ---\n")
   cat("Overall:", x$overall, "\n")
+  print_wrapped_line("Pass describes the selected screening rules, not a statistical validation. Unrequested checks do not affect the overall result.")
   cat(sprintf(
     "Pass: %d | Warn: %d | Fail: %d | Skip: %d\n\n",
     x$pass_count, x$warn_count, x$fail_count, x$skip_count

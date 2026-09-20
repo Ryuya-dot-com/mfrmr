@@ -1077,6 +1077,7 @@ test_that("APA precision cannot override blocked fit readiness", {
 })
 
 test_that("APA formal-inference decision requires precision support after fit gates pass", {
+  skip_if_not_installed("lpSolve")
   data <- load_mfrmr_data("example_core")
   fit <- suppressWarnings(fit_mfrm(
     data,

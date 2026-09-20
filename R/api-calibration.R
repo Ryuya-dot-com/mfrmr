@@ -57,7 +57,7 @@ mfrm_calibration_capabilities <- function() {
       "population coding and conditional parameters are not stored in the artifact",
       "relative-slope ownership is not stored in the artifact",
       "source JML Person coordinates are excluded from the artifact",
-      "both relative-slope ownership and a portable JML scoring-prior contract are absent"
+      "relative slopes and a JML scoring prior are not stored in the artifact"
     ),
     stringsAsFactors = FALSE
   )
@@ -115,7 +115,7 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
   if (!valid_shape) {
     mfrmr_calibration_abort(
       "QUADRATURE_REVIEW_INVALID", "quadrature_review",
-      "the review has an incomplete or altered fit/grid contract"
+      "the review must retain one fitted model and run record for every evaluated quadrature order"
     )
   }
   model <- toupper(as.character(fit$config$model %||% "")[1L])
@@ -139,7 +139,36 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
       "the reviewed fits do not share one model and prepared response dataset"
     )
   }
-  if (!isTRUE(all(as.logical(runs$EstimationConverged)))) {
+  same_settings <- tryCatch({
+    reference_arguments <- mfrmr_gqs_refit_arguments(fits[[1L]], NULL, 2L)
+    reference_model <- mfrm_checkpoint_objective_components(
+      list(), fits[[1L]]$config
+    )$model
+    all(vapply(seq_along(fits), function(i) {
+      candidate <- fits[[i]]
+      candidate_nodes <- candidate$config$estimation_control$quad_points
+      identical(as.numeric(candidate_nodes), as.numeric(nodes[i])) &&
+        identical(mfrmr_gqs_refit_arguments(candidate, NULL, 2L),
+                  reference_arguments) &&
+        identical(mfrm_checkpoint_objective_components(
+          list(), candidate$config
+        )$model, reference_model) &&
+        identical(candidate$prep$score_map, fits[[1L]]$prep$score_map)
+    }, logical(1L)))
+  }, error = function(condition) FALSE)
+  if (!isTRUE(same_settings)) {
+    mfrmr_calibration_abort(
+      "QUADRATURE_REVIEW_INVALID", "quadrature_review.fits",
+      paste(
+        "each reviewed fit must use its recorded quadrature order and the same",
+        "score map, model, anchors, integration mode and fitting settings"
+      )
+    )
+  }
+  if (!isTRUE(all(as.logical(runs$EstimationConverged))) ||
+      !all(vapply(fits, function(candidate) {
+        identical(as.integer(candidate$opt$convergence), 0L)
+      }, logical(1L)))) {
     mfrmr_calibration_abort(
       "QUADRATURE_REVIEW_INCOMPLETE", "quadrature_review.runs",
       "every evaluated quadrature fit must complete estimation"
@@ -180,7 +209,10 @@ mfrmr_validate_calibration_quadrature_review <- function(fit, review) {
 #'
 #' Before extraction, run [mml_quadrature_sensitivity()] on user-selected grids
 #' and inspect its continuous differences. Pass the exact highest-grid fit in
-#' that object together with `quadrature_review`. This procedural requirement
+#' that object together with `quadrature_review`. The retained fits must use
+#' their recorded grid sizes and the same data, score map and fitting settings,
+#' including anchors and integration mode, and must all have converged.
+#' This procedural requirement
 #' does not declare the fit numerically stable: the package does not choose the
 #' application-specific tolerance or decide whether more grids are needed.
 #' Archive the review separately when it is part of the audit trail, because

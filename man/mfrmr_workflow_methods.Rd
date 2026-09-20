@@ -64,6 +64,98 @@ Here \code{results} is the basic summary and \code{res} is the comprehensive obj
 accepted by \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
 }
 
+\section{Updating saved analyses for 0.2.4}{
+
+Keep the original objects, data and analysis settings. Installing an update
+does not recalculate saved tables, figures or reports. Start by printing
+\code{summary(fit)} under the updated package and reading its interpretation
+decision. If the saved native fit lacks the current estimation checks,
+refit from the original data with the same intended model, category coding,
+anchors, weights and numerical settings. Running \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} alone
+cannot establish checks missing from that fit. If the original data or
+settings are unavailable, retain the old result as historical output;
+its previous approval is not evidence for current inferential use.
+
+For a fit with current estimation checks, update the affected result at
+the earliest step below, then rebuild its dependent summaries, plots and
+exports. A request to recompute diagnostics or scoring does not itself
+require a new calibration fit.
+\itemize{
+\item \strong{Display wording only:} reprint a saved fit summary. This updates labels
+and removes the duplicate inference decision; it does not recalculate
+stored diagnostics or establish missing precision evidence.
+\item \strong{Diagnostics and QC:} recreate \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} results with the original
+diagnostic settings before rebuilding reliability, precision, category,
+marginal-fit, person-fit, unexpected-response, fair-score and reporting
+results. Rerun separately requested \code{\link[=q3_statistic]{q3_statistic()}},
+\code{\link[=analyze_residual_pca]{analyze_residual_pca()}} and \code{\link[=compute_person_fit_indices]{compute_person_fit_indices()}} calculations
+with their original options. In \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}, request
+\code{separation_facets} only for facets whose levels need to be distinguished;
+it is no longer a default rater-quality requirement. Missing results remain
+unavailable and cannot be treated as passes.
+\item \strong{Group comparisons and equivalence:} recreate residual \code{\link[=analyze_dff]{analyze_dff()}}
+/ \code{\link[=analyze_dif]{analyze_dif()}} and \code{\link[=dif_interaction_table]{dif_interaction_table()}} results from the existing
+fit and original group data. They now describe residual differences without
+tests or confidence intervals. Recompute \code{\link[=analyze_facet_equivalence]{analyze_facet_equivalence()}}
+from an eligible MML fit with matching current diagnostics and the original
+practical bound; old equivalence bundles cannot supply the required joint
+covariance. Rebuild model-choice and weighting reviews from their source
+fits as well.
+\item \strong{Observed-score design coefficients and shrinkage:} rerun
+\code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with its original data and settings, then
+\code{\link[=mfrm_d_study]{mfrm_d_study()}} with the planned counts and residual-scaling choice.
+This re-estimates the separate observed-score mixed model, not the MFRM.
+Reapply \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} with the original prior settings
+to refresh shrinkage reports and descriptive bands.
+\item \strong{Fitted-object Person scores:} re-summarize the original prediction object
+to recover stored interval settings and updated explanations. To replace
+older grid-endpoint intervals with continuous posterior intervals, rerun
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} using the existing fit, scoring data and settings.
+Reprinting cannot change an already calculated interval. Rerun scoring
+when older estimated-population results lack numerical prior information
+or are refused because they claimed unrestricted scoring; these fits
+require explicit \code{readiness_policy = "review"}.
+\item \strong{Plausible values:} use \code{summary(original_plausible_values)} on the saved
+draw object to obtain empirical quantiles at its requested interval level.
+No new draws are needed for this correction. A saved derived summary alone
+cannot recover the original draws. If estimated-population restrictions
+require regeneration, repeat the original scoring/draw call with the same
+data, settings and seed, and \code{readiness_policy = "review"}.
+\item \strong{Portable calibration:} \code{\link[=load_mfrm_calibration]{load_mfrm_calibration()}} preserves a valid
+artifact's recorded scoring algorithm; older grid-based intervals remain
+grid-based. To adopt continuous intervals, create a new calibration using
+the reviewed source fits and \link{mfrm_calibration_workflow}, then score again.
+Retain the old artifact for reproducibility. Re-summarizing older score
+results recovers recorded algorithm/level labels without changing values.
+\item \strong{External fits:} rerun \code{\link[=import_erm_fit]{import_erm_fit()}}, \code{\link[=import_tam_fit]{import_tam_fit()}} or
+\code{\link[=import_mirt_fit]{import_mirt_fit()}} on the saved source-package fit and rebuild displays;
+source-model re-estimation is unnecessary. Use \code{compute_fit = TRUE} when
+imported measurement diagnostics are needed. Unsupported source models
+remain unsupported, and imports do not become native fits.
+\item \strong{Agreement, networks and timing:} rebuild \code{\link[=interrater_agreement_table]{interrater_agreement_table()}},
+\code{\link[=rater_network_analysis]{rater_network_analysis()}} and \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} from the
+existing native fit, matching diagnostics and original settings. Refresh
+design reviews with \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}} to record whether the
+graph covers all observed subsets. Recreate \code{\link[=response_time_review]{response_time_review()}} from
+the original timed-event data and settings. No MFRM refit is required.
+Unavailable comparisons remain unassessed; a missing or excluded graph
+edge does not establish absence of a rater effect. Halo Welch-test columns
+are retained as missing values. Timing rates use valid times and describe
+cutoff rules, not calibrated rapid-guessing or low-effort classifications.
+\item \strong{Simulation and design summaries:} re-summarize saved evaluation objects
+to retain attempted-run denominators and unavailable residual-DIF rates.
+Missing workload or connectivity records cannot be reconstructed by
+summary formatting. If those records are required for a recommendation,
+repeat the original evaluation with its recorded design, settings and seeds.
+}
+
+After any required recalculation, regenerate dependent \code{\link[=mfrm_results]{mfrm_results()}},
+reports and exports with matching source objects. A newly created PDF, HTML
+file or CSV can still contain outdated calculations if built from an old
+derived object. Consult the affected function's help for its interpretation
+limits; updating an object does not broaden those limits.
+}
+
 \section{Next steps for reporting}{
 
 For the clearest default route in \code{RSM} / \code{PCM}, use
@@ -141,6 +233,11 @@ pre-omit background-data table for replay/export provenance.
 under the fitted population model when scored units also supply
 one-row-per-person background data. That scoring-time \code{person_data}
 contract remains separate from the fit object's stored replay table.
+Estimated-population scoring currently requires explicit
+\code{readiness_policy = "review"}. Scores and intervals hold the estimated
+calibration and population parameters fixed; their estimation uncertainty
+is omitted. These draws alone do not justify downstream group comparisons
+or regression without a compatible conditioning model and sampling design.
 \item \code{\link[=predict_mfrm_population]{predict_mfrm_population()}} remains a scenario-level simulation/refit
 helper rather than the latent-regression estimator itself.
 }
@@ -224,6 +321,8 @@ while score-side FACETS helpers remain outside the documented \code{GPCM}
 boundary. Use
 \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} as the formal capability map
 before branching into less common helpers.
+Residual DIF/DFF differences remain descriptive; their detection and
+false-positive rates are unavailable in \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}.
 \item (Optional, \code{RSM} / \code{PCM}; bounded \code{GPCM} with caveat) Estimate
 interaction bias with \code{\link[=estimate_bias]{estimate_bias()}}.
 \item Choose a downstream branch:
@@ -264,7 +363,9 @@ before using those results in design claims.
 Unit scoring can use an ordinary \code{MML} fit directly, a latent-regression
 \code{MML} fit when you also supply one-row-per-person background data for the
 scored units, or a \code{JML} fit when a post hoc reference-prior EAP layer is
-acceptable. Intercept-only latent-regression fits
+acceptable. Estimated-population fits require explicit
+\code{readiness_policy = "review"}; this does not remove their interpretation
+limits. Intercept-only latent-regression fits
 (\code{population_formula = ~ 1}) can reconstruct that minimal person table
 from the scored person IDs. Keep \code{predict_mfrm_population()}
 conceptually separate from that scoring layer: it is a simulation-based
@@ -310,8 +411,10 @@ bounded \code{GPCM}:
 \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} when you want to inspect
 whether bounded \code{GPCM} is introducing substantively acceptable
 discrimination-based reweighting relative to the Rasch-family reference.
-Use one selectable q>=31 grid for every candidate and a denser common-grid
-sensitivity check when the comparison is close or consequential.
+Eligible MML comparisons require a common grid of at least 31 points and
+a denser common-grid sensitivity check when close or consequential.
+Free-slope GPCM ranking and the PCM-versus-GPCM chi-square LRT remain
+unavailable; grid refinement alone does not change those restrictions.
 \item Design planning and forecasting:
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
 \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} -> \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for

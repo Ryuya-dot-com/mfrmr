@@ -56,10 +56,10 @@ not one common slope and not simultaneous criterion-by-rater slope blocks.
 The overview records the slope owner, step owner, level count, free relative
 slope contrasts, and whether the supplied reference is the exact unit-slope
 PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
-intentionally withheld in the current comparison contract.
-The returned \code{comparison_contract} separates three evidence channels:
-selectable same-basis MML information criteria, descriptive JML
-reweighting, and non-ready optimizer traces. In particular, a JML
+unavailable. Free-slope GPCM also lacks the inference checks required for
+information-criterion ranking, even under MML. The returned
+\code{comparison_contract} records the applicable comparison restrictions;
+observed changes in fit, scores and information remain descriptive. A JML
 log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
 selection because it is unpenalized and the GPCM contains additional slope
 parameters. FACETS may serve as a direct comparator for the PCM/JML side
@@ -81,9 +81,9 @@ reweighting is substantively acceptable.
 
 \itemize{
 \item \code{model_comparison}: same-data model-comparison bundle from \code{\link[=compare_mfrm]{compare_mfrm()}}.
-AIC/Person-BIC/SABIC ranking is available only when
-\code{model_comparison$table$ICComparable} is true. PCM-versus-GPCM LRT remains
-unavailable even though PCM is the aligned GPCM's unit-slope reduction.
+AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
+GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though PCM
+is the aligned GPCM's unit-slope reduction.
 \item \code{comparison_contract}: one-row evidence-tier table stating whether formal
 model selection is available, how any observed log-likelihood difference
 may be read, and the bounded role of FACETS in a JML review.

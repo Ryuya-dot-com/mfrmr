@@ -731,14 +731,6 @@ test_that("extract_anchor_tables returns lists", {
   expect_true("groups" %in% names(at))
 })
 
-# ---- lines 3775, 3780, 3790: ensure_positive_definite ----
-test_that("ensure_positive_definite handles non-PD matrix", {
-  mat <- matrix(c(1, 0.99, 0.99, 1), nrow = 2)
-  result <- mfrmr:::ensure_positive_definite(mat)
-  expect_true(is.matrix(result))
-  expect_equal(dim(result), c(2, 2))
-})
-
 # ---- lines 3814, 3818, 3821: compute_pca_overall edge cases ----
 test_that("compute_pca_overall returns NULL for empty facets", {
   r <- mfrmr:::compute_pca_overall(data.frame(), character(0))
@@ -829,18 +821,19 @@ test_that("loglik_rsm and loglik_pcm with weights", {
   expect_true(is.finite(ll_pcm_w))
 })
 
-# ---- additional reporting.R line 536: disordered step with non-finite spacing ----
-test_that("summarize_step_estimates with disordered steps and non-finite spacing", {
+# ---- Step summaries recompute ordering from estimates ----
+test_that("summarize_step_estimates retains decreasing and unavailable comparisons", {
   tbl <- data.frame(
-    Step = c("S1", "S2"),
-    Estimate = c(-0.5, 0.5),
-    StepFacet = c("Common", "Common"),
-    Spacing = c(NA_real_, -0.3),
-    Ordered = c(TRUE, FALSE),
+    Step = c("S1", "S2", "S3"),
+    Estimate = c(-0.5, -0.8, NA_real_),
+    StepFacet = "Common",
+    Spacing = c(NA_real_, 0.3, 0.4),
+    Ordered = TRUE,
     stringsAsFactors = FALSE
   )
   txt <- mfrmr:::summarize_step_estimates(tbl)
-  expect_true(grepl("disordered", txt))
+  expect_match(txt, "1 decreasing among 1 available; 1 of 2 comparisons unavailable", fixed = TRUE)
+  expect_match(txt, "Decreasing pairs end at Common:S2", fixed = TRUE)
 })
 
 # ---- PCM with bias for PCM branches ----

@@ -115,11 +115,20 @@ positive halo pattern; consult signed correlations in \code{pair_metrics} and
 The key descriptive comparison is the distribution of halo-edge weights
 versus non-halo-edge weights. A larger halo-edge distribution is consistent
 with a halo pattern, but this function deliberately reports it as a
-screening diagnostic. \code{MeanHaloWeight}, \code{MeanNonHaloWeight}, and the Welch
-comparison use all finite absolute correlations meeting \code{min_pair_n}, before
+screening diagnostic. \code{MeanHaloWeight} and \code{MeanNonHaloWeight}
+use all finite absolute correlations meeting \code{min_pair_n}, before
 adjusted-p, \code{min_abs_weight}, and sign filtering; the corresponding
-\verb{MeanRetained*} columns describe the filtered graph. The Welch test is
-descriptive only because edge weights are clustered by rater and node.
+\verb{MeanRetained*} columns describe the filtered graph. Candidate and unavailable
+pair counts accompany these available-pair means. An incomplete comparison
+cannot receive an unqualified no-flag assessment.
+
+\code{WelchT}, \code{WelchDF} and \code{WelchP} remain as unavailable compatibility columns.
+The correlations share observations, raters and nodes; an independent-sample
+test of their difference is not supplied. Pairwise correlation tail areas
+screen association under their sampling assumptions, not halo itself.
+No retained graph edges is not evidence that halo is absent; retain the
+originally specified thresholds. Recreate older network results from the
+existing fit and matching diagnostics before summary, plotting or export.
 }
 \examples{
 \donttest{

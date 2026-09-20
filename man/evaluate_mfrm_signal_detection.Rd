@@ -215,8 +215,9 @@ A DIF signal is counted as "detected" when the target contrast has
 \eqn{p <} \code{dif_p_cut} \strong{and}, when an absolute contrast cutoff is in
 force, \eqn{|\mathrm{Contrast}| \ge} \code{dif_abs_cut}. For
 \code{dif_method = "refit"}, \code{dif_abs_cut} is interpreted on the logit scale.
-For \code{dif_method = "residual"}, the residual-contrast screening result is
-used and the default is to rely on the significance test alone.
+For \code{dif_method = "residual"}, DIF detection, classification and false-positive
+rates are unavailable (\code{NA}). Residual contrasts remain available as
+descriptive summaries; a missing test is not counted as a non-detection.
 
 Bias results are different: \code{\link[=estimate_bias]{estimate_bias()}} reports \code{t} and \code{Prob.} as
 screening metrics rather than formal inferential quantities. Here, a bias
@@ -226,7 +227,8 @@ available and satisfy
 \eqn{p <} \code{bias_p_cut} \strong{and} \eqn{|t| \ge} \code{bias_abs_t}.
 
 \strong{Power} is the proportion of replications in which the target signal
-was correctly detected. For DIF this is a conventional power summary.
+was flagged when a comparison statistic is available. Refit DIF rates are
+conditional screening rates, not calibrated inferential power.
 For bias, the primary summary is \code{BiasScreenRate}, a screening hit rate
 rather than formal inferential power.
 

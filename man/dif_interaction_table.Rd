@@ -30,17 +30,17 @@ dif_interaction_table(
 must contain the \code{group} column.}
 
 \item{min_obs}{Minimum observations per cell. Cells with fewer than
-this many observations are flagged as sparse and their test
-statistics set to \code{NA}. Default \code{10}.}
+this many observations are marked sparse; scaled residuals and magnitude
+flags are \code{NA}. Observed and expected score summaries remain available.}
 
-\item{p_adjust}{P-value adjustment method, passed to
-\code{\link[stats:p.adjust]{stats::p.adjust()}}. Default \code{"holm"}.}
+\item{p_adjust}{Retained for compatibility; unused because no p-values are
+reported. Default \code{"holm"}.}
 
-\item{abs_t_warn}{Threshold for flagging cells by absolute t-value.
-Default \code{2}.}
+\item{abs_t_warn}{Retained for compatibility; unused because scaled residuals
+are not t statistics. \code{flag_t} is \code{NA}.}
 
-\item{abs_bias_warn}{Threshold for flagging cells by absolute
-Obs-Exp average (in logits). Default \code{0.5}.}
+\item{abs_bias_warn}{Threshold for marking the absolute observed-minus-expected
+average, in score units. Default \code{0.5}. This is a descriptive magnitude rule.}
 }
 \value{
 Object of class \code{mfrm_dif_interaction} with:
@@ -53,7 +53,7 @@ Object of class \code{mfrm_dif_interaction} with:
 }
 \description{
 Produces a cell-level interaction table showing Obs-Exp differences,
-standardized residuals, and screening statistics for each
+scaled residuals, and absolute residual mean comparisons for each
 facet-level x group-value cell.
 }
 \details{
@@ -67,17 +67,14 @@ it computes:
 \item ObsExpAvg: mean observed-minus-expected difference
 \item Var_sum: sum of model variances
 \item StdResidual: (ObsScore - ExpScore) / sqrt(Var_sum)
-\item t: approximate t-statistic (equal to StdResidual)
-\item df: N - 1
-\item p_value: two-tailed p-value from the t-distribution
+\item t, df, p_value, p_adjusted, flag_t: \code{NA}, retained for compatibility
 }
 }
 \section{When to use this instead of analyze_dff()}{
 
 Use \code{dif_interaction_table()} when you want cell-level screening for a
 single facet-by-group table. Use \code{\link[=analyze_dff]{analyze_dff()}} when you want group-pair
-contrasts summarized into differential-functioning effect sizes and
-method-appropriate classifications.
+comparisons. Neither residual output tests differential functioning.
 }
 
 \section{Further guidance}{
@@ -94,9 +91,10 @@ For plot selection and follow-up diagnostics, see
 \item \verb{$config}: analysis configuration parameters.
 \item \verb{$gpcm_boundary}: for bounded \code{GPCM} fits, a capability-boundary table
 marking the table as caveated DFF screening evidence.
-\item Cells with \verb{|t| > abs_t_warn} or \verb{|ObsExpAvg| > abs_bias_warn}
-are flagged in the \code{flag_t} and \code{flag_bias} columns.
-\item Sparse cells (N < min_obs) have \code{sparse = TRUE} and NA statistics.
+\item \code{flag_bias} records \verb{|ObsExpAvg| > abs_bias_warn} in score units.
+It does not establish differential functioning. \code{flag_t} is unavailable.
+\item Sparse cells (N < min_obs) have \code{sparse = TRUE} and unavailable scaled
+residuals and magnitude flags. The score means and counts are retained.
 }
 }
 
@@ -105,6 +103,10 @@ are flagged in the \code{flag_t} and \code{flag_bias} columns.
 For bounded \code{GPCM}, the interaction table uses the fitted slope-aware
 expected-score/residual scale and should be reported as screening evidence,
 not as a standalone fairness, invariance, or operational subgroup decision.
+
+Residual means can differ even when response parameters are the same between
+groups. These summaries provide no p-values or t-based decisions. Recompute
+older saved tables with this function using the fitted model; no refit is needed.
 }
 
 \section{Typical workflow}{

@@ -53,7 +53,10 @@ When fitted category probabilities are available, expected exact agreement
 for a matched context is the model-implied quantity
 \eqn{\sum_k P_{r1}(X=k)P_{r2}(X=k)}. It is not a marginal-frequency chance
 agreement statistic. Observed exact agreement uses equality of the package's
-observed score categories. The current function does not translate category
+observed score categories. Repeated ratings in a rater/context cell are
+averaged using observation weights; comparisons then describe those means,
+and expected exact agreement is withheld for the repeated cells. The
+current function does not translate category
 positions across multiple independent scales, apply an agreement-based SE
 inflation, or establish numerical equivalence with FACETS Table 7.
 }
@@ -65,8 +68,13 @@ inflation, or establish numerical equivalence with FACETS Table 7.
 \item \code{settings}: applied facet matching and warning thresholds.
 }
 
-Pairs flagged by both low exact agreement and low correlation generally
-deserve highest calibration priority.
+Flags indicate configured review thresholds, not rater quality, fairness
+or an automatic training priority. A missing rule remains unavailable;
+a known cutoff crossing still flags the pair. Overall flag rates require
+complete classification. Expected agreement is withheld if any matched
+context lacks valid category probabilities; availability counts are retained.
+Recreate older agreement/network results from the existing fit and matching
+diagnostics with the original settings, then regenerate plots and exports.
 }
 
 \section{Typical workflow}{
@@ -100,12 +108,18 @@ counts behind the agreement proportions.}
 The \code{summary} data.frame contains:
 \describe{
 \item{RaterFacet}{Name of the rater facet analyzed.}
-\item{TotalPairs}{Number of rater pairs evaluated.}
-\item{ExactAgreement}{Mean exact agreement across all pairs.}
+\item{Pairs, AvailablePairs, UnavailablePairs}{All candidate rater pairs,
+those with matched scores, and those without.}
+\item{TotalPairs}{Total matched-context opportunities across rater pairs.}
+\item{ExactAgreement}{Exact agreements divided by all matched-context
+opportunities.}
 \item{AgreementMinusExpected}{Observed exact agreement minus expected exact
 agreement.}
 \item{MeanCorr}{Mean pairwise correlation.}
-\item{FlaggedPairs, FlaggedShare}{Count and proportion of flagged pairs.}
+\item{FlaggedPairs, FlaggedShare}{Known flagged pairs and their share of
+all pairs; the share is unavailable if classification is incomplete.}
+\item{ClassifiedPairs, UnclassifiedPairs}{Available and unavailable combined
+flag decisions. Correlation availability is recorded separately.}
 \item{RaterSeparation, RaterReliability}{Severity-spread indices for the
 rater facet, reported separately from agreement.}
 }

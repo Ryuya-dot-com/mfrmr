@@ -45,6 +45,11 @@ A response is flagged as unexpected when:
 \item \code{rule = "both"}: both conditions must be met.
 }
 
+Missing inputs preserve an unavailable rule outcome unless the other
+condition determines the result (for example, a true condition suffices
+for \code{either}). Summaries retain evaluated and unavailable counts; the
+full-sample percentage is withheld if any outcome is unavailable.
+
 The table includes row-level observed/expected values, residuals,
 observed-category probability, most-likely category, and a composite
 severity score for sorting.
@@ -99,7 +104,11 @@ criterion.}
 The \code{summary} data.frame contains:
 \describe{
 \item{TotalObservations}{Total observations analyzed.}
-\item{UnexpectedN, UnexpectedPercent}{Count and share of flagged rows.}
+\item{UnexpectedN, UnexpectedPercent}{Known flagged count and full-sample
+percentage. The percentage is unavailable when any rule outcome is
+unknown; the count is unavailable when no response can be evaluated.}
+\item{EvaluatedObservations, UnavailableObservations}{Responses whose
+rule outcome is determined or unavailable.}
 \item{AbsZThreshold, ProbThreshold}{Applied cutoff values.}
 \item{Rule}{"either" or "both".}
 }

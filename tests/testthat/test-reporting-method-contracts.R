@@ -38,6 +38,89 @@ local({
 # build_visual_warning_map
 # ============================================================================
 
+test_that("regularized facet SEs remain diagnostic across reports and saved inputs", {
+  covariance <- mfrmr:::compute_mml_parameter_covariance(.fit_mml)
+  expect_identical(covariance$status, "ok")
+  covariance$status <- "regularized"
+  covariance$regularized <- TRUE
+  local_mocked_bindings(
+    compute_mml_parameter_covariance = function(...) covariance,
+    .package = "mfrmr"
+  )
+  diag <- diagnose_mfrm(.fit_mml, residual_pca = "none", diagnostic_mode = "both")
+  facet <- diag$measures$Facet != "Person"
+  expect_true(any(is.finite(diag$measures$SE[facet])))
+  expect_false(any(diag$measures$CIEligible[facet]))
+  expect_false(any(diag$measures$SupportsFormalInference[facet]))
+  expect_true(all(grepl("regularized Hessian", diag$measures$SE_Method[facet])))
+  expect_true(diag$precision_profile$HasRegularizedSE)
+  expect_false(diag$precision_profile$SupportsFormalInference)
+  expect_equal(diag$measures$SE, .diag_mml$measures$SE, tolerance = 0)
+  expect_equal(diag$measures$CI_Lower, .diag_mml$measures$CI_Lower, tolerance = 0)
+  expect_equal(diag$measures$CI_Upper, .diag_mml$measures$CI_Upper, tolerance = 0)
+  expect_error(analyze_facet_equivalence(.fit_mml), "unregularized", fixed = TRUE)
+  report <- precision_review_report(.fit_mml, diag)
+  text <- paste(capture.output(print(summary(report))), collapse = " ")
+  expect_match(text, "regularized Hessian", fixed = TRUE)
+  expect_match(text, "diagnostic only", fixed = TRUE)
+  expect_false(grepl("PrecisionTier|SupportsFormalInference|validation-use", text))
+
+  older <- diag
+  older$measures$SupportsFormalInference[facet] <- TRUE
+  older$measures$CIEligible[facet] <- TRUE
+  expect_error(summary(older), "Recompute diagnose_mfrm(fit)", fixed = TRUE)
+  expect_error(precision_review(older), "Recompute diagnose_mfrm(fit)", fixed = TRUE)
+  expect_error(precision_review_report(.fit_mml, older), "Recompute diagnose_mfrm(fit)", fixed = TRUE)
+  expect_error(build_apa_outputs(.fit_mml, older), "Recompute diagnose_mfrm(fit)", fixed = TRUE)
+
+  older_report <- report
+  older_report$profile$HasRegularizedSE <- NULL
+  expect_error(summary(older_report), "Recreate it with precision_review_report", fixed = TRUE)
+  older_summary <- summary(report)
+  older_summary$profile$HasRegularizedSE <- NULL
+  expect_error(print(older_summary), "Recreate it with precision_review_report", fixed = TRUE)
+  older_normal <- .diag_mml
+  older_normal$precision_profile$HasRegularizedSE <- NULL
+  expect_error(summary(older_normal), "Recompute diagnose_mfrm(fit)", fixed = TRUE)
+})
+
+test_that("unavailable model-based SEs cannot promote observation-table fallbacks", {
+  model_se <- mfrmr:::compute_mml_facet_model_se(.fit_mml)
+  model_se$table$ModelSE[1] <- NA_real_
+  local_mocked_bindings(compute_mml_facet_model_se = function(...) model_se,
+                        .package = "mfrmr")
+  se <- mfrmr:::build_measure_se_table(
+    .fit_mml, .diag_mml$obs, .fit_mml$config$facet_names, .diag_mml$fit
+  )
+  row <- se$Facet == model_se$table$Facet[1] & se$Level == model_se$table$Level[1]
+  expect_true(is.finite(se$SE[row]))
+  expect_identical(unname(se$SE_Method[row]), "Fallback observation-table information")
+  expect_false(se$SupportsFormalInference[row])
+  expect_identical(se$CIUse[row], "review_before_reporting")
+})
+
+test_that("precision reporting separates numerical convergence from uncertainty", {
+  fit <- .fit_mml
+  fit$readiness$fit$InferenceReady <- FALSE
+  fit$readiness$fit$FitReadiness <- "review"
+  fit$readiness$fit$EstimabilityState <- "not_evaluated"
+  fit$readiness$fit$ReasonCodes <- "design_rank_not_evaluated"
+  profile <- mfrmr:::build_precision_profile(
+    fit, .diag_mml$measures, .diag_mml$reliability, .diag_mml$facet_precision
+  )
+  checks <- mfrmr:::audit_precision_outputs(
+    fit, .diag_mml$measures, .diag_mml$reliability, .diag_mml$facet_precision, profile
+  )
+  expect_identical(checks$Status[checks$Check == "Optimizer convergence"], "pass")
+  expect_identical(checks$Status[checks$Check == "Precision tier"], "review")
+  expect_match(profile$RecommendedUse, "does not support ordinary SE/CI inference", fixed = TRUE)
+  expect_match(checks$Detail[checks$Check == "Optimizer convergence"],
+               "does not establish valid SEs", fixed = TRUE)
+  jml <- precision_review_report(.fit, .diag)
+  expect_false(jml$profile$SupportsFormalInference)
+  expect_match(jml$profile$RecommendedUse, "Changing to MML does not by itself", fixed = TRUE)
+})
+
 test_that("APA design prose uses each facet's own level count", {
   apa <- build_apa_outputs(.fit, .diag)
   text <- gsub("[[:space:]]+", " ", apa$report_text)
@@ -162,7 +245,7 @@ test_that("build_visual_summary_map returns summary text for all keys", {
 
 test_that("build_visual_summary_map includes strict marginal routes for MML diagnostics", {
   smap_mml <- mfrmr:::build_visual_summary_map(.fit_mml, .diag_mml)
-  expect_true(any(grepl("latent-integrated first-order category screen", smap_mml$strict_marginal_fit, fixed = TRUE)))
+  expect_true(any(grepl("Expected counts condition on the same responses", smap_mml$strict_marginal_fit, fixed = TRUE)))
   expect_true(any(grepl("plot_marginal_fit()", smap_mml$strict_marginal_fit, fixed = TRUE)))
   expect_true(any(grepl("plot_marginal_pairwise()", smap_mml$strict_pairwise_local_dependence, fixed = TRUE)))
 })

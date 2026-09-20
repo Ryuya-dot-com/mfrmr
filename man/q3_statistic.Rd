@@ -24,8 +24,8 @@ on demand when omitted.}
 
 \item{min_pairs}{Minimum number of persons with finite aggregated residuals
 at both levels required to retain a pair; a single integer of at least
-three. Pairs below the threshold drop out
-of the table (mirrors \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}).}
+three. Unavailable pairs remain in the table with \code{NA} correlations and
+flags (mirrors \code{\link[=plot_local_dependence_heatmap]{plot_local_dependence_heatmap()}}).}
 
 \item{yen_threshold}{Legacy-named argument retained for compatibility. It
 applies the strict absolute heuristic \verb{|Q3-style| > threshold} (default
@@ -51,15 +51,19 @@ for that bootstrap.}
 \value{
 An object of class \code{mfrm_q3} containing:
 \describe{
-\item{\code{pairs}}{A data frame with one row per facet-level pair
+\item{\code{pairs}}{A data frame with one row per unordered facet-level pair
 and columns \code{Level1}, \code{Level2}, \code{Q3}, \code{N}, \code{AbsQ3},
 \code{YenFlag}, \code{MaraisFlag}, \code{RelativeFlag}, and a textual
 \code{Interpretation} summarising which thresholds were exceeded. \code{N} is the
 number of persons with finite aggregated residuals at both levels.
+Unavailable pairs have \code{NA} correlations and flags, with an explanation
+in \code{Interpretation}.
 \code{YenFlag} is a compatibility name and does not imply that Yen (1984)
 proposed the fixed default.}
 \item{\code{summary}}{One-row tibble with \code{MeanQ3}, \code{MaxAbsQ3},
-and the three flagged-pair counts.}
+the three flagged-pair counts, \code{CandidatePairs}, \code{AvailablePairs}, and
+\code{UnavailablePairs}. Flagged counts are unavailable if no pair can be
+evaluated.}
 \item{\code{thresholds}}{The thresholds used, for reproducibility. The \code{yen}
 name is retained for compatibility.}
 \item{\code{facet}}{The facet whose levels were paired.}

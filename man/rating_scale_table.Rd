@@ -19,15 +19,21 @@ rating_scale_table(
 \item{whexact}{Use exact ZSTD transformation for category fit.}
 
 \item{drop_unused}{If \code{TRUE}, remove categories with zero count from the
-displayed category table; \code{summary} and \code{caveats} still retain the omitted
-score-support warning.}
+displayed category table. Usage totals still cover the full declared scale;
+unavailable counts remain visible, and score-support caveats are retained.}
 }
 \value{
 A named list with:
 \itemize{
 \item \code{category_table}: category-level counts, expected counts, fit, and ZSTD
 \item \code{threshold_table}: model step/threshold estimates
-\item \code{summary}: one-row summary (usage and threshold monotonicity)
+\item \code{summary}: one-row summary with available/unavailable category counts and
+adjacent-threshold comparisons. Category-fit means identify their available
+denominators and describe displayed rows. Missing fit statistics/flags stay
+\code{NA}, including unused categories with no estimable category fit.
+\item \code{category_usage}: counts across the full scale, before \code{drop_unused}
+\item \code{threshold_coverage}: available, unavailable and decreasing adjacent-pair
+counts; \code{NotApplicable} distinguishes binary scales from missing estimates
 \item \code{caveats}: structured score-support warning/review rows
 \item \code{diagnostic_mode}: character scalar carried from
 \code{diagnostics$diagnostic_mode} (\code{"legacy"}, \code{"both"}, or
@@ -107,7 +113,9 @@ For a plot-selection guide and a longer walkthrough, see
 The \code{category_table} data.frame contains:
 \describe{
 \item{Category}{Score category value.}
-\item{Count, Percent}{Observed count and percentage of total.}
+\item{Count, Percent}{Observed count and percentage of total. With observation
+weights, counts are sums of weights, not independent sample sizes. Missing
+or invalid scores/weights make the usage counts unavailable.}
 \item{AvgPersonMeasure}{Mean person measure for respondents in this
 category.}
 \item{Infit, Outfit}{Category-level fit statistics.}
@@ -127,13 +135,16 @@ and \code{UpperCategory} to identify the corresponding score transition.}
 \item{Estimate}{Estimated threshold/step difficulty (logits).}
 \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
 threshold sets.}
-\item{GapFromPrev}{Difference from the previous threshold within the same
-\code{StepFacet} when thresholds are facet-specific. Gaps below
-1.4 logits may indicate category underuse; gaps above 5.0 may
-indicate wide unused regions (Linacre, 2002).}
+\item{GapFromPrev}{Difference between adjacent numbered thresholds within
+the same \code{StepFacet}. Missing thresholds are not skipped to form a gap.
+No automatic category-merging rule is applied.}
 \item{ThresholdMonotonic}{Logical flag repeated within each threshold set.
-For PCM fits, read this within \code{StepFacet}, not as a pooled item-bank
-verdict.}
+\code{FALSE} records at least one decreasing adjacent pair; \code{TRUE} requires
+every expected pair to be available and nondecreasing, allowing numerical
+differences up to \code{sqrt(.Machine$double.eps)}. Equal thresholds meet this
+descriptive condition. Otherwise the flag is \code{NA}. A binary scale has
+only one threshold and no applicable ordering comparison. This is a
+statement about point estimates, not a test of category adequacy.}
 \item{LowerCategory, UpperCategory, WeaklyIdentified, ThresholdCaveat}{
 Adjacent score-category support metadata. Thresholds adjacent to retained
 zero-count categories are flagged for cautious interpretation.}
@@ -150,8 +161,8 @@ categories}. Psychometrika, 43(4), 561-573.
 Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
 \item Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 standardized mean? \emph{Rasch Measurement Transactions, 16}(2), 878.
-(Source for the 0.5-1.5 mean-square heuristic review interval and the
-threshold-gap heuristics used in \code{summary(t8)$summary}.)
+(Source for the 0.5-1.5 mean-square heuristic review interval; this is
+not a source for threshold-gap rules.)
 \item Wind, S. A. (2023). \emph{Detecting rating scale malfunctioning with the
 partial credit model and generalized partial credit model}.
 Educational and Psychological Measurement, 83(5), 953-983.
@@ -184,6 +195,7 @@ review <- summary(categories)
 review$summary
 
 # Bars show observed counts; the line shows model-expected counts
+# Recreate saved tables with the original fit and diagnostics after updating.
 plot(categories)
 }
 }

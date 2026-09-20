@@ -3955,7 +3955,14 @@ test_that("evaluate_mfrm_signal_detection returns usable detection summaries", {
   expect_true(is.data.frame(p_sig$data))
   expect_equal(p_sig$metric_col, "DIFPower")
   expect_equal(p_sig$display_metric, "DIF target-flag rate")
-  expect_match(p_sig$interpretation_note, "DIF-side rates summarize target/non-target flagging behavior", fixed = TRUE)
+  expect_match(p_sig$interpretation_note, "DIF detection rates are unavailable", fixed = TRUE)
+  expect_true(all(is.na(p_sig$data$y)))
+  expect_error(plot(sig_eval, signal = "dif", metric = "power"), "Selected metric is unavailable")
+  old <- sig_eval
+  old$results$DIFDetected <- TRUE
+  old$results$DIFClassDetected <- TRUE
+  old$results$DIFFalsePositiveRate <- 0
+  expect_true(all(is.na(summary(old)$detection_summary$DIFPower)))
 
   p_sig_bias <- plot(sig_eval, signal = "bias", metric = "power", x_var = "n_person", draw = FALSE)
   expect_equal(p_sig_bias$metric_col, "BiasScreenRate")
@@ -3965,7 +3972,11 @@ test_that("evaluate_mfrm_signal_detection returns usable detection summaries", {
   expect_equal(p_sig_bias_screen$metric_col, "BiasScreenRate")
   expect_equal(p_sig_bias_screen$display_metric, "Bias screening hit rate")
 
-  expect_true(any(sig_eval$results$DIFDetected, na.rm = TRUE))
+  expect_true(all(is.na(sig_eval$results$DIFDetected)))
+  expect_true(all(is.na(sig_eval$results$DIFClassDetected)))
+  expect_true(all(is.na(s_sig$detection_summary$DIFPower)))
+  expect_true(all(is.na(s_sig$detection_summary$DIFFalsePositiveRate)))
+  expect_true(any(grepl("DIF detection rates are unavailable", s_sig$notes)))
   expect_true(all(is.finite(s_sig$detection_summary$BiasScreenMetricAvailabilityRate)))
   expect_true(any(grepl("Bias-side rates are screening summaries", s_sig$notes, fixed = TRUE)))
 })

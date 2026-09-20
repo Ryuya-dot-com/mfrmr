@@ -55,7 +55,11 @@ This helper visualizes the largest first-order strict marginal-fit cells from
 
 The \code{"std_residual"} view ranks cells by the absolute standardized residual
 from posterior-integrated expected category counts. The \code{"prop_diff"} view
-ranks the same cells by the signed observed-minus-expected proportion gap.
+ranks cells by the absolute observed-minus-expected proportion gap and plots
+their signed gaps. Both views apply the facet filter before ranking all cells.
+The returned \code{full_table} retains all candidate rows; \code{retention} records
+available/unavailable values for the selected metric. Undefined values are
+not zero residuals, and grey bars/labels indicate unavailable values or flags.
 
 Use this plot after \code{summary(diagnostics)} indicates strict marginal flags.
 The display is exploratory: it highlights which facet/category cells deserve

@@ -1014,7 +1014,9 @@ print.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
 print.summary.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
   model <- as.character(x$comparison$Model[1L] %||% "MML")
   cat(model, "-MML quadrature sensitivity summary\n", sep = "")
-  overview <- x$overview
+  overview <- x$overview[setdiff(
+    names(x$overview), c("StabilityClassification", "ReadinessEffect")
+  )]
   numeric <- vapply(overview, is.numeric, logical(1))
   overview[numeric] <- lapply(overview[numeric], round, digits = digits)
   print(overview, row.names = FALSE)
@@ -1028,5 +1030,6 @@ print.summary.mfrm_quadrature_sensitivity <- function(x, digits = 5L, ...) {
     print(x$quadrature_overview, row.names = FALSE)
     cat("Inspect $quadrature_review for adaptive-order changes and unavailable rows.\n")
   }
+  cat("No automatic stability classification or readiness change is applied.\n")
   invisible(x)
 }

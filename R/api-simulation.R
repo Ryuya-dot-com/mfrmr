@@ -8724,7 +8724,7 @@ signal_eval_get_p <- function(tbl, adjusted_col = "p_adjusted", raw_col = "p_val
 
 signal_eval_false_positive_rate <- function(flag_vec) {
   if (length(flag_vec) == 0) return(NA_real_)
-  mean(flag_vec, na.rm = TRUE)
+  design_eval_safe_mean(flag_vec)
 }
 
 signal_eval_summary <- function(results, rep_overview, design_variable_aliases = NULL) {
@@ -8751,15 +8751,15 @@ signal_eval_summary <- function(results, rep_overview, design_variable_aliases =
         Reps = dplyr::n(),
         ConvergenceRate = mean(.data$Converged, na.rm = TRUE),
         McseConvergenceRate = simulation_mcse_proportion(.data$Converged),
-        DIFPower = mean(.data$DIFDetected, na.rm = TRUE),
+        DIFPower = design_eval_safe_mean(.data$DIFDetected),
         McseDIFPower = simulation_mcse_proportion(.data$DIFDetected),
-        DIFClassificationPower = mean(.data$DIFClassDetected, na.rm = TRUE),
+        DIFClassificationPower = design_eval_safe_mean(.data$DIFClassDetected),
         McseDIFClassificationPower = simulation_mcse_proportion(.data$DIFClassDetected),
         MeanTargetContrast = mean(.data$DIFContrast, na.rm = TRUE),
         McseTargetContrast = simulation_mcse_mean(.data$DIFContrast),
         MeanTargetContrastAbs = mean(abs(.data$DIFContrast), na.rm = TRUE),
         McseTargetContrastAbs = simulation_mcse_mean(abs(.data$DIFContrast)),
-        DIFFalsePositiveRate = mean(.data$DIFFalsePositiveRate, na.rm = TRUE),
+        DIFFalsePositiveRate = design_eval_safe_mean(.data$DIFFalsePositiveRate),
         McseDIFFalsePositiveRate = simulation_mcse_mean(.data$DIFFalsePositiveRate),
         BiasScreenRate = mean(.data$BiasDetected, na.rm = TRUE),
         McseBiasScreenRate = simulation_mcse_proportion(.data$BiasDetected),
@@ -8801,6 +8801,9 @@ signal_eval_summary <- function(results, rep_overview, design_variable_aliases =
   }
   if (nrow(detection_summary) > 0 && any(detection_summary$BiasScreenMetricAvailabilityRate < 1, na.rm = TRUE)) {
     notes <- c(notes, "Some design conditions did not yield usable bias-screening t/p metrics in every replication.")
+  }
+  if (nrow(results_tbl) > 0 && all(is.na(results_tbl$DIFDetected))) {
+    notes <- c(notes, "DIF detection rates are unavailable; residual differences do not provide a differential-functioning test.")
   }
   notes <- c(
     notes,
@@ -8938,8 +8941,9 @@ signal_eval_metric_col <- function(signal, metric) {
 #' \eqn{p <} `dif_p_cut` **and**, when an absolute contrast cutoff is in
 #' force, \eqn{|\mathrm{Contrast}| \ge} `dif_abs_cut`. For
 #' `dif_method = "refit"`, `dif_abs_cut` is interpreted on the logit scale.
-#' For `dif_method = "residual"`, the residual-contrast screening result is
-#' used and the default is to rely on the significance test alone.
+#' For `dif_method = "residual"`, DIF detection, classification and false-positive
+#' rates are unavailable (`NA`). Residual contrasts remain available as
+#' descriptive summaries; a missing test is not counted as a non-detection.
 #'
 #' Bias results are different: [estimate_bias()] reports `t` and `Prob.` as
 #' screening metrics rather than formal inferential quantities. Here, a bias
@@ -8949,7 +8953,8 @@ signal_eval_metric_col <- function(signal, metric) {
 #' \eqn{p <} `bias_p_cut` **and** \eqn{|t| \ge} `bias_abs_t`.
 #'
 #' **Power** is the proportion of replications in which the target signal
-#' was correctly detected. For DIF this is a conventional power summary.
+#' was flagged when a comparison statistic is available. Refit DIF rates are
+#' conditional screening rates, not calibrated inferential power.
 #' For bias, the primary summary is `BiasScreenRate`, a screening hit rate
 #' rather than formal inferential power.
 #'
@@ -9327,9 +9332,9 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
       dif_target_ets <- if (nrow(dif_target_row) > 0) as.character(dif_target_row$ETS[1]) else NA_character_
       dif_target_class <- if (nrow(dif_target_row) > 0) as.character(dif_target_row$Classification[1]) else NA_character_
       dif_target_class_system <- if (nrow(dif_target_row) > 0) as.character(dif_target_row$ClassificationSystem[1]) else NA_character_
-      dif_detected <- is.finite(dif_target_p) && dif_target_p <= dif_p_cut &&
+      dif_detected <- if (!is.finite(dif_target_p)) NA else dif_target_p <= dif_p_cut &&
         is.finite(dif_target_contrast) && abs(dif_target_contrast) >= dif_abs_cut_effective
-      dif_class_detected <- if (identical(dif_target_class_system, "ETS")) {
+      dif_class_detected <- if (identical(dif_method, "residual")) NA else if (identical(dif_target_class_system, "ETS")) {
         !is.na(dif_target_ets) && dif_target_ets %in% c("B", "C")
       } else {
         identical(dif_target_class, "Screen positive")
@@ -9345,8 +9350,8 @@ evaluate_mfrm_signal_detection <- function(n_person = c(30, 50, 100),
           ) |>
           dplyr::mutate(
             p_eval = dplyr::if_else(is.finite(.data$p_adjusted), .data$p_adjusted, .data$p_value),
-            Flag = is.finite(.data$p_eval) & .data$p_eval <= dif_p_cut &
-              is.finite(.data$Contrast) & abs(.data$Contrast) >= dif_abs_cut_effective
+            Flag = ifelse(is.finite(.data$p_eval), .data$p_eval <= dif_p_cut &
+              is.finite(.data$Contrast) & abs(.data$Contrast) >= dif_abs_cut_effective, NA)
           )
         dif_fp_rate <- signal_eval_false_positive_rate(dif_non_target$Flag)
       }
@@ -9539,6 +9544,11 @@ summary.mfrm_signal_detection <- function(object, digits = 3, ...) {
     stop("`object` must be output from evaluate_mfrm_signal_detection().")
   }
   digits <- max(0L, as.integer(digits[1]))
+  if (identical(object$settings$dif_method, "residual")) {
+    for (field in c("DIFP", "DIFDetected", "DIFClassDetected", "DIFFalsePositiveRate")) {
+      object$results[[field]] <- rep(NA_real_, nrow(object$results))
+    }
+  }
   out <- signal_eval_summary(
     object$results,
     object$rep_overview,
@@ -9758,13 +9768,13 @@ plot.mfrm_signal_detection <- function(x,
   if (is.null(group_var)) {
     agg_tbl <- plot_tbl |>
       dplyr::group_by(.data[[x_var]]) |>
-      dplyr::summarize(y = mean(.data[[metric_col]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::summarize(y = design_eval_safe_mean(.data[[metric_col]]), .groups = "drop") |>
       dplyr::arrange(.data[[x_var]]) |>
       dplyr::mutate(group = "All designs")
   } else {
     agg_tbl <- plot_tbl |>
       dplyr::group_by(.data[[x_var]], .data[[group_var]]) |>
-      dplyr::summarize(y = mean(.data[[metric_col]], na.rm = TRUE), .groups = "drop") |>
+      dplyr::summarize(y = design_eval_safe_mean(.data[[metric_col]]), .groups = "drop") |>
       dplyr::arrange(.data[[x_var]], .data[[group_var]]) |>
       dplyr::rename(group = dplyr::all_of(group_var))
   }
@@ -9777,8 +9787,10 @@ plot.mfrm_signal_detection <- function(x,
     display_metric = signal_detection_metric_label(signal, metric_col),
     interpretation_note = if (identical(signal, "bias")) {
       "Bias-side rates summarize screening behavior from estimate_bias(); they are not formal inferential power or alpha estimates."
+    } else if (identical(x$settings$dif_method, "residual")) {
+      "DIF detection rates are unavailable; residual differences do not provide a differential-functioning test."
     } else {
-      "DIF-side rates summarize target/non-target flagging behavior under the selected DFF method and threshold settings."
+      "DIF-side rates summarize conditional subgroup screening, not calibrated inferential power."
     },
     x_var = x_var,
     x_label = x_label,
@@ -9798,6 +9810,7 @@ plot.mfrm_signal_detection <- function(x,
   groups <- unique(as.character(agg_tbl$group))
   cols <- grDevices::hcl.colors(max(1L, length(groups)), "Set 2")
   x_vals <- sort(unique(agg_tbl[[x_var]]))
+  if (!any(is.finite(agg_tbl$y))) stop("Selected metric is unavailable for these results.", call. = FALSE)
   y_range <- range(agg_tbl$y, na.rm = TRUE)
   if (!all(is.finite(y_range))) stop("Selected metric has no finite values to plot.")
 

@@ -22,9 +22,8 @@ Produces APA-style narrative text interpreting the results of a differential-
 functioning analysis or interaction table. For \code{method = "refit"}, the
 report summarises linked screening contrasts and whether conditional plug-in
 uncertainty was available. For \code{method = "residual"}, it summarises
-screening-positive results, lists the specific levels and their direction,
-and includes a caveat about the distinction between construct-relevant
-variation and measurement bias.
+the availability and meaning of residual comparisons, without testing
+differential functioning or classifying comparisons as positive or negative.
 }
 \details{
 When \code{dif_result} is an \code{mfrm_dff}/\code{mfrm_dif} object, the report is based on
@@ -37,7 +36,7 @@ calibrations retain the required anchors. Their separate-subgroup plug-in
 standard errors condition on those anchors and omit baseline-anchor
 uncertainty and cross-refit covariance, so the report does not assign ETS
 labels or present refit rows as formal inference. The residual method also
-uses screening-positive versus screening-negative language.
+returns descriptive group differences without tests or binary classifications.
 }
 \section{Interpreting output}{
 
@@ -45,7 +44,8 @@ uses screening-positive versus screening-negative language.
 \item \verb{$narrative}: character scalar with the full narrative text.
 \item \verb{$counts}: named integer vector of method-appropriate counts.
 \item \verb{$large_dif}: an empty compatibility table for current refit output, or
-screening-positive contrasts/cells (\code{method = "residual"}).
+an empty table for residual comparisons. Interaction reports include only
+cells above the requested absolute residual mean threshold, in score units.
 \item \verb{$gpcm_boundary}: for bounded \code{GPCM} inputs, a capability-boundary table
 marking the narrative as caveated DFF screening output.
 \item \verb{$config}: analysis configuration inherited from the input.

@@ -184,7 +184,8 @@ test_that("portable score methods foreground review and conditional uncertainty"
   ) %in% names(summarized$estimates)))
   semantic_columns <- c(
     "Person", "Disposition", "EstimateBasis", "UncertaintyBasis",
-    "CalibrationId", "SchemaVersion", "ScoringBasis"
+    "CalibrationId", "SchemaVersion", "ScoringBasis", "ScoringAlgorithm",
+    "IntervalLevel"
   )
   expect_identical(
     summarized$estimates[semantic_columns], scored$estimates[semantic_columns]
@@ -214,10 +215,12 @@ test_that("portable score methods foreground review and conditional uncertainty"
     "calibration-parameter uncertainty excluded", printed, fixed = TRUE
   )))
   expect_true(any(grepl(
-    "Interpretation boundary", summary_printed, fixed = TRUE
+    "Interval interpretation", summary_printed, fixed = TRUE
   )))
   public_output <- paste(c(printed, summary_printed), collapse = "\n")
   expect_false(grepl("CORE-[0-9]|G[0-6] exit|internal", public_output, perl = TRUE))
+  expect_false(grepl("scored_review|ALL_RESPONSES_", public_output))
+  expect_match(public_output, "all responses at the minimum score", fixed = TRUE)
 
   old_width <- options(width = 80L)
   on.exit(options(old_width), add = TRUE)
@@ -289,12 +292,12 @@ test_that("portable score plots preserve selection and non-scored dispositions",
   ) %in% names(interval$data$data)))
   expect_match(
     interval$data$interpretation$Guidance[3L],
-    "excludes calibration-parameter uncertainty",
+    "calibration-parameter uncertainty excluded",
     fixed = TRUE
   )
   expect_match(
     interval$data$caption,
-    "excludes calibration-parameter uncertainty",
+    "calibration-parameter uncertainty excluded",
     fixed = TRUE
   )
 
@@ -514,6 +517,109 @@ test_that("public extraction requires user-reviewed highest-grid fit", {
   )
 })
 
+test_that("portable extraction checks the retained fits behind a grid review", {
+  fixture <- calibration_public_fixture()
+  review <- fixture$quadrature_review
+  changes <- list(
+    duplicate_grid = function(x) { x$fits$q5 <- x$fits$q7; x },
+    anchors = function(x) {
+      x$fits$q5$config$replay_inputs$anchors <- data.frame(
+        Facet = "Rater", Level = "R01", Value = 0.1
+      )
+      x
+    },
+    resolved_sign = function(x) {
+      x$fits$q5$config$facet_signs[1L] <- 1
+      x
+    },
+    score_map = function(x) {
+      x$fits$q5$prep$score_map$OriginalScore <-
+        x$fits$q5$prep$score_map$OriginalScore + 10
+      x
+    },
+    integration = function(x) {
+      x$fits$q5$config$estimation_control$mml_integration <- "adaptive"
+      x
+    },
+    optimizer = function(x) {
+      x$fits$q5$config$replay_inputs$reltol <- 0.1
+      x
+    },
+    convergence = function(x) { x$fits$q5$opt$convergence <- 1L; x }
+  )
+  for (name in names(changes)) {
+    error <- tryCatch(
+      extract_mfrm_calibration(fixture$fit,
+                               quadrature_review = changes[[name]](review)),
+      mfrm_calibration_error = identity
+    )
+    expect_s3_class(error, "mfrm_calibration_error")
+    expect_identical(error$code, if (name == "convergence") {
+      "QUADRATURE_REVIEW_INCOMPLETE"
+    } else "QUADRATURE_REVIEW_INVALID", info = name)
+  }
+  reordered <- review
+  reordered$fits$q5$prep$data <-
+    reordered$fits$q5$prep$data[nrow(reordered$fits$q5$prep$data):1L, ]
+  expect_s3_class(
+    extract_mfrm_calibration(fixture$fit, quadrature_review = reordered),
+    "mfrm_calibration"
+  )
+})
+
+test_that("portable interval identity survives saved results, summaries and CSV", {
+  fixture <- calibration_public_fixture()
+  for (algorithm in c("quadrature_eap_v1", "quadrature_eap_v2",
+                      "adaptive_quadrature_eap_v1", "adaptive_quadrature_eap_v2")) {
+    draft <- fixture$draft
+    draft$scoring_basis$scoring_algorithm <- algorithm
+    draft$integrity$semantic_components <-
+      mfrmr:::mfrmr_calibration_semantic_components(draft)
+    artifact <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+    scored <- score_mfrm_calibration(artifact, fixture$rows, interval_level = 0.955)
+    summarized <- summary(scored, digits = 1)
+    fields <- c("ScoringAlgorithm", "IntervalLevel")
+    expect_identical(unique(scored$estimates$ScoringAlgorithm), algorithm)
+    expect_identical(unique(scored$estimates$IntervalLevel), 0.955)
+    expect_identical(summarized$estimates[fields], scored$estimates[fields])
+
+    path <- tempfile(fileext = ".csv")
+    utils::write.csv(summarized$estimates, path, row.names = FALSE)
+    exported <- utils::read.csv(path, stringsAsFactors = FALSE)
+    unlink(path)
+    expect_identical(exported[fields], scored$estimates[fields])
+
+    older <- scored
+    older$estimates[fields] <- NULL
+    expect_identical(summary(older, digits = 1)$estimates, summarized$estimates)
+    expect_identical(scored$estimates[c("Estimate", "SD", "Lower", "Upper")],
+                     older$estimates[c("Estimate", "SD", "Lower", "Upper")])
+    interval <- plot(older, draw = FALSE)
+    expected <- if (endsWith(algorithm, "_v1")) {
+      "posterior mass may differ from the requested level"
+    } else "continuous posterior quantiles"
+    displayed <- gsub("[[:space:]]+", " ", paste(capture.output({
+      print(older)
+      print(summary(older))
+    }), collapse = " "))
+    expect_match(displayed, expected, fixed = TRUE)
+    expect_match(displayed, "95.5% intervals", fixed = TRUE)
+    expect_match(interval$data$caption, expected, fixed = TRUE)
+    expect_match(interval$data$caption, "95.5% intervals", fixed = TRUE)
+    if (requireNamespace("ggplot2", quietly = TRUE)) {
+      gg <- as_ggplot(interval)
+      expect_match(gsub("[[:space:]]+", " ", gg$labels$caption), expected, fixed = TRUE)
+    }
+  }
+  rows <- fixture$rows
+  rows$Score <- NA_real_
+  empty <- score_mfrm_calibration(fixture$frozen, rows, missing_response = "omit")
+  expect_identical(empty$estimates$IntervalLevel, numeric(0))
+  expect_identical(summary(empty)$estimates$ScoringAlgorithm, character(0))
+  expect_match(paste(capture.output(print(summary(empty))), collapse = " "),
+               "no valid responses", fixed = TRUE)
+})
+
 test_that("public documentation surfaces share the bounded calibration wording", {
   root <- normalizePath(find.package("mfrmr"), winslash = "/")
   readme <- file.path(root, "README.md")
@@ -613,6 +719,12 @@ test_that("installed public API scores a saved artifact in a fresh process", {
   expect_s3_class(result, "mfrm_calibration_score")
   expect_identical(result$settings$calibration_id, "public-api-rsm")
   expect_identical(result$settings$engine_identity, "artifact_coordinates_v1")
+  expect_identical(unique(result$estimates$ScoringAlgorithm),
+                   fixture$frozen$scoring_basis$scoring_algorithm)
+  expect_identical(unique(result$estimates$IntervalLevel), 0.95)
+  expect_equal(result$estimates,
+               score_mfrm_calibration(fixture$frozen, fixture$rows)$estimates,
+               tolerance = 0)
   expect_equal(nrow(result$quadrature_review), nrow(result$estimates) * 2L)
   expect_true(all(result$quadrature_review$Status == "computed"))
 })

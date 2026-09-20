@@ -74,6 +74,10 @@
 #' mismatched or outdated diagnostic readiness records. Matching saved
 #' diagnostics remain reusable; changing a table caption or note does not
 #' bypass this check.
+#' For saved analyses affected by the 0.2.4 calculation changes, follow
+#' "Updating saved analyses for 0.2.4" in [mfrmr_workflow_methods] before
+#' rebuilding reports. Matching the source fit alone does not update old
+#' diagnostic calculations.
 #'
 #' @section Model-comparison reporting route:
 #' Use [compare_mfrm()] to build the candidate-model table and inspect

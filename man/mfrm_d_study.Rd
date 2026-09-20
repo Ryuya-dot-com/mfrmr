@@ -20,7 +20,8 @@ mfrm_d_study(
 \item{design_grid}{Data frame or named list giving planned counts for each
 random measurement facet. Column names may be the facet names themselves
 (for example \code{Rater}) or \code{n_} plus the facet name (for example
-\code{n_Rater}). When \code{NULL}, one row using the observed number of levels is
+\code{n_Rater}). Counts must be positive integers. When \code{NULL}, one row using
+the observed number of levels is
 returned.}
 
 \item{object_facet, random_facets}{Passed to \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} when
@@ -30,8 +31,8 @@ returned.}
 when planned facet counts increase. \code{"highest_order"} treats the residual
 as highest-order person-by-all-conditions/error variance and divides by
 the product of planned counts. \code{"single_condition"} divides by the smallest
-planned facet count, a conservative sensitivity check when unmodeled
-person-by-one-facet interactions may dominate. \code{"none"} leaves the residual
+planned facet count, a sensitivity assumption for variation associated
+with the least-replicated condition. It is not a confidence bound. \code{"none"} leaves the residual
 unscaled. \code{"sensitivity"} returns all three assumptions for each design
 row.}
 
@@ -57,7 +58,10 @@ variance contributes \code{sigma2_j / n_j} to the absolute-error denominator.
 The residual term contains unmodeled person-by-facet and higher-order
 interaction variance in the current simplified G-study, so the selected
 \code{residual_scaling} assumption is reported explicitly. The relative-decision
-denominator uses only this scaled residual term.
+denominator uses only this scaled residual term. Missing or invalid required
+components leave the affected coefficient unavailable; they are not zero
+variance. These are point projections conditional on estimated components,
+not uncertainty bounds or automatic recommendations for sample size.
 
 This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 decomposition. If person-by-rater or person-by-item interactions are a

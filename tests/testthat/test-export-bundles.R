@@ -2906,6 +2906,16 @@ test_that("export_mfrm_bundle writes optional prediction artifacts", {
   expect_match(html_text, "<h2>population_prediction_forecast</h2>", fixed = TRUE)
   expect_match(html_text, "<h2>unit_prediction_estimates</h2>", fixed = TRUE)
   expect_match(html_text, "<h2>plausible_value_summary</h2>", fixed = TRUE)
+  expect_match(html_text, "<h2>unit_prediction_notes</h2>", fixed = TRUE)
+  expect_match(html_text, "<h2>plausible_value_notes</h2>", fixed = TRUE)
+  expect_match(html_text, "standard normal N(0,1)", fixed = TRUE)
+  expect_false(grepl("legacy_mml|review_only_nonready_source|quadrature_eap_v2|SourceScoringReady|mfrmr-readiness-0.2.4", html_text))
+  expect_match(html_text, "Formal inference:", fixed = TRUE)
+  estimates <- utils::read.csv(file.path(out_dir, "bundle_pred_test_unit_prediction_estimates.csv"))
+  values <- utils::read.csv(file.path(out_dir, "bundle_pred_test_plausible_values.csv"))
+  expect_equal(estimates$IntervalLevel, rep(prediction_bundle_fixture$unit_prediction$settings$interval_level, nrow(estimates)))
+  expect_true(all(estimates$PriorMean == 0 & estimates$PriorSD == 1))
+  expect_true(all(c("Prior", "UncertaintyBasis", "DrawBasis") %in% names(values)))
 
   unit_settings <- utils::read.csv(
     file.path(out_dir, "bundle_pred_test_unit_prediction_settings.csv"),

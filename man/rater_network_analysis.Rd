@@ -110,6 +110,12 @@ comparison raters more often assigned higher scores than this rater. The
 reported \code{SeverityIndex} is positive for relatively severe raters and
 negative for relatively lenient raters, but it is on a network-analysis scale
 and should not be read as an MFRM severity logit.
+A rater without any retained directional comparisons has an unavailable
+index, not a balanced index. Zero or negative undirected weights remain in
+the pair table but do not form graph edges. Graph distances summarize
+reachable pairs only, so they do not describe distance across disconnected
+components. Recreate older network results from the existing fit and matching
+diagnostics with the original settings before summary, plotting or export.
 }
 \examples{
 \donttest{

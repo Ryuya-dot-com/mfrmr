@@ -105,7 +105,7 @@ test_that("model-choice contract names level-specific single-owner slopes", {
   expect_false(grepl("one common slope for the whole model", contract, fixed = TRUE))
 })
 
-test_that("weighting comparison contract separates selectable MML from descriptive JML", {
+test_that("weighting comparison cannot enable GPCM ranking from supplied comparison flags", {
   make_fit <- function(model, method) {
     list(config = list(model = model, method = method))
   }
@@ -137,13 +137,13 @@ test_that("weighting comparison contract separates selectable MML from descripti
     aligned_pcm_owner = TRUE,
     pcm_gpcm_lrt = "withheld_current_scope"
   )
-  expect_identical(mml$EvidenceTier, "same_basis_mml_information_criteria")
-  expect_true(mml$FormalModelSelectionAvailable)
+  expect_identical(mml$EvidenceTier, "mml_numerical_review_only")
+  expect_false(mml$FormalModelSelectionAvailable)
   expect_equal(mml$ObservedLogLikDifference, 3)
-  expect_identical(mml$AICPreferred, "GPCM/MML")
+  expect_true(is.na(mml$AICPreferred))
   expect_identical(
     mml$LogLikDifferenceStatus,
-    "available_but_read_with_information_criterion_penalties"
+    "numerical_review_required"
   )
 
   jml <- mfrmr:::.weighting_review_comparison_contract(
@@ -154,15 +154,42 @@ test_that("weighting comparison contract separates selectable MML from descripti
     aligned_pcm_owner = TRUE,
     pcm_gpcm_lrt = "withheld_current_scope"
   )
-  expect_identical(jml$EvidenceTier, "jml_descriptive_reweighting_only")
+  expect_identical(jml$EvidenceTier, "jml_numerical_review_only")
   expect_false(jml$FormalModelSelectionAvailable)
   expect_true(is.na(jml$AICPreferred))
   expect_identical(
     jml$LogLikDifferenceStatus,
-    "descriptive_unpenalized_gain_not_selection"
+    "numerical_review_required"
   )
   expect_identical(
     jml$FACETSComparisonRole,
     "PCM_JML_side_only_no_FACETS_free_slope_GPCM_counterpart"
   )
+})
+
+
+test_that("weighting review distinguishes numerical convergence from inference readiness", {
+  state <- "ready"
+  testthat::local_mocked_bindings(
+    mfrmr_get_readiness_record = function(...) list(fit = data.frame(NumericalState = state)),
+    .package = "mfrmr"
+  )
+  contract <- function() mfrmr:::.weighting_review_comparison_contract(
+    list(config = list(model = "PCM", method = "MML")),
+    list(config = list(model = "GPCM", method = "MML")),
+    list(table = data.frame(LogLik = c(-100, -97)),
+         comparison_basis = list(same_data = TRUE, all_inference_ready = FALSE)),
+    "PCM", TRUE, "withheld_current_scope"
+  )
+  ready <- contract()
+  expect_true(ready$BothNumericallyReady)
+  expect_false(ready$BothInferenceReady)
+  expect_false(ready$FormalModelSelectionAvailable)
+  expect_identical(ready$EvidenceTier, "mml_descriptive_not_inference_ready")
+  expect_identical(ready$LogLikDifferenceStatus, "descriptive_noncomparable")
+  expect_match(ready$NumericalReview, "checks passed for both fits", fixed = TRUE)
+  state <- "review"
+  pending <- contract()
+  expect_false(pending$BothNumericallyReady)
+  expect_identical(pending$LogLikDifferenceStatus, "numerical_review_required")
 })

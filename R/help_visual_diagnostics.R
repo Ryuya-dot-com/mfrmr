@@ -278,7 +278,7 @@
 #'   response-time screening by person, facet, and score category. Best for
 #'   reviewing rapid/slow response patterns alongside MFRM diagnostics; it is
 #'   not a joint speed-accuracy model and does not change fitted measures.}
-#'   \item{`plot_local_dependence_heatmap()`}{Yen Q3-style heatmap of
+#'   \item{`plot_local_dependence_heatmap()`}{Standardized, aggregated-residual Q3-style heatmap of
 #'   pairwise residual correlations between facet levels. Best for
 #'   exploratory local-dependence screening; pairs with very strong
 #'   off-diagonal residual correlation merit content-level review.}
@@ -785,7 +785,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Fair-average diagnostic interval",
       "Bias-interaction interval overlay",
       "Displacement interval overlay",
-      "DFF / DIF contrast summary",
+      "Group contrast summary",
       "Facet-equivalence ROPE review",
       "Anchor drift forest plot",
       "Rater trajectory plot",
@@ -819,7 +819,7 @@ mfrmr_interval_guide <- function(scope = c(
       "plot_fair_average(fit, show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)",
       "plot_bias_interaction(..., show_ci = TRUE, ci_level = 0.95)",
       "plot_displacement(..., show_ci = TRUE, ci_level = 0.95)",
-      "plot_dif_summary(..., ci_level = 0.95)",
+      "plot_dif_summary(...)",
       "analyze_facet_equivalence(ci_level = 0.95); plot_facet_equivalence()",
       "detect_anchor_drift(...); plot_anchor_drift(ci_level = 0.95)",
       "plot_rater_trajectory(..., ci_level = 0.95)",
@@ -875,7 +875,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Joint MML covariance for pair differences and deviations from the equally weighted facet mean.",
       "Approximate drift interval using supplied anchor-drift SE columns.",
       "Approximate per-rater severity interval across already linked waves.",
-      "Approximate Wald-style whiskers around original and shrunken estimates using SE / ShrunkSE.",
+      "Descriptive normal bands from original and plug-in shrunken SEs; variance estimates are held fixed.",
       "Profile or fallback interval for ICC, depending on optional backend availability."
     ),
     UseFor = c(
@@ -888,7 +888,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Inspect fair-score uncertainty separately from historical measure-level SE columns; FairZ is not a z-score.",
       "Screen interaction-bias cells while showing uncertainty around the bias-size estimate.",
       "Review anchor or calibration tension without treating displacement as a binary decision.",
-      "Display group-by-facet contrast uncertainty before writing DFF / DIF interpretation.",
+      "Describe group residual differences; linked refit intervals require separate uncertainty review.",
       "Decide whether an interval lies within, overlaps, or falls outside the practical equivalence band.",
       "Review whether common elements drift materially across forms or waves.",
       "Inspect rater movement across anchored waves or training occasions.",
@@ -909,7 +909,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Requires inference-ready MML and unregularized covariance; pairwise TOST is unadjusted and ROPE is descriptive.",
       "Drift claims require explicit multi-fit wave or form designs.",
       "Trajectory movement is interpretable only after the supplied fits are on a common scale.",
-      "Shrinkage intervals describe estimation stability, not automatic rater-quality decisions.",
+      "No calibrated coverage or automatic rater-quality decision: prior-variance uncertainty and cross-level covariance are omitted; zero width after full pooling is not perfect precision.",
       "ICC intervals describe clustering uncertainty, not model adequacy by themselves."
     ),
     GPCMStatus = c(

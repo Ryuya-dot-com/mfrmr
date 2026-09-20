@@ -110,8 +110,8 @@ test_that("summarize_anchor_constraints handles missing columns", {
 
 test_that("summarize_step_estimates handles NULL step table", {
   sse <- mfrmr:::summarize_step_estimates
-  expect_equal(sse(NULL), "Step/threshold estimates were not available.")
-  expect_equal(sse(data.frame()), "Step/threshold estimates were not available.")
+  expect_equal(sse(NULL), "Step/threshold estimates and ordering comparisons were not available.")
+  expect_equal(sse(data.frame()), "Step/threshold estimates and ordering comparisons were not available.")
 })
 
 # ---- summarize_top_misfit_levels edge cases (lines 539-559) ----

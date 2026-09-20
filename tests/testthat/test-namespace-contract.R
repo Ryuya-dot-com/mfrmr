@@ -183,6 +183,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
     "S3method(print,mfrm_fit)",
+    "S3method(print,mfrm_person_fit_indices)",
     "S3method(print,mfrm_plot_bundle)",
     "S3method(print,mfrm_apa_text)",
     "S3method(print,apa_table)",
@@ -338,6 +339,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,mfrm_q3)",
     "S3method(print,mfrm_generalizability)",
     "S3method(print,mfrm_imported_fit)",
+    "S3method(print,summary.mfrm_imported_fit)",
+    "S3method(summary,mfrm_imported_fit)",
     # 0.2.0: print method for the `draw = FALSE` plot payload class
     # (added so users don't see a raw list dump).
     "S3method(print,mfrm_plot_data)",

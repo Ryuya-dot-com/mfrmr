@@ -8,7 +8,9 @@ test_that("separation, reliability, and strata match hand calculations", {
     Infit = c(1.0, 1.4, 0.8),
     Outfit = c(1.1, 1.2, 0.9),
     PrecisionTier = rep("model_based", 3),
-    Converged = rep(TRUE, 3)
+    Converged = rep(TRUE, 3),
+    InferenceReady = rep(TRUE, 3),
+    SupportsFormalInference = rep(TRUE, 3)
   )
 
   out <- mfrmr:::calc_reliability(measures)
@@ -169,4 +171,53 @@ test_that("FACETS-style fit df uses fourth-moment Wright-Masters formula", {
                            (obs$FourthCentralMoment[r1_idx] / obs$Var[r1_idx]^2 - 1))
   expect_equal(r1$DF_Infit_FACETS, 2 * r1_sum_var_w^2 / r1_denom_infit)
   expect_equal(r1$DF_Outfit_FACETS, 2 * r1_sum_w^2 / r1_denom_outfit)
+})
+
+
+test_that("reliability uses one finite-estimate population and requires its SEs", {
+  measures <- tibble::tibble(
+    Facet = "Rater", Estimate = c(-1, 0, 1, Inf),
+    ModelSE = c(.2, .2, .2, 100), RealSE = c(.3, .3, .3, 200),
+    PrecisionTier = "model_based", Converged = TRUE,
+    InferenceReady = TRUE, SupportsFormalInference = TRUE
+  )
+  out <- mfrmr:::calc_reliability(measures)
+  expect_equal(out$Reliability, .96)
+  expect_equal(out$RealReliability, .91)
+  expect_equal(out$EstimateAvailable, 3L)
+  expect_equal(out$ModelSEAvailable, 3L)
+  expect_equal(out$ExcludedEstimates, 1L)
+  expect_false(out$SupportsFormalInference)
+  expect_match(out$ModelSummaryNote, "3 of 4 levels", fixed = TRUE)
+
+  measures <- measures[1:3, ]
+  measures$ModelSE[3] <- NA_real_
+  out <- mfrmr:::calc_reliability(measures)
+  expect_equal(out$ObservedVariance, 1)
+  expect_true(is.na(out$Reliability))
+  expect_true(is.na(out$Separation))
+  expect_true(is.na(out$ModelErrorVariance))
+  expect_equal(out$RealReliability, .91)
+  expect_false(out$SupportsFormalInference)
+  expect_identical(out$ReliabilityUse, "review_before_reporting")
+  expect_match(out$ModelSummaryNote, "1 of 3 finite estimates lack", fixed = TRUE)
+  precision <- mfrmr:::build_facet_precision_summary(measures)
+  expect_true(all(is.na(precision$Reliability[precision$SEMode == "model"])))
+  expect_true(all(precision$SEAvailable[precision$SEMode == "model"] == 2))
+})
+
+test_that("reliability does not infer eligibility from convergence or missing flags", {
+  measures <- tibble::tibble(
+    Facet = "Rater", Estimate = c(-1, 0, 1), ModelSE = .2, RealSE = .3,
+    PrecisionTier = "model_based", Converged = TRUE,
+    InferenceReady = TRUE, SupportsFormalInference = c(TRUE, NA, TRUE)
+  )
+  expect_false(mfrmr:::calc_reliability(measures)$SupportsFormalInference)
+  measures$SupportsFormalInference <- NULL
+  measures$InferenceReady <- NULL
+  out <- mfrmr:::calc_reliability(measures)
+  expect_false(out$InferenceReady)
+  expect_false(out$SupportsFormalInference)
+  measures$Estimate <- Inf
+  expect_true(is.na(mfrmr:::calc_reliability(measures)$Reliability))
 })

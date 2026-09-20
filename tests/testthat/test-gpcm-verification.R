@@ -216,7 +216,7 @@ test_that("GPCM diagnose_mfrm returns measures with caveat status", {
     as.data.frame(source_readiness$fit)
   )
   expect_true(any(grepl(
-    "source fit is review and is not inference-ready",
+    "Ordinary inference is unavailable",
     diag_summary$key_warnings,
     fixed = TRUE
   )))
@@ -235,7 +235,7 @@ test_that("GPCM diagnose_mfrm returns measures with caveat status", {
   ))
   diag_console <- capture.output(print(diag_summary))
   expect_true(any(grepl("Source fit readiness", diag_console, fixed = TRUE)))
-  expect_true(any(grepl("review-only", diag_console, fixed = TRUE)))
+  expect_true(any(grepl("formal inference is not ready", diag_console, fixed = TRUE)))
   expect_true(any(grepl(
     "Fair average: Available via direct table only",
     diag_console,
@@ -471,11 +471,12 @@ test_that("five-category all-maximum persons and raters retain distinct contract
   expect_true(any(grepl("Certified JML facet recession directions", jml_console)))
   expect_true(any(grepl("numerical traces, not finite JML maxima", jml_console)))
   expect_true(any(grepl(
-    "GPCM estimator: unpenalized_identified_jml",
+    "GPCM estimator: unpenalized joint maximum likelihood",
     jml_console,
     fixed = TRUE
   )))
   jml_fit_console <- capture.output(print(jml))
+  jml_fit_console <- gsub("[[:space:]]+", " ", paste(jml_fit_console, collapse = " "))
   expect_true(any(grepl(
     "Statistical penalty: none", jml_fit_console, fixed = TRUE
   )))

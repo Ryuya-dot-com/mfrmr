@@ -959,6 +959,10 @@ compute_person_posterior_summary <- function(idx,
     SD = sd_eap,
     Lower = intervals[, "Lower"],
     Upper = intervals[, "Upper"],
+    PriorMean = if (isTRUE(quad_basis$transformed)) quad_basis$mu[person_ids] else 0,
+    PriorSD = if (isTRUE(quad_basis$transformed)) quad_basis$sigma else 1,
+    WeightedLikelihood = as.numeric(rowsum(as.integer((idx$weight %||% rep(1, n)) != 1), person_int,
+                                           reorder = FALSE)[, 1]) > 0,
     Observations = obs_n,
     WeightedN = weight_n
   )
@@ -1111,7 +1115,123 @@ prediction_source_scoring_readiness <- function(fit) {
   )
 }
 
+prediction_scoring_reasons <- function(codes) {
+  labels <- c(
+    population_scoring_validity_not_evaluated = "Scoring with an estimated population distribution still requires review.",
+    readiness_contract_not_current = "The source fit does not retain current scoring checks.",
+    input_not_scoring_ready = "The source response data require review.",
+    estimability_not_scoring_ready = "The source calibration's identification requires review.",
+    category_not_scoring_ready = "The source score categories require review.",
+    boundary_not_scoring_ready = "A source estimate may lie at a boundary or be unbounded.",
+    numerical_not_scoring_ready = "Source numerical convergence requires review.",
+    calibration_parameter_layout_invalid = "The retained calibration parameters are incomplete or incompatible."
+  )
+  result <- unname(labels[sub(":.*$", "", as.character(codes))])
+  result[is.na(result)] <- "Inspect the source calibration diagnostics before interpreting these scores."
+  unique(result)
+}
+
+prediction_estimate_table <- function(x) {
+  table <- x$estimates
+  if (!is.data.frame(table) || !nrow(table)) return(table)
+  settings <- x$settings
+  population <- identical(settings$posterior_basis, "population_model")
+  table$IntervalLevel <- settings$interval_level %||% NA_real_
+  table$ScoringAlgorithm <- settings$scoring_algorithm %||% NA_character_
+  table$CalibrationMethod <- settings$method %||% NA_character_
+  table$EstimateBasis <- "Posterior EAP conditional on point calibration and scoring prior"
+  table$Prior <- if (population) "Fitted conditional normal" else "Standard normal N(0,1)"
+  if (!"PriorMean" %in% names(table)) table$PriorMean <- if (population) NA_real_ else 0
+  if (!"PriorSD" %in% names(table)) table$PriorSD <- if (population) NA_real_ else 1
+  if (!"WeightedLikelihood" %in% names(table)) table$WeightedLikelihood <- NA
+  table$UncertaintyBasis <- "Conditional posterior uncertainty; calibration and population estimation uncertainty excluded"
+  algorithm <- settings$scoring_algorithm %||% ""
+  table$IntervalBasis <- if (endsWith(algorithm, "_v2")) {
+    "Continuous equal-tail posterior quantiles"
+  } else if (endsWith(algorithm, "_v1")) {
+    "Quadrature-grid endpoints; posterior mass may differ from requested level"
+  } else "Interval calculation not recorded; rescore to establish its interpretation"
+  table
+}
+
+prediction_draw_table <- function(draws, estimates) {
+  if (!is.data.frame(draws) || !nrow(draws)) return(draws)
+  columns <- intersect(c("CalibrationMethod", "Prior", "PriorMean", "PriorSD",
+    "WeightedLikelihood", "UncertaintyBasis", "ScoringAlgorithm",
+    "SourceScoringReady", "EstimateUse"), names(estimates))
+  for (name in columns) draws[[name]] <- estimates[[name]][match(draws$Person, estimates$Person)]
+  draws$DrawBasis <- "Discrete quadrature posterior; conditional on point calibration and scoring prior"
+  draws
+}
+
+prediction_output_notes <- function(x) {
+  notes <- x$notes %||% character(0)
+  notes <- notes[!grepl("Reason codes:", notes, fixed = TRUE) &
+                   !startsWith(notes, "Intervals invert the continuous posterior CDF")]
+  notes <- c(notes, if (identical(x$settings$posterior_basis, "population_model")) {
+    "Scoring prior: fitted conditional normal distribution, held at its estimated parameters."
+  } else "Scoring prior: standard normal N(0,1).")
+  notes <- c(notes, mfrmr_calibration_score_interval_note(x$settings),
+    "Posterior SDs and intervals condition on the point calibration and prior; uncertainty from estimating either is excluded.")
+  if (identical(x$settings$source_scoring_ready, FALSE)) {
+    notes <- c(notes, "The source fit requires review; these scores are review-only and should be treated as exploratory.",
+      prediction_scoring_reasons(x$settings$source_scoring_reason_codes))
+  }
+  unique(notes)
+}
+
+prediction_display_estimates <- function(table) {
+  columns <- intersect(c("Person", "Estimate", "SD", "Lower", "Upper", "IntervalLevel",
+                          "PriorMean", "PriorSD", "Observations"), names(table))
+  out <- as.data.frame(table[columns])
+  if ("SourceScoringReady" %in% names(table)) {
+    out$Review <- ifelse(is.na(table$SourceScoringReady), "Not recorded",
+                        ifelse(table$SourceScoringReady, "No source restriction recorded", "Required"))
+  }
+  out
+}
+
+prediction_print_summary <- function(x, plausible = FALSE) {
+  prediction_validate_population_output(x)
+  cat(if (plausible) "mfrmr Plausible Values Summary\n" else "mfrmr Unit Prediction Summary\n")
+  estimates <- prediction_estimate_table(x)
+  print_wrapped_line(paste0("Calibration estimated by ", x$settings$method %||% "an unrecorded method",
+    "; scoring uses posterior EAP. Prior: ", unique(estimates$Prior)[1], "."))
+  print_wrapped_line(mfrmr_calibration_score_interval_note(x$settings))
+  print_wrapped_line("Posterior SDs and intervals condition on point estimates of the calibration and prior; their estimation uncertainty is excluded.")
+  if (!is.null(x$quadrature_overview)) {
+    cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
+    print(x$quadrature_overview, row.names = FALSE)
+  }
+  if (plausible) {
+    cat("\nEmpirical draw summaries (first 10)\n")
+    print(utils::head(as.data.frame(x$draw_summary[c("Person", "Draws", "MeanValue",
+      "SDValue", "LowerValue", "UpperValue")]), 10L), row.names = FALSE)
+    print_wrapped_line("Draw limits are empirical quantiles at the requested level. With few draws they are coarse; use the companion posterior interval and its stated calculation method for interval reporting.")
+  }
+  cat("\nPosterior estimates (first 10)\n")
+  shown <- prediction_display_estimates(estimates)
+  shown <- shown[setdiff(names(shown), c("IntervalLevel", "PriorMean", "PriorSD"))]
+  print(utils::head(shown, 10L), row.names = FALSE)
+  if (nrow(x$row_review %||% data.frame())) {
+    cat("\nResponse rows\n"); print(as.data.frame(x$row_review), row.names = FALSE)
+  }
+  if (nrow(x$population_review %||% data.frame())) {
+    cat("\nBackground-data omissions\n")
+    columns <- intersect(c("InputPersons", "RetainedPersons", "OmittedPersons", "RetainedRows", "OmittedRows"), names(x$population_review))
+    print(as.data.frame(x$population_review[columns]), row.names = FALSE)
+  }
+  notes <- prediction_output_notes(x)
+  notes <- notes[!grepl("^Posterior summaries|^Scoring prior:|^[0-9.]+% intervals:|^Intervals:|^Posterior SDs and intervals", notes)]
+  for (note in notes) print_wrapped_line(note)
+  invisible(x)
+}
+
 prediction_validate_population_output <- function(x) {
+  if (inherits(x, "summary.mfrm_plausible_values") &&
+      !all(c("IntervalLevel", "DrawSummaryBasis") %in% names(x$draw_summary))) {
+    stop("Recreate this summary with summary(original_plausible_values) to label the draw quantiles and interval level; no refitting or resampling is needed.", call. = FALSE)
+  }
   if (!inherits(x, c("mfrm_unit_prediction", "mfrm_plausible_values",
                       "summary.mfrm_unit_prediction", "summary.mfrm_plausible_values")) ||
       !identical(x$settings$posterior_basis, "population_model")) return(invisible(x))
@@ -1255,6 +1375,13 @@ prediction_validate_population_output <- function(x) {
 #'   they do not establish that this prior matches the new population.
 #' - `SD` is posterior uncertainty under the fitted scoring basis used for
 #'   scoring.
+#' - Estimate tables retain `IntervalLevel` without rounding, the prior form,
+#'   per-Person `PriorMean` and `PriorSD`, calibration method, interval method
+#'   and uncertainty interpretation. `WeightedLikelihood` indicates whether
+#'   any response contribution for that Person was raised to a non-unit weight.
+#'   Such weights do not by themselves establish equivalent independent ratings
+#'   or frequentist coverage. Draw tables retain their discrete-grid basis and
+#'   the same prior and calibration interpretation.
 #' - `draws`, when requested, contains approximate plausible values on the
 #'   fitted quadrature grid.
 #' - `population_review`, when present, records whether scored persons were
@@ -1265,6 +1392,13 @@ prediction_validate_population_output <- function(x) {
 #'   between adaptive orders, and computation status/reasons. `summary()` also
 #'   supplies a compact `quadrature_overview`. A `computed` status does not
 #'   certify accuracy; inspect the differences and any unavailable rows.
+#'
+#' Re-summarize older results to recover recorded interval settings and readable
+#' notes without changing numerical scores. Prior means/SDs for older
+#' estimated-population results may be unavailable because those parameters
+#' were not retained in the result. Re-score with the existing fitted model
+#' to retain them; no calibration refit is needed. An unrecorded interval
+#' algorithm is labelled unavailable, not assumed to use continuous quantiles.
 #'
 #' @section What this does not justify:
 #' This helper does not update the original calibration, estimate new non-person
@@ -1346,8 +1480,8 @@ predict_mfrm_units <- function(fit,
                                seed = NULL,
                                adaptive_quad_points = NULL) {
   adaptive_quad_points <- mfrmr_validate_adaptive_quad_points(adaptive_quad_points)
-  if (!inherits(fit, "mfrm_fit")) {
-    stop("`fit` must be output from fit_mfrm().", call. = FALSE)
+  if (!inherits(fit, "mfrm_fit") || inherits(fit, "mfrm_imported_fit")) {
+    stop("`fit` must be a native fit_mfrm() result; use the source package to score an imported model.", call. = FALSE)
   }
   fit_method <- prediction_resolve_fit_method(fit)
   if (!fit_method %in% c("MML", "JML")) {
@@ -1359,16 +1493,15 @@ predict_mfrm_units <- function(fit,
   if (!isTRUE(source_readiness$ready) &&
       identical(readiness_policy, "error")) {
     stop(
-      "`fit` is not ready for fitted-object scoring (FitReadiness = '",
-      source_readiness$fit_readiness, "'; reason codes: ",
-      paste(source_readiness$reason_codes, collapse = "; "),
-      "). Resolve the source fit or use `readiness_policy = \"review\"` ",
+      "`fit` is not ready for fitted-object scoring. ",
+      paste(prediction_scoring_reasons(source_readiness$reason_codes), collapse = " "),
+      " Resolve the source fit or use `readiness_policy = \"review\"` ",
       "for an explicitly review-only calculation.",
       call. = FALSE
     )
   }
-  interval_level <- as.numeric(interval_level[1])
-  if (!is.finite(interval_level) || interval_level <= 0 || interval_level >= 1) {
+  if (!is.numeric(interval_level) || length(interval_level) != 1L ||
+      !is.finite(interval_level) || interval_level <= 0 || interval_level >= 1) {
     stop("`interval_level` must be a single number in (0, 1).", call. = FALSE)
   }
   n_draws <- prediction_validate_integer(n_draws[1] %||% 0L, "n_draws", min_value = 0L, positive = FALSE)
@@ -1431,7 +1564,7 @@ predict_mfrm_units <- function(fit,
   calibration_note <- if (isTRUE(population_ready$active)) {
     "Posterior summaries are computed under the fitted MML calibration together with the fitted conditional normal population model for the scored persons."
   } else if (identical(fit_method, "MML")) {
-    "Posterior summaries are computed under the fixed fitted MML calibration."
+    "Posterior summaries are computed under the fixed fitted MML calibration with a standard normal N(0,1) scoring prior."
   } else {
     "Posterior summaries are computed under the fixed fitted JML calibration using a standard normal reference prior on the quadrature grid."
   }
@@ -1442,16 +1575,6 @@ predict_mfrm_units <- function(fit,
     "Non-person facets in `new_data` must already exist in the fitted calibration.",
     "Overlapping person IDs are treated as labels in `new_data`; the original fitted person estimates are not updated."
   )
-  if (!isTRUE(source_readiness$ready)) {
-    notes <- c(
-      notes,
-      paste0(
-        "The source fit is not scoring-ready; this result was requested with ",
-        "`readiness_policy = \"review\"` and is review-only. Reason codes: ",
-        paste(source_readiness$reason_codes, collapse = "; "), "."
-      )
-    )
-  }
   if (identical(fit_method, "JML")) {
     notes <- c(
       notes,
@@ -1491,6 +1614,9 @@ predict_mfrm_units <- function(fit,
       notes,
       "The `draws` component contains quadrature-grid posterior draws that can be used as approximate plausible-value summaries."
     )
+  }
+  if (any(scored$estimates$WeightedLikelihood)) {
+    notes <- c(notes, "Non-unit response weights exponentiate likelihood contributions. Posterior uncertainty describes that weighting rule; weights do not establish equivalent independent ratings or frequentist coverage.")
   }
 
   out <- structure(
@@ -1554,6 +1680,9 @@ predict_mfrm_units <- function(fit,
     out$settings$adaptive_quad_points <- adaptive_quad_points
     out$notes <- c(out$notes, mfrmr_adaptive_quadrature_note())
   }
+  out$estimates <- prediction_estimate_table(out)
+  out$draws <- prediction_draw_table(out$draws, out$estimates)
+  out$notes <- prediction_output_notes(out)
   out
 }
 
@@ -1600,17 +1729,17 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
 
   round_df <- function(df) {
     if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    num_cols <- vapply(df, is.numeric, logical(1))
+    num_cols <- vapply(df, is.numeric, logical(1)) & !names(df) %in% c("IntervalLevel", "PriorMean", "PriorSD")
     df[num_cols] <- lapply(df[num_cols], round, digits = digits)
     df
   }
 
   out <- list(
-    estimates = round_df(object$estimates),
+    estimates = round_df(prediction_estimate_table(object)),
     row_review = round_df(object$row_review),
     population_review = round_df(object$population_review),
     settings = object$settings,
-    notes = object$notes %||% character(0),
+    notes = prediction_output_notes(object),
     digits = digits
   )
   if (!is.null(object$quadrature_review)) {
@@ -1623,45 +1752,7 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
 
 #' @export
 print.summary.mfrm_unit_prediction <- function(x, ...) {
-  prediction_validate_population_output(x)
-  digits <- prediction_validate_integer(x$digits %||% 3L, "digits", min_value = 0L, positive = FALSE)
-  round_df <- function(df) {
-    if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    num_cols <- vapply(df, is.numeric, logical(1))
-    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
-    df
-  }
-  preview_df <- function(df, n = 10L) {
-    if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    utils::head(df, n = n)
-  }
-
-  cat("mfrmr Unit Prediction Summary\n")
-  if (!is.null(x$quadrature_overview)) {
-    cat("\nFixed-parameter integration review (adaptive minus fixed)\n")
-    print(x$quadrature_overview, row.names = FALSE)
-  }
-  if (!is.null(x$estimates) && nrow(x$estimates) > 0) {
-    cat("\nPosterior estimates\n")
-    print(round_df(as.data.frame(preview_df(x$estimates))), row.names = FALSE)
-  }
-  if (!is.null(x$row_review) && nrow(x$row_review) > 0) {
-    cat("\nRow preparation review\n")
-    print(round_df(as.data.frame(x$row_review)), row.names = FALSE)
-  }
-  if (!is.null(x$population_review) && nrow(x$population_review) > 0) {
-    cat("\nPopulation-model omission review\n")
-    print(round_df(as.data.frame(x$population_review)), row.names = FALSE)
-  }
-  if (!is.null(x$settings) && length(x$settings) > 0L) {
-    cat("\nSettings\n")
-    print(bundle_settings_table(x$settings), row.names = FALSE)
-  }
-  if (length(x$notes %||% character(0)) > 0L) {
-    cat("\nNotes\n")
-    for (line in x$notes) cat(" - ", line, "\n", sep = "")
-  }
-  invisible(x)
+  prediction_print_summary(x)
 }
 
 #' Sample approximate plausible values under fitted posterior scoring
@@ -1696,7 +1787,8 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' @param n_draws Number of posterior draws per person. Must be a positive
 #'   integer.
 #' @param interval_level Posterior interval level passed to
-#'   [predict_mfrm_units()] for the accompanying EAP summary table.
+#'   [predict_mfrm_units()] for the accompanying EAP summary table. The same
+#'   level selects the empirical draw quantiles reported by `summary()`.
 #' @param scoring_quad_points Number of Gauss-Hermite nodes used only for this
 #'   scoring call. Passed to [predict_mfrm_units()] and independent of the
 #'   fit-time quadrature order. Fixed or adaptive integration is inherited
@@ -1734,12 +1826,22 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #' - `estimates` contains the companion posterior EAP summaries from
 #'   [predict_mfrm_units()].
 #' - `summary()` reports draw counts and empirical draw summaries by person.
+#'   `LowerValue` and `UpperValue` use the requested `interval_level` and are
+#'   labelled with `IntervalLevel` and `DrawSummaryBasis`. They are empirical
+#'   quantiles of a finite sample of discrete draws, not the continuous posterior
+#'   limits in the companion estimates table. With few draws they are coarse;
+#'   one draw has an unavailable empirical SD.
+#'   Recreate older summaries from the original plausible-values object to
+#'   update these limits and labels; no refitting or resampling is needed.
 #'
 #' @section What this does not justify:
 #' This helper does not update the calibration, estimate new non-person facet
 #' levels, or provide exact future true values. It samples from the quadrature-
 #' grid posterior implied by the existing fitted-model scoring basis, using
 #' fixed or Person-specific adaptive nodes according to the fit's setting.
+#' Calibration and population parameters remain fixed. These draws alone do
+#' not validate downstream group comparisons or regressions; those analyses
+#' require a compatible conditioning model and sampling design.
 #'
 #' @section References:
 #' The underlying posterior scoring follows the usual quadrature-based EAP
@@ -1833,6 +1935,7 @@ sample_mfrm_plausible_values <- function(fit,
   notes <- c(
     draw_note,
     "Use them as approximate plausible-value summaries for posterior uncertainty, not as deterministic future truth values.",
+    "Draws alone do not validate downstream group comparisons or regressions; check the conditioning model and sampling design for the intended analysis.",
     pred$notes
   )
 
@@ -1895,29 +1998,38 @@ summary.mfrm_plausible_values <- function(object, digits = 3, ...) {
 
   round_df <- function(df) {
     if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    num_cols <- vapply(df, is.numeric, logical(1))
+    num_cols <- vapply(df, is.numeric, logical(1)) & !names(df) %in% c("IntervalLevel", "PriorMean", "PriorSD")
     df[num_cols] <- lapply(df[num_cols], round, digits = digits)
     df
   }
 
+  level <- object$settings$interval_level %||% NA_real_
+  if (!is.numeric(level) || length(level) != 1L || !is.finite(level) || level <= 0 || level >= 1) {
+    stop("The requested interval level is unavailable; recreate the scoring result with an explicit interval_level before summarizing draw quantiles.", call. = FALSE)
+  }
+  alpha <- (1 - level) / 2
   draw_summary <- object$values |>
     dplyr::group_by(.data$Person) |>
     dplyr::summarise(
       Draws = dplyr::n(),
       MeanValue = mean(.data$Value),
       SDValue = stats::sd(.data$Value),
-      LowerValue = stats::quantile(.data$Value, probs = 0.025, names = FALSE, type = 1),
-      UpperValue = stats::quantile(.data$Value, probs = 0.975, names = FALSE, type = 1),
+      LowerValue = stats::quantile(.data$Value, probs = alpha, names = FALSE, type = 1),
+      UpperValue = stats::quantile(.data$Value, probs = 1 - alpha, names = FALSE, type = 1),
       .groups = "drop"
     )
 
+  draw_summary$IntervalLevel <- level
+  draw_summary$DrawSummaryBasis <- "Empirical quantiles of discrete posterior draws; not continuous posterior interval bounds"
+  draw_summary <- prediction_draw_table(draw_summary, prediction_estimate_table(object))
+
   out <- list(
     draw_summary = round_df(draw_summary),
-    estimates = round_df(object$estimates),
+    estimates = round_df(prediction_estimate_table(object)),
     row_review = round_df(object$row_review),
     population_review = round_df(object$population_review),
     settings = object$settings,
-    notes = object$notes %||% character(0),
+    notes = prediction_output_notes(object),
     digits = digits
   )
   class(out) <- "summary.mfrm_plausible_values"
@@ -1926,43 +2038,5 @@ summary.mfrm_plausible_values <- function(object, digits = 3, ...) {
 
 #' @export
 print.summary.mfrm_plausible_values <- function(x, ...) {
-  prediction_validate_population_output(x)
-  digits <- prediction_validate_integer(x$digits %||% 3L, "digits", min_value = 0L, positive = FALSE)
-  round_df <- function(df) {
-    if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    num_cols <- vapply(df, is.numeric, logical(1))
-    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
-    df
-  }
-  preview_df <- function(df, n = 10L) {
-    if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    utils::head(df, n = n)
-  }
-
-  cat("mfrmr Plausible Values Summary\n")
-  if (!is.null(x$draw_summary) && nrow(x$draw_summary) > 0) {
-    cat("\nDraw summary\n")
-    print(round_df(as.data.frame(preview_df(x$draw_summary))), row.names = FALSE)
-  }
-  if (!is.null(x$estimates) && nrow(x$estimates) > 0) {
-    cat("\nCompanion estimates\n")
-    print(round_df(as.data.frame(preview_df(x$estimates))), row.names = FALSE)
-  }
-  if (!is.null(x$row_review) && nrow(x$row_review) > 0) {
-    cat("\nRow preparation review\n")
-    print(round_df(as.data.frame(x$row_review)), row.names = FALSE)
-  }
-  if (!is.null(x$population_review) && nrow(x$population_review) > 0) {
-    cat("\nPopulation-model omission review\n")
-    print(round_df(as.data.frame(x$population_review)), row.names = FALSE)
-  }
-  if (!is.null(x$settings) && length(x$settings) > 0L) {
-    cat("\nSettings\n")
-    print(bundle_settings_table(x$settings), row.names = FALSE)
-  }
-  if (length(x$notes %||% character(0)) > 0L) {
-    cat("\nNotes\n")
-    for (line in x$notes) cat(" - ", line, "\n", sep = "")
-  }
-  invisible(x)
+  prediction_print_summary(x, plausible = TRUE)
 }

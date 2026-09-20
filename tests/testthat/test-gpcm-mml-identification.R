@@ -136,17 +136,17 @@ test_that("default GPCM MML estimates the common population scale", {
     paste(fit_console, collapse = " ")
   )
   expect_true(any(grepl(
-    "Scale: estimated_population_scale",
+    "Scale: estimated population",
     fit_console_text,
     fixed = TRUE
   )))
   expect_true(any(grepl(
-    "Discrimination: geometric_mean_one_relative_discrimination",
+    "Discrimination: relative slopes with geometric mean 1",
     fit_console_text,
     fixed = TRUE
   )))
   expect_true(any(grepl(
-    "GPCM estimator: marginal_maximum_likelihood",
+    "GPCM estimator: marginal maximum likelihood",
     fit_console_text,
     fixed = TRUE
   )))
@@ -166,8 +166,8 @@ test_that("default GPCM MML estimates the common population scale", {
     fixed = TRUE
   )))
   kernel_console_line <- paste0(
-    "GPCM kernel: aligned_single_owner_relative_slope_gpcm | ",
-    "Slope action: complete_adjacent_predictor"
+    "GPCM slopes multiply the complete adjacent-category predictor, ",
+    "including thresholds"
   )
   expect_true(any(grepl(kernel_console_line, fit_console_text, fixed = TRUE)))
   summary_console <- capture.output(print(summary_fit))
@@ -177,7 +177,7 @@ test_that("default GPCM MML estimates the common population scale", {
     paste(summary_console, collapse = " ")
   )
   expect_true(any(grepl(
-    "GPCM estimator: marginal_maximum_likelihood",
+    "GPCM estimator: marginal maximum likelihood",
     summary_console_text,
     fixed = TRUE
   )))

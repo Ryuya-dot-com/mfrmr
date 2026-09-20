@@ -1,3 +1,10 @@
+validate_response_time_review <- function(x) {
+  if (is.null(x$overview$UnassessedPersons)) {
+    stop("Recreate this response-time review from the original timing data to retain excluded rows and unassessed groups; no MFRM refit is needed.", call. = FALSE)
+  }
+  invisible(x)
+}
+
 # Response-time diagnostics are intentionally descriptive. They do not alter
 # the ordered-response likelihood fitted by fit_mfrm().
 
@@ -27,6 +34,8 @@
              group_cols),
     stringsAsFactors = FALSE
   )
+  out$InputRows <- integer(0)
+  out$ExcludedRows <- integer(0)
   out$N <- integer(0)
   out$MeanTime <- numeric(0)
   out$MedianTime <- numeric(0)
@@ -49,24 +58,28 @@
   if (nrow(obs) == 0L) {
     return(.response_time_empty_summary(group_cols))
   }
-  key <- interaction(obs[, group_cols, drop = FALSE], drop = TRUE, sep = "\r")
+  key <- dplyr::group_indices(dplyr::group_by(obs, dplyr::across(dplyr::all_of(group_cols))))
   idx <- split(seq_len(nrow(obs)), key)
   rows <- lapply(idx, function(i) {
     grp <- obs[i[1L], group_cols, drop = FALSE]
+    n_input <- length(i)
+    i <- i[is.finite(obs$Time[i])]
     t <- obs$Time[i]
     lt <- obs$LogTime[i]
     data.frame(
       grp,
+      InputRows = n_input,
+      ExcludedRows = n_input - length(i),
       N = length(i),
-      MeanTime = mean(t, na.rm = TRUE),
-      MedianTime = stats::median(t, na.rm = TRUE),
+      MeanTime = if (length(i)) mean(t) else NA_real_,
+      MedianTime = if (length(i)) stats::median(t) else NA_real_,
       SDTime = if (length(i) > 1L) stats::sd(t, na.rm = TRUE) else NA_real_,
-      MeanLogTime = mean(lt, na.rm = TRUE),
-      MedianLogTime = stats::median(lt, na.rm = TRUE),
-      RapidResponses = sum(obs$RapidFlag[i], na.rm = TRUE),
-      RapidRate = mean(obs$RapidFlag[i], na.rm = TRUE),
-      SlowResponses = sum(obs$SlowFlag[i], na.rm = TRUE),
-      SlowRate = mean(obs$SlowFlag[i], na.rm = TRUE),
+      MeanLogTime = if (length(i)) mean(lt) else NA_real_,
+      MedianLogTime = if (length(i)) stats::median(lt) else NA_real_,
+      RapidResponses = if (length(i)) sum(obs$RapidFlag[i]) else NA_integer_,
+      RapidRate = if (length(i)) mean(obs$RapidFlag[i]) else NA_real_,
+      SlowResponses = if (length(i)) sum(obs$SlowFlag[i]) else NA_integer_,
+      SlowRate = if (length(i)) mean(obs$SlowFlag[i]) else NA_real_,
       stringsAsFactors = FALSE
     )
   })
@@ -127,6 +140,23 @@
 #' response-time distributions, distributional rapid/slow flags, and person /
 #' facet / score-level response-time patterns for screening and reporting
 #' context.
+#'
+#' @details
+#' Supply one row per timed event. A respondent's production time must not be
+#' repeated for every rater or criterion that scores that response; rater
+#' scoring time is a different observation. This helper does not model repeated
+#' events, censoring or a speed-accuracy relationship.
+#'
+#' Numeric factor labels are interpreted as times, not factor codes. Group
+#' summaries retain `InputRows`, valid timed rows (`N`) and `ExcludedRows`.
+#' Rates describe valid rows only; groups with no valid times remain present
+#' with unavailable statistics. Missing facet or score labels are omitted from
+#' that grouping. Sample quantiles and user-specified cutoffs are descriptive;
+#' they do not diagnose rapid guessing, effort or rater quality. Equal cutoffs
+#' can flag the same event in both tails when times are tied. `FlaggedGroups`
+#' counts distinct groups, while `Flags` counts rapid/slow rule crossings.
+#' Recreate older reviews from the original timing data before summary or
+#' plotting; no MFRM refit is needed.
 #'
 #' @param data A data.frame in long format with one row per observed rating
 #'   event.
@@ -229,9 +259,24 @@ response_time_review <- function(data,
   slow_rate_warn <- .response_time_check_probability(
     slow_rate_warn, "slow_rate_warn"
   )
-  min_n_flag <- max(1L, as.integer(min_n_flag[1L]))
+  if (!is.numeric(min_n_flag) || length(min_n_flag) != 1L ||
+      !is.finite(min_n_flag) || min_n_flag < 1 || min_n_flag != floor(min_n_flag)) {
+    stop("`min_n_flag` must be a positive integer.", call. = FALSE)
+  }
+  if (!is.character(time_unit) || length(time_unit) != 1L || is.na(time_unit) || !nzchar(time_unit)) {
+    stop("`time_unit` must be one non-empty label.", call. = FALSE)
+  }
+  rapid_from_data <- is.null(rapid_threshold)
+  slow_from_data <- is.null(slow_threshold)
+  for (name in c("rapid_threshold", "slow_threshold")) {
+    value <- get(name)
+    if (!is.null(value) && (!is.numeric(value) || length(value) != 1L ||
+        !is.finite(value) || value <= min_time)) {
+      stop("`", name, "` must be one finite number greater than `min_time`.", call. = FALSE)
+    }
+  }
 
-  time_values <- suppressWarnings(as.numeric(data[[time]]))
+  time_values <- suppressWarnings(as.numeric(if (is.factor(data[[time]])) as.character(data[[time]]) else data[[time]]))
   person_values <- as.character(data[[person]])
   valid <- is.finite(time_values) & time_values > min_time &
     !is.na(person_values) & nzchar(person_values)
@@ -263,25 +308,30 @@ response_time_review <- function(data,
          "greater than `min_time`.", call. = FALSE)
   }
 
-  obs <- data.frame(
-    Row = which(valid),
-    Person = person_values[valid],
-    Time = valid_times,
-    LogTime = log(valid_times),
-    RapidFlag = valid_times <= rapid_threshold,
-    SlowFlag = valid_times >= slow_threshold,
+  if (rapid_threshold > slow_threshold) {
+    stop("`rapid_threshold` must not exceed `slow_threshold`.", call. = FALSE)
+  }
+  all_obs <- data.frame(
+    Row = seq_len(nrow(data)),
+    Person = person_values,
+    Time = ifelse(valid, time_values, NA_real_),
+    LogTime = log(ifelse(valid, time_values, NA_real_)),
+    RapidFlag = ifelse(valid, time_values <= rapid_threshold, NA),
+    SlowFlag = ifelse(valid, time_values >= slow_threshold, NA),
     stringsAsFactors = FALSE
   )
   if (!is.null(score)) {
-    obs$Score <- as.character(data[[score]][valid])
+    all_obs$Score <- as.character(data[[score]])
   }
 
-  person_summary <- .response_time_group_summary(obs, "Person")
+  obs <- all_obs[valid, , drop = FALSE]
+  person_summary <- .response_time_group_summary(
+    all_obs[!is.na(person_values) & nzchar(person_values), , drop = FALSE], "Person")
 
   facet_summary <- lapply(facets, function(f) {
-    facet_obs <- obs
+    facet_obs <- all_obs
     facet_obs$Facet <- f
-    facet_obs$Level <- as.character(data[[f]][valid])
+    facet_obs$Level <- as.character(data[[f]])
     facet_obs <- facet_obs[!is.na(facet_obs$Level) & nzchar(facet_obs$Level),
                            , drop = FALSE]
     .response_time_group_summary(facet_obs, c("Facet", "Level"))
@@ -294,7 +344,7 @@ response_time_review <- function(data,
   rownames(facet_summary) <- NULL
 
   score_summary <- if (!is.null(score)) {
-    score_obs <- obs[!is.na(obs$Score) & nzchar(obs$Score), , drop = FALSE]
+    score_obs <- all_obs[!is.na(all_obs$Score) & nzchar(all_obs$Score), , drop = FALSE]
     .response_time_group_summary(score_obs, "Score")
   } else {
     .response_time_empty_summary("Score")
@@ -312,6 +362,9 @@ response_time_review <- function(data,
 
   notes <- c(
     "Response-time review is descriptive; it does not change fit_mfrm estimates.",
+    "Each row must represent one timed event. Do not duplicate one response-production time across its raters or criteria; rater scoring time is a different event.",
+    "Rates describe valid timed rows only; each group retains input and excluded counts. A group without valid times is unassessed.",
+    "Sample quantiles describe the observed distribution, not validated rapid-guessing, low-effort or speed cutoffs. Missing times and censoring are not modeled.",
     if (is.null(score)) {
       "No score column was supplied, so score-level response-time summaries are empty."
     } else {
@@ -322,7 +375,7 @@ response_time_review <- function(data,
               nrow(data) - nrow(obs))
     },
     if (rapid_threshold >= slow_threshold) {
-      "Rapid and slow thresholds overlap because the response-time distribution is narrow; review flags cautiously."
+      "Rapid and slow cutoffs coincide; events at that value are included in both tails."
     }
   )
   notes <- notes[nzchar(notes)]
@@ -342,7 +395,9 @@ response_time_review <- function(data,
     SlowThreshold = slow_threshold,
     RapidRate = mean(obs$RapidFlag, na.rm = TRUE),
     SlowRate = mean(obs$SlowFlag, na.rm = TRUE),
-    FlaggedGroups = nrow(flags),
+    FlaggedGroups = nrow(unique(flags[, c("Source", "Group"), drop = FALSE])),
+    Flags = nrow(flags),
+    UnassessedPersons = sum(person_summary$N == 0L),
     InterpretationBoundary = paste(
       "Descriptive response-time screening; not a joint speed-accuracy model",
       "and not a fit/pass-fail rule."
@@ -353,12 +408,12 @@ response_time_review <- function(data,
     Threshold = c("rapid", "slow"),
     Value = c(rapid_threshold, slow_threshold),
     Basis = c(
-      if (is.null(match.call()$rapid_threshold)) {
+      if (rapid_from_data) {
         paste0("quantile_", rapid_quantile)
       } else {
         "user_supplied"
       },
-      if (is.null(match.call()$slow_threshold)) {
+      if (slow_from_data) {
         paste0("quantile_", slow_quantile)
       } else {
         "user_supplied"
@@ -397,7 +452,8 @@ response_time_review <- function(data,
 
 #' @export
 print.mfrm_response_time_review <- function(x, ...) {
-  cat("<mfrm_response_time_review>\n")
+  validate_response_time_review(x)
+  cat("mfrmr response-time review\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     ov <- x$overview[1L, , drop = FALSE]
     cat("  rows       : ", ov$ValidRows, " valid / ", ov$Rows, " total\n",
@@ -409,6 +465,7 @@ print.mfrm_response_time_review <- function(x, ...) {
         ", slow >= ", signif(ov$SlowThreshold, 4), "\n", sep = "")
     cat("  flags      : ", ov$FlaggedGroups, " group(s)\n", sep = "")
   }
+  print_wrapped_line("Descriptive timing review; counts and rates use valid timed rows only. Flags are not evidence of low effort or rater quality.")
   cat("Use `summary(x)` for top flagged groups and ",
       "`plot_response_time_review(x)` for draw-free plot data or graphics.\n",
       sep = "")
@@ -427,6 +484,7 @@ summary.mfrm_response_time_review <- function(object, top_n = 10L, ...) {
     stop("`object` must be output from response_time_review().",
          call. = FALSE)
   }
+  validate_response_time_review(object)
   top_n <- max(1L, as.integer(top_n[1L]))
   order_top <- function(tbl, rate_col) {
     if (!is.data.frame(tbl) || nrow(tbl) == 0L) return(tbl)
@@ -434,6 +492,7 @@ summary.mfrm_response_time_review <- function(object, top_n = 10L, ...) {
     tbl[utils::head(ord, top_n), , drop = FALSE]
   }
   out <- list(
+    availability = object$person_summary[, c("Person", "InputRows", "N", "ExcludedRows"), drop = FALSE],
     overview = object$overview,
     thresholds = object$thresholds,
     top_rapid_persons = order_top(object$person_summary, "RapidRate"),
@@ -453,17 +512,25 @@ summary.mfrm_response_time_review <- function(object, top_n = 10L, ...) {
 
 #' @export
 print.summary.mfrm_response_time_review <- function(x, ...) {
+  validate_response_time_review(x)
   cat("mfrmr response-time review\n\n")
   if (!is.null(x$overview) && nrow(x$overview) > 0L) {
     print(x$overview, row.names = FALSE)
   }
   if (!is.null(x$thresholds) && nrow(x$thresholds) > 0L) {
     cat("\nThresholds:\n")
-    print(x$thresholds, row.names = FALSE)
+    thresholds <- x$thresholds
+    thresholds$Basis <- ifelse(thresholds$Basis == "user_supplied", "User-specified cutoff",
+      ifelse(grepl("^quantile_", thresholds$Basis),
+             paste("Observed quantile", sub("^quantile_", "", thresholds$Basis)), "Basis not recorded"))
+    print(thresholds, row.names = FALSE)
   }
   if (!is.null(x$flags) && nrow(x$flags) > 0L) {
     cat("\nFlagged groups:\n")
-    print(x$flags, row.names = FALSE)
+    flags <- x$flags
+    flags$Flag <- ifelse(flags$Flag == "high_rapid_response_rate", "High fraction at or below rapid cutoff",
+                        ifelse(flags$Flag == "high_slow_response_rate", "High fraction at or above slow cutoff", "Review timing pattern"))
+    print(flags, row.names = FALSE)
   }
   if (!is.null(x$notes) && length(x$notes) > 0L) {
     cat("\nNotes:\n")
@@ -557,6 +624,7 @@ plot_response_time_review <- function(x,
   if (!inherits(x, "mfrm_response_time_review")) {
     stop("`x` must be output from response_time_review().", call. = FALSE)
   }
+  validate_response_time_review(x)
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
   tbl <- .response_time_plot_table(x, type = type, facet = facet,
@@ -580,7 +648,7 @@ plot_response_time_review <- function(x,
     if (identical(type, "distribution")) {
       graphics::hist(
         tbl$LogTime,
-        breaks = "FD",
+        breaks = if (length(unique(tbl$LogTime)) < 2L) 1L else "FD",
         col = style$fill_soft,
         border = style$axis,
         main = title,
@@ -595,6 +663,10 @@ plot_response_time_review <- function(x,
         col = c(style$warn, style$accent_secondary),
         bty = "n", cex = 0.85
       )
+    } else if (!any(is.finite(tbl$MedianTime))) {
+      graphics::plot.new()
+      graphics::title(main = title)
+      graphics::text(0.5, 0.5, "No valid times are available for these groups.")
     } else if (identical(type, "score")) {
       y <- tbl$MedianTime
       x_pos <- seq_len(nrow(tbl))
@@ -623,6 +695,8 @@ plot_response_time_review <- function(x,
                        col = c(style$warn, style$accent_secondary))
     }
   }
+
+  if (isTRUE(draw)) graphics::mtext(subtitle, side = 3, line = 0.2, cex = 0.7)
 
   ref_values <- if (identical(type, "distribution")) {
     log(thresholds$Value)

@@ -47,6 +47,10 @@ Build an unexpected-after-adjustment screening report
 \details{
 This helper recomputes expected values and residuals after interaction
 adjustments from \code{\link[=estimate_bias]{estimate_bias()}} have been introduced.
+Screening coverage is retained separately before and after adjustment.
+Reduction counts, percentages and the comparison plot are unavailable if
+either screen leaves responses unclassified. Recreate older saved results
+with the original settings; the MFRM fit does not need re-estimation.
 
 \code{summary(t10)} is supported through \code{summary()}.
 \code{plot(t10)} is dispatched through \code{plot()} for class

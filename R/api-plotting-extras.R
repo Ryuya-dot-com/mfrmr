@@ -187,7 +187,7 @@ plot_threshold_ladder <- function(fit,
 #' @section Interpreting output:
 #' The default 0.5-1.5 envelope follows Linacre (2002) Rasch
 #' Measurement Transactions. Persons in the green centre are
-#' fit-acceptable; amber and red corners are candidates for misfit
+#' within the screening band; amber and red corners are candidates for
 #' review (overfit / underfit) using
 #' [unexpected_response_table()] for follow-up.
 #'
@@ -237,26 +237,31 @@ plot_person_fit <- function(fit,
       diagnose_mfrm(fit, residual_pca = "none")
     ))
   }
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "plot_person_fit()")
+  if (!is.numeric(lower) || length(lower) != 1L || !is.finite(lower) || lower < 0 ||
+      !is.numeric(upper) || length(upper) != 1L || !is.finite(upper) || upper <= lower) {
+    stop("Fit thresholds must be finite numbers with 0 <= lower < upper.", call. = FALSE)
+  }
   m <- as.data.frame(diagnostics$measures, stringsAsFactors = FALSE)
   if (!all(c("Facet", "Level", "Infit", "Outfit") %in% names(m))) {
     stop("Diagnostics measures are missing required columns.",
          call. = FALSE)
   }
   m <- m[as.character(m$Facet) == "Person", , drop = FALSE]
-  m <- m[is.finite(m$Infit) & is.finite(m$Outfit), , drop = FALSE]
   if (nrow(m) == 0L) {
-    stop("No finite Infit/Outfit values for any Person row.",
+    stop("No Person rows are available in the diagnostics.",
          call. = FALSE)
   }
   n_col <- if ("N" %in% names(m)) "N" else if ("N.x" %in% names(m)) "N.x" else NA_character_
   m$N <- if (!is.na(n_col)) suppressWarnings(as.numeric(m[[n_col]])) else 1
   in_band <- m$Infit >= lower & m$Infit <= upper
   out_band <- m$Outfit >= lower & m$Outfit <= upper
-  m$Status <- ifelse(in_band & out_band, "in_band",
-                     ifelse(in_band | out_band, "one_outside", "both_outside"))
+  available_fit <- is.finite(m$Infit) & is.finite(m$Outfit)
+  m$Status <- ifelse(!available_fit, "not_available", ifelse(in_band & out_band, "in_band",
+                     ifelse(in_band | out_band, "one_outside", "both_outside")))
   status_color <- c(in_band = style$success,
                     one_outside = style$warn,
-                    both_outside = style$fail)
+                    both_outside = style$fail, not_available = style$neutral)
   m$Color <- unname(status_color[m$Status])
   m$Score <- abs(m$Infit - 1) + abs(m$Outfit - 1)
   m <- m[order(-m$Score), , drop = FALSE]
@@ -281,7 +286,8 @@ plot_person_fit <- function(fit,
     person_fit_indices <- as.data.frame(person_fit_indices, stringsAsFactors = FALSE)
   }
   if (nrow(person_fit_indices) > 0L) {
-    merge_tbl <- person_fit_indices[, setdiff(names(person_fit_indices), "N"), drop = FALSE]
+    merge_tbl <- person_fit_indices
+    names(merge_tbl)[names(merge_tbl) == "N"] <- "PersonFitN"
     m$.row_id <- seq_len(nrow(m))
     m <- merge(m, merge_tbl,
                by.x = "Level", by.y = "Person",
@@ -301,7 +307,7 @@ plot_person_fit <- function(fit,
       m[[nm]] <- if (nm %in% c("lz_flag_5pct", "lz_flag_1pct",
                                "lz_star_flag_5pct", "lz_star_flag_1pct",
                                "ReportFlag")) {
-        FALSE
+        NA
       } else if (nm %in% c("lz_star_status", "ReportIndex",
                            "ReportFlagLevel", "ReviewStatus",
                            "ReviewReason", "ReportCaveat")) {
@@ -327,8 +333,11 @@ plot_person_fit <- function(fit,
       lower, upper
     )
   } else {
-    "Report index per person: lz* when available, otherwise lz with caveat"
+    "Conditional lz* or uncorrected lz; normal cutoffs are uncalibrated screening references"
   }
+
+  plot_available <- if (fit_index == "meansquare") is.finite(m$Infit) & is.finite(m$Outfit) else is.finite(m$ReportValue)
+  plot_subtitle <- paste0(plot_subtitle, sprintf("; %d of %d persons available", sum(plot_available), nrow(m)))
 
   z_5pct <- stats::qnorm(0.975)
   z_1pct <- stats::qnorm(0.995)
@@ -340,7 +349,10 @@ plot_person_fit <- function(fit,
     subtitle_lines <- strwrap(plot_subtitle,
       width = max(30L, floor((graphics::par("fin")[1] - 0.8) * 15)))
     graphics::par(mar = c(max(old_mar[1], 5 + 0.8 * length(subtitle_lines)), old_mar[-1]))
-    if (identical(fit_index, "meansquare")) {
+    if (identical(fit_index, "meansquare") && !any(plot_available)) {
+      graphics::plot.new()
+      graphics::title(main = plot_title, sub = "No complete Infit/Outfit pairs are available")
+    } else if (identical(fit_index, "meansquare")) {
       cex_size <- 0.6 + 1.6 * sqrt(m$N / max(m$N, na.rm = TRUE))
       x_rng <- range(c(m$Infit, lower, upper), finite = TRUE)
       y_rng <- range(c(m$Outfit, lower, upper), finite = TRUE)
@@ -414,6 +426,7 @@ plot_person_fit <- function(fit,
     Infit = m$Infit,
     Outfit = m$Outfit,
     N = m$N,
+    PersonFitN = m$PersonFitN %||% rep(NA_integer_, nrow(m)),
     Status = m$Status,
     LogLik = suppressWarnings(as.numeric(m$LogLik)),
     lz = suppressWarnings(as.numeric(m$lz)),
@@ -453,9 +466,11 @@ plot_person_fit <- function(fit,
   flag_summary <- data.frame(
     Area = c("mean_square", "report_index"),
     Rows = c(nrow(payload), nrow(payload)),
+    AvailableRows = c(sum(is.finite(payload$Infit) & is.finite(payload$Outfit)), sum(is.finite(payload$ReportValue))),
+    UnavailableRows = c(sum(!is.finite(payload$Infit) | !is.finite(payload$Outfit)), sum(!is.finite(payload$ReportValue))),
     FlaggedRows = c(
-      sum(payload$Status != "in_band", na.rm = TRUE),
-      sum(payload$ReportFlag %in% TRUE, na.rm = TRUE)
+      if (any(payload$Status != "not_available")) sum(payload$Status %in% c("one_outside", "both_outside")) else NA_integer_,
+      if (any(is.finite(payload$ReportValue))) sum(payload$ReportFlag %in% TRUE) else NA_integer_
     ),
     Review1PctRows = c(
       NA_integer_,
@@ -479,7 +494,7 @@ plot_person_fit <- function(fit,
     new_reference_lines(
       axis = rep("v", 4),
       value = c(-z_1pct, -z_5pct, z_5pct, z_1pct),
-      label = c("-1% threshold", "-5% threshold", "5% threshold", "1% threshold"),
+      label = c("Normal reference -2.576", "Normal reference -1.960", "Normal reference 1.960", "Normal reference 2.576"),
       linetype = c("dotted", "dashed", "dashed", "dotted"),
       role = rep("person-fit z threshold", 4)
     )
@@ -507,10 +522,10 @@ plot_person_fit <- function(fit,
       title = plot_title,
       subtitle = plot_subtitle,
       legend = new_plot_legend(
-        label = c("In band", "One outside", "Both outside",
-                  "Not flagged", "Review 5%", "Review 1%"),
-        role = rep("status", 6),
-        aesthetic = rep("point", 6),
+        label = c("Within band", "One outside", "Both outside", "Unavailable",
+                  "No threshold exceeded", "Above 1.960", "Above 2.576"),
+        role = rep("status", 7),
+        aesthetic = rep("point", 7),
         value = c(unname(status_color),
                   unname(review_color[c("not_flagged", "review_5pct", "review_1pct")]))
       ),
@@ -715,9 +730,8 @@ plot_rater_severity_profile <- function(fit,
 #'
 #' Compact effect-size summary for a [analyze_dff()] / [analyze_dif()]
 #' result. Shows each contrast's signed effect size as a horizontal bar
-#' with a vertical reference at zero, coloured by the method-appropriate
-#' classification. Current residual and refit screening labels use the
-#' neutral colour; refit output does not receive ETS A/B/C labels.
+#' with a vertical reference at zero and a neutral colour. Residual comparisons
+#' do not provide differential-functioning tests or classifications.
 #'
 #' @param x Output from [analyze_dff()] or [analyze_dif()].
 #' @param top_n Maximum rows shown (default `30`).
@@ -727,7 +741,8 @@ plot_rater_severity_profile <- function(fit,
 #' @param draw If `TRUE`, draw with base graphics.
 #' @param ci_level Optional confidence level for approximate normal
 #'   intervals drawn from `Effect +/- z * SE` when finite standard errors are
-#'   available. Use `NULL` (default) to omit intervals.
+#'   available for linked refits. Residual comparisons require `NULL` (default)
+#'   because their interval uncertainty is not established.
 #' @param effect_thresholds Optional numeric vector of absolute effect-size
 #'   guide lines to draw at `+/- threshold`. These are display aids, not ETS
 #'   classification boundaries.
@@ -740,11 +755,11 @@ plot_rater_severity_profile <- function(fit,
 #' @section Interpreting output:
 #' Bars are anchored at zero. Width corresponds to effect size on the
 #' contrast's native scale. For `method = "residual"`, this is the
-#' observed-minus-expected average screening contrast between groups. For
+#' observed-minus-expected average difference between groups, in score units. For
 #' `method = "refit"`, this is the subgroup parameter difference on the
 #' fitted logit scale when linking support allows a comparable contrast.
-#' Current DFF/DIF classifications are screening-only, so bars use the
-#' preset's neutral colour.
+#' Residual differences do not isolate differential functioning. Linked refit
+#' intervals omit estimated-anchor uncertainty and cross-refit covariance.
 #'
 #' @seealso [analyze_dff()], [analyze_dif()], [plot_dif_heatmap()].
 #'
@@ -777,6 +792,7 @@ plot_dif_summary <- function(x,
     stop("`x` must be output from analyze_dff() or analyze_dif().",
          call. = FALSE)
   }
+  validate_dff_residual_output(x)
   sort_by <- match.arg(sort_by)
   top_n <- .validate_dff_count_arg(top_n, "top_n")
   ci_level <- .validate_dff_probability(ci_level, "ci_level")
@@ -840,6 +856,9 @@ plot_dif_summary <- function(x,
   )
   tbl <- tbl[ord, , drop = FALSE]
   tbl <- tbl[seq_len(min(nrow(tbl), top_n)), , drop = FALSE]
+  if (!is.null(ci_level) && identical(method, "residual")) {
+    stop("Confidence intervals are unavailable for residual differences. Omit `ci_level` to plot the differences.", call. = FALSE)
+  }
   if (!is.null(ci_level)) {
     z <- stats::qnorm(1 - (1 - ci_level) / 2)
     finite_se <- is.finite(tbl$SE)
@@ -849,11 +868,14 @@ plot_dif_summary <- function(x,
     tbl$CI_Lower <- NA_real_
     tbl$CI_Upper <- NA_real_
   }
-  plot_title <- "Differential functioning summary"
+  plot_title <- if (identical(method, "residual")) "Group residual differences" else "Linked subgroup differences"
   plot_subtitle <- sprintf(
-    "%d row(s) shown; sorted by %s",
-    nrow(tbl), sort_by
+    "%d comparisons shown",
+    nrow(tbl)
   )
+  if (identical(method, "residual")) {
+    plot_subtitle <- paste(plot_subtitle, "Residual differences do not isolate differential functioning.", sep = ". ")
+  }
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
@@ -928,14 +950,15 @@ plot_dif_summary <- function(x,
     "dif_summary",
     list(
       data = payload,
+      notes = data.frame(Type = "Interpretation", Text = if (identical(method, "residual")) {
+        "Residual differences do not isolate differential functioning; no test or confidence interval is provided."
+      } else "Linked differences condition on the estimated anchors.", stringsAsFactors = FALSE),
       sort_by = sort_by,
       title = plot_title,
       subtitle = plot_subtitle,
       legend = new_plot_legend(
-        label = c("A: negligible", "B: moderate", "C: large", "unclassified"),
-        role = rep("classification", 4),
-        aesthetic = rep("bar", 4),
-        value = c(style$success, style$warn, style$fail, style$neutral)
+        label = "Group difference",
+        role = "estimate", aesthetic = "bar", value = style$neutral
       ),
       reference_lines = rbind(
         new_reference_lines("v", 0, "Zero contrast", "dashed", "reference"),

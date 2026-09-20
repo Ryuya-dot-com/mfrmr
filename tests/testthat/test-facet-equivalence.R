@@ -43,6 +43,10 @@ local({
     rope <- plot(eq, type = "rope", draw = FALSE)
     expect_equal(forest$data, eq$forest)
     expect_equal(rope$data, eq$forest)
+    expect_match(forest$title, "deviation from facet mean")
+    printed <- paste(capture.output(print(summary(eq))), collapse = "\n")
+    expect_match(printed, "two one-sided normal-reference tests")
+    expect_false(grepl("mml_observed_information_contrasts|pairwise_tost_summary|InferenceReady|Decision", printed))
     expect_true(forest$inference_ready)
     expect_equal(forest$covariance_basis, eq$summary$CovarianceBasis)
     reordered <- diagnostics

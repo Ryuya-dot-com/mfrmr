@@ -40,7 +40,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_true(any(grepl("Key warnings", printed_summary, fixed = TRUE)))
   expect_true(any(grepl("Next actions", printed_summary, fixed = TRUE)))
   expect_true(any(grepl("Status:", printed_summary, fixed = TRUE)))
-  expect_true(any(grepl("Basis:", printed_summary, fixed = TRUE)))
+  expect_true(any(grepl("Optimizer code 0:", printed_summary, fixed = TRUE)))
   expect_true(any(grepl("Facet overview", printed_summary, fixed = TRUE)))
   # Default plot(fit) now returns the Wright map alone; the 3-plot
   # bundle remains available via `type = "bundle"`.
@@ -576,7 +576,7 @@ test_that("core fit/diagnostics workflow runs", {
   expect_match(apa$report_text, "Optimization", fixed = TRUE)
   expect_match(apa$report_text, "Terminal gradient\\s+sup-norm")
   expect_match(apa$report_text, "Constraint settings:", fixed = TRUE)
-  expect_match(apa$report_text, "Step/threshold summary:", fixed = TRUE)
+  expect_match(apa$report_text, "Adjacent threshold comparisons:", fixed = TRUE)
   # Wrap-insensitive: the wrapped report text may hard-break inside the
   # sentence, so match across whitespace instead of a fixed string.
   expect_match(apa$report_text, "Largest\\s+misfit", perl = TRUE)

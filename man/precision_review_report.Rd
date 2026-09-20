@@ -79,6 +79,11 @@ as hybrid, or should remain exploratory in the final report.
 \item Use \code{summary()} to see whether the run supports model-based reporting
 language or should remain in exploratory/screening mode.
 }
+
+Regularized or fallback SEs remain diagnostic only. Numerical convergence
+does not establish inferential support. Older reports without the recorded
+regularization distinction must be recreated with \code{precision_review_report(fit)};
+the existing fit can be reused without refitting.
 }
 
 \examples{

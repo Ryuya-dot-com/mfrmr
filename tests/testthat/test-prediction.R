@@ -244,6 +244,9 @@ test_that("predict_mfrm_units scores latent-regression fits under the fitted pop
 
   expect_s3_class(pred, "mfrm_unit_prediction")
   expect_identical(pred$settings$posterior_basis, "population_model")
+  expected_prior <- as.numeric(cbind(1, fixture$person_data$X) %*% fixture$fit$population$coefficients)
+  expect_equal(pred$estimates$PriorMean[match(fixture$person_data$Person, pred$estimates$Person)], expected_prior)
+  expect_equal(pred$estimates$PriorSD, rep(sqrt(fixture$fit$population$sigma2), nrow(pred$estimates)))
   expect_true(is.data.frame(pred$population_review))
   expect_equal(pred$population_review$RetainedPersons, 2)
   expect_equal(pred$population_review$OmittedPersons, 0)
@@ -460,6 +463,7 @@ test_that("predict_mfrm_units supports intercept-only latent-regression scoring 
 })
 
 test_that("predict_mfrm_units supports JML PCM calibrations with custom facet names", {
+  skip_if_not_installed("lpSolve")
   toy <- load_mfrmr_data("example_core")
   names(toy)[names(toy) == "Rater"] <- "Judge"
   names(toy)[names(toy) == "Criterion"] <- "Task"
@@ -696,9 +700,9 @@ test_that("estimated-population scoring cannot bypass unresolved source validity
     rating_max = 1, quad_points = 61, maxit = 300, reltol = 1e-10))
   new <- data.frame(Person = "NEW", Rater = "R1", Score = 1)
   expect_true(fit$data_review$estimability$nonlinear_local_estimability$local_first_order_rank_deficient)
-  expect_error(predict_mfrm_units(fit, new), "population_scoring_validity_not_evaluated")
+  expect_error(predict_mfrm_units(fit, new), "estimated population distribution")
   expect_error(sample_mfrm_plausible_values(fit, new, n_draws = 3),
-               "population_scoring_validity_not_evaluated")
+               "estimated population distribution")
   reviewed <- predict_mfrm_units(fit, new, readiness_policy = "review")
   pv <- sample_mfrm_plausible_values(fit, new, n_draws = 3, seed = 2,
                                     readiness_policy = "review")
@@ -770,4 +774,60 @@ test_that("prediction integer validation does not leak coercion warnings", {
       fixed = TRUE
     )
   )
+})
+
+test_that("scoring tables retain interval, prior and draw meanings without internal console codes", {
+  fixture <- make_prediction_fixture()
+  level <- .81234567
+  pred <- predict_mfrm_units(fixture$fit, fixture$new_units, interval_level = level,
+                             n_draws = 3, seed = 47)
+  table <- summary(pred, digits = 2)$estimates
+  expect_identical(unique(table$IntervalLevel), level)
+  expect_true(all(table$PriorMean == 0 & table$PriorSD == 1))
+  expect_true(all(!table$WeightedLikelihood))
+  expect_true(all(grepl("Continuous equal-tail", table$IntervalBasis)))
+  expect_true(all(grepl("uncertainty excluded", table$UncertaintyBasis)))
+  expect_true(all(grepl("Discrete quadrature", pred$draws$DrawBasis)))
+  expect_identical(pred$draws$Person, rep(pred$estimates$Person, each = 3L))
+  bundled <- build_summary_table_bundle(pred, digits = 2)$tables$estimates
+  expect_identical(unique(bundled$IntervalLevel), level)
+  text <- paste(capture.output(print(pred)), collapse = " ")
+  expect_false(grepl("legacy_mml|quadrature_eap_v|SourceScoringReady|EstimateUse|readiness_contract", text))
+  expect_match(text, "N\\(0,1\\)")
+
+  weighted <- fixture$new_units
+  weighted$Weight <- c(2, 1, 1, 1)
+  scored <- predict_mfrm_units(fixture$fit, weighted, weight = "Weight")
+  expect_identical(scored$estimates$WeightedLikelihood, c(TRUE, FALSE))
+  expect_true(any(grepl("exponentiate likelihood", scored$notes)))
+
+  # A known ordered draw sample distinguishes the requested central range
+  # (9 to 90) from the former hard-coded 95% range (2 to 97).
+  pv <- structure(list(values = data.frame(Person = pred$estimates$Person[1],
+    Draw = 1:100, Value = 0:99), estimates = pred$estimates[1, ],
+    settings = pred$settings, notes = pred$notes, row_review = pred$row_review),
+    class = "mfrm_plausible_values")
+  draw_summary <- summary(pv, digits = 2)
+  expect_equal(draw_summary$draw_summary$LowerValue, 9)
+  expect_equal(draw_summary$draw_summary$UpperValue, 90)
+  expect_identical(draw_summary$draw_summary$IntervalLevel, level)
+  expect_match(draw_summary$draw_summary$DrawSummaryBasis, "Empirical quantiles")
+  expect_identical(draw_summary$draw_summary$PriorMean, pv$estimates$PriorMean)
+  expect_match(draw_summary$draw_summary$UncertaintyBasis, "estimation uncertainty excluded")
+  expect_match(paste(capture.output(print(draw_summary)), collapse = " "), "With few draws")
+  stale <- draw_summary
+  stale$draw_summary$DrawSummaryBasis <- NULL
+  expect_error(print(stale), "no refitting or resampling")
+  expect_error(build_summary_table_bundle(stale), "no refitting or resampling")
+
+  older <- pred
+  older$estimates <- older$estimates[c("Person", "Estimate", "SD", "Lower", "Upper", "Observations", "WeightedN", "SourceScoringReady", "EstimateUse")]
+  expect_identical(unique(summary(older, digits = 0)$estimates$IntervalLevel), level)
+  expect_true(all(summary(older)$estimates$PriorSD == 1))
+  missing_method <- older
+  missing_method$settings$scoring_algorithm <- NULL
+  expect_true(all(grepl("not recorded", summary(missing_method)$estimates$IntervalBasis)))
+  expect_error(predict_mfrm_units(fixture$fit, fixture$new_units, interval_level = c(.8, .95)), "single number")
+  imported <- structure(list(), class = c("mfrm_imported_fit", "mfrm_fit"))
+  expect_error(predict_mfrm_units(imported, fixture$new_units, readiness_policy = "review"), "native fit_mfrm")
 })

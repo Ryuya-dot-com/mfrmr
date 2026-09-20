@@ -62,7 +62,8 @@ complete covariates and records that omission in \code{population_review}.}
 integer.}
 
 \item{interval_level}{Posterior interval level passed to
-\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for the accompanying EAP summary table.}
+\code{\link[=predict_mfrm_units]{predict_mfrm_units()}} for the accompanying EAP summary table. The same
+level selects the empirical draw quantiles reported by \code{summary()}.}
 
 \item{scoring_quad_points}{Number of Gauss-Hermite nodes used only for this
 scoring call. Passed to \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} and independent of the
@@ -123,6 +124,13 @@ many-facet plausible-values system with all ConQuest-style extensions.
 \item \code{estimates} contains the companion posterior EAP summaries from
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}.
 \item \code{summary()} reports draw counts and empirical draw summaries by person.
+\code{LowerValue} and \code{UpperValue} use the requested \code{interval_level} and are
+labelled with \code{IntervalLevel} and \code{DrawSummaryBasis}. They are empirical
+quantiles of a finite sample of discrete draws, not the continuous posterior
+limits in the companion estimates table. With few draws they are coarse;
+one draw has an unavailable empirical SD.
+Recreate older summaries from the original plausible-values object to
+update these limits and labels; no refitting or resampling is needed.
 }
 }
 
@@ -132,6 +140,9 @@ This helper does not update the calibration, estimate new non-person facet
 levels, or provide exact future true values. It samples from the quadrature-
 grid posterior implied by the existing fitted-model scoring basis, using
 fixed or Person-specific adaptive nodes according to the fit's setting.
+Calibration and population parameters remain fixed. These draws alone do
+not validate downstream group comparisons or regressions; those analyses
+require a compatible conditioning model and sampling design.
 }
 
 \section{References}{

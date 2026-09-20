@@ -237,10 +237,16 @@ test_that("category-count axes include expected counts above observed bars", {
   categories <- list(category_table = data.frame(
     Category = 1:3, Count = c(2, 4, 3), ExpectedCount = c(NA, 30, 1)
   ))
+  categories$category_usage <- mfrmr:::summarize_category_usage(categories$category_table)
+  categories$threshold_coverage <- mfrmr:::summarize_threshold_order(data.frame())
+  empty <- categories
+  empty$category_table$Count <- 0
+  empty$category_table$ExpectedCount <- NULL
+  empty$category_usage <- mfrmr:::summarize_category_usage(empty$category_table)
   for (draw in list(mfrmr:::draw_category_structure_bundle, mfrmr:::draw_rating_scale_bundle)) {
     draw(categories)
     expect_gt(tail(axes, 1)[[1]][2], 30)
-    draw(list(category_table = data.frame(Category = 1:3, Count = 0)))
+    draw(empty)
     expect_gt(tail(axes, 1)[[1]][2], 0)
   }
 

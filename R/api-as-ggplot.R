@@ -417,7 +417,7 @@
       .plot_series_colors(density_groups, payload$preset %||% "standard"))) +
     ggplot2::scale_linetype_manual(values = c(.plot_series_linetypes(density_groups),
       `Person mean` = "dotted", `Person median` = "dashed"))
-  .mfrmr_gg_labs(p, payload, x = NULL, y = "Logit scale", fallback = "Wright map")
+  .mfrmr_gg_labs(p, payload, x = NULL, y = payload$axis_label %||% "Logit scale", fallback = "Wright map")
 }
 
 .mfrmr_gg_expected_pathway <- function(payload) {
@@ -1054,7 +1054,10 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
       .mfrmr_gg_theme()
     if (nrow(payload$encoding) == 1L || payload$plot == "difference") p <- p + ggplot2::theme(legend.position = "none")
     # Long reference/uncertainty explanations remain available outside the figure.
-    payload$subtitle <- if (!is.null(payload$ci_note)) "Approximate intervals; see returned notes for uncertainty scope." else NULL
+    payload$subtitle <- if (!is.null(payload$ci_note)) {
+      if (identical(payload$plot, "difference")) "Approximate fair-score intervals; observed means held fixed."
+      else "Approximate fair-score intervals omit some estimation uncertainty."
+    } else NULL
     if (identical(payload$interpretation_status, "review_only")) {
       payload$subtitle <- paste(c("REVIEW ONLY", payload$subtitle), collapse = " - ")
     }

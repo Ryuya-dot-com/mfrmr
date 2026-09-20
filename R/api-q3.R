@@ -77,8 +77,8 @@
 #' @param facet Facet whose levels are paired (default `"Rater"`).
 #' @param min_pairs Minimum number of persons with finite aggregated residuals
 #'   at both levels required to retain a pair; a single integer of at least
-#'   three. Pairs below the threshold drop out
-#'   of the table (mirrors [plot_local_dependence_heatmap()]).
+#'   three. Unavailable pairs remain in the table with `NA` correlations and
+#'   flags (mirrors [plot_local_dependence_heatmap()]).
 #' @param yen_threshold Legacy-named argument retained for compatibility. It
 #'   applies the strict absolute heuristic `|Q3-style| > threshold` (default
 #'   `0.20`). Yen (1984) did not propose this as a general cutoff, and it is not
@@ -100,15 +100,19 @@
 #'
 #' @return An object of class `mfrm_q3` containing:
 #' \describe{
-#'   \item{`pairs`}{A data frame with one row per facet-level pair
+#'   \item{`pairs`}{A data frame with one row per unordered facet-level pair
 #'     and columns `Level1`, `Level2`, `Q3`, `N`, `AbsQ3`,
 #'     `YenFlag`, `MaraisFlag`, `RelativeFlag`, and a textual
 #'     `Interpretation` summarising which thresholds were exceeded. `N` is the
 #'     number of persons with finite aggregated residuals at both levels.
+#'     Unavailable pairs have `NA` correlations and flags, with an explanation
+#'     in `Interpretation`.
 #'     `YenFlag` is a compatibility name and does not imply that Yen (1984)
 #'     proposed the fixed default.}
 #'   \item{`summary`}{One-row tibble with `MeanQ3`, `MaxAbsQ3`,
-#'     and the three flagged-pair counts.}
+#'     the three flagged-pair counts, `CandidatePairs`, `AvailablePairs`, and
+#'     `UnavailablePairs`. Flagged counts are unavailable if no pair can be
+#'     evaluated.}
 #'   \item{`thresholds`}{The thresholds used, for reproducibility. The `yen`
 #'     name is retained for compatibility.}
 #'   \item{`facet`}{The facet whose levels were paired.}
@@ -189,8 +193,7 @@ q3_statistic <- function(fit,
   }
 
   # Reuse the heatmap helper's plot data; it already implements the
-  # standardized-residual pivot + pairwise Pearson correlation that
-  # Q3 is defined as.
+  # standardized-residual pivot and pairwise Pearson correlation.
   h <- plot_local_dependence_heatmap(
     fit = fit,
     diagnostics = diagnostics,
@@ -201,41 +204,18 @@ q3_statistic <- function(fit,
 
   pairs_df <- as.data.frame(h$data$pairs %||% data.frame(),
                              stringsAsFactors = FALSE)
-  if (nrow(pairs_df) == 0L) {
-    return(structure(
-      list(
-        pairs = data.frame(Level1 = character(0), Level2 = character(0),
-                            Q3 = numeric(0), N = integer(0),
-                            AbsQ3 = numeric(0), YenFlag = logical(0),
-                            MaraisFlag = logical(0),
-                            RelativeFlag = logical(0),
-                            Interpretation = character(0),
-                            stringsAsFactors = FALSE),
-        summary = data.frame(MeanQ3 = NA_real_, MaxAbsQ3 = NA_real_,
-                              YenFlagged = 0L, MaraisFlagged = 0L,
-                              RelativeFlagged = 0L,
-                              stringsAsFactors = FALSE),
-        thresholds = c(yen = yen_threshold,
-                        marais = marais_threshold,
-                        relative_offset = relative_offset),
-        facet = facet
-      ),
-      class = c("mfrm_q3", "list")
-    ))
-  }
-
   pairs_df$Q3 <- suppressWarnings(as.numeric(pairs_df$ResidualCor))
   pairs_df$AbsQ3 <- abs(pairs_df$Q3)
-  mean_q3 <- mean(pairs_df$Q3, na.rm = TRUE)
+  available <- is.finite(pairs_df$Q3)
+  n_available <- sum(available)
+  mean_q3 <- if (n_available > 0L) mean(pairs_df$Q3[available]) else NA_real_
 
-  pairs_df$YenFlag <- is.finite(pairs_df$AbsQ3) &
-                       pairs_df$AbsQ3 > yen_threshold
-  pairs_df$MaraisFlag <- is.finite(pairs_df$AbsQ3) &
-                         pairs_df$AbsQ3 > marais_threshold
-  pairs_df$RelativeFlag <- is.finite(pairs_df$Q3) &
-                           abs(pairs_df$Q3 - mean_q3) > relative_offset
+  pairs_df$YenFlag <- pairs_df$AbsQ3 > yen_threshold
+  pairs_df$MaraisFlag <- pairs_df$AbsQ3 > marais_threshold
+  pairs_df$RelativeFlag <- abs(pairs_df$Q3 - mean_q3) > relative_offset
 
   pairs_df$Interpretation <- vapply(seq_len(nrow(pairs_df)), function(i) {
+    if (!available[i]) return(paste0("Unavailable: ", pairs_df$Reason[i]))
     flags <- character(0)
     if (isTRUE(pairs_df$MaraisFlag[i])) {
       flags <- c(flags, sprintf(
@@ -255,17 +235,20 @@ q3_statistic <- function(fit,
         relative_offset
       ))
     }
-    if (length(flags) == 0L) "OK" else paste(flags, collapse = ", ")
+    if (length(flags) == 0L) "No screening threshold exceeded" else paste(flags, collapse = ", ")
   }, character(1))
 
   pairs_df <- pairs_df[order(pairs_df$AbsQ3, decreasing = TRUE), , drop = FALSE]
 
   summary_df <- data.frame(
+    CandidatePairs = nrow(pairs_df),
+    AvailablePairs = n_available,
+    UnavailablePairs = nrow(pairs_df) - n_available,
     MeanQ3 = mean_q3,
-    MaxAbsQ3 = max(pairs_df$AbsQ3, na.rm = TRUE),
-    YenFlagged = sum(pairs_df$YenFlag, na.rm = TRUE),
-    MaraisFlagged = sum(pairs_df$MaraisFlag, na.rm = TRUE),
-    RelativeFlagged = sum(pairs_df$RelativeFlag, na.rm = TRUE),
+    MaxAbsQ3 = if (n_available > 0L) max(pairs_df$AbsQ3, na.rm = TRUE) else NA_real_,
+    YenFlagged = if (n_available > 0L) sum(pairs_df$YenFlag, na.rm = TRUE) else NA_integer_,
+    MaraisFlagged = if (n_available > 0L) sum(pairs_df$MaraisFlag, na.rm = TRUE) else NA_integer_,
+    RelativeFlagged = if (n_available > 0L) sum(pairs_df$RelativeFlag, na.rm = TRUE) else NA_integer_,
     stringsAsFactors = FALSE
   )
 
@@ -277,7 +260,8 @@ q3_statistic <- function(fit,
     thresholds = c(yen = yen_threshold,
                    marais = marais_threshold,
                    relative_offset = relative_offset),
-    facet = facet
+    facet = facet,
+    calculation_version = 2L
   )
   class(out) <- c("mfrm_q3", "list")
   out
@@ -285,16 +269,21 @@ q3_statistic <- function(fit,
 
 #' @export
 print.mfrm_q3 <- function(x, ...) {
+  if (!identical(x$calculation_version, 2L)) {
+    stop("Recreate this Q3-style screen with q3_statistic(fit, ...) to retain unique pairs and unavailable results.", call. = FALSE)
+  }
   cat("mfrmr standardized/aggregated-residual Q3-style screen\n")
   cat(sprintf("  Facet: %s\n", x$facet))
+  cat(sprintf("  Unique pairs: %d available of %d; %d unavailable\n",
+              x$summary$AvailablePairs, x$summary$CandidatePairs, x$summary$UnavailablePairs))
   cat(sprintf("  Mean Q3-style correlation: %.3f | Max absolute: %.3f\n",
               x$summary$MeanQ3, x$summary$MaxAbsQ3))
   cat(sprintf(paste0(
     "  Flagged pairs: fixed absolute rule %d / stricter absolute rule %d / ",
-    "relative-to-mean rule %d (of %d)\n"
+    "relative-to-mean rule %d (of %d available)\n"
   ),
               x$summary$YenFlagged, x$summary$MaraisFlagged,
-              x$summary$RelativeFlagged, nrow(x$pairs)))
+              x$summary$RelativeFlagged, x$summary$AvailablePairs))
   cat(sprintf(paste0(
     "  Heuristic thresholds: absolute %.2f / stricter %.2f / ",
     "relative offset %.2f\n"

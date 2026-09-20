@@ -198,13 +198,13 @@ test_that("summarize_unexpected_response_table returns zero-row summary for NULL
   summarize_fn <- mfrmr:::summarize_unexpected_response_table
   result <- summarize_fn(NULL, total_observations = 100, abs_z_min = 2, prob_max = 0.30, rule = "either")
   expect_true(is.data.frame(result))
-  expect_equal(result$UnexpectedN, 0L)
+  expect_true(is.na(result$UnexpectedN))
   expect_equal(result$TotalObservations, 100)
   expect_equal(result$Rule, "either")
 
   # Empty tibble
   result2 <- summarize_fn(dplyr::tibble(), total_observations = 50)
-  expect_equal(result2$UnexpectedN, 0L)
+  expect_true(is.na(result2$UnexpectedN))
 })
 
 # ===========================================================================
@@ -655,7 +655,7 @@ test_that("category_warnings_text handles no warnings", {
     AvgPersonMeasure = c(-1, 0, 1)
   )
   result <- fn(cat_tbl, step_tbl = NULL)
-  expect_equal(result, "No major category warnings detected.")
+  expect_equal(result, "No warnings among the available category summaries; this does not establish category adequacy.")
 })
 
 test_that("category_warnings_text reports unused categories", {

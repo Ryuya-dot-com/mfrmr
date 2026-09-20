@@ -84,6 +84,8 @@ test_that("strict marginal fit diagnostics are available for MML RSM, PCM, and G
       "not_available"
     )
 
+    expected_groups <- if (model == "RSM") "Common" else obj$fit$config$facet_levels[[obj$fit$config$step_facet]]
+    expect_setequal(diag$marginal_fit$step_or_scale$summary_stats$StepFacet, expected_groups)
     overall_cells <- diag$marginal_fit$overall$cell_stats
     expect_equal(
       sum(overall_cells$ObservedCount, na.rm = TRUE),
@@ -113,7 +115,7 @@ test_that("strict marginal fit diagnostics are available for MML RSM, PCM, and G
     expect_match(printed, "Strict marginal fit", fixed = TRUE)
     expect_match(printed, "Strict pairwise local dependence", fixed = TRUE)
     expect_match(printed, "Strict marginal guidance", fixed = TRUE)
-    expect_match(printed, "not_available", fixed = TRUE)
+    expect_false(grepl("not_available|screening_only|limited_information_inspired", printed))
 
     rs <- mfrmr::rating_scale_table(obj$fit, diagnostics = diag)
     expect_true(all(c(

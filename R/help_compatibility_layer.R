@@ -342,11 +342,13 @@ precision_review <- function(x, required = TRUE) {
   required <- isTRUE(required)
 
   if (inherits(x, "mfrm_precision_review")) {
+    validate_precision_review_profile(x$profile)
     return(x)
   }
   if (!is.list(x)) {
     stop("`x` must be an `mfrm_diagnostics`, precision-review object, or compatible list.", call. = FALSE)
   }
+  validate_diagnostics_precision(x)
 
   out <- x$precision_review
   if (is.null(out)) {

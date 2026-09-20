@@ -303,6 +303,8 @@ test_that("summary table bundle role registry covers every supported spec role",
     ),
     summary.mfrm_diagnostics = list(
       overview = df,
+      fit_screening = df,
+      marginal_coverage = df,
       overall_fit = df,
       precision_profile = df,
       precision_review = df,

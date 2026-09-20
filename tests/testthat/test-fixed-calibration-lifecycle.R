@@ -97,9 +97,10 @@ fixed_calibration_anchored_fixture <- local({
 })
 
 fixed_calibration_interaction_fixture <- local({
-  cache <- NULL
-  function() {
-    if (!is.null(cache)) return(cache)
+  cache <- list()
+  function(model = c("RSM", "PCM")) {
+    model <- match.arg(model)
+    if (!is.null(cache[[model]])) return(cache[[model]])
     data <- mfrmr:::sample_mfrm_data(seed = 42)
     fit <- suppressWarnings(suppressMessages(fit_mfrm(
       data,
@@ -107,7 +108,8 @@ fixed_calibration_interaction_fixture <- local({
       facets = c("Rater", "Task", "Criterion"),
       score = "Score",
       method = "MML",
-      model = "RSM",
+      model = model,
+      step_facet = if (identical(model, "PCM")) "Criterion" else NULL,
       facet_interactions = "Rater:Criterion",
       min_obs_per_interaction = 0,
       quad_points = 5,
@@ -120,8 +122,8 @@ fixed_calibration_interaction_fixture <- local({
       source_fit_id = "fit-interaction-rsm",
       created_at_utc = "2026-08-22T00:00:00Z"
     )
-    cache <<- list(fit = fit, draft = draft)
-    cache
+    cache[[model]] <<- list(fit = fit, draft = draft, data = data)
+    cache[[model]]
   }
 })
 
@@ -209,6 +211,14 @@ test_that("normalized direct and group anchors become typed declarations", {
   expect_equal(anchors$Value, c(0, 0.1, 0.1), tolerance = 0)
   expect_identical(anchors$CoordinateSystem, rep("expanded_logit", 3))
   expect_identical(anchors$DeclarationOrder, 1:3)
+
+  review <- suppressWarnings(mml_quadrature_sensitivity(
+    fixture$fit, fixed_calibration_fit_fixture("PCM")$data,
+    quad_points = c(5L, 7L), theta_points = 41L
+  ))
+  reviewed <- extract_mfrm_calibration(review$fits$q7,
+                                      quadrature_review = review)
+  expect_identical(reviewed$constraints$anchors, anchors)
 })
 
 test_that("RSM interaction coordinates retain the complete identified matrix", {
@@ -509,8 +519,8 @@ test_that("calibration print and summary expose scope without source Persons", {
   )
   expect_true(any(grepl("<mfrm_calibration>", printed, fixed = TRUE)))
   expect_true(any(grepl("mfrmr Calibration Summary", summary_printed, fixed = TRUE)))
-  expect_true(any(grepl("Support profile:", printed, fixed = TRUE)))
-  expect_true(any(grepl("Support profile:", summary_printed, fixed = TRUE)))
+  expect_true(any(grepl("Scoring prior: standard normal", printed, fixed = TRUE)))
+  expect_true(any(grepl("Scoring prior: standard normal", summary_printed, fixed = TRUE)))
   frozen_visibility <- NULL
   summary_visibility <- NULL
   capture.output(frozen_visibility <- withVisible(print(frozen)))
@@ -541,7 +551,7 @@ test_that("calibration print and summary expose scope without source Persons", {
     fixed = TRUE
   )
   public_print <- paste(c(printed, summary_printed), collapse = "\n")
-  expect_false(grepl("\\bLane\\b|core_|G1|OPT-[0-9]+", public_print,
+  expect_false(grepl("\\bLane\\b|core_|G1|OPT-[0-9]+|Support profile|fixed_standard_normal_v1", public_print,
                      perl = TRUE))
   expect_false(any(grepl(fixed_calibration_fit_fixture("RSM")$data$Person[1], printed, fixed = TRUE)))
 })
@@ -728,6 +738,34 @@ test_that("interaction artifacts score from their complete stored cell matrix", 
     fit_estimates[c("Estimate", "SD", "Lower", "Upper")],
     tolerance = 1e-14
   )
+})
+
+test_that("public RSM and PCM interaction calibrations retain reviewed fit scoring", {
+  for (model in c("RSM", "PCM")) {
+    fixture <- fixed_calibration_interaction_fixture(model)
+    review <- suppressWarnings(mml_quadrature_sensitivity(
+      fixture$fit, fixture$data, quad_points = c(5L, 7L), theta_points = 41L
+    ))
+    fit <- review$fits$q7
+    draft <- extract_mfrm_calibration(fit, quadrature_review = review)
+    artifact <- freeze_mfrm_calibration(validate_mfrm_calibration(draft))
+    path <- tempfile(fileext = ".rds")
+    save_mfrm_calibration(artifact, path)
+    restored <- load_mfrm_calibration(path)
+    unlink(path)
+    expect_identical(restored, artifact)
+    persons <- unique(fixture$data$Person)[1:2]
+    rows <- fixture$data[fixture$data$Person %in% persons, , drop = FALSE]
+    rows$Person <- paste0("NEW", match(rows$Person, persons))
+    score <- score_mfrm_calibration(restored, rows)
+    fitted <- predict_mfrm_units(fit, rows)
+    fields <- c("Person", "Estimate", "SD", "Lower", "Upper")
+    expect_equal(score$estimates[fields], as.data.frame(fitted$estimates)[fields],
+                 tolerance = 1e-12)
+    expect_identical(nrow(restored$model$interactions), 1L)
+    expect_identical(restored$scoring_basis$quadrature_order, 31L)
+    expect_identical(as.integer(fit$config$estimation_control$quad_points), 7L)
+  }
 })
 
 test_that("artifact scoring is row-order, chunk-order, score-map, RNG, and option invariant", {

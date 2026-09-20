@@ -104,7 +104,7 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
     fixed = TRUE
   )))
   expect_true(any(grepl(
-    "screening/review-only",
+    "below q = 31",
     review$comparison_warnings,
     fixed = TRUE
   )))
@@ -122,6 +122,12 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
     "report_templates", "route_map", "weighting_review_status"
   ) %in% names(sx)))
   expect_false("weighting_audit_status" %in% names(sx))
+  stale <- review
+  stale$model_roles$NumericalConvergence <- NULL
+  expect_error(summary(stale), "Recreate it with build_model_choice_review()", fixed = TRUE)
+  stale_summary <- sx
+  stale_summary$model_roles$NumericalConvergence <- NULL
+  expect_error(print(stale_summary), "no model refit is needed", fixed = TRUE)
   printed <- capture.output(print(sx))
   expect_true(any(grepl("Model Contracts and Readiness", printed, fixed = TRUE)))
   expect_true(any(grepl("Step parameters (reported values versus independent parameters)",
@@ -137,8 +143,9 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_length(downstream_start, 1L)
   contract_lines <- printed[contract_start:(downstream_start - 1L)]
   expect_lte(max(nchar(contract_lines)), 80L)
+  expect_false(any(grepl("reference_plus_sensitivity_review|ICIntegrationTier|supported_with_caveat|gpcm_free_slope", printed)))
   expect_true(any(grepl("Comparison Warnings", printed, fixed = TRUE)))
-  expect_true(any(grepl("screening/review-only", printed, fixed = TRUE)))
+  expect_true(any(grepl("below q = 31", printed, fixed = TRUE)))
 
   bundle <- build_summary_table_bundle(review)
   expect_s3_class(bundle, "mfrm_summary_table_bundle")
@@ -185,7 +192,7 @@ test_that("build_model_choice_review bundles comparison and user guidance", {
   expect_length(warning_path, 1L)
   exported_warnings <- utils::read.csv(warning_path, stringsAsFactors = FALSE)
   expect_true(any(grepl(
-    "screening/review-only",
+    "below q = 31",
     exported_warnings$Warning,
     fixed = TRUE
   )))

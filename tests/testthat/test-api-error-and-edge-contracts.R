@@ -423,7 +423,7 @@ test_that("print.summary.mfrm_threshold_profiles covers all sections", {
   expect_true(any(grepl("Overview", out, fixed = TRUE)))
   expect_true(any(grepl("Profile thresholds", out, fixed = TRUE)))
   expect_true(any(grepl("Threshold ranges", out, fixed = TRUE)))
-  expect_true(any(grepl("PCA reference bands", out, fixed = TRUE)))
+  expect_true(any(grepl("PCA descriptive reference values (uncalibrated)", out, fixed = TRUE)))
 })
 
 # ==========================================================================

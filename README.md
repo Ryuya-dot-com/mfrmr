@@ -27,6 +27,8 @@ Questions and bug reports:
 This README describes the `0.2.4.9000` development version. Functions and
 options shown here may differ from an installed release; check
 `packageVersion("mfrmr")` and the help shipped with that installation.
+For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
+before reusing saved diagnostics, scores or reports.
 
 Install the CRAN package with:
 
@@ -446,13 +448,12 @@ fit_summary$person_overview
 fit_summary$step_overview
 ```
 
-Read `fit_summary$decision` first. It translates the stored readiness contract
-into four practical questions: are the fit-readiness requirements satisfied, has formal precision
-support been evaluated, what evidence prevents formal use, and what should be
-done next. A fit-only summary deliberately returns
-`FormalInference = "No"` even when `InferenceReady = TRUE`, because convergence
-and estimability do not by themselves validate standard errors, confidence
-intervals, or reliability. Evaluate that separate contract with diagnostics:
+Read `fit_summary$decision` first: have estimation checks passed, has precision
+been assessed, what limits interpretation, and what should be done next?
+A fit-only summary returns `FormalInference = "No"` even when estimation
+checks pass. Convergence and estimability do not by themselves validate
+standard errors, confidence intervals or reliability. Review precision with
+matching diagnostics:
 
 ```r
 diag <- diagnose_mfrm(fit, residual_pca = "none")
@@ -468,54 +469,27 @@ reliability, or significance claims. It does not mean that changing optimizer
 settings until the answer becomes `"Yes"` is appropriate. Follow `NextAction`
 and retain the original reason in reports.
 
-Then review convergence and estimation settings. When optimizer code zero is
-reached before the common terminal-gradient check passes, `fit_mfrm()` makes a
-bounded sequence of warm-started polishing attempts when the requested setting
-is at least as strict as the public default (`reltol <= 1e-9`). It retains the
-best non-worsening stage under the recorded selection rule. The requested and
-selected-stage settings, every attempted stage, terminal gradients, parameter
-changes, and evaluation counts remain in `fit$opt$optimizer_polish`. For
-L-BFGS-B, the native `factr` and `pgtol` controls are also recorded; do not
-interpret `EffectiveReltol` as a native L-BFGS-B argument.
+Then review convergence and estimation settings. Optimizer success and the
+terminal-gradient check are separate numerical checks. A small gradient still
+does not resolve a disconnected design, effects that cannot be separately
+estimated, or unbounded estimates. The fitting help describes the numerical
+controls and the recorded optimization history.
 
 Treat `maxit` as a computational ceiling, not a convergence criterion or a
-control to tune until preferred estimates appear. The package default is
-`maxit = 400`; smaller values in executable examples exist only to shorten
-checks. Prespecify the estimator and controls before inspecting results. If a
-fit ends with `ConvergenceStatus = "iteration_limit"`, do not interpret or
-compare its estimates. Refit the same data, model, method, anchors, optimizer,
-tolerance, and quadrature rule using the next ceiling in a prespecified
-sequence. Use a result only after `FitReadiness = ready`,
-`InferenceReady = TRUE`, and `Numerical = pass`; do not select among runs by
-coefficient size, fit statistics, significance, or agreement with an expected answer. Material
-differences between separately ready runs indicate numerical instability that
-requires review.
+control to tune until preferred estimates appear. The default is `maxit = 400`.
+Prespecify the estimator and controls before inspecting results. If a fit stops
+at the iteration limit, refit the same data, model, method, anchors, optimizer,
+tolerance and quadrature rule using the next ceiling in that sequence. Do not
+select among runs by coefficient size, fit statistics, significance or agreement
+with an expected answer. Material differences between numerically acceptable
+runs require review.
 
-`InferenceReady` is deliberately a conservative fit-level first screen, not a
-publication decision. It is `TRUE` only when Input, Estimability, Category,
-Boundary, and Numerical components all pass. Then inspect the separate Design,
-Stability, Diagnostics, and Reporting workflow rows in
-`fit_summary$readiness`. A fit object saved before this versioned record existed
-is labelled `legacy_unknown`; an older `InferenceReady = TRUE` value does not
-make its summaries, results, or plots interpretation-ready. Refit it under the
-current version to establish current readiness. Before optimization, mfrmr now
-checks the estimator-specific constrained RSM/PCM free-coordinate design.
-Exact rank deficiency stops with a structured `mfrmr_estimability_error`;
-optimization cannot turn it into a usable fit. A disconnected design that is
-full rank only under its declared constraints, an MML panel linked through a
-common latent-population assumption rather than shared Persons, or a boundary-
-constant facet level remains a reporting hold or review even when the optimizer
-gradient is small. Inspect `fit$data_review$estimability` for the rank,
-nullity, parameter blocks, and check scope. In an otherwise supported fit, a Reporting status such as
-`ready_for_diagnostics_and_reporting_follow_up` means that fitting succeeded
-and the next diagnostic stage is pending; it does not mean that optimization
-failed or that the result is already manuscript-ready. Plots can still be
-generated for diagnosis, but their
-returned data carry `interpretation_status = "review_only"`, their subtitle is
-marked `REVIEW ONLY`, the drawn title carries the same banner, and the plotting
-call warns before substantive or cross-subset interpretation. The remaining
-tables describe the fitted scale; they do not create universal acceptance
-thresholds.
+Print `fit_summary` for readable explanations; its component tables retain
+detailed settings and status fields for further inspection. Estimation checks
+and precision assessment are distinct from reviewing the rating design and
+the assumptions needed for the intended comparison. Plots marked `REVIEW ONLY`
+remain diagnostic displays. A saved fit without current estimation checks needs
+the update procedure below before inferential reuse.
 
 ### 4. Request the comprehensive measurement summary
 
@@ -1027,7 +1001,7 @@ plot(scores, type = "interval", preset = "publication")
 Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
 and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
 example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
-artifact display contract and `help("mfrm_calibration_score_methods",
+artifact summaries and `help("mfrm_calibration_score_methods",
 package = "mfrmr")` for score summaries and plots. Estimated-population and
 latent-regression MML, JML, and bounded GPCM
 remain fitted-object-only routes; they do not create portable calibration
@@ -1039,6 +1013,10 @@ than authenticating files from untrusted sources. Review every
 plot is a batch-review display, not evidence that the source calibration fits
 or transports to a new population.
 
+Score tables and summaries retain the scoring algorithm and requested interval
+level for CSV export. Printed scores and interval plots identify saved
+grid-based intervals, whose posterior mass may differ from the requested level.
+
 ## Model and interpretation boundaries
 
 | Area | Supported route | Important boundary |
@@ -1049,9 +1027,22 @@ or transports to a new population.
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
 | Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
-| Latent regression | Conditional-normal, unidimensional MML population model | Not arbitrary ConQuest design-matrix or multidimensional population modeling |
-| Diagnostics | Residual/EAP and strict marginal screening routes | A flag is not a deletion, fairness, or validity decision |
+| Latent regression | Conditional-normal, unidimensional MML population model | Person scoring requires explicit exploratory review and omits uncertainty in the fitted population parameters |
+| Diagnostics | Residual and posterior-averaged marginal screens | A flag is not a deletion, fairness, or validity decision; missing results remain unavailable |
+| Residual group comparisons | Differences in observed-minus-expected scores | No residual SEs, p-values, confidence intervals or differential-functioning classifications |
+| G/D studies | Observed-score main-effects variance decomposition and design projections | No MFRM latent-scale reliability, full interaction decomposition or cut-score accuracy estimate; variance-estimation uncertainty is omitted |
+| Shrinkage | Post-fit adjustment toward zero | Original estimates and predictions are unchanged; descriptive bands omit prior-variance uncertainty and cross-level covariance |
+| External imports | Source-scale displays for supported mirt, TAM and eRm fits | No native response-level diagnostics or portable calibration; missing joint covariance is not reconstructed |
 | FACETS and ConQuest | Exported-table review within documented overlap | Neither external program is executed by `mfrmr` |
+
+Fitted-object Person scoring is separate from calibration estimation. It
+returns posterior EAP under a stated normal prior, including a standard-normal
+reference prior when the calibration was fitted by JML. Scores, posterior SDs
+and intervals hold calibration and prior parameters fixed. Estimated-population
+scoring requires `readiness_policy = "review"`; posterior draws alone do not
+justify downstream regression or group inference without a compatible
+conditioning model and sampling design. See `?predict_mfrm_units` and
+`?sample_mfrm_plausible_values`.
 
 For bounded `GPCM`, inspect the capability table before choosing a downstream
 helper:
@@ -1113,9 +1104,26 @@ profile condition. Inspect `CurveBasis`, `PredictorOffset`, and
 `settings$curve_basis` before interpreting a curve as if it represented a
 particular observed Person-by-facet cell.
 
-For unpenalized JML, all-minimum or all-maximum Person patterns can have an
-unbounded primary ability estimate. A finite adjusted display, when supplied,
-is kept separate from the likelihood-based primary status. The same principle
+`fit_mfrm(method = "JML")` uses the observed scores without extreme-score
+adjustment or finite-item bias correction. Freely estimated Persons with
+all-minimum or all-maximum responses have primary estimates of `-Inf` or
+`Inf`; their finite optimizer values are computational traces. Fixed anchors
+retain their supplied values, while coupled constraints require separate
+review. JML SEs and normal bands remain exploratory.
+
+`fair_average_table(..., xtreme = 0.25)` can produce a finite displayed
+`Measure` without refitting. Its `PrimaryMeasure` retains the original fitted
+value, and `MeasureBasis` and `ExtremeAdjustment` identify the replacement.
+The original SE does not describe that replacement, so measure SEs are
+unavailable on adjusted rows. Fair-score calculations do not use this
+replacement. When a JML Person measure is infinite, non-Person FairM is
+unavailable because its mean Person reference is unbounded. FairZ uses a zero
+reference; `FairMReference` records the distinction. This
+display option and endpoint placement on a Wright map do not correct JML
+bias. In comparisons across software, specify score adjustments and post-fit
+corrections separately; a shared "JML" label is insufficient.
+
+The same principle
 applies to any GPCM slope whose boundary status has not been resolved: a finite
 optimizer iterate is not automatically a finite maximum suitable for ordinary
 inference.
@@ -1123,11 +1131,13 @@ inference.
 PCM and bounded GPCM can be reviewed on the same data with
 `compare_mfrm(fit_pcm, fit_gpcm)`, `build_weighting_review(fit_pcm, fit_gpcm)`,
 or `build_model_choice_review(..., run_weighting_review = TRUE)`. Selectable
-information-criterion ranking requires comparable, inference-ready MML fits
-on a common quadrature grid with at least 31 points. Although PCM is the
-all-unit-slope reduction of the aligned GPCM kernel, the current automatic
-nesting contract withholds the PCM-versus-GPCM chi-square LRT and records
-`PCM_in_GPCM_ic_only` instead.
+information-criterion ranking requires comparable MML fits with adequate
+support for inference on a common quadrature grid with at least 31 points.
+Free-slope GPCM fits currently do not satisfy these inference requirements,
+so their criteria, when available, are descriptive only. PCM is the
+all-unit-slope reduction of the aligned GPCM kernel, but a PCM-versus-GPCM
+chi-square LRT is unavailable. The recorded `PCM_in_GPCM_ic_only` relation
+does not authorize automatic ranking.
 
 The practical comparison is available without reconstructing the model
 matrices manually. After fitting the same data as `fit_pcm` and `fit_gpcm`
@@ -1143,10 +1153,10 @@ choice$model_roles[, c(
 ```
 
 The coordinate columns count reported values; the free-parameter columns also
-apply the fitted constraints. `build_weighting_review()` keeps JML and MML
-evidence separate. Comparable, inference-ready MML fits can contribute
-information criteria, whereas an unpenalized JML likelihood difference is not
-turned into an automatic PCM-versus-GPCM choice.
+apply the fitted constraints. `build_weighting_review()` describes changes in
+measures and information under discrimination-based weighting. Free-slope
+GPCM ranking remains unavailable under MML, and an unpenalized JML likelihood
+difference does not justify an automatic PCM-versus-GPCM choice.
 
 Cross-software slope values are not automatically matched estimands. FACETS
 does not jointly fit Muraki's free-slope polytomous GPCM. FACETS' reported
@@ -1175,9 +1185,39 @@ diag_both <- diagnose_mfrm(
 summary(diag_both)$diagnostic_basis
 ```
 
-The legacy route evaluates residual-oriented summaries using person estimates.
-The strict marginal route uses latent-integrated expected values. They are
-complementary screens and should not be collapsed into one decision rule.
+The residual route uses person point estimates. The marginal route averages
+expectations over Person posteriors conditional on the same responses, with
+the calibration held fixed. Its residual scales omit cross-response covariance
+and calibration uncertainty. These are complementary descriptive screens;
+neither supplies guaranteed individual or multiple-element false-positive rates.
+
+## Updating saved analyses
+
+Installing 0.2.4 does not recalculate saved diagnostics, scores or reports.
+Keep the originals and the settings used to create them. First print
+`summary(fit)` with the updated package. A native fit lacking the current
+estimation checks must be refitted from its original data and settings before
+inferential reuse; computing diagnostics alone cannot supply those fit checks.
+
+For a fit that already has current estimation checks, start at the affected
+step and rebuild everything that depends on it:
+
+| Saved result | Required action |
+| --- | --- |
+| Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
+| Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
+| Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
+| G/D studies or shrinkage | Rerun the observed-score G-study and D-study, or reapply shrinkage, using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
+| Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
+| Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |
+| External imports | Re-import the saved source-package fit, then recreate derived output; source-model re-estimation is unnecessary. |
+| Simulation/design evaluations | Re-summarize retained runs for corrected denominators. Missing connectivity or workload records require repeating the original evaluation if needed for a recommendation. |
+
+The complete instructions, including function names and exceptions, are in
+"Updating saved analyses for 0.2.4" under
+`help("mfrmr_workflow_methods", package = "mfrmr")`. [NEWS](NEWS.md) explains
+the individual changes. Re-exporting an old derived object does not update
+its calculations, and updating an object does not broaden its statistical use.
 
 ## Documentation
 

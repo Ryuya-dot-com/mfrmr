@@ -86,7 +86,12 @@ in \code{summary(x)$review} and in the plot payload's
 
 The summary object retains every returned score and review disposition.
 Its estimates table preserves the available estimate and uncertainty basis
-columns and calibration identifiers when extracted or written to CSV.
+columns, calibration identifiers, scoring algorithm and requested interval
+level when extracted or written to CSV. The interval level is not rounded.
+Older score results recover these fields from their recorded settings when
+re-summarized. Saved grid-based intervals retain their original endpoints;
+printed results and interval plots explain that their posterior mass can
+differ from the requested level.
 Its print method shows at most ten rows from each table so routine console
 output stays compact. Base and ggplot2 renderers distinguish scored and
 review states by shape as well as colour.

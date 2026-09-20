@@ -1,272 +1,219 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-18. Release dates are not promised.
-Completed user-visible changes belong in `NEWS.md`; source-bound evidence and
-execution details belong in the [maintainer roadmap](inst/validation/internal-roadmap-0.2.3.md#2026-09-18-current-priorities-and-completion-decisions).
+Status: public roadmap, updated 2026-09-20. This roadmap describes the direction
+of development; release dates are not promised.
+See [NEWS](NEWS.md) for implemented changes and the
+[README](README.md) for current usage and interpretation limits.
+
+## Current releases
+
+mfrmr 0.2.4.9000 is under development and has not been released.
+The README describes this working version; use `packageVersion("mfrmr")`
+and the help shipped with your installation for its available functionality.
 
 ## Purpose and priorities
 
 mfrmr helps users calibrate ratings, compare Persons and facets on an explicit
-measurement scale, reuse a calibration, and report what the evidence supports.
-Its responsibilities are the response model, category/facet meanings,
-identification, anchors and linking, scoring, and preservation of uncertainty
-and restrictions throughout that workflow.
+measurement scale, reuse a calibration, and report what the results support.
+The immediate priority is a reliable existing workflow with clear uncertainty
+and compatibility limits. Rating-design support and models for sampled raters
+follow as separate extensions.
 
-The estimation core remains frequentist MML/JML. EAP scoring conditional on
-an MML calibration does not turn that calibration into full Bayesian
-estimation. Random effects do not require a Bayesian backend. Future engine
-choices follow a specified measurement model and inferential target; adopting
-a generic regression interface is not itself a development objective.
+The estimation core remains frequentist MML/JML. Posterior EAP scoring
+conditional on a fitted calibration does not make the calibration fully
+Bayesian. Future computational choices must preserve the intended measurement
+model, scale and inferential target.
 
-Priorities are: close the existing public claims for 0.2.4; qualify useful
-measurement decisions within that scope; then extend rating-design support
-and sampled-facet models in bounded stages. New model families, plots and
-validation counts are not progress measures on their own.
+## Focus for 0.2.4
 
-## Current releases
-
-- The [CRAN package](https://cran.r-project.org/package=mfrmr) lists 0.2.3.1
-  as the published source release, checked 2026-09-18.
-- Local development is 0.2.4.9000. Neither the completed checks nor this roadmap
-  approves a 0.2.4 release.
-
-## What 0.2.4 is intended to support
-
-The principal addition is a portable calibration and new-Person scoring
-workflow with an explicit, deliberately narrow contract:
+The principal addition is portable calibration and new-Person scoring:
 
 - one observed rating scale, RSM or PCM, and MML calibration with a fixed
   standard-normal Person distribution;
-- supported direct and group facet anchors;
-- same-data fitting-integration sensitivity review before extraction, using
-  the highest reviewed fitting order with estimation completed at each order;
-- separate scoring-integration settings and checks;
-- preservation of categories, facet levels, scale, anchors and scoring basis
-  when saving and transferring the calibration;
-- EAP scoring of compatible new Persons, with explicit refusal of incompatible
-  data, levels, models or settings.
+- supported direct and group facet anchors and stored two-way facet interactions;
+- review of fitting-integration sensitivity using the same data, score map,
+  model and fitting settings, with estimation completed at every requested order;
+- extraction from the exact highest-order fit in that review, with separate
+  scoring-integration settings;
+- preservation of categories, facet levels, anchors and scoring assumptions
+  when saving, transferring and loading the calibration;
+- EAP scoring of new Persons with compatible data and known non-Person levels,
+  with incompatible inputs refused explicitly.
 
-Portable score intervals condition on the frozen point calibration and stored
-prior; calibration-estimation uncertainty is excluded. Repeated calibration,
-learned populations, transport and linking uncertainty are separate targets.
-No single quadrature order is guaranteed for all designs.
+No single quadrature order is sufficient for every design. Users must judge
+whether changes across the reviewed orders matter for their analysis.
+Portable intervals condition on the saved point calibration and standard-normal
+prior; they exclude calibration-estimation uncertainty. A successful numerical
+review does not establish that the scoring prior suits a new population.
+See the [portable calibration workflow](vignettes/mfrmr-portable-calibration.Rmd).
 
-The ordinary fitted-object routes remain subject to their documented scope.
-Existing GPCM, JML, diagnostic, design and reporting functions are part of the
-release review even when they are outside portable calibration.
+The other priority is consistent interpretation throughout existing analyses:
 
-## Evidence required before 0.2.4
+| Result | Meaning and limits to retain in tables, plots and reports |
+| --- | --- |
+| Fit and precision summaries | Optimizer success, estimability and precision assessment are separate. Brief and full summaries must give the same interpretation decision. |
+| Person scores and posterior draws | EAP, SD and intervals condition on the fitted calibration and stated prior. Estimated-population scoring requires explicit exploratory review. Draws alone do not qualify downstream group or regression inference. |
+| Reliability and separation | Report the finite estimates and corresponding SEs used; incomplete SEs cannot produce a complete index. High rater separation means differences in severity, not high agreement. |
+| Fit, category, marginal, PCA and Q3 diagnostics | Preserve missing results and report how many observations or elements were evaluated. Flags are descriptive review aids, without guaranteed individual or multiple-element error rates. Ordered point estimates do not by themselves establish adequate categories. |
+| QC | Assess differentiation only for facets selected for that purpose. An unavailable check cannot become a pass, and an overall QC result does not establish statistical validity. |
+| Agreement, networks and response times | Retain unavailable comparisons, graph scope and the number of observations with valid times. Agreement and graph patterns do not establish rater quality or causal halo; time cutoffs do not establish rapid guessing or effort. |
+| Fair Scores | State the reference profile and omitted uncertainty. Existing approximate intervals remain diagnostic; a new inferential FairZ method is outside 0.2.4. |
+| Group comparisons and linking | Residual differences describe observed-minus-expected scores without tests or confidence intervals. Linked subgroup refits and drift screens retain their separate uncertainty limits. A new omnibus differential-functioning test is outside 0.2.4. |
+| Observed-score G/D studies and shrinkage | Retain their distinct models and conditional assumptions; neither is a jointly estimated random-facet MFRM or a source of fully propagated uncertainty. |
+| External imports | Preserve source coordinates and uncertainty conventions. Missing joint covariance cannot be reconstructed from marginal SEs. Imported objects do not become native fits or portable calibrations. |
 
-The [claim ledger](inst/validation/claim-reconciliation-0.2.4.md) covers all 18
-claim groups. Their reconciliation is complete; claim closure remains open.
-For each retained result, the release decision must bind the target, model,
-use conditions, estimator, evidence and executable output restrictions.
-
-| Work | Current position | Next decision and completion condition |
-| --- | --- | --- |
-| Core calibration and portable scoring | Structural studies, integration reviews, identity repairs and installed-process replay provide bounded evidence. | Reconcile applicable evidence to the final source; verify supported fit → freeze → save/load → new-Person score → export workflows and incompatible-input refusals. Conditional uncertainty must remain explicit in extracted results. |
-| FairZ intervals | The [20,000-dataset confirmation](inst/validation/fairz-confirmation-results-0.2.4.md) is complete: five primary cells supported, three under review. Public intervals remain diagnostic-only. | Decide the public disposition of the joint-covariance candidate and the existing conditional output. Any promotion requires an implemented target/scope rule and matching output checks. Five supported simulation cells are not a general eligibility formula; do not extend the completed study to obtain a pass. |
-| Differential rater functioning (DRF) | EAP residual equality differs from a no-DRF hypothesis. A joint RSM/PCM comparison can include group ability means; four saved pairs pass the bounded q121 numerical preflight. | Freeze and evaluate the omnibus test's own null-size and availability study. Then decide a scoped inferential route or continued unavailability. Existing residual/refit screens do not acquire calibrated p-values from this work. |
-| GPCM and JML | Independent kernels, numerical/boundary audits and bounded external comparisons exist; broader uncertainty and output claims remain open. | Close exact model/estimator subclaims or enforce restrictions. Include the selected slope owner and other facets, JML correction/extreme-score conventions, and uncertainty for the actual target. Item-only overlap with another package is insufficient. |
-| Other decision-bearing routes | Equivalence, fit/PCA/Q3 flags, linking, observed-score G/D studies, shrinkage, imports and descriptive helpers have distinct evidence and limits. | Resolve each retained formula/decision/output claim in the ledger. A descriptive label or warning cannot repair an incorrect calculation or prevent an unsupported automatic decision. |
-| Final release source | Prior local and cross-platform checks are reusable evidence for their recorded sources. | After the retained claims close, check one frozen candidate: full packaged tests, platform matrix, examples/vignettes, saved-object compatibility and CRAN requirements. Record skips/warnings and source identity; then make the release decision. |
-
-The release blocker is an unresolved **retained public claim or material
-implementation defect**. A new research candidate may be deferred if the
-existing public route has a correct, enforced disposition. In particular,
-adding a formal DRF LRT is conditional, not a new unconditional 0.2.4 promise.
-The separate, unrun 80,000-dataset population-coordinate interval study is not
-a prerequisite for that LRT. It becomes necessary only for the population
-claims that depend on its specific evidence.
-
-### Delivery order and release consequences
-
-1. Freeze the already numerically reviewed joint-DRF sampling protocol and its
-   execution/failure policy. Do not repeat the four-pair numerical panel without
-   a new discrepancy or a relevant source change.
-2. Resolve the FairZ candidate's public disposition from the finished study.
-   Continue the independent GPCM/JML and secondary-route claim decisions while
-   an admitted experiment runs; new computations must answer a named gap.
-3. Implement the resulting corrections or restrictions and verify the affected
-   complete user workflows. Statistical qualification of an omnibus comparison
-   must not silently unlock population intervals, Person intervals or per-rater
-   tests through a shared readiness flag.
-4. Once every retained claim has a supported or enforced-restriction
-   disposition, freeze and check the release candidate. A failed retained claim
-   requires a correction or explicit supported-scope revision before release.
-
-New studies fix their questions, targets, conditions, precision, seeds,
-replication counts and failure accounting before execution. Preserve attempted
-and available denominators, including numerical conflicts and boundary cases.
-An inconclusive result stays inconclusive; increasing repetitions or changing
-thresholds after seeing it is not the default next action.
-
-Reuse completed studies and source-applicability checks. Run focused software
-checks after affected changes, and the broad suite after shared-runtime changes
-or at final-source review. No internal development visualization is planned.
-User-facing plots require an identifiable user decision and a qualified result
-object; their labels and documentation remain in English.
+Existing calculations and interpretations still require review before release.
+Clearer wording does not resolve an incorrect formula or unsupported decision.
+Changed behavior and saved-object instructions must agree across NEWS, help,
+examples and exported results. See
+[Updating saved analyses](README.md#updating-saved-analyses) for the user actions.
 
 ## Model scope
 
-| Area | Current direction |
+| Area | Current scope and direction |
 | --- | --- |
-| RSM / PCM | Existing fitted-model routes and the bounded 0.2.4 portable MML workflow. |
-| GPCM | Documented bounded fitted-model routes; slope identification and uncertainty require their own decisions. No portable GPCM in 0.2.4. |
-| JML | Documented fitted-model analyses with estimator/correction/extreme-score distinctions preserved. No portable JML in 0.2.4. |
-| Interactions / estimated populations | Retain documented fitting capabilities and actual inference restrictions. Neither a returned fit nor local information rank establishes formal inference. No portable interaction calibration in 0.2.4. |
-| Multiple scales | Later explicit scale identifiers and separate-scale routing; no silent pooling or automatic cross-scale linking. |
+| RSM / PCM | Existing fitted-model workflows and portable fixed-normal MML calibration. Category structure and identification must match the rating design. |
+| GPCM | One selected facet owns both relative slopes and steps. Free-slope uncertainty, automatic information-criterion ranking and the PCM-versus-GPCM chi-square LRT remain unavailable. No portable GPCM in 0.2.4. |
+| JML | Fitting uses observed scores without extreme-score adjustment or finite-item bias correction. Free extreme Persons retain infinite estimates; optional display replacements are separate. SEs and normal bands remain exploratory. No corrected-JML estimator or portable JML in 0.2.4. |
+| Interactions / estimated populations | Compatible fixed-normal RSM/PCM MML calibrations preserve two-way facet interactions. Estimated-population fits remain fitted-object-only. Scoring compatibility or local information rank does not establish formal interaction inference. |
+| Multiple scales | A later extension would identify and fit separate scales explicitly, without silent pooling or automatic cross-scale linking. |
+
+For GPCM, "bounded" refers to documented model and workflow scope, not finite
+parameter box constraints. Numerical convergence alone does not remove its
+inferential restrictions. The [model-scope guide](vignettes/mfrmr-gpcm-scope.Rmd)
+describes the available routes.
 
 ## Random-effects MFRM and testlet covariance
 
-The first sampled-facet use case is generalization beyond the observed rater
-pool: what varies across raters, and how uncertain is a Person comparison when
-raters are replaced? Keep this separate from dependence among repeated ratings
-of the same response. Current fixed-facet MML and post-fit empirical-Bayes
-shrinkage do not constitute a jointly estimated random-facet MFRM.
+The first intended use is generalization beyond observed raters: how much do
+raters vary, and how uncertain is a Person comparison when the raters are
+replaced? That question differs from dependence among repeated ratings of the
+same response. Current fixed-facet MML and post-fit empirical-Bayes shrinkage
+do not estimate a joint random-facet MFRM.
 
-The first candidate is a single-scale, unit-weight adjacent-category RSM with
-one shared random-rater intercept, fixed task/criterion effects and a declared
-Person distribution. One effect belongs to each rater across all their Persons;
-integrating a fresh rater effect for every Person changes the model. Keep
-Person-local testlet effects and shared-rater effects separately identified.
-Reuse completed local-dependence and fixed-point reference work; completing
-every correlated-testlet variant is not a prerequisite for this bounded rater
-question.
+The initial model would use one observed scale, unit weights, an
+adjacent-category RSM, one shared random-rater intercept, fixed task/criterion
+effects and a declared Person distribution. Each rater's effect must be shared
+across all Persons rated by that rater. A new effect integrated independently
+for every Person would describe a different model.
 
-| Stage | Required result before proceeding |
-| --- | --- |
-| Specify the measurement and inference | Define observed-rater versus new-rater targets, scale constraints, effect ownership, missingness assumptions and a frequentist marginal-likelihood/prediction route. Resolve the role of calibration uncertainty in Person and Person-difference results. |
-| Choose a computational route | Compare existing engines against the exact adjacent-category probabilities, likelihood, effect sharing and constraints. Reuse an engine only where these match; explain a demonstrated gap before creating a native solver or adapter. |
-| Qualify the bounded model | Verify joint likelihood/derivatives, identification, zero-variance and weak-information behavior, integration and optimizer stability. Then assess recovery, interval/prediction performance, availability and cost at the intended rater counts and workloads. A two-rater reference is not evidence for operational scale. |
-| Admit a public workflow | Preserve model/covariance declarations in fitting, scoring, saved objects and reporting. Distinguish conditional observed-rater results from new-rater predictions, and retain shared uncertainty in Person differences. |
-| Extend only after a new use case is admitted | PCM, sampled tasks, local/correlated testlets, crossed/nested interactions and random slopes receive separate specifications and evidence. They are not one mandatory Cartesian-product study. |
+Development proceeds from a specified target to computation and then to use:
 
-The inference framework is chosen before the backend. The previous brms/Stan
-reference results remain research evidence; further Bayesian fitting is paused.
-A cumulative-link ordinal regression engine is not a drop-in estimator for
-polytomous RSM/PCM. Neither this distinction nor the pause mandates writing a
-new estimator. See the [measurement-purpose decision](inst/validation/measurement-extension-next-decisions-0.2.4.md)
-and the [literature-grounded model specification](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md).
+1. Distinguish predictions for observed raters from predictions for replacement
+   raters, and state scale constraints, missingness assumptions and the role
+   of calibration uncertainty in Person and Person-difference results.
+2. Use existing computation where it matches the response probabilities,
+   effect sharing and constraints. A cumulative-link ordinal model is not
+   interchangeable with a polytomous RSM/PCM.
+3. Check identification, likelihood calculations, integration, weak information,
+   variance boundaries and performance at realistic rater counts and workloads.
+   Evaluate estimation and interval/prediction behavior for the intended target.
+4. Preserve those assumptions in scoring, saved results and reports before
+   adding PCM, sampled tasks, local testlets, covariance or random slopes.
 
-Random effects and covariance must be declared as model elements, with owners,
-response mappings, constraints and prediction populations. Positive-definite
-covariance alone does not establish identification. Random slopes on observed
-covariates differ from discrimination on latent ability. A new rater is not
-silently represented by severity zero, and independent marginal Person SDs do
-not represent a jointly estimated Person difference.
+Person-local testlets and effects shared across raters need different
+covariance structures. Positive-definite covariance alone does not establish
+identification. A new rater cannot silently be assigned severity zero, and
+independent Person SDs do not express the joint uncertainty of a difference.
+Random slopes on observed covariates also differ from discrimination on
+latent ability. None of these extensions is part of the 0.2.4 promise.
 
 ## Rater assignment and anchors
 
-The design question is: within a stated total and per-rater workload, which
-assignments provide defensible comparisons for the intended Persons and
-raters? Define the cost unit explicitly, particularly when one scored response
-contains several criterion ratings. Connectedness, balanced workload and an
-anchor percentage alone do not answer the precision question.
+The design question is which assignments provide useful Person or facet
+comparisons within a stated total and per-rater workload. Define whether one
+unit of cost is a scored response or an individual criterion rating.
+Connectedness, balanced workload and an anchor percentage alone cannot answer
+the precision question; there is no single recommended percentage.
 
-| Stage | User benefit and evidence required |
-| --- | --- |
-| Existing fixed-facet design support | Audit current assignment, workload, connectivity, failure-denominator and requested-facet handling. Retain their present supported meaning; this work does not wait for random-rater estimation. |
-| Target-specific equal-cost comparisons | Specify whether the objective is facet estimation, Person scoring or a Person difference. Compare the same declared targets across allocations, showing error, interval availability/coverage/width, and computation. Use uncertainty qualified for that target; facet recovery cannot stand in for Person-difference precision. |
-| Generalization to replacement raters | After the matching random-rater model and prediction route qualify, compare allocation under sampled rater pools and explicit replacement assumptions. This stage depends on the sampled-facet track; the preceding stages do not. |
-| Recommendation API | Require usable result objects, explicit constraints and transparent trade-offs. Preserve unavailable/disconnected cases and subgroup disadvantages. Do not declare one best design without a user-relevant objective and acceptable uncertainty. |
+The next steps are to:
 
-Reuse the [saved equal-cost layouts and common targets](inst/validation/measurement-extension-next-decisions-0.2.4.md#3-評定設計支援で比較する対象).
-Keep disconnected layouts as negative controls. The known confounding between
-rating density and comparison groups in layout B must be handled explicitly;
-it cannot identify an isolated bridging effect. Model-based finite outputs do
-not establish direct comparison information in a disconnected assignment.
+- preserve correct workload, connectivity, requested-facet and failed-run
+  accounting in existing design tools;
+- compare complete and incomplete rating designs at equal cost for declared
+  targets, retaining disconnected cases and any subgroup disadvantages;
+- distinguish direct anchors, group anchors, and unanchored linking, including
+  the uncertainty introduced by selecting or estimating the link;
+- compare allocations using target-specific estimation error, interval
+  availability and performance, and computation, rather than connectivity alone;
+- extend comparisons to replacement raters only after the matching sampled-rater
+  model and prediction methods are available.
 
-Anchors and linking require a separate statement of what changes: fixing an
-anchor, deleting a rating, or excluding a common element are different
-procedures. Existing [topology checks](inst/validation/equating-topology-record-0.2.4.md)
-and [fixed-estimate offset checks](inst/validation/offset-sensitivity-record-0.2.4.md)
-retain their limits. Inference for full-refit differences must repeat any
-selection/linking, preserve a common scale and account for paired covariance.
+Evidence from one allocation pattern will not be generalized to all designs.
+Facet-estimation accuracy cannot substitute for Person-difference precision.
+An API recommending designs should expose these trade-offs rather than name a
+best design without a user-relevant target and workload constraints.
+
+Deleting a rating, fixing an anchor and excluding a common linking element are
+different changes. Existing linking sensitivity views hold source estimates
+fixed. A future uncertainty analysis that refits models must also repeat any
+selection/linking and account for covariance between the compared results.
 
 ## Generalizability theory
 
-Existing `mfrm_generalizability()` and `mfrm_d_study()` cover a limited
-observed-score, main-effects mixed-model decomposition and planning projection.
-Their assumptions and output claims belong in the 0.2.4 review. They do not
-establish a full interaction decomposition or reliability on the MFRM latent
-scale. Future multivariate G-theory needs declared universe-score/error
-covariances, relative/absolute decisions and design-dependent coefficients;
-univariate calculations do not establish that extension.
+Current `mfrm_generalizability()` and `mfrm_d_study()` provide an observed-score,
+main-effects mixed-model decomposition and planning projection. They do not
+estimate reliability on the MFRM latent scale. Missing variance components
+leave affected coefficients unavailable; convergence warnings require review.
+D-study projections hold estimated variances fixed, and residual-scaling
+choices express assumptions rather than uncertainty bounds. These coefficients
+do not estimate accuracy at a particular cut score.
+
+Future support for interactions and multivariate designs needs explicit
+universe-score and error covariances, relative/absolute decisions, and the
+averaging rules for each design. Univariate calculations alone do not establish
+that extension. Multivariate G-theory is not required for the 0.2.4 workflow.
 
 ## Response time and decision processes
 
-These remain unversioned research directions below the sampled-facet and
-rating-design priorities. A hierarchical response-time model needs a concrete
-timed workflow, a declared actor/event and unit, treatment of missing/censored
-times, and an identified ability-speed relationship. A respondent's one
-production time must not be duplicated because several raters score the
-response. Rater scoring time is a different observation.
+These are later research directions. A response-time model first needs a
+specific timed event, actor and unit, treatment of missing or censored times,
+and an identified relationship between ability and speed. One respondent's
+production time must not be duplicated because several raters score that
+response; rater scoring time is a different observation.
 
-A drift diffusion model requires a suitable choice-and-time decision task and
-its own validated likelihood; ordinary polytomous ratings or essay completion
-times do not by themselves justify it. Response time, diffusion models and
-multivariate G-theory are not prerequisites for 0.2.4 or random-rater support.
-Existing descriptive time summaries retain their scope. See the
-[process-model research specification](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md#2026-09-15-crossed-effects-and-process-model-refinement)
-for the deferred questions and literature.
+A drift diffusion model requires an appropriate choice-and-time task and its
+own likelihood. Polytomous ratings or essay completion times alone do not
+justify it. Current descriptive time summaries do not estimate either model.
 
 ## External comparison
 
-Use FACETS, ConQuest, TAM, mirt, sirt, immer or other software only after
-matching response probabilities, parameterization, identification, effect
-owners, estimator and target. Record differences when exact matching is
-impossible. External agreement is evidence, not a definition of correctness
-or a claim of feature parity. Independent likelihood calculations remain
-useful when no external program expresses the full model.
+mfrmr should reuse computation where response probabilities, parameterization,
+identification, effect owners, estimator and target agree. Agreement with
+another program is bounded evidence, not a definition of correctness or a
+promise of feature parity.
 
-## Relationship to adjacent R packages
-
-mfrmr owns the many-facet measurement workflow and scale/uncertainty contract.
-It should reuse mature computation where it preserves that contract. Begin
-with documentation/export and an exact matched case; add a narrow adapter only
-for a recurring user need. Dependencies, backend identities and unsupported
-translations stay explicit. Importing results is not refitting or reconstructing
-an unavailable covariance. A backend is not silently converted into a native
-mfrmr fit or portable calibration.
-
-The [dated package-scope audit](inst/validation/measurement-model-extension-literature-roadmap-0.2.4.md#2026-09-15-sirt-and-immer-scope-audit)
-retains checked versions, shared computational dependencies and model
-comparisons. Those records do not approve every current or future package
-feature as an interchangeable engine.
+The mirt, TAM and eRm adapters preserve the source ability scale for supported
+unidimensional Rasch/partial-credit models. TAM multi-facet displays combine
+effects for each response condition; they do not reconstruct separate facet
+coordinates. Summaries identify source scoring and uncertainty conventions,
+and Wright maps show points only. Posterior SDs do not establish separation
+reliability. Importing a result is neither re-estimation nor reconstruction of
+an unavailable covariance.
 
 ## Version direction
 
-| Version / horizon | Goal | Entry or completion condition |
-| --- | --- | --- |
-| 0.2.4 | Release the bounded portable calibration/scoring workflow and close retained existing-route claims. | Claim dispositions and implemented restrictions precede final-source/platform checks and the release decision. |
-| 0.2.5 candidate | Explicit scale identifiers and separate-scale RSM/binary and PCM routing, if user demand justifies it. | After 0.2.4 closure, fix scale-specific identification, categories, missingness and scoring. This is not automatic linking or a prerequisite for random-rater research. |
-| Subsequent feature releases, version unassigned | Target-specific rating-design support and bounded frequentist random-rater MFRM. | Use the separate staged gates above; admit public features only after numerical, statistical and workflow evidence. |
-| 0.3.0 | Consolidate validated APIs, object schemas, migration and reproducible performance. | Include only admitted routes; no requirement to complete all research tracks. |
-| 1.0.0 | Maintain a deliberately bounded stable core. | Document supported use conditions, statistical limits, compatibility policy and maintenance commitments. |
-
-There are no promised versions for portable GPCM/JML/interactions, automatic
-cross-scale linking, multidimensional estimation, mixed response families,
-multivariate G-theory, response-time or diffusion models. Their absence does
-not prevent a stable core release.
-
-## Compatibility principles
-
-- Reject incompatible objects clearly; preserve model, scale, category, anchor
-  and uncertainty meanings across summaries, plots, exports and replay.
-- Give schema changes an explicit migration or refusal policy. Semantic
-  identity matters more than incidental file hashes.
-- Use realistic operational defaults in examples and clear reader-facing
-  documentation. A compact illustration must not imply general qualification.
-- Describe functionality as supported only when its documented conditions,
-  implementation and evidence agree. A planning milestone is not API support.
+| Version / horizon | Intended outcome |
+| --- | --- |
+| 0.2.4 | Portable fixed-normal RSM/PCM MML calibration and scoring, corrected existing workflows, and consistent interpretation and migration guidance. |
+| 0.2.5 candidate | Explicit scale identifiers and separate-scale RSM/binary and PCM workflows, if user needs justify them. This would not provide automatic linking. |
+| Later feature releases, version unassigned | Target-specific rating-design support and a limited frequentist random-rater MFRM, introduced separately when their methods and workflows are ready. |
+| 0.3.0 | Consolidate supported APIs, saved-object compatibility and reproducible performance. |
+| 1.0.0 | A deliberately limited stable core with clear use conditions, statistical limits and maintenance commitments. |
 
 ## Not part of the 0.2.4 promise
 
-Portable GPCM/JML/interaction calibration, jointly estimated random facets,
-multiple observed scales within one portable object, automatic cross-scale
-linking, joint response-time/diffusion estimation, exported multivariate
-G-theory, and external-software feature parity remain outside the release
-promise. A new formal DRF LRT or FairZ uncertainty method is admitted only by
-its own evidence and output decision. Existing exported functionality still
-requires a correct, enforceable disposition.
+There are no promised versions for portable GPCM/JML/estimated populations,
+automatic cross-scale linking, multidimensional estimation, mixed response
+families, multivariate G-theory, response-time or diffusion models.
+
+## Compatibility principles
+
+- Preserve model, scale, categories, anchors and uncertainty meaning when
+  saving results, drawing figures and exporting tables.
+- Refuse incompatible objects clearly and provide a migration or refusal
+  explanation when saved-object requirements change.
+- Use realistic examples without implying that one successful example
+  establishes accuracy for every design or population.
+- Describe a feature as supported only when its documented conditions,
+  implementation and evidence agree. A roadmap entry is not current API support.

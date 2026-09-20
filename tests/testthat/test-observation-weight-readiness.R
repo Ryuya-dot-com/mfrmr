@@ -38,7 +38,7 @@ test_that("observation weights restrict inference without changing unit-weight e
       expect_false(any(diag$reliability$SupportsFormalInference))
       expect_true(all(is.finite(diag$measures$SE)))
       expect_true(all(is.finite(diag$parameter_uncertainty$steps$SE)))
-      expect_match(diag$precision_profile$RecommendedUse, "Diagnostic review only")
+      expect_match(diag$precision_profile$RecommendedUse, "diagnostic only", fixed = TRUE)
       attached <- attach_diagnostics_to_fit(fit)
       expect_false(any(attached$facets$others$SupportsFormalInference))
       expect_false(any(attached$facets$person$CIEligible))

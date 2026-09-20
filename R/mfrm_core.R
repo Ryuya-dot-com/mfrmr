@@ -3501,22 +3501,17 @@ mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
   } else {
     "legacy_or_unknown"
   }
-  integration_tier <- if ("ICIntegrationTier" %in% names(row)) {
-    as.character(row$ICIntegrationTier[1])
-  } else {
-    "legacy_or_unknown"
-  }
-  integration_status <- if ("ICIntegrationStatus" %in% names(row)) {
-    as.character(row$ICIntegrationStatus[1])
-  } else {
-    "legacy_or_unknown"
-  }
   quadrature_points <- if ("ICQuadraturePoints" %in% names(row)) {
     suppressWarnings(as.integer(row$ICQuadraturePoints[1]))
   } else {
     NA_integer_
   }
   loglik <- format_value("LogLik")
+
+  if (identical(status, "descriptive_jml")) {
+    return(paste0("LogLik: ", loglik,
+      " | Information-criterion ranking is unavailable for JML."))
+  }
 
   if (eligible) {
     lines <- paste0(
@@ -3533,8 +3528,7 @@ mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
           "screening/review only; automatic deltas, weights, preferences, ",
           "and LRT are disabled at q=",
           if (is.finite(quadrature_points)) quadrature_points else "unknown",
-          " (tier: ", integration_tier, "; status: ",
-          integration_status, "). Use q >= 31 as the comparison starting ",
+          ". Use q >= 31 as the comparison starting ",
           "grid and check a denser common grid when the decision is close."
         )
       )
@@ -3549,8 +3543,7 @@ mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
         lines,
         paste0(
           "SABIC selection guard: displayed for sensitivity only; automatic ",
-          "SABIC selection is disabled at Persons <= 22 (status: ", status,
-          ")."
+          "SABIC selection is disabled at Persons <= 22."
         )
       )
     }
@@ -3559,9 +3552,15 @@ mfrm_ic_console_lines <- function(summary_row, digits = 3L) {
 
   legacy_aic <- if ("LegacyAIC" %in% names(row)) "LegacyAIC" else "AIC"
   legacy_bic <- if ("LegacyBIC" %in% names(row)) "LegacyBIC" else "BIC"
+  reason <- switch(status,
+    invalid_weight_policy = "invalid observation weights",
+    suppressed_nonunit_weight = "non-unit observation weights lack ordinary likelihood-based comparison support",
+    invalid_person_count = "the Person count is invalid",
+    invalid_likelihood_contract = "likelihood or parameter-count information is unavailable",
+    "current comparison support is not established")
   lines <- paste0(
     "LogLik: ", loglik,
-    " | Canonical MML information-criterion panel: not eligible (", status, ")."
+    " | Canonical MML information-criterion panel: not eligible; ", reason, "."
   )
   if (is.finite(suppressWarnings(as.numeric(row[[legacy_aic]][1] %||% NA_real_))) ||
       is.finite(suppressWarnings(as.numeric(row[[legacy_bic]][1] %||% NA_real_)))) {
@@ -4868,8 +4867,8 @@ compute_obs_table <- function(res) {
     score_k_int <- as.integer(idx$score_k)
     obs_col <- pmin(pmax(score_k_int + 1L, 1L), ncol(probs_mat))
     pr_obs <- probs_mat[cbind(seq_len(n_rows), obs_col)]
-    eps <- .Machine$double.eps
-    log_probs_mat <- log(pmax(probs_mat, eps))
+    log_probs_mat <- log(probs_mat)
+    log_probs_mat[probs_mat == 0] <- 0
     item_entropy <- as.numeric(rowSums(probs_mat * log_probs_mat))
     item_e_logp_sq <- as.numeric(rowSums(probs_mat * log_probs_mat^2))
     item_var_logp <- pmax(item_e_logp_sq - item_entropy^2, 0)
@@ -4891,7 +4890,7 @@ compute_obs_table <- function(res) {
     observed_score_deriv <- numeric(0)
   }
 
-  prep$data |>
+  out <- prep$data |>
     mutate(
       PersonMeasure = person_measure_by_row,
       Observed = prep$rating_min + idx$score_k,
@@ -4909,6 +4908,8 @@ compute_obs_table <- function(res) {
       ItemVarLogP = item_var_logp,
       ItemLogPScoreCov = item_logp_score_cov
     )
+  attr(out, "person_fit_moments_version") <- 2L
+  out
 }
 
 extract_bias_facet_spec <- function(bias_results, data_cols = NULL) {
@@ -5107,11 +5108,19 @@ calc_unexpected_response_table <- function(obs_df,
                                            prob_max = 0.30,
                                            rule = c("either", "both")) {
   rule <- match.arg(tolower(rule), c("either", "both"))
+  if (!is.numeric(abs_z_min) || length(abs_z_min) != 1L || is.na(abs_z_min) || abs_z_min < 0 ||
+      !is.numeric(prob_max) || length(prob_max) != 1L || !is.finite(prob_max) || prob_max < 0 || prob_max > 1) {
+    stop("Unexpected-response cutoffs require abs_z_min >= 0 and 0 <= prob_max <= 1.", call. = FALSE)
+  }
+  retain_coverage <- function(table, flags = rep(NA, nrow(obs_df) %||% 0L)) {
+    attr(table, "unexpected_coverage") <- c(Evaluated = sum(!is.na(flags)), Unavailable = sum(is.na(flags)))
+    table
+  }
   if (is.null(obs_df) || nrow(obs_df) == 0 || is.null(probs) || nrow(probs) != nrow(obs_df)) {
-    return(tibble())
+    return(retain_coverage(tibble()))
   }
   if (!"score_k" %in% names(obs_df) || !"StdResidual" %in% names(obs_df)) {
-    return(tibble())
+    return(retain_coverage(tibble()))
   }
 
   score_k <- suppressWarnings(as.integer(obs_df$score_k))
@@ -5131,14 +5140,14 @@ calc_unexpected_response_table <- function(obs_df,
   abs_std <- abs(obs_df$StdResidual)
   surprise <- -log10(pmax(obs_prob, .Machine$double.xmin))
   cat_gap <- abs(obs_df$Observed - most_likely)
-  low_prob <- is.finite(obs_prob) & obs_prob <= prob_max
-  high_resid <- is.finite(abs_std) & abs_std >= abs_z_min
+  low_prob <- ifelse(is.finite(obs_prob) & obs_prob >= 0 & obs_prob <= 1, obs_prob <= prob_max, NA)
+  high_resid <- ifelse(is.finite(abs_std), abs_std >= abs_z_min, NA)
   flagged <- if (rule == "both") {
     low_prob & high_resid
   } else {
     low_prob | high_resid
   }
-  if (!any(flagged, na.rm = TRUE)) return(tibble())
+  if (!any(flagged, na.rm = TRUE)) return(retain_coverage(tibble(), flagged))
 
   out <- obs_df |>
     mutate(
@@ -5153,6 +5162,7 @@ calc_unexpected_response_table <- function(obs_df,
       FlagLargeResidual = high_resid,
       Unexpected = flagged,
       Direction = dplyr::case_when(
+        !is.finite(.data$Residual) ~ "Residual unavailable",
         .data$Residual > 0 ~ "Higher than expected",
         .data$Residual < 0 ~ "Lower than expected",
         TRUE ~ "As expected"
@@ -5185,9 +5195,10 @@ calc_unexpected_response_table <- function(obs_df,
   keep_cols <- keep_cols[keep_cols %in% names(out)]
 
   # Keep all flagged rows until callers have computed prevalence summaries.
-  out |>
+  out <- out |>
     arrange(desc(.data$Severity), desc(abs(.data$StdResidual)), .data$ObsProb) |>
     select(dplyr::all_of(keep_cols))
+  retain_coverage(out, flagged)
 }
 
 summarize_unexpected_response_table <- function(unexpected_tbl,
@@ -5195,32 +5206,26 @@ summarize_unexpected_response_table <- function(unexpected_tbl,
                                                 abs_z_min = 2,
                                                 prob_max = 0.30,
                                                 rule = "either") {
-  if (is.null(unexpected_tbl) || nrow(unexpected_tbl) == 0) {
-    return(tibble(
-      TotalObservations = total_observations,
-      UnexpectedN = 0L,
-      UnexpectedPercent = 0,
-      LowProbabilityN = 0L,
-      LargeResidualN = 0L,
-      Rule = rule,
-      AbsZThreshold = abs_z_min,
-      ProbThreshold = prob_max
-    ))
-  }
+  coverage <- attr(unexpected_tbl, "unexpected_coverage", exact = TRUE)
+  evaluated <- as.integer(coverage["Evaluated"] %||% NA_integer_)
+  unavailable <- as.integer(coverage["Unavailable"] %||% NA_integer_)
+  n_flagged <- nrow(unexpected_tbl) %||% 0L
   low_n <- if ("FlagLowProbability" %in% names(unexpected_tbl)) {
     sum(unexpected_tbl$FlagLowProbability, na.rm = TRUE)
   } else {
-    NA_integer_
+    if (n_flagged == 0L) 0L else NA_integer_
   }
   resid_n <- if ("FlagLargeResidual" %in% names(unexpected_tbl)) {
     sum(unexpected_tbl$FlagLargeResidual, na.rm = TRUE)
   } else {
-    NA_integer_
+    if (n_flagged == 0L) 0L else NA_integer_
   }
   tibble(
     TotalObservations = total_observations,
-    UnexpectedN = nrow(unexpected_tbl),
-    UnexpectedPercent = ifelse(total_observations > 0, 100 * nrow(unexpected_tbl) / total_observations, NA_real_),
+    EvaluatedObservations = evaluated,
+    UnavailableObservations = unavailable,
+    UnexpectedN = if (is.finite(evaluated) && evaluated > 0L) n_flagged else NA_integer_,
+    UnexpectedPercent = if (total_observations > 0 && isTRUE(unavailable == 0L)) 100 * n_flagged / total_observations else NA_real_,
     LowProbabilityN = low_n,
     LargeResidualN = resid_n,
     Rule = rule,
@@ -5822,15 +5827,17 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     return(list(summary = tibble(), pairs = tibble()))
   }
 
+  obs_df$.context <- dplyr::group_indices(
+    dplyr::group_by(obs_df, dplyr::across(dplyr::all_of(context_cols)))
+  )
   df <- obs_df |>
-    mutate(across(all_of(context_cols), as.character)) |>
-    tidyr::unite(".context", all_of(context_cols), sep = "|", remove = FALSE) |>
     select(.context, !!rlang::sym(rater_facet), Observed, any_of("Weight"))
   df$.Weight <- get_weights(df)
 
   df <- df |>
     group_by(.context, !!rlang::sym(rater_facet)) |>
-    summarize(Score = weighted_mean(Observed, .Weight), .groups = "drop")
+    summarize(Score = if (all(is.finite(Observed))) weighted_mean(Observed, .Weight) else NA_real_,
+              Ratings = n(), .groups = "drop")
 
   if (nrow(df) == 0) {
     return(list(summary = tibble(), pairs = tibble()))
@@ -5838,7 +5845,7 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
 
   wide <- tryCatch(
     tidyr::pivot_wider(
-      df,
+      select(df, -all_of("Ratings")),
       id_cols = .context,
       names_from = !!rlang::sym(rater_facet),
       values_from = Score
@@ -5866,8 +5873,6 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     if (!is.null(probs) && nrow(probs) == nrow(obs_df)) {
       prob_cols <- paste0(".p", seq_len(ncol(probs)))
       prob_df <- obs_df |>
-        mutate(across(all_of(context_cols), as.character)) |>
-        tidyr::unite(".context", all_of(context_cols), sep = "|", remove = FALSE) |>
         select(.context, !!rlang::sym(rater_facet), any_of("Weight"))
       prob_df[prob_cols] <- probs
       prob_df$.Weight <- get_weights(prob_df)
@@ -5875,7 +5880,7 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
       prob_avg <- prob_df |>
         group_by(.context, !!rlang::sym(rater_facet)) |>
         summarize(
-          across(all_of(prob_cols), ~ weighted_mean(.x, .Weight)),
+          across(all_of(prob_cols), ~ if (n() == 1L) .x[1L] else NA_real_),
           .groups = "drop"
         )
 
@@ -5906,6 +5911,8 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
         OpportunityCount = 0,
         ExactCount = 0,
         ExpectedExactCount = NA_real_,
+        ExpectedAvailableContexts = 0L,
+        ExpectedUnavailableContexts = 0L,
         AdjacentCount = 0,
         Exact = NA_real_,
         ExpectedExact = NA_real_,
@@ -5935,7 +5942,9 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
         p1 <- get0(key1_vec[k], envir = prob_map, inherits = FALSE)
         p2 <- get0(key2_vec[k], envir = prob_map, inherits = FALSE)
         if (is.null(p1) || is.null(p2)) next
-        if (any(!is.finite(p1)) || any(!is.finite(p2))) next
+        if (any(!is.finite(p1)) || any(!is.finite(p2)) ||
+            any(p1 < 0 | p1 > 1) || any(p2 < 0 | p2 > 1) ||
+            abs(sum(p1) - 1) > 1e-8 || abs(sum(p2) - 1) > 1e-8) next
         kept <- kept + 1L
         tmp[kept] <- sum(p1 * p2)
       }
@@ -5943,7 +5952,7 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     } else {
       numeric(0)
     }
-    exp_mean <- if (length(exp_vals) > 0) mean(exp_vals) else NA_real_
+    exp_mean <- if (length(exp_vals) == n_ok) mean(exp_vals) else NA_real_
 
     tibble(
       Rater1 = pair[1],
@@ -5951,7 +5960,9 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
       N = n_ok,
       OpportunityCount = n_ok,
       ExactCount = exact_count,
-      ExpectedExactCount = if (length(exp_vals) > 0) sum(exp_vals) else NA_real_,
+      ExpectedExactCount = if (length(exp_vals) == n_ok) sum(exp_vals) else NA_real_,
+      ExpectedAvailableContexts = length(exp_vals),
+      ExpectedUnavailableContexts = n_ok - length(exp_vals),
       AdjacentCount = sum(abs(diff) <= 1, na.rm = TRUE),
       Exact = exact_count / n_ok,
       ExpectedExact = exp_mean,
@@ -5970,6 +5981,8 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
       OpportunityCount = integer(0),
       ExactCount = integer(0),
       ExpectedExactCount = numeric(0),
+      ExpectedAvailableContexts = integer(0),
+      ExpectedUnavailableContexts = integer(0),
       AdjacentCount = integer(0),
       Exact = numeric(0),
       ExpectedExact = numeric(0),
@@ -5981,10 +5994,10 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     )
   }
 
-  contexts_with_pairs <- sum(rowSums(!is.na(wide[rater_cols])) >= 2)
+  contexts_with_pairs <- sum(rowSums(is.finite(as.matrix(wide[rater_cols]))) >= 2)
   total_pairs <- sum(pair_tbl$N, na.rm = TRUE)
   total_exact <- sum(pair_tbl$Exact * pair_tbl$N, na.rm = TRUE)
-  expected_available <- any(is.finite(pair_tbl$ExpectedExact))
+  expected_available <- total_pairs > 0 && all(is.finite(pair_tbl$ExpectedExact[pair_tbl$N > 0]))
   total_expected <- if (expected_available) {
     sum(pair_tbl$ExpectedExact * pair_tbl$N, na.rm = TRUE)
   } else {
@@ -5994,6 +6007,13 @@ calc_interrater_agreement <- function(obs_df, facet_cols, rater_facet, res = NUL
     RaterFacet = rater_facet,
     Raters = length(rater_cols),
     Pairs = nrow(pair_tbl),
+    AvailablePairs = sum(pair_tbl$N > 0),
+    UnavailablePairs = sum(pair_tbl$N == 0),
+    CorrelationPairs = sum(is.finite(pair_tbl$Corr)),
+    UnavailableCorrelationPairs = sum(!is.finite(pair_tbl$Corr)),
+    RepeatedCells = sum(df$Ratings > 1L),
+    ExpectedAvailableContexts = sum(pair_tbl$ExpectedAvailableContexts),
+    ExpectedUnavailableContexts = sum(pair_tbl$ExpectedUnavailableContexts),
     Contexts = contexts_with_pairs,
     TotalPairs = total_pairs,
     OpportunityCount = total_pairs,
@@ -6156,12 +6176,12 @@ calc_facets_report_tbls <- function(res,
   rating_max <- prep$rating_max
   sizes <- build_param_sizes(config)
   params <- expand_params(res$opt$par, sizes, config)
-  theta_hat <- if (config$method == "JML") {
-    params$theta
-  } else {
-    res$facets$person$Estimate
-  }
-  theta_mean <- if (length(theta_hat) > 0) mean(theta_hat, na.rm = TRUE) else 0
+  theta_hat <- res$facets$person$Estimate
+  person_mean_unbounded <- identical(config$method, "JML") &&
+    any(is.infinite(theta_hat))
+  theta_mean <- if (person_mean_unbounded) NA_real_ else if (length(theta_hat) > 0) {
+    mean(theta_hat, na.rm = TRUE)
+  } else 0
   facet_means <- purrr::map_dbl(config$facet_names, function(f) {
     mean(params$facets[[f]], na.rm = TRUE)
   })
@@ -6385,6 +6405,7 @@ calc_facets_report_tbls <- function(res,
         estimate_eta_from_target(t, s, rating_min, rating_max, slope = a)
       }
     )
+    if (facet != "Person" && person_mean_unbounded) xtreme_eta[] <- NA_real_
 
     # Convert any xtreme-adjusted eta back to facet-specific measure units.
     measure_logit <- tbl$Estimate
@@ -6414,14 +6435,24 @@ calc_facets_report_tbls <- function(res,
         Status = status,
         FairM = fair_m,
         FairZ = fair_z,
+        FairMReference = if (facet == "Person") "Mean of other facet measures" else
+          if (person_mean_unbounded) "Unavailable: mean Person measure is unbounded" else
+            "Mean of fitted Person and other facet measures",
+        PrimaryMeasure = as.numeric(Estimate) * scale_factor + scale_origin,
+        MeasureBasis = dplyr::case_when(
+          is.finite(xtreme_eta) ~ "Extreme-score display only",
+          is.finite(Estimate) ~ "Fitted estimate",
+          TRUE ~ "No finite fitted estimate"
+        ),
+        ExtremeAdjustment = ifelse(is.finite(xtreme_eta), xtreme, 0),
         Measure = ifelse(is.finite(measure_logit), measure_logit * scale_factor + scale_origin, NA_real_),
         ModelSE = ifelse(
-          is.finite(dplyr::coalesce(ModelSE, SE)),
+          !is.finite(xtreme_eta) & is.finite(dplyr::coalesce(ModelSE, SE)),
           abs(scale_factor) * dplyr::coalesce(ModelSE, SE),
           NA_real_
         ),
         RealSE = ifelse(
-          is.finite(dplyr::coalesce(RealSE, ModelSE, SE)),
+          !is.finite(xtreme_eta) & is.finite(dplyr::coalesce(RealSE, ModelSE, SE)),
           abs(scale_factor) * dplyr::coalesce(
             RealSE,
             ModelSE * sqrt(pmax(dplyr::coalesce(Infit, 1), 1)),
@@ -6442,7 +6473,11 @@ calc_facets_report_tbls <- function(res,
         ObservedAverage,
         FairM,
         FairZ,
+        FairMReference = .data$FairMReference,
         Measure,
+        PrimaryMeasure = .data$PrimaryMeasure,
+        MeasureBasis = .data$MeasureBasis,
+        ExtremeAdjustment = .data$ExtremeAdjustment,
         ModelSE,
         RealSE,
         InfitMnSq = Infit,
@@ -6524,7 +6559,7 @@ format_facets_report_gt <- function(tbl,
   count_cols <- intersect(c("Total Score", "Total Count", "Weightd Score", "Weightd Count"), names(out))
   for (col in count_cols) out[[col]] <- round(as.numeric(out[[col]]), digits = 0)
   value_cols <- intersect(
-    c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average", "Measure", "Model S.E.", "Real S.E.",
+    c("Obsvd Average", "Fair(M) Average", "Fair(Z) Average", "Measure", "PrimaryMeasure", "Model S.E.", "Real S.E.",
       "Fair(M) S.E.", "Fair(M) CI Lower", "Fair(M) CI Upper", "Fair(M) CI Level",
       "Fair(Z) S.E.", "Fair(Z) CI Lower", "Fair(Z) CI Upper", "Fair(Z) CI Level",
       "Infit MnSq", "Infit ZStd", "Outfit MnSq", "Outfit ZStd", "PtMea Corr"),
@@ -7246,6 +7281,18 @@ add_gpcm_fair_average_delta_se <- function(raw_tbls,
   stats::setNames(out, names(raw_tbls))
 }
 
+validate_fair_measure_basis <- function(bundle) {
+  if (any(vapply(bundle$raw_by_facet, function(tbl) {
+        nrow(tbl) > 0L && !all(c("PrimaryMeasure", "MeasureBasis", "ExtremeAdjustment", "FairMReference") %in% names(tbl))
+      }, logical(1)))) {
+    stop(paste(
+      "This saved table does not retain the fitted-measure and mean-reference basis.",
+      "Recreate fair_average_table(fit, ...) with the original settings; no model refit is needed."
+    ), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 calc_fair_average_bundle <- function(res,
                                      diagnostics,
                                      facets = NULL,
@@ -7362,17 +7409,39 @@ calc_expected_category_counts <- function(res) {
   if (length(probs) == 0) return(tibble())
   w <- idx$weight
   exp_counts <- if (is.null(w)) {
-    colSums(probs, na.rm = TRUE)
+    colSums(probs)
   } else {
-    colSums(probs * w, na.rm = TRUE)
+    colSums(probs * w)
   }
   total_exp <- sum(exp_counts)
   cat_vals <- seq(prep$rating_min, prep$rating_max)
   tibble(
     Category = cat_vals,
     ExpectedCount = exp_counts,
-    ExpectedPercent = if (total_exp > 0) 100 * exp_counts / total_exp else rep(NA_real_, length(exp_counts))
+    ExpectedPercent = if (is.finite(total_exp) && total_exp > 0) 100 * exp_counts / total_exp else rep(NA_real_, length(exp_counts))
   )
+}
+
+marginal_probability_rows <- function(probability) {
+  probability <- as.matrix(probability)
+  rowSums(!is.finite(probability) | probability < 0 | probability > 1) == 0L &
+    abs(rowSums(probability) - 1) <= sqrt(.Machine$double.eps)
+}
+
+marginal_flag_coverage <- function(flag, screen) {
+  flag <- as.logical(flag)
+  classified <- sum(!is.na(flag))
+  data.frame(Screen = screen, Total = length(flag), Classified = classified,
+    Unclassified = sum(is.na(flag)),
+    Flagged = if (classified) sum(flag, na.rm = TRUE) else NA_integer_)
+}
+
+validate_marginal_coverage <- function(bundle) {
+  if (isTRUE(bundle$available) && !identical(bundle$coverage_version, 1L)) {
+    stop(paste("This saved marginal-fit result lacks classification coverage.",
+      "Recreate diagnostics with diagnose_mfrm(fit, diagnostic_mode = \"both\") and the original settings."), call. = FALSE)
+  }
+  invisible(bundle)
 }
 
 compute_mml_expected_category_diagnostics <- function(res,
@@ -7421,7 +7490,6 @@ compute_mml_expected_category_diagnostics <- function(res,
   if (is.null(weights) || length(weights) == 0L) {
     weights <- rep(1, nrow(prep$data))
   }
-  weights <- ifelse(is.finite(weights) & weights > 0, weights, 0)
 
   list(
     available = TRUE,
@@ -7456,6 +7524,12 @@ summarize_marginal_fit_grid <- function(group_df,
     stop("`group_df` must have one row per observation.", call. = FALSE)
   }
 
+  posterior_prob <- as.matrix(posterior_prob)
+  if (!identical(dim(posterior_prob), c(n, length(categories))) || length(weights) != n) {
+    stop("Probabilities and weights must match the observations and categories.", call. = FALSE)
+  }
+  if (!n) return(list(cell_stats = tibble(), summary_stats = tibble()))
+  valid_probability <- marginal_probability_rows(posterior_prob)
   group_cols <- names(group_df)
   group_key <- do.call(
     paste,
@@ -7470,12 +7544,18 @@ summarize_marginal_fit_grid <- function(group_df,
     idx_g <- split_idx[[i]]
     probs_g <- posterior_prob[idx_g, , drop = FALSE]
     w_g <- weights[idx_g]
-    total_w <- sum(w_g, na.rm = TRUE)
+    weight_ok <- is.finite(w_g) & w_g >= 0
+    active <- !weight_ok | w_g > 0
+    observed_ok <- is.finite(observed_cat[idx_g]) & observed_cat[idx_g] %in% categories
+    usable <- weight_ok & (!active | (observed_ok & valid_probability[idx_g]))
+    observed_complete <- all(weight_ok & (!active | observed_ok))
+    expected_complete <- all(weight_ok & (!active | valid_probability[idx_g]))
+    total_w <- if (all(weight_ok)) sum(w_g) else NA_real_
 
     cell_rows[[i]] <- bind_rows(lapply(seq_along(categories), function(j) {
-      obs_count <- sum(w_g[observed_cat[idx_g] == categories[j]], na.rm = TRUE)
-      exp_count <- sum(w_g * probs_g[, j], na.rm = TRUE)
-      var_count <- sum((w_g^2) * probs_g[, j] * pmax(1 - probs_g[, j], 0), na.rm = TRUE)
+      obs_count <- if (observed_complete) sum(w_g[active & observed_cat[idx_g] == categories[j]]) else NA_real_
+      exp_count <- if (expected_complete) sum(w_g[active] * probs_g[active, j]) else NA_real_
+      var_count <- if (expected_complete) sum((w_g[active]^2) * probs_g[active, j] * pmax(1 - probs_g[active, j], 0)) else NA_real_
       obs_prop <- if (is.finite(total_w) && total_w > 0) obs_count / total_w else NA_real_
       exp_prop <- if (is.finite(total_w) && total_w > 0) exp_count / total_w else NA_real_
       prop_diff <- obs_prop - exp_prop
@@ -7489,6 +7569,9 @@ summarize_marginal_fit_grid <- function(group_df,
         group_index_tbl[i, , drop = FALSE],
         tibble(
           Category = categories[j],
+          Observations = length(idx_g),
+          AvailableObservations = sum(usable),
+          UnavailableObservations = sum(!usable),
           GroupCount = total_w,
           ObservedCount = obs_count,
           ExpectedCount = exp_count,
@@ -7499,7 +7582,7 @@ summarize_marginal_fit_grid <- function(group_df,
           PropDiff = prop_diff,
           SquaredPropDiff = prop_diff^2,
           StdResidual = std_resid,
-          FlaggedAbsZ = is.finite(std_resid) && abs(std_resid) >= abs_z_warn
+          FlaggedAbsZ = if (is.finite(std_resid)) abs(std_resid) >= abs_z_warn else NA
         )
       )
     }))
@@ -7510,20 +7593,27 @@ summarize_marginal_fit_grid <- function(group_df,
     group_by(across(all_of(group_cols))) |>
     summarize(
       GroupCount = dplyr::first(.data$GroupCount),
-      ObservedCountTotal = sum(.data$ObservedCount, na.rm = TRUE),
-      ExpectedCountTotal = sum(.data$ExpectedCount, na.rm = TRUE),
-      RMSD = sqrt(mean(.data$SquaredPropDiff, na.rm = TRUE)),
+      Observations = dplyr::first(.data$Observations),
+      AvailableObservations = dplyr::first(.data$AvailableObservations),
+      UnavailableObservations = dplyr::first(.data$UnavailableObservations),
+      ObservedCountTotal = sum(.data$ObservedCount),
+      ExpectedCountTotal = sum(.data$ExpectedCount),
+      RMSD = if (all(is.finite(.data$SquaredPropDiff))) sqrt(mean(.data$SquaredPropDiff)) else NA_real_,
+      Cells = dplyr::n(),
+      ClassifiedCells = sum(!is.na(.data$FlaggedAbsZ)),
+      UnclassifiedCells = sum(is.na(.data$FlaggedAbsZ)),
       MaxAbsStdResidual = if (all(!is.finite(.data$StdResidual))) {
         NA_real_
       } else {
         max(abs(.data$StdResidual), na.rm = TRUE)
       },
-      FlaggedCellCount = sum(.data$FlaggedAbsZ, na.rm = TRUE),
+      FlaggedCellCount = if (any(!is.na(.data$FlaggedAbsZ))) sum(.data$FlaggedAbsZ, na.rm = TRUE) else NA_integer_,
       .groups = "drop"
     ) |>
     mutate(
-      FlaggedRMSD = is.finite(.data$RMSD) & .data$RMSD >= rmsd_warn,
-      Flagged = .data$FlaggedCellCount > 0 | .data$FlaggedRMSD
+      FlaggedRMSD = ifelse(is.finite(.data$RMSD), .data$RMSD >= rmsd_warn, NA),
+      Flagged = ifelse(.data$FlaggedCellCount > 0, TRUE,
+                       ifelse(.data$UnclassifiedCells > 0, NA, FALSE)) | .data$FlaggedRMSD
     )
 
   list(
@@ -7545,7 +7635,7 @@ build_marginal_fit_guidance <- function(pairwise_available = FALSE) {
       PrimaryReportingEligible = FALSE,
       ClassificationSystem = "screening",
       ReportingUse = "screening_only",
-      InterpretationNote = "Use as a latent-integrated limited-information screen; do not treat isolated flags as definitive inferential evidence."
+      InterpretationNote = "Expected counts condition on the same responses. Residual scales omit cross-response covariance and calibration uncertainty; use flags for exploratory review, not formal inference."
     )
   )
 
@@ -7651,7 +7741,7 @@ build_diagnostic_basis_guide <- function(diagnostic_mode = c("legacy", "marginal
     ),
     InterpretationNote = c(
       "Legacy fit statistics use plug-in residual machinery and should not be interpreted as latent-integrated marginal evidence.",
-      "Strict marginal fit integrates over the latent distribution and is the preferred category-level strict screen.",
+      "Category expectations integrate over the Person posterior conditioned on the same responses, with fitted calibration fixed; inspect classification coverage before interpreting this exploratory screen.",
       "Strict pairwise local-dependence checks are exploratory follow-ups to first-order marginal flags, not standalone inferential tests.",
       "Posterior predictive checks are not computed by mfrmr; use external Bayesian software when this corroborating analysis is required."
     )
@@ -7710,24 +7800,32 @@ calc_marginal_pairwise_bundle <- function(expected_core,
 
         level_pair <- sort(c(level_i, level_j), method = "radix")
         pair_weight <- weights[row_i] * weights[row_j]
-        if (!is.finite(pair_weight) || pair_weight <= 0) next
+        # Zero-weight opportunities are excluded by design; invalid ones remain unavailable.
+        if (is.finite(pair_weight) && pair_weight == 0) next
+        if (!all(is.finite(weights[c(row_i, row_j)]) & weights[c(row_i, row_j)] >= 0) ||
+            !is.finite(pair_weight)) pair_weight <- NA_real_
 
         posterior <- obs_posterior[row_i, ]
-        if (!all(is.finite(posterior))) next
+        posterior_ok <- all(marginal_probability_rows(obs_posterior[c(row_i, row_j), , drop = FALSE])) &&
+          isTRUE(all.equal(posterior, obs_posterior[row_j, ], tolerance = sqrt(.Machine$double.eps)))
 
         exact_q <- numeric(length(prob_list))
         adjacent_q <- numeric(length(prob_list))
         for (q in seq_along(prob_list)) {
           prob_i <- prob_list[[q]][row_i, ]
           prob_j <- prob_list[[q]][row_j, ]
-          exact_q[q] <- sum(prob_i * prob_j)
-          adjacent_q[q] <- sum(outer(prob_i, prob_j)[adjacent_mask])
+          valid_q <- all(marginal_probability_rows(rbind(prob_i, prob_j)))
+          exact_q[q] <- if (valid_q) sum(prob_i * prob_j) else NA_real_
+          adjacent_q[q] <- if (valid_q) sum(outer(prob_i, prob_j)[adjacent_mask]) else NA_real_
         }
 
-        exp_exact <- sum(posterior * exact_q)
-        exp_adjacent <- sum(posterior * adjacent_q)
-        obs_exact <- as.numeric(observed_cat[row_i] == observed_cat[row_j])
-        obs_adjacent <- as.numeric(abs(observed_cat[row_i] - observed_cat[row_j]) <= 1)
+        exp_exact <- if (posterior_ok) sum(posterior * exact_q) else NA_real_
+        exp_adjacent <- if (posterior_ok) sum(posterior * adjacent_q) else NA_real_
+        observed_ok <- all(is.finite(observed_cat[c(row_i, row_j)]) &
+                           observed_cat[c(row_i, row_j)] %in% expected_core$categories)
+        obs_exact <- if (observed_ok) as.numeric(observed_cat[row_i] == observed_cat[row_j]) else NA_real_
+        obs_adjacent <- if (observed_ok) as.numeric(abs(observed_cat[row_i] - observed_cat[row_j]) <= 1) else NA_real_
+        usable <- all(is.finite(c(pair_weight, exp_exact, exp_adjacent, obs_exact, obs_adjacent)))
 
         pair_idx <- pair_idx + 1L
         pair_rows[[pair_idx]] <- tibble(
@@ -7735,6 +7833,7 @@ calc_marginal_pairwise_bundle <- function(expected_core,
           Level1 = level_pair[1],
           Level2 = level_pair[2],
           PairWeight = pair_weight,
+          Available = usable,
           ObservedExactCount = pair_weight * obs_exact,
           ExpectedExactCount = pair_weight * exp_exact,
           ExactVarianceCount = (pair_weight^2) * exp_exact * pmax(1 - exp_exact, 0),
@@ -7760,15 +7859,17 @@ calc_marginal_pairwise_bundle <- function(expected_core,
     group_by(.data$Facet, .data$Level1, .data$Level2) |>
     summarize(
       LevelPairCount = dplyr::n(),
-      OpportunityWeight = sum(.data$PairWeight, na.rm = TRUE),
-      ObservedExactCount = sum(.data$ObservedExactCount, na.rm = TRUE),
-      ExpectedExactCount = sum(.data$ExpectedExactCount, na.rm = TRUE),
-      ExactVarianceCount = sum(.data$ExactVarianceCount, na.rm = TRUE),
-      ObservedAdjacentCount = sum(.data$ObservedAdjacentCount, na.rm = TRUE),
-      ExpectedAdjacentCount = sum(.data$ExpectedAdjacentCount, na.rm = TRUE),
-      AdjacentVarianceCount = sum(.data$AdjacentVarianceCount, na.rm = TRUE),
-      ExactRMSD = sqrt(stats::weighted.mean(.data$SquaredExactDiff, .data$PairWeight, na.rm = TRUE)),
-      AdjacentRMSD = sqrt(stats::weighted.mean(.data$SquaredAdjacentDiff, .data$PairWeight, na.rm = TRUE)),
+      AvailableContextPairs = sum(.data$Available),
+      UnavailableContextPairs = sum(!.data$Available),
+      OpportunityWeight = sum(.data$PairWeight),
+      ObservedExactCount = sum(.data$ObservedExactCount),
+      ExpectedExactCount = sum(.data$ExpectedExactCount),
+      ExactVarianceCount = sum(.data$ExactVarianceCount),
+      ObservedAdjacentCount = sum(.data$ObservedAdjacentCount),
+      ExpectedAdjacentCount = sum(.data$ExpectedAdjacentCount),
+      AdjacentVarianceCount = sum(.data$AdjacentVarianceCount),
+      ExactRMSD = sqrt(stats::weighted.mean(.data$SquaredExactDiff, .data$PairWeight)),
+      AdjacentRMSD = sqrt(stats::weighted.mean(.data$SquaredAdjacentDiff, .data$PairWeight)),
       .groups = "drop"
     ) |>
     mutate(
@@ -7788,10 +7889,10 @@ calc_marginal_pairwise_bundle <- function(expected_core,
         (.data$ObservedAdjacentCount - .data$ExpectedAdjacentCount) / sqrt(.data$AdjacentVarianceCount),
         NA_real_
       ),
-      FlaggedExact = (is.finite(.data$ExactStdResidual) & abs(.data$ExactStdResidual) >= abs_z_warn) |
-        (is.finite(.data$ExactGap) & abs(.data$ExactGap) >= exact_gap_warn),
-      FlaggedAdjacent = (is.finite(.data$AdjacentStdResidual) & abs(.data$AdjacentStdResidual) >= abs_z_warn) |
-        (is.finite(.data$AdjacentGap) & abs(.data$AdjacentGap) >= adjacent_gap_warn),
+      FlaggedExact = ifelse(is.finite(.data$ExactStdResidual), abs(.data$ExactStdResidual) >= abs_z_warn, NA) |
+        ifelse(is.finite(.data$ExactGap), abs(.data$ExactGap) >= exact_gap_warn, NA),
+      FlaggedAdjacent = ifelse(is.finite(.data$AdjacentStdResidual), abs(.data$AdjacentStdResidual) >= abs_z_warn, NA) |
+        ifelse(is.finite(.data$AdjacentGap), abs(.data$AdjacentGap) >= adjacent_gap_warn, NA),
       Flagged = .data$FlaggedExact | .data$FlaggedAdjacent
     ) |>
     mutate(
@@ -7809,9 +7910,15 @@ calc_marginal_pairwise_bundle <- function(expected_core,
     group_by(.data$Facet) |>
     summarize(
       LevelPairs = dplyr::n(),
-      ContextPairs = sum(.data$LevelPairCount, na.rm = TRUE),
-      MeanAbsExactGap = stats::weighted.mean(abs(.data$ExactGap), .data$OpportunityWeight, na.rm = TRUE),
-      MeanAbsAdjacentGap = stats::weighted.mean(abs(.data$AdjacentGap), .data$OpportunityWeight, na.rm = TRUE),
+      ContextPairs = sum(.data$LevelPairCount),
+      AvailableContextPairs = sum(.data$AvailableContextPairs),
+      UnavailableContextPairs = sum(.data$UnavailableContextPairs),
+      ClassifiedLevelPairs = sum(!is.na(.data$Flagged)),
+      UnclassifiedLevelPairs = sum(is.na(.data$Flagged)),
+      AvailableExactResiduals = sum(is.finite(.data$ExactStdResidual)),
+      AvailableAdjacentResiduals = sum(is.finite(.data$AdjacentStdResidual)),
+      MeanAbsExactGap = stats::weighted.mean(abs(.data$ExactGap), .data$OpportunityWeight),
+      MeanAbsAdjacentGap = stats::weighted.mean(abs(.data$AdjacentGap), .data$OpportunityWeight),
       MaxAbsExactStdResidual = if (all(!is.finite(.data$ExactStdResidual))) {
         NA_real_
       } else {
@@ -7822,8 +7929,8 @@ calc_marginal_pairwise_bundle <- function(expected_core,
       } else {
         max(abs(.data$AdjacentStdResidual), na.rm = TRUE)
       },
-      OpportunityWeight = sum(.data$OpportunityWeight, na.rm = TRUE),
-      FlaggedLevelPairs = sum(.data$Flagged, na.rm = TRUE),
+      OpportunityWeight = sum(.data$OpportunityWeight),
+      FlaggedLevelPairs = if (any(!is.na(.data$Flagged))) sum(.data$Flagged, na.rm = TRUE) else NA_integer_,
       .groups = "drop"
     ) |>
     mutate(
@@ -7854,6 +7961,7 @@ calc_marginal_pairwise_bundle <- function(expected_core,
 
   list(
     available = TRUE,
+    coverage = marginal_flag_coverage(pair_stats$Flagged, "Level pairs"),
     pair_stats = pair_stats,
     facet_summary = facet_summary,
     top_pairs = top_pairs,
@@ -7915,7 +8023,7 @@ calc_marginal_fit_bundle <- function(res,
   step_or_scale <- summarize_marginal_fit_grid(
     group_df = data.frame(
       CellType = rep("step_facet", n),
-      StepFacet = if (identical(config$model, "PCM")) {
+      StepFacet = if (config$model %in% c("PCM", "GPCM")) {
         as.character(prep$data[[config$step_facet]])
       } else {
         rep("Common", n)
@@ -7964,6 +8072,12 @@ calc_marginal_fit_bundle <- function(res,
 
   overall_summary <- overall$summary_stats |>
     slice_head(n = 1)
+  coverage <- bind_rows(
+    marginal_flag_coverage(overall$cell_stats$FlaggedAbsZ, "Overall categories"),
+    marginal_flag_coverage(step_or_scale$summary_stats$Flagged, "Step/scale groups"),
+    marginal_flag_coverage(facet_level$summary_stats$Flagged, "Facet levels"),
+    marginal_flag_coverage(pairwise$pair_stats$Flagged, "Level pairs")
+  )
   summary_tbl <- tibble(
     Available = TRUE,
     Method = method,
@@ -7973,11 +8087,11 @@ calc_marginal_fit_bundle <- function(res,
     CategoryCount = length(categories),
     OverallRMSD = overall_summary$RMSD[1] %||% NA_real_,
     OverallMaxAbsStdResidual = overall_summary$MaxAbsStdResidual[1] %||% NA_real_,
-    StepGroupsFlagged = sum(step_or_scale$summary_stats$Flagged, na.rm = TRUE),
-    FacetLevelsFlagged = sum(facet_level$summary_stats$Flagged, na.rm = TRUE),
+    StepGroupsFlagged = coverage$Flagged[2],
+    FacetLevelsFlagged = coverage$Flagged[3],
     PairwiseAvailable = isTRUE(pairwise$available),
     PairwiseFlaggedLevelPairs = if (isTRUE(pairwise$available)) {
-      sum(pairwise$pair_stats$Flagged, na.rm = TRUE)
+      coverage$Flagged[4]
     } else {
       NA_integer_
     },
@@ -8000,6 +8114,8 @@ calc_marginal_fit_bundle <- function(res,
 
   list(
     available = TRUE,
+    coverage_version = 1L,
+    coverage = coverage,
     summary = summary_tbl,
     overall = overall,
     step_or_scale = step_or_scale,
@@ -8009,7 +8125,9 @@ calc_marginal_fit_bundle <- function(res,
     top_cells = top_cells,
     thresholds = list(abs_z_warn = abs_z_warn, rmsd_warn = rmsd_warn),
     notes = c(
-      "Strict marginal diagnostics use latent-integrated posterior-expected first-order category counts.",
+      "Expected counts integrate over Person posteriors conditioned on the same observed responses, with fitted calibration held fixed.",
+      "Residual scaling uses weighted Bernoulli variances; it omits cross-response covariance and calibration-parameter uncertainty. Cutoffs are descriptive review rules, not calibrated tests.",
+      "Unavailable cells, groups and level pairs remain in coverage totals; no overall all-clear follows from available rows alone.",
       "The implemented summary covers overall, step-facet/scale, facet-level category residuals, and pairwise local-dependence checks.",
       "Posterior predictive checks are not computed by mfrmr; use external Bayesian software when that additional analysis is required."
     )
@@ -8017,35 +8135,39 @@ calc_marginal_fit_bundle <- function(res,
 }
 
 calc_category_stats <- function(obs_df, res = NULL, whexact = FALSE) {
-  if (nrow(obs_df) == 0) return(tibble())
-  obs_df <- obs_df |> mutate(.Weight = get_weights(obs_df))
-  total_n <- sum(obs_df$.Weight, na.rm = TRUE)
+  if (is.null(obs_df) || nrow(obs_df) == 0 || !"Observed" %in% names(obs_df)) return(tibble())
+  obs_df <- as.data.frame(obs_df)
+  obs_df$.Weight <- if ("Weight" %in% names(obs_df)) suppressWarnings(as.numeric(obs_df$Weight)) else rep(1, nrow(obs_df))
+  all_categories <- if (!is.null(res)) seq(res$prep$rating_min, res$prep$rating_max) else
+    sort(unique(obs_df$Observed[is.finite(obs_df$Observed)]))
+  count_complete <- all(is.finite(obs_df$Observed) & obs_df$Observed %in% all_categories &
+                          is.finite(obs_df$.Weight) & obs_df$.Weight >= 0)
+  for (name in c("PersonMeasure", "Expected", "StdSq", "Var", "Residual")) {
+    if (!name %in% names(obs_df)) obs_df[[name]] <- NA_real_
+  }
+  total_n <- sum(obs_df$.Weight)
   obs_summary <- obs_df |>
     group_by(Observed) |>
     summarize(
-      Count = sum(.Weight, na.rm = TRUE),
+      Count = sum(.Weight),
       AvgPersonMeasure = weighted_mean(PersonMeasure, .Weight),
       ExpectedAverage = weighted_mean(Expected, .Weight),
-      Infit = sum(StdSq * Var * .Weight, na.rm = TRUE) / sum(Var * .Weight, na.rm = TRUE),
-      Outfit = sum(StdSq * .Weight, na.rm = TRUE) / sum(.Weight, na.rm = TRUE),
+      Infit = sum(StdSq * Var * .Weight) / sum(Var * .Weight),
+      Outfit = sum(StdSq * .Weight) / sum(.Weight),
       MeanResidual = weighted_mean(Residual, .Weight),
-      DF_Infit = sum(Var * .Weight, na.rm = TRUE),
-      DF_Outfit = sum(.Weight, na.rm = TRUE),
+      DF_Infit = sum(Var * .Weight),
+      DF_Outfit = sum(.Weight),
       .groups = "drop"
     ) |>
     rename(Category = Observed)
 
-  all_categories <- if (!is.null(res)) {
-    seq(res$prep$rating_min, res$prep$rating_max)
-  } else {
-    sort(unique(obs_df$Observed))
-  }
-
   cat_tbl <- tibble(Category = all_categories) |>
     left_join(obs_summary, by = "Category") |>
     mutate(
-      Count = replace_na(Count, 0),
-      Percent = if (total_n > 0) 100 * Count / total_n else NA_real_,
+      Count = if (count_complete) replace_na(Count, 0) else NA_real_,
+      Percent = if (count_complete && is.finite(total_n) && total_n > 0) 100 * Count / total_n else NA_real_,
+      Infit = ifelse(count_complete & is.finite(Infit) & Infit >= 0, Infit, NA_real_),
+      Outfit = ifelse(count_complete & is.finite(Outfit) & Outfit >= 0, Outfit, NA_real_),
       InfitZSTD = zstd_from_mnsq(Infit, DF_Infit, whexact = whexact),
       OutfitZSTD = zstd_from_mnsq(Outfit, DF_Outfit, whexact = whexact)
     )
@@ -8063,12 +8185,25 @@ calc_category_stats <- function(obs_df, res = NULL, whexact = FALSE) {
   cat_tbl |>
     mutate(
       LowCount = Count < 10,
-      InfitFlag = !is.na(Infit) & (Infit < 0.5 | Infit > 1.5),
-      OutfitFlag = !is.na(Outfit) & (Outfit < 0.5 | Outfit > 1.5),
-      ZSTDFlag = (is.finite(InfitZSTD) & abs(InfitZSTD) >= 2) |
-        (is.finite(OutfitZSTD) & abs(OutfitZSTD) >= 2)
+      InfitFlag = ifelse(is.finite(Infit), Infit < 0.5 | Infit > 1.5, NA),
+      OutfitFlag = ifelse(is.finite(Outfit), Outfit < 0.5 | Outfit > 1.5, NA),
+      ZSTDFlag = ifelse(is.finite(InfitZSTD), abs(InfitZSTD) >= 2, NA) |
+        ifelse(is.finite(OutfitZSTD), abs(OutfitZSTD) >= 2, NA)
     ) |>
     arrange(Category)
+}
+
+summarize_category_usage <- function(cat_tbl, low_count = 10) {
+  n <- nrow(cat_tbl) %||% 0L
+  counts <- suppressWarnings(as.numeric(cat_tbl$Count %||% rep(NA_real_, n)))
+  valid <- is.finite(counts) & counts >= 0
+  complete <- n > 0L && all(valid)
+  data.frame(Categories = n, AvailableCounts = sum(valid), UnavailableCounts = sum(!valid),
+    UsedCategories = if (complete) sum(counts > 0) else NA_integer_,
+    UnusedCategories = if (complete) sum(counts == 0) else NA_integer_,
+    LowCountCategories = if (complete) sum(counts < low_count) else NA_integer_,
+    MinCategoryCount = if (complete) min(counts) else NA_real_,
+    MaxCategoryCount = if (complete) max(counts) else NA_real_)
 }
 
 make_union_find <- function(nodes) {
@@ -8186,26 +8321,75 @@ calc_subsets <- function(obs_df, facet_cols) {
   list(summary = summary_tbl, nodes = node_tbl)
 }
 
-calc_step_order <- function(step_tbl) {
-  if (is.null(step_tbl) || nrow(step_tbl) == 0) return(tibble())
-  step_tbl <- step_tbl |>
-    mutate(StepIndex = suppressWarnings(as.integer(stringr::str_extract(Step, "\\d+"))))
-  if (!"StepFacet" %in% names(step_tbl)) {
-    step_tbl <- mutate(step_tbl, StepFacet = "Common")
+calc_step_order <- function(step_tbl, expected_steps = NULL, expected_facets = NULL) {
+  if ((is.null(step_tbl) || nrow(step_tbl) == 0) && !length(expected_facets)) return(tibble())
+  step_tbl <- as.data.frame(step_tbl)
+  if (!"Step" %in% names(step_tbl)) step_tbl$Step <- rep(NA_character_, nrow(step_tbl))
+  if (!"Estimate" %in% names(step_tbl)) step_tbl$Estimate <- rep(NA_real_, nrow(step_tbl))
+  if (!"StepFacet" %in% names(step_tbl)) step_tbl$StepFacet <- rep("Common", nrow(step_tbl))
+  step_tbl$StepIndex <- suppressWarnings(as.integer(stringr::str_extract(as.character(step_tbl$Step), "(?<![0-9-])[0-9]+$")))
+  step_tbl$Estimate <- suppressWarnings(as.numeric(step_tbl$Estimate))
+  groups <- as.character(step_tbl$StepFacet)
+  group_id <- match(groups, unique(groups))
+  counts <- list()
+  tables <- lapply(sort(unique(group_id)), function(i) {
+    d <- step_tbl[group_id == i, , drop = FALSE]
+    d <- d[order(d$StepIndex, na.last = TRUE), , drop = FALSE]
+    index <- d$StepIndex
+    count <- expected_steps %||% if (any(is.finite(index))) max(index, na.rm = TRUE) else NA_integer_
+    labels_ok <- !anyNA(d$StepFacet) && all(nzchar(as.character(d$StepFacet))) &&
+      !anyNA(index) && !anyDuplicated(index) && all(index >= 1 & index <= count)
+    previous <- c(NA_real_, head(d$Estimate, -1L))
+    adjacent <- c(FALSE, diff(index) == 1L)
+    valid <- labels_ok & adjacent & is.finite(d$Estimate) & is.finite(previous)
+    d$Spacing <- ifelse(valid, d$Estimate - previous, NA_real_)
+    d$Ordered <- ifelse(is.finite(d$Spacing), d$Spacing >= -sqrt(.Machine$double.eps), NA)
+    comparisons <- if (is.finite(count) && count > 0L) max(count - 1L, 0L) else NA_integer_
+    available <- sum(!is.na(d$Ordered))
+    unavailable <- if (is.finite(comparisons)) max(comparisons - available, 0L) else NA_integer_
+    no_comparison <- isTRUE(count == 1L) && labels_ok && nrow(d) == 1L && is.finite(d$Estimate[1])
+    monotonic <- if (any(d$Ordered %in% FALSE)) FALSE else
+      if (isTRUE(comparisons > 0L) && isTRUE(unavailable == 0L) && labels_ok) TRUE else NA
+    d$ThresholdMonotonic <- monotonic
+    counts[[i]] <<- data.frame(StepFacet = as.character(d$StepFacet[1]), Steps = nrow(d),
+      Comparisons = comparisons, Available = available, Unavailable = unavailable,
+      Decreasing = if (available) sum(d$Ordered %in% FALSE) else NA_integer_,
+      NotApplicable = no_comparison, ThresholdMonotonic = monotonic)
+    d
+  })
+  missing_facets <- setdiff(expected_facets, groups)
+  if (length(missing_facets)) {
+    comparisons <- if (length(expected_steps) && is.finite(expected_steps)) max(expected_steps - 1L, 0L) else NA_integer_
+    counts[[length(counts) + 1L]] <- data.frame(StepFacet = missing_facets, Steps = 0L,
+      Comparisons = comparisons, Available = 0L, Unavailable = comparisons,
+      Decreasing = NA_integer_, NotApplicable = FALSE, ThresholdMonotonic = NA)
   }
-  step_tbl |>
-    arrange(StepFacet, StepIndex) |>
-    group_by(StepFacet) |>
-    mutate(
-      Spacing = Estimate - lag(Estimate),
-      Ordered = ifelse(is.na(Spacing), NA, Spacing > 0)
-    ) |>
-    ungroup()
+  out <- if (length(tables)) tibble::as_tibble(do.call(rbind, tables)) else tibble()
+  attr(out, "threshold_order_counts") <- do.call(rbind, counts)
+  out
+}
+
+summarize_threshold_order <- function(step_order) {
+  groups <- attr(step_order, "threshold_order_counts", exact = TRUE)
+  if (is.null(groups) || !nrow(groups)) {
+    return(data.frame(Steps = nrow(step_order) %||% 0L, Comparisons = NA_integer_,
+      Available = 0L, Unavailable = NA_integer_, Decreasing = NA_integer_,
+      NotApplicable = FALSE, ThresholdMonotonic = NA))
+  }
+  applicable <- !groups$NotApplicable
+  monotonic <- if (any(groups$ThresholdMonotonic %in% FALSE)) FALSE else
+    if (any(applicable) && all(groups$ThresholdMonotonic[applicable] %in% TRUE)) TRUE else NA
+  data.frame(Steps = sum(groups$Steps), Comparisons = sum(groups$Comparisons),
+    Available = sum(groups$Available), Unavailable = sum(groups$Unavailable),
+    Decreasing = if (any(groups$Available > 0)) sum(groups$Decreasing, na.rm = TRUE) else NA_integer_,
+    NotApplicable = all(groups$NotApplicable), ThresholdMonotonic = monotonic)
 }
 
 category_warnings_text <- function(cat_tbl, step_tbl = NULL) {
   if (is.null(cat_tbl) || nrow(cat_tbl) == 0) return("No category diagnostics available.")
   msgs <- character()
+  usage <- summarize_category_usage(cat_tbl)
+  if (usage$UnavailableCounts > 0) msgs <- c(msgs, category_usage_note(usage))
   unused <- cat_tbl |>
     filter(Count == 0)
   if (nrow(unused) > 0) {
@@ -8230,13 +8414,17 @@ category_warnings_text <- function(cat_tbl, step_tbl = NULL) {
       msgs <- c(msgs, paste0("Category |ZSTD| >= 2: ", paste(zstd_bad$Category, collapse = ", ")))
     }
   }
-  avg_tbl <- cat_tbl |>
-    filter(is.finite(AvgPersonMeasure)) |>
-    arrange(Category)
-  if (nrow(avg_tbl) >= 3 && is.unsorted(avg_tbl$AvgPersonMeasure, strictly = FALSE)) {
+  avg_tbl <- cat_tbl |> arrange(Category)
+  avg <- avg_tbl$AvgPersonMeasure
+  if (any(!is.finite(avg))) msgs <- c(msgs, "Some category-average measures were unavailable.")
+  if (length(avg) >= 2 && any(diff(avg) < 0, na.rm = TRUE)) {
     msgs <- c(msgs, "Category averages are not monotonic (Avg Measure by category).")
   }
   if (!is.null(step_tbl) && nrow(step_tbl) > 0) {
+    coverage <- summarize_threshold_order(step_tbl)
+    if (!isTRUE(coverage$NotApplicable) && !isTRUE(coverage$Unavailable == 0L)) {
+      msgs <- c(msgs, threshold_order_note(coverage))
+    }
     disordered <- step_tbl |>
       filter(!is.na(Ordered), Ordered == FALSE)
     if (nrow(disordered) > 0) {
@@ -8247,7 +8435,7 @@ category_warnings_text <- function(cat_tbl, step_tbl = NULL) {
     }
   }
   if (length(msgs) == 0) {
-    "No major category warnings detected."
+    "No warnings among the available category summaries; this does not establish category adequacy."
   } else {
     paste(msgs, collapse = "\n")
   }
@@ -9513,7 +9701,9 @@ build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl, covariance 
 
   facet_model_bundle <- compute_mml_facet_model_se(res, covariance = covariance)
   facet_model_tbl <- facet_model_bundle$table |>
-    mutate(SE_Method = "Observed information (MML)")
+    mutate(SE_Method = if (identical(facet_model_bundle$status, "regularized")) {
+      "Observed information (MML; regularized Hessian)"
+    } else "Observed information (MML)")
 
   base_tbl |>
     left_join(approx_tbl, by = c("Facet", "Level")) |>
@@ -9528,8 +9718,11 @@ build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl, covariance 
       by = c("Facet", "Level")
     ) |>
     mutate(
+      SE_Method_Raw = ifelse(is.finite(.data$ModelSE_Raw),
+                            .data$SE_Method_Raw, NA_character_),
       PrecisionTier = dplyr::case_when(
-        identical(method, "MML") & !is.na(.data$SE_Method_Raw) ~ "model_based",
+        identical(method, "MML") & !is.na(.data$SE_Method_Raw) &
+          !grepl("regularized", .data$SE_Method_Raw, fixed = TRUE) ~ "model_based",
         identical(method, "MML") ~ "hybrid",
         TRUE ~ "exploratory"
       ),
@@ -9553,8 +9746,8 @@ build_measure_se_table <- function(res, obs_df, facet_cols, fit_tbl, covariance 
       ),
       CIBasis = dplyr::case_when(
         .data$PrecisionTier == "model_based" & .data$InferenceReady ~ "Normal interval from model-based SE",
-        .data$PrecisionTier == "model_based" ~ "Diagnostic normal band; ordinary inference unavailable under the fit-readiness contract",
-        .data$PrecisionTier == "hybrid" ~ "Normal interval from fallback observation-table SE",
+        .data$PrecisionTier == "model_based" ~ "Diagnostic normal band; ordinary inference unavailable for this fit",
+        .data$PrecisionTier == "hybrid" ~ "Diagnostic normal band from fallback or regularized SE",
         TRUE ~ "Normal interval from exploratory observation-table SE"
       ),
       CIUse = dplyr::case_when(
@@ -9587,8 +9780,10 @@ summarize_precision_basis <- function(df, se_col, distribution_basis = c("sample
   est <- suppressWarnings(as.numeric(df$Estimate))
   se_vals <- if (se_col %in% names(df)) suppressWarnings(as.numeric(df[[se_col]])) else rep(NA_real_, nrow(df))
   ok_est <- is.finite(est)
-  ok_se <- is.finite(se_vals) & se_vals >= 0
+  ok_se <- ok_est & is.finite(se_vals) & se_vals >= 0
   n_est <- sum(ok_est)
+  n_se <- sum(ok_se)
+  complete_se <- n_est > 0L && n_se == n_est
 
   observed_mean <- if (n_est > 0L) mean(est[ok_est]) else NA_real_
   observed_var <- if (n_est == 0L) {
@@ -9599,7 +9794,7 @@ summarize_precision_basis <- function(df, se_col, distribution_basis = c("sample
     mean((est[ok_est] - observed_mean)^2)
   }
   observed_sd <- if (is.finite(observed_var)) sqrt(observed_var) else NA_real_
-  rmse <- if (any(ok_se)) sqrt(mean(se_vals[ok_se]^2, na.rm = TRUE)) else NA_real_
+  rmse <- if (complete_se) sqrt(mean(se_vals[ok_se]^2)) else NA_real_
   error_var <- if (is.finite(rmse)) rmse^2 else NA_real_
   true_var <- if (is.finite(observed_var) && is.finite(error_var)) {
     pmax(observed_var - error_var, 0)
@@ -9622,7 +9817,17 @@ summarize_precision_basis <- function(df, se_col, distribution_basis = c("sample
     Separation = separation,
     Strata = strata,
     Reliability = reliability,
-    SEAvailable = sum(ok_se),
+    EstimateAvailable = n_est,
+    SEAvailable = n_se,
+    ExcludedEstimates = nrow(df) - n_est,
+    SummaryNote = if (n_est == 0L) {
+      "Indices unavailable: no finite estimates."
+    } else if (!complete_se) {
+      sprintf("Indices unavailable: %d of %d finite estimates lack a valid SE.",
+              n_est - n_se, n_est)
+    } else {
+      sprintf("Computed over %d of %d levels with finite estimates and SEs.", n_est, nrow(df))
+    },
     MeanSE = if (any(ok_se)) mean(se_vals[ok_se], na.rm = TRUE) else NA_real_,
     MedianSE = if (any(ok_se)) stats::median(se_vals[ok_se], na.rm = TRUE) else NA_real_
   )
@@ -9667,7 +9872,10 @@ build_facet_precision_summary <- function(measure_df, variability_tbl = NULL) {
           Separation = stats$Separation,
           Strata = stats$Strata,
           Reliability = stats$Reliability,
+          EstimateAvailable = stats$EstimateAvailable,
           SEAvailable = stats$SEAvailable,
+          ExcludedEstimates = stats$ExcludedEstimates,
+          SummaryNote = stats$SummaryNote,
           MeanSE = stats$MeanSE,
           MedianSE = stats$MedianSE,
           MeanInfit = if ("Infit" %in% names(sub)) mean(sub$Infit, na.rm = TRUE) else NA_real_,
@@ -9687,6 +9895,97 @@ build_facet_precision_summary <- function(measure_df, variability_tbl = NULL) {
   }
   out |>
     arrange(.data$Facet, .data$DistributionBasis, .data$SEMode)
+}
+
+validate_diagnostics_precision <- function(diagnostics) {
+  if (inherits(diagnostics, "mfrm_imported_diagnostics") &&
+      (!identical(diagnostics$metric_version, 1L) ||
+       (is.data.frame(diagnostics$facets_chisq) && nrow(diagnostics$facets_chisq) > 0L &&
+        !"SupportsFormalInference" %in% names(diagnostics$facets_chisq)) ||
+       (is.data.frame(diagnostics$reliability) && nrow(diagnostics$reliability) > 0L &&
+        !"EstimateAvailable" %in% names(diagnostics$reliability)))) {
+    stop(paste(
+      "These saved imported diagnostics do not record the current uncertainty restrictions.",
+      "Re-import the existing source-package fit with compute_fit = TRUE; no re-estimation is needed."
+    ), call. = FALSE)
+  }
+  profile <- diagnostics$precision_profile
+  if (inherits(diagnostics, "mfrm_diagnostics") &&
+      !inherits(diagnostics, "mfrm_imported_diagnostics") &&
+      is.data.frame(profile) && nrow(profile) > 0L &&
+      !"HasRegularizedSE" %in% names(profile)) {
+    stop(paste(
+      "These saved diagnostics do not distinguish ordinary, fallback and regularized uncertainty.",
+      "Recompute diagnose_mfrm(fit) from the existing fit; no model refit is needed."
+    ), call. = FALSE)
+  }
+  if (inherits(diagnostics, "mfrm_diagnostics") &&
+      !inherits(diagnostics, "mfrm_imported_diagnostics") &&
+      is.data.frame(diagnostics$reliability) && nrow(diagnostics$reliability) > 0L &&
+      !"ModelSummaryNote" %in% names(diagnostics$reliability)) {
+    stop(paste(
+      "These saved diagnostics do not record the levels used for reliability.",
+      "Recompute diagnose_mfrm(fit) from the existing fit; no model refit is needed."
+    ), call. = FALSE)
+  }
+  regularized <- identical(diagnostics$parameter_uncertainty$status, "regularized")
+  measures <- diagnostics$measures
+  if (inherits(diagnostics, "mfrm_diagnostics") &&
+      !inherits(diagnostics, "mfrm_imported_diagnostics") &&
+      is.list(diagnostics$fair_average)) {
+    tryCatch(validate_fair_measure_basis(diagnostics$fair_average), error = function(e) {
+      stop(paste(
+        "These saved diagnostics do not retain the fitted-measure and mean-reference basis.",
+        "Recompute diagnose_mfrm(fit) from the existing fit; no model refit is needed."
+      ), call. = FALSE)
+    })
+  }
+  if (regularized && is.data.frame(measures) &&
+      any(measures$Facet != "Person" & measures$SupportsFormalInference %in% TRUE)) {
+    stop(paste(
+      "These saved diagnostics classify regularized standard errors as ordinary uncertainty.",
+      "Recompute diagnose_mfrm(fit) from the existing fit; no model refit is needed."
+    ), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+validate_precision_review_profile <- function(profile) {
+  if (!is.data.frame(profile) || !"HasRegularizedSE" %in% names(profile)) {
+    stop(paste(
+      "This saved precision report does not record whether standard errors were regularized.",
+      "Recreate it with precision_review_report(fit) using the existing fit."
+    ), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
+mfrm_precision_reporting_note <- function(method, precision_tier, inference_ready) {
+  if (identical(method, "JML") || identical(precision_tier, "exploratory")) {
+    return(paste(
+      "JML standard errors and normal bands are exploratory approximations.",
+      "Changing to MML does not by itself establish valid uncertainty;",
+      "review the fitted model and its uncertainty assumptions."
+    ))
+  }
+  if (!isTRUE(inference_ready)) {
+    return(paste(
+      "This fit does not support ordinary SE/CI inference. Finite standard",
+      "errors and normal bands are diagnostic only; review identification,",
+      "category support, parameter boundaries and numerical convergence."
+    ))
+  }
+  if (identical(precision_tier, "hybrid")) {
+    return(paste(
+      "Some standard errors use fallback information or a regularized Hessian.",
+      "Those rows are diagnostic only; inspect individual interval eligibility."
+    ))
+  }
+  paste(
+    "Uncertainty is conditional on the fitted model. Person posterior SDs",
+    "condition on the fitted calibration; facet standard errors use observed",
+    "information. Review interval assumptions before reporting."
+  )
 }
 
 build_precision_profile <- function(res, measure_df, reliability_tbl, facet_precision_tbl) {
@@ -9711,9 +10010,11 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
 
   has_fallback <- identical(method, "MML") &&
     any(grepl("Fallback observation-table information", all_labels))
+  has_regularized <- identical(method, "MML") &&
+    any(grepl("regularized Hessian", all_labels, fixed = TRUE))
   precision_tier <- if (!identical(method, "MML")) {
     "exploratory"
-  } else if (has_fallback) {
+  } else if (has_fallback || has_regularized) {
     "hybrid"
   } else {
     "model_based"
@@ -9753,41 +10054,34 @@ build_precision_profile <- function(res, measure_df, reliability_tbl, facet_prec
     PrecisionTier = precision_tier,
     SupportsFormalInference = supports_formal,
     HasFallbackSE = has_fallback,
+    HasRegularizedSE = has_regularized,
     PersonSEBasis = if (length(person_labels) > 0) paste(sort(person_labels), collapse = "; ") else NA_character_,
     NonPersonSEBasis = if (length(nonperson_labels) > 0) paste(sort(nonperson_labels), collapse = "; ") else NA_character_,
     CIBasis = if (identical(precision_tier, "model_based")) {
       if (isTRUE(inference_ready)) {
         "Normal interval from model-based SE"
       } else {
-        "Diagnostic normal band; ordinary inference unavailable under the fit-readiness contract"
+        "Diagnostic normal band; ordinary inference unavailable for this fit"
       }
     } else if (identical(precision_tier, "hybrid")) {
-      "Normal interval from mixed model-based and fallback SE"
+      "Normal bands from mixed model-based, fallback or regularized SE"
     } else {
       "Normal interval from exploratory SE"
     },
     ReliabilityBasis = if (identical(precision_tier, "model_based")) {
       if (isTRUE(inference_ready)) {
-        "Observed variance with model-based and fit-adjusted error bounds"
+        "Observed variance minus mean squared model-based or fit-adjusted SE"
       } else {
-        "Descriptive variance decomposition; ordinary inference unavailable under the fit-readiness contract"
+        "Descriptive variance decomposition; ordinary inference unavailable for this fit"
       }
     } else if (identical(precision_tier, "hybrid")) {
-      "Observed variance with mixed model-based and fallback error bounds"
+      "Descriptive variance summary with mixed uncertainty approximations"
     } else {
-      "Exploratory variance summary with model-based and fit-adjusted error bounds"
+      "Exploratory observed variance minus mean squared SE"
     },
     HasFitAdjustedSE = has_fit_adjusted,
     HasSamplePopulationCoverage = coverage_complete,
-    RecommendedUse = if (identical(precision_tier, "model_based") && isTRUE(inference_ready)) {
-      "Use for primary reporting of SE, CI, and reliability in this package."
-    } else if (identical(precision_tier, "model_based")) {
-      "Diagnostic review only; ordinary inference is unavailable under the fit-readiness contract."
-    } else if (identical(precision_tier, "hybrid")) {
-      "Use model-based rows for primary reporting, but review levels that fell back to observation-table information before treating the whole run as formal inference."
-    } else {
-      "Use for screening and calibration triage; confirm formal SE, CI, and reliability with an MML fit."
-    }
+    RecommendedUse = mfrm_precision_reporting_note(method, precision_tier, inference_ready)
   )
 }
 
@@ -9800,12 +10094,14 @@ audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_prec
   method <- as.character(res$summary$Method[1] %||% res$config$method %||% NA_character_)
   method <- ifelse(identical(method, "JMLE"), "JML", method)
   convergence <- mfrm_convergence_state(res)
-  converged <- convergence$inference_ready
+  numerical_ready <- identical(
+    as.character(mfrmr_get_readiness_record(res)$fit$NumericalState[1]), "ready"
+  )
 
   finite_model <- if ("ModelSE" %in% names(measure_df)) is.finite(suppressWarnings(as.numeric(measure_df$ModelSE))) else logical(0)
   model_share <- if (length(finite_model) > 0) mean(finite_model) else NA_real_
 
-  real_ok <- TRUE
+  real_ok <- NA
   if (all(c("ModelSE", "RealSE") %in% names(measure_df))) {
     model_vals <- suppressWarnings(as.numeric(measure_df$ModelSE))
     real_vals <- suppressWarnings(as.numeric(measure_df$RealSE))
@@ -9815,7 +10111,7 @@ audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_prec
     }
   }
 
-  rel_ok <- TRUE
+  rel_ok <- NA
   if (all(c("Reliability", "RealReliability") %in% names(reliability_tbl))) {
     rel_vals <- suppressWarnings(as.numeric(reliability_tbl$Reliability))
     real_rel_vals <- suppressWarnings(as.numeric(reliability_tbl$RealReliability))
@@ -9831,33 +10127,34 @@ audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_prec
   }
 
   label_status <- "review"
-  label_detail <- "SE source labels were not available for audit."
+  label_detail <- "The basis of the standard errors was not recorded."
   if (nrow(measure_df) > 0 && all(c("Facet", "SE_Method") %in% names(measure_df))) {
     labels <- as.character(measure_df$SE_Method)
     person_labels <- labels[measure_df$Facet == "Person"]
     nonperson_labels <- labels[measure_df$Facet != "Person"]
     if (identical(method, "MML")) {
       has_person_eap <- length(person_labels) == 0 || any(grepl("Posterior SD \\(EAP\\)", person_labels))
-      has_nonperson_info <- length(nonperson_labels) == 0 || any(grepl("Observed information \\(MML\\)", nonperson_labels))
+      has_nonperson_info <- length(nonperson_labels) == 0 || any(grepl("Observed information \\(MML", nonperson_labels))
       has_fallback <- any(grepl("Fallback observation-table information", labels))
-      if (has_person_eap && has_nonperson_info && !has_fallback) {
+      has_regularized <- any(grepl("regularized Hessian", labels, fixed = TRUE))
+      if (has_person_eap && has_nonperson_info && !has_fallback && !has_regularized) {
         label_status <- "pass"
-        label_detail <- "Person and non-person SE labels match the MML precision path."
+        label_detail <- "Person uncertainty uses posterior SDs; facet uncertainty uses observed information."
       } else if (has_person_eap && (has_nonperson_info || has_fallback)) {
         label_status <- "review"
-        label_detail <- "MML labels were found, but at least one level fell back to observation-table information."
+        label_detail <- "Some SEs use fallback information or a regularized Hessian; those SEs are diagnostic only."
       } else {
         label_status <- "warn"
-        label_detail <- "MML SE labels did not consistently identify posterior-SD/person and observed-information/facet sources."
+        label_detail <- "The recorded SE basis does not consistently identify Person posterior SDs and facet observed information."
       }
     } else {
       uses_obs_info <- all(grepl("Observation-table information", labels))
       if (uses_obs_info) {
         label_status <- "pass"
-        label_detail <- "JML SE labels consistently identify observation-table information."
+        label_detail <- "JML SEs use approximate information from the observed responses."
       } else {
         label_status <- "warn"
-        label_detail <- "JML SE labels were expected to indicate observation-table information throughout."
+        label_detail <- "The recorded SE basis is inconsistent with the expected JML approximation."
       }
     }
   }
@@ -9874,53 +10171,49 @@ audit_precision_outputs <- function(res, measure_df, reliability_tbl, facet_prec
     ),
     Status = c(
       if (nrow(precision_profile_tbl) > 0) {
-        if (identical(as.character(precision_profile_tbl$PrecisionTier[1]), "model_based")) "pass" else "review"
+        if (isTRUE(precision_profile_tbl$SupportsFormalInference[1])) "pass" else "review"
       } else if (identical(method, "MML")) {
         "review"
       } else {
         "review"
       },
-      if (isTRUE(converged)) "pass" else "review",
+      if (numerical_ready) "pass" else "review",
       if (!is.finite(model_share)) "warn" else if (model_share >= 0.99) "pass" else if (model_share >= 0.90) "review" else "warn",
-      if (isTRUE(real_ok)) "pass" else "warn",
-      if (isTRUE(rel_ok)) "pass" else "warn",
+      if (is.na(real_ok)) "review" else if (isTRUE(real_ok)) "pass" else "warn",
+      if (is.na(rel_ok)) "review" else if (isTRUE(rel_ok)) "pass" else "warn",
       if (isTRUE(coverage_ok)) "pass" else "review",
       label_status
     ),
     Detail = c(
-      if (nrow(precision_profile_tbl) > 0 && identical(as.character(precision_profile_tbl$PrecisionTier[1]), "model_based")) {
-        if (isTRUE(converged)) {
-          "This run uses the package's model-based precision path."
-        } else {
-          "This run uses the package's model-based precision path, but optimizer convergence should be reviewed before formal reporting."
-        }
-      } else if (nrow(precision_profile_tbl) > 0 && identical(as.character(precision_profile_tbl$PrecisionTier[1]), "hybrid")) {
-        "This run mixes model-based SE with fallback observation-table SE for at least one level; review before treating the full run as formal inference."
-      } else {
-        "This run uses the package's exploratory precision path; prefer MML for formal SE, CI, and reliability reporting."
-      },
-      if (isTRUE(converged)) {
-        "Optimizer diagnostics support inference-ready status."
+      mfrm_precision_reporting_note(method,
+        as.character(precision_profile_tbl$PrecisionTier[1] %||% ""),
+        convergence$inference_ready),
+      if (numerical_ready) {
+        "Numerical convergence checks passed; this alone does not establish valid SEs or intervals."
       } else {
         paste0(
-          "Optimizer diagnostics require review; keep SE, CI, and reliability in review mode.",
+          "Numerical convergence requires review before interpreting estimates.",
           if (nzchar(convergence$detail)) paste0(" ", convergence$detail) else ""
         )
       },
       if (!is.finite(model_share)) {
-        "ModelSE coverage could not be computed."
+        "The proportion of available SEs could not be computed."
       } else {
-        paste0("Finite ModelSE values were available for ", sprintf("%.1f", 100 * model_share), "% of rows.")
+        paste0("Finite standard errors were available for ", sprintf("%.1f", 100 * model_share), "% of rows.")
       },
-      if (isTRUE(real_ok)) {
-        "Fit-adjusted SE values were not smaller than their paired ModelSE values."
+      if (is.na(real_ok)) {
+        "No finite model/fit-adjusted SE pairs were available for comparison."
+      } else if (isTRUE(real_ok)) {
+        "Among available pairs, fit-adjusted SEs were at least as large as their unadjusted values."
       } else {
-        "At least one RealSE value was smaller than ModelSE."
+        "At least one fit-adjusted SE was smaller than its unadjusted value."
       },
-      if (isTRUE(rel_ok)) {
-        "Conservative reliability values were not larger than the model-based values."
+      if (is.na(rel_ok)) {
+        "No finite model/fit-adjusted reliability pairs were available for comparison."
+      } else if (isTRUE(rel_ok)) {
+        "Among available pairs, fit-adjusted reliability values were not larger than the model-based values."
       } else {
-        "At least one RealReliability value exceeded Reliability."
+        "At least one fit-adjusted reliability estimate exceeded its unadjusted value."
       },
       if (isTRUE(coverage_ok)) {
         "Each facet had sample/population summaries for both model and fit-adjusted SE modes."
@@ -9945,14 +10238,8 @@ calc_reliability <- function(measure_df) {
       } else {
         all(converged_vals)
       }
-      ready_vals <- if ("InferenceReady" %in% names(.x)) {
-        unique(as.logical(stats::na.omit(.x$InferenceReady)))
-      } else if ("SupportsFormalInference" %in% names(.x)) {
-        unique(as.logical(stats::na.omit(.x$SupportsFormalInference)))
-      } else {
-        converged_vals
-      }
-      facet_ready <- length(ready_vals) > 0L && all(ready_vals)
+      facet_ready <- "InferenceReady" %in% names(.x) &&
+        all(.x$InferenceReady %in% TRUE)
       facet_tier <- if (length(tier_vals) == 0) {
         NA_character_
       } else if (all(tier_vals == "model_based")) {
@@ -9962,16 +10249,28 @@ calc_reliability <- function(measure_df) {
       } else {
         "hybrid"
       }
-      supports_formal <- identical(facet_tier, "model_based") && isTRUE(facet_ready)
+      supports_formal <- identical(facet_tier, "model_based") && facet_ready &&
+        "SupportsFormalInference" %in% names(.x) &&
+        all(.x$SupportsFormalInference %in% TRUE) &&
+        model_stats$EstimateAvailable == nrow(.x) &&
+        model_stats$SEAvailable == nrow(.x) && real_stats$SEAvailable == nrow(.x) &&
+        is.finite(model_stats$Reliability) && is.finite(real_stats$Reliability)
+
 
       tibble(
         Levels = nrow(.x),
+        EstimateAvailable = model_stats$EstimateAvailable,
+        ModelSEAvailable = model_stats$SEAvailable,
+        RealSEAvailable = real_stats$SEAvailable,
+        ExcludedEstimates = model_stats$ExcludedEstimates,
+        ModelSummaryNote = model_stats$SummaryNote,
+        RealSummaryNote = real_stats$SummaryNote,
         Converged = facet_converged,
         InferenceReady = facet_ready,
         PrecisionTier = facet_tier,
         SupportsFormalInference = supports_formal,
         ReliabilityUse = dplyr::case_when(
-          identical(facet_tier, "model_based") && isTRUE(facet_ready) ~ "primary_reporting",
+          supports_formal ~ "primary_reporting",
           identical(facet_tier, "model_based") ~ "review_before_reporting",
           identical(facet_tier, "hybrid") ~ "review_before_reporting",
           identical(facet_tier, "exploratory") ~ "screening_only",
@@ -10005,20 +10304,29 @@ calc_reliability <- function(measure_df) {
     dplyr::ungroup()
 }
 
-ensure_positive_definite <- function(mat) {
-  eig <- tryCatch(eigen(mat, symmetric = TRUE, only.values = TRUE)$values, error = function(e) NULL)
-  if (is.null(eig)) return(mat)
-  if (any(eig < .Machine$double.eps)) {
-    smoothed <- tryCatch(suppressWarnings(psych::cor.smooth(mat)), error = function(e) NULL)
-    if (!is.null(smoothed)) {
-      if (is.list(smoothed) && !is.null(smoothed$R)) {
-        mat <- smoothed$R
-      } else {
-        mat <- smoothed
-      }
+residual_pca_correlation <- function(residual_matrix) {
+  mat <- as.matrix(residual_matrix)
+  mat[!is.finite(mat)] <- NA_real_
+  correlation <- tryCatch(
+    suppressWarnings(stats::cor(mat, use = "pairwise.complete.obs")),
+    error = function(e) NULL
+  )
+  error <- NULL
+  if (is.null(correlation) || any(!is.finite(correlation))) {
+    error <- paste(
+      "Residual correlations are unavailable for one or more columns or pairs.",
+      "Check shared-person counts and residual variation; missing correlations are not replaced with zero."
+    )
+  } else {
+    values <- eigen(correlation, symmetric = TRUE, only.values = TRUE)$values
+    if (min(values) < -sqrt(.Machine$double.eps) * max(1, max(values))) {
+      error <- paste(
+        "Pairwise residual correlations do not form a positive semidefinite matrix.",
+        "Review missingness and shared-person coverage; the matrix is not automatically smoothed."
+      )
     }
   }
-  mat
+  list(cor_matrix = correlation, error = error)
 }
 
 compute_principal_components <- function(cor_matrix, n_factors) {
@@ -10041,9 +10349,13 @@ compute_principal_components <- function(cor_matrix, n_factors) {
 
 compute_pca_overall <- function(obs_df, facet_names, max_factors = 10L) {
   pca_failure <- function(message, residual_matrix = NULL, cor_matrix = NULL, warning = NULL) {
-    list(pca = NULL, residual_matrix = residual_matrix, cor_matrix = cor_matrix, error = message, warning = warning)
+    list(pca = NULL, residual_matrix = residual_matrix, cor_matrix = cor_matrix, error = message, warning = warning, calculation_version = 2L, max_factors = as.integer(max_factors))
   }
   if (length(facet_names) == 0) return(NULL)
+  combinations <- unique(obs_df[, facet_names, drop = FALSE])
+  if (anyDuplicated(do.call(paste, c(combinations, sep = "_")))) {
+    return(pca_failure("Combined-facet column labels are ambiguous. Relabel facet levels to distinguish the combinations."))
+  }
   df_aug <- obs_df |>
     mutate(
       Person = as.character(Person),
@@ -10073,24 +10385,11 @@ compute_pca_overall <- function(obs_df, facet_names, max_factors = 10L) {
     return(pca_failure("Residual PCA requires at least two persons and two combined-facet columns."))
   }
 
-  residual_matrix_clean <- residual_matrix_wide[, colSums(is.na(residual_matrix_wide)) < nrow(residual_matrix_wide), drop = FALSE]
-  if (ncol(residual_matrix_clean) < 2) {
-    return(pca_failure("Residual PCA requires at least two combined-facet columns with observed residuals.", residual_matrix = residual_matrix_wide))
+  correlation <- residual_pca_correlation(residual_matrix_wide)
+  cor_matrix <- correlation$cor_matrix
+  if (!is.null(correlation$error)) {
+    return(pca_failure(correlation$error, residual_matrix_wide, cor_matrix))
   }
-
-  cor_matrix <- tryCatch(suppressWarnings(stats::cor(residual_matrix_clean, use = "pairwise.complete.obs")), error = function(e) e)
-  if (inherits(cor_matrix, "error")) {
-    return(pca_failure(
-      paste0("Could not compute the residual correlation matrix: ", conditionMessage(cor_matrix)),
-      residual_matrix = residual_matrix_wide
-    ))
-  }
-  if (is.null(cor_matrix)) {
-    return(pca_failure("Residual correlation matrix was not available.", residual_matrix = residual_matrix_wide))
-  }
-  cor_matrix[is.na(cor_matrix)] <- 0
-  diag(cor_matrix) <- 1
-  cor_matrix <- ensure_positive_definite(cor_matrix)
 
   max_cap <- if (is.na(max_factors) || !is.finite(max_factors)) {
     min(10L, ncol(cor_matrix) - 1L, nrow(cor_matrix) - 1L)
@@ -10108,14 +10407,14 @@ compute_pca_overall <- function(obs_df, facet_names, max_factors = 10L) {
       warning = pca_run$warning
     ))
   }
-  list(pca = pca_result, residual_matrix = residual_matrix_wide, cor_matrix = cor_matrix, error = NULL, warning = pca_run$warning)
+  list(pca = pca_result, residual_matrix = residual_matrix_wide, cor_matrix = cor_matrix, error = NULL, warning = pca_run$warning, calculation_version = 2L, max_factors = as.integer(max_factors))
 }
 
 compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
   out <- list()
   for (facet in facet_names) {
     pca_failure <- function(message, residual_matrix = NULL, cor_matrix = NULL, warning = NULL) {
-      list(pca = NULL, residual_matrix = residual_matrix, cor_matrix = cor_matrix, error = message, warning = warning)
+      list(pca = NULL, residual_matrix = residual_matrix, cor_matrix = cor_matrix, error = message, warning = warning, calculation_version = 2L, max_factors = as.integer(max_factors))
     }
     facet_sym <- rlang::sym(facet)
     prep <- obs_df |>
@@ -10144,28 +10443,12 @@ compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
       next
     }
 
-    keep <- colSums(is.na(wide)) < nrow(wide)
-    wide <- wide[, keep, drop = FALSE]
-    if (ncol(wide) < 2) {
-      out[[facet]] <- pca_failure("Residual PCA requires at least two facet-level columns with observed residuals.", residual_matrix = wide)
+    correlation <- residual_pca_correlation(wide)
+    cor_mat <- correlation$cor_matrix
+    if (!is.null(correlation$error)) {
+      out[[facet]] <- pca_failure(correlation$error, wide, cor_mat)
       next
     }
-
-    cor_mat <- tryCatch(suppressWarnings(stats::cor(wide, use = "pairwise.complete.obs")), error = function(e) e)
-    if (inherits(cor_mat, "error")) {
-      out[[facet]] <- pca_failure(
-        paste0("Could not compute the residual correlation matrix: ", conditionMessage(cor_mat)),
-        residual_matrix = wide
-      )
-      next
-    }
-    if (is.null(cor_mat)) {
-      out[[facet]] <- pca_failure("Residual correlation matrix was not available.", residual_matrix = wide)
-      next
-    }
-    cor_mat[is.na(cor_mat)] <- 0
-    diag(cor_mat) <- 1
-    cor_mat <- ensure_positive_definite(cor_mat)
 
     max_cap <- if (is.na(max_factors) || !is.finite(max_factors)) {
       min(10L, ncol(cor_mat) - 1L, nrow(cor_mat) - 1L)
@@ -10184,7 +10467,7 @@ compute_pca_by_facet <- function(obs_df, facet_names, max_factors = 10L) {
       )
       next
     }
-    out[[facet]] <- list(pca = pca_obj, cor_matrix = cor_mat, residual_matrix = wide, error = NULL, warning = pca_run$warning)
+    out[[facet]] <- list(pca = pca_obj, cor_matrix = cor_mat, residual_matrix = wide, error = NULL, warning = pca_run$warning, calculation_version = 2L, max_factors = as.integer(max_factors))
   }
   out
 }
@@ -10309,7 +10592,7 @@ mfrm_diagnostics <- function(res,
         .data$BoundaryExcluded ~ "No interval; typed unbounded JML Person",
         .data$PrecisionTier == "model_based" & !.data$CIEligible ~ "Diagnostic normal band; ordinary inference unavailable",
         .data$PrecisionTier == "model_based" ~ "Model-based normal interval",
-        .data$PrecisionTier == "hybrid" ~ "Approximate interval; review fallback SE",
+        .data$PrecisionTier == "hybrid" ~ "Diagnostic normal band; review fallback or regularized SE",
         .data$PrecisionTier == "exploratory" ~ "Approximate interval; screening only",
         TRUE ~ "Approximate interval"
       )
@@ -10447,7 +10730,7 @@ mfrm_diagnostics <- function(res,
       ),
       "RealSE is a fit-adjusted companion to ModelSE: ModelSE * sqrt(max(Infit, 1)), so it is never smaller than ModelSE.",
       "CI_Lower and CI_Upper are symmetric 95% normal bands computed as Estimate +/- qnorm(0.975) * SE. `CI_Level` records 0.95 and `CI_Method` records the interval family. Use `CIEligible`, `InferenceReady`, `CIBasis`, and `CIUse` to distinguish primary-reporting intervals from review or screening approximations.",
-      "Reliability tables report model and real bounds using observed variance, error variance, and true variance (Observed variance - mean SE^2). `Reliability`/`Separation` remain compatibility aliases for the model-based values, while `PrecisionTier`, `InferenceReady`, `SupportsFormalInference`, and `ReliabilityUse` indicate how strongly each facet summary supports formal reporting."
+      "Reliability tables use observed variance minus mean squared SE, truncated at zero. Model and fit-adjusted values are companion indices, not confidence bounds. Finite-estimate and SE counts state the calculation basis; indices are unavailable if any finite estimate lacks an SE. For Persons scored by EAP this is a separation-based index, not posterior-variance EAP reliability. `Reliability`/`Separation` remain compatibility aliases for the model-based values, while `PrecisionTier`, `InferenceReady`, `SupportsFormalInference`, and `ReliabilityUse` indicate how strongly each facet summary supports formal reporting."
     )
   )
   marginal_fit <- if (diagnostic_mode %in% c("marginal_fit", "both")) {

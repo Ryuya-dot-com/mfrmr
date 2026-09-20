@@ -21,7 +21,9 @@ mfrm_results(
 long-format \code{data.frame} is also accepted when person and score columns can
 be inferred unambiguously from common names such as \code{Person} and \code{Score};
 remaining measurement columns must use recognizable facet-role names.
-Ambiguous extra columns are rejected rather than guessed as facets.}
+Ambiguous extra columns are rejected rather than guessed as facets.
+Imported source-package fits use their own \code{summary()} and point-only
+Wright map; comprehensive reports require a native mfrmr fit.}
 
 \item{include}{Result sections or purpose presets to include. Purpose
 presets are \code{"standard"}, \code{"publication"}, \code{"validation"}, \code{"facets"},

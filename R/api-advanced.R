@@ -73,6 +73,7 @@ resolve_dff_subgroup_precision <- function(sub_fit, sub_diag = NULL, diagnostics
 
 annotate_dff_table <- function(tbl, method) {
   if (nrow(tbl) == 0) {
+    tbl$Interpretation <- character(0)
     tbl$EffectMetric <- character(0)
     tbl$ContrastBasis <- character(0)
     tbl$SEBasis <- character(0)
@@ -158,31 +159,34 @@ annotate_dff_table <- function(tbl, method) {
     return(tbl)
   }
 
-  sig <- dplyr::if_else(
-    is.finite(tbl$p_adjusted),
-    tbl$p_adjusted <= 0.05,
-    dplyr::if_else(is.finite(tbl$p_value), tbl$p_value <= 0.05, NA)
-  )
+  for (field in c("SE", "t", "df", "p_value", "p_adjusted")) {
+    tbl[[field]] <- rep(NA_real_, nrow(tbl))
+  }
   tbl$ContrastBasis <- "group difference in mean observed-minus-expected residuals"
-  tbl$SEBasis <- "Welch contrast of residual cell means"
-  tbl$StatisticLabel <- "Welch screening t"
-  tbl$ProbabilityMetric <- "Welch t tail area"
-  tbl$DFBasis <- "Welch-Satterthwaite approximation"
+  tbl$SEBasis <- "not reported: residual-contrast uncertainty is not established"
+  tbl$StatisticLabel <- "residual mean difference"
+  tbl$ProbabilityMetric <- "not reported"
+  tbl$DFBasis <- "not applicable"
   tbl$EffectMetric <- "mean_obs_minus_exp_difference"
-  tbl$ClassificationSystem <- "screening"
-  tbl$Classification <- dplyr::case_when(
-    !is.finite(tbl$Contrast) ~ NA_character_,
-    sig %in% TRUE ~ "Screen positive",
-    sig %in% FALSE ~ "Screen negative",
-    TRUE ~ NA_character_
-  )
+  tbl$ClassificationSystem <- "descriptive"
+  tbl$Classification <- ifelse(is.finite(tbl$Contrast), "Residual contrast", "Unavailable")
+  tbl$Interpretation <- "Residual differences do not isolate differential functioning; no test or confidence interval is provided."
   tbl$ETS <- NA_character_
   tbl$ETS_Eligible <- FALSE
   tbl$FormalInferenceEligible <- FALSE
   tbl$SupportsFormalInference <- FALSE
   tbl$PrimaryReportingEligible <- FALSE
-  tbl$ReportingUse <- "screening_only"
+  tbl$ReportingUse <- "descriptive"
   tbl
+}
+
+validate_dff_residual_output <- function(x) {
+  cfg <- x$config %||% list()
+  residual <- identical(cfg$method, "residual") || "abs_t_warn" %in% names(cfg)
+  if (residual && !identical(cfg$residual_output_version, 2L)) {
+    stop("This saved result uses earlier residual tests. Recompute it with analyze_dff() or dif_interaction_table() using the fitted model; no model refit is needed.", call. = FALSE)
+  }
+  invisible(x)
 }
 
 build_dff_summary <- function(tbl, method) {
@@ -200,12 +204,8 @@ build_dff_summary <- function(tbl, method) {
   }
 
   tibble(
-    Classification = c("Screen positive", "Screen negative", "Unclassified"),
-    Count = c(
-      sum(tbl$Classification == "Screen positive", na.rm = TRUE),
-      sum(tbl$Classification == "Screen negative", na.rm = TRUE),
-      sum(is.na(tbl$Classification), na.rm = TRUE)
-    )
+    Classification = c("Residual contrast", "Unavailable"),
+    Count = c(sum(is.finite(tbl$Contrast)), sum(!is.finite(tbl$Contrast)))
   )
 }
 
@@ -469,9 +469,9 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 
 #' Differential facet functioning analysis
 #'
-#' Screens whether the difficulty of facet levels differs across a grouping
-#' variable (e.g., whether rater severity differs for male vs. female
-#' examinees, or whether item difficulty differs across rater subgroups).
+#' Compares observed-minus-expected scores between groups, or describes linked
+#' subgroup facet estimates after refitting. Residual differences do not isolate
+#' differential functioning and are returned without tests or classifications.
 #'
 #' @param fit Output from [fit_mfrm()].
 #' @param diagnostics Output from [diagnose_mfrm()].
@@ -492,12 +492,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' @param method Analysis method: `"residual"` (default) uses the fitted
 #'   model's residuals without re-estimation; `"refit"` re-estimates the
 #'   model within each group subset. The residual method is faster and
-#'   avoids convergence issues with small subsets.
+#'   avoids additional subgroup fits; neither method establishes adequate sample size.
 #' @param min_obs Minimum number of observations per cell (facet-level x
 #'   group). Cells below this threshold are flagged as sparse and their
 #'   statistics set to `NA`. Default `10`.
-#' @param p_adjust Method for multiple-comparison adjustment, passed to
-#'   [stats::p.adjust()]. Default is `"holm"`.
+#' @param p_adjust Adjustment for refit screening tail areas; default `"holm"`.
+#'   Retained but unused for residual comparisons, which return no p-values.
 #'
 #' @details
 #' **Differential facet functioning (DFF)** occurs when the
@@ -514,7 +514,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' Residual screens inherit the fitted model's ability and population
 #' assumptions. With fixed-standard-normal RSM/PCM MML, subgroup refits retain
 #' that population assumption; linking anchors do not estimate subgroup ability
-#' distributions. A screen positive can therefore reflect an inadequately
+#' distributions. A residual difference can therefore reflect an inadequately
 #' represented group difference as well as differential facet functioning.
 #' For MML, observation expectations are evaluated at each Person's EAP
 #' ability, rather than integrated over the conditional ability distribution.
@@ -530,13 +530,13 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' group cell, the observed and expected score sums are aggregated and
 #' a standardized residual is computed as:
 #' \deqn{z = \frac{\sum (X_{obs} - E_{exp})}{\sqrt{\sum \mathrm{Var}}}}
-#' Pairwise contrasts between groups compare the mean observed-minus-expected
-#' difference for each facet level, with uncertainty summarized by a
-#' Welch/Satterthwaite approximation. This method reuses the fitted model
-#' without re-estimation; small subsets can still yield sparse or unstable
-#' contrasts. Because the resulting contrast
-#' is not a logit-scale parameter difference, the residual method is treated as
-#' a screening procedure rather than an ETS-style classifier.
+#' Pairwise contrasts compare the mean observed-minus-expected score in Group1
+#' minus that in Group2. Positive values mean higher residual scores in Group1,
+#' not greater rater leniency for that group. Differences use score units.
+#' `StdResidual` is a descriptive scaling by model response variance, not a
+#' t-statistic. No residual-contrast SE, confidence interval, p-value or
+#' positive/negative classification is provided. Compatibility columns `SE`,
+#' `t`, `df`, `p_value` and `p_adjusted` contain `NA`.
 #'
 #' **Refit method** (`method = "refit"`): Subsets the data by group, refits
 #' the MFRM model within each subset, anchors all non-target facets back to
@@ -570,7 +570,7 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' estimates share a linked logit scale, a validated joint, bootstrap, or
 #' replicate covariance contract is required before formal refit inference.
 #'
-#' Multiple comparisons are adjusted using Holm's step-down procedure by
+#' Refit screening tail areas are adjusted using Holm's step-down procedure by
 #' default, jointly across the returned facet-level/group-pair rows in this
 #' call. Holm's family-wise error control requires valid unadjusted p-values;
 #' the approximate screening tail areas here have not been shown to meet that
@@ -579,8 +579,8 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' via `p_adjust`; see [stats::p.adjust()] for their assumptions.
 #'
 #' @section Choosing a method:
-#' In most first-pass DFF screening, start with `method = "residual"`. It is
-#' faster, reuses the fitted model, and is less fragile in smaller subsets.
+#' Use `method = "residual"` to describe group differences in model residuals
+#' without fitting subgroup models. This does not test differential functioning.
 #' Use `method = "refit"` when you specifically want group-specific parameter
 #' estimates and can tolerate extra computation. Agreement between methods is
 #' not guaranteed by a universal per-group sample-size threshold: stability and
@@ -591,14 +591,14 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #'
 #' @section Interpreting output:
 #' - `$dif_table`: one row per facet-level x group-pair with contrast,
-#'   SE, t-statistic, p-value, adjusted p-value, effect metric, and
-#'   method-appropriate classification. Includes `Method`, `N_Group1`,
+#'   a residual mean difference or linked subgroup difference. Residual rows have
+#'   no SE, test or binary classification. Includes `Method`, `N_Group1`,
 #'   `N_Group2`, `EffectMetric`, `ClassificationSystem`, `ContrastBasis`,
 #'   `SEBasis`, `StatisticLabel`, `ProbabilityMetric`, `DFBasis`,
 #'   `ReportingUse`, `PrimaryReportingEligible`, and `sparse` columns.
 #' - `$cell_table`: (residual method only) per-cell detail with N,
-#'   ObsScore, ExpScore, ObsExpAvg, StdResidual.
-#' - `$summary`: counts by screening result (`method = "residual"`) or linked-
+#'   ObsScore, ExpScore, ObsExpAvg, StdResidual and an interpretation note.
+#' - `$summary`: available/unavailable residual comparisons or linked-
 #'   screening and insufficient-linking rows (`method = "refit"`).
 #' - `$group_fits`: (refit method only) list of per-group facet estimates and
 #'   subgroup linking diagnostics.
@@ -611,6 +611,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' residual-method contrasts and interaction cells in screening language.
 #' Refit contrasts require explicit subgroup linking and precision support for
 #' conditional screening, but remain in screening language.
+#'
+#' @section Saved results:
+#' Residual results, summaries and reports saved by earlier versions must be
+#' recomputed with this function using the fitted model and original data.
+#' This does not require refitting the model. Previously exported tables and
+#' figures should also be regenerated.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()]. For `RSM` / `PCM` fairness review, prefer
@@ -644,11 +650,9 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 #' dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 #' dff$summary
-#' # Look for: a small `FlaggedPairs` count relative to `Pairs`. Under
-#' #   method = "residual", `ClassificationSystem` is "screening", not
-#' #   ETS. "Screen positive" rows are prompts for substantive review.
+#' # Read the residual mean difference and the number of observations per group.
 #' head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast",
-#'                        "Classification", "ClassificationSystem")])
+#'                        "N_Group1", "N_Group2")])
 #' # The residual contrast is an observed-minus-expected average contrast
 #' # between groups. It is useful for screening, but it is not an ETS
 #' # A/B/C logit-delta classification.
@@ -906,9 +910,9 @@ analyze_dif <- function(...) {
 .dff_effect_axis_label <- function(method) {
   method <- method %||% NA_character_
   if (identical(method, "residual")) {
-    "Observed-minus-expected screening contrast"
+    "Group residual mean difference (score units)"
   } else if (identical(method, "refit")) {
-    "Differential-functioning contrast (logit)"
+    "Linked subgroup difference (logits)"
   } else {
     "Effect (native contrast scale)"
   }
@@ -922,7 +926,7 @@ analyze_dif <- function(...) {
   rows <- list(
     data.frame(
       Item = "Zero reference",
-      Meaning = "Values near zero indicate little systematic group-by-facet departure on the selected scale.",
+      Meaning = "Zero denotes no difference on the displayed scale.",
       ReportingNote = "Use the sign convention and contrast basis reported in the source table.",
       stringsAsFactors = FALSE
     )
@@ -938,20 +942,20 @@ analyze_dif <- function(...) {
     rows[[length(rows) + 1L]] <- data.frame(
       Item = "Standardized residual",
       Meaning = "Larger absolute values identify cells with stronger observed-minus-expected departure relative to model variance.",
-      ReportingNote = "Use as a screening statistic; combine with sample size and substantive review.",
+      ReportingNote = "This scaling is descriptive; it does not supply a t test or a differential-functioning decision.",
       stringsAsFactors = FALSE
     )
   } else if (identical(metric, "contrast") || identical(metric, "summary")) {
     rows[[length(rows) + 1L]] <- data.frame(
-      Item = "Differential-functioning contrast",
+      Item = "Group comparison",
       Meaning = if (identical(method, "residual")) {
         "Residual-method effects are observed-minus-expected average contrasts between groups."
       } else {
         "Refit-method effects are subgroup parameter differences when linking supports a comparable scale."
       },
       ReportingNote = paste(
-        "Treat current residual and refit classifications as screening evidence;",
-        "refit rows do not receive ETS A/B/C labels."
+        "Residual differences do not isolate differential functioning.",
+        "Linked refit differences condition on the estimated anchors."
       ),
       stringsAsFactors = FALSE
     )
@@ -1062,13 +1066,12 @@ analyze_dif <- function(...) {
         NA_real_,
         (.data$ObsScore - .data$ExpScore) / sqrt(.data$Var_sum)
       ),
-      t = .data$StdResidual,
-      df = ifelse(.data$sparse, NA_real_, .data$N - 1),
-      p_value = ifelse(
-        is.finite(.data$t) & is.finite(.data$df) & .data$df > 0,
-        2 * stats::pt(abs(.data$t), df = .data$df, lower.tail = FALSE),
-        NA_real_
-      )
+      t = NA_real_,
+      df = NA_real_,
+      p_value = NA_real_,
+      FormalInferenceEligible = FALSE,
+      ReportingUse = "descriptive",
+      Interpretation = "Observed-minus-expected scores; scaled residuals are descriptive and are not t statistics."
     )
   names(cell_table)[names(cell_table) == facet] <- "Level"
   names(cell_table)[names(cell_table) == ".group_var"] <- "GroupValue"
@@ -1106,52 +1109,20 @@ analyze_dif <- function(...) {
       avg1 <- if (nrow(c1) > 0 && !is_sparse) c1$ObsExpAvg[1] else NA_real_
       avg2 <- if (nrow(c2) > 0 && !is_sparse) c2$ObsExpAvg[1] else NA_real_
       contrast <- if (is.finite(avg1) && is.finite(avg2)) avg1 - avg2 else NA_real_
-      # Welch-style SE for a contrast of cell-level mean residuals
-      var1 <- if (nrow(c1) > 0 && !is_sparse) c1$Var_sum[1] else NA_real_
-      var2 <- if (nrow(c2) > 0 && !is_sparse) c2$Var_sum[1] else NA_real_
-      comp1 <- if (is.finite(var1) && n1 > 0) var1 / n1^2 else NA_real_
-      comp2 <- if (is.finite(var2) && n2 > 0) var2 / n2^2 else NA_real_
-      se_diff <- if (is.finite(comp1) && is.finite(comp2) && (comp1 + comp2) > 0) {
-        sqrt(comp1 + comp2)
-      } else {
-        NA_real_
-      }
-      t_val <- if (is.finite(contrast) && is.finite(se_diff) && se_diff > 0) {
-        contrast / se_diff
-      } else {
-        NA_real_
-      }
-      df_val <- if (!is_sparse) {
-        welch_satterthwaite_df(c(comp1, comp2), c(n1 - 1, n2 - 1))
-      } else {
-        NA_real_
-      }
-      p_val <- if (is.finite(t_val) && is.finite(df_val) && df_val > 0) {
-        2 * stats::pt(abs(t_val), df = df_val, lower.tail = FALSE)
-      } else {
-        NA_real_
-      }
       abs_diff <- abs(contrast)
-      # ContrastDirection resolves the historical sign flip between
-      # residual and refit methods for DFF screening. Under the
-      # residual method `contrast = avg1 - avg2` is the mean observed-
-      # minus-expected difference: contrast > 0 means Group1 scored
-      # higher than expected, i.e. the facet was *easier* for Group1.
-      direction <- if (is.finite(contrast)) {
-        if (contrast > 0) "easier_for_group1" else "harder_for_group1"
-      } else {
-        NA_character_
-      }
+      direction <- if (!is.finite(contrast)) NA_character_ else if (contrast > 0) {
+        "higher_residual_in_group1"
+      } else if (contrast < 0) "lower_residual_in_group1" else "equal_residuals"
       dif_rows[[length(dif_rows) + 1]] <- tibble(
         Level = lev,
         Group1 = g1,
         Group2 = g2,
         Contrast = contrast,
         ContrastDirection = direction,
-        SE = se_diff,
-        t = t_val,
-        df = df_val,
-        p_value = p_val,
+        SE = NA_real_,
+        t = NA_real_,
+        df = NA_real_,
+        p_value = NA_real_,
         AbsDiff = abs_diff,
         Method = "residual",
         N_Group1 = as.integer(n1),
@@ -1160,21 +1131,15 @@ analyze_dif <- function(...) {
         ContrastComparable = FALSE,
         FormalInferenceEligible = FALSE,
         PrimaryReportingEligible = FALSE,
-        InferenceTier = "screening",
+        InferenceTier = "descriptive",
         ComparisonMethod = method_label,
         ScaleLinkStatus = "not_applicable",
-        ReportingUse = "screening_only"
+        ReportingUse = "descriptive"
       )
     }
   }
   dif_table <- bind_rows(dif_rows)
 
-  # Adjust p-values
-  if (nrow(dif_table) > 0 && any(is.finite(dif_table$p_value))) {
-    dif_table$p_adjusted <- stats::p.adjust(dif_table$p_value, method = p_adjust)
-  } else {
-    dif_table$p_adjusted <- NA_real_
-  }
   dif_table <- annotate_dff_table(dif_table, method = "residual")
 
   # Summary counts
@@ -1192,6 +1157,7 @@ analyze_dif <- function(...) {
       area = "Differential facet functioning screening under bounded GPCM"
     ),
     config = list(facet = facet, group = group, method = "residual",
+                  residual_output_version = 2L,
                   min_obs = min_obs, p_adjust = p_adjust,
                   focal = focal, group_levels = group_levels,
                   functioning_label = functioning_label)
@@ -1540,6 +1506,7 @@ NULL
 #' @method summary mfrm_dif
 #' @export
 summary.mfrm_dif <- function(object, ...) {
+  validate_dff_residual_output(object)
   out <- list(
     dif_table = object$dif_table,
     cell_table = object$cell_table,
@@ -1564,8 +1531,9 @@ summary.mfrm_dff <- function(object, ...) {
 #' @method print summary.mfrm_dif
 #' @export
 print.summary.mfrm_dif <- function(x, ...) {
+  validate_dff_residual_output(x)
   label <- x$config$functioning_label %||% "DFF"
-  cat("--- ", label, " Analysis ---\n", sep = "")
+  cat(if (identical(x$config$method, "residual")) "--- Group residual comparisons ---\n" else paste0("--- ", label, " Analysis ---\n"))
   cat("Method:", x$config$method %||% "refit", "\n")
   cat("Facet:", x$config$facet, " | Group:", x$config$group, "\n")
   cat("Groups:", paste(x$config$group_levels, collapse = ", "), "\n")
@@ -1590,10 +1558,12 @@ print.summary.mfrm_dif <- function(x, ...) {
     show_cols <- intersect(
       c("Level", "Group1", "Group2", "Contrast", "SE", "t",
         "p_adjusted", "Classification", "ETS",
-        "ReportingUse", "PrimaryReportingEligible",
         "N_Group1", "N_Group2", "sparse"),
       names(x$dif_table)
     )
+    if (identical(x$config$method, "residual")) {
+      show_cols <- intersect(c("Level", "Group1", "Group2", "Contrast", "N_Group1", "N_Group2", "sparse"), names(x$dif_table))
+    }
     print_tbl <- x$dif_table |> select(all_of(show_cols))
     print(as.data.frame(print_tbl), row.names = FALSE, digits = 3)
   } else {
@@ -1603,7 +1573,7 @@ print.summary.mfrm_dif <- function(x, ...) {
   if (identical(x$config$method, "refit")) {
     cat("\nRefit Classification Summary:\n")
   } else {
-    cat("\nScreening Summary:\n")
+    cat("\nResidual differences do not isolate differential functioning; no test or confidence interval is provided.\n\nAvailable comparisons:\n")
   }
   print(as.data.frame(x$summary), row.names = FALSE)
   .print_dff_gpcm_boundary(x$gpcm_boundary)
@@ -1640,6 +1610,7 @@ print.mfrm_dff <- function(x, ...) {
 # warranted; callers who want the full contrast table should call
 # summary() explicitly.
 .print_dif_overview <- function(x, label) {
+  validate_dff_residual_output(x)
   cfg <- x$config %||% list()
   method <- cfg$method %||% "refit"
   facet <- cfg$facet %||% NA_character_
@@ -1647,11 +1618,7 @@ print.mfrm_dff <- function(x, ...) {
   groups <- cfg$group_levels %||% character(0)
   tbl <- x$dif_table
   n_rows <- if (is.data.frame(tbl)) nrow(tbl) else 0L
-  n_flag <- if (n_rows > 0L && "Classification" %in% names(tbl) &&
-                identical(method, "residual")) {
-    sum(tbl$Classification == "Screen positive", na.rm = TRUE)
-  } else NA_integer_
-  cat(sprintf("mfrm_%s (%s)\n", tolower(label), label))
+  cat(if (identical(method, "residual")) "Group residual comparisons\n" else sprintf("mfrm_%s (%s)\n", tolower(label), label))
   cat(sprintf("  Method: %s | Facet: %s | Group: %s\n",
               method, facet, group))
   if (length(groups) > 0L) {
@@ -1660,17 +1627,16 @@ print.mfrm_dff <- function(x, ...) {
   }
   if (n_rows > 0L) {
     cat(sprintf("  Contrasts: %d row(s)", n_rows))
-    if (is.finite(n_flag)) cat(sprintf(", %d flagged", n_flag))
     cat("\n")
   } else {
     cat("  Contrasts: 0 row(s)\n")
   }
   boundary <- x$gpcm_boundary %||% data.frame()
   if (is.data.frame(boundary) && nrow(boundary) > 0L) {
-    status <- as.character(boundary$Status[1] %||% "supported_with_caveat")
-    cat(sprintf("  GPCM boundary: %s\n", status))
+    cat("  GPCM: differences use the fitted category slopes and expected scores.\n")
   }
-  cat("  Use `summary()` for the contrast table and classification breakdown.\n")
+  if (identical(method, "residual")) cat("  Residual differences do not isolate differential functioning; no test or confidence interval is provided.\n")
+  cat("  Use `summary()` for the contrast table.\n")
   invisible(NULL)
 }
 
@@ -1678,12 +1644,7 @@ print.mfrm_dff <- function(x, ...) {
   if (is.null(boundary) || !is.data.frame(boundary) || nrow(boundary) == 0L) {
     return(invisible(NULL))
   }
-  keep <- intersect(c("Area", "Status"), names(boundary))
-  if (length(keep) == 0L) {
-    return(invisible(NULL))
-  }
-  cat("\nGPCM Boundary:\n")
-  print(as.data.frame(boundary[, keep, drop = FALSE]), row.names = FALSE)
+  cat("\nGPCM: these summaries use the fitted category slopes and expected scores.\n")
   invisible(NULL)
 }
 
@@ -1694,7 +1655,7 @@ print.mfrm_dff <- function(x, ...) {
 #' Compute interaction table between a facet and a grouping variable
 #'
 #' Produces a cell-level interaction table showing Obs-Exp differences,
-#' standardized residuals, and screening statistics for each
+#' scaled residuals, and absolute residual mean comparisons for each
 #' facet-level x group-value cell.
 #'
 #' @param fit Output from [fit_mfrm()].
@@ -1705,14 +1666,14 @@ print.mfrm_dff <- function(x, ...) {
 #'   (default), the data stored in `fit$prep$data` is used, but it
 #'   must contain the `group` column.
 #' @param min_obs Minimum observations per cell. Cells with fewer than
-#'   this many observations are flagged as sparse and their test
-#'   statistics set to `NA`. Default `10`.
-#' @param p_adjust P-value adjustment method, passed to
-#'   [stats::p.adjust()]. Default `"holm"`.
-#' @param abs_t_warn Threshold for flagging cells by absolute t-value.
-#'   Default `2`.
-#' @param abs_bias_warn Threshold for flagging cells by absolute
-#'   Obs-Exp average (in logits). Default `0.5`.
+#'   this many observations are marked sparse; scaled residuals and magnitude
+#'   flags are `NA`. Observed and expected score summaries remain available.
+#' @param p_adjust Retained for compatibility; unused because no p-values are
+#'   reported. Default `"holm"`.
+#' @param abs_t_warn Retained for compatibility; unused because scaled residuals
+#'   are not t statistics. `flag_t` is `NA`.
+#' @param abs_bias_warn Threshold for marking the absolute observed-minus-expected
+#'   average, in score units. Default `0.5`. This is a descriptive magnitude rule.
 #'
 #' @details
 #' This function uses observation-level residuals computed from the fitted
@@ -1725,16 +1686,13 @@ print.mfrm_dff <- function(x, ...) {
 #'   \item ObsExpAvg: mean observed-minus-expected difference
 #'   \item Var_sum: sum of model variances
 #'   \item StdResidual: (ObsScore - ExpScore) / sqrt(Var_sum)
-#'   \item t: approximate t-statistic (equal to StdResidual)
-#'   \item df: N - 1
-#'   \item p_value: two-tailed p-value from the t-distribution
+#'   \item t, df, p_value, p_adjusted, flag_t: `NA`, retained for compatibility
 #' }
 #'
 #' @section When to use this instead of analyze_dff():
 #' Use `dif_interaction_table()` when you want cell-level screening for a
 #' single facet-by-group table. Use [analyze_dff()] when you want group-pair
-#' contrasts summarized into differential-functioning effect sizes and
-#' method-appropriate classifications.
+#' comparisons. Neither residual output tests differential functioning.
 #'
 #' @section Further guidance:
 #' For plot selection and follow-up diagnostics, see
@@ -1746,14 +1704,19 @@ print.mfrm_dff <- function(x, ...) {
 #' - `$config`: analysis configuration parameters.
 #' - `$gpcm_boundary`: for bounded `GPCM` fits, a capability-boundary table
 #'   marking the table as caveated DFF screening evidence.
-#' - Cells with `|t| > abs_t_warn` or `|ObsExpAvg| > abs_bias_warn`
-#'   are flagged in the `flag_t` and `flag_bias` columns.
-#' - Sparse cells (N < min_obs) have `sparse = TRUE` and NA statistics.
+#' - `flag_bias` records `|ObsExpAvg| > abs_bias_warn` in score units.
+#'   It does not establish differential functioning. `flag_t` is unavailable.
+#' - Sparse cells (N < min_obs) have `sparse = TRUE` and unavailable scaled
+#'   residuals and magnitude flags. The score means and counts are retained.
 #'
 #' @section GPCM boundary:
 #' For bounded `GPCM`, the interaction table uses the fitted slope-aware
 #' expected-score/residual scale and should be reported as screening evidence,
 #' not as a standalone fairness, invariance, or operational subgroup decision.
+#'
+#' Residual means can differ even when response parameters are the same between
+#' groups. These summaries provide no p-values or t-based decisions. Recompute
+#' older saved tables with this function using the fitted model; no refit is needed.
 #'
 #' @section Typical workflow:
 #' 1. Fit a model with [fit_mfrm()].
@@ -1893,40 +1856,28 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
         NA_real_,
         (.data$ObsScore - .data$ExpScore) / sqrt(.data$Var_sum)
       ),
-      t = .data$StdResidual,
-      df = ifelse(.data$sparse, NA_real_, .data$N - 1),
-      p_value = ifelse(
-        is.finite(.data$t) & is.finite(.data$df) & .data$df > 0,
-        2 * stats::pt(abs(.data$t), df = .data$df, lower.tail = FALSE),
-        NA_real_
-      )
+      t = NA_real_,
+      df = NA_real_,
+      p_value = NA_real_,
+      FormalInferenceEligible = FALSE,
+      ReportingUse = "descriptive",
+      Interpretation = "Observed-minus-expected scores; scaled residuals are descriptive and are not t statistics."
     )
   names(int_table)[names(int_table) == facet] <- "Level"
   names(int_table)[names(int_table) == ".group_var"] <- "GroupValue"
 
-  # Adjust p-values
-  if (nrow(int_table) > 0 && any(is.finite(int_table$p_value))) {
-    int_table$p_adjusted <- stats::p.adjust(int_table$p_value, method = p_adjust)
-  } else {
-    int_table$p_adjusted <- NA_real_
-  }
-
-  # Flag cells
-  int_table <- int_table |>
-    mutate(
-      flag_t = ifelse(.data$sparse, NA, abs(.data$t) > abs_t_warn),
-      flag_bias = ifelse(.data$sparse, NA, abs(.data$ObsExpAvg) > abs_bias_warn)
-    )
+  int_table$p_adjusted <- NA_real_
+  int_table$flag_t <- NA
+  int_table$flag_bias <- ifelse(int_table$sparse, NA, abs(int_table$ObsExpAvg) > abs_bias_warn)
 
   # Summary
   n_total <- nrow(int_table)
   n_sparse <- sum(int_table$sparse, na.rm = TRUE)
-  n_flag_t <- sum(int_table$flag_t == TRUE, na.rm = TRUE)
   n_flag_bias <- sum(int_table$flag_bias == TRUE, na.rm = TRUE)
   int_summary <- tibble(
     Metric = c("Total cells", "Sparse cells (N < min_obs)",
-               "Flagged by |t|", "Flagged by |Obs-Exp Avg|"),
-    Count = c(n_total, n_sparse, n_flag_t, n_flag_bias)
+               "Above absolute residual mean threshold"),
+    Count = c(n_total, n_sparse, n_flag_bias)
   )
 
   out <- list(
@@ -1938,6 +1889,7 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
       area = "Differential facet functioning screening under bounded GPCM"
     ),
     config = list(facet = facet, group = group, min_obs = min_obs,
+                  method = "residual", residual_output_version = 2L,
                   p_adjust = p_adjust, abs_t_warn = abs_t_warn,
                   abs_bias_warn = abs_bias_warn,
                   group_levels = group_levels,
@@ -1949,6 +1901,7 @@ dif_interaction_table <- function(fit, diagnostics, facet, group, data = NULL,
 
 #' @export
 summary.mfrm_dif_interaction <- function(object, ...) {
+  validate_dff_residual_output(object)
   out <- list(
     table = object$table,
     summary = object$summary,
@@ -1961,12 +1914,14 @@ summary.mfrm_dif_interaction <- function(object, ...) {
 
 #' @export
 print.summary.mfrm_dif_interaction <- function(x, ...) {
+  validate_dff_residual_output(x)
   label <- x$config$functioning_label %||% "DFF"
-  cat("--- ", label, " Interaction Table ---\n", sep = "")
+  cat("--- Residuals by group and facet ---\n")
   cat("Facet:", x$config$facet, " | Group:", x$config$group, "\n")
   cat("Groups:", paste(x$config$group_levels, collapse = ", "), "\n")
-  cat("Min obs:", x$config$min_obs, " | |t| warn:", x$config$abs_t_warn,
-      " | |bias| warn:", x$config$abs_bias_warn, "\n\n")
+  cat("Min obs:", x$config$min_obs, " | Absolute residual mean threshold:",
+      x$config$abs_bias_warn, "score units\n")
+  cat("Residual differences do not isolate differential functioning; no test is provided.\n\n")
 
   cat("Cell Summary:\n")
   print(as.data.frame(x$summary), row.names = FALSE)
@@ -1975,7 +1930,7 @@ print.summary.mfrm_dif_interaction <- function(x, ...) {
   if (nrow(x$table) > 0) {
     show_cols <- intersect(
       c("Level", "GroupValue", "N", "ObsExpAvg", "StdResidual",
-        "p_adjusted", "sparse", "flag_t", "flag_bias"),
+        "sparse", "flag_bias"),
       names(x$table)
     )
     print(as.data.frame(x$table |> select(all_of(show_cols))),
@@ -2006,7 +1961,7 @@ print.mfrm_dif_interaction <- function(x, ...) {
 #'   the `cell_table` element
 #'   is used (requires `method = "residual"`).
 #' @param metric Which metric to plot: `"obs_exp"` for observed-minus-expected
-#'   average (default), `"t"` for the standardized residual / t-statistic,
+#'   average (default), `"t"` for the descriptive scaled residual (not a t-test),
 #'   or `"contrast"` for pairwise differential-functioning contrast (only for `mfrm_dff`
 #'   objects with `dif_table`).
 #' @param draw If `TRUE` (default), draw the plot.
@@ -2084,6 +2039,8 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
     stop("`flag_color` must be a single non-empty character string.",
          call. = FALSE)
   }
+
+  validate_dff_residual_output(x)
 
   # Resolve input: accept mfrm_dif_interaction or mfrm_dff/mfrm_dif
   if (inherits(x, "mfrm_dif_interaction")) {
@@ -2172,8 +2129,8 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
 
     metric_label <- switch(metric,
       obs_exp = "Obs - Exp Average",
-      t       = "Standardized Residual (t)",
-      contrast = "Differential-Functioning Contrast"
+      t       = "Scaled residual",
+      contrast = "Group contrast"
     )
     label <- NULL
     if (!is.null(x$config$functioning_label)) {
@@ -2190,7 +2147,7 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
       breaks = breaks,
       axes = FALSE,
       xlab = "", ylab = "",
-      main = paste(label %||% "DFF", "Heatmap:", metric_label),
+      main = paste("Group comparisons:", metric_label),
       ...
     )
     graphics::axis(1, at = seq_len(ncol(mat)), labels = cols,
@@ -2224,8 +2181,8 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
 
   metric_label <- switch(metric,
     obs_exp = "Obs - Exp Average",
-    t       = "Standardized Residual (t)",
-    contrast = "Differential-Functioning Contrast"
+    t       = "Scaled residual",
+    contrast = "Group contrast"
   )
   out <- new_mfrm_plot_data(
     "dif_heatmap",
@@ -2235,9 +2192,8 @@ plot_dif_heatmap <- function(x, metric = c("obs_exp", "t", "contrast"),
       pairs = as.data.frame(tbl, stringsAsFactors = FALSE),
       metric = metric,
       value_column = value_col,
-      title = paste("DFF Heatmap:", metric_label),
-      subtitle = sprintf("%d row x %d column matrix; metric column = `%s`",
-                         nrow(mat), ncol(mat), value_col),
+      title = paste("Group comparisons:", metric_label),
+      subtitle = "Residual differences do not isolate differential functioning.",
       thresholds = data.frame(
         Metric = metric,
         Threshold = flag_threshold %||% NA_real_,
@@ -4200,12 +4156,30 @@ summary.mfrm_anchor_drift <- function(object, ...) {
   out
 }
 
+linking_review_notes <- function(gpcm_detected = FALSE) {
+  clean_summary_lines(c(
+    "Review anchor overlap, fitted-wave drift and adjacent-link residuals together before comparing results across administrations.",
+    "Drift or limited-overlap flags identify comparisons to investigate; they do not establish that the measurement scale has changed.",
+    if (gpcm_detected) {
+      "GPCM linking results are exploratory and do not establish that scores can be used interchangeably across administrations or that drift is absent."
+    }
+  ))
+}
+
+print_linking_uncertainty_note <- function() {
+  print_wrapped_line(paste(
+    "Linking flags are review screens, not tests of anchor invariance.",
+    "Source-parameter, estimated-offset and cross-fit covariance are not fully propagated.",
+    "A sufficient element count alone does not establish a common scale."
+  ))
+}
+
 #' @rdname detect_anchor_drift
 #' @export
 print.summary.mfrm_anchor_drift <- function(x, ...) {
   cat("--- Anchor Drift Screen ---\n")
   cat("Reference:", x$config$reference, "\n")
-  cat("Method:", x$config$method, "| Intended use:", x$config$intended_use, "\n")
+  print_linking_uncertainty_note()
   cat("Comparisons:", x$n_comparisons, "| Flagged:", x$n_flagged, "\n\n")
   if (nrow(x$summary) > 0) {
     cat("Drift summary by facet and wave:\n")
@@ -4799,7 +4773,8 @@ summary.mfrm_equating_chain <- function(object, ...) {
 #' @export
 print.summary.mfrm_equating_chain <- function(x, ...) {
   cat("--- Screened Linking Chain ---\n")
-  cat("Method:", x$config$method, "| Intended use:", x$config$intended_use, "\n")
+  print_linking_uncertainty_note()
+  print_wrapped_line("Offset_SD is residual spread, not the SE of the estimated offset; cumulative offsets omit uncertainty across links.")
   cat("Links:", nrow(x$links), "| Waves:",
       paste(x$config$waves, collapse = " -> "), "\n\n")
   cat("Link details:\n")
@@ -5460,24 +5435,7 @@ build_linking_review <- function(anchor_review = NULL,
     )
   )
 
-  notes <- clean_summary_lines(c(
-    if (gpcm_detected) {
-      "Linking review is an exploratory synthesis layer over existing package-native bounded GPCM anchor, drift, and chain evidence."
-    } else {
-      "Linking review is an operational synthesis layer over existing package-native anchor, drift, and chain evidence."
-    },
-    "Drift or thin-support warnings do not prove scale breakdown by themselves; they indicate where review is needed.",
-    "Repeated signals across anchor, drift, and chain evidence deserve priority, but this helper does not collapse them into one opaque composite score.",
-    if (gpcm_detected) {
-      paste(
-        "Bounded GPCM linking review is exploratory: it indexes direct",
-        "anchor/drift/chain evidence and should not be reported as an",
-        "operational GPCM linking decision or as evidence that drift is absent."
-      )
-    } else {
-      ""
-    }
-  ))
+  notes <- linking_review_notes(gpcm_detected)
 
   out <- list(
     overview = overview,
@@ -5586,39 +5544,26 @@ summary.mfrm_linking_review <- function(object, digits = 3, top_n = 10, ...) {
 print.summary.mfrm_linking_review <- function(x, ...) {
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
-
   cat("mfrm Linking Review Summary\n")
+  print_linking_uncertainty_note()
   if (nrow(x$overview) > 0) {
     cat("\nOverview\n")
-    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
-  }
-  if (nrow(x$status) > 0) {
-    cat("\nStatus\n")
-    print(as.data.frame(x$status), row.names = FALSE)
+    keep <- intersect(c("AnchorReviewAvailable", "DriftAvailable", "ChainAvailable", "SourceModels"), names(x$overview))
+    print(as.data.frame(x$overview[, keep, drop = FALSE]), row.names = FALSE)
   }
   print_bullet_section("Key Warnings", x$key_warnings)
   print_bullet_section("Next Actions", x$next_actions)
   if (nrow(x$top_linking_risks) > 0) {
     cat("\nTop Linking Risks\n")
-    print(round_numeric_df(as.data.frame(x$top_linking_risks), digits = digits), row.names = FALSE)
-  }
-  if (nrow(x$group_view_index) > 0) {
-    cat("\nGrouping Views\n")
-    print(as.data.frame(x$group_view_index), row.names = FALSE)
+    keep <- intersect(c("Facet", "Level", "Wave", "Link", "Signal", "Magnitude", "Guidance"), names(x$top_linking_risks))
+    print(round_numeric_df(as.data.frame(x$top_linking_risks[, keep, drop = FALSE]), digits = digits), row.names = FALSE)
   }
   if (nrow(x$plot_routes) > 0) {
     cat("\nPlot Follow-up\n")
     print(as.data.frame(x$plot_routes), row.names = FALSE)
   }
-  if (nrow(x$support_status) > 0) {
-    cat("\nSupport Status\n")
-    print(as.data.frame(x$support_status), row.names = FALSE)
-  }
-  if (nrow(x$gpcm_boundary) > 0) {
-    cat("\nGPCM Boundary\n")
-    print(as.data.frame(x$gpcm_boundary)[, c("Area", "Status"), drop = FALSE], row.names = FALSE)
-  }
-  print_bullet_section("Notes", x$notes)
+  print_wrapped_line("Detailed risk values, grouped views and support information remain in the returned review tables.")
+  print_bullet_section("Notes", linking_review_notes(any(x$settings$source_models == "GPCM")))
   invisible(x)
 }
 
@@ -7035,10 +6980,10 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
   both_jml <- same_method && identical(reference_method, "JML")
   both_mml <- same_method && identical(reference_method, "MML")
   same_data <- isTRUE(basis$same_data)
-  both_ready <- isTRUE(
-    basis$all_inference_ready %||% basis$all_converged
-  )
-  ic_comparable <- isTRUE(basis$ic_comparable)
+  both_ready <- isTRUE(basis$all_inference_ready)
+  both_numerical <- all(vapply(list(rasch_fit, gpcm_fit), function(fit) {
+    identical(as.character(mfrmr_get_readiness_record(fit)$fit$NumericalState[1]), "ready")
+  }, logical(1)))
   ic_selectable <- isTRUE(basis$all_ic_selectable)
 
   loglik_difference <- NA_real_
@@ -7049,14 +6994,14 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     }
   }
 
-  evidence_tier <- if (ic_comparable) {
-    "same_basis_mml_information_criteria"
-  } else if (both_jml && same_data && !both_ready) {
-    "jml_optimizer_trace_only_not_inference_ready"
+  evidence_tier <- if (both_jml && same_data && !both_numerical) {
+    "jml_numerical_review_only"
   } else if (both_jml && same_data) {
     "jml_descriptive_reweighting_only"
+  } else if (both_mml && same_data && !both_numerical) {
+    "mml_numerical_review_only"
   } else if (both_mml && same_data && !both_ready) {
-    "mml_optimizer_trace_only_not_inference_ready"
+    "mml_descriptive_not_inference_ready"
   } else if (both_mml && same_data && !ic_selectable) {
     "mml_screening_or_review_grid_only"
   } else if (both_mml && same_data) {
@@ -7067,20 +7012,15 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 
   loglik_status <- if (!is.finite(loglik_difference)) {
     "unavailable"
-  } else if (!both_ready) {
-    "optimizer_trace_only_not_inference_ready"
+  } else if (!both_numerical) {
+    "numerical_review_required"
   } else if (both_jml) {
     "descriptive_unpenalized_gain_not_selection"
-  } else if (ic_comparable) {
-    "available_but_read_with_information_criterion_penalties"
   } else {
     "descriptive_noncomparable"
   }
 
-  formal_selection <- ic_comparable
-  selection_route <- if (formal_selection) {
-    "AIC_PersonBIC_SABIC_candidate_set_review"
-  } else if (both_jml) {
+  selection_route <- if (both_jml) {
     "withheld_JML_has_no_automatic_PCM_GPCM_selection"
   } else {
     "withheld_comparison_basis_not_selectable"
@@ -7095,27 +7035,15 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     "not_an_internal_free_slope_comparator"
   }
 
-  preferred_value <- function(criterion) {
-    if (!formal_selection) return(NA_character_)
-    as.character(comparison$preferred[[criterion]] %||% NA_character_)[1]
-  }
-
-  recommended_use <- if (both_jml) {
-    paste(
-      "Treat the likelihood difference and slopes as descriptive optimizer",
-      "evidence only; use declared unit- and non-unit-slope recovery conditions",
-      "before making a PCM-versus-GPCM claim."
-    )
-  } else if (formal_selection) {
-    paste(
-      "Read candidate-set information criteria together with slope stability,",
-      "information redistribution, and a denser common quadrature sensitivity check."
-    )
+  recommended_use <- paste(
+    "Inspect changes in facet measures, relative slopes and information shares.",
+    "Free-slope GPCM information-criterion ranking and the PCM-versus-GPCM",
+    "chi-square LRT are unavailable; a larger likelihood does not select a scoring model."
+  )
+  numerical_note <- if (both_numerical) {
+    "Numerical convergence checks passed for both fits; inference eligibility is assessed separately."
   } else {
-    paste(
-      "Repair inference readiness, integration selectability, or comparison",
-      "identity before using this pair for model selection."
-    )
+    "Numerical convergence is incomplete or requires review for at least one fit; interpret differences cautiously."
   }
 
   tibble::tibble(
@@ -7126,14 +7054,16 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     SameMethod = same_method,
     SamePreparedData = same_data,
     BothInferenceReady = both_ready,
+    BothNumericallyReady = both_numerical,
+    NumericalReview = numerical_note,
     EvidenceTier = evidence_tier,
-    FormalModelSelectionAvailable = formal_selection,
+    FormalModelSelectionAvailable = FALSE,
     SelectionRoute = selection_route,
     ObservedLogLikDifference = loglik_difference,
     LogLikDifferenceStatus = loglik_status,
-    AICPreferred = preferred_value("AIC"),
-    PersonBICPreferred = preferred_value("BIC"),
-    SABICPreferred = preferred_value("SABIC"),
+    AICPreferred = NA_character_,
+    PersonBICPreferred = NA_character_,
+    SABICPreferred = NA_character_,
     PCMvsGPCMLRT = pcm_gpcm_lrt,
     FACETSComparisonRole = facets_role,
     RecommendedUse = recommended_use
@@ -7173,10 +7103,10 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' The overview records the slope owner, step owner, level count, free relative
 #' slope contrasts, and whether the supplied reference is the exact unit-slope
 #' PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
-#' intentionally withheld in the current comparison contract.
-#' The returned `comparison_contract` separates three evidence channels:
-#' selectable same-basis MML information criteria, descriptive JML
-#' reweighting, and non-ready optimizer traces. In particular, a JML
+#' unavailable. Free-slope GPCM also lacks the inference checks required for
+#' information-criterion ranking, even under MML. The returned
+#' `comparison_contract` records the applicable comparison restrictions;
+#' observed changes in fit, scores and information remain descriptive. A JML
 #' log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
 #' selection because it is unpenalized and the GPCM contains additional slope
 #' parameters. FACETS may serve as a direct comparator for the PCM/JML side
@@ -7192,9 +7122,9 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'
 #' @section What the returned tables mean:
 #' - `model_comparison`: same-data model-comparison bundle from [compare_mfrm()].
-#'   AIC/Person-BIC/SABIC ranking is available only when
-#'   `model_comparison$table$ICComparable` is true. PCM-versus-GPCM LRT remains
-#'   unavailable even though PCM is the aligned GPCM's unit-slope reduction.
+#'   AIC/Person-BIC/SABIC ranking is unavailable for the current free-slope
+#'   GPCM fits. PCM-versus-GPCM LRT also remains unavailable even though PCM
+#'   is the aligned GPCM's unit-slope reduction.
 #' - `comparison_contract`: one-row evidence-tier table stating whether formal
 #'   model selection is available, how any observed log-likelihood difference
 #'   may be read, and the bounded role of FACETS in a JML review.
@@ -7431,8 +7361,8 @@ build_weighting_review <- function(rasch_fit,
       key_warnings,
       paste(
         "The JML log-likelihood difference is unpenalized and cannot select",
-        "PCM versus GPCM; when either fit is not inference-ready it is only an",
-        "optimizer-trace difference."
+        "PCM versus GPCM. Review numerical convergence separately from",
+        "the conditions needed for statistical inference."
       )
     )
   }
@@ -7492,15 +7422,7 @@ build_weighting_review <- function(rasch_fit,
 
   next_actions <- clean_summary_lines(c(
     "Read summary(model_comparison) before interpreting any fit advantage as a scoring recommendation.",
-    if (identical(comparison_contract$ReferenceMethod, "JML") &&
-        identical(comparison_contract$ComparisonMethod, "JML")) {
-      paste(
-        "Use evaluate_mfrm_recovery() under declared unit_slopes and non-unit",
-        "slope regimes before treating JML reweighting as evidence for GPCM."
-      )
-    } else {
-      "For MML selection, require ICComparable and repeat consequential comparisons on a denser common quadrature grid."
-    },
+    "Use likelihood and weighting differences descriptively; GPCM ranking remains unavailable even after numerical convergence.",
     paste0("Use slope_profile and top_reweighted_levels to inspect whether ", slope_facet, " levels are being upweighted or downweighted in substantively acceptable ways."),
     paste0("Use plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE) and the bounded GPCM analogue to inspect precision redistribution visually."),
     "If equal contributions of items and raters are part of the score interpretation, retain the Rasch-family fit as the operational reference even when bounded GPCM fits better."
@@ -7574,6 +7496,20 @@ build_weighting_review <- function(rasch_fit,
   as_mfrm_bundle(out, "mfrm_weighting_review")
 }
 
+validate_model_review_convergence <- function(x) {
+  weighting <- inherits(x, c("mfrm_weighting_review", "summary.mfrm_weighting_review"))
+  table <- if (weighting) x$comparison_contract else x$model_roles
+  field <- if (weighting) "BothNumericallyReady" else "NumericalConvergence"
+  if (!is.data.frame(table) || !field %in% names(table)) {
+    stop(paste0(
+      "This saved review does not distinguish numerical convergence from inference eligibility. ",
+      "Recreate it with ", if (weighting) "build_weighting_review()" else "build_model_choice_review()",
+      " using the existing fits; no model refit is needed."
+    ), call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' @export
 print.mfrm_weighting_review <- function(x, ...) {
   print(summary(x), ...)
@@ -7596,6 +7532,7 @@ summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
     stop("`object` must be output from build_weighting_review().", call. = FALSE)
   }
 
+  validate_model_review_convergence(object)
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
 
@@ -7624,27 +7561,25 @@ summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
 
 #' @export
 print.summary.mfrm_weighting_review <- function(x, ...) {
+  validate_model_review_convergence(x)
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
 
   cat("mfrm Weighting Review Summary\n")
   if (nrow(x$overview) > 0) {
     cat("\nOverview\n")
-    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
-  }
-  if (nrow(x$status) > 0) {
-    cat("\nStatus\n")
-    print(as.data.frame(x$status), row.names = FALSE)
+    keep <- intersect(c("ReferenceModel", "ComparisonModel", "ReferenceMethod",
+                        "ComparisonMethod", "SlopeFacet", "StepFacet",
+                        "SlopeLevelCount", "FreeRelativeSlopeContrasts"), names(x$overview))
+    print(as.data.frame(x$overview[, keep, drop = FALSE]), row.names = FALSE)
   }
   if (nrow(x$comparison_contract) > 0) {
-    cat("\nComparison Contract\n")
-    print(
-      round_numeric_df(
-        as.data.frame(x$comparison_contract),
-        digits = digits
-      ),
-      row.names = FALSE
-    )
+    contract <- x$comparison_contract
+    cat("\nComparison interpretation\n")
+    if ("NumericalReview" %in% names(contract)) print_wrapped_line(contract$NumericalReview[1])
+    cat("  Log-likelihood difference:",
+        format(round(contract$ObservedLogLikDifference[1], digits)), "\n")
+    print_wrapped_line(contract$RecommendedUse[1])
   }
   print_bullet_section("Key Warnings", x$key_warnings)
   print_bullet_section("Next Actions", x$next_actions)
@@ -7655,10 +7590,6 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
   if (nrow(x$top_reweighted_levels) > 0) {
     cat("\nTop Reweighted Levels\n")
     print(round_numeric_df(as.data.frame(x$top_reweighted_levels), digits = digits), row.names = FALSE)
-  }
-  if (nrow(x$support_status) > 0) {
-    cat("\nSupport Status\n")
-    print(as.data.frame(x$support_status), row.names = FALSE)
   }
   print_bullet_section("Notes", x$notes)
   invisible(x)
@@ -7817,6 +7748,11 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       },
       SlopeCoordinates = nrow(as.data.frame(fit$slopes %||% data.frame())),
       FreeSlopeParameters = as.integer(sizes$log_slopes %||% 0L),
+      NumericalConvergence = if (identical(as.character(readiness$NumericalState[1]), "ready")) {
+        "Passed"
+      } else {
+        "Incomplete or requires review"
+      },
       FitReadiness = decision$FitReadiness[1L],
       FormalInference = decision$FormalInference[1L],
       Interpretation = decision$Interpretation[1L],
@@ -8040,7 +7976,11 @@ build_model_choice_review <- function(...,
   if (!isTRUE(basis$ic_comparable)) {
     key_warnings <- c(
       key_warnings,
-      "Information-criterion ranking is suppressed because the compared fits do not all share one current, selectable, verified MML likelihood, observation, constraint, integration, and readiness basis. q<31 fits remain screening/review-only."
+      if (isTRUE(has_gpcm)) {
+        "Free-slope GPCM lacks the inference checks required for information-criterion ranking. Numerical convergence alone does not remove this restriction."
+      } else {
+        "Information-criterion ranking is unavailable. Review the comparison warnings for data, estimation, integration and inference requirements."
+      }
     )
   }
   if (isTRUE(has_gpcm) && is.na(ref_labels$reference)) {
@@ -8153,6 +8093,7 @@ summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {
     stop("`object` must be output from build_model_choice_review().",
          call. = FALSE)
   }
+  validate_model_review_convergence(object)
   digits <- max(0L, as.integer(digits %||% 3L))
   out <- list(
     overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
@@ -8176,12 +8117,15 @@ summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {
 
 #' @export
 print.summary.mfrm_model_choice_review <- function(x, ...) {
+  validate_model_review_convergence(x)
   digits <- as.integer(x$digits %||% 3L)
   if (!is.finite(digits)) digits <- 3L
   cat("mfrm Model Choice Review\n")
   if (nrow(x$overview) > 0L) {
     cat("\nOverview\n")
-    print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
+    keep <- intersect(c("FitCount", "Models", "OperationalReference", "SensitivityModel"),
+                      names(x$overview))
+    print(as.data.frame(x$overview[, keep, drop = FALSE]), row.names = FALSE)
   }
   print_bullet_section("Key Warnings", x$key_warnings)
   print_bullet_section("Comparison Warnings", x$comparison_warnings)
@@ -8196,8 +8140,7 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
       c(
         "Label", "Model", "Method", "Persons", "Npar", "LogLik",
         "AIC", "BIC", "SABIC", "Delta_AIC", "Delta_BIC",
-        "Delta_SABIC", "ICStatus", "ICIntegrationTier", "ICSelectable",
-        "ICComparable", "SABICComparable", "InferenceReady"
+        "Delta_SABIC", "InferenceReady"
       ),
       names(comparison)
     )
@@ -8233,9 +8176,14 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
     names(slopes)[4:5] <- c("Reported", "Free")
     print(slopes, row.names = FALSE)
     cat("\nFit readiness\n")
+    if ("NumericalConvergence" %in% names(roles)) {
+      for (i in seq_len(nrow(roles))) {
+        print_wrapped_line(paste0(roles$Label[i], ": numerical convergence: ",
+                                  roles$NumericalConvergence[i], "."))
+      }
+    }
     print(roles[, c(
-      "Label", "Model", "FitReadiness", "FormalInference",
-      "Interpretation"
+      "Label", "Model", "FormalInference", "Interpretation"
     ), drop = FALSE], row.names = FALSE)
     cat("  Full score contracts and readiness reasons remain in `$model_roles`.\n")
   }
@@ -8246,7 +8194,14 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
         "RecoveryChecks", "FairAverage", "BiasScreening", "SummaryAppendix"),
       names(x$downstream_routes)
     )
-    print(as.data.frame(x$downstream_routes[, keep, drop = FALSE]), row.names = FALSE)
+    routes <- as.data.frame(x$downstream_routes[, keep, drop = FALSE])
+    for (field in setdiff(keep, c("Label", "Model"))) {
+      routes[[field]] <- dplyr::recode(routes[[field]],
+        supported = "Available", supported_with_caveat = "Available with limitations",
+        review_required = "Review required", blocked = "Unavailable",
+        unsupported = "Unavailable", not_supported = "Unavailable")
+    }
+    print(routes, row.names = FALSE)
   }
   if (nrow(x$weighting_review_status) > 0L) {
     cat("\nWeighting Review Status\n")

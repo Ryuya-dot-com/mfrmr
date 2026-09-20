@@ -33,38 +33,21 @@ pass/warn/fail thresholds.  Useful for understanding how close a
 borderline result is to the next verdict level.
 }
 }
-\section{QC checks performed}{
+\section{Interpretation}{
 
-The pipeline evaluates up to 10 checks (depending on available
-diagnostics):
-\enumerate{
-\item \strong{Convergence}: did the optimizer converge?
-\item \strong{Overall Infit}: global information-weighted mean-square
-\item \strong{Overall Outfit}: global unweighted mean-square
-\item \strong{Misfit rate}: proportion of elements with \eqn{|\mathrm{ZSTD}| > 2}
-\item \strong{Category usage}: minimum observations per score category
-\item \strong{Disordered steps}: whether threshold estimates are monotonic
-\item \strong{Separation} (per facet): element discrimination adequacy
-\item \strong{Residual PCA eigenvalue}: first-component eigenvalue (if computed)
-\item \strong{Displacement}: maximum absolute displacement across elements
-\item \strong{Inter-rater agreement}: minimum pairwise exact agreement
-}
-}
+The rows are the actual checks returned by \code{\link[=run_qc_pipeline]{run_qc_pipeline()}}: convergence,
+global fit, selected-facet reliability and separation, element misfit,
+unexpected responses, category structure, connectivity, inter-rater
+agreement, and the functioning/bias screen. Element misfit uses the
+configured mean-square band; it is not a ZSTD test. PCA and displacement
+are separate diagnostics and are not checks in this pipeline.
 
-\section{Interpreting plots}{
-
-\itemize{
-\item \strong{Green} (Pass): the check meets the current threshold-profile criteria.
-\item \strong{Amber} (Warn): borderline---monitor but not necessarily
-disqualifying.  Review the detail panel to see how close the value
-is to the fail threshold.
-\item \strong{Red} (Fail): requires investigation before strong operational or
-interpretive claims are made from the current run. Common remedies include collapsing categories
-(for disordered steps), removing outlier raters (for misfit), or
-increasing sample size (for low separation).
-\item The detail view shows numeric values, making it easy to communicate
-exact results to stakeholders.
-}
+Green (Pass), amber (Warn), and red (Fail) describe the selected screening
+rules. Grey (Skip) marks unrequested or unavailable checks; \code{AffectsOverall}
+in the returned data distinguishes their contribution to the overall result.
+A missing result is not evidence of acceptable fit. High rater separation
+is not high agreement, and no colour establishes statistical validity or
+justifies deleting raters or collapsing categories without further review.
 }
 
 \examples{

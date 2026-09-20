@@ -534,11 +534,8 @@ plot_rater_agreement_heatmap <- function(fit,
   }
   metric <- match.arg(metric)
   style <- resolve_plot_preset(preset)
-  agree <- tryCatch(
-    interrater_agreement_table(fit, diagnostics = diagnostics,
-                                rater_facet = rater_facet),
-    error = function(e) NULL
-  )
+  agree <- interrater_agreement_table(fit, diagnostics = diagnostics,
+                                       rater_facet = rater_facet)
   if (is.null(agree) || is.null(agree$pairs)) {
     stop("interrater_agreement_table() did not return pairwise rows.",
          call. = FALSE)
@@ -565,7 +562,8 @@ plot_rater_agreement_heatmap <- function(fit,
   raters <- sort(unique(c(pairs$Rater1, pairs$Rater2)))
   mat <- matrix(NA_real_, nrow = length(raters), ncol = length(raters),
                 dimnames = list(raters, raters))
-  diag(mat) <- 1
+  # Self comparisons are not estimated agreement evidence.
+  diag(mat) <- NA_real_
   for (k in seq_len(nrow(pairs))) {
     i <- match(pairs$Rater1[k], raters)
     j <- match(pairs$Rater2[k], raters)
@@ -590,6 +588,8 @@ plot_rater_agreement_heatmap <- function(fit,
       xlab = "Rater", ylab = "Rater",
       main = sprintf("Pairwise rater agreement (%s)", metric)
     )
+    graphics::mtext(sprintf("%d / %d pairs available; blank cells unassessed; self-comparisons omitted",
+      sum(is.finite(pairs$Value)), nrow(pairs)), side = 3, line = 0.2, cex = 0.7)
     graphics::axis(1, at = seq_along(raters), labels = raters,
                    las = 2, cex.axis = 0.8)
     graphics::axis(2, at = seq_along(raters), labels = raters,
@@ -611,8 +611,9 @@ plot_rater_agreement_heatmap <- function(fit,
       pairs = pairs,
       metric = metric,
       title = sprintf("Pairwise rater agreement (%s)", metric),
-      subtitle = sprintf("%d rater(s); metric column = `%s`",
-                         length(raters), value_col),
+      subtitle = sprintf("%d raters; %d / %d pair comparisons available. Blank cells are unassessed; self-comparisons are omitted.",
+                         length(raters), sum(is.finite(pairs$Value)), nrow(pairs)),
+      notes = agree$notes,
       preset = style$name
     )
   )

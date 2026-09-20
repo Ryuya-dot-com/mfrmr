@@ -12,24 +12,29 @@ compute_person_fit_indices(diagnostics, fit = NULL)
 \item{fit}{Optional \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}. Required to decide
 whether the person estimates are JML/fixed-effect estimates for which
 the Snijders (2001) correction is computed. MML/EAP person scores
-return \code{NA} for \code{lz_star} with an explanatory status.}
+return \code{NA} for \code{lz_star} with an explanatory status. Supplied fit and
+diagnostics must identify the same analysis.}
 }
 \value{
 A data frame of class \code{mfrm_person_fit_indices} with one row per
 Person and columns:
 \describe{
 \item{\code{Person}}{Person ID.}
-\item{\code{N}}{Number of contributing response opportunities.}
+\item{\code{TotalN}, \code{N}, \code{UnavailableN}}{Total responses, responses with
+valid probability and log-likelihood moments, and unavailable responses.
+An incomplete response set does not produce a person-fit statistic.}
 \item{\code{LogLik}}{Sum of log P(X = x | theta) under the fitted
 model. Computed from the per-observation category probability
 \code{PrObserved} (the model probability of the observed category),
 not from a Gaussian residual approximation.}
 \item{\code{lz}}{Drasgow et al. (1985) standardized log-likelihood,
-in its proper polytomous form.}
+in its polytomous form, treating each retained response once regardless
+of calibration weights. \code{lz_status} records computational availability.}
 \item{\code{lz_star}}{Snijders-corrected \verb{lz*} when the source fit used
 JML/fixed-effect person estimates, conditioning on the fitted
 non-person calibration, and the diagnostics include the required
-derivative terms; otherwise \code{NA}.}
+derivative terms. Numerical convergence, a finite person estimate and
+unit observation weights are required; otherwise \code{NA}.}
 \item{\code{lz_star_status}}{Status string for \code{lz_star}, such as
 \code{"computed_jml_conditional_calibration"}, \code{"fit_required"},
 \code{"not_applicable_eap"}, or \code{"insufficient_information"}.}
@@ -40,7 +45,8 @@ for each person, when available.}
 \item{\code{lz_flag_5pct}, \code{lz_flag_1pct}}{Logical flags for practical
 two-sided \code{lz} thresholds of \verb{|z| > 1.96} and \verb{|z| > 2.58}.}
 \item{\code{lz_star_flag_5pct}, \code{lz_star_flag_1pct}}{The same flags for
-\code{lz_star}, returned as \code{FALSE} when \code{lz_star} is unavailable.}
+\code{lz_star}. All index flags, including \code{ReportFlag}, remain \code{NA} when
+the corresponding statistic is unavailable.}
 \item{\code{ReportIndex}, \code{ReportValue}, \code{ReportFlagLevel},
 \code{ReportFlag}, \code{ReviewStatus}, \code{ReviewReason}, \code{ReportCaveat}}{Compact
 reporting columns. \code{ReportIndex} prefers \code{lz_star} when the Snijders
@@ -57,7 +63,18 @@ applies Snijders' estimated-ability correction for JML person estimates,
 conditional on the fitted non-person parameters. This does not propagate
 non-person calibration uncertainty. For MML/EAP person scores, use \code{lz}
 with its documented caveat rather than treating EAP scores as if they
-satisfied the Snijders estimating equation.
+satisfied the Snijders estimating equation. Positive and negative flags
+indicate more and less predictable patterns, respectively; neither alone
+establishes invalid responses or justifies exclusion. The implemented
+correction does not cover non-unit observation weights, even if normalized
+to mean one. No multiple-person error-rate control is provided.
+
+Small positive probabilities are used without a lower floor. Zero, invalid
+or missing observed probabilities make the person statistic unavailable.
+Missing derivative information withholds the correction for the whole person.
+With the matching fit supplied, older probability-moment diagnostics are
+refreshed from that fit without re-estimation. Otherwise recompute
+diagnostics first. Older saved person-fit tables/summaries must be rebuilt.
 
 Note: this implementation reads the model category probabilities
 directly from the diagnostics bundle. Earlier mfrmr releases used

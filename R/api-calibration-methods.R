@@ -82,6 +82,21 @@ mfrmr_calibration_score_print_value <- function(value) {
   format(value, trim = TRUE, scientific = FALSE)
 }
 
+mfrmr_calibration_score_interval_note <- function(settings) {
+  algorithm <- settings$scoring_algorithm %||% ""
+  level <- settings$interval_level
+  label <- if (length(level) == 1L && is.finite(level)) {
+    paste0(format(100 * level, trim = TRUE), "% intervals: ")
+  } else "Intervals: "
+  paste0(label, if (endsWith(algorithm, "_v1")) {
+    "saved grid endpoints; posterior mass may differ from the requested level."
+  } else if (endsWith(algorithm, "_v2")) {
+    "continuous posterior quantiles."
+  } else {
+    "calculation method not recorded in this result."
+  })
+}
+
 mfrmr_calibration_score_print_preview <- function(data, kind, limit = 10L) {
   data <- as.data.frame(data, stringsAsFactors = FALSE)
   if (nrow(data) == 0L) return(invisible(NULL))
@@ -89,6 +104,9 @@ mfrmr_calibration_score_print_preview <- function(data, kind, limit = 10L) {
   cat("\n", kind, " (", nrow(shown), " of ", nrow(data), ")\n", sep = "")
   for (i in seq_len(nrow(shown))) {
     person <- as.character(shown$Person[i] %||% "<unknown>")
+    disposition <- switch(as.character(shown$Disposition[i] %||% "unknown"),
+      scored = "scored", scored_review = "review required",
+      not_scored = "not scored", "status not recorded")
     if (identical(kind, "Posterior estimates")) {
       line <- paste0(
         person,
@@ -96,14 +114,25 @@ mfrmr_calibration_score_print_preview <- function(data, kind, limit = 10L) {
         ", SD ", mfrmr_calibration_score_print_value(shown$SD[i]),
         ", interval [", mfrmr_calibration_score_print_value(shown$Lower[i]),
         ", ", mfrmr_calibration_score_print_value(shown$Upper[i]), "], ",
-        as.character(shown$Disposition[i] %||% "unknown")
+        disposition
       )
     } else {
       reasons <- as.character(shown$ReasonCodes[i] %||% "")
       if (is.na(reasons) || !nzchar(reasons)) reasons <- "none recorded"
-      reasons <- gsub(";", ", ", reasons, fixed = TRUE)
+      labels <- c(
+        RESPONSES_MISSING_OMITTED = "missing responses omitted",
+        ALL_RESPONSES_LOWER_ENDPOINT = "all responses at the minimum score",
+        ALL_RESPONSES_UPPER_ENDPOINT = "all responses at the maximum score",
+        VERY_SPARSE_RESPONSE_PATTERN = "very few valid responses",
+        QUADRATURE_EDGE_MASS_REVIEW = "posterior mass near the integration limits",
+        ZERO_VALID_RESPONSES = "no valid responses"
+      )
+      codes <- strsplit(reasons, ";", fixed = TRUE)[[1L]]
+      descriptions <- unname(labels[codes])
+      descriptions[is.na(descriptions)] <- "see ReasonCodes in the review table"
+      reasons <- paste(descriptions, collapse = ", ")
       line <- paste0(
-        person, ": ", as.character(shown$Disposition[i] %||% "unknown"),
+        person, ": ", disposition,
         "; reasons: ", reasons
       )
     }
@@ -177,7 +206,12 @@ mfrmr_calibration_score_overview <- function(x) {
 #'
 #' The summary object retains every returned score and review disposition.
 #' Its estimates table preserves the available estimate and uncertainty basis
-#' columns and calibration identifiers when extracted or written to CSV.
+#' columns, calibration identifiers, scoring algorithm and requested interval
+#' level when extracted or written to CSV. The interval level is not rounded.
+#' Older score results recover these fields from their recorded settings when
+#' re-summarized. Saved grid-based intervals retain their original endpoints;
+#' printed results and interval plots explain that their posterior mass can
+#' differ from the requested level.
 #' Its print method shows at most ten rows from each table so routine console
 #' output stays compact. Base and ggplot2 renderers distinguish scored and
 #' review states by shape as well as colour.
@@ -246,12 +280,22 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
   digits <- mfrmr_calibration_score_digits(digits)
 
   estimates <- as.data.frame(object$estimates, stringsAsFactors = FALSE)
+  if (!"ScoringAlgorithm" %in% names(estimates)) {
+    estimates$ScoringAlgorithm <- rep(
+      object$settings$scoring_algorithm %||% NA_character_, nrow(estimates)
+    )
+  }
+  if (!"IntervalLevel" %in% names(estimates)) {
+    estimates$IntervalLevel <- rep(
+      object$settings$interval_level %||% NA_real_, nrow(estimates)
+    )
+  }
   estimate_columns <- intersect(
     c(
       "Person", "Estimate", "SD", "Lower", "Upper", "Observations",
       "WeightedN", "Disposition", "ReasonCodes", "ReadinessStatus",
       "EstimateBasis", "UncertaintyBasis", "CalibrationId", "SchemaVersion",
-      "ScoringBasis"
+      "ScoringBasis", "ScoringAlgorithm", "IntervalLevel"
     ),
     names(estimates)
   )
@@ -278,6 +322,7 @@ summary.mfrm_calibration_score <- function(object, digits = 3L, ...) {
 
   round_numeric <- function(data) {
     numeric_columns <- vapply(data, is.double, logical(1))
+    numeric_columns[names(data) == "IntervalLevel"] <- FALSE
     data[numeric_columns] <- lapply(
       data[numeric_columns], round, digits = digits
     )
@@ -338,6 +383,7 @@ print.mfrm_calibration_score <- function(x, ...) {
   )
   print_wrapped_line("Intervals: conditional on frozen point calibration;")
   print_wrapped_line("calibration-parameter uncertainty excluded")
+  print_wrapped_line(mfrmr_calibration_score_interval_note(x$settings))
   if (overview$Scored > 0L) {
     print_wrapped_line(
       "Use `summary(x)` for review tables and `plot(x)` for score intervals.",
@@ -391,7 +437,8 @@ print.summary.mfrm_calibration_score <- function(x, ...) {
       as.character(row$MissingResponsePolicy %||% "not recorded")
     ))
   }
-  cat("\nInterpretation boundary\n")
+  cat("\nInterval interpretation\n")
+  print_wrapped_line(mfrmr_calibration_score_interval_note(x$settings))
   print_wrapped_line(
     paste(
       "Posterior SDs and intervals are conditional on the frozen point",
@@ -581,9 +628,15 @@ plot.mfrm_calibration_score <- function(
     if (review_plotted == 1L) "" else "s", " shown"
   )
   uncertainty_note <- paste(
-    "Posterior uncertainty is conditional on the frozen point calibration",
-    "and excludes calibration-parameter uncertainty."
+    "Conditional on the frozen point calibration;",
+    "calibration-parameter uncertainty excluded."
   )
+  if (identical(type, "interval")) {
+    uncertainty_note <- paste(
+      mfrmr_calibration_score_interval_note(x$settings), uncertainty_note,
+      sep = "\n"
+    )
+  }
   selection_summary <- data.frame(
     ScoredPersons = as.integer(nrow(full)),
     PlottedPersons = as.integer(nrow(plotted)),
@@ -642,7 +695,7 @@ plot.mfrm_calibration_score <- function(
       if (diff(x_range) <= 0) x_range <- x_range + c(-0.5, 0.5)
       old_mar <- graphics::par("mar")
       on.exit(graphics::par(mar = old_mar), add = TRUE)
-      graphics::par(mar = c(5.2, 8.2, 4.2, 1.5))
+      graphics::par(mar = c(6.4, 8.2, 4.2, 1.5))
       graphics::plot(
         plotted$Estimate, plotted$DisplayOrder,
         xlim = x_range, ylim = c(0.5, nrow(plotted) + 0.5),
@@ -726,7 +779,9 @@ plot.mfrm_calibration_score <- function(
       cex = 0.78
     )
     graphics::mtext(subtitle, side = 3, line = 0.25, cex = 0.72)
-    graphics::mtext(uncertainty_note, side = 1, line = 3.8, cex = 0.72)
+    graphics::mtext(uncertainty_note, side = 1,
+                    line = if (identical(type, "interval")) 5 else 3.8,
+                    cex = 0.72)
   }
 
   interpretation <- data.frame(
@@ -755,6 +810,7 @@ plot.mfrm_calibration_score <- function(
         sort_by = sort_by,
         label_review = label_review,
         interval_level = x$settings$interval_level,
+        scoring_algorithm = x$settings$scoring_algorithm,
         uncertainty_basis = "conditional_on_frozen_point_calibration",
         calibration_id = x$settings$calibration_id,
         preset = style$name

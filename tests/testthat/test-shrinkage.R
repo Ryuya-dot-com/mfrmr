@@ -256,3 +256,33 @@ test_that("plot.mfrm_facet_nesting runs and returns a matrix", {
   expect_true(is.matrix(m))
   expect_equal(dim(m), c(2L, 2L))
 })
+
+test_that("shrinkage reports use eligible pairs and preserve their conditional meaning", {
+  fit <- structure(list(
+    config = list(facet_names = "Rater"),
+    facets = list(others = data.frame(Facet = "Rater", Level = as.character(1:4),
+      Estimate = c(-1, 0, 1, 20), ModelSE = c(.2, .2, .2, NA_real_)))
+  ), class = "mfrm_fit")
+  eb <- apply_empirical_bayes_shrinkage(fit)
+  r <- shrinkage_report(eb)
+  expect_equal(r$NLevelsUsed, 3L)
+  expect_equal(r$MeanShrinkage, mean(eb$facets$others$ShrinkageFactor[1:3]))
+  expect_true(is.na(eb$facets$others$ShrinkageFactor[4]))
+  expect_equal(eb$facets$others$ShrunkEstimate[4], 20)
+  expect_false(r$SupportsFormalInference)
+  expect_match(r$Interpretation, "not perfect precision", fixed = TRUE)
+  for (prior in list(-1, NA_real_, Inf, c(1, 2), "1")) {
+    expect_error(apply_empirical_bayes_shrinkage(fit, facet_prior_sd = prior), "facet_prior_sd")
+  }
+  stale <- eb; stale$shrinkage_report$Interpretation <- NULL
+  expect_error(shrinkage_report(stale), "Reapply apply_empirical_bayes_shrinkage", fixed = TRUE)
+  expect_error(mfrmr:::.build_shrinkage_plot_data(stale), "Reapply apply_empirical_bayes_shrinkage", fixed = TRUE)
+  expect_error(plot_shrinkage_funnel(stale, draw = FALSE), "Reapply apply_empirical_bayes_shrinkage", fixed = TRUE)
+  bands <- mfrmr:::.add_shrinkage_ci_columns(data.frame(Estimate = 0, SE = -1,
+             ShrunkEstimate = 0, ShrunkSE = 0))
+  expect_true(is.na(bands$CI_Lower))
+  expect_equal(bands$ShrunkCI_Lower, 0)
+  expect_equal(bands$ShrunkCI_Upper, 0)
+  expect_false(bands$SupportsFormalInference)
+  expect_match(bands$IntervalInterpretation, "Zero SE after full pooling", fixed = TRUE)
+})

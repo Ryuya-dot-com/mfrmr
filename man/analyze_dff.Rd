@@ -45,14 +45,14 @@ If \code{NULL} (default), all pairwise group comparisons are performed.}
 \item{method}{Analysis method: \code{"residual"} (default) uses the fitted
 model's residuals without re-estimation; \code{"refit"} re-estimates the
 model within each group subset. The residual method is faster and
-avoids convergence issues with small subsets.}
+avoids additional subgroup fits; neither method establishes adequate sample size.}
 
 \item{min_obs}{Minimum number of observations per cell (facet-level x
 group). Cells below this threshold are flagged as sparse and their
 statistics set to \code{NA}. Default \code{10}.}
 
-\item{p_adjust}{Method for multiple-comparison adjustment, passed to
-\code{\link[stats:p.adjust]{stats::p.adjust()}}. Default is \code{"holm"}.}
+\item{p_adjust}{Adjustment for refit screening tail areas; default \code{"holm"}.
+Retained but unused for residual comparisons, which return no p-values.}
 
 \item{...}{Passed directly to \code{\link[=analyze_dff]{analyze_dff()}}.}
 }
@@ -68,9 +68,9 @@ An object of class \code{mfrm_dff} (with compatibility class \code{mfrm_dif}) wi
 }
 }
 \description{
-Screens whether the difficulty of facet levels differs across a grouping
-variable (e.g., whether rater severity differs for male vs. female
-examinees, or whether item difficulty differs across rater subgroups).
+Compares observed-minus-expected scores between groups, or describes linked
+subgroup facet estimates after refitting. Residual differences do not isolate
+differential functioning and are returned without tests or classifications.
 
 \code{analyze_dif()} is retained for compatibility with earlier package versions.
 In many-facet workflows, prefer \code{\link[=analyze_dff]{analyze_dff()}} as the primary entry point.
@@ -90,7 +90,7 @@ Differences between group ability distributions are not themselves DFF.
 Residual screens inherit the fitted model's ability and population
 assumptions. With fixed-standard-normal RSM/PCM MML, subgroup refits retain
 that population assumption; linking anchors do not estimate subgroup ability
-distributions. A screen positive can therefore reflect an inadequately
+distributions. A residual difference can therefore reflect an inadequately
 represented group difference as well as differential facet functioning.
 For MML, observation expectations are evaluated at each Person's EAP
 ability, rather than integrated over the conditional ability distribution.
@@ -106,13 +106,13 @@ model's observation-level residuals.  For each facet-level \eqn{\times}
 group cell, the observed and expected score sums are aggregated and
 a standardized residual is computed as:
 \deqn{z = \frac{\sum (X_{obs} - E_{exp})}{\sqrt{\sum \mathrm{Var}}}}
-Pairwise contrasts between groups compare the mean observed-minus-expected
-difference for each facet level, with uncertainty summarized by a
-Welch/Satterthwaite approximation. This method reuses the fitted model
-without re-estimation; small subsets can still yield sparse or unstable
-contrasts. Because the resulting contrast
-is not a logit-scale parameter difference, the residual method is treated as
-a screening procedure rather than an ETS-style classifier.
+Pairwise contrasts compare the mean observed-minus-expected score in Group1
+minus that in Group2. Positive values mean higher residual scores in Group1,
+not greater rater leniency for that group. Differences use score units.
+\code{StdResidual} is a descriptive scaling by model response variance, not a
+t-statistic. No residual-contrast SE, confidence interval, p-value or
+positive/negative classification is provided. Compatibility columns \code{SE},
+\code{t}, \code{df}, \code{p_value} and \code{p_adjusted} contain \code{NA}.
 
 \strong{Refit method} (\code{method = "refit"}): Subsets the data by group, refits
 the MFRM model within each subset, anchors all non-target facets back to
@@ -146,7 +146,7 @@ Refit contrasts are not assigned ETS A/B/C labels. Even when subgroup point
 estimates share a linked logit scale, a validated joint, bootstrap, or
 replicate covariance contract is required before formal refit inference.
 
-Multiple comparisons are adjusted using Holm's step-down procedure by
+Refit screening tail areas are adjusted using Holm's step-down procedure by
 default, jointly across the returned facet-level/group-pair rows in this
 call. Holm's family-wise error control requires valid unadjusted p-values;
 the approximate screening tail areas here have not been shown to meet that
@@ -156,8 +156,8 @@ via \code{p_adjust}; see \code{\link[stats:p.adjust]{stats::p.adjust()}} for the
 }
 \section{Choosing a method}{
 
-In most first-pass DFF screening, start with \code{method = "residual"}. It is
-faster, reuses the fitted model, and is less fragile in smaller subsets.
+Use \code{method = "residual"} to describe group differences in model residuals
+without fitting subgroup models. This does not test differential functioning.
 Use \code{method = "refit"} when you specifically want group-specific parameter
 estimates and can tolerate extra computation. Agreement between methods is
 not guaranteed by a universal per-group sample-size threshold: stability and
@@ -171,14 +171,14 @@ power, parameter stability, or sample-size adequacy.
 
 \itemize{
 \item \verb{$dif_table}: one row per facet-level x group-pair with contrast,
-SE, t-statistic, p-value, adjusted p-value, effect metric, and
-method-appropriate classification. Includes \code{Method}, \code{N_Group1},
+a residual mean difference or linked subgroup difference. Residual rows have
+no SE, test or binary classification. Includes \code{Method}, \code{N_Group1},
 \code{N_Group2}, \code{EffectMetric}, \code{ClassificationSystem}, \code{ContrastBasis},
 \code{SEBasis}, \code{StatisticLabel}, \code{ProbabilityMetric}, \code{DFBasis},
 \code{ReportingUse}, \code{PrimaryReportingEligible}, and \code{sparse} columns.
 \item \verb{$cell_table}: (residual method only) per-cell detail with N,
-ObsScore, ExpScore, ObsExpAvg, StdResidual.
-\item \verb{$summary}: counts by screening result (\code{method = "residual"}) or linked-
+ObsScore, ExpScore, ObsExpAvg, StdResidual and an interpretation note.
+\item \verb{$summary}: available/unavailable residual comparisons or linked-
 screening and insufficient-linking rows (\code{method = "refit"}).
 \item \verb{$group_fits}: (refit method only) list of per-group facet estimates and
 subgroup linking diagnostics.
@@ -194,6 +194,14 @@ evidence over the fitted expected-score and residual scale. Keep
 residual-method contrasts and interaction cells in screening language.
 Refit contrasts require explicit subgroup linking and precision support for
 conditional screening, but remain in screening language.
+}
+
+\section{Saved results}{
+
+Residual results, summaries and reports saved by earlier versions must be
+recomputed with this function using the fitted model and original data.
+This does not require refitting the model. Previously exported tables and
+figures should also be regenerated.
 }
 
 \section{Typical workflow}{
@@ -220,11 +228,9 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 dff <- analyze_dff(fit, diag, facet = "Rater", group = "Group", data = toy)
 dff$summary
-# Look for: a small `FlaggedPairs` count relative to `Pairs`. Under
-#   method = "residual", `ClassificationSystem` is "screening", not
-#   ETS. "Screen positive" rows are prompts for substantive review.
+# Read the residual mean difference and the number of observations per group.
 head(dff$dif_table[, c("Level", "Group1", "Group2", "Contrast",
-                       "Classification", "ClassificationSystem")])
+                       "N_Group1", "N_Group2")])
 # The residual contrast is an observed-minus-expected average contrast
 # between groups. It is useful for screening, but it is not an ETS
 # A/B/C logit-delta classification.

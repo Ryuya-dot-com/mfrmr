@@ -60,8 +60,10 @@ the fitted MFRM latent scale or estimate a latent ordinal G/Phi coefficient.
 \itemize{
 \item \code{G} is appropriate for \strong{relative} decisions (rank-ordering
 persons): \code{G = sigma2(p) / (sigma2(p) + sigma2(Residual))}.
-\item The reported \code{Phi} is appropriate for \strong{absolute} decisions (cut-score
-classification): \verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}, before D-study scaling.
+\item The reported \code{Phi} describes dependability for \strong{absolute} decisions:
+\verb{Phi = sigma2(p) / (sigma2(p) + sigma2(facet main effects) + sigma2(Residual))}, before D-study scaling.
+It does not estimate the probability of correct classification at a
+particular cut score.
 \item Use \code{\link[=mfrm_d_study]{mfrm_d_study()}} to project \code{G} / \code{Phi} under planned numbers of
 raters, items, criteria, or other random measurement facets.
 \item Values of 0.70 and 0.80 are displayed as familiar planning references,
@@ -79,16 +81,19 @@ This helper formulates the random-effects model with main effects
 only (\code{Score ~ 1 + (1|Person) + (1|Facet1) + ... + Residual}); no
 explicit \code{(1 | Person:Rater)}, \code{(1 | Person:Criterion)}, or
 \code{(1 | Rater:Criterion)} interaction terms are estimated. All
-two-way and higher interaction variance is therefore folded into
-the \code{Residual} term -- the standard one-observation-per-cell
-approximation -- which can bias \code{G} downward when person x facet
-interactions are substantively large. This function reports the
+interactions are omitted. The residual combines unexplained variation;
+omitted interactions may also affect the fitted main-effect components.
+Their separate variances and correct averaging rates are not recovered. This function reports the
 one-observation-per-cell baseline. \code{\link[=mfrm_d_study]{mfrm_d_study()}} applies D-study
 scaling, including residual-scaling sensitivity checks, to the same
 simplified variance-component decomposition.
 Because person-by-facet interaction terms are not estimated separately,
 D-study projections remain practical planning evidence rather than a
-replacement for a fully specified G-theory design.
+replacement for a fully specified G-theory design. Counts held constant in
+a D-study do not turn a random facet into a fixed-facet universe. Variance
+estimation uncertainty is not propagated to G/Phi. Component values are
+stored at full precision; rounding is only for display. Recreate older
+G/D results from the existing MFRM fit before reuse.
 Boundary or singular \code{lme4} fits are retained as diagnostic evidence but are
 not treated as decision-ready G/D-study evidence.
 }

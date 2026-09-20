@@ -274,6 +274,9 @@ test_that("detect_anchor_drift S3 methods produce output", {
 
   expect_output(print(drift), "Anchor Drift Screen")
   expect_output(print(s), "Anchor Drift Screen")
+  printed <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(printed, "not tests of anchor invariance", fixed = TRUE)
+  expect_false(grepl("screened_common_element_alignment|review_screen", printed))
 })
 
 # ================================================================
@@ -386,6 +389,9 @@ test_that("build_equating_chain S3 methods produce output", {
 
   expect_output(print(chain), "Screened Linking Chain")
   expect_output(print(s), "Screened Linking Chain")
+  printed <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(printed, "Offset_SD is residual spread", fixed = TRUE)
+  expect_false(grepl("screened_common_element_alignment|screened_linking_aid", printed))
 })
 
 # ================================================================
@@ -460,6 +466,9 @@ test_that("build_linking_review summary methods produce front-door output", {
   expect_output(print(review), "Linking Review Summary")
   expect_output(print(s), "Linking Review Summary")
   expect_output(print(s), "Plot Follow-up")
+  printed <- paste(capture.output(print(s)), collapse = "\n")
+  expect_match(gsub("\\s+", " ", printed), "covariance are not fully propagated", fixed = TRUE)
+  expect_false(grepl("insufficient_anchor_evidence|pre_fit_anchor_adequacy|supported_with_caveat|synthesis layer|package-native|opaque composite", printed))
 })
 
 test_that("build_linking_review rejects malformed inputs", {

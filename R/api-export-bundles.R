@@ -886,6 +886,7 @@ build_mfrm_manifest <- function(fit,
       stringsAsFactors = FALSE
     )
   }
+  validate_shrinkage_output(fit)
   shrinkage_review <- tryCatch({
     mode <- as.character(fit$config$facet_shrinkage %||% "none")
     report <- fit$shrinkage_report
@@ -899,6 +900,9 @@ build_mfrm_manifest <- function(fit,
         Tau2 = suppressWarnings(as.numeric(report$Tau2)),
         MeanShrinkage = suppressWarnings(as.numeric(report$MeanShrinkage)),
         EffectiveDF = suppressWarnings(as.numeric(report$EffectiveDF)),
+        NLevelsUsed = report$NLevelsUsed,
+        SupportsFormalInference = FALSE,
+        Interpretation = report$Interpretation,
         stringsAsFactors = FALSE
       )
     }
@@ -5191,10 +5195,11 @@ export_mfrm_bundle <- function(fit,
           "unit_prediction_notes"
         )
       }
-      html_tables$unit_prediction_estimates <- unit_sum$estimates
+      html_tables$unit_prediction_estimates <- prediction_display_estimates(unit_sum$estimates)
+      html_tables$unit_prediction_notes <- data.frame(Note = unit_sum$notes)
       html_tables$unit_prediction_row_review <- unit_sum$row_review
       if (nrow(as.data.frame(unit_sum$population_review %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
-        html_tables$unit_prediction_population_review <- unit_sum$population_review
+        html_tables$unit_prediction_population_review <- unit_sum$population_review[setdiff(names(unit_sum$population_review), "PosteriorBasis")]
       }
     }
 
@@ -5229,10 +5234,13 @@ export_mfrm_bundle <- function(fit,
         )
       }
       if (nrow(as.data.frame(pv_sum$draw_summary %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
-        html_tables$plausible_value_summary <- pv_sum$draw_summary
+        html_tables$plausible_value_summary <- pv_sum$draw_summary[setdiff(names(pv_sum$draw_summary),
+          c("ScoringAlgorithm", "SourceScoringReady", "EstimateUse"))]
       }
+      html_tables$plausible_value_estimates <- prediction_display_estimates(pv_sum$estimates)
+      html_tables$plausible_value_notes <- data.frame(Note = pv_sum$notes)
       if (nrow(as.data.frame(pv_sum$population_review %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
-        html_tables$plausible_value_population_review <- pv_sum$population_review
+        html_tables$plausible_value_population_review <- pv_sum$population_review[setdiff(names(pv_sum$population_review), "PosteriorBasis")]
       }
     }
   }
@@ -5280,19 +5288,8 @@ export_mfrm_bundle <- function(fit,
     write_csv(manifest$available_outputs, paste0(prefix, "_manifest_available_outputs.csv"), "manifest_available_outputs")
     if (nrow(as.data.frame(manifest$gpcm_boundary %||% data.frame(), stringsAsFactors = FALSE)) > 0) {
       write_csv(manifest$gpcm_boundary, paste0(prefix, "_manifest_gpcm_boundary.csv"), "manifest_gpcm_boundary")
-      html_tables$manifest_gpcm_boundary <- manifest$gpcm_boundary
     }
     write_text(render_mfrm_manifest_text(manifest), paste0(prefix, "_manifest.txt"), "manifest_text")
-    html_tables$manifest_summary <- manifest$summary
-    html_tables$manifest_readiness <- manifest$readiness
-    if (nrow(as.data.frame(manifest$readiness_components, stringsAsFactors = FALSE)) > 0) {
-      html_tables$manifest_readiness_components <- manifest$readiness_components
-    }
-    if (nrow(as.data.frame(manifest$readiness_parameters, stringsAsFactors = FALSE)) > 0) {
-      html_tables$manifest_readiness_parameters <- manifest$readiness_parameters
-    }
-    html_tables$manifest_available_outputs <- manifest$available_outputs
-    html_tables$manifest_settings <- manifest$settings
   }
 
   if ("visual_summaries" %in% include) {
@@ -5449,7 +5446,11 @@ export_mfrm_bundle <- function(fit,
   }
 
   if ("html" %in% include) {
-    html_text$manifest <- if (!is.null(manifest)) render_mfrm_manifest_text(manifest) else NULL
+    html_tables$analysis <- manifest$summary[intersect(c("Model", "Method", "Observations",
+      "Persons", "Facets", "Categories"), names(manifest$summary))]
+    html_text$interpretation <- paste(utils::capture.output(
+      print_fit_decision_section(summary(fit, diagnostics = diagnostics)$decision)
+    ), collapse = "\n")
     html_path <- file.path(output_dir, paste0(prefix, "_bundle.html"))
     if (file.exists(html_path) && !overwrite) {
       stop("File already exists: ", html_path, ". Set `overwrite = TRUE` to replace.", call. = FALSE)
@@ -5585,6 +5586,13 @@ export_validate_optional_object <- function(x, class_name, arg_name) {
     stop("`", arg_name, "` must be output from ", class_name, " helpers.", call. = FALSE)
   }
   prediction_validate_population_output(x)
+  if (inherits(x, c("mfrm_unit_prediction", "mfrm_plausible_values"))) {
+    x$estimates <- prediction_estimate_table(x)
+    if (inherits(x, "mfrm_unit_prediction")) {
+      x$draws <- prediction_draw_table(x$draws, x$estimates)
+    } else x$values <- prediction_draw_table(x$values, x$estimates)
+    x$notes <- prediction_output_notes(x)
+  }
   x
 }
 

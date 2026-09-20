@@ -110,8 +110,8 @@ unstable anchor elements.}
 a series of administrations or forms.}
 \item{\code{\link[=build_linking_review]{build_linking_review()}}}{Synthesizes anchor review, drift, and
 screened-chain evidence into one operational review surface.}
-\item{\code{\link[=analyze_dff]{analyze_dff()}}}{Screens differential facet functioning with residual
-or refit methods. Linked refit point contrasts remain screening-only
+\item{\code{\link[=analyze_dff]{analyze_dff()}}}{Describes group residual differences or linked
+subgroup facet estimates. Linked refit point contrasts remain screening-only
 because their uncertainty is conditional on baseline anchors.}
 }
 }
@@ -123,14 +123,15 @@ because their uncertainty is conditional on baseline anchors.}
 \item Use \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} for assignment/co-observation connectedness.
 Agreement, severity-direction, and halo networks describe score relations;
 they do not establish an empirical link or a common measurement scale.
-\item Use residual and refit DFF outputs as screening results. Even with an
+\item Residual differences do not isolate differential functioning and have no
+tests or binary classifications. Even with an
 adequate link, refit SEs condition on baseline anchors and omit their
 uncertainty and cross-refit covariance; formal inference remains unavailable.
 \item Always name the facet, facet level, and group pair involved in a DFF
 contrast. A generic "DIF exists" statement is not interpretable in a
 many-facet design.
-\item Residual and refit DFF classifications are currently screening labels;
-current refit output does not assign ETS A/B/C labels.
+\item Linked refit contrasts remain descriptive; neither method assigns ETS
+A/B/C labels or supports a formal differential-functioning decision.
 \item Treat drift flags as prompts for review, not automatic evidence that an
 anchor must be removed.
 \item Treat \code{LinkSupportAdequate = FALSE} as a weak-link warning: at least one

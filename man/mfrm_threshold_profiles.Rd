@@ -19,8 +19,8 @@ Use this function to inspect available profile presets before calling
 
 \code{profiles} contains thresholds used by warning logic
 (sample size, fit ratios, PCA cutoffs, etc.).
-\code{pca_reference_bands} contains literature-oriented descriptive bands used in
-summary text.
+\code{pca_reference_bands} contains uncalibrated descriptive references used in
+summary text; these are not dimensionality-test critical values.
 }
 \section{Interpreting output}{
 

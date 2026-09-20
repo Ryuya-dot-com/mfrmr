@@ -19,7 +19,10 @@
 #' for a matched context is the model-implied quantity
 #' \eqn{\sum_k P_{r1}(X=k)P_{r2}(X=k)}. It is not a marginal-frequency chance
 #' agreement statistic. Observed exact agreement uses equality of the package's
-#' observed score categories. The current function does not translate category
+#' observed score categories. Repeated ratings in a rater/context cell are
+#' averaged using observation weights; comparisons then describe those means,
+#' and expected exact agreement is withheld for the repeated cells. The
+#' current function does not translate category
 #' positions across multiple independent scales, apply an agreement-based SE
 #' inflation, or establish numerical equivalence with FACETS Table 7.
 #'
@@ -28,8 +31,13 @@
 #' - `pairs`: pairwise exact agreement, correlation, and direction/size gaps.
 #' - `settings`: applied facet matching and warning thresholds.
 #'
-#' Pairs flagged by both low exact agreement and low correlation generally
-#' deserve highest calibration priority.
+#' Flags indicate configured review thresholds, not rater quality, fairness
+#' or an automatic training priority. A missing rule remains unavailable;
+#' a known cutoff crossing still flags the pair. Overall flag rates require
+#' complete classification. Expected agreement is withheld if any matched
+#' context lacks valid category probabilities; availability counts are retained.
+#' Recreate older agreement/network results from the existing fit and matching
+#' diagnostics with the original settings, then regenerate plots and exports.
 #'
 #' @section Typical workflow:
 #' 1. Run with explicit `rater_facet` (and `context_facets` if needed).
@@ -57,12 +65,18 @@
 #' The `summary` data.frame contains:
 #' \describe{
 #'   \item{RaterFacet}{Name of the rater facet analyzed.}
-#'   \item{TotalPairs}{Number of rater pairs evaluated.}
-#'   \item{ExactAgreement}{Mean exact agreement across all pairs.}
+#'   \item{Pairs, AvailablePairs, UnavailablePairs}{All candidate rater pairs,
+#'     those with matched scores, and those without.}
+#'   \item{TotalPairs}{Total matched-context opportunities across rater pairs.}
+#'   \item{ExactAgreement}{Exact agreements divided by all matched-context
+#'     opportunities.}
 #'   \item{AgreementMinusExpected}{Observed exact agreement minus expected exact
 #'     agreement.}
 #'   \item{MeanCorr}{Mean pairwise correlation.}
-#'   \item{FlaggedPairs, FlaggedShare}{Count and proportion of flagged pairs.}
+#'   \item{FlaggedPairs, FlaggedShare}{Known flagged pairs and their share of
+#'     all pairs; the share is unavailable if classification is incomplete.}
+#'   \item{ClassifiedPairs, UnclassifiedPairs}{Available and unavailable combined
+#'     flag decisions. Correlation availability is recorded separately.}
 #'   \item{RaterSeparation, RaterReliability}{Severity-spread indices for the
 #'     rater facet, reported separately from agreement.}
 #' }
@@ -117,6 +131,8 @@ interrater_agreement_table <- function(fit,
     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.")
   }
 
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "interrater_agreement_table()")
+
   known_facets <- c("Person", fit$config$facet_names)
   if (is.null(rater_facet) || !nzchar(as.character(rater_facet[1]))) {
     if (!is.null(diagnostics$interrater$summary) &&
@@ -160,17 +176,19 @@ interrater_agreement_table <- function(fit,
 
   pairs <- as.data.frame(agreement$pairs, stringsAsFactors = FALSE)
   flagged_n <- 0L
+  classified_n <- 0L
   if (nrow(pairs) > 0) {
     pairs <- pairs |>
       mutate(
         Pair = paste(.data$Rater1, .data$Rater2, sep = " | "),
         ExactGap = ifelse(is.finite(.data$ExpectedExact), .data$Exact - .data$ExpectedExact, NA_real_),
-        LowExactFlag = is.finite(.data$Exact) & .data$Exact < exact_warn,
-        LowCorrFlag = is.finite(.data$Corr) & .data$Corr < corr_warn,
+        LowExactFlag = ifelse(is.finite(.data$Exact), .data$Exact < exact_warn, NA),
+        LowCorrFlag = ifelse(is.finite(.data$Corr), .data$Corr < corr_warn, NA),
         Flag = .data$LowExactFlag | .data$LowCorrFlag
       ) |>
       arrange(desc(.data$Flag), .data$Exact, .data$Corr)
     flagged_n <- sum(pairs$Flag, na.rm = TRUE)
+    classified_n <- sum(!is.na(pairs$Flag))
     if (!is.null(top_n)) {
       pairs <- pairs |>
         slice_head(n = max(1L, as.integer(top_n)))
@@ -189,13 +207,22 @@ interrater_agreement_table <- function(fit,
 
   summary_tbl <- as.data.frame(agreement$summary, stringsAsFactors = FALSE)
   if (nrow(summary_tbl) > 0) {
-    summary_tbl$FlaggedPairs <- flagged_n
-    summary_tbl$FlaggedShare <- ifelse(summary_tbl$Pairs > 0, flagged_n / summary_tbl$Pairs, NA_real_)
+    summary_tbl$ClassifiedPairs <- classified_n
+    summary_tbl$UnclassifiedPairs <- summary_tbl$Pairs - classified_n
+    summary_tbl$FlaggedPairs <- if (classified_n > 0L) flagged_n else NA_integer_
+    summary_tbl$FlaggedShare <- ifelse(summary_tbl$Pairs > 0 &
+      summary_tbl$UnclassifiedPairs == 0L, flagged_n / summary_tbl$Pairs, NA_real_)
   }
 
   out <- list(
     summary = summary_tbl,
     pairs = pairs,
+    notes = c(
+      "Agreement compares scores within the selected matching contexts; it does not measure rater quality or establish fairness.",
+      "Repeated ratings in a rater/context cell are averaged using observation weights; expected exact agreement is unavailable for those cells.",
+      "Missing comparisons remain unavailable. A known cutoff crossing is flagged even when the other rule is unavailable; an overall flag rate requires complete classification.",
+      "Expected agreement uses fitted category probabilities with calibration fixed; it is not chance agreement or an inferential test."
+    ),
     settings = list(
       rater_facet = rater_facet,
       context_facets = setdiff(facet_cols, rater_facet),
@@ -341,6 +368,11 @@ facets_chisq_table <- function(fit,
 #' - `rule = "either"`: `|StdResidual| >= abs_z_min` OR `ObsProb <= prob_max`
 #' - `rule = "both"`: both conditions must be met.
 #'
+#' Missing inputs preserve an unavailable rule outcome unless the other
+#' condition determines the result (for example, a true condition suffices
+#' for `either`). Summaries retain evaluated and unavailable counts; the
+#' full-sample percentage is withheld if any outcome is unavailable.
+#'
 #' The table includes row-level observed/expected values, residuals,
 #' observed-category probability, most-likely category, and a composite
 #' severity score for sorting.
@@ -384,7 +416,11 @@ facets_chisq_table <- function(fit,
 #' The `summary` data.frame contains:
 #' \describe{
 #'   \item{TotalObservations}{Total observations analyzed.}
-#'   \item{UnexpectedN, UnexpectedPercent}{Count and share of flagged rows.}
+#'   \item{UnexpectedN, UnexpectedPercent}{Known flagged count and full-sample
+#'     percentage. The percentage is unavailable when any rule outcome is
+#'     unknown; the count is unavailable when no response can be evaluated.}
+#'   \item{EvaluatedObservations, UnavailableObservations}{Responses whose
+#'     rule outcome is determined or unavailable.}
 #'   \item{AbsZThreshold, ProbThreshold}{Applied cutoff values.}
 #'   \item{Rule}{"either" or "both".}
 #' }
@@ -431,6 +467,7 @@ unexpected_response_table <- function(fit,
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "unexpected_response_table()")
   if (is.null(diagnostics$obs) || nrow(diagnostics$obs) == 0) {
     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.")
   }
@@ -464,6 +501,17 @@ unexpected_response_table <- function(fit,
   as_mfrm_bundle(out, "mfrm_unexpected")
 }
 
+validate_unexpected_coverage <- function(x) {
+  needed <- c("EvaluatedObservations", "UnavailableObservations")
+  if ("BaselineUnexpectedN" %in% names(x$summary)) {
+    needed <- c(needed, "BaselineEvaluatedObservations", "BaselineUnavailableObservations")
+  }
+  if (!all(needed %in% names(x$summary))) {
+    stop("Recreate this unexpected-response result with unexpected_response_table() or unexpected_after_bias_table() to retain screening coverage; no model refit is needed.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' Build an adjusted-score reference table bundle
 #'
 #' @param fit Output from [fit_mfrm()].
@@ -480,7 +528,11 @@ unexpected_response_table <- function(fit,
 #' @param label_style Column-label style for formatted outputs:
 #'   `"both"` (default), `"native"`, or `"legacy"`.
 #' @param omit_unobserved If `TRUE`, remove unobserved levels.
-#' @param xtreme Extreme-score adjustment amount.
+#' @param xtreme Display adjustment in score units for all-minimum/all-maximum
+#'   rows; default `0` leaves fitted measures unchanged. A positive value
+#'   replaces the displayed `Measure` by inversion of an expected score that
+#'   far from the endpoint. It does not adjust responses, refit the model or
+#'   correct JML bias.
 #' @param fair_se Logical. When `TRUE` and `fit` is an MML bounded-`GPCM`
 #'   fit, add structural delta-method standard errors and confidence limits
 #'   for `Fair(M)` / `AdjustedAverage` and `Fair(Z)` /
@@ -507,6 +559,20 @@ unexpected_response_table <- function(fit,
 #' rows); FairZ uses zero references. Neither integrates over the observed
 #' assignment/person distribution. FairZ and its historical alias
 #' `StandardizedAdjustedAverage` are expected scores, not z-scores.
+#' If a free JML Person measure is infinite, the mean Person reference is
+#' unavailable: non-Person FairM values are `NA`, with the reason recorded in
+#' `FairMReference`. Finite optimizer traces are not substituted into that
+#' mean. FairZ uses a zero Person reference and does not require this mean.
+#'
+#' With `xtreme > 0`, `PrimaryMeasure` retains the fitted measure, including
+#' infinite JML estimates and fixed anchors, on the requested reporting scale.
+#' `MeasureBasis` identifies display-only replacements and `ExtremeAdjustment`
+#' records their amount in score units. The displayed `Measure` may differ
+#' from a fixed anchor; the anchor itself is unchanged. Measure SEs are
+#' unavailable on replaced rows because the original SE does not describe the
+#' display adjustment. Fair-score calculations do not use the replacement.
+#' Recompute older diagnostics and recreate saved tables from the existing
+#' fit before summarizing or plotting them; no model refit is needed.
 #'
 #' Bounded `GPCM` fits are supported under a slope-aware
 #' element-conditional construction. For each slope-facet element
@@ -558,7 +624,10 @@ unexpected_response_table <- function(fit,
 #'   \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 #'   \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `AdjustedAverage` when `fair_se = TRUE` and available.}
 #'   \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for `StandardizedAdjustedAverage` when `fair_se = TRUE` and available.}
-#'   \item{Measure}{Estimated facet measure, transformed by `umean` and `uscale`.}
+#'   \item{Measure}{Displayed facet measure, transformed by `umean` and `uscale`; may be replaced when `xtreme > 0`.}
+#'   \item{PrimaryMeasure}{Original fitted measure on the same reporting scale, including infinite JML estimates.}
+#'   \item{MeasureBasis, ExtremeAdjustment}{Whether the displayed measure was replaced and the replacement amount in score units.}
+#'   \item{FairMReference}{The mean reference used for FairM, or why that reference is unavailable.}
 #'   \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for `Model S.E.` and `Real S.E.`.}
 #'   \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 #' }
@@ -976,8 +1045,8 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' @param diagnostics Optional output from [diagnose_mfrm()].
 #' @param whexact Use exact ZSTD transformation for category fit.
 #' @param drop_unused If `TRUE`, remove categories with zero count from the
-#'   displayed category table; `summary` and `caveats` still retain the omitted
-#'   score-support warning.
+#'   displayed category table. Usage totals still cover the full declared scale;
+#'   unavailable counts remain visible, and score-support caveats are retained.
 #'
 #' @details
 #' This helper provides category usage/fit statistics and threshold summaries
@@ -1028,7 +1097,9 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' The `category_table` data.frame contains:
 #' \describe{
 #'   \item{Category}{Score category value.}
-#'   \item{Count, Percent}{Observed count and percentage of total.}
+#'   \item{Count, Percent}{Observed count and percentage of total. With observation
+#'     weights, counts are sums of weights, not independent sample sizes. Missing
+#'     or invalid scores/weights make the usage counts unavailable.}
 #'   \item{AvgPersonMeasure}{Mean person measure for respondents in this
 #'     category.}
 #'   \item{Infit, Outfit}{Category-level fit statistics.}
@@ -1048,13 +1119,16 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   \item{Estimate}{Estimated threshold/step difficulty (logits).}
 #'   \item{StepFacet}{Threshold family identifier when the fit uses facet-specific
 #'     threshold sets.}
-#'   \item{GapFromPrev}{Difference from the previous threshold within the same
-#'     `StepFacet` when thresholds are facet-specific. Gaps below
-#'     1.4 logits may indicate category underuse; gaps above 5.0 may
-#'     indicate wide unused regions (Linacre, 2002).}
+#'   \item{GapFromPrev}{Difference between adjacent numbered thresholds within
+#'     the same `StepFacet`. Missing thresholds are not skipped to form a gap.
+#'     No automatic category-merging rule is applied.}
 #'   \item{ThresholdMonotonic}{Logical flag repeated within each threshold set.
-#'     For PCM fits, read this within `StepFacet`, not as a pooled item-bank
-#'     verdict.}
+#'     `FALSE` records at least one decreasing adjacent pair; `TRUE` requires
+#'     every expected pair to be available and nondecreasing, allowing numerical
+#'     differences up to `sqrt(.Machine$double.eps)`. Equal thresholds meet this
+#'     descriptive condition. Otherwise the flag is `NA`. A binary scale has
+#'     only one threshold and no applicable ordering comparison. This is a
+#'     statement about point estimates, not a test of category adequacy.}
 #'   \item{LowerCategory, UpperCategory, WeaklyIdentified, ThresholdCaveat}{
 #'     Adjacent score-category support metadata. Thresholds adjacent to retained
 #'     zero-count categories are flagged for cautious interpretation.}
@@ -1063,7 +1137,13 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' @return A named list with:
 #' - `category_table`: category-level counts, expected counts, fit, and ZSTD
 #' - `threshold_table`: model step/threshold estimates
-#' - `summary`: one-row summary (usage and threshold monotonicity)
+#' - `summary`: one-row summary with available/unavailable category counts and
+#'   adjacent-threshold comparisons. Category-fit means identify their available
+#'   denominators and describe displayed rows. Missing fit statistics/flags stay
+#'   `NA`, including unused categories with no estimable category fit.
+#' - `category_usage`: counts across the full scale, before `drop_unused`
+#' - `threshold_coverage`: available, unavailable and decreasing adjacent-pair
+#'   counts; `NotApplicable` distinguishes binary scales from missing estimates
 #' - `caveats`: structured score-support warning/review rows
 #' - `diagnostic_mode`: character scalar carried from
 #'   `diagnostics$diagnostic_mode` (`"legacy"`, `"both"`, or
@@ -1099,6 +1179,7 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #' review$summary
 #'
 #' # Bars show observed counts; the line shows model-expected counts
+#' # Recreate saved tables with the original fit and diagnostics after updating.
 #' plot(categories)
 #' }
 #' @section References:
@@ -1109,8 +1190,8 @@ measurable_summary_table <- function(fit, diagnostics = NULL) {
 #'   Psychometrika, 47(2), 149-174. \doi{10.1007/BF02296272}
 #' - Linacre, J. M. (2002). What do Infit and Outfit, mean-square and
 #'   standardized mean? *Rasch Measurement Transactions, 16*(2), 878.
-#'   (Source for the 0.5-1.5 mean-square heuristic review interval and the
-#'   threshold-gap heuristics used in `summary(t8)$summary`.)
+#'   (Source for the 0.5-1.5 mean-square heuristic review interval; this is
+#'   not a source for threshold-gap rules.)
 #' - Wind, S. A. (2023). *Detecting rating scale malfunctioning with the
 #'   partial credit model and generalized partial credit model*.
 #'   Educational and Psychological Measurement, 83(5), 953-983.
@@ -1129,6 +1210,7 @@ rating_scale_table <- function(fit,
   if (is.null(diagnostics)) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "rating_scale_table()")
   if (is.null(diagnostics$obs) || nrow(diagnostics$obs) == 0) {
     stop("`diagnostics$obs` is empty. Run diagnose_mfrm() first.")
   }
@@ -1136,57 +1218,25 @@ rating_scale_table <- function(fit,
   cat_tbl <- as.data.frame(calc_category_stats(diagnostics$obs, res = fit, whexact = whexact), stringsAsFactors = FALSE)
   cat_tbl <- augment_category_table_with_marginal_fit(cat_tbl, diagnostics)
   cat_tbl <- annotate_score_category_caveats(cat_tbl, prep = fit$prep)
+  usage <- summarize_category_usage(cat_tbl)
   if (isTRUE(drop_unused) && nrow(cat_tbl) > 0 && "Count" %in% names(cat_tbl)) {
-    cat_tbl <- cat_tbl[cat_tbl$Count > 0, , drop = FALSE]
+    cat_tbl <- cat_tbl[is.na(cat_tbl$Count) | cat_tbl$Count > 0, , drop = FALSE]
   }
 
-  step_tbl <- as.data.frame(fit$steps, stringsAsFactors = FALSE)
-  if (nrow(step_tbl) > 0 && all(c("Step", "Estimate") %in% names(step_tbl))) {
-    monotonic_flag <- function(x) {
-      x <- suppressWarnings(as.numeric(x))
-      x <- x[is.finite(x)]
-      if (length(x) < 2) {
-        return(NA)
-      }
-      all(diff(x) >= -sqrt(.Machine$double.eps))
-    }
-    if ("StepFacet" %in% names(step_tbl)) {
-      ord <- order(as.character(step_tbl$StepFacet), step_index_from_label(step_tbl$Step))
-    } else {
-      ord <- order(step_index_from_label(step_tbl$Step))
-    }
-    step_tbl <- step_tbl[ord, , drop = FALSE]
-    est <- suppressWarnings(as.numeric(step_tbl$Estimate))
-    if ("StepFacet" %in% names(step_tbl)) {
-      groups <- as.character(step_tbl$StepFacet)
-      step_tbl$GapFromPrev <- stats::ave(est, groups, FUN = function(x) c(NA_real_, diff(x)))
-      step_tbl$ThresholdMonotonic <- stats::ave(
-        est,
-        groups,
-        FUN = function(x) rep(monotonic_flag(x), length(x))
-      )
-    } else {
-      step_tbl$GapFromPrev <- c(NA_real_, diff(est))
-      step_tbl$ThresholdMonotonic <- rep(monotonic_flag(est), nrow(step_tbl))
-    }
+  ordered_steps <- calc_step_order(fit$steps, expected_steps = fit$config$n_cat - 1L,
+    expected_facets = fit$config$facet_levels[[fit$config$step_facet %||% ""]])
+  threshold_coverage <- summarize_threshold_order(ordered_steps)
+  step_tbl <- as.data.frame(ordered_steps)
+  if (nrow(step_tbl)) {
+    step_tbl$GapFromPrev <- step_tbl$Spacing
     step_tbl <- annotate_threshold_caveats(step_tbl, prep = fit$prep)
   }
-
-  threshold_monotonic <- if (nrow(step_tbl) > 1 && "Estimate" %in% names(step_tbl)) {
-    if ("StepFacet" %in% names(step_tbl)) {
-      group_flags <- vapply(split(step_tbl$Estimate, step_tbl$StepFacet), monotonic_flag, logical(1))
-      if (any(is.na(group_flags))) NA else all(group_flags)
-    } else {
-      monotonic_flag(step_tbl$Estimate)
-    }
-  } else {
-    NA
-  }
+  threshold_monotonic <- threshold_coverage$ThresholdMonotonic
 
   marginal_fit_available <- has_marginal_fit_bundle(diagnostics)
   marginal_summary <- as.data.frame(diagnostics$marginal_fit$summary %||% data.frame(), stringsAsFactors = FALSE)
   marginal_flagged_categories <- if ("MarginalFitFlag" %in% names(cat_tbl)) {
-    sum(as.logical(cat_tbl$MarginalFitFlag), na.rm = TRUE)
+    marginal_flag_coverage(cat_tbl$MarginalFitFlag, "Displayed categories")$Flagged
   } else {
     NA_integer_
   }
@@ -1207,15 +1257,24 @@ rating_scale_table <- function(fit,
   }
 
   summary_tbl <- data.frame(
-    Categories = nrow(cat_tbl),
-    UsedCategories = if ("Count" %in% names(cat_tbl)) sum(cat_tbl$Count > 0, na.rm = TRUE) else NA_integer_,
+    Categories = usage$Categories,
+    DisplayedCategories = nrow(cat_tbl),
+    AvailableCategoryCounts = usage$AvailableCounts,
+    UnavailableCategoryCounts = usage$UnavailableCounts,
+    UsedCategories = usage$UsedCategories,
     UnusedScoreCategories = unused_score_categories,
     WeaklyIdentifiedThresholds = weak_thresholds,
-    MinCategoryCount = if ("Count" %in% names(cat_tbl) && nrow(cat_tbl) > 0) min(cat_tbl$Count, na.rm = TRUE) else NA_real_,
-    MaxCategoryCount = if ("Count" %in% names(cat_tbl) && nrow(cat_tbl) > 0) max(cat_tbl$Count, na.rm = TRUE) else NA_real_,
-    MeanCategoryInfit = if ("Infit" %in% names(cat_tbl)) mean(cat_tbl$Infit, na.rm = TRUE) else NA_real_,
-    MeanCategoryOutfit = if ("Outfit" %in% names(cat_tbl)) mean(cat_tbl$Outfit, na.rm = TRUE) else NA_real_,
+    MinCategoryCount = usage$MinCategoryCount,
+    MaxCategoryCount = usage$MaxCategoryCount,
+    MeanCategoryInfit = if (any(is.finite(cat_tbl$Infit))) mean(cat_tbl$Infit[is.finite(cat_tbl$Infit)]) else NA_real_,
+    AvailableCategoryInfit = sum(is.finite(cat_tbl$Infit)),
+    MeanCategoryOutfit = if (any(is.finite(cat_tbl$Outfit))) mean(cat_tbl$Outfit[is.finite(cat_tbl$Outfit)]) else NA_real_,
+    AvailableCategoryOutfit = sum(is.finite(cat_tbl$Outfit)),
     ThresholdMonotonic = threshold_monotonic,
+    ThresholdComparisons = threshold_coverage$Comparisons,
+    AvailableThresholdComparisons = threshold_coverage$Available,
+    UnavailableThresholdComparisons = threshold_coverage$Unavailable,
+    ThresholdOrderNotApplicable = threshold_coverage$NotApplicable,
     DiagnosticMode = as.character(diagnostics$diagnostic_mode %||% "legacy"),
     ExpectedCountBasis = if (marginal_fit_available) {
       "legacy_plugin + latent_integrated_first_order_counts"
@@ -1226,6 +1285,8 @@ rating_scale_table <- function(fit,
     MarginalOverallRMSD = if (marginal_fit_available) marginal_summary$OverallRMSD[1] %||% NA_real_ else NA_real_,
     MarginalMaxAbsStdResidual = if (marginal_fit_available) marginal_summary$OverallMaxAbsStdResidual[1] %||% NA_real_ else NA_real_,
     MarginalFlaggedCategories = marginal_flagged_categories,
+    MarginalClassifiedCategories = sum(!is.na(cat_tbl$MarginalFitFlag)),
+    MarginalUnclassifiedCategories = sum(is.na(cat_tbl$MarginalFitFlag)),
     stringsAsFactors = FALSE
   )
 
@@ -1234,6 +1295,8 @@ rating_scale_table <- function(fit,
     threshold_table = step_tbl,
     summary = summary_tbl,
     caveats = caveats,
+    category_usage = usage,
+    threshold_coverage = threshold_coverage,
     diagnostic_mode = as.character(diagnostics$diagnostic_mode %||% "legacy"),
     marginal_fit = diagnostics$marginal_fit %||% NULL
   )
@@ -1468,6 +1531,10 @@ bias_count_table <- function(bias_results,
 #' @details
 #' This helper recomputes expected values and residuals after interaction
 #' adjustments from [estimate_bias()] have been introduced.
+#' Screening coverage is retained separately before and after adjustment.
+#' Reduction counts, percentages and the comparison plot are unavailable if
+#' either screen leaves responses unclassified. Recreate older saved results
+#' with the original settings; the MFRM fit does not need re-estimation.
 #'
 #' `summary(t10)` is supported through `summary()`.
 #' `plot(t10)` is dispatched through `plot()` for class
@@ -1584,13 +1651,17 @@ unexpected_after_bias_table <- function(fit,
     rule = rule
   )
   baseline_n <- baseline$summary$UnexpectedN
-  after_n <- nrow(tbl)
+  after_n <- summary_tbl$UnexpectedN
+  complete <- isTRUE(baseline$summary$UnavailableObservations == 0) &&
+    isTRUE(summary_tbl$UnavailableObservations == 0)
   summary_tbl <- summary_tbl |>
     mutate(
       BaselineUnexpectedN = baseline_n,
       AfterBiasUnexpectedN = after_n,
-      ReducedBy = ifelse(is.finite(baseline_n), baseline_n - after_n, NA_real_),
-      ReducedPercent = ifelse(is.finite(baseline_n) && baseline_n > 0, 100 * (baseline_n - after_n) / baseline_n, NA_real_)
+      BaselineEvaluatedObservations = baseline$summary$EvaluatedObservations,
+      BaselineUnavailableObservations = baseline$summary$UnavailableObservations,
+      ReducedBy = ifelse(complete, baseline_n - after_n, NA_real_),
+      ReducedPercent = ifelse(complete && is.finite(baseline_n) && baseline_n > 0, 100 * (baseline_n - after_n) / baseline_n, NA_real_)
     )
 
   out <- list(
@@ -2660,6 +2731,8 @@ table6_subsets_listing <- function(fit,
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
 
+  mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "subset_connectivity_report()")
+
   summary_tbl <- if (!is.null(diagnostics$subsets$summary)) {
     as.data.frame(diagnostics$subsets$summary, stringsAsFactors = FALSE)
   } else {
@@ -2671,6 +2744,7 @@ table6_subsets_listing <- function(fit,
     data.frame()
   }
 
+  source_subsets <- nrow(summary_tbl)
   if (nrow(summary_tbl) == 0 || nrow(nodes_tbl) == 0) {
     return(list(
       summary = summary_tbl,
@@ -2680,6 +2754,8 @@ table6_subsets_listing <- function(fit,
       settings = list(
         top_n_subsets = if (is.null(top_n_subsets)) NA_integer_ else max(1L, as.integer(top_n_subsets)),
         min_observations = as.numeric(min_observations),
+        source_subsets = source_subsets,
+        retained_subsets = 0L,
         is_disjoint = FALSE
       )
     ))
@@ -2756,6 +2832,8 @@ table6_subsets_listing <- function(fit,
     settings = list(
       top_n_subsets = if (is.null(top_n_subsets)) NA_integer_ else max(1L, as.integer(top_n_subsets)),
       min_observations = min_observations,
+      source_subsets = source_subsets,
+      retained_subsets = nrow(summary_tbl),
       is_disjoint = nrow(summary_tbl) > 1
     )
   )
@@ -4211,6 +4289,7 @@ annotate_threshold_caveats <- function(threshold_table, prep = NULL) {
 }
 
 augment_category_table_with_marginal_fit <- function(category_table, diagnostics) {
+  validate_marginal_coverage(diagnostics$marginal_fit)
   if (!has_marginal_fit_bundle(diagnostics)) {
     return(category_table)
   }
@@ -4325,6 +4404,9 @@ table8_barchart_export <- function(fit,
   if (is.null(diagnostics) && !identical(fit_model, "GPCM")) {
     diagnostics <- diagnose_mfrm(fit, residual_pca = "none")
   }
+  if (!is.null(diagnostics)) {
+    mfrm_results_validate_diagnostics_identity(fit, diagnostics, helper = "category_structure_report()")
+  }
   obs_tbl <- if (!is.null(diagnostics$obs) && nrow(diagnostics$obs) > 0) {
     diagnostics$obs
   } else if (identical(fit_model, "GPCM")) {
@@ -4344,8 +4426,9 @@ table8_barchart_export <- function(fit,
   category_table <- as.data.frame(calc_category_stats(obs_tbl, res = fit, whexact = FALSE), stringsAsFactors = FALSE)
   category_table <- augment_category_table_with_marginal_fit(category_table, diagnostics)
   category_table <- annotate_score_category_caveats(category_table, prep = fit$prep)
+  category_usage <- summarize_category_usage(category_table)
   if (isTRUE(drop_unused) && nrow(category_table) > 0 && "Count" %in% names(category_table)) {
-    category_table <- category_table[category_table$Count > 0, , drop = FALSE]
+    category_table <- category_table[is.na(category_table$Count) | category_table$Count > 0, , drop = FALSE]
   }
 
   curve_spec <- build_step_curve_spec(fit)
@@ -4429,6 +4512,7 @@ table8_barchart_export <- function(fit,
 
   out <- list(
     category_table = category_table,
+    category_usage = category_usage,
     mode_peaks = mode_peaks,
     mode_boundaries = mode_boundaries,
     median_thresholds = median_thresholds,
@@ -5461,7 +5545,7 @@ write_mfrm_subset_file <- function(fit,
 }
 
 extract_pca_eigenvalues <- function(pca_bundle) {
-  if (is.null(pca_bundle)) return(numeric(0))
+  if (is.null(pca_bundle) || !is.null(pca_bundle$error)) return(numeric(0))
 
   eig <- numeric(0)
   if (!is.null(pca_bundle$pca) && "values" %in% names(pca_bundle$pca)) {
@@ -5474,7 +5558,7 @@ extract_pca_eigenvalues <- function(pca_bundle) {
     )
   }
 
-  eig[is.finite(eig)]
+  pmax(0, eig[is.finite(eig)])
 }
 
 build_pca_variance_table <- function(pca_bundle, facet = NULL) {
@@ -5573,25 +5657,14 @@ residual_parallel_eigenvalues <- function(residual_matrix) {
   mat <- as.matrix(residual_matrix)
   storage.mode(mat) <- "double"
   if (nrow(mat) < 2L || ncol(mat) < 2L) return(numeric(0))
-  finite_cols <- colSums(is.finite(mat)) >= 2L
-  mat <- mat[, finite_cols, drop = FALSE]
-  if (nrow(mat) < 2L || ncol(mat) < 2L) return(numeric(0))
-
-  cor_mat <- tryCatch(
-    suppressWarnings(stats::cor(mat, use = "pairwise.complete.obs")),
-    error = function(e) NULL
-  )
-  if (is.null(cor_mat) || nrow(cor_mat) < 2L || ncol(cor_mat) < 2L) {
-    return(numeric(0))
-  }
-  cor_mat[!is.finite(cor_mat)] <- 0
-  diag(cor_mat) <- 1
-  cor_mat <- ensure_positive_definite(cor_mat)
+  correlation <- residual_pca_correlation(mat)
+  if (!is.null(correlation$error)) return(numeric(0))
+  cor_mat <- correlation$cor_matrix
   eig <- tryCatch(
     suppressWarnings(as.numeric(eigen(cor_mat, symmetric = TRUE, only.values = TRUE)$values)),
     error = function(e) numeric(0)
   )
-  eig[is.finite(eig)]
+  pmax(0, eig[is.finite(eig)])
 }
 
 permute_residual_columns <- function(residual_matrix) {
@@ -5640,16 +5713,9 @@ compute_residual_parallel_analysis <- function(residual_matrix,
     return(empty("Residual matrix must have at least two rows and two columns."))
   }
 
-  keep_cols <- colSums(is.finite(mat)) >= 2L
-  mat <- mat[, keep_cols, drop = FALSE]
-  if (nrow(mat) < 2L || ncol(mat) < 2L) {
-    return(empty("Residual matrix has fewer than two usable columns."))
-  }
-
   observed <- if (is.null(observed_eigenvalues)) residual_parallel_eigenvalues(mat) else as.numeric(observed_eigenvalues)
-  observed <- observed[is.finite(observed)]
-  if (length(observed) == 0) {
-    return(empty("Observed residual eigenvalues are unavailable."))
+  if (length(observed) != ncol(mat) || any(!is.finite(observed))) {
+    return(empty("Observed residual eigenvalues are unavailable for the complete set of columns."))
   }
 
   if (!is.null(seed)) {
@@ -5669,7 +5735,7 @@ compute_residual_parallel_analysis <- function(residual_matrix,
   ok <- logical(as.integer(reps))
   for (i in seq_len(as.integer(reps))) {
     eig <- residual_parallel_eigenvalues(permute_residual_columns(mat))
-    if (length(eig) > 0L) {
+    if (length(eig) == length(observed) && all(is.finite(eig))) {
       eig_list[[i]] <- eig
       ok[i] <- TRUE
     }
@@ -5677,16 +5743,17 @@ compute_residual_parallel_analysis <- function(residual_matrix,
 
   eig_list <- eig_list[ok]
   successful <- length(eig_list)
-  if (successful == 0L) {
-    return(empty("No valid permuted residual correlation matrices were produced."))
+  if (successful < as.integer(reps)) {
+    out <- empty(paste0(
+      successful, " of ", as.integer(reps), " residual permutations produced valid correlation matrices. ",
+      "The comparison is unavailable because retaining only successful permutations would change the reference distribution."
+    ))
+    out$successful_reps <- as.integer(successful)
+    return(out)
   }
 
   n_components <- length(observed)
-  null_mat <- matrix(NA_real_, nrow = successful, ncol = n_components)
-  for (i in seq_len(successful)) {
-    k <- min(length(eig_list[[i]]), n_components)
-    null_mat[i, seq_len(k)] <- eig_list[[i]][seq_len(k)]
-  }
+  null_mat <- do.call(rbind, eig_list)
 
   null_mean <- colMeans(null_mat, na.rm = TRUE)
   null_sd <- apply(null_mat, 2L, stats::sd, na.rm = TRUE)
@@ -5832,10 +5899,10 @@ infer_facet_names <- function(diagnostics) {
 #'   analysis to the PCA tables.
 #' @param parallel_reps Number of residual permutations used when
 #'   `parallel = TRUE`.
-#' @param parallel_quantile Upper null quantile used as the exploratory
+#' @param parallel_quantile Upper permutation quantile used as the exploratory
 #'   comparison cutoff. The default (`0.95`) follows the common parallel
 #'   analysis convention.
-#' @param parallel_method Parallel-analysis null method. Currently
+#' @param parallel_method Parallel-analysis reference method. Currently
 #'   `"residual_permutation"` is implemented: standardized residuals are
 #'   permuted within each residual column, preserving each column's residual
 #'   distribution and missingness pattern while breaking residual association.
@@ -5861,6 +5928,13 @@ infer_facet_names <- function(diagnostics) {
 #' triangulated with global residual fit, element fit, and Q3-style
 #' local-dependence screens.
 #'
+#' Correlations use persons with observed residuals for each pair. Every column
+#' and pair must have defined correlations, and the resulting matrix must be
+#' positive semidefinite (allowing numerical roundoff). Missing correlations
+#' are not set to zero, and invalid matrices are not smoothed. Unavailable
+#' analyses retain an explanation in `errors`. Older stored PCA calculations
+#' are recomputed from the supplied observations when this function is called.
+#'
 #' Output tables use:
 #' - `Component`: principal-component index (1, 2, ...)
 #' - `Eigenvalue`: eigenvalue for each component
@@ -5868,16 +5942,21 @@ infer_facet_names <- function(diagnostics) {
 #' - `Cumulative`: cumulative variance proportion
 #'
 #' When `parallel = TRUE`, the variance tables additionally include
-#' data-driven null summaries:
+#' conditional permutation-reference summaries:
 #' - `ParallelMean`: mean permuted-residual eigenvalue
 #' - `ParallelCutoff`: `parallel_quantile` cutoff of permuted eigenvalues
 #' - `ExcessOverParallelCutoff`: observed eigenvalue minus the cutoff
 #' - `ExceedsParallelCutoff`: whether the observed eigenvalue exceeds the
 #'   permutation cutoff
 #'
-#' The default `parallel_reps = 200` is intended as a practical review setting.
-#' For stable final reporting of the 95% cutoff, use a larger value when the
-#' residual matrix size makes that computationally reasonable.
+#' The comparison conditions on the fitted residuals and missingness pattern;
+#' it does not simulate responses or refit the model. It does not account for
+#' fitted-parameter uncertainty and is not a calibrated dimensionality test.
+#' If any requested permutation has unavailable or invalid correlations, the
+#' comparison is withheld rather than conditioning on successful permutations.
+#' `parallel_status` retains the successful count and the reason.
+#' More permutations improve numerical stability of the reference quantile,
+#' but do not establish error-rate control for the fitted model.
 #'
 #' For `mode = "facet"` or `"both"`, `by_facet_table` additionally includes
 #' a `Facet` column.
@@ -5893,10 +5972,9 @@ infer_facet_names <- function(diagnostics) {
 #' @section Interpreting output:
 #' Use `overall_table` first:
 #' - early components with noticeably larger eigenvalues or proportions
-#'   suggest stronger residual structure that may deserve follow-up. Small
-#'   early components can be described as evidence consistent with the specified
-#'   one-dimensional facet structure only when fit and local-dependence screens
-#'   tell the same story.
+#'   suggest residual structure that may deserve follow-up. Small early
+#'   components do not establish unidimensionality; inspect the residual
+#'   aggregation, available person overlaps, fit and local-dependence screens.
 #'
 #' Then inspect `by_facet_table`:
 #' - helps localize which facet contributes most to residual structure.
@@ -5913,10 +5991,10 @@ infer_facet_names <- function(diagnostics) {
 #'
 #' The optional parallel analysis follows Horn's data-driven eigenvalue
 #' comparison logic and later recommendations to compare observed eigenvalues
-#' with high quantiles of an empirical null distribution. Because `mfrmr`
-#' applies it to standardized Rasch-family residual matrices, the null
-#' distribution is generated by within-column residual permutation rather than
-#' by simulating raw item scores.
+#' with high quantiles of a reference distribution. Here that reference is
+#' generated by within-column permutation of standardized residuals. The
+#' cited factor-retention literature does not calibrate this many-facet
+#' residual comparison as a fitted-model test.
 #'
 #' - Horn, J. L. (1965). A rationale and test for the number of factors in
 #'   factor analysis. *Psychometrika*, 30, 179-185.
@@ -6048,7 +6126,9 @@ analyze_residual_pca <- function(diagnostics,
   out_by_facet <- list()
 
   if (mode %in% c("overall", "both")) {
-    can_reuse <- is.null(facets) && !is.null(diagnostics$residual_pca_overall)
+    can_reuse <- is.null(facets) &&
+      identical(diagnostics$residual_pca_overall$calculation_version, 2L) &&
+      identical(diagnostics$residual_pca_overall$max_factors, pca_max_factors)
     out_overall <- if (can_reuse) {
       diagnostics$residual_pca_overall
     } else {
@@ -6061,7 +6141,10 @@ analyze_residual_pca <- function(diagnostics,
   }
 
   if (mode %in% c("facet", "both")) {
-    can_reuse <- is.null(facets) && !is.null(diagnostics$residual_pca_by_facet)
+    can_reuse <- is.null(facets) && length(diagnostics$residual_pca_by_facet) > 0L &&
+      all(vapply(diagnostics$residual_pca_by_facet, function(x) {
+        identical(x$calculation_version, 2L) && identical(x$max_factors, pca_max_factors)
+      }, logical(1)))
     out_by_facet <- if (can_reuse) {
       diagnostics$residual_pca_by_facet
     } else {
@@ -6142,6 +6225,7 @@ analyze_residual_pca <- function(diagnostics,
 
   out <- list(
     mode = mode,
+    calculation_version = 2L,
     facet_names = facet_names,
     overall = out_overall,
     by_facet = out_by_facet,
@@ -6186,9 +6270,22 @@ analyze_residual_pca <- function(diagnostics,
   as.integer(x)
 }
 
+validate_residual_pca_bundle <- function(x) {
+  if (!identical(x$calculation_version, 2L)) {
+    stop(paste(
+      "Recreate this residual PCA with analyze_residual_pca(diagnostics, ...).",
+      "The saved result does not record checks for unavailable or invalid residual correlations."
+    ), call. = FALSE)
+  }
+  invisible(x)
+}
+
 resolve_pca_input <- function(x) {
   if (is.null(x)) stop("Input cannot be NULL.")
-  if (!is.null(x$overall_table) || !is.null(x$by_facet_table)) return(x)
+  if (!is.null(x$overall_table) || !is.null(x$by_facet_table)) {
+    validate_residual_pca_bundle(x)
+    return(x)
+  }
   if (inherits(x, "mfrm_fit")) return(analyze_residual_pca(x, mode = "both"))
   if (!is.null(x$obs)) return(analyze_residual_pca(x, mode = "both"))
   stop("Input must be fit from fit_mfrm(), diagnostics from diagnose_mfrm(), or result from analyze_residual_pca().")
@@ -6350,23 +6447,15 @@ plot_residual_pca <- function(x,
     } else {
       paste0("Facet-specific scree profile: ", facet)
     }
-    # Rasch-conventional secondary-dimension reference bands on the residual
-    # eigenvalue scale (see Linacre, 2026, A User's Guide to Winsteps 5.11.0):
-    # 1.4 critical minimum, 2.0 noticeable, 3.0 strong second dimension.
-    rasch_refs <- c(1, 1.4, 2, 3)
-    rasch_ref_labels <- c(
-      "Unit-eigenvalue",
-      "Critical minimum (1.4)",
-      "Noticeable second dim (2.0)",
-      "Strong second dim (3.0)"
-    )
+    rasch_refs <- 1
+    rasch_ref_labels <- "Unit eigenvalue (descriptive reference)"
 
     if (plot_type == "parallel_scree") {
       title <- paste0(title_suffix, " (Parallel Scree)")
       q_percent <- formatC(100 * unique(tbl$ParallelQuantile)[1], format = "fg", digits = 4)
       q_label <- paste0(q_percent, "% residual-permutation cutoff")
       subtitle <- if (mode == "overall") {
-        "Observed residual eigenvalues compared with the permutation null"
+        "Conditional residual-permutation reference; fitted-model uncertainty omitted"
       } else {
         paste0("Facet-specific permutation comparison: ", facet)
       }
@@ -6401,7 +6490,7 @@ plot_residual_pca <- function(x,
           lty = 3,
           col = style$accent_tertiary
         )
-        graphics::abline(h = rasch_refs, lty = c(2, 3, 3, 3), col = style$neutral)
+        graphics::abline(h = rasch_refs, lty = 2, col = style$neutral)
       }
       out <- new_mfrm_plot_data(
         "residual_pca",
@@ -6419,7 +6508,7 @@ plot_residual_pca <- function(x,
                       rep(style$neutral, length(rasch_refs)))
           ),
           reference_lines = new_reference_lines("h", rasch_refs, rasch_ref_labels,
-                                                c("dashed", "dotted", "dotted", "dotted"),
+                                                "dashed",
                                                 rep("reference", length(rasch_refs))),
           data = tbl,
           InferenceTier = "exploratory",
@@ -6491,7 +6580,7 @@ plot_residual_pca <- function(x,
       )
       graphics::abline(h = pretty(graphics::par("usr")[3:4], n = 5), col = style$grid, lty = 1)
       graphics::abline(v = pretty(graphics::par("usr")[1:2], n = 5), col = style$grid, lty = 1)
-      graphics::abline(h = rasch_refs, lty = c(2, 3, 3, 3), col = style$neutral)
+      graphics::abline(h = rasch_refs, lty = 2, col = style$neutral)
     }
 
     out <- new_mfrm_plot_data(
@@ -6509,7 +6598,7 @@ plot_residual_pca <- function(x,
           value = c(style$accent_primary, rep(style$neutral, length(rasch_refs)))
         ),
         reference_lines = new_reference_lines("h", rasch_refs, rasch_ref_labels,
-                                              c("dashed", "dotted", "dotted", "dotted"),
+                                              "dashed",
                                               rep("reference", length(rasch_refs))),
         data = tbl,
         InferenceTier = "exploratory",

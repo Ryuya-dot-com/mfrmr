@@ -27,8 +27,10 @@
 #' facet levels, computed from the diagnostics observation table.
 #' Cells with large absolute values flag pairs of facet elements (e.g.
 #' two raters, two items) whose residuals co-move more than the
-#' main-effects MFRM expects, which is the standard Yen Q3-style
-#' indicator of local response dependence.
+#' main-effects MFRM expects. Residuals are averaged within each Person
+#' and facet level before correlation. This is a Q3-style screen, distinct
+#' from raw-residual Yen Q3; no fixed correlation cutoff establishes local
+#' independence for this standardized, aggregated index.
 #'
 #' This helper complements [plot_marginal_pairwise()]: the marginal
 #' version uses posterior-integrated agreement residuals on a
@@ -40,15 +42,16 @@
 #'   on demand when omitted.
 #' @param facet Facet whose levels are placed on both axes (default
 #'   `"Rater"`).
-#' @param min_pairs Minimum number of shared response opportunities
-#'   required to retain a pair. Pairs below the threshold are shown
-#'   as `NA`.
+#' @param min_pairs Minimum number of persons with finite aggregated residuals
+#'   at both levels; an integer of at least three. Unavailable pairs remain
+#'   in the table with their overlap count and reason, and appear as `NA`
+#'   in the matrix.
 #' @param preset Visual preset.
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @return An `mfrm_plot_data` whose `data` slot bundles the symmetric
-#'   residual `matrix`, the long-form `pairs` table, and the threshold
-#'   used.
+#'   residual `matrix`, one row per unordered pair in `pairs`, and the
+#'   threshold used.
 #' @seealso [plot_marginal_pairwise()], [plot_qc_dashboard()],
 #'   [mfrmr_visual_diagnostics]
 #' @examples
@@ -58,10 +61,8 @@
 #'                  method = "JML", maxit = 30)
 #' p <- plot_local_dependence_heatmap(fit, draw = FALSE)
 #' dim(p$data$matrix)
-#' # Look for: |off-diagonal correlation| < 0.2 is the typical
-#' #   acceptable regime; values >= 0.3 (Yen 1984 / Marais 2013
-#' #   guideline) flag pairs that may share dependence beyond the
-#' #   main-effects MFRM. Inspect those cells in `diag$obs`.
+#' # Inspect large absolute correlations alongside shared-person counts.
+#' # Unavailable pairs are not evidence of local independence.
 #' }
 #' @export
 plot_local_dependence_heatmap <- function(fit,
@@ -73,17 +74,27 @@ plot_local_dependence_heatmap <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
-  facet <- as.character(facet[1])
+  if (length(facet) != 1L || is.na(facet)) {
+    stop("`facet` must name a single fitted facet.", call. = FALSE)
+  }
+  facet <- as.character(facet)
   facet_names <- as.character(fit$config$facet_names %||% character(0))
   if (!facet %in% facet_names) {
     stop("`facet` must be one of: ", paste(facet_names, collapse = ", "), ".",
          call. = FALSE)
+  }
+  if (!is.numeric(min_pairs) || length(min_pairs) != 1L ||
+      !is.finite(min_pairs) || min_pairs < 3 || min_pairs != floor(min_pairs)) {
+    stop("`min_pairs` must be a single integer of at least 3.", call. = FALSE)
   }
   style <- resolve_plot_preset(preset)
   if (is.null(diagnostics)) {
     diagnostics <- suppressMessages(diagnose_mfrm(fit, residual_pca = "none",
                                                     diagnostic_mode = "legacy"))
   }
+  mfrm_results_validate_diagnostics_identity(
+    fit, diagnostics, helper = "plot_local_dependence_heatmap()"
+  )
   obs <- as.data.frame(diagnostics$obs %||% data.frame(),
                         stringsAsFactors = FALSE)
   needed <- c(facet, "Person", "StdResidual")
@@ -96,7 +107,8 @@ plot_local_dependence_heatmap <- function(fit,
   obs[[facet]] <- as.character(obs[[facet]])
   obs$Person <- as.character(obs$Person)
   obs$StdResidual <- suppressWarnings(as.numeric(obs$StdResidual))
-  obs <- obs[is.finite(obs$StdResidual), , drop = FALSE]
+  obs <- obs[!is.na(obs[[facet]]) & !is.na(obs$Person), , drop = FALSE]
+  obs$StdResidual[!is.finite(obs$StdResidual)] <- NA_real_
 
   wide <- tryCatch(
     tidyr::pivot_wider(
@@ -104,7 +116,7 @@ plot_local_dependence_heatmap <- function(fit,
       id_cols = "Person",
       names_from = !!rlang::sym(facet),
       values_from = "StdResidual",
-      values_fn = mean
+      values_fn = function(x) mean(x, na.rm = TRUE)
     ),
     error = function(e) NULL
   )
@@ -121,28 +133,30 @@ plot_local_dependence_heatmap <- function(fit,
   rater_cols <- sort(rater_cols)
   mat <- matrix(NA_real_, nrow = length(rater_cols), ncol = length(rater_cols),
                  dimnames = list(rater_cols, rater_cols))
+  diag(mat) <- vapply(rater_cols, function(level) {
+    values <- wide[[level]]
+    values <- values[is.finite(values)]
+    if (length(values) >= min_pairs && stats::sd(values) > 0) 1 else NA_real_
+  }, numeric(1))
   pairs_rows <- list()
-  for (i in seq_along(rater_cols)) {
-    for (j in seq_along(rater_cols)) {
-      if (i == j) {
-        mat[i, j] <- 1
-        next
-      }
+  for (i in seq_len(length(rater_cols) - 1L)) {
+    for (j in seq.int(i + 1L, length(rater_cols))) {
       a <- suppressWarnings(as.numeric(wide[[rater_cols[i]]]))
       b <- suppressWarnings(as.numeric(wide[[rater_cols[j]]]))
       ok <- is.finite(a) & is.finite(b)
       n_pair <- sum(ok)
-      if (n_pair < as.integer(min_pairs)) {
-        next
-      }
-      r <- suppressWarnings(stats::cor(a[ok], b[ok], use = "complete.obs"))
-      if (!is.finite(r)) next
-      mat[i, j] <- r
+      r <- if (n_pair >= min_pairs) {
+        suppressWarnings(stats::cor(a[ok], b[ok]))
+      } else NA_real_
+      reason <- if (n_pair < min_pairs) "Insufficient shared persons" else
+        if (!is.finite(r)) "No residual variation in the shared persons" else ""
+      mat[i, j] <- mat[j, i] <- r
       pairs_rows[[length(pairs_rows) + 1L]] <- data.frame(
         Level1 = rater_cols[i],
         Level2 = rater_cols[j],
         ResidualCor = r,
         N = n_pair,
+        Reason = reason,
         stringsAsFactors = FALSE
       )
     }
@@ -151,7 +165,7 @@ plot_local_dependence_heatmap <- function(fit,
     do.call(rbind, pairs_rows)
   } else {
     data.frame(Level1 = character(0), Level2 = character(0),
-               ResidualCor = numeric(0), N = integer(0),
+               ResidualCor = numeric(0), N = integer(0), Reason = character(0),
                stringsAsFactors = FALSE)
   }
 
@@ -188,8 +202,8 @@ plot_local_dependence_heatmap <- function(fit,
       facet = facet,
       min_pairs = as.integer(min_pairs),
       title = sprintf("Pairwise residual correlation (Q3 view): %s", facet),
-      subtitle = sprintf("%d level(s); pairs with N >= %d retained",
-                          length(rater_cols), as.integer(min_pairs)),
+      subtitle = sprintf("%d of %d unique pairs available; at least %d shared persons required",
+                         sum(is.finite(pairs_df$ResidualCor)), nrow(pairs_df), min_pairs),
       preset = style$name
     )
   ))
@@ -485,10 +499,11 @@ plot_residual_matrix <- function(fit,
 #'   shrinkage columns present).
 #' @param top_n Maximum number of rows to draw (default 30).
 #' @param preset Visual preset.
-#' @param show_ci Logical. When `TRUE`, draw approximate confidence-interval
-#'   whiskers for raw and shrunken estimates when `SE` / `ShrunkSE` evidence is
-#'   available.
-#' @param ci_level Confidence level used when `show_ci = TRUE`; default 0.95.
+#' @param show_ci Logical. When `TRUE`, draw descriptive normal bands from
+#'   raw and plug-in shrunken SEs. These omit prior-variance uncertainty and
+#'   cross-level covariance; zero width after full pooling is not perfect precision.
+#' @param ci_level Nominal normal-band level when `show_ci = TRUE`; default
+#'   0.95. This does not assert repeated-sampling coverage.
 #' @param draw If `TRUE`, draw with base graphics.
 #'
 #' @return An `mfrm_plot_data` whose `data` slot bundles the long
@@ -522,6 +537,7 @@ plot_shrinkage_funnel <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
+  validate_shrinkage_output(fit)
   if (isTRUE(show_ci)) {
     ci_level <- .validate_shrinkage_ci_level(ci_level)
   }
@@ -589,6 +605,8 @@ plot_shrinkage_funnel <- function(fit,
   )
   payload <- payload[order(payload$RawEstimate), , drop = FALSE]
   payload$RowOrder <- seq_len(nrow(payload))
+  payload$SupportsFormalInference <- rep(FALSE, nrow(payload))
+  payload$Interpretation <- rep(shrinkage_interpretation(), nrow(payload))
   if (isTRUE(show_ci)) {
     payload <- .add_shrinkage_ci_columns(
       payload,
@@ -646,11 +664,12 @@ plot_shrinkage_funnel <- function(fit,
     legend_col <- c(style$accent_primary, style$accent_tertiary)
     if (isTRUE(show_ci)) {
       legend_labels <- c(legend_labels,
-                         sprintf("%g%% CI whisker", round(100 * ci_level)))
+                         sprintf("%g%% plug-in band", round(100 * ci_level)))
       legend_pch <- c(legend_pch, NA)
       legend_lty <- c(legend_lty, 1)
       legend_col <- c(legend_col, style$accent_primary)
     }
+    if (isTRUE(show_ci)) graphics::mtext("Plug-in bands; prior-variance uncertainty and covariance omitted.", side = 1, line = 3, cex = 0.65)
     graphics::legend("topright",
                       legend = legend_labels,
                       pch = legend_pch, lty = legend_lty, col = legend_col,
@@ -658,13 +677,13 @@ plot_shrinkage_funnel <- function(fit,
   }
 
   legend_label <- c("Raw estimate", "Shrunken estimate",
-                    "Shrinkage movement", "Sum-to-zero reference")
+                    "Shrinkage movement", "Zero shrinkage target")
   legend_role <- c("location", "location", "movement", "reference")
   legend_aesthetic <- c("point", "point", "line", "line")
   legend_value <- c(style$accent_primary, style$accent_tertiary,
                     style$neutral, style$grid)
   if (isTRUE(show_ci)) {
-    legend_label <- c(legend_label, sprintf("%g%% CI whisker",
+    legend_label <- c(legend_label, sprintf("%g%% plug-in band",
                                             round(100 * ci_level)))
     legend_role <- c(legend_role, "interval")
     legend_aesthetic <- c(legend_aesthetic, "line")
@@ -675,6 +694,7 @@ plot_shrinkage_funnel <- function(fit,
     list(
       table = payload,
       facet = facet,
+      interpretation = shrinkage_interpretation(),
       show_ci = isTRUE(show_ci),
       ci_level = if (isTRUE(show_ci)) ci_level else NA_real_,
       title = sprintf("Empirical-Bayes shrinkage funnel: %s", facet),
@@ -688,7 +708,7 @@ plot_shrinkage_funnel <- function(fit,
         value = legend_value
       ),
       reference_lines = new_reference_lines(
-        "v", 0, "Sum-to-zero reference", "dashed", "reference"
+        "v", 0, "Zero shrinkage target", "dashed", "reference"
       )
     )
   ))

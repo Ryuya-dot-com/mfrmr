@@ -45,7 +45,11 @@ legacy extreme-row exclusion (\code{FALSE}).}
 
 \item{omit_unobserved}{If \code{TRUE}, remove unobserved levels.}
 
-\item{xtreme}{Extreme-score adjustment amount.}
+\item{xtreme}{Display adjustment in score units for all-minimum/all-maximum
+rows; default \code{0} leaves fitted measures unchanged. A positive value
+replaces the displayed \code{Measure} by inversion of an expected score that
+far from the endpoint. It does not adjust responses, refit the model or
+correct JML bias.}
 
 \item{fair_se}{Logical. When \code{TRUE} and \code{fit} is an MML bounded-\code{GPCM}
 fit, add structural delta-method standard errors and confidence limits
@@ -86,6 +90,20 @@ FairM uses mean other-facet measures (and mean person measure for non-person
 rows); FairZ uses zero references. Neither integrates over the observed
 assignment/person distribution. FairZ and its historical alias
 \code{StandardizedAdjustedAverage} are expected scores, not z-scores.
+If a free JML Person measure is infinite, the mean Person reference is
+unavailable: non-Person FairM values are \code{NA}, with the reason recorded in
+\code{FairMReference}. Finite optimizer traces are not substituted into that
+mean. FairZ uses a zero Person reference and does not require this mean.
+
+With \code{xtreme > 0}, \code{PrimaryMeasure} retains the fitted measure, including
+infinite JML estimates and fixed anchors, on the requested reporting scale.
+\code{MeasureBasis} identifies display-only replacements and \code{ExtremeAdjustment}
+records their amount in score units. The displayed \code{Measure} may differ
+from a fixed anchor; the anchor itself is unchanged. Measure SEs are
+unavailable on replaced rows because the original SE does not describe the
+display adjustment. Fair-score calculations do not use the replacement.
+Recompute older diagnostics and recreate saved tables from the existing
+fit before summarizing or plotting them; no model refit is needed.
 
 Bounded \code{GPCM} fits are supported under a slope-aware
 element-conditional construction. For each slope-facet element
@@ -146,7 +164,10 @@ The \code{stacked} data.frame contains the following columns, selected by
 \item{ObservedAverage, AdjustedAverage, StandardizedAdjustedAverage}{Package-native aliases for the three average columns above.}
 \item{AdjustedAverageSE, AdjustedAverageCI_Lower, AdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{AdjustedAverage} when \code{fair_se = TRUE} and available.}
 \item{StandardizedAdjustedAverageSE, StandardizedAdjustedAverageCI_Lower, StandardizedAdjustedAverageCI_Upper}{Optional structural delta-method uncertainty for \code{StandardizedAdjustedAverage} when \code{fair_se = TRUE} and available.}
-\item{Measure}{Estimated facet measure, transformed by \code{umean} and \code{uscale}.}
+\item{Measure}{Displayed facet measure, transformed by \code{umean} and \code{uscale}; may be replaced when \code{xtreme > 0}.}
+\item{PrimaryMeasure}{Original fitted measure on the same reporting scale, including infinite JML estimates.}
+\item{MeasureBasis, ExtremeAdjustment}{Whether the displayed measure was replaced and the replacement amount in score units.}
+\item{FairMReference}{The mean reference used for FairM, or why that reference is unavailable.}
 \item{ModelBasedSE, FitAdjustedSE}{Package-native aliases for \verb{Model S.E.} and \verb{Real S.E.}.}
 \item{Infit MnSq, Outfit MnSq}{Fit statistics for this level.}
 }

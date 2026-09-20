@@ -263,8 +263,19 @@ Residual PCA is a follow-up layer after the main fit screen.
 ```{r residual-pca}
 diag_pca <- diagnose_mfrm(fit, residual_pca = "both", pca_max_factors = 4)
 pca <- analyze_residual_pca(diag_pca, mode = "both")
-plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+summary(pca)
+if (nrow(pca$overall_table) > 0L) {
+  plot_residual_pca(pca, mode = "overall", plot_type = "scree", preset = "publication")
+}
 ```
+
+The incomplete rating design in this example leaves some pairs without
+enough shared Persons to compute their residual correlation, so the overall
+PCA is unavailable. The summary retains the reason and any available
+facet-specific results. Inspect shared-Person counts and residual variation;
+do not replace missing correlations with zero or interpret the absence of a
+scree plot as evidence for one dimension. A facet-specific PCA describes its
+own residual matrix and cannot replace the unavailable overall analysis.
 
 Interpretation:
 

@@ -24,6 +24,49 @@ statistical questions, and records the bounded current-source checks and
 release consequences. Earlier records below retain their original outcomes
 and source identities; they are not blanket current-source approvals.
 
+The [September 20 candidate checks](release-candidate-check-0.2.4.md) verify
+portable scoring across fresh sessions and Mac/Linux, correct two public-output
+issues, and retain the failed full runs alongside their targeted test repairs.
+The final archive passes the standard Mac check. A clean complete-suite run
+of that final archive and the current-source hosted matrix remain pending;
+local/historical results do not stand in for them.
+
+The [September 20 structural-SE source review](mml-structural-source-applicability-0.2.4.md)
+reconstructs the original sampling-study source and verifies current numerical
+continuity on saved independent references and historical datasets. Quadrature
+changes also alter optimizer eligibility in 15 formerly unavailable fits;
+historical sampling rates retain their original denominators. Current package
+code is unchanged and broader uncertainty claims remain scoped.
+
+The [September 20 descriptive-output review](claim-reconciliation-0.2.4.md#september-20-descriptive-agreement-network-and-timing-availability-c18c17)
+preserves unavailable agreement/network comparisons and time groups, corrects
+context identity and zero-edge behavior, and withdraws the dependent-edge Welch
+comparison. Saved fits and bounded tests support the documented output repairs;
+causal, inferential and release-wide claims remain open.
+
+The [September 20 public-scope and migration review](claim-reconciliation-0.2.4.md#september-20-public-scope-and-saved-analysis-instructions)
+centralizes saved-analysis actions in installed help, removes maintainer operations
+from the public roadmap, and corrects remaining shrinkage/population-scoring
+examples. Numerical code and all claim dispositions are unchanged.
+
+The [September 20 model-summary review](claim-reconciliation-0.2.4.md#september-20-consistent-model-summary-decisions-and-public-labels-c05c17)
+removes contradictory formal-inference readiness in the full summary and uses
+readable population, workflow and GPCM explanations. Structured estimates and
+eligibility are unchanged; saved-fit replay and targeted checks are recorded.
+
+The [September 20 Person-scoring review](claim-reconciliation-0.2.4.md#september-20-fitted-object-person-scoring-and-draw-interpretation-c06c17)
+repairs the requested level of empirical draw quantiles and preserves scoring
+priors and conditional uncertainty through summaries and exports. Saved-fit
+replay leaves EAP, SD, continuous intervals and draws unchanged. Earlier scoring
+studies retain their bounded claims; learned-population scoring stays review-only.
+
+The [September 20 import review](claim-reconciliation-0.2.4.md#september-20-external-import-coordinates-and-source-uncertainty-c05c16c17)
+corrects source-to-difficulty mapping and separates imported posterior SDs,
+source fit statistics and unavailable joint covariance. Dedicated summaries
+and point-only Wright maps preserve the source scale. Twelve saved source
+fits support bounded numerical replay without refitting; the source archive,
+installed checks and retained failures are recorded with that follow-up.
+
 The [current-source FairZ review](fairz-current-review-0.2.4.md) repairs mixed
 fit/diagnostic input in fair-average tables and plots, corrects their help
 column descriptions, and reruns the frozen 40-dataset preflight. Reporting
@@ -39,9 +82,29 @@ all six software failures: the complete packaged suite has 18,406 passes,
 has 0 errors/warnings/notes. Twelve same-data FairZ comparisons preserve the
 original results, including the four non-ready fits; historical confirmation
 files and their source identities remain unchanged.
-The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-18-current-priorities-and-completion-decisions)
-separates 0.2.4 claim closure, the next joint-DRF study specification, and staged
-rating-design/random-rater extensions. The `fe8220ce` consolidation remains
+The [marginal-fit follow-up](claim-reconciliation-0.2.4.md#september-19-marginal-fit-availability-and-reporting-c11c17)
+retains missing expected counts and pairwise opportunities, exports classification
+coverage and corrects GPCM step-group ownership and plot selection. Five saved
+MML fits preserve their existing numerical cells and pair flags; the scales
+remain descriptive, with same-response posterior conditioning made explicit.
+The [category/threshold follow-up](claim-reconciliation-0.2.4.md#september-19-category-usage-and-threshold-availability-c11c17)
+retains unavailable usage and ordering comparisons, distinguishes binary scales,
+and prevents plots from joining different threshold families. Seven saved fits
+preserve the available category values and step gaps without model refitting.
+The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-19-existing-public-outputs-before-new-tests)
+prioritizes existing public output corrections and portable workflow closure.
+The [September 19 portable follow-up](claim-reconciliation-0.2.4.md#september-19-portable-scope-and-interval-reporting-c07c17)
+reconciles existing two-way interaction support and preserves interval method
+and requested level in displayed/exported scores, without changing calculations.
+The [precision/comparison follow-up](claim-reconciliation-0.2.4.md#september-19-precision-eligibility-and-comparison-reporting-c03c04c05c09c17)
+keeps regularized/fallback facet SEs diagnostic and distinguishes numerical
+convergence from inferential support. It reuses six saved fits and retains the
+JML/GPCM comparison and equivalence restrictions.
+The [JML-convention follow-up](claim-reconciliation-0.2.4.md#september-19-jml-conventions-and-extreme-score-displays-c03c05c12c17)
+separates optional extreme-score displays from original estimates and withholds
+non-Person FairM when its JML mean reference is unbounded. Existing studies do
+not select a bias correction; the public estimator remains uncorrected.
+New omnibus DRF and inferential FairZ methods are deferred from 0.2.4. The `fe8220ce` consolidation remains
 the earlier development checkpoint, not the identity of all subsequent work.
 
 For future-model research, the [person-local testlet reference](local-testlet-tam-reference-0.2.4.md)

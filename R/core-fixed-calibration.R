@@ -2274,6 +2274,7 @@ mfrmr_score_calibration <- function(calibration,
     EstimateBasis = character(0),
     UncertaintyBasis = character(0), CalibrationId = character(0),
     SchemaVersion = integer(0), ScoringBasis = character(0),
+    ScoringAlgorithm = character(0), IntervalLevel = numeric(0),
     stringsAsFactors = FALSE
   )
   quadrature_review <- NULL
@@ -2459,6 +2460,10 @@ mfrmr_score_calibration <- function(calibration,
         calibration$header$schema_version, length(person_labels)
       ),
       ScoringBasis = rep(calibration$scoring_basis$type, length(person_labels)),
+      ScoringAlgorithm = rep(
+        calibration$scoring_basis$scoring_algorithm, length(person_labels)
+      ),
+      IntervalLevel = rep(interval_level, length(person_labels)),
       stringsAsFactors = FALSE
     )
   }
@@ -2653,7 +2658,7 @@ print.mfrm_calibration <- function(x, ...) {
   cat("<mfrm_calibration>", "\n", sep = "")
   cat("  State: ", s$state, "\n", sep = "")
   cat("  Model: ", s$model, " / ", s$estimator, "\n", sep = "")
-  cat("  Support profile: ", s$support_profile, "\n", sep = "")
+  cat("  Scoring prior: standard normal (mean 0, SD 1)\n")
   cat("  Facets: ", s$facets, "; coordinates: ", s$coordinates,
       "; anchors: ", s$anchors, "\n", sep = "")
   cat("  Validation refusals: ", nrow(s$refusals), "\n", sep = "")
@@ -2667,11 +2672,10 @@ print.summary.mfrm_calibration <- function(x, ...) {
   mfrmr_validate_calibration_summary(x)
   cat("mfrmr Calibration Summary\n")
   print_wrapped_line(paste0("Calibration: ", x$calibration_id))
-  cat("  Schema: ", x$schema_id, " v", x$schema_version, "\n", sep = "")
+  cat("  File format: version ", x$schema_version, "\n", sep = "")
   cat("  State: ", x$state, "\n", sep = "")
   cat("  Model / estimator: ", x$model, " / ", x$estimator, "\n", sep = "")
-  cat("  Support profile: ", x$support_profile, "\n", sep = "")
-  cat("  Scoring basis: ", x$scoring_basis, "\n", sep = "")
+  cat("  Scoring prior: standard normal (mean 0, SD 1)\n")
   cat("  Validation refusals: ", nrow(x$refusals), "\n", sep = "")
   invisible(x)
 }

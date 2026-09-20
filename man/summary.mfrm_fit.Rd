@@ -178,6 +178,12 @@ cannot override input, estimability, category, or boundary review.
 fit-only summary returns \code{FormalInference = "No"} until a matching
 \code{mfrm_diagnostics} object is supplied through \verb{diagnostics =}; use
 \code{summary(diagnostics)$decision} for the equivalent precision-aware view.
+The console uses this single decision throughout; a converged optimizer
+or a passed fit check does not independently authorize formal inference.
+Printed workflow, population and GPCM descriptions use readable labels.
+The returned tables retain their numerical values and structured status
+fields for programmatic use. Reprinting an existing summary updates its
+display without refitting or changing its stored results.
 \item \code{data_review}: overall multi-facet connectivity, facet-level score
 support, boundary-constant levels, single-level facets, and retained
 preparation notes behind the readiness rows.

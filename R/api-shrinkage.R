@@ -41,28 +41,37 @@
 # ==============================================================================
 
 
+shrinkage_interpretation <- function() {
+  "Descriptive zero-centered adjustment; plug-in SEs/bands omit prior-variance uncertainty and cross-level covariance. Zero SE after full pooling is not perfect precision."
+}
+
+validate_shrinkage_output <- function(fit) {
+  report <- fit$shrinkage_report
+  if (is.data.frame(report) && nrow(report) > 0L && !"Interpretation" %in% names(report)) {
+    stop("Reapply apply_empirical_bayes_shrinkage() with the original settings to refresh this saved report, then regenerate plots and exports; no MFRM refit is needed.", call. = FALSE)
+  }
+  invisible(TRUE)
+}
+
 #' @keywords internal
 #' @noRd
 .compute_facet_shrinkage <- function(estimates, ses,
                                      method = c("empirical_bayes"),
                                      prior_sd = NULL,
                                      min_levels = 3L) {
-  # Core math:
-  #   tau^2      = max(0, sum(estimates^2)/K - mean(se^2))  (method-of-moments,
-  #                                                          under the sum-to-zero
-  #                                                          identification the
-  #                                                          facet mean is exactly
-  #                                                          zero -- no DF lost to
-  #                                                          mean estimation)
-  #   B_j        = se_j^2 / (tau^2 + se_j^2)                (shrinkage factor)
-  #   est^EB_j   = (1 - B_j) * est_j                         (SZ -> shrink to 0)
-  #   se^EB_j    = sqrt((1 - B_j) * se_j^2)                  (naive Morris 1983
-  #                                                          posterior SE;
-  #                                                          tau^2 treated as known)
+  # Zero-centered moment adjustment; tau2 is held fixed in the plug-in SE.
+  # Identification/anchor constraints and sampling covariance are not modeled.
+  # tau2 = max(0, mean(estimates^2) - mean(se^2)) on complete pairs.
+  # B = se^2 / (tau2 + se^2); adjusted estimate = (1-B) * estimate.
+  # Plug-in SE = sqrt((1-B) * se^2).
   #
   # Returns a list with parallel shrunk vectors so downstream callers can
   # merge them back onto the facet table by row order.
   method <- match.arg(method)
+  if (!is.null(prior_sd) && (!is.numeric(prior_sd) || length(prior_sd) != 1L ||
+      !is.finite(prior_sd) || prior_sd < 0 || !is.finite(prior_sd^2))) {
+    stop("`facet_prior_sd` must be NULL or a non-negative finite scalar with finite squared value.", call. = FALSE)
+  }
 
   estimates <- as.numeric(estimates)
   ses <- as.numeric(ses)
@@ -86,6 +95,7 @@
 
   valid <- is.finite(estimates) & is.finite(ses) & ses > 0
   K_use <- sum(valid)
+  out_template$n_levels_used <- K_use
   if (K_use < min_levels) {
     out_template$note <- paste0(
       "Fewer than ", min_levels, " valid levels; shrinkage not applied."
@@ -93,14 +103,14 @@
     # Pass through unchanged.
     out_template$shrunk_estimates <- estimates
     out_template$shrunk_ses <- ses
-    out_template$shrinkage_factors <- rep(0, K)
+    out_template$shrinkage_factors <- ifelse(valid, 0, NA_real_)
     return(out_template)
   }
 
   mean_se2 <- mean(ses[valid]^2)
-  # Population variance of point estimates around zero (sum-to-zero gives
-  # the population mean = 0). Using the raw second moment makes the
-  # estimator consistent under the exchangeable prior assumption.
+  # A zero-centered moment heuristic on complete estimate/SE pairs.
+  # Identification constraints do not supply a known population mean or
+  # independent sampling errors; their covariance is not modeled here.
   raw_var <- sum(estimates[valid]^2) / K_use
 
   # Pull prior variance either from the supplied value or from the
@@ -115,7 +125,7 @@
 
   # Compute per-level shrinkage. Levels with non-finite SEs pass through
   # with factor 0 (no shrinkage applied).
-  B <- rep(0, K)
+  B <- rep(NA_real_, K)
   shrunk_est <- estimates
   shrunk_se <- ses
   if (tau2 > 0) {
@@ -131,8 +141,8 @@
     shrunk_est[valid] <- 0
     shrunk_se[valid] <- sqrt(pmax(0, 0)) # zero variance after complete pooling
     out_template$note <- paste0(
-      "Between-level variance below measurement error; ",
-      "all levels collapsed to the facet mean."
+      "The zero-centered moment estimate is zero; eligible levels are fully pooled at zero. ",
+      "Zero plug-in SE does not establish perfect precision."
     )
   }
 
@@ -157,6 +167,9 @@
     stop("`.apply_shrinkage_to_fit()` requires an mfrm_fit.", call. = FALSE)
   }
 
+  if (!is.logical(shrink_person) || length(shrink_person) != 1L || is.na(shrink_person)) {
+    stop("`shrink_person` must be a single logical value.", call. = FALSE)
+  }
   others <- fit$facets$others
   if (is.null(others) || nrow(others) == 0L) {
     fit$shrinkage_report <- data.frame(
@@ -297,11 +310,15 @@
     }
   }
 
+  fit$shrinkage_report$SupportsFormalInference <- FALSE
+  fit$shrinkage_report$Interpretation <- shrinkage_interpretation()
+
   # Summary-level surfacing. Downstream tables and narrative read these.
   if (!is.null(fit$summary) && nrow(fit$summary) > 0L) {
     fit$summary$FacetShrinkage <- as.character(method)
     fit$summary$FacetShrinkageTau2Mean <- if (nrow(fit$shrinkage_report) > 0L) {
-      mean(fit$shrinkage_report$Tau2, na.rm = TRUE)
+      tau <- fit$shrinkage_report$Tau2
+      if (any(is.finite(tau))) mean(tau[is.finite(tau)]) else NA_real_
     } else NA_real_
   }
 
@@ -311,46 +328,41 @@
 
 #' Apply empirical-Bayes shrinkage to fitted non-person facet estimates
 #'
-#' Post-hoc shrinkage helper that augments an `mfrm_fit` with James-Stein
-#' / empirical-Bayes shrunk estimates for each non-person facet. The
+#' Post-hoc normal-model shrinkage helper that augments an `mfrm_fit`
+#' with descriptive empirical-Bayes adjustments for each non-person facet. The
 #' shrinkage variance \eqn{\hat{\tau}^2} is estimated by method of
 #' moments from the facet-level point estimates and their standard
 #' errors:
 #' \deqn{\hat{\tau}^2 = \max\!\left(0,
 #'   \frac{1}{K}\sum_{j=1}^{K}\hat{\delta}_j^{2} -
 #'   \overline{\mathrm{SE}^2}\right),}
-#' where the first term is the population variance of the facet point
-#' estimates around their *known* mean of zero (the mfrmr sum-to-zero
-#' identification pins the facet mean exactly at 0, so no degree of
-#' freedom is consumed by mean estimation). The shrinkage factor is
-#' \eqn{B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)}, and
-#' the shrunk point / standard error are
-#' \eqn{\hat{\delta}_j^{EB} = (1 - B_j)\hat{\delta}_j} and
-#' \eqn{\mathrm{SE}_j^{EB} = \sqrt{(1 - B_j)\mathrm{SE}_j^2}}.
-#' The posterior SE form treats \eqn{\hat{\tau}^2} as known; it omits
-#' the Morris (1983, eqs. 4.1-4.2, p. 51) confidence-interval correction
-#' \eqn{v \cdot \hat{\delta}_j^{2}} with
-#' \eqn{v = 2 B_j^2 / (K - r - 2)}, where \eqn{r} is the number of
-#' regression coefficients used to model the prior mean (under mfrmr's
-#' sum-to-zero pinning, \eqn{r = 0}, so the divisor is \eqn{K - 2}).
-#' This correction adds variance proportional to the squared deviation
-#' \eqn{\hat{\delta}_j^{2}}, accounting for uncertainty in
-#' \eqn{\hat{\tau}^2}. Under the equal-variance assumption
-#' \eqn{\hat{\delta}_j^{2} \approx \hat{\tau}^2}, the omitted variance is
-#' on the order of \eqn{2 / (K - 2)} times the reported posterior
-#' variance \eqn{V(1 - B_j)}, so the true SE is approximately
-#' \eqn{\sqrt{1 + 2/(K - 2)}} times the reported `ShrunkSE`. Magnitudes:
-#' SE understated by ~73\% at \eqn{K = 3}, ~29\% at \eqn{K = 5}, ~15\%
-#' at \eqn{K = 8}, ~7\% at \eqn{K = 15}. For a small-K facet, treat
-#' `ShrunkSE` as a lower bound rather than a calibrated posterior SE.
+#' where zero is the chosen shrinkage target and the moment is calculated on
+#' complete finite estimate/positive-SE pairs. A sum-to-zero identification
+#' constraint does not establish a known population mean or independent errors.
+#' The shrinkage factor is
+#' \eqn{B_j = \mathrm{SE}_j^2 / (\hat{\tau}^2 + \mathrm{SE}_j^2)}, with
+#' \eqn{\hat{\delta}_j^{EB} = (1-B_j)\hat{\delta}_j} and
+#' \eqn{\mathrm{ShrunkSE}_j = \sqrt{(1-B_j)\mathrm{SE}_j^2}}.
 #'
-#' `fit$facets$others` gains `ShrunkEstimate`, `ShrunkSE`, and
-#' `ShrinkageFactor` columns, and `fit$shrinkage_report` records the
-#' per-facet \eqn{\hat{\tau}^2}, mean shrinkage, and effective degrees
-#' of freedom (\eqn{\mathrm{EffectiveDF}_f = \sum_j (1 - B_j)}, which
-#' matches the "effective number of parameters" defined by
-#' Efron & Morris, 1973). The original `Estimate` / `SE` columns are
-#' preserved.
+#' `ShrunkSE` is a plug-in normal-model quantity conditional on the selected
+#' prior variance. It omits uncertainty in that variance, cross-level covariance
+#' and the fitted identification/anchor constraints. It is neither a calibrated
+#' SE nor a guaranteed lower bound. Unequal shrinkage can break the original
+#' sum-to-zero constraint. Original estimates, anchors and predictions are
+#' unchanged; this helper does not refit a hierarchical MFRM.
+#'
+#' A zero estimated prior variance fully pools eligible estimates at zero and
+#' gives zero plug-in SE; this does not establish perfect precision. Optional
+#' plot whiskers are descriptive normal bands. Their legacy `CI` column names
+#' do not confer confidence-interval coverage; `SupportsFormalInference` is
+#' false. Invalid estimate/SE pairs retain their original values with unavailable
+#' shrinkage factors. With fewer than three valid pairs no shrinkage is applied.
+#'
+#' The report records complete-pair counts and mean shrinkage over those pairs.
+#' `EffectiveDF` sums retained weights over eligible levels, conditional on the
+#' chosen prior variance; it is not model degrees of freedom for testing or IC.
+#' Reapply this helper to existing fits to refresh old reports; no MFRM refit
+#' is needed. Regenerate previously saved plots and exports as well.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()] with a non-empty
 #'   `facets$others` table.
@@ -369,7 +381,8 @@
 #' @section Typical workflow:
 #' 1. Fit the model as usual with `fit_mfrm()`.
 #' 2. Call `apply_empirical_bayes_shrinkage(fit)` when small-N facets
-#'    are present (see [facet_small_sample_review()]).
+#'    are present and zero-centered pooling is substantively defensible
+#'    (see [facet_small_sample_review()]); small counts alone do not require it.
 #' 3. Report both the original and shrunk estimates in the manuscript,
 #'    citing Efron & Morris (1973). `build_apa_outputs()` will add the
 #'    sentence automatically when `fit$config$facet_shrinkage` is set.
@@ -399,14 +412,12 @@
 #' fit_eb$shrinkage_report
 #' # Look for:
 #' # - `Tau2` is the estimated between-level prior variance per facet.
-#' #   `Tau2 = 0` means the data did not justify any pooling and the
-#' #   shrunken estimates equal the raw estimates (`MeanShrinkage = 0`).
+#' #   `Tau2 = 0` fully pools eligible estimates at zero
+#' #   (`MeanShrinkage = 1`). Zero plug-in SE is not perfect precision.
 #' # - `MeanShrinkage` near 0 = little movement, near 1 = heavy pooling
-#' #   toward 0. Small-N facets typically pull values further than
-#' #   well-identified ones.
-#' # - `EffectiveDF` is the implied "effective number of parameters"
-#' #   (Efron & Morris 1973); EffectiveDF much smaller than the row
-#' #   count of the facet means most levels were pooled together.
+#' #   toward the chosen zero target; inspect the SEs and prior variance.
+#' # - `EffectiveDF` sums retained weights over eligible levels, conditional
+#' #   on the chosen prior variance; it is not degrees of freedom for testing.
 #' head(fit_eb$facets$others[, c("Facet", "Level", "Estimate",
 #'                                "ShrunkEstimate", "ShrinkageFactor")])
 #' # Look for: rows where `ShrinkageFactor` is large (close to 1) had
@@ -434,6 +445,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`.build_shrinkage_plot_data()` requires an mfrm_fit.", call. = FALSE)
   }
+  validate_shrinkage_output(fit)
   others <- fit$facets$others %||% data.frame()
   report <- fit$shrinkage_report
   mode <- as.character(fit$config$facet_shrinkage %||% "none")
@@ -466,6 +478,8 @@ apply_empirical_bayes_shrinkage <- function(fit,
     ShrinkageFactor = suppressWarnings(as.numeric(others$ShrinkageFactor)),
     stringsAsFactors = FALSE
   )
+  tbl$SupportsFormalInference <- rep(FALSE, nrow(tbl))
+  tbl$Interpretation <- rep(shrinkage_interpretation(), nrow(tbl))
   list(table = tbl, report = report, mode = mode)
 }
 
@@ -501,15 +515,17 @@ apply_empirical_bayes_shrinkage <- function(fit,
   shrunk_est <- if (shrunk_estimate_col %in% names(tbl)) suppressWarnings(as.numeric(tbl[[shrunk_estimate_col]])) else rep(NA_real_, nrow(tbl))
   shrunk_se <- if (shrunk_se_col %in% names(tbl)) suppressWarnings(as.numeric(tbl[[shrunk_se_col]])) else rep(NA_real_, nrow(tbl))
 
-  tbl[[raw_lower]] <- ifelse(is.finite(raw_est) & is.finite(raw_se),
+  tbl[[raw_lower]] <- ifelse(is.finite(raw_est) & is.finite(raw_se) & raw_se >= 0,
                              raw_est - z_ci * raw_se, NA_real_)
-  tbl[[raw_upper]] <- ifelse(is.finite(raw_est) & is.finite(raw_se),
+  tbl[[raw_upper]] <- ifelse(is.finite(raw_est) & is.finite(raw_se) & raw_se >= 0,
                              raw_est + z_ci * raw_se, NA_real_)
-  tbl[[shrunk_lower]] <- ifelse(is.finite(shrunk_est) & is.finite(shrunk_se),
+  tbl[[shrunk_lower]] <- ifelse(is.finite(shrunk_est) & is.finite(shrunk_se) & shrunk_se >= 0,
                                 shrunk_est - z_ci * shrunk_se, NA_real_)
-  tbl[[shrunk_upper]] <- ifelse(is.finite(shrunk_est) & is.finite(shrunk_se),
+  tbl[[shrunk_upper]] <- ifelse(is.finite(shrunk_est) & is.finite(shrunk_se) & shrunk_se >= 0,
                                 shrunk_est + z_ci * shrunk_se, NA_real_)
   tbl$CI_Level <- ci_level
+  tbl$SupportsFormalInference <- rep(FALSE, nrow(tbl))
+  tbl$IntervalInterpretation <- rep(shrinkage_interpretation(), nrow(tbl))
   tbl
 }
 
@@ -596,14 +612,14 @@ apply_empirical_bayes_shrinkage <- function(fit,
     ci_level <- .validate_shrinkage_ci_level(ci_level)
     z_ci <- stats::qnorm(1 - (1 - ci_level) / 2)
     for (i in seq_len(nrow(tbl))) {
-      if (is.finite(tbl$Estimate[i]) && is.finite(tbl$SE[i])) {
+      if (is.finite(tbl$Estimate[i]) && is.finite(tbl$SE[i]) && tbl$SE[i] >= 0) {
         graphics::segments(
           x0 = tbl$Estimate[i] - z_ci * tbl$SE[i], y0 = i - 0.12,
           x1 = tbl$Estimate[i] + z_ci * tbl$SE[i], y1 = i - 0.12,
           col = style$accent_primary
         )
       }
-      if (is.finite(tbl$ShrunkEstimate[i]) && is.finite(tbl$ShrunkSE[i])) {
+      if (is.finite(tbl$ShrunkEstimate[i]) && is.finite(tbl$ShrunkSE[i]) && tbl$ShrunkSE[i] >= 0) {
         graphics::segments(
           x0 = tbl$ShrunkEstimate[i] - z_ci * tbl$ShrunkSE[i], y0 = i + 0.12,
           x1 = tbl$ShrunkEstimate[i] + z_ci * tbl$ShrunkSE[i], y1 = i + 0.12,
@@ -612,6 +628,8 @@ apply_empirical_bayes_shrinkage <- function(fit,
       }
     }
   }
+
+  if (isTRUE(show_ci)) graphics::mtext("Plug-in bands; prior-variance uncertainty and covariance omitted.", side = 1, line = 3, cex = 0.65)
 
   # Horizontal band separators between facets.
   facet_boundaries <- cumsum(table(tbl$Facet)[unique(tbl$Facet)])
@@ -625,7 +643,7 @@ apply_empirical_bayes_shrinkage <- function(fit,
   legend_col <- c(style$accent_primary, style$accent_tertiary, style$neutral)
   legend_bg <- c(NA, "white", NA)
   if (isTRUE(show_ci)) {
-    legend_labels <- c(legend_labels, sprintf("%g%% CI", round(100 * ci_level)))
+    legend_labels <- c(legend_labels, sprintf("%g%% plug-in band", round(100 * ci_level)))
     legend_pch <- c(legend_pch, NA)
     legend_lty <- c(legend_lty, 1)
     legend_col <- c(legend_col, style$accent_primary)
@@ -668,6 +686,7 @@ shrinkage_report <- function(fit) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit from fit_mfrm().", call. = FALSE)
   }
+  validate_shrinkage_output(fit)
   rep_tbl <- fit$shrinkage_report
   if (is.null(rep_tbl) || !is.data.frame(rep_tbl) || nrow(rep_tbl) == 0L) {
     message("No shrinkage applied; ",
