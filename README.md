@@ -971,6 +971,8 @@ features$missing
 groups <- mfrm_cluster(features, k = 3)
 groups$membership
 groups$profiles
+plot(groups)
+plot(groups, type = "profile", feature = "ExperienceYears")
 ```
 
 Here `rater_attributes` is your entity-level table, with `ExperienceYears`
@@ -981,6 +983,11 @@ with missing group membership. Optional missingness reasons are documented in
 `?mfrm_features`. No value is imputed. Silhouette widths describe separation
 in this sample; stability, inferential comparisons, and measurement uncertainty
 are not assessed. The groups do not establish ability levels or rater quality.
+
+`plot()` also displays categorical feature proportions and, for an imputed
+clustering result, a co-membership heatmap. All views reuse stored results;
+`draw = FALSE` returns the values for custom graphics. See `?plot.mfrm_clusters`
+and the tutorial for examples. PAM is nonhierarchical and has no dendrogram.
 
 For incomplete external attributes, `mfrm_cluster_imputed()` accepts a model
 fitted with the optional `mice` package. Select eligible missing cells explicitly

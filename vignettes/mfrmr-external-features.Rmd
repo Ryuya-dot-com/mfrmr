@@ -225,6 +225,73 @@ imputation of rating responses. Before using groups to make decisions about
 raters, establish that the attributes and proposed use address the intended
 question and assess the consequences with appropriate evidence.
 
+## Read separation, feature profiles, and imputation sensitivity
+
+The silhouette plot shows which raters fit their assigned group less clearly
+under the selected distances. Negative widths warrant examining the rater's
+profile and nearby groups; high widths do not establish useful or stable types.
+The dashed line is the overall mean. Raters excluded from clustering have no
+width; their IDs remain in the returned plot data.
+
+```{r silhouette, fig.width=7, fig.height=5}
+plot(one_completion)
+```
+
+Inspect one feature at a time so that its units and categories remain clear.
+Numeric profiles show means and medians in original units, without confidence
+intervals. Categorical profiles show proportions within each group, preserving
+the order of training levels. These are descriptions of this completion only.
+
+```{r profiles, fig.width=7, fig.height=5}
+plot(one_completion, type = "profile", feature = "ExperienceYears")
+plot(one_completion, type = "profile", feature = "TrainingLevel")
+```
+
+The next heatmap asks which pairs remain together across imputations. For
+readability, this view explicitly selects the first 20 IDs in the input table;
+it does not recluster them, change the denominator, or represent the remaining
+pairs. Omit `ids` to display all raters. By default, ID labels are hidden above
+50 displayed entities; the data are never sampled automatically.
+
+```{r co-membership, fig.width=7, fig.height=6}
+plot(analyses$ThreeGroups, ids = raters$Rater[1:20])
+```
+
+The colour scale always runs from zero to one. Grey denotes unavailable pairs
+involving excluded raters, not pairs that never share a group. Rows retain
+the requested ID order. The map does not infer a consensus partition or a
+hierarchy, and it does not measure stability under new samples of raters.
+
+For a custom figure, extract the same values without drawing or refitting:
+
+```{r plot-values}
+view <- plot(analyses$ThreeGroups, ids = raters$Rater[1:5], draw = FALSE)
+plot_data(view)$matrix
+```
+
+## How this relates to MFRM rater-type research
+
+Clustering has been used alongside MFRM, with both hierarchical and
+nonhierarchical methods. In writing assessment,
+[Eckes (2012), *Operational Rater Types in Writing Assessment*](https://doi.org/10.1080/15434303.2011.649381),
+clustered MFRM rater-by-criterion bias estimates using hierarchical Ward
+clustering, also checking complete and average linkage solutions. In music
+performance assessment,
+[Wesolowski (2019), *Predicting Operational Rater-Type Classifications Using
+Rasch Measurement Theory and Random Forests*](https://doi.org/10.1111/jedm.12227),
+reported nonhierarchical k-means clustering of 29 differential rater functioning
+indices, followed by prediction of the resulting labels.
+
+Those analyses ask about patterns of rating behaviour. This tutorial instead
+groups external backgrounds such as experience and specialty. Its Gower
+distances accommodate the selected mix of variable types, and PAM produces
+a partition rather than a hierarchy. It therefore has no dendrogram. The cited
+studies do not validate the present attributes, weights, imputation model, or
+PAM groups, and do not establish that one method is preferable for all uses.
+Grouping estimated MFRM effects would additionally require consideration of
+their measurement uncertainty and comparability. The present external-feature
+API does not propagate that uncertainty.
+
 ## Plan for the size of the analysis
 
 Pairwise distances require memory that grows quadratically with the number

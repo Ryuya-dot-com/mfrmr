@@ -196,7 +196,7 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   For feature selection, missingness review, and multiple-imputation examples,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
-#'   [cluster::daisy()], [cluster::pam()]
+#'   [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   # Fictional raters; R2 has unrecorded experience, not zero years.
@@ -389,6 +389,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   reasons, imputation diagnostics, and comparisons of group counts and weights,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
+#'   [plot.mfrm_clusters()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples
 #' if (requireNamespace("mice", quietly = TRUE) &&

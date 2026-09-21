@@ -15,6 +15,7 @@ cran_light_tests <- c(
   "adaptive-quadrature-review",
   "cran-smoke",
   "cluster-comparison",
+  "cluster-plots",
   "compatibility-aliases",
   "compiled-header-contract",
   "data-and-citation",

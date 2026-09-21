@@ -2,6 +2,11 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* Added `plot()` methods for exploratory clustering results: silhouettes,
+  single-feature profiles, and pairwise co-membership heatmaps across
+  imputations. Plots reuse stored results, retain excluded IDs in their data,
+  distinguish unavailable pairs from zero co-membership, and support
+  `draw = FALSE` for custom graphics. PAM remains nonhierarchical.
 * Added a complete rater-attribute tutorial using fictional experience,
   workload, specialty, training, and certification data. It covers missingness
   reasons, explicit imputation models, group profiles, and comparisons across

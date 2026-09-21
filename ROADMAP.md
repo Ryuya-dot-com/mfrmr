@@ -97,6 +97,11 @@ separation. Groups do not establish ability levels, rater quality, or latent
 measurement classes. Sampling stability and new-entity assignment require
 separate development and validation.
 
+Plots now show silhouettes, individual feature profiles, and co-membership
+across imputations directly from these results. PAM is nonhierarchical.
+A dendrogram would require a separately specified hierarchical analysis with
+an appropriate distance and linkage; it cannot be added as a view of PAM.
+
 Missing external features remain visible with user-supplied reasons. Clustering
 stops by default; explicit omission retains unclassified IDs. This is not
 imputation or correction for missing-data bias. Planned unassigned ratings,

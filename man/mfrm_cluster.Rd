@@ -84,5 +84,5 @@ if (requireNamespace("cluster", quietly = TRUE)) {
 }
 \seealso{
 \code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
-\code{\link[cluster:daisy]{cluster::daisy()}}, \code{\link[cluster:pam]{cluster::pam()}}
+\code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}, \code{\link[cluster:daisy]{cluster::daisy()}}, \code{\link[cluster:pam]{cluster::pam()}}
 }

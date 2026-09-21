@@ -9,6 +9,33 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: clustering plots and relation to MFRM research
+
+Development-only S3 plot methods now consume mfrm_clusters and
+mfrm_imputed_clusters: stored silhouettes, one-feature numeric or categorical
+profiles, and the existing all-imputation co-membership matrix. No refitting,
+consensus partition or hierarchical analysis is added. Excluded IDs remain
+in plot payloads; unavailable heatmap cells remain distinct from zero.
+Explicit ID selection changes only the displayed matrix. Large displays hide
+ID labels above 50 entities without sampling; heatmaps use raster rendering.
+Plots use English labels, base graphics, existing styles and mfrm_plot_data.
+
+The public tutorial distinguishes external backgrounds from MFRM-derived rater
+bias profiles. Eckes (2012), DOI 10.1080/15434303.2011.649381, uses hierarchical
+Ward clustering of rater-by-criterion bias estimates (methods checked in the
+institutional full text, p. 279); Wesolowski (2019), DOI 10.1111/jedm.12227,
+reports k-means on 29 DRF indices (publisher abstract). These precedents do
+not validate the current Gower/PAM attributes or propagate measurement error.
+Dendrograms require a separately specified hierarchical result.
+
+Verification is limited to the new plot tests (38 expectations), namespace
+contract (4 expectations), new Rd syntax/HTML/example execution, and the
+changed tutorial with real mice completions. The four public example figures
+were inspected for values, labels, and layout. The rendered tutorial is kept
+at /private/tmp/mfrmr-cluster-plots-20260921/mfrmr-external-features.html.
+No estimator tests, full suite, full package check, stress matrix or CI was
+repeated. The separate 0.2.4 candidate remains unchanged.
+
 ## 2026-09-21: external-feature stress checks and applied tutorial
 
 The user requested the outstanding stress checks and concrete feature examples.
