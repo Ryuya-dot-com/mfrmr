@@ -203,6 +203,48 @@ Also inspect `MinGroupSize`. A rare category can produce a very small group,
 and repeated profiles can give high separation values. A high overall
 silhouette can coexist with these conditions.
 
+## Compare feature selections
+
+Does including annual rating workload change the background groups? Hold the
+raters, group count, method, and imputation model fixed, and remove
+`AnnualRatings` from the clustering features. Select the corresponding
+eligible cells rather than passing cells for an unselected feature.
+
+```{r feature-selection}
+background_names <- setdiff(feature_names, "AnnualRatings")
+background_features <- mfrm_features(raters, "Rater", background_names,
+  subset(selected_reasons, Feature %in% background_names))
+background_only <- mfrm_cluster_imputed(background_features, model,
+  subset(eligible, Feature %in% background_names), k = 3)
+feature_comparison <- mfrm_cluster_compare(list(
+  WithWorkload = analyses$ThreeGroups, WithoutWorkload = background_only))
+feature_comparison$analysis_summary
+feature_comparison$weights
+summary(feature_comparison)
+```
+
+Here, removing workload changes the together/apart status of
+`r if (available) sprintf("%.1f%%", 100 * feature_comparison$comparison_summary$MeanChangedFraction) else "the fraction shown in the table"`
+of rater pairs on average across the five imputations. This measures the
+description's dependence on including workload, not whether workload should
+be excluded. The `Features` column records each analysis's feature count;
+`weights` lists only its selected features. Silhouettes now use different
+distances and cannot automatically choose a feature set.
+
+Workload remains in the imputation model, so this does not examine removing
+it as a predictor of missing attributes. Different feature selections must
+reuse the same fitted `mids` object, and stored completed values are checked
+against the corresponding imputation. A selection containing only complete
+attributes can use its empty `missing` table as `impute`; it retains a
+partition for every completion for comparison purposes.
+
+The included entities must match across all results. With `missing = "omit"`,
+removing an incomplete feature may admit additional raters, in which case the
+comparison stops. Define and report a common cohort before fitting if that
+is the intended question; the API does not silently intersect samples.
+
+## Interpret the retained profiles
+
 Inspect the actual profiles before attaching interpretations to the groups:
 
 ```{r interpretation}
@@ -514,9 +556,10 @@ variables and their distributions affected performance. Choose features and
 their substantive domains before choosing weights. For example, equal total
 weight for a domain containing ten features and one containing two requires
 different per-feature weights. This is a substantive choice, not an automatic
-correction for correlations. The current comparison API varies positive
-weights on the same features; comparisons that change the selected feature
-set are not currently supported.
+correction for correlations. The comparison API supports both positive
+feature weights and different selections on the same entities, as illustrated
+above. Choosing features to maximize an attractive grouping still requires
+separate validation; the comparison does not automate feature selection.
 
 PCA and k-means answer different questions. PCA represents variation in
 numeric features with orthogonal continuous components. K-means partitions

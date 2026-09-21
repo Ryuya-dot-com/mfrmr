@@ -122,3 +122,93 @@ test_that("imputed comparisons pair identical completions without refitting", {
   changed$analyses[[2]]$feature_data$data$X[3] <- 7
   expect_error(mfrm_cluster_compare(list(A = two, B = changed)), "Completed feature values.*2")
 })
+
+test_that("feature selections compare the same entities and check every shared column", {
+  skip_if_not_installed("cluster")
+  input <- data.frame(ID = letters[1:4], X = c(0, 0, 1, 1), Y = c(0, 1, 0, 1))
+  x <- mfrm_cluster(mfrm_features(input, "ID", "X"), 2)
+  y <- mfrm_cluster_hierarchical(mfrm_features(input[4:1, ], "ID", "Y"), 2)
+  xy <- mfrm_cluster(mfrm_features(input, "ID", c("X", "Y")), 2)
+  out <- mfrm_cluster_compare(list(XOnly = x, YOnly = y, Both = xy))
+  expect_equal(out$analysis_summary$Features, c(1L, 1L, 2L))
+  expect_equal(out$weights$Feature, c("X", "Y", "X", "Y"))
+  expect_equal(out$comparisons$ChangedFraction[1], 2/3)
+  expect_equal(out$comparisons$AdjustedRand[1], -0.5)
+  expect_equal(out$comparisons$Pairs, rep(6, 3))
+  expect_identical(out$analyses$YOnly, y)
+  reverse <- mfrm_cluster_compare(list(Both = xy, YOnly = y, XOnly = x))
+  expect_equal(tail(reverse$comparisons$ChangedFraction, 1), 2/3)
+
+  # XOnly shares no columns with either later analysis: still detect Y conflicts.
+  changed <- input
+  changed$Y[1] <- 2
+  other <- mfrm_cluster(mfrm_features(changed, "ID", "Y"), 2)
+  expect_error(mfrm_cluster_compare(list(X = x, Y = y, Changed = other)),
+    "original feature values and types")
+  changed$Y <- factor(input$Y)
+  other <- mfrm_cluster(mfrm_features(changed, "ID", "Y"), 2)
+  expect_error(mfrm_cluster_compare(list(X = x, Y = y, Changed = other)),
+    "original feature values and types")
+
+  changed <- input
+  changed$X[4] <- NA_real_
+  incomplete <- mfrm_cluster(mfrm_features(changed, "ID", c("X", "Y")), 2,
+                             missing = "omit")
+  expect_error(mfrm_cluster_compare(list(All = incomplete, YOnly = y)), "same entities")
+  same_omission <- mfrm_cluster(mfrm_features(changed, "ID", "X"), 2, missing = "omit")
+  omitted <- mfrm_cluster_compare(list(All = incomplete, XOnly = same_omission))
+  expect_equal(omitted$analysis_summary$Excluded, c(1L, 1L))
+  expect_equal(omitted$comparisons$Pairs, 3)
+  expect_identical(omitted$analyses$XOnly$membership$ID, letters[1:4])
+})
+
+test_that("feature selection preserves imputation pairing even without shared features", {
+  skip_if_not_installed("mice")
+  skip_if_not_installed("cluster")
+  original <- data.frame(ID = letters[1:6],
+    X = c(0, 1, NA, 9, 10, 11), Y = c(0, 9, 1, NA, 2, 10),
+    Complete = c(0, 0, 0, 1, 1, 1),
+    Flag = c(FALSE, NA, FALSE, TRUE, TRUE, FALSE))
+  first <- second <- original
+  first$X[3] <- 2; second$X[3] <- 8
+  first$Y[4] <- 8; second$Y[4] <- 3
+  first$Flag[2] <- 0; second$Flag[2] <- 1
+  # Numeric 0/1 storage for completed logical features matches mice's imputer.
+  first$Flag <- as.numeric(first$Flag); second$Flag <- as.numeric(second$Flag)
+  model <- mice::as.mids(rbind(cbind(.imp = 0L, original),
+    cbind(.imp = 1L, first), cbind(.imp = 2L, second)))
+  model$data$Flag <- original$Flag
+  fit <- function(names) {
+    review <- mfrm_features(original, "ID", names)
+    mfrm_cluster_imputed(review, model, review$missing, k = 2)
+  }
+  x <- fit("X"); y <- fit("Y"); xy <- fit(c("X", "Y"))
+  fixed <- fit("Complete"); flag <- fit("Flag")
+  local_mocked_bindings(mfrm_cluster = function(...) stop("Unexpected refit"), .package = "mfrmr")
+  out <- mfrm_cluster_compare(list(X = x, Y = y, Both = xy, Complete = fixed, Flag = flag))
+  expect_equal(nrow(out$comparisons), 20L)
+  expect_equal(out$analysis_summary$Features, rep(c(1L, 1L, 2L, 1L, 1L), each = 2))
+  expect_true(all(out$comparison_summary$Partitions == 2L))
+  expect_equal(nrow(fixed$imputed_cells), 0L)
+  expect_identical(fixed$analyses[[1]]$membership, fixed$analyses[[2]]$membership)
+  # Independent pair enumeration for the disjoint selections in each completion.
+  ij <- utils::combn(1:6, 2)
+  for (j in 1:2) {
+    a <- x$analyses[[j]]$membership$Cluster
+    b <- y$analyses[[j]]$membership$Cluster
+    expect_equal(out$comparisons$ChangedFraction[j],
+      mean((a[ij[1, ]] == a[ij[2, ]]) != (b[ij[1, ]] == b[ij[2, ]])))
+  }
+  changed <- y
+  changed$analyses <- rev(changed$analyses)
+  expect_error(mfrm_cluster_compare(list(X = x, Y = changed)), "Completed feature values.*1")
+  changed <- y
+  changed$imputation_model$method["Y"] <- "norm"
+  expect_error(mfrm_cluster_compare(list(X = x, Y = changed)), "same fitted mids")
+  changed <- y
+  changed$feature_data$data$Y[1] <- -1
+  expect_error(mfrm_cluster_compare(list(X = x, Y = changed)), "original feature values")
+  changed <- y
+  changed$analyses[[1]]$feature_data <- x$analyses[[1]]$feature_data
+  expect_error(mfrm_cluster_compare(list(X = x, Y = changed)), "selected features")
+})

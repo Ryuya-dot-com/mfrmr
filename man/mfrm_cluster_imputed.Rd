@@ -22,7 +22,7 @@ mfrm_cluster_imputed(
 \method{summary}{mfrm_imputed_clusters}(object, ...)
 }
 \arguments{
-\item{x}{An original, incomplete table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}.}
+\item{x}{An original feature table reviewed with \code{\link[=mfrm_features]{mfrm_features()}}.}
 
 \item{imputed}{A \code{mids} object from the optional \code{mice} package, containing
 the identifier, selected features, and at least two imputations. Its original
@@ -33,7 +33,10 @@ imputation model without becoming clustering features.}
 the missing cells to impute. For example, select appropriate rows from
 \code{x$missing} after reviewing their reasons. Extra columns are ignored.
 The selected-feature entries in \code{imputed$where} must match this selection;
-other missing cells must remain missing in every completed data set.}
+other missing cells must remain missing in every completed data set.
+If all selected features are already complete, supply the empty
+\code{x$missing} table. This retains one partition per imputation so the result
+can be compared with other feature selections from the same model.}
 
 \item{k, weights}{As in \code{\link[=mfrm_cluster]{mfrm_cluster()}}. The same choices apply to every
 imputation.}

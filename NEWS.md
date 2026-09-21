@@ -2,6 +2,13 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* `mfrm_cluster_compare()` now compares different feature selections on the
+  same entities, reporting feature counts and selected weights. Shared
+  features must retain their values and types. For multiply imputed results,
+  different selections must reuse the same fitted `mids` object and preserve
+  completion pairing. Selections containing only complete attributes can
+  use an empty `impute` table with `mfrm_cluster_imputed()`. The tutorial
+  demonstrates omitting workload while keeping the imputation model fixed.
 * Extended the external-feature tutorial with separate person, rater, and
   task groupings linked to rating assignments by ID. It distinguishes
   unassigned ratings, missing assigned scores, and missing or undefined

@@ -109,8 +109,8 @@ demonstrates separate person, rater, and task tables, with classifications
 joined by ID to planned and observed rating rows. This supports descriptive
 assignment review, not a joint clustering model or inference about group
 effects. Many-feature analyses require attention to redundant and irrelevant
-variables. Feature-set comparisons, numeric PCA/k-means integration, and
-joint cross-facet imputation remain future work; they need explicit distance,
+variables. Numeric PCA/k-means integration and joint cross-facet imputation
+remain future work; they need explicit distance,
 scaling, dependence, and uncertainty choices before implementation.
 
 Missing external features remain visible with user-supplied reasons. Clustering
@@ -128,11 +128,16 @@ imputations without averaging arbitrary group labels. They do not establish
 sampling stability or provide pooled inferential estimates. Numeric ranges are
 recalculated in each completed sample and retained for inspection.
 
-Group-count, feature-weight, and clustering-method sensitivity can be reviewed by comparing
-existing clustering results. Pair changes and adjusted Rand indices compare
+Feature-selection, group-count, feature-weight, and clustering-method
+sensitivity can be reviewed by comparing existing clustering results on the
+same entities. Shared feature values and types must remain unchanged.
+Pair changes and adjusted Rand indices compare
 partitions without relying on group numbers. For multiply imputed features,
-the comparison pairs identical completed tables and retains every imputation's
-result. Group sizes, profiles, and silhouettes remain available for substantive
+the comparison pairs completed tables and retains every imputation's result.
+When feature selections differ, it requires the same fitted imputation model
+and checks selected values against each completion. Removing a clustering
+feature does not remove it from the imputation model. Group sizes, feature
+counts, profiles, and silhouettes remain available for substantive
 review; no setting is automatically selected. These descriptive comparisons
 do not provide sampling stability or pooled inference.
 

@@ -347,7 +347,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #' retaining all analyses and the fraction of imputations in which each pair
 #' of entities belongs to the same group.
 #'
-#' @param x An original, incomplete table reviewed with [mfrm_features()].
+#' @param x An original feature table reviewed with [mfrm_features()].
 #' @param imputed A `mids` object from the optional `mice` package, containing
 #'   the identifier, selected features, and at least two imputations. Its original
 #'   data must match `x` by ID. Auxiliary variables may be included in the
@@ -357,6 +357,9 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   `x$missing` after reviewing their reasons. Extra columns are ignored.
 #'   The selected-feature entries in `imputed$where` must match this selection;
 #'   other missing cells must remain missing in every completed data set.
+#'   If all selected features are already complete, supply the empty
+#'   `x$missing` table. This retains one partition per imputation so the result
+#'   can be compared with other feature selections from the same model.
 #' @param k,weights As in [mfrm_cluster()]. The same choices apply to every
 #'   imputation.
 #' @param missing Either `"error"` (default) or `"omit"`, applied to missing
@@ -471,7 +474,8 @@ mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
     stop("`imputed` must be a mice mids object with at least two imputations.", call. = FALSE)
   }
   if (!is.data.frame(impute) || anyDuplicated(names(impute)) ||
-      !all(c("ID", "Feature") %in% names(impute)) || !nrow(impute)) {
+      !all(c("ID", "Feature") %in% names(impute)) ||
+      (!nrow(impute) && nrow(x$missing) > 0L)) {
     stop("`impute` must explicitly list missing cells in ID and Feature columns.", call. = FALSE)
   }
   cells <- as.data.frame(impute[, c("ID", "Feature"), drop = FALSE])

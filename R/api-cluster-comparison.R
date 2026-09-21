@@ -1,25 +1,31 @@
 #' Compare exploratory groups across settings and clustering methods
 #'
 #' Compare existing external-feature clustering results without refitting.
-#' Review how group membership changes when the number of groups or feature
-#' weights or clustering method changes, including paired comparisons across
+#' Review how group membership changes when the selected features, number of
+#' groups, feature weights, or clustering method changes, including paired comparisons across
 #' the same imputations.
 #'
 #' @param analyses A named list of at least two results from [mfrm_cluster()]
 #'   and/or [mfrm_cluster_hierarchical()],
 #'   or a named list of results from [mfrm_cluster_imputed()]. Do not mix the two
 #'   result types. Names must be unique and nonblank. All results must use the
-#'   same original feature values, types, IDs, and included entities. Row and
-#'   feature order may differ. For imputed results, the completed feature tables
-#'   must also match by imputation number; reuse the same `mids` object when
-#'   fitting each setting. Different imputation models are not compared here.
+#'   same entity IDs and included entities. Selected features may differ;
+#'   features with the same name must retain their original values and types.
+#'   Row and feature order may differ. IDs must refer to the same entities,
+#'   not, for example, persons and raters that happen to share ID labels.
+#'   For imputed results, shared completed features must also match by
+#'   imputation number. When feature selections differ, all results must retain
+#'   the same `mids` object, including its data and settings; each retained
+#'   completion is checked against it using the optional `mice` package.
+#'   Reuse one fitted imputation model.
 #' @return An `mfrm_cluster_comparison` object containing:
 #'   \itemize{
 #'   \item `analysis_summary`: method, linkage (unavailable for PAM), group
-#'     count, included/excluded entity counts,
+#'     count, selected feature count (`Features`), included/excluded entity counts,
 #'     smallest/largest group sizes, and mean silhouette for each analysis and
 #'     imputation. `Imputation` is `NA` for ordinary clustering results.
-#'   \item `weights`: supplied feature weights for each analysis.
+#'   \item `weights`: selected features and their supplied weights for each
+#'     analysis. Unselected features have no row; they are not zero-weight inputs.
 #'   \item `comparisons`: all pairs of analyses, with one row per imputation.
 #'     `Pairs` counts unordered pairs of included entities, excluding self-pairs.
 #'     `SplitPairs` were together in `First` and apart in `Second`; `JoinedPairs`
@@ -40,15 +46,18 @@
 #'   identifies the correct group count or establishes group validity.
 #'
 #'   Mean silhouette and group sizes help describe each partition. Silhouette
-#'   values calculated with different feature weights use different distances;
-#'   their maximum is not an automatic criterion for choosing weights. Review
+#'   values calculated with different features or weights use different distances;
+#'   their maximum is not an automatic criterion for selecting features or weights. Review
 #'   group profiles in the retained `analyses` alongside the comparison.
 #'
-#'   With multiple imputations, each comparison uses the same completed data
-#'   on both sides. Every imputation is retained. Summary means and ranges
+#'   With multiple imputations, feature selection is applied to the same
+#'   completed data on both sides, without refitting the imputation model.
+#'   A feature omitted from clustering can remain an imputation predictor;
+#'   this comparison does not evaluate its removal from the imputation model.
+#'   Every imputation is retained. Summary means and ranges
 #'   describe sensitivity to settings across those imputations; they are not
 #'   Rubin-pooled estimates, confidence intervals, or sampling stability.
-#'   Different input data or inclusion masks cause an error rather than a
+#'   Conflicting shared feature values or different inclusion masks cause an error rather than a
 #'   silent intersection of entities or imputations. No preferred setting,
 #'   consensus partition, or hypothesis test is returned.
 #'
@@ -74,6 +83,13 @@
 #'   summary(comparison)
 #'   comparison$analysis_summary
 #'   comparison$comparisons
+#'   # Hold the entities and group count fixed while changing the feature set.
+#'   experience <- mfrm_features(raters, "Rater", "ExperienceYears")
+#'   feature_comparison <- mfrm_cluster_compare(list(
+#'     BothFeatures = fits$TwoGroups,
+#'     ExperienceOnly = mfrm_cluster(experience, k = 2)))
+#'   feature_comparison$analysis_summary
+#'   feature_comparison$weights
 #' }
 #' @export
 mfrm_cluster_compare <- function(analyses) {
@@ -95,27 +111,50 @@ mfrm_cluster_compare <- function(analyses) {
   }
   original <- analyses[[1L]]$feature_data
   ids <- original$row_summary$ID
-  features <- original$features
+  feature_sets <- lapply(analyses, function(a) a$feature_data$features)
+  different_features <- any(!vapply(feature_sets, setequal, logical(1), feature_sets[[1L]]))
+  if (imputed && different_features && any(!vapply(analyses, function(a)
+      identical(a$imputation_model, analyses[[1L]]$imputation_model), logical(1)))) {
+    stop("Different feature selections must reuse the same fitted mids object.", call. = FALSE)
+  }
+  if (imputed && different_features && !requireNamespace("mice", quietly = TRUE)) {
+    stop("Install the optional 'mice' package to compare imputed feature selections.", call. = FALSE)
+  }
   # Reuse feature validation, aligning both original and completed tables by ID.
   feature_table <- function(x) {
     x <- mfrm_features(x$data, x$id, x$features, x$missing)
-    if (!setequal(x$row_summary$ID, ids) || !setequal(x$features, features)) {
-      stop("All results must use the same entity IDs and selected features.", call. = FALSE)
+    if (!setequal(x$row_summary$ID, ids)) {
+      stop("All results must use the same entity IDs.", call. = FALSE)
     }
-    data <- x$data[match(ids, x$row_summary$ID), features, drop = FALSE]
+    data <- x$data[match(ids, x$row_summary$ID), x$features, drop = FALSE]
     rownames(data) <- NULL
     data
   }
-  original_data <- feature_table(original)
-  completed_data <- lapply(partitions[[1L]], function(a) feature_table(a$feature_data))
+  # Accumulate every feature, so conflicts between later analyses are also checked.
+  check_shared <- function(reference, data, message) {
+    shared <- intersect(names(data), names(reference))
+    if (length(shared) &&
+        !isTRUE(all.equal(as.list(data[shared]), reference[shared], tolerance = 0))) {
+      stop(message, call. = FALSE)
+    }
+    reference[names(data)] <- as.list(data)
+    reference
+  }
+  original_data <- list()
+  completed_data <- rep(list(list()), m)
   included <- !is.na(partitions[[1L]][[1L]]$membership$Cluster[
     match(ids, partitions[[1L]][[1L]]$membership$ID)])
   memberships <- summaries <- weight_tables <- vector("list", length(analyses))
   for (i in seq_along(analyses)) {
-    if (!isTRUE(all.equal(feature_table(analyses[[i]]$feature_data), original_data,
-                          tolerance = 0))) {
-      stop("All results must use the same original feature values and types.", call. = FALSE)
+    reviewed <- analyses[[i]]$feature_data
+    if (imputed && different_features) {
+      original_data <- check_shared(original_data,
+        feature_table(mfrm_features(analyses[[i]]$imputation_model$data,
+          reviewed$id, reviewed$features)),
+        "Shared features must use the same original feature values and types.")
     }
+    original_data <- check_shared(original_data, feature_table(reviewed),
+      "Shared features must use the same original feature values and types.")
     memberships[[i]] <- vector("list", m)
     summaries[[i]] <- vector("list", m)
     for (j in seq_len(m)) {
@@ -123,8 +162,23 @@ mfrm_cluster_compare <- function(analyses) {
       if (!inherits(a, "mfrm_clusters")) {
         stop("Every retained partition must be an external-feature clustering result.", call. = FALSE)
       }
-      if (!isTRUE(all.equal(feature_table(a$feature_data), completed_data[[j]], tolerance = 0))) {
-        stop("Completed feature values and types must match at imputation ", j, ".", call. = FALSE)
+      data <- feature_table(a$feature_data)
+      if (!setequal(names(data), feature_sets[[i]])) {
+        stop("Each retained partition must use its analysis's selected features.", call. = FALSE)
+      }
+      message <- paste0("Completed feature values and types must match at imputation ", j, ".")
+      completed_data[[j]] <- check_shared(completed_data[[j]], data, message)
+      if (imputed && different_features) {
+        # Disjoint selections have no shared values to establish completion pairing.
+        expected <- mice::complete(analyses[[i]]$imputation_model, action = j)
+        for (name in reviewed$features) {
+          if (is.logical(reviewed$data[[name]]) && is.numeric(expected[[name]]) &&
+              all(is.na(expected[[name]]) | expected[[name]] %in% c(0, 1))) {
+            expected[[name]] <- as.logical(expected[[name]])
+          }
+        }
+        expected <- feature_table(mfrm_features(expected, reviewed$id, names(data)))
+        if (!isTRUE(all.equal(data, expected, tolerance = 0))) stop(message, call. = FALSE)
       }
       member <- a$membership
       if (anyDuplicated(member$ID) || !setequal(member$ID, ids)) {
@@ -145,6 +199,7 @@ mfrm_cluster_compare <- function(analyses) {
       summaries[[i]][[j]] <- data.frame(Analysis = names(analyses)[i],
         Method = a$settings$method, Linkage = a$settings$linkage %||% NA_character_,
         Imputation = if (imputed) j else NA_integer_, K = a$settings$k,
+        Features = length(feature_sets[[i]]),
         Included = sum(included), Excluded = sum(!included),
         MinGroupSize = min(sizes), MaxGroupSize = max(sizes),
         MeanSilhouette = mean(member$Silhouette, na.rm = TRUE))

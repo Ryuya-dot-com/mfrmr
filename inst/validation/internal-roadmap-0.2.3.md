@@ -9,6 +9,41 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: compare selected feature sets
+
+mfrm_cluster_compare now compares different feature selections on the same
+IDs and inclusion mask, with selected feature counts in analysis_summary
+and feature-specific weights in the existing weights table. It checks shared
+values/types across every supplied analysis, including features absent from
+the first result. It neither refits nor silently intersects entity samples.
+
+For different selections across imputations, the retained mids objects must
+be identical. Original and completed selected values are checked against that
+source, including when feature sets are disjoint; reordering completions or
+changing the imputation model is refused. mice::complete retrieves stored
+values without fitting a new imputation model. Logical 0/1 completions retain
+the same normalization as the existing adapter. A complete selected subset
+can explicitly supply its empty missing-cell table to retain one partition
+per imputation. Empty selections for incomplete features are still refused.
+
+Scoped checks passed: cluster-comparison 77 expectations, feature-clustering
+127, hierarchical-clustering 80. Added checks independently enumerate pairs,
+cover disjoint selections, reordered IDs, later shared-column conflicts,
+matching/mismatching omitted entities, complete selected subsets, logical
+completions, changed models, and lost completion pairing. An initial
+empty-shared-column attribute mismatch in the new accumulator was fixed.
+No full suite, package check, stress matrix, plotting checks, or CI was rerun.
+
+Both changed Rd files parsed/rendered, the changed comparison help example
+executed, and the updated tutorial ran successfully. In its fictional
+120-rater example, removing AnnualRatings from clustering, holding the
+five-imputation model and k = 3 fixed, changed 25.70308% of pair relations
+on average (range 0--32.75910%; mean ARI 0.418318). All 120 raters and all
+five completions were retained. Workload remains an imputation predictor;
+these results do not assess removing it from that model or justify feature
+selection in real data. Preview and saved comparison:
+/private/tmp/mfrmr-feature-selection-20260921/.
+
 ## 2026-09-21: many-feature workloads and cross-facet interpretation
 
 The user selected separate Person, Rater, and Task classifications followed

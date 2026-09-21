@@ -17,10 +17,15 @@ mfrm_cluster_compare(analyses)
 and/or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}},
 or a named list of results from \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}. Do not mix the two
 result types. Names must be unique and nonblank. All results must use the
-same original feature values, types, IDs, and included entities. Row and
-feature order may differ. For imputed results, the completed feature tables
-must also match by imputation number; reuse the same \code{mids} object when
-fitting each setting. Different imputation models are not compared here.}
+same entity IDs and included entities. Selected features may differ;
+features with the same name must retain their original values and types.
+Row and feature order may differ. IDs must refer to the same entities,
+not, for example, persons and raters that happen to share ID labels.
+For imputed results, shared completed features must also match by
+imputation number. When feature selections differ, all results must retain
+the same \code{mids} object, including its data and settings; each retained
+completion is checked against it using the optional \code{mice} package.
+Reuse one fitted imputation model.}
 
 \item{x, object}{An object returned by \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}.}
 
@@ -30,10 +35,11 @@ fitting each setting. Different imputation models are not compared here.}
 An \code{mfrm_cluster_comparison} object containing:
 \itemize{
 \item \code{analysis_summary}: method, linkage (unavailable for PAM), group
-count, included/excluded entity counts,
+count, selected feature count (\code{Features}), included/excluded entity counts,
 smallest/largest group sizes, and mean silhouette for each analysis and
 imputation. \code{Imputation} is \code{NA} for ordinary clustering results.
-\item \code{weights}: supplied feature weights for each analysis.
+\item \code{weights}: selected features and their supplied weights for each
+analysis. Unselected features have no row; they are not zero-weight inputs.
 \item \code{comparisons}: all pairs of analyses, with one row per imputation.
 \code{Pairs} counts unordered pairs of included entities, excluding self-pairs.
 \code{SplitPairs} were together in \code{First} and apart in \code{Second}; \code{JoinedPairs}
@@ -48,8 +54,8 @@ imputation-specific partitions, profiles, and settings.
 }
 \description{
 Compare existing external-feature clustering results without refitting.
-Review how group membership changes when the number of groups or feature
-weights or clustering method changes, including paired comparisons across
+Review how group membership changes when the selected features, number of
+groups, feature weights, or clustering method changes, including paired comparisons across
 the same imputations.
 }
 \details{
@@ -62,15 +68,18 @@ partitions with fixed group sizes; it can be negative. Neither measure
 identifies the correct group count or establishes group validity.
 
 Mean silhouette and group sizes help describe each partition. Silhouette
-values calculated with different feature weights use different distances;
-their maximum is not an automatic criterion for choosing weights. Review
+values calculated with different features or weights use different distances;
+their maximum is not an automatic criterion for selecting features or weights. Review
 group profiles in the retained \code{analyses} alongside the comparison.
 
-With multiple imputations, each comparison uses the same completed data
-on both sides. Every imputation is retained. Summary means and ranges
+With multiple imputations, feature selection is applied to the same
+completed data on both sides, without refitting the imputation model.
+A feature omitted from clustering can remain an imputation predictor;
+this comparison does not evaluate its removal from the imputation model.
+Every imputation is retained. Summary means and ranges
 describe sensitivity to settings across those imputations; they are not
 Rubin-pooled estimates, confidence intervals, or sampling stability.
-Different input data or inclusion masks cause an error rather than a
+Conflicting shared feature values or different inclusion masks cause an error rather than a
 silent intersection of entities or imputations. No preferred setting,
 consensus partition, or hypothesis test is returned.
 
@@ -93,6 +102,13 @@ if (requireNamespace("cluster", quietly = TRUE)) {
   summary(comparison)
   comparison$analysis_summary
   comparison$comparisons
+  # Hold the entities and group count fixed while changing the feature set.
+  experience <- mfrm_features(raters, "Rater", "ExperienceYears")
+  feature_comparison <- mfrm_cluster_compare(list(
+    BothFeatures = fits$TwoGroups,
+    ExperienceOnly = mfrm_cluster(experience, k = 2)))
+  feature_comparison$analysis_summary
+  feature_comparison$weights
 }
 }
 \references{
