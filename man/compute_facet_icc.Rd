@@ -15,7 +15,8 @@ compute_facet_icc(
   ci_boot_reps = 1000L,
   ci_boot_seed = NULL,
   ci_boot_parallel = c("no", "multicore", "snow"),
-  ci_boot_ncpus = 1L
+  ci_boot_ncpus = 1L,
+  missing = c("error", "omit")
 )
 }
 \arguments{
@@ -61,6 +62,11 @@ nothing on Windows and falls back to serial; use \code{"snow"} there.}
 \item{ci_boot_ncpus}{Number of CPUs to use for the parallel
 bootstrap path (ignored when \code{ci_boot_parallel = "no"}). A positive
 integer. Interactive progress is available for serial execution.}
+
+\item{missing}{How to handle missing scores or selected grouping values:
+\code{"error"} (default) or explicit complete-case omission with \code{"omit"}.
+Numeric character/factor score labels retain their numeric values.
+Nonnumeric scores, infinite values, and blank grouping labels are refused.}
 }
 \value{
 A data.frame of class \code{mfrm_facet_icc} with one row per
@@ -95,6 +101,16 @@ observed score variance attributable to each facet. This is a
 descriptive summary complementary to the Rasch-metric rater
 separation/reliability reported elsewhere.
 }
+\section{Rows used}{
+
+Missingness is checked only in the score, facets, and optional person column.
+\code{InputRows}, \code{UsedRows}, and \code{ExcludedRows} are included in the table.
+\code{attr(x, "data_usage")} retains these counts, excluded input row positions,
+missing columns per row, and observed grouping-level counts after omission.
+\code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} uses these retained counts for its sample
+sizes. Omission does not impute scores or correct missing-data bias.
+}
+
 \section{Interpreting output}{
 
 The \code{Interpretation} column uses \strong{two scales} so the same numeric

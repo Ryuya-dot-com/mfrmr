@@ -9,6 +9,45 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: consistent ICC and design-effect analysis rows
+
+ICC input now preserves numeric factor labels and refuses malformed/infinite
+scores instead of silently dropping them. Selected score/grouping missingness
+is an error by default; explicit `missing = "omit"` retains excluded input row
+positions, missing columns, counts, and observed grouping-level counts. lmer
+uses `na.fail` after this selection. Literal column names are quoted in the
+model formula. The person term is included once when also listed in facets.
+
+Design effects derive cluster sizes and effective N from the ICC result's
+retained counts, including when a later data frame is supplied. An old ICC
+result without these records must be recomputed. The hierarchical entry point
+propagates input/model errors and records when counts start from stored fitted
+rows. Its nesting/cross-tabulation/connectivity results still describe the
+supplied design; that distinction is documented. Public help, NEWS and the
+saved-analysis guide describe the behavior and migration without internal
+release operations.
+
+Scoped verification passed: `test-icc-input.R` (58 expectations),
+`test-icc-ci-method.R` (83), and `test-hierarchical-audit.R` (27), with no
+failures or warnings in their completed runs. The input tests check numeric
+labels, literal column names, invalid values, missing score/person/facet rows,
+manual complete-row equivalence, explicit sample-size calculations, CSV
+counts, legacy refusal and the fitted-object wrapper. The first input-test
+attempt stopped on an unavailable test-only options helper; base options with
+on-exit restoration replaced it. Only the input file was rerun after that fix
+and the added wrapper missing-group case. Already-passing interval/hierarchy
+checks were reused. Rd files were regenerated and the diff passes whitespace
+checks. No whole-suite, R CMD check, numerical coverage study or hosted run was
+started for this change.
+
+The correction is applied to both development and the separate 0.2.4 candidate,
+with identical implementation, tests and generated function help. Feature
+clustering, imputation comparison and development G-study changes remain
+outside the candidate. Earlier package/matrix results stay bound to 79d0d87;
+they are not relabelled as checks of this revision. Changes remain local.
+The scale-dependent near-zero variance threshold and broader design-effect
+interpretation are separate remaining review items, not corrected here.
+
 ## 2026-09-21: candidate backport and verification scoped to the change
 
 The ICC payload from `dfa5f4c` was backported onto candidate `c4867b7` as

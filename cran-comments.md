@@ -25,8 +25,16 @@ differential-functioning methods are outside this release.
 
 ## Test environments
 
-The ICC correction in the current 0.2.4 candidate passed hosted checks on
-2026-09-21 in four environments:
+The current candidate additionally corrects ICC score conversion and explicit
+missing-row handling, and calculates design effects from the ICC model's
+retained sample counts. The affected input, interval, and hierarchical tests
+pass locally (168 expectations, no failures or warnings). Implementation
+and tests match between development and the candidate. This additional
+correction has not been subjected to another full package check or hosted
+matrix; the broader results below belong to the preceding source.
+
+The preceding ICC interval correction (source 79d0d87) passed hosted checks
+on 2026-09-21 in four environments:
 
 - macOS with R 4.6.1;
 - Windows with R 4.6.1;
@@ -57,7 +65,7 @@ coefficient calculations are unchanged. The correction was found by running
 the documented examples with `--run-donttest`; its regression tests and the
 additional examples pass.
 
-The exact 0.2.4 source archive passes `R CMD check --as-cran` on arm64 macOS
+The preceding 79d0d87 source archive passes `R CMD check --as-cran` on arm64 macOS
 with R 4.6.1: 0 errors, 0 warnings, and 1 NOTE. This includes the additional
 `--run-donttest` examples, 756 passing lightweight test expectations with three
 intentional CRAN skips, vignette rebuilding, and PDF/HTML manual generation.

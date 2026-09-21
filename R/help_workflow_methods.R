@@ -87,8 +87,13 @@
 #'   practical bound; old equivalence bundles cannot supply the required joint
 #'   covariance. Rebuild model-choice and weighting reviews from their source
 #'   fits as well.
-#' - **ICC intervals:** rerun [compute_facet_icc()] or
+#' - **ICC and design effects:** rerun [compute_facet_icc()] or
 #'   [analyze_hierarchical_structure()] from the original data and settings.
+#'   Numeric score labels now retain their values. Missing scores or grouping
+#'   values require an explicit `missing = "omit"` choice; malformed scores
+#'   must be corrected. Inspect `attr(icc, "data_usage")`, then recreate
+#'   [compute_facet_design_effect()] using the new ICC result. Older ICC
+#'   tables lack the row accounting needed to calculate matching sample sizes.
 #'   The former `ci_method = "profile"` transformed separate component bounds
 #'   and did not calculate a profile-likelihood interval for the ICC ratio.
 #'   Choose `"boot"` explicitly for parametric percentile intervals, then read

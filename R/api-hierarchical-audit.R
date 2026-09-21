@@ -557,6 +557,18 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' @param ci_boot_ncpus Number of CPUs to use for the parallel
 #'   bootstrap path (ignored when `ci_boot_parallel = "no"`). A positive
 #'   integer. Interactive progress is available for serial execution.
+#' @param missing How to handle missing scores or selected grouping values:
+#'   `"error"` (default) or explicit complete-case omission with `"omit"`.
+#'   Numeric character/factor score labels retain their numeric values.
+#'   Nonnumeric scores, infinite values, and blank grouping labels are refused.
+#'
+#' @section Rows used:
+#' Missingness is checked only in the score, facets, and optional person column.
+#' `InputRows`, `UsedRows`, and `ExcludedRows` are included in the table.
+#' `attr(x, "data_usage")` retains these counts, excluded input row positions,
+#' missing columns per row, and observed grouping-level counts after omission.
+#' [compute_facet_design_effect()] uses these retained counts for its sample
+#' sizes. Omission does not impute scores or correct missing-data bias.
 #'
 #' @section Interpreting output:
 #' The `Interpretation` column uses **two scales** so the same numeric
@@ -680,7 +692,9 @@ compute_facet_icc <- function(data, facets, score,
                               ci_boot_reps = 1000L,
                               ci_boot_seed = NULL,
                               ci_boot_parallel = c("no", "multicore", "snow"),
-                              ci_boot_ncpus = 1L) {
+                              ci_boot_ncpus = 1L,
+                              missing = c("error", "omit")) {
+  missing <- match.arg(missing)
   ci_method <- .icc_ci_method(ci_method)
   ci_boot_parallel <- match.arg(ci_boot_parallel)
   if (!is.numeric(ci_level) || is.complex(ci_level) || length(ci_level) != 1L ||
@@ -712,33 +726,83 @@ compute_facet_icc <- function(data, facets, score,
       class = c("mfrm_facet_icc", "data.frame")
     ))
   }
-  missing_cols <- setdiff(c(score, facets, person), names(data))
+  if (!is.data.frame(data) || nrow(data) == 0L || anyNA(names(data)) ||
+      anyDuplicated(names(data)) || any(!nzchar(names(data)))) {
+    stop("`data` must be a nonempty data frame with unique, nonmissing column names.", call. = FALSE)
+  }
+  if (!is.character(score) || length(score) != 1L || is.na(score) || !nzchar(score) ||
+      !is.character(facets) || !length(facets) || anyNA(facets) ||
+      anyDuplicated(facets) || any(!nzchar(facets)) ||
+      (!is.null(person) && (!is.character(person) || length(person) != 1L ||
+                           is.na(person) || !nzchar(person)))) {
+    stop("Supply a score column name, distinct facet names, and an optional person column name.", call. = FALSE)
+  }
+  re_terms <- unique(c(person, facets))
+  if (any(re_terms %in% c(score, "Residual"))) {
+    stop("Grouping columns cannot be the score column or named `Residual`.", call. = FALSE)
+  }
+  if (!is.logical(reml) || length(reml) != 1L || is.na(reml)) {
+    stop("`reml` must be TRUE or FALSE.", call. = FALSE)
+  }
+  needed_cols <- c(score, re_terms)
+  missing_cols <- setdiff(needed_cols, names(data))
   if (length(missing_cols) > 0L) {
     stop("Column(s) not found in `data`: ",
          paste(missing_cols, collapse = ", "), ".", call. = FALSE)
   }
-  # Coerce to factor so lmer treats them as grouping factors.
-  for (col in c(facets, person)) {
-    if (!is.null(col) && !is.factor(data[[col]])) {
-      data[[col]] <- as.factor(as.character(data[[col]]))
+  data <- as.data.frame(data)
+  for (col in re_terms) {
+    value <- data[[col]]
+    if (!is.null(dim(value)) || !(is.factor(value) || (!is.object(value) &&
+        (is.character(value) || is.logical(value) || (is.numeric(value) && !is.complex(value))))) ||
+        (is.numeric(value) && any(is.infinite(value)))) {
+      stop("Grouping column '", col, "' must contain finite numeric, character, factor, or logical labels, or NA.", call. = FALSE)
+    }
+    if (any(!is.na(value) & !nzchar(trimws(as.character(value))))) {
+      stop("Grouping column '", col, "' contains blank labels; use NA for missing values.", call. = FALSE)
+    }
+    if (!is.factor(value)) {
+      labels <- as.character(value)
+      labels[is.na(value)] <- NA_character_
+      data[[col]] <- as.factor(labels)
     }
   }
-  data[[score]] <- suppressWarnings(as.numeric(data[[score]]))
-  data <- data[is.finite(data[[score]]), , drop = FALSE]
-  if (nrow(data) == 0L) {
-    stop("No finite rows in `score`.", call. = FALSE)
+  value <- data[[score]]
+  if (!is.null(dim(value)) || !(is.factor(value) || (!is.object(value) &&
+      (is.character(value) || (is.numeric(value) && !is.complex(value)))))) {
+    stop("The score column must be numeric or numeric character/factor labels, with NA for missing values.", call. = FALSE)
   }
+  data[[score]] <- suppressWarnings(as.numeric(if (is.factor(value)) as.character(value) else value))
+  if (any(!is.na(value) & !is.finite(data[[score]]))) {
+    stop("The score column contains nonnumeric or infinite values; correct them explicitly and use NA for missing values.", call. = FALSE)
+  }
+  absent <- is.na(data[, needed_cols, drop = FALSE])
+  keep <- rowSums(absent) == 0L
+  cells <- which(absent, arr.ind = TRUE)
+  data_usage <- list(source = "Supplied data", missing = missing,
+    counts = c(InputRows = nrow(data), UsedRows = sum(keep), ExcludedRows = sum(!keep)),
+    excluded_rows = which(!keep),
+    missing_cells = data.frame(InputRow = cells[, 1L], Column = needed_cols[cells[, 2L]],
+                               row.names = NULL))
+  if (any(!keep) && missing == "error") {
+    stop(sum(!keep), " row(s) have missing scores or selected grouping values. Review the data or choose missing = 'omit' explicitly.", call. = FALSE)
+  }
+  if (!any(keep)) stop("No complete rows remain for the ICC model.", call. = FALSE)
+  data <- data[keep, , drop = FALSE]
+  data_usage$observed_levels <- vapply(data[re_terms], function(x) length(unique(x)), integer(1))
 
-  re_terms <- c(if (!is.null(person)) person else NULL, facets)
+  quoted_names <- vapply(c(score, re_terms), function(name) {
+    deparse1(as.name(name), backtick = TRUE)
+  }, character(1))
   formula <- stats::as.formula(paste0(
-    score, " ~ 1 + ",
-    paste0("(1 | ", re_terms, ")", collapse = " + ")
+    quoted_names[1L], " ~ 1 + ",
+    paste0("(1 | ", quoted_names[-1L], ")", collapse = " + ")
   ))
   # Retain fit warnings separately from convergence codes and boundary messages.
   lmer_warnings <- character(0)
   fit <- tryCatch(
     withCallingHandlers(
-      lme4::lmer(formula, data = data, REML = isTRUE(reml)),
+      lme4::lmer(formula, data = data, REML = reml, na.action = stats::na.fail),
       warning = function(w) {
         lmer_warnings <<- c(lmer_warnings, conditionMessage(w))
         invokeRestart("muffleWarning")
@@ -861,7 +925,9 @@ compute_facet_icc <- function(data, facets, score,
       }
     }
   }
-  structure(out, class = c("mfrm_facet_icc", "data.frame"), icc_ci = ci_details)
+  for (name in names(data_usage$counts)) out[[name]] <- data_usage$counts[[name]]
+  structure(out, class = c("mfrm_facet_icc", "data.frame"),
+            icc_ci = ci_details, data_usage = data_usage)
 }
 
 .icc_ci_method <- function(method) {
@@ -971,12 +1037,19 @@ compute_facet_icc <- function(data, facets, score,
 #' is the average number of observations per facet element and `rho` is
 #' the ICC.
 #'
-#' @param data Data frame in long format.
+#' @param data Data frame in long format, used to fit the ICC model when
+#'   `icc_table` is `NULL`. With a supplied ICC table, sample sizes come from
+#'   its retained row accounting, not from `data`.
 #' @param facets Character vector of facet column names.
 #' @param icc_table Output from [compute_facet_icc()] (optional; will be
-#'   computed on the fly when `NULL`).
+#'   computed on the fly when `NULL`). Must retain its `data_usage` attribute.
+#'   Rerun older saved ICC results from their original data and settings before
+#'   calculating design effects; their analysis sample cannot be reconstructed
+#'   from the ICC table alone.
 #' @param score Score column name; required when `icc_table` is `NULL`.
 #' @param person Person column; passed through to compute_facet_icc().
+#' @param missing Missing-value policy passed to [compute_facet_icc()] when
+#'   `icc_table` is `NULL`. A supplied table retains its original policy.
 #'
 #' @section Interpreting output:
 #' - `Deff = 1`: facet behaves like simple random sampling; no
@@ -999,7 +1072,10 @@ compute_facet_icc <- function(data, facets, score,
 #'    robust SEs or moving to a hierarchical model.
 #'
 #' @return A data.frame of class `mfrm_facet_design_effect` with columns
-#'   `Facet`, `AvgClusterSize`, `ICC`, `DesignEffect`, and `EffectiveN`.
+#'   `Facet`, `AvgClusterSize`, `ICC`, `DesignEffect`, `EffectiveN`, `InputRows`,
+#'   `UsedRows`, and `ExcludedRows`. Its `data_usage` attribute is retained
+#'   from the ICC result. Cluster sizes and effective sample sizes use only
+#'   rows included in that model.
 #'
 #' @seealso [compute_facet_icc()], [analyze_hierarchical_structure()].
 #'
@@ -1025,25 +1101,30 @@ compute_facet_icc <- function(data, facets, score,
 #' }
 #' @export
 compute_facet_design_effect <- function(data, facets, icc_table = NULL,
-                                        score = NULL, person = NULL) {
-  facets <- as.character(facets)
+                                        score = NULL, person = NULL,
+                                        missing = c("error", "omit")) {
+  missing <- match.arg(missing)
+  if (!is.character(facets) || !length(facets) || anyNA(facets) ||
+      anyDuplicated(facets) || any(!nzchar(facets))) {
+    stop("`facets` must contain distinct, nonmissing column names.", call. = FALSE)
+  }
   if (is.null(icc_table)) {
     if (is.null(score)) {
       stop("Supply either `icc_table` or `score`.", call. = FALSE)
     }
     icc_table <- compute_facet_icc(data, facets = facets,
-                                   score = score, person = person)
+                                   score = score, person = person, missing = missing)
   }
-  total_n <- nrow(data)
+  usage <- attr(icc_table, "data_usage")
+  if (is.null(usage$counts) || is.null(usage$observed_levels)) {
+    stop("ICC row accounting is unavailable. Rerun compute_facet_icc() with the original data and settings before calculating design effects.", call. = FALSE)
+  }
+  if (any(!facets %in% names(usage$observed_levels)) || any(!facets %in% icc_table$Facet)) {
+    stop("Each requested facet must be a grouping column in the supplied ICC result.", call. = FALSE)
+  }
+  total_n <- usage$counts[["UsedRows"]]
   out_rows <- lapply(facets, function(f) {
-    if (!f %in% names(data)) {
-      return(data.frame(
-        Facet = f, AvgClusterSize = NA_real_, ICC = NA_real_,
-        DesignEffect = NA_real_, EffectiveN = NA_real_,
-        stringsAsFactors = FALSE
-      ))
-    }
-    k <- length(unique(stats::na.omit(data[[f]])))
+    k <- usage$observed_levels[[f]]
     avg_m <- if (k > 0) total_n / k else NA_real_
     rho <- suppressWarnings(as.numeric(
       icc_table$ICC[match(f, icc_table$Facet)]
@@ -1061,8 +1142,9 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
       stringsAsFactors = FALSE
     )
   })
-  structure(do.call(rbind, out_rows),
-            class = c("mfrm_facet_design_effect", "data.frame"))
+  out <- do.call(rbind, out_rows)
+  for (name in names(usage$counts)) out[[name]] <- usage$counts[[name]]
+  structure(out, class = c("mfrm_facet_design_effect", "data.frame"), data_usage = usage)
 }
 
 
@@ -1105,6 +1187,12 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'   Supplying a non-`NULL` value routes through
 #'   [lifecycle::deprecate_warn()] and overrides the canonical
 #'   `ci_*` argument.
+#' @param missing Missing-value policy for the ICC and design-effect tables,
+#'   passed to [compute_facet_icc()]. Invalid input or model errors stop the
+#'   requested ICC analysis. Nesting, cross-tabulation, and connectivity tables
+#'   describe the supplied design, including rows excluded from the ICC model.
+#'   When `data` is a fit, ICC row counts start from its stored fitted rows;
+#'   they cannot recover exclusions made before fitting the MFRM.
 #'
 #' @section Interpreting output:
 #' - `nesting`: a
@@ -1198,7 +1286,10 @@ analyze_hierarchical_structure <- function(data,
                                            icc_ci_method = NULL,
                                            icc_ci_level = NULL,
                                            icc_ci_boot_reps = NULL,
-                                           icc_ci_boot_seed = NULL) {
+                                           icc_ci_boot_seed = NULL,
+                                           missing = c("error", "omit")) {
+  missing <- match.arg(missing)
+  data_source <- if (inherits(data, "mfrm_fit")) "Stored fitted rows" else "Supplied data"
   # Deprecated `icc_ci_*` spellings route through lifecycle and
   # override the canonical `ci_*` values when supplied. This unifies
   # the API with compute_facet_icc() while preserving compatibility.
@@ -1270,27 +1361,19 @@ analyze_hierarchical_structure <- function(data,
   deff_tbl <- NULL
   icc_available <- isTRUE(compute_icc) &&
     requireNamespace("lme4", quietly = TRUE) &&
-    !is.null(score) && score %in% names(data)
+    !is.null(score)
   if (icc_available) {
-    icc_tbl <- tryCatch(
-      compute_facet_icc(data, facets = facets, score = score,
+    icc_tbl <- compute_facet_icc(data, facets = facets, score = score,
                         person = person,
                         ci_method = ci_method,
                         ci_level = ci_level,
                         ci_boot_reps = ci_boot_reps,
-                        ci_boot_seed = ci_boot_seed),
-      error = function(e) {
-        message("ICC computation failed: ", conditionMessage(e))
-        NULL
-      }
-    )
+                        ci_boot_seed = ci_boot_seed, missing = missing)
+    attr(icc_tbl, "data_usage")$source <- data_source
     if (!is.null(icc_tbl) && nrow(icc_tbl) > 0) {
-      deff_tbl <- tryCatch(
-        compute_facet_design_effect(data, facets = facets,
+      deff_tbl <- compute_facet_design_effect(data, facets = facets,
                                     icc_table = icc_tbl,
-                                    score = score, person = person),
-        error = function(e) NULL
-      )
+                                    score = score, person = person)
     }
   }
 
@@ -1564,10 +1647,28 @@ summary.mfrm_facet_sample_review <- function(object, ...) {
   invisible(object)
 }
 
+.print_icc_data_usage <- function(x) {
+  usage <- attr(x, "data_usage", exact = TRUE)
+  if (is.null(usage)) {
+    cat("  Row accounting unavailable; rerun the ICC analysis to obtain it.\n")
+  } else {
+    cat(sprintf("  ICC rows: %d input, %d used, %d excluded.\n",
+                usage$counts[["InputRows"]], usage$counts[["UsedRows"]],
+                usage$counts[["ExcludedRows"]]))
+    if (identical(usage$source, "Stored fitted rows")) {
+      cat("  Counts start from stored fitted rows; earlier MFRM filtering is not included.\n")
+    }
+    if (usage$counts[["ExcludedRows"]] > 0L) {
+      cat("  Incomplete rows were explicitly omitted; no missing values were imputed.\n")
+    }
+  }
+}
+
 #' @export
 print.mfrm_facet_icc <- function(x, ...) {
   .check_icc_intervals(x)
   cat("mfrm_facet_icc\n")
+  .print_icc_data_usage(x)
   if (nrow(x) == 0L) {
     cat("  (empty; lme4 unavailable or fit failed)\n")
   } else {
@@ -1583,6 +1684,7 @@ summary.mfrm_facet_icc <- function(object, ...) {
   # readers don't conflate person reliability with non-person variance
   # share; see `compute_facet_icc()` "Interpreting output".
   cat("Facet ICC summary (mfrmr)\n")
+  .print_icc_data_usage(object)
   if (!is.data.frame(object) || nrow(object) == 0L) {
     cat("  (empty; lme4 unavailable or fit failed)\n")
     return(invisible(object))
@@ -1602,6 +1704,7 @@ summary.mfrm_facet_icc <- function(object, ...) {
 #' @export
 print.mfrm_facet_design_effect <- function(x, ...) {
   cat("mfrm_facet_design_effect (Kish, 1965)\n")
+  .print_icc_data_usage(x)
   print.data.frame(x, row.names = FALSE)
   invisible(x)
 }
@@ -1609,6 +1712,7 @@ print.mfrm_facet_design_effect <- function(x, ...) {
 #' @export
 summary.mfrm_facet_design_effect <- function(object, ...) {
   cat("Kish design-effect summary (mfrmr)\n")
+  .print_icc_data_usage(object)
   if (!is.data.frame(object) || nrow(object) == 0L) {
     cat("  (empty)\n")
     return(invisible(object))
@@ -1635,6 +1739,7 @@ print.mfrm_hierarchical_structure <- function(x, ...) {
       x$summary$CrossedPairs %||% 0L, "\n")
   if (isTRUE(x$summary$ICCAvailable)) {
     cat("  ICC table: available (", nrow(x$icc), " facets)\n", sep = "")
+    .print_icc_data_usage(x$icc)
   } else {
     cat("  ICC table: unavailable (install `lme4` or set compute_icc = FALSE)\n")
   }

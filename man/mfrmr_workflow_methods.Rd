@@ -101,8 +101,13 @@ from an eligible MML fit with matching current diagnostics and the original
 practical bound; old equivalence bundles cannot supply the required joint
 covariance. Rebuild model-choice and weighting reviews from their source
 fits as well.
-\item \strong{ICC intervals:} rerun \code{\link[=compute_facet_icc]{compute_facet_icc()}} or
+\item \strong{ICC and design effects:} rerun \code{\link[=compute_facet_icc]{compute_facet_icc()}} or
 \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} from the original data and settings.
+Numeric score labels now retain their values. Missing scores or grouping
+values require an explicit \code{missing = "omit"} choice; malformed scores
+must be corrected. Inspect \code{attr(icc, "data_usage")}, then recreate
+\code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} using the new ICC result. Older ICC
+tables lack the row accounting needed to calculate matching sample sizes.
 The former \code{ci_method = "profile"} transformed separate component bounds
 and did not calculate a profile-likelihood interval for the ICC ratio.
 Choose \code{"boot"} explicitly for parametric percentile intervals, then read

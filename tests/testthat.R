@@ -22,6 +22,7 @@ cran_light_tests <- c(
   "gauss-hermite-weights",
   "generalizability-missing",
   "icc-ci-method",
+  "icc-input",
   "posterior-intervals",
   "mml-cpp11-backend",
   "missing-codes-integration",

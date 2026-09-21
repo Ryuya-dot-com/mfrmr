@@ -989,7 +989,16 @@ describe sensitivity to the imputations, conditional on the chosen model and
 clustering settings; they are not membership probabilities or sampling
 stability. No automatic missing-score correction is performed.
 
-## ICC intervals
+## ICC inputs and intervals
+
+`compute_facet_icc()` preserves numeric character/factor score labels. Missing
+scores or selected grouping values stop the analysis by default; choose
+`missing = "omit"` explicitly to use complete rows. Invalid score labels and
+infinite values must be corrected. Inspect the input, used, and excluded row
+counts and `attr(icc, "data_usage")` for excluded positions and missing columns.
+`compute_facet_design_effect()` uses the observation and grouping-level counts
+retained in that ICC result. Rerun older ICC results before calculating design
+effects. Omission does not impute scores or correct missing-data bias.
 
 `compute_facet_icc()` reports observed-score variance shares from a Gaussian
 random-intercept model. Request parametric percentile intervals with
@@ -1274,7 +1283,7 @@ step and rebuild everything that depends on it:
 | Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
 | Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
 | Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
-| ICC intervals | Rerun `compute_facet_icc()` or `analyze_hierarchical_structure()` from the original data/settings. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
+| ICC and design effects | Rerun `compute_facet_icc()` or `analyze_hierarchical_structure()` from the original data/settings, explicitly choosing how to handle missing values. Recreate design effects from the new ICC result's row accounting. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
 | G/D studies or shrinkage | Rerun the observed-score G-study and D-study, or reapply shrinkage, using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
 | Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |

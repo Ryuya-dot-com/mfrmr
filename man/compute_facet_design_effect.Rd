@@ -9,24 +9,36 @@ compute_facet_design_effect(
   facets,
   icc_table = NULL,
   score = NULL,
-  person = NULL
+  person = NULL,
+  missing = c("error", "omit")
 )
 }
 \arguments{
-\item{data}{Data frame in long format.}
+\item{data}{Data frame in long format, used to fit the ICC model when
+\code{icc_table} is \code{NULL}. With a supplied ICC table, sample sizes come from
+its retained row accounting, not from \code{data}.}
 
 \item{facets}{Character vector of facet column names.}
 
 \item{icc_table}{Output from \code{\link[=compute_facet_icc]{compute_facet_icc()}} (optional; will be
-computed on the fly when \code{NULL}).}
+computed on the fly when \code{NULL}). Must retain its \code{data_usage} attribute.
+Rerun older saved ICC results from their original data and settings before
+calculating design effects; their analysis sample cannot be reconstructed
+from the ICC table alone.}
 
 \item{score}{Score column name; required when \code{icc_table} is \code{NULL}.}
 
 \item{person}{Person column; passed through to compute_facet_icc().}
+
+\item{missing}{Missing-value policy passed to \code{\link[=compute_facet_icc]{compute_facet_icc()}} when
+\code{icc_table} is \code{NULL}. A supplied table retains its original policy.}
 }
 \value{
 A data.frame of class \code{mfrm_facet_design_effect} with columns
-\code{Facet}, \code{AvgClusterSize}, \code{ICC}, \code{DesignEffect}, and \code{EffectiveN}.
+\code{Facet}, \code{AvgClusterSize}, \code{ICC}, \code{DesignEffect}, \code{EffectiveN}, \code{InputRows},
+\code{UsedRows}, and \code{ExcludedRows}. Its \code{data_usage} attribute is retained
+from the ICC result. Cluster sizes and effective sample sizes use only
+rows included in that model.
 }
 \description{
 Combines per-facet average cluster size with ICC estimates to return

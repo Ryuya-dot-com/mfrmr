@@ -18,7 +18,8 @@ analyze_hierarchical_structure(
   icc_ci_method = NULL,
   icc_ci_level = NULL,
   icc_ci_boot_reps = NULL,
-  icc_ci_boot_seed = NULL
+  icc_ci_boot_seed = NULL,
+  missing = c("error", "omit")
 )
 }
 \arguments{
@@ -60,6 +61,13 @@ person x facet levels.}
 Supplying a non-\code{NULL} value routes through
 \code{\link[lifecycle:deprecate_warn]{lifecycle::deprecate_warn()}} and overrides the canonical
 \verb{ci_*} argument.}
+
+\item{missing}{Missing-value policy for the ICC and design-effect tables,
+passed to \code{\link[=compute_facet_icc]{compute_facet_icc()}}. Invalid input or model errors stop the
+requested ICC analysis. Nesting, cross-tabulation, and connectivity tables
+describe the supplied design, including rows excluded from the ICC model.
+When \code{data} is a fit, ICC row counts start from its stored fitted rows;
+they cannot recover exclusions made before fitting the MFRM.}
 }
 \value{
 A list of class \code{mfrm_hierarchical_structure} with:

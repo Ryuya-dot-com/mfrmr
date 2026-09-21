@@ -104,6 +104,14 @@ and action needed for each affected workflow.
 
 ## Changes affecting existing analyses
 
+* ICC analyses now preserve numeric character/factor score labels and reject
+  malformed scores. Missing scores or selected grouping values stop the
+  analysis unless `missing = "omit"` is explicit. Results retain input, used,
+  and excluded row counts, excluded row positions, and missing columns.
+  Design effects use the ICC model's retained observation and grouping-level
+  counts, so excluded rows no longer inflate cluster sizes or effective sample
+  sizes. Rerun older ICC results before calculating design effects. Omission
+  does not impute scores or correct missing-data bias.
 * Withdrew `ci_method = "profile"` from `compute_facet_icc()` and
   `analyze_hierarchical_structure()`: transforming separate variance-component
   intervals while fixing the other components did not produce a
