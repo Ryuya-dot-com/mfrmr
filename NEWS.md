@@ -62,6 +62,8 @@ with corrections to uncertainty, subgroup comparisons and design planning.
 
 ## External features and exploratory groups
 
+* The external-feature tutorial now uses `mice` chain plots to review
+  imputation behavior, so the basic example does not require `rstan`.
 * Added `mfrm_features()` to prepare one row per Person, rater or task from
   selected external attributes, preserving types, IDs and missingness reasons.
   `mfrm_cluster()` uses Gower distances and PAM; `mfrm_cluster_hierarchical()`

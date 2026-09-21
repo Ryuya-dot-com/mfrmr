@@ -150,11 +150,15 @@ model <- mice::mice(imputation_data, m = 5, maxit = 5,
   method = methods, predictorMatrix = predictors, where = where,
   seed = 724, printFlag = FALSE)
 model$loggedEvents
-head(mice::convergence(model))
+plot(model, c("ExperienceYears", "AnnualRatings"), layout = c(2, 2))
 ```
 
 Five imputations and five iterations keep this executable example short; they
-are not an adequacy recommendation. Inspect logged events, chain behavior,
+are not an adequacy recommendation. The plot shows the mean and standard
+deviation of imputed values along each chain for two numeric features.
+Persistent drift or differences between chains call for investigation;
+overlapping lines in this short example do not establish convergence.
+Inspect logged events, chain behavior,
 observed versus imputed distributions, and substantive plausibility. A lack
 of logged events does not establish convergence or a suitable model.
 `mfrm_cluster_imputed()` checks consistency of the data, not these assumptions.
