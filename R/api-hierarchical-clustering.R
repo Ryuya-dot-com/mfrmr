@@ -48,6 +48,8 @@
 #' labels does not sample or remove entities. Excluded entities have no leaves
 #' but remain in the result and plot data. Silhouette and feature-profile views
 #' reuse [plot.mfrm_clusters()]. Plots do not refit or choose groups.
+#' Automatic [as_ggplot()] conversion is not supported; use `plot()` for the
+#' stored hierarchy or [plot_data()] to extract it for custom graphics.
 #'
 #' Use [mfrm_cluster_compare()] to compare this partition with PAM or another
 #' linkage on the same data. For multiple imputations, use

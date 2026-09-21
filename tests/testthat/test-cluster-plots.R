@@ -26,6 +26,20 @@ test_that("cluster plots use stored silhouettes and feature summaries without re
   expect_error(plot(x, labels = 1, draw = FALSE), "TRUE or FALSE")
   expect_error(plot(x, unexpected = TRUE, draw = FALSE), "must be empty")
 
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    for (view in list(list(), list(type = "profile", feature = "Years"),
+                     list(type = "profile", feature = "Training"))) {
+      expect_error(do.call(as_ggplot, c(list(x), view)),
+        "Automatic ggplot conversion is not available for exploratory clustering plots")
+      payload <- do.call(plot, c(list(x, draw = FALSE), view))
+      expect_error(as_ggplot(payload), "Use plot\\(x\\).*plot_data\\(\\)")
+    }
+    hierarchy <- mfrm_cluster_hierarchical(
+      mfrm_features(input, "ID", c("Years", "Training")), 2, missing = "omit")
+    expect_error(as_ggplot(hierarchy), "exploratory clustering plots")
+    expect_error(as_ggplot(plot(hierarchy, draw = FALSE)), "exploratory clustering plots")
+  }
+
   grDevices::pdf(NULL, width = 8, height = 6)
   on.exit(grDevices::dev.off(), add = TRUE)
   old <- graphics::par(c("mar", "bg", "fg", "cex.axis", "mfrow"))
@@ -57,6 +71,11 @@ test_that("imputation heatmaps preserve pair fractions, unavailable cells, and r
   expect_error(plot(x, ids = "unknown"), "distinct entity IDs")
   expect_error(plot(x, ids = character()), "distinct entity IDs")
   expect_error(plot(x, labels = NA), "TRUE or FALSE")
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_error(as_ggplot(x), "exploratory clustering plots")
+    expect_error(as_ggplot(plot(x, ids = selection, draw = FALSE)),
+      "Use plot\\(x\\).*plot_data\\(\\)")
+  }
   grDevices::pdf(NULL, width = 8, height = 6)
   on.exit(grDevices::dev.off(), add = TRUE)
   old <- graphics::par(c("mar", "bg", "fg", "cex.axis", "mfrow"))

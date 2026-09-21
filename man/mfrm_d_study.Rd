@@ -71,8 +71,8 @@ not uncertainty bounds or automatic recommendations for sample size.
 This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 decomposition. If person-by-rater or person-by-item interactions are a
 primary estimand, consider \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} and
-\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} for supported Person-by-Task or
-Person-by-Rater-by-Task designs with common condition identities. Those
+\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} for one or two common random facets,
+including Person-by-Task, Person-by-Rater, and Person-by-Rater-by-Task. Those
 functions also accept a single score and estimate the corresponding
 interaction components explicitly. Changing \code{residual_scaling} here only
 explores assumptions; it does not estimate the omitted interactions.

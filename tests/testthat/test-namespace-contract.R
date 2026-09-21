@@ -168,6 +168,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "mfrm_generalizability",
     "mfrm_multivariate_gstudy",
     "mfrm_multivariate_d_study",
+    "mfrm_multivariate_d_compare",
     "import_mirt_fit",
     "import_tam_fit",
     "import_erm_fit"
@@ -362,6 +363,9 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,mfrm_multivariate_d_study)",
     "S3method(summary,mfrm_multivariate_d_study)",
     "S3method(plot,mfrm_multivariate_d_study)",
+    "S3method(print,mfrm_multivariate_d_comparison)",
+    "S3method(summary,mfrm_multivariate_d_comparison)",
+    "S3method(plot,mfrm_multivariate_d_comparison)",
     "S3method(print,mfrm_imported_fit)",
     "S3method(print,summary.mfrm_imported_fit)",
     "S3method(summary,mfrm_imported_fit)",

@@ -9,6 +9,1104 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## Current work plan
+
+Updated 2026-09-21 after the user's sequencing decision: finish implemented
+development functions, extend statistical support, extend models, then integrate
+them as 0.2.4. This replaces the previous release-first recommendation. This
+section is the active execution order. Update it in place when a decision
+changes; do not create another competing "next steps" list. The public ROADMAP owns feature
+priorities and user promises. The dated sections below retain evidence and
+superseded plans; their imperatives are not current execution instructions.
+In particular, the September 18 DRF-first queue, automatic full-suite/matrix
+requirements, old numbered feature releases and research-prototype gates do
+not override this plan. Their original protocols and results remain intact.
+
+### Release boundary and evidence available now
+
+- The separate 0.2.4 candidate is the clean checkout at
+  `/private/tmp/mfrmr-0.2.4-icc-candidate-20260921`, HEAD `532d59e` at this
+  review. It includes later ICC input/units and shrinkage/replay corrections.
+  Preserve it as a baseline. Its final check or publication is no longer the
+  next task; the expanded release follows stages 1–3 below. A later integration
+  must reconcile its corrections with the development features deliberately.
+- This checkout is now candidate 0.2.4, HEAD `5721fa6` plus uncommitted changes including
+  metric-specific multivariate D-study output. HEAD alone does not identify
+  that changed implementation. These development features now target the
+  expanded 0.2.4, not an automatically deferred feature release. The final
+  integrated source needs its own identity and checks; the old candidate's
+  receipts cannot cover it. Stage 4 has aligned DESCRIPTION/CITATION/NEWS and
+  installation guidance; this metadata transition does not publish a release.
+- Historical full-suite/five-environment evidence belongs to `9010f66`.
+  `79d0d87` has its own local as-CRAN check and four successful hosted cells;
+  its cancelled Ubuntu-release job is not a five-environment pass. Subsequent
+  ICC/shrinkage changes have focused evidence. The current record does not
+  establish a final archive check for `532d59e`. See the
+  [candidate evidence scope](#2026-09-21-documentation-routes-and-candidate-evidence-scope).
+- Multivariate implementation has independent ANOVA/QR and MINQUE-kernel
+  checks, external numerical references, focused API/plot tests and saved
+  recovery/plan-choice results. The point workflow and the subsequent bounded
+  normal-theory plan-difference API have distinct evidence below. Neither
+  establishes sparse-roster reliability, distribution-robust inference or full
+  G-theory support.
+- External-feature workflows have ID/type/omission/MI-pairing regressions,
+  rendered examples and bounded stress evidence. They support descriptive
+  analyses, not population cluster recovery, new-entity prediction or pooled
+  inference. See the [feature checks](#2026-09-21-external-feature-stress-checks-and-applied-tutorial)
+  and [feature-set comparisons](#2026-09-21-compare-selected-feature-sets).
+
+### Ordered work and completion conditions
+
+| Order / state | Concrete next action | Completion and scope of verification |
+| --- | --- | --- |
+| 1. Finish implemented development functions — current supported workflows reviewed | Finish the metric-specific multivariate G/D-study workflow and clustering/MI setting comparisons. Reconcile help, examples, plots/ggplot conversion, exports, exclusions and saved-object migration against the actual APIs. | Each supported data-to-result route works with coherent identities, units, omissions and failure behavior. Close concrete defects with affected tests/examples and reuse existing stress evidence. A repeated full suite or a new estimator is not required merely to declare this stage complete. |
+| 2. Extend statistical support — initial two-facet normal-theory comparison implemented | `mfrm_multivariate_d_compare()` now supplies prespecified paired differences and approximate intervals, with plots/help, for complete ANOVA or incomplete MINQUE(0) sources under explicit normal random effects. Preserve the limitations and failure evidence below. One-facet, nonnormal-robust and simultaneous inference remain separate extensions. | The selected initial scope has a working API, matching assumptions, paired covariance, boundary/failure accounting, targeted coverage evidence and focused numerical/rendered checks. This completes the initial scoped deliverable, not all inferential support. Stage 4 must still verify the combined package; model work next requires its own concrete design. |
+| 3. Extend models — initial nested point workflow implemented | Person-by-(Child-within-Parent) now has five-component ANOVA/MINQUE(0), balanced future projections, local child identities, help and plots. Nested intervals, nesting within persons, partial sharing and random-facet MFRM remain separate extensions. | The selected extension has independent QR/kernel calculations, identifiable incomplete/unequal examples, direct composite reduction, saved-result and plot checks. This is a bounded point-estimation workflow, not population recovery evidence for arbitrary sparse designs or full G-theory support. |
+| 4. Integrate as 0.2.4 — local candidate verified | The selected extensions now share version/NEWS, migration help, website index and standard packaged tests. The [claim ledger](claim-reconciliation-0.2.4.md) includes added scope. The repaired archive is bound to the initial package/example/vignette results, the corrected namespace test and unchanged executable content. | Local integration is complete within the recorded check scope below. The release decision remains open; no remote CI, commit, submission or publication occurred. Broaden verification only for an identified outstanding risk, not to replay successful unchanged checks. |
+
+A reproduced user-facing calculation or interpretation defect interrupts this
+order. Finishing a study, test file or document is not by itself completion of
+a user workflow. Publication and external submissions are separate actions;
+this roadmap revision performs neither. The four stages set the priority order;
+keep APIs and documentation compatible during implementation rather than leaving
+every compatibility repair until stage 4. Before model work begins, name the
+included design and its acceptance conditions. The new order does not authorize
+an unbounded bundle of every previously discussed method.
+
+Stage-1 follow-up, 2026-09-21: reused the input/MI pairing, numerical and tutorial
+evidence above, and traced current tables, plots and saved-result routes. Fixed
+two reproduced display/export defects: original-score D-study plot payloads
+retained vector composite weights; generic ggplot conversion of clustering views
+could graph group numbers instead of the requested view or mislabel co-membership.
+Original-score payloads now return NULL weights. Automatic clustering conversion
+now refuses with directions to the supported base plots and plot_data route;
+there is no new clustering ggplot renderer. Help and NEWS match this behavior.
+The affected cluster-plots and multivariate-d-study-plots test files pass, and
+the four regenerated Rd files pass checkRd. The saved 120-rater, five-imputation
+feature comparison replays its summaries and plot values unchanged, without
+refitting clustering or imputation. A D-study RDS round-trip preserves numerical
+results and the selected score's metadata. Full tests, stress experiments and
+package/CI checks were not repeated. Final combined-source verification remains
+stage 4; stage 2 begins with the method decision below, not another general audit.
+
+### Local specification for the next G/D uncertainty decision
+
+First target: uncertainty in a prespecified difference in G/Phi or SEM between
+complete future plans for the same original score or fixed-weight composite,
+under the implemented common-facet model. This is uncertainty in a projection,
+not measurement error for an individual, a cut-score accuracy estimate, or
+inference about whichever plan happens to have the largest estimate.
+
+Before choosing a bootstrap or analytic approximation, settle:
+
+1. Which persons and facet conditions are sampled, which source assignments
+   are conditioned on, and which score-distribution and missingness assumptions
+   define the target. Preserve shared effects and the common multivariate sample.
+   Outcome-dependent assignment/omission is not corrected by resampling alone.
+2. How all estimated components, their cross-score covariance and dependence
+   across planned scenarios enter each comparison. Use joint realizations for
+   paired differences; separate marginal intervals are not a difference interval.
+3. What negative/non-PSD component estimates, failed fits and unavailable
+   projected metrics mean for the proposed method. Do not silently discard
+   failures, clip components or replace the public estimator to make intervals.
+   Any constrained estimator is a separate method choice with separate evidence.
+4. Which existing conditions answer the question and which additional data or
+   resampling runs are actually needed. Prespecify coverage/availability or
+   decision-error criteria, Monte Carlo precision and a measured compute budget
+   before fresh draws. Mean G/Phi, nominal interval level or rank agreement alone
+   is not acceptance evidence. Report true loss alongside wrong-plan frequency.
+5. Whether evidence supports a public interval for a bounded scope. If not,
+   keep current output at conditional point projections while revising the
+   method or explicitly changing its proposed inclusion. Stage 2 is not complete
+   merely because the interval was withheld. Adaptive weight/plan selection,
+   simultaneous inference, response imputation and a
+   D-study for heterogeneous sparse rosters remain distinct extensions.
+
+Existing inputs: `R/api-multivariate-gtheory.R`,
+`R/api-plotting-multivariate-d-study.R`,
+`tests/testthat/test-multivariate-gtheory.R`,
+`tests/testthat/test-multivariate-d-study-plots.R`, and
+`validation-results/multivariate-sparse-recovery-20260921/`.
+The saved `metric-projection-audit-20260921.csv` and
+`d-study-plan-choice-20260921.csv` with their reproduction scripts already
+separate calculation availability, bias/error and planning loss. Do not rerun
+the original fits to reproduce those questions. No generic resampling framework
+or automatic design selector is required before a method is chosen.
+
+#### First method assessment: paired normal-theory delta intervals
+
+Question: is a normal-theory approximation sufficient for prespecified D-study
+differences before implementing a resampling API? Start with the 1,000 saved
+Complete trials (120 persons, 12 raters, 8 tasks); do not regenerate data or
+refit them. Retain the existing Equal/Difference weights and future plans 2x6,
+3x4 and 4x3. Evaluate all three fixed pair differences, later plan minus earlier
+plan, for G, Phi and both SEMs. No winner is selected from the observed values.
+
+For each fixed composite, reconstruct the seven ANOVA mean squares from the
+saved raw covariance components. Under independent Gaussian random effects,
+the mean squares are independent scaled chi-squares. With theta = A MS, use
+A diag(2 MS^2 / (df + 2)) A' as the primary estimated component covariance;
+the df denominator is a labelled sensitivity comparison. Apply the difference
+of the two metric gradients to this same covariance, preserving dependence
+between plans. Check the formula against full covariance-kernel traces on a
+small deterministic design, the public point-projection API and finite
+differences. Retain negative components; do not clip interval endpoints or
+drop failed/non-interior projections. SEM is not its own sampling SE.
+
+Before running: nominal coverage .95; report all 24 comparison cells, interval
+availability, conditional and all-attempt coverage, both tail errors, mean
+width, bias, empirical SD, mean estimated SE and Monte Carlo SE. Coverage below
+.925 or availability below .99 flags a method revision; these are diagnostic
+screens, not sufficient public-method qualification. With 1,000 independent
+trials, coverage MCSE near .95 is about .0069. Allow at most two minutes for
+this saved-result calculation, with no fresh simulation, packages or backend.
+The Complete rows supply a Gaussian balanced assessment only. Sparse MINQUE
+needs dependent quadratic-form covariance; balanced degrees-of-freedom formulas
+must not be applied to the other 5,000 saved rows.
+
+Sources and scope: the supplied urGENOVA 2.1 manual, pp. 11–12, explains its
+normal-theory df+2 variance-component SEs and why those intervals exclude
+unbalanced designs. This does not validate delta intervals for plan differences.
+[Tong and Brennan (2007)](https://doi.org/10.1177/0013164407301533) find
+different bootstrap behavior for relative and absolute error variances;
+[Owen (2007)](https://arxiv.org/abs/0712.1111) treats separately resampled
+crossed factors for linear statistics, not automatic justification of G/Phi
+contrast intervals. [Jiang et al. (2022)](https://doi.org/10.1177/00131644211033899)
+study LMM-based coefficient intervals; their abstract does not establish
+coverage for the present raw MINQUE estimator or paired planning target.
+No new public interval or NEWS feature is claimed by this assessment.
+
+Assessment result, 2026-09-21: `scripts/check-d-study-contrast-uncertainty.R`
+completed in 6.7 seconds without generating data or refitting the saved trials.
+The independent 48-cell quadratic-form covariance calculation, central-difference
+gradients and public D-study point projections agreed with the formulas.
+All 24 primary comparisons retained all 1,000 trials. Nominal .95 coverage was
+.937–.957 for G, .937–.964 for Phi, .951–.958 for relative SEM and .946–.971
+for absolute SEM. All-attempt and conditional coverage therefore coincide.
+Per-comparison coverage MCSE was .0053–.0077. The 24 comparisons share trials;
+they are not 24 independent replications of the study. No prespecified revision
+flag fired, but this is one Gaussian generating model and one balanced source
+size, not general validation. The df sensitivity version gave Phi coverage
+.958–.976 and absolute-SEM coverage .967–.989; it is not chosen simply because
+those intervals cover more often. The saved RDS
+`validation-results/multivariate-sparse-recovery-20260921/d-study-contrast-uncertainty-20260921.rds`
+retains both methods' trial-level outcomes, tail errors, widths, bias/SE
+summaries, source hashes and session information.
+
+Decision: retain paired analytical delta intervals as the first candidate;
+do not add a bootstrap backend or expose a qualified public interval yet.
+The next bounded assessment is covariance under an incomplete source design.
+For one prespecified composite z = Yw, the current estimator is
+theta_hat_s = z' A_s z, with B_s = H K_s H,
+S_st = tr(B_s B_t), and A_s = sum_t (S inverse)_st B_t. Gaussian effects imply
+Cov(theta_hat_s, theta_hat_t) = 2 tr(A_s V A_t V), where
+V = sum_s (w' Sigma_s w) K_s. This follows the quadratic-form calculation
+already checked above; it does not assume independent unbalanced mean squares.
+Evaluate the covariance calculation and computational cost before a larger
+study. Use the fixed-roster saved trials and known covariance as an oracle
+diagnostic first, explicitly distinguished from a usable plug-in interval.
+Then address estimating V, including indefinite estimates, without silently
+truncating components or discarding cases. The balanced df+2 correction does
+not transfer automatically. Small/zero components, few facet levels and
+non-Gaussian effects need explicit evaluation before final public scope.
+Outcome-dependent omissions remain outside an ignorable-assignment target.
+Stage 2 is still open; no package/full tests or release checks were run.
+
+#### Sparse covariance assessment, specified before execution
+
+Reuse the 1,000 saved trials for each of Rotating, RepeatedPair and Concentrated,
+plus the saved Rotating small-RT and zero-RT profiles. Keep the same two fixed
+composites, three future complete plans, three paired differences and four
+metrics. These five settings answer whether sparse allocation or a small/zero
+Rater:Task component defeats the joint-covariance method. Exclude changing MCAR
+rosters and outcome-dependent omissions from this fixed-roster calculation;
+this is not evidence that their uncertainty has been handled.
+
+Compare three labelled covariance versions: known generating covariance
+(oracle, diagnostic only), raw plug-in, and a Gaussian moment correction.
+The latter is a derived candidate, not an already validated public method.
+If C(theta) = B m(theta), where m stacks the 28 unique products theta_i theta_j,
+then E[m(theta_hat)] = (I + T) m(theta), with T the corresponding 28 rows of B.
+Thus B (I + T)^(-1) m(theta_hat) is unbiased for C(theta) under the Gaussian
+model when the moment map is invertible. It need not be PSD or yield calibrated
+nonlinear intervals. Check that it reduces to the earlier df+2 formula on a
+balanced design before applying it to sparse data.
+
+Compute B from grouped sums of the quadratic-form matrices, independently
+checking the result against direct traces and the current MINQUE moment
+system. This avoids a large matrix product for every saved trial. Pilot one
+960-row operator first; budget five minutes and 2 GiB for the full assessment,
+with no new random data, original-data refits, package install or full tests.
+Preserve source hashes and operator timing/conditioning. Do not evaluate a
+large Cartesian complete design with dense matrices.
+
+Use the previous nominal .95 coverage and diagnostic screens (.925 coverage,
+.99 availability), reporting all-attempt and conditional results, MCSE, both
+tails, interval width, bias and SE calibration. Also compare oracle component
+variances with empirical variances of the saved estimates. Keep component
+negativity and estimated sampling-covariance non-PSD diagnostics distinct.
+Intervals require interior projected metrics and a positive finite estimated
+variance for that particular contrast; do not blanket-suppress them because
+an unrelated covariance direction fails, clip components/endpoints, or replace
+failed attempts. Report sampling-covariance failures even when a scalar contrast
+is calculable. No stage-2 completion or public API claim follows automatically.
+
+Assessment result, 2026-09-21: the first pilot stopped in the existing MINQUE
+helper because one score produced a 1-by-k right-hand side instead of k-by-1.
+Changed only its assembly to row-bind vectorized quadratic products. This fixes
+the documented single-score public route for both complete and incomplete data;
+the multivariate calculations are unchanged. A regression checks one/two facets,
+balanced ANOVA agreement, sparse multivariate diagonals and downstream D-study
+values. The affected multivariate-gtheory test file passes; NEWS records the fix.
+The original pilot failure was retained here, not counted as a successful check.
+
+After the fix, the direct Gaussian traces, actual MINQUE moment system and the
+28 spanning balanced df+2 identities passed. The 960-row Rotating operator took
+1.45 seconds; the complete pilot took 3.36 seconds with peak RSS 1,025 MiB.
+The five-condition assessment then took 39.15 seconds with peak RSS 832 MiB,
+reusing the cached operator and all 5,000 saved fits. No new random data or
+original-data refits were used. `scripts/check-d-study-sparse-uncertainty.R`
+retains a pilot/assess sequence; operators, every attempted interval, summaries,
+source hashes and session details are in
+`validation-results/multivariate-sparse-recovery-20260921/sparse-uncertainty-20260921/`.
+
+Across the 24 prespecified comparisons within each condition, nominal .95
+conditional coverage was:
+
+| Source condition | Known-covariance oracle | Raw plug-in | Moment-corrected candidate | Available per comparison |
+| --- | --- | --- | --- | --- |
+| Rotating | .952–.965 | .957–.972 | .942–.962 | 1,000/1,000 |
+| RepeatedPair | .936–.963 | .934–.979 | .915–.970 | 1,000/1,000 |
+| Concentrated | .939–.968 | .934–.970 | .888–.950 | 994–1,000/1,000 |
+| SmallRT | .951–.967 | .953–.976 | .946–.962 | 1,000/1,000 |
+| ZeroRT | .947–.963 | .951–.975 | .944–.963 | 1,000/1,000 |
+
+The Concentrated unavailable attempts were point-projection failures, shared by
+all three covariance versions; they were not dropped from all-attempt coverage.
+No further contrast-variance failure occurred. In ZeroRT, 507 Equal and 536
+Difference trials had at least one negative projected component, but every
+contrast remained calculable. These counts concern scalar components of each
+fixed composite, not the PSD status of the original multivariate matrices.
+
+The moment-corrected candidate failed the prespecified coverage screen in four
+RepeatedPair and seven Concentrated comparisons. The worst was Concentrated,
+Difference-composite Phi, 3x4 minus 2x6: truth .02181669, coverage .888
+(MCSE .00997), mean width .05266. For the same 1,000 attempts, oracle coverage
+was .947 (width .07001) and plug-in coverage .934 (width .06502). Moment
+correction produced non-PSD sampling covariance in 56 Difference trials of
+Concentrated. That does not explain the whole failure: Equal Phi for the same
+plan pair covered .910 with no non-PSD sampling covariance. Exact unbiasedness
+of a component-covariance estimator does not establish unbiased nonlinear SEs
+or calibrated intervals using estimated gradients.
+
+Decision: do not use the moment correction as a general sparse-design default.
+Raw plug-in remains a candidate, with observed .934–.979 coverage across these
+conditions; its sometimes wider intervals do not establish validity elsewhere.
+The oracle separates covariance-estimation difficulties from the point estimator
+without offering a usable interval. Public G/D outputs remain point estimates.
+Next resolve the public method's sampling scope and stress the raw plug-in
+candidate under independently specified small-facet/non-Gaussian conditions,
+retaining these failures as counterexamples. A public implementation must also
+avoid the dense reference's quadratic memory cost; the 960-row measurement is
+not evidence for arbitrary large datasets. Existing outcome-dependent deletion
+remains a violation of the stated sampling target, not a problem repaired by
+these intervals. Do not repeat the five saved conditions as fresh evidence or
+restart an external-software-equivalence exercise. Stage 2 remains open.
+
+#### Small-facet and non-Gaussian scope assessment, specified before execution
+
+Question: can the raw Gaussian plug-in paired-delta candidate support the
+proposed planning-comparison API when the sampled facet pools are smaller,
+or when independent random effects have the same covariances but are not normal?
+Reuse the 1,000 saved Rotating fits in `-raters6-matched-tasks` (120/6/8)
+and `-tasks4` (120/12/4). Do not rerun these fits or the baseline conditions.
+The four-task layout has all four tasks per person; these are specific design
+comparisons, not an estimate of a universal minimum facet count.
+
+Only two conditions require fresh data: the baseline 120/12/8 Rotating roster
+with (a) standardized t(6) and (b) centered, standardized Gamma(shape=2, scale=1)
+independent latent effects. Draw two independent latent coordinates per effect
+level and right-multiply by the same component Cholesky factors as before.
+Both generators have mean zero, variance one and excess kurtosis three before
+that transformation; they differ in skewness and higher moments. They preserve
+the seven population covariance matrices, shared effect identities and fixed
+assignments. Do not standardize realized samples or select observations by score.
+Fit the actual two-score MINQUE(0) API. Use 1,000 attempts per new condition,
+L'Ecuyer-CMRG seeds 921290000+b and 921300000+b, b=1,...,1000.
+
+Retain the same three future plans, two fixed composites, three paired
+differences and four metrics (24 comparisons per condition). Primary intervals
+use raw Gaussian plug-in covariance and a normal critical value. Known Gaussian
+covariance is a diagnostic in all four conditions. For the non-Gaussian cases,
+also compute the known fourth-moment covariance: for scalar component effects,
+add their fourth cumulant times the cross-products of the diagonals of
+`Z_s' A_i Z_s`. This is an oracle diagnostic, not a robust public estimator.
+The quadratic-form cumulant principle is described by Bao and Ullah (2010),
+<https://doi.org/10.1016/j.jspi.2009.11.002>; derive the model-specific operator
+here and verify it against direct incidence matrices and exact finite-support
+enumeration before using it. t(6) has finite fourth but not eighth moments, so
+empirical component-variance agreement can itself be unstable at 1,000 trials.
+
+Keep the existing .95 nominal level, .925 lower coverage screen and .99
+availability screen; also flag coverage above .975 as conservative rather than
+treating longer intervals as an automatic success. Report every comparison,
+both tail errors, widths, MCSE, all-attempt coverage, bias, failures, negative
+components and non-PSD sampling covariance. These correlated comparisons and
+screens do not prove validity across a population of designs. No replacement
+draws, component clipping, discarding failed trials or post hoc method choice.
+
+Budget: a pilot with operator checks and ten new fits per distribution, retained
+as the first ten assessment attempts; measure time/memory before continuing.
+Allow at most five minutes and 2 GiB for the subsequent assessment. Save
+components, failures, seeds and interval results for reuse. If the primary method
+fails a condition, keep that limitation explicit and revise the method/scope
+before exposing intervals; do not add arbitrary count thresholds or silently
+switch to the known-covariance oracle. This work is a decision about the API,
+not completion of stage 2 by a reference script.
+
+Outcome, 2026-09-21: the independent fourth-cumulant identity and incidence-matrix
+checks passed. Pilot time was 5.13 seconds, peak RSS 1,324 MiB; its ten fits per
+distribution were retained. The assessment took 61.11 seconds, peak RSS 866 MiB.
+It reused 2,000 saved Gaussian fits and generated only the 2,000 prespecified
+nonnormal fits. All new fits returned. Results and every attempt are retained in
+`validation-results/multivariate-sparse-recovery-20260921/uncertainty-scope-20260921/`,
+with `scripts/check-d-study-uncertainty-scope.R` and input/source hashes.
+
+| Condition | Primary raw plug-in coverage range | Available per comparison | Known Gaussian covariance | Known fourth-moment covariance |
+| --- | --- | --- | --- | --- |
+| 6 raters, 8 tasks; Gaussian | .955–.980 | 1,000/1,000 | .941–.959 | Same as Gaussian |
+| 12 raters, 4 tasks; Gaussian | .939–.977 | 999–1,000/1,000 | .941–.959 | Same as Gaussian |
+| 12 raters, 8 tasks; standardized t(6) | .927–.961 | 1,000/1,000 | .920–.949 | .945–.966 |
+| 12 raters, 8 tasks; standardized Gamma(2) | .921–.966 | 1,000/1,000 | .905–.953 | .938–.961 |
+
+All four cases have 24 comparisons per method. The Gaussian cases passed the
+prespecified lower-coverage/availability screen, with three conservative cells
+over .975 across them. Gamma(2) failed the lower-coverage screen for Difference
+Phi, 4x3 minus 2x6 (.921, MCSE .00853), and 4x3 minus 3x4 (.922, MCSE .00848).
+No estimated sampling covariance was non-PSD in these four conditions. The
+fourth-moment oracle helps identify omitted nonnormal covariance contributions;
+it is not a practical robust estimator and does not certify arbitrary designs.
+
+Implementation decision: retain raw Gaussian plug-in covariance for an explicit
+normal-random-effects approximation only. Do not silently generalize it to
+nonnormal effects or use an oracle for user intervals. The first public
+comparison scope is two random common facets, one chosen original score or
+fixed composite at a time, and prespecified future complete plans. One-facet
+intervals were not assessed here and are explicitly refused. No sample-count
+threshold is invented from the successful cells. Approximation limitations for
+small pools, boundaries and uneven allocation remain in the help.
+
+Implemented `mfrm_multivariate_d_compare()` with mandatory `assumption = "normal"`,
+reference-scenario differences, joint difference covariance, pointwise intervals,
+metric-specific failures, exact identical-plan differences when points exist,
+and separate component/sampling-covariance diagnostics. It recomputes current
+point projections from the saved G-study, without refitting or mutating it.
+The source data are required to preserve the assignment design. Complete-source
+covariance uses the independent mean-square identity; incomplete-source covariance
+uses grouped matrix products in blocks, not a dense N-by-N matrix. Time remains
+quadratic, and the reference workload is not a general scalability guarantee.
+The 960-row production calculation matched the saved dense operator to
+2.51e-13 in 0.894 seconds. A review caught and corrected character-ID grouping
+before completion; the focused regression now exercises character identifiers.
+
+`plot()` supplies G/Phi and SEM difference panels with the zero reference,
+composite weights, explicit assumptions and retained unavailable intervals.
+`plot_data()` preserves the numbers; generic ggplot conversion is refused rather
+than selecting unrelated columns. The public help example executed, and both
+panels were visually reviewed; clipped axis labels were corrected by increasing
+the plot margins. NEWS, README, public roadmap and Rd help describe the actual
+scope. The focused comparison test file passes (independent quadratic forms,
+numerical gradients, complete/minque agreement, reference reversal, composite
+scaling, scalar reduction, replay, boundaries, unsupported requests and plot
+payloads). New/changed Rd files pass `checkRd`. No full tests, Gaussian fit
+reruns, repeated coverage study, CI job, commit or publication was performed.
+
+The initial stage-2 deliverable is now implemented for that bounded scope.
+Next define the stage-3 nested/local-facet target and its estimation/projection
+rules; additional interval families are separate scope decisions. Final combined
+source and package verification remains stage 4.
+
+### Stage-3 implementation: persons crossed with a nested measurement facet
+
+Use case: different rater teams belong to different tasks; within each task,
+the rater identities are shared across persons and score components. The model
+is Person x (Rater:Task), with both measurement facets random. This does not
+describe raters unique to each person, a rater working on several tasks, fixed
+tasks, or different rater sets for different score columns. The user-supplied
+GENOVA `cc.manual` explicitly includes this design. The supplied mGENOVA manual
+Appendix C also shows the five-source structure but uses variable-specific
+children and unequal counts; it is not a matched multivariate reference for
+the selected common-score scope. Brennan (1992), NCME module, pp. 31–32,
+Equations 13–16 and Table 3, gives the nested relative/absolute error rules:
+<https://dev.ncme.org/wp-content/uploads/2025/10/Module-14-Generalizability-Theory-Brennan-Winter-1.pdf>.
+
+The G-study API now accepts explicit `nesting = c(Rater = "Task")`,
+referring to facet labels. Reuse it for the isomorphic two-facet design with
+other labels or the opposite nesting direction. The five covariance matrices
+are Person, Parent, Child(Parent), Person:Parent and Residual. The last combines
+Person-by-Child-within-Parent interaction and cell residual; no separate common
+child main effect or crossed child-by-parent interaction is estimable.
+Child identity is the parent/child pair, even when local labels repeat. State
+the independence/identity assumption explicitly; relabeling a shared physical
+rater cannot create independent task-specific raters.
+
+Balanced nested ANOVA uses df P-1, T-1, T(R-1), (P-1)(T-1), and T(P-1)(R-1).
+For mean products M in that order, components are
+`(M_P-M_PT)/(R*T)`, `(M_T-M_RT-M_PT+M_E)/(P*R)`,
+`(M_RT-M_E)/P`, `(M_PT-M_E)/R`, and `M_E`.
+Incomplete or unequal-child-count sources use the existing unconstrained
+MINQUE(0) engine with the five correct incidence kernels and its rank check.
+Source pool counts and child counts per parent must be reported separately;
+the relevant potential cells are P times the total observed parent/child pairs.
+
+Future D-studies retain the nesting and give every person the same balanced
+set of T parents with R children per parent. Relative error is
+`Person:Parent/T + Residual/(R*T)`; absolute error adds
+`Parent/T + Child(Parent)/(R*T)`. The child grid column is a per-parent count,
+not the total number of child identities. Incomplete or unequal source designs
+require an explicit future grid. Future unequal allocations, changed nesting,
+partial sharing, and nested intervals are outside this first extension.
+
+Acceptance work: independent QR projections/mean products, complete ANOVA vs
+MINQUE agreement, five-kernel expectations under known covariance matrices,
+an incomplete/unequal identifiable example, refusal of confounded one-child
+designs, ID scoping/order invariance, direct weighted-score reduction, published
+D-study algebra, exact figure labels/values and saved-result replay. Reuse the
+crossed regressions affected by the shared implementation; do not repeat old
+coverage studies or seek whole-software equivalence. The new interval function
+must explicitly refuse this five-component model pending a method assessment.
+Numerical checks and an executable help example implement a bounded point
+workflow, not population recovery or nested-interval validation.
+
+Implementation outcome, 2026-09-21: the selected five-component point workflow
+is now implemented. The nested regression file passes 69 expectations covering
+the independent QR and kernel calculations above, an unequal/incomplete source,
+identity scoping, weighted-score reduction, the published projection algebra,
+confounding refusal, saved results and plot payloads. The affected crossed
+G-study, D-study plot and plan-comparison files pass 338, 139 and 62 expectations
+respectively, without failures or warnings. These are affected-file checks,
+not a new full-suite or release-source pass. No recovery/coverage study was
+repeated or newly claimed for nested data.
+
+The new executable help example uses 30 persons, six tasks, three distinct
+raters within each task and two correlated continuous scores, generated with
+the five nested effect sources. Its requested projections are available;
+non-PSD components remain visibly flagged. Base coefficient/SEM plots and
+ggplot SEM export were inspected at normal output sizes. That inspection
+found a clipped nested-count legend; base plots now reserve right-margin
+space from the measured label width. The two affected plot test files pass
+after that correction, and the regenerated image shows the full per-task
+counts. Three generated Rd pages pass checkRd. README, NEWS and the public
+roadmap now state the same nesting, per-parent count and interval boundaries.
+
+This completes the initial scoped stage-3 model extension. Stage 4 is next:
+reconcile the retained claims and saved-result compatibility across stages
+1–3 and portable calibration, then select and check one integrated source.
+Version metadata remains 0.2.4.9001; no commit, push or publication occurred.
+
+### Stage-4 integrated candidate, 2026-09-21
+
+The working source is now 0.2.4 with release-status candidate; the published
+version field remains 0.2.3.1. NEWS is one 0.2.4 entry, with consolidated
+feature/G-theory scope and the previous corrections retained. Installed
+workflow help and README distinguish recomputing multivariate D-studies from
+refitting changed designs, preserve imputation pairing and explain saved plot
+behavior. The website index and standard packaged-test selector now include
+the plan-comparison API and nested-design checks. Source terminology checks
+and regenerated workflow Rd validation passed before building.
+
+Evidence directory: `validation-results/integrated-0.2.4-20260921/`.
+The baseline-source comparison contains 86 unchanged R/native files, eight
+added R files and three changed R files (generalizability, ggplot dispatch and
+workflow help), with none removed. In particular, calibration/scoring, ICC,
+shrinkage/replay and native estimation remain identical to the preserved
+`532d59e` candidate. Existing statistical evidence is reused within its stated
+conditions; no new simulation or full packaged-suite rerun is justified by
+this integration alone.
+
+`NOT_CRAN=false R CMD build --no-manual` rebuilt the vignettes and produced
+`mfrmr_0.2.4.tar.gz`, SHA256
+`73f888af40fae4190699a11a8b7cb7f53e7bcb8e8efe2f1257c69c81810674a2`.
+The 600-file archive manifest matches corresponding working files except
+R-generated DESCRIPTION metadata. Generated vignette products have separate
+archive hashes. No internal validation files, scripts or Rplots.pdf are included.
+Check this exact archive with the standard test selector and
+`R CMD check --no-manual --run-donttest`; also use its installed package for
+the existing portable public-API/fresh-process replay checks. The record is
+not a hosted-matrix, as-CRAN incoming, PDF-manual or publication approval.
+
+The initial archive check completed its examples (including donttest),
+vignettes and vignette rebuilding successfully. Standard tests reported
+1 failure, 1,901 passes, no test warnings and three intentional CRAN skips.
+The failure was the exact S3 registration inventory: its expected list lacked
+the three new multivariate plan-comparison methods. The production NAMESPACE
+was correct. The test now names those methods and the public export; its
+four expectations pass against the initial archive's installed package.
+The original unsuccessful check and transcript are retained, not overwritten.
+
+The installed portable public-API file completed all 224 expectations without
+failures, warnings or skips, including separate-process saved-calibration
+scoring. Its subsequent CSV summary export failed on a list-valued result
+column. The successful test transcript and partial CSV are retained, with a
+summary derived from that transcript in `portable-api-summary.json`. Tests
+were not rerun to fix reporting; this post-test error is not hidden as a clean
+runner exit.
+
+The repaired archive is `repaired/mfrmr_0.2.4.tar.gz`, SHA256
+`ae2550a21d3834ddcd42de3e4b985778aad61e2597f2b6a873cd4dd9473b6da5`.
+It was built from the initial archive plus the corrected test file, reusing
+the already generated vignette outputs. All 600 members were compared: only
+that test and R-generated DESCRIPTION metadata differ. All R/native code,
+NAMESPACE, help, examples, vignette sources/outputs and remaining tests are
+byte-identical. The corrected test also matches the current working source.
+Its own package check therefore uses `--no-manual --no-tests --no-examples
+--no-vignettes`, reusing the successful unchanged phases above and the focused
+test repair. This is not claimed as a second full test/example execution.
+
+The repaired archive's check completed with status OK: zero errors, warnings
+and notes on arm64 macOS with R 4.6.1. Package-index fetch warnings in the
+restricted-network environment remain in the logs; this is not a CRAN incoming
+or reverse-dependency assessment. Its manifest still matches the working
+packaged files except generated DESCRIPTION metadata. Together with the
+initial successful example/vignette phases, unchanged passing tests and the
+four-expectation repair, this completes local integration verification. The
+release decision is still open; no commit, push, hosted job or submission was
+performed, and the repaired archive is the selected candidate.
+
+### Verification and public-document discipline
+
+- Match checks to the change: wording/link edits need document checks; changed
+  calculation or selection rules need their affected regressions and callers;
+  a source selected for distribution needs a batched package check. Broader
+  runs require a named unresolved risk. Do not silently relabel old evidence.
+- Preserve failed/skipped/unavailable attempts and the scope of each source.
+  Do not repeat the original Gaussian runs, complete suite or external-software
+  comparison just to generate a newer timestamp.
+- Keep at most one new expensive statistical study active by default. A roadmap
+  entry alone does not start a simulation, install a backend, push a branch or
+  publish a release. Existing explicit task authorizations retain their scope.
+- Public ROADMAP states outcomes, current support, dependencies and completion
+  criteria. README/help explains use and interpretation. NEWS records actual
+  user-visible changes. Runtime paths, source hashes, internal claim labels,
+  execution counts and historical experiments stay in maintainer evidence.
+- For planning-only changes, verify links, API names, working versus planned
+  release versions and consistency with the existing evidence; do not run R
+  tests or a package build merely for a roadmap revision.
+
+## Historical evidence and superseded plans
+
+The dated sections below are retained records, not additional active work
+queues. Use the Current work plan above to decide what to do next, and these
+records to establish what was tested and what its results can support.
+
+## 2026-09-21: planning errors from saved covariance estimates
+
+Question: with twelve future ratings per person, does choosing the largest
+estimated G/Phi select the true best plan, and how much dependability is lost
+when it does not? Before inspecting these comparisons, specify complete
+Rater/Task plans (2,6), (3,4), (4,3), the existing Equal and Difference weights,
+and separate G/Phi choices. These are equal rating counts, not equal costs or
+examinee workloads. No automatic design recommendation is added to the API.
+
+Reuse all 6,000 raw saved covariance estimates from the six baseline Gaussian
+conditions. There is no random-data generation or G-study refit. Project all
+three plans jointly within each saved fit. Require all three coefficients to
+be available before comparing a metric; retain and count other trials. A tie
+means estimates within 1e-12 of the maximum and is counted separately rather
+than broken into a preferred plan. No ties occurred. True loss is the best
+generating-model coefficient minus the true coefficient of the selected plan;
+report it across all uniquely selected trials, including zero loss for correct
+choices. Store Monte Carlo SEs separately from these losses, not as intervals
+for an individual's estimated D-study coefficients.
+
+For the Rotating source roster (1,000 trials, all three plans comparable):
+
+| Composite / metric | True best R x T | Different selection | Mean true loss (MCSE) |
+| --- | --- | ---: | ---: |
+| Equal G | 4 x 3 | 58/1,000 (5.8%) | .000817 (.000128) |
+| Equal Phi | 4 x 3 | 56/1,000 (5.6%) | .000742 (.000110) |
+| Difference G | 3 x 4 | 383/1,000 (38.3%) | .002695 (.000159) |
+| Difference Phi | 3 x 4 | 399/1,000 (39.9%) | .002810 (.000163) |
+
+For Difference G, true coefficients are .713679, .731707 and .727903 in plan
+order. The latter two are close: frequent rank errors need not mean large
+practical losses. Conversely, a small average loss does not exclude rarer
+larger losses; the CSV retains all three selection counts and maximum loss.
+The practical importance of a difference requires the assessment's purpose.
+The Concentrated source condition has six Equal-G and five Difference-G trials
+without a complete comparison; its losses condition on 994 and 995 trials.
+All Phi comparisons remain available. Do not infer interval coverage or an
+optimal allocation for arbitrary assessments from these specified Gaussian
+conditions or from the tested three-plan menu.
+
+Evidence: `validation-results/multivariate-sparse-recovery-20260921/` contains
+`d-study-plan-choice-20260921.csv` and `source/check-d-study-plan-choice.R`.
+The script replays the true matrices and 23 saved fits through the current
+D-study API: first/last per condition plus every fit with any unavailable
+candidate coefficient. G/Phi agree within 1e-12. Existing raw RDS files are
+unchanged. Update the existing README workflow and help to distinguish rank,
+difference size, estimation uncertainty, and costs. Check the added README
+commands and help syntax; no full test suite or new public API is needed.
+
+## 2026-09-21: prioritize statistical validation over software equivalence
+
+The GENOVA comparison answered the user's specific reporting-policy question.
+Do not treat the preceding reply's "sparse-design equivalence unverified" as
+an outstanding development requirement. Preserve the executed benchmarks as
+bounded regression evidence; further external runs need a specific unresolved
+formula, convention, or interoperability question. Full software equivalence
+is not a release prerequisite or a measure of statistical validity.
+
+The existing independent ANOVA/QR and dense MINQUE kernel tests check formulas,
+and the saved recovery results already separate bias/RMSE from availability.
+Use that evidence when assessing uncertainty in planned G/Phi/SEM, especially
+under unequal overlap, variance boundaries and selective missingness. Before
+adding an interval or design recommendation, define its inferential target
+and evaluate coverage or decision errors under explicit conditions.
+
+Revise the public roadmap accordingly. Remove execution counts and validation
+chronology from public help/NEWS; retain user-relevant negative-component
+conventions and concise simulation findings in README. G-study help now points
+to metric-specific D-study statuses rather than only the row-level Status.
+This is a documentation revision; no new estimator, external run, simulation
+or full test suite is needed. Historical evidence below remains valid within
+its stated scope.
+
+## 2026-09-21: executed mGENOVA comparison closes the binary-validation gap
+
+Execute the user-supplied, unmodified mGENOVA 2.1 Windows binary in a temporary
+32-bit Debian/Wine 8.0 container. The container has networking disabled and
+mounts only the dedicated scratch directory containing the program, official
+example inputs and synthetic comparison data. No package dependency is added.
+The supplied cc.manual executes successfully; its Run 4.1 individual/composite
+D-study table reproduces the published Appendix F values exactly at five
+decimals. This runtime check does not imply mfrmr supports local raters.
+
+Execute the same 48-row, two-score, negative-RT fixture used for jGENOVA below.
+All 21 distinct entries of the seven G-study component matrices agree at
+printed precision. For R=2 and T=6, run Equal and Difference composites with
+and without DOPTIONS NEGATIVE. All four D-study tables (universe/error
+variances, G/Phi and SEMs) and their universe/relative/absolute covariance
+matrices agree within 5.1e-6 after explicitly matching component treatment.
+The largest coefficient-table difference is 4.677921e-6. Raw mfrmr results
+match NEGATIVE; the default zeroes negative variance diagonals and preserves
+covariances. Raw versus default Phi is .73096/.72727 for Content,
+.69303/.69149 for Equal, and .62268/.62038 for Difference.
+
+Thus the former blanket refusal to report coefficients is not required by
+mGENOVA in this example. This comparison does not validate the full raw
+covariance model, sparse MINQUE(0) equivalence, or sampling precision.
+
+Evidence is in `validation-results/genova-negative-components-20260921/mgenova/`:
+the binary, original reference inputs/output, corrected comparison input/output,
+Dockerfile/runtime identity, comparison script/CSVs, source snapshots and hashes.
+The Windows binary requires CRLF control-card lines here; the initial LF-only
+file produced "OPTIONS card missing." The executed input uses CRLF and starts
+DSTUDY titles at column 10. Preserve the earlier unexecuted input as history;
+the mgenova subdirectory contains the executed version. Its prepare.R rebuilds
+that version from the parent saved dataset. Run its compare.R from the package
+root with the mgenova directory as the sole argument to recheck saved output.
+
+Add a fixed-output regression for both component conventions, individual scores
+and both composites. Run only that new block and regenerate/check D-study help;
+no full-suite or Monte Carlo repetition. Update README, NEWS and public roadmap
+to replace the earlier "mGENOVA execution unverified" limitation with this
+bounded result. The earlier jGENOVA evidence remains unchanged.
+
+## 2026-09-21: executed jGENOVA comparison with a negative RT estimate
+
+Historical first stage; direct mGENOVA execution is now covered above.
+
+Question: do negative-component differences originate in raw estimation,
+D-study formulas, or the convention for replacing/recalculating components?
+The supplied GENOVA/mGENOVA binaries are Windows PE32 applications; at this
+stage no compatible runtime was installed. Retrieve the official jGENOVA 1.0
+Java source and manual from https://brennancrickgenova.org/genova-suite/.
+Compile the source without edits using the existing Corretto Java 11.0.27.
+The supplied GENinp.txt reproduces the official GENout.txt exactly after
+normalizing page-header dates and line endings. No compatibility runtime was
+installed and no production Java dependency was introduced.
+
+Use the existing orthonormal balanced-data fixture with P=4, R=3, T=4 and
+RT matrix [[-.1,.03],[.03,.1]]. All other components are unchanged. The data
+have admissible mean-product matrices but one indefinite ANOVA component.
+Sort records by P/R/T for the external input. Execute four independent
+univariate G-studies: Content, Organization, Sum, Difference. Each has two
+D-studies at R=2, T=6: default EMS and ALGORITHM, both with NEGATIVE printing.
+
+All 28 raw Algorithm component projections agree with mfrmr within 5e-8,
+the external output's seven-decimal precision. Recovering each cross-score
+covariance as (VC(Sum)-VC(Content)-VC(Organization))/2 and separately as
+(VC(Content)+VC(Organization)-VC(Difference))/2 agrees within 1e-7.
+For all eight D-studies, supplying the convention-matched component values
+to mfrmr reproduces universe/relative/absolute variances, G/Phi and SEMs
+within 5.1e-6 (five-decimal external output).
+
+For Content, raw P/R/T/PR/PT/RT/E = 1.2/.2/.3/.4/.3/-.1/.6:
+
+| Convention | G | Phi | Absolute error variance |
+| --- | ---: | ---: | ---: |
+| mfrmr raw estimates | .80000 | .73096 | .44167 |
+| executed jGENOVA, default EMS | .80000 | .73532 | .43194 |
+| executed jGENOVA, ALGORITHM | .80000 | .72727 | .45000 |
+
+Source/manual distinction: jGENOVA NEGATIVE controls printing, not D-study
+retention. Dproc.dsPrep zeroes negative varFin and varMod before D-study;
+default D-study code does so too. EMS recalculation additionally changes
+Content R to .175 and T to .2666667; it is not simple truncation of the raw
+vector. The manual documents the option meanings on pp. 2-10--2-11, 3-5,
+A-22--A-23. This is different from mGENOVA 2.1 DOPTIONS NEGATIVE.
+
+mGENOVA's documented default is evaluated as manual arithmetic only: zero
+negative matrix diagonals before projection, retaining covariances. The
+Equal Phi becomes .69149 versus raw .69303; Difference Phi becomes .62038
+versus raw .62268. Those need not equal a separately truncated univariate
+sum/difference analysis. A matching raw-data mGENOVA control file is prepared
+but has NOT been executed; no mGENOVA binary or sparse MINQUE parity claim.
+
+Evidence is saved under
+`validation-results/genova-negative-components-20260921/`: generated ratings,
+four raw input/output pairs, component and D-study comparison CSVs,
+`mgenova-negative-rt.crd` (unexecuted), explicitly labeled manual arithmetic,
+official reference input/output and local output, source archive, tested R
+source snapshots, preparation/comparison scripts, and SHA-256/runtime metadata.
+From the package root, `Rscript <directory>/prepare.R <directory>` prepares
+inputs. Compile the archived Java sources into a separate classes directory,
+then run `java -cp <classes> initGen.GENOVA <score.crd> <score.out>` for each
+score. `Rscript <directory>/compare.R <directory>` checks output arithmetic.
+
+Add one fixed-reference regression block to the existing test file, with no
+Java dependency; its raw and convention-matched output assertions pass.
+The fixture's new optional RT argument preserves its default behavior.
+Regenerate and check D-study help. README/NEWS/roadmap now distinguish
+jGENOVA conventions from mGENOVA options and raw mfrmr projections.
+No Monte Carlo rerun, full suite, change of estimator or automatic clipping.
+
+## 2026-09-21: precision and accounting after the output correction
+
+Recompute G/Phi availability, bias and RMSE from saved projected variances
+for the six baseline conditions plus small_rt and zero_rt (8,000 stored
+trials). No random data generation, G-study fit or full test suite. Original
+RDS/CSV results remain unchanged; the new table is
+`validation-results/multivariate-sparse-recovery-20260921/metric-projection-audit-20260921.csv`.
+It includes all trial denominators, former/current metric counts, truth,
+bias/RMSE with MCSE, and source paths. Its reproduction script is kept beside
+the existing source snapshots as `source/check-current-projections.R`.
+
+| Condition | Equal G returned | Mean G | G bias (MCSE) | G RMSE (MCSE) |
+| --- | ---: | ---: | ---: | ---: |
+| Complete | 1,000/1,000 | .76736 | .00002 (.00080) | .02537 (.00058) |
+| Rotating | 1,000/1,000 | .76472 | -.00262 (.00158) | .04988 (.00142) |
+| RepeatedPair | 1,000/1,000 | .76378 | -.00356 (.00207) | .06560 (.00164) |
+| Concentrated | 994/1,000 | .76590 | -.00144 (.00225) | .07077 (.00178) |
+| MCAR25 | 1,000/1,000 | .76636 | -.00098 (.00191) | .06040 (.00167) |
+| HighScoreMissing25 | 1,000/1,000 | .68353 | -.08381 (.00244) | .11387 (.00245) |
+| small_rt | 1,000/1,000 | .76484 | -.00250 (.00154) | .04868 (.00138) |
+| zero_rt | 1,000/1,000 | .76482 | -.00252 (.00154) | .04871 (.00138) |
+
+Equal G truth is .7673389 in all eight conditions. Concentrated G moments
+condition on 994 returned values; the six other trials have negative relative
+error variance, not negative universe variance. Difference G has five such
+trials (995/1,000 returned). Both Phi coefficients remain calculable in all
+1,000 Concentrated trials. All other listed conditions return both composites'
+G/Phi in all trials. Thus a row-level `Status == "Available"` filter would
+undercount Phi. Updated the existing simulation script to count each composite's
+GStatus/PhiStatus separately; metric_summary already retains per-metric
+denominators. Historical saved schemas remain intact.
+
+Concentrated has one Phi > G reversal per composite with positive projected
+error variances (Equal replicate 590; Difference replicate 522). Those raw
+projections do not establish superior absolute-score dependability: their
+extra absolute-error contributions violate the nonnegative model constraint.
+Help/README now explain this consequence of unconstrained estimates; the
+existing component diagnostic remains visible. Added the corresponding analytic
+case to the existing metric-specific regression test.
+
+Validation passed: the one affected test block (22 expectations), the changed
+script's actual tally expressions on saved trials, and replay of 13 saved
+negative-relative-error/order-reversal cases through the D-study API.
+Regenerated and checked the help topic; whitespace checks pass.
+Existing broader tests remain the evidence for
+unchanged code. Revised user guidance separates calculability, assignment
+precision and missingness bias; successful output is not recovery validation.
+
+## 2026-09-21: metric-specific D-study output implemented
+
+Replace blanket non-PSD withholding with separate checks for every
+score/composite and metric. G requires U >= 0, R >= 0 and U + R > 0; Phi
+substitutes A. Relative/absolute SEM require only R/A >= 0, respectively.
+Thus zero universe variance gives zero reliability when error is positive;
+zero total variance leaves only the coefficient undefined. Raw components
+and projected variances are unchanged, without truncation or PSD repair.
+
+The coefficient table adds GStatus, PhiStatus, RelativeSEMStatus,
+AbsoluteSEMStatus and ComponentPSD. Status summarizes whether all, some or
+none of the four metrics are available. Non-PSD estimates are noted in
+printed results and both plot renderers, independently of metric availability.
+Plot series use metric-specific status; legacy saved D-study objects keep
+their recorded values and policy until the D-study is explicitly recalculated.
+
+Validation: the two affected test files (multivariate-gtheory and
+multivariate-d-study-plots) pass, including independent G/Phi/SEM failures,
+negative-universe contrasts, zero-total/zero-universe boundaries, and legacy
+plot gaps. Their existing balanced mGENOVA numerical fixtures still pass.
+Regenerated the three help topics and checked Rd parsing; no full suite.
+Reviewed the public base plot with available G and unavailable Phi and its
+component note. No new simulation or G-study estimation was performed.
+
+Replay of saved component matrices through the changed public D-study API:
+reference, small_rt and zero_rt each used their 1,000 Rotating replications.
+Equal and Difference G/Phi and both SEMs are finite in all 1,000 cases per
+profile and agree with arithmetic on the saved projected variances within
+1e-12. The replay reconstructs G-study input from saved component estimates
+with unit diagnostic scales; it checks projections, not original scaled
+component diagnostics. Original results remain intact as evidence of the
+previous rule. This is not a GENOVA/mGENOVA executable comparison.
+
+README, NEWS, help and the public roadmap now describe the implemented
+behavior. The earlier rates and decisions below are historical records of
+the former blanket withholding rule, not current coefficient availability.
+
+## 2026-09-21: distinguish coefficient calculation from output policy
+
+The user's GENOVA comparison question exposed an overinterpretation of low
+coefficient availability. At the time of this audit, `mfrm_multivariate_d_study()` replaced every
+coefficient/SEM with NA if ANY G-study component matrix is non-PSD. This
+includes Rater:Task, which does not enter relative error or G. Thus the
+reported rate mixes estimator behavior with mfrmr's blanket output policy.
+
+Audit the saved Rotating results for the reference, small_rt and zero_rt;
+no fits or simulations were rerun. For both Equal (.5, .5) and Difference
+(1, -1), all 1,000 replications in each condition have finite positive
+universe variance and finite nonnegative relative/absolute error variances.
+Their raw U/(U+R) and U/(U+A) ratios are finite and in [0, 1]. Then-current output
+availability is 847/1,000, 141/1,000 and 107/1,000, respectively, for each
+composite. These are reporting-policy exclusions, not numerical failures
+to calculate the selected scalar ratios. Raw calculability alone does not
+validate the joint covariance model, precision or interval coverage.
+
+Reproduce from each existing `results.rds`, selecting
+`estimates[trials$Case == "Rotating", ]`, then the
+`D/{Equal,Difference}/{UniverseVariance,RelativeErrorVariance,AbsoluteErrorVariance}`
+columns. Check U > 0, R >= 0, A >= 0, finiteness, and ratios in [0, 1]; compare
+with the finite counts in the saved G/Phi columns. No clipping, matrix repair,
+new estimator or GENOVA execution is involved.
+
+Source audit: the user-supplied *mGENOVA Manual*, Version 2.1, printed pages
+15 and 21, says the default D-study procedure sets negative estimated variance
+components to zero; `DOPTIONS NEGATIVE` retains them. This concerns diagonal
+variances, not all negative covariances, and is not a general PSD constraint.
+The [official CASMA software description](https://education.uiowa.edu/casma/computer-programs)
+distinguishes complete/balanced univariate GENOVA, unbalanced univariate
+urGENOVA (no D-study), and restricted-design multivariate mGENOVA. These
+are not interchangeable benchmarks for arbitrary sparse crossed MINQUE(0).
+The supplied Windows executable was not run. Published balanced-example
+agreement remains separate evidence and does not establish sparse-case parity.
+
+Decision: review whether withholding every output is justified for each
+requested score/coefficient before attributing low availability to inadequate
+estimation or prioritizing a replacement estimator. Compare raw components,
+negative-variance conventions and coefficient output separately on matched,
+supported designs. The initial decision was to retain behavior pending that review, explain it
+accurately, and do not imply that all raw finite ratios are validated results.
+README, help, NEWS and the public roadmap now make this distinction. Verify
+help generation and unchanged production expressions; no full test suite.
+The metric-specific correction recorded above supersedes that temporary hold.
+
+## 2026-09-21: facet-pool sizes and small covariance components
+
+The previous same-workload experiment left two practical questions: whether
+changing the observed facet pools resolves low availability, and whether
+non-PSD estimates require model misspecification. Extend the existing script
+with six named profiles rather than repeat its six original conditions.
+Each added profile uses 1,000 replications, 120 persons, 960 assigned/observed
+ratings, four tasks and four raters per person, two distinct raters per
+performance, and the same seven-component Gaussian model. No missingness,
+automatic matrix repair, support repair or release-scope expansion.
+
+The `raters6`/`raters24` profiles change the observed rater pool; `tasks4`/
+`tasks12` change the observed task pool; `small_rt`/`zero_rt` multiply the
+entire generating Rater:Task matrix by .05 or zero, preserving the other
+matrices and assignment. A zero matrix uses zero effects directly, with its
+cross-product checked against the generating matrix. The original Rotating
+result is reused as reference; its rosters, matrices and truth match the
+current baseline setup. The future COMPLETE D-study target remains two
+raters and six tasks per person. All settings have true equal-composite
+G=.7673389; Phi is .6891981 normally, .6937110 for small_rt and .6939502 for
+zero_rt. RT contributes only to absolute error in this target.
+
+During setup review, the initial two rater profiles also changed Person/Task
+assignment because task cohorts depended on the rater count. Exclude those
+two runs from the comparison and preserve them in directories ending
+`-raters6-unmatched-tasks` and `-raters24-unmatched-tasks`. Fix task cohorts at
+the reference's 12 persons independently of the rater pool. Comparing saved
+Person/Task tables confirms identical assignments for the reference and both
+corrected rater profiles. Only those two profiles were rerun; the task and
+variance profiles' rosters, generating matrices and truth were verified
+unchanged without repeating their simulations. This correction precedes
+interpretation and is not selection by observed coefficient availability.
+
+Reproduce with `Rscript scripts/check-multivariate-sparse-recovery.R 1000
+<new-output-directory> <profile>`. Current results have prefix
+`validation-results/multivariate-sparse-recovery-20260921-`, ending in
+`raters6-matched-tasks`, `raters24-matched-tasks`, `tasks4`, `tasks12`,
+`small_rt`, or `zero_rt`. Each has the same three result files as the earlier
+run and a source snapshot whose hashes match its RDS. A three-replication
+zero-component smoke and setup-only checks preceded the main runs. Every
+one of the 6,000 retained new fits returned components and passed rank 7;
+all trial denominators are preserved. Accepted runs took 116.5 seconds in
+total on this machine; the two superseded rater runs took another 39.5 s.
+
+| Observed pools / component | G/Phi available | Availability MCSE (percentage points) |
+| --- | ---: | ---: |
+| 12 raters, 8 tasks, reference matrix (reused) | 847/1,000 (84.7%) | 1.14 |
+| 6 raters, 8 tasks | 737/1,000 (73.7%) | 1.39 |
+| 24 raters, 8 tasks | 755/1,000 (75.5%) | 1.36 |
+| 12 raters, 4 tasks | 690/1,000 (69.0%) | 1.46 |
+| 12 raters, 12 tasks | 800/1,000 (80.0%) | 1.26 |
+| 12 raters, 8 tasks, RT matrix at 5% | 141/1,000 (14.1%) | 1.10 |
+| 12 raters, 8 tasks, zero RT matrix | 107/1,000 (10.7%) | 0.98 |
+
+Pool comparisons concern estimation from fixed-budget incomplete source data,
+not future per-person replication counts. Each rater has 160, 80 or 40 ratings
+in the 6/12/24-rater conditions. Across all 1,000 fits, Content rater-variance
+RMSE decreases from .1486 (MCSE .0040) to .1134 (.0031) to .0927 (.0024),
+although full coefficient availability is not monotonic. Content task-variance
+RMSE is .2563 with four tasks and .1669 with twelve (MCSE .0088 and .0043).
+The task subsets necessarily change when the task pool changes. These finite
+design comparisons neither optimize the design nor establish a minimum
+adequate pool size; availability is not an accuracy score.
+
+Under small_rt and zero_rt, the scaled moment-system condition number stays
+16.604 and all generating matrices are admissible. RT alone is non-PSD in
+847 and 884 estimates respectively (overall non-PSD counts 859 and 893).
+Paired changes in availability versus the reused reference are -70.6
+percentage points (MCSE 1.49) and -74.0 points (MCSE 1.42). All-score
+withholding remains the existing rule. Raw equal-composite relative-error
+variance RMSE stays .03181/.03177, compared with .03321 in the reference.
+The target G itself is unchanged. Returned G RMSEs of .04421/.04326 use only
+141/107 results, compared with .04942 among 847 reference results; they cannot
+be interpreted as an unconditional improvement over the reference.
+
+Decision, refined by the output-policy audit above: the current estimator
+plus global admissibility rule limits output near covariance boundaries even
+under its own model, but these rates do not establish that the selected
+coefficients cannot be calculated. Review the blanket rule before choosing
+a replacement estimator. Preserve raw components; do not silently clip
+matrices, drop components, or treat an unavailable coefficient as a
+bad-data/model-fit diagnosis. Estimation uncertainty still needs evaluation
+before wider sparse-data support claims.
+Help, README and the public roadmap now distinguish component identification
+from the rank of each between-score covariance matrix, and observed facet
+pools from future per-person replication. The production function expressions
+remain unchanged. No full suite, new internal plot, candidate change or CI.
+
+## 2026-09-21: sparse multivariate recovery and missingness consequences
+
+Question: at the same rating workload, do different assignments give similar
+precision and usable D-study projections, and does the same missing fraction
+have similar consequences under random and outcome-dependent deletion?
+This addresses the public MINQUE(0) API introduced on September 21. Older
+D-SIM backend prototypes target different implementations and are not counted
+as evidence for this estimator. Existing ANOVA/kernel algebra checks and the
+40,000-row computational check are reused; they are not rerun as a campaign.
+
+Reproduction: from the development package root, run
+`Rscript scripts/check-multivariate-sparse-recovery.R`. Optional arguments set
+the repetition count and a new output directory. A three-replication smoke
+checked the generator, identities, accounting, and output before the main
+run of 1,000 replications in each of six conditions (6,000 G-study fits with
+D-study projections).
+It completed in 205.103 seconds on this machine. Results are saved under
+`validation-results/multivariate-sparse-recovery-20260921/` as `results.rds`,
+`case-summary.csv`, and `metric-summary.csv`. The RDS retains all trial
+statuses and scalar estimates, generating matrices, rosters, target design,
+weights, seeds, source MD5 hashes and session information. Tested source
+copies are in that directory's `source/`; their hashes match the saved ones.
+The new script is repository-only under the existing scripts build exclusion.
+
+Design and target:
+
+- Gaussian continuous Content/Organization scores from seven independent
+  random-effect families, using the positive-definite covariance matrices
+  in the existing `mvgt_fixture`. Effects are shared by their actual Person,
+  Rater, Task and interaction IDs. Each replication generates one complete
+  120-person by 12-rater by 8-task array, shared across comparisons. Seeds
+  921260001--921261000 use L'Ecuyer-CMRG with Inversion/Rejection.
+- The complete reference has 11,520 ratings. Each of three fixed incomplete
+  rosters has 960 ratings, four tasks and two distinct raters per performance
+  per person, with all 12 raters and eight task levels represented. Rotating
+  uses four raters per person, two per task; RepeatedPair uses the same two
+  per person. Both give every rater 80 ratings. Concentrated assigns half
+  the persons to raters 1/2 (240 ratings each), and the remainder across the
+  other ten raters (48 each). Assignment is independent of generated effects.
+- MCAR25 removes exactly 240 uniformly selected Content values from Rotating;
+  HighScoreMissing25 removes exactly its highest 240 Content values. The
+  latter is deliberately strong outcome-dependent selection, not a fitted
+  missingness model. Organization stays observed; explicit omission excludes
+  these rows jointly. No support repair, resampling or score imputation.
+- D-study truth is calculated directly from the generating matrices for a
+  FUTURE COMPLETE design of two common raters and six common tasks, never
+  the observed sparse roster. Equal weights (.5,.5) give true G=0.7673389
+  and Phi=0.6891981; (1,-1) also evaluates a difference score. Component
+  variances/covariances and raw projected variances retain all 1,000 fits per
+  condition, including non-PSD fits. Coefficient/SEM bias and RMSE condition
+  on availability and always retain their denominator. Monte Carlo SEs are
+  included for mean bias, RMSE (delta method) and availability proportions.
+
+All 6,000 fits returned components and passed rank 7. Under the unchanged
+rule withholding all G/Phi/SEM when any component is non-PSD:
+
+| Condition | Used rows | Non-PSD fits | G/Phi available | Availability MCSE (percentage points) |
+| --- | ---: | ---: | ---: | ---: |
+| Complete | 11,520 | 8 | 992/1,000 (99.2%) | 0.28 |
+| Rotating | 960 | 153 | 847/1,000 (84.7%) | 1.14 |
+| RepeatedPair | 960 | 173 | 827/1,000 (82.7%) | 1.20 |
+| Concentrated | 960 | 690 | 310/1,000 (31.0%) | 1.46 |
+| MCAR25 | 720 | 404 | 596/1,000 (59.6%) | 1.55 |
+| HighScoreMissing25 | 720 | 483 | 517/1,000 (51.7%) | 1.58 |
+
+The fixed sparse designs' scaled moment-system condition numbers were
+16.604 (Rotating), 18.973 (RepeatedPair), and 18.396 (Concentrated). Thus a
+numerically separable system does not establish comparable precision or
+matrix admissibility. Content rater-variance RMSEs, using all fits against
+truth .2, were .1134, .1324 and .2338 (RMSE MCSE .0031, .0038, .0105).
+Concentration especially affected Rater and Rater:Task matrices: 263 and 429
+non-PSD estimates respectively, with overlap between these counts. Do not
+recommend Rotating over RepeatedPair from availability alone: their paired
+difference is 2.0 percentage points with MCSE 1.42 points. Concentrated minus
+Rotating is -53.7 points with paired MCSE 1.77 points.
+
+For Content person variance, truth is 1.2. Across ALL fits, MCAR25's mean is
+1.2129 (bias .0129, MCSE .00729), whereas HighScoreMissing25's mean is .4292
+(bias -.7708, MCSE .00378). Among the 517 admissible HighScoreMissing25 fits
+the mean is still .4278. Its equal-composite G bias is -.0890 (MCSE .00339),
+conditional on these 517 available projections. Passing matrix checks does
+not diagnose or remove selection bias. MCAR retained at least 119 persons;
+outcome-dependent deletion retained as few as 113. The intended target stays
+the generating population, rather than silently redefining it after omission.
+
+A separate same-workload structural counterexample gives every person eight
+tasks rated once (960 rows). Person:Task and residual kernels coincide and
+the API correctly refuses rank 6 of 7. This deterministic failure was checked
+once, not counted as 1,000 stochastic failures. Repeating ratings on the same
+performance is different from adding singly rated tasks; that repeat alone
+does not guarantee identification of every other component.
+
+Decision: retain the existing estimator, non-PSD withholding and explicit
+future-design requirement. Help, README and public roadmap explain roster
+review, identification, admissibility and precision separately; no new
+automatic adequacy threshold or missingness diagnosis is introduced. This
+is one Gaussian covariance model and fixed facet-count setting, not broad
+sparse-design validation. Variance boundaries, other covariance structures,
+facet counts, non-Gaussian/ordinal outcomes, nested/local facets, sampling
+intervals and a genuinely sparse-roster D-study remain separate work.
+No confidence-interval coverage was assessed because this API has no sampling
+intervals. No production estimator code changed: parsed R expressions match
+the tested source snapshot exactly after help edits. Updated Rd checks and
+the help's runnable examples pass. No full test suite, candidate change,
+remote CI, push, or internal plots were needed.
+
 ## 2026-09-21: D-study comparison semantics and export corrections
 
 Follow-up review reproduced two misleading plot behaviors. The generic

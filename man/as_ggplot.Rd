@@ -53,6 +53,11 @@ bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
 score review plots, and multivariate D-study comparisons. D-study conversions
 preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
 estimates. They do not refit the model or add confidence intervals.
+Difference-interval plots from \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} use their
+base \code{plot()} method or \code{\link[=plot_data]{plot_data()}}; automatic conversion is not supported.
+Automatic conversion of exploratory clustering plots is not supported.
+Use their \code{plot()} methods for silhouettes, feature profiles, dendrograms
+and imputation co-membership heatmaps, or \code{\link[=plot_data]{plot_data()}} for custom graphics.
 For main-effects \code{mfrm_d_study} results, use the base \code{plot()} method or
 \code{\link[=plot_data]{plot_data()}} for custom graphics; automatic conversion is refused because
 generic column selection does not preserve those design comparisons.

@@ -26,6 +26,8 @@ cran_light_tests <- c(
   "gauss-hermite-weights",
   "generalizability-missing",
   "multivariate-gtheory",
+  "multivariate-nested-gtheory",
+  "multivariate-d-compare",
   "multivariate-d-study-plots",
   "icc-ci-method",
   "icc-input",

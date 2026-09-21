@@ -6,6 +6,37 @@ approval remain open.** This is the successor status assessment to the
 [public roadmap](../../ROADMAP.md). It does not broaden API support or replace
 the source identities, protocols, failures or results in earlier records.
 
+Release-plan update, 2026-09-21: 0.2.4 now targets completion of existing
+development functions, statistical-support extensions, selected model
+extensions, and then integration. The 18-group reconciliation below describes
+the earlier baseline; it is not an inventory or approval of the expanded
+release. Historical exclusions and candidate checks do not automatically define
+its scope. Reconcile new retained claims and their source-specific evidence
+before the final integration decision, following the
+[current work plan](internal-roadmap-0.2.3.md#current-work-plan).
+
+### September 21: selected additions in the integrated candidate
+
+The source now identifies itself as candidate 0.2.4, not a published release.
+The original 18-group table remains historical. The additional retained claims
+are reconciled here; their implementation records are in the current work plan.
+
+| Retained addition | Applicable evidence | Boundary retained in public help |
+| --- | --- | --- |
+| External-feature PAM/hierarchical clustering, MI and setting comparisons | Existing ID/type/omission/pairing regressions, applied tutorial and bounded feature stress results; plotted values reuse fitted objects. | Exploratory descriptions, not latent classes, population recovery, membership probabilities or pooled inference. No generic ggplot conversion. |
+| Multivariate crossed G/D-study points, composites and metric-specific availability | Independent ANOVA/QR, MINQUE kernels, published numerical examples, weighted-score reduction and saved sparse/plan-choice assessments. | One/two common random facets; numeric observed scores. Raw non-PSD estimates remain flagged; no missingness correction, sparse-roster reliability or MFRM latent reliability. |
+| Prespecified paired G/Phi/SEM plan-difference intervals | Joint quadratic-form/delta calculations, independent dense covariance checks, existing Gaussian and targeted nonnormal coverage results; API/plot/replay regressions. | Explicit normal random effects and two crossed facets only. Gamma-condition failures remain evidence against a robust claim; no selection-adjusted, simultaneous or nested intervals. |
+| Person-by-(Child-within-Parent) G/D-study points | Five-component independent QR/kernel equations, incomplete/unequal examples, direct composite reduction, published D-study divisors, saved-result and rendered plot checks. | Shared persons and score identities; future balanced nesting retained. No nesting within persons, partial sharing, score-specific children, arbitrary sparse recovery claim or nested intervals. |
+
+Integration also preserves the prior candidate's ICC/shrinkage and portable
+calibration implementation: direct comparison to `/private/tmp/mfrmr-0.2.4-icc-candidate-20260921`
+found no native-source changes and only the expected shared R changes in
+`api-generalizability.R` and `api-as-ggplot.R`, plus the new feature/G-theory
+files. Subsequent edits add workflow help only. Source identity and the batched
+package-check outcome are recorded under the stage-4 entry of the
+[active work plan](internal-roadmap-0.2.3.md#current-work-plan). No earlier
+full-suite or hosted result is relabeled as a pass for this integrated source.
+
 Subsequent follow-up: the [fit/diagnostics identity repair](estimator-output-identity-repair-0.2.4.md)
 addresses a newly reproduced C03/C04/C05/C17 output defect. MML diagnostics
 could incorrectly promote a JML lightweight summary to formal inference.
@@ -54,7 +85,7 @@ Public Fair Score interval eligibility remains false. Earlier checkpoint
 tables below retain their original counts; the machine-readable ledger
 includes later follow-ups.
 
-The [current maintainer sequence](internal-roadmap-0.2.3.md#2026-09-19-existing-public-outputs-before-new-tests) supersedes the historical execution instructions below. Completing a numerical repair or resuming a study does not close the
+The [current maintainer sequence](internal-roadmap-0.2.3.md#current-work-plan) supersedes the historical execution instructions below. Completing a numerical repair or resuming a study does not close the
 corresponding statistical claim.
 
 The main workflow, documentation and many numerical/output repairs are well

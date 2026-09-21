@@ -2,7 +2,7 @@
 % Please edit documentation in R/api-plotting-multivariate-d-study.R
 \name{plot.mfrm_multivariate_d_study}
 \alias{plot.mfrm_multivariate_d_study}
-\title{Compare task and rater counts in a multivariate D-study}
+\title{Compare measurement-condition counts in a multivariate D-study}
 \usage{
 \method{plot}{mfrm_multivariate_d_study}(
   x,
@@ -11,6 +11,7 @@
   x_var = NULL,
   draw = TRUE,
   preset = "standard",
+  composite = NULL,
   ...
 )
 }
@@ -20,14 +21,17 @@
 \item{type}{\code{"coefficients"} shows G and Phi in separate panels;
 \code{"sem"} shows relative and absolute standard errors of measurement.}
 
-\item{score}{A single original score name. \code{NULL} selects the weighted
-composite if present, otherwise the first score in the G-study. The
-title identifies the selection and, for a composite, its weights.
-An explicit name always selects an original score, even if it is named
-\code{"Composite"}. Call the method again to inspect another score.}
+\item{score}{A single original score name. An explicit name always selects
+an original score, even if a composite has the same name. If both \code{score}
+and \code{composite} are \code{NULL}, select the sole composite, or the first score
+when there are no composites. Several composites require an explicit
+selection. The title identifies the selection and any composite weights.
+Call the method again to inspect another score or composite.}
 
-\item{x_var}{\code{"Tasks"} or \code{"Raters"}. By default use tasks, unless only
-the rater count varies. A Person-by-Task result only permits \code{"Tasks"}.
+\item{x_var}{A count column in \code{x$design_grid}: \code{"Tasks"}/\code{"Raters"} for
+the task/rater interface, or a facet label supplied through \code{facets}.
+By default use the last varying count column, or the last column if
+none varies. A one-facet result permits only its included facet.
 Each line holds the other facet count constant.}
 
 \item{draw}{Draw the plot when \code{TRUE}; \code{FALSE} only returns its data.}
@@ -35,21 +39,30 @@ Each line holds the other facet count constant.}
 \item{preset}{Plot style: \code{"standard"}, \code{"publication"}, \code{"compact"}, or
 \code{"monochrome"}. Point shapes and line types also distinguish counts.}
 
+\item{composite}{A single composite name from \code{x$coefficients}, as defined
+by a weight-matrix column, or \code{"Composite"} for vector weights. Supply
+either \code{score} or \code{composite}, not both.}
+
 \item{...}{Reserved for future use; additional arguments are rejected.}
 }
 \value{
 Invisibly, an \code{mfrm_plot_data} object. Use \code{\link[=plot_data]{plot_data()}} to extract
 \code{table} (the selected score/composite), \code{series} (one row per scenario and
 plotted metric, including missing values), \code{unavailable}, \code{design_grid},
-\code{weights}, score identity, axis/group names, labels, and legend settings.
+\code{weights}, score identity, axis/group names, labels, \code{component_note},
+and legend settings. In \code{series}, \code{Status} is specific to \code{Metric};
+\code{table} retains the original row status and metric-specific columns.
+\code{weights} contains the selected composite's named weight vector,
+or \code{NULL} when plotting an original score.
 \code{\link[=as_ggplot]{as_ggplot()}} preserves these comparisons for editing or export with
 the optional ggplot2 package; for example, \code{as_ggplot(d, type = "sem")}.
 }
 \description{
-See how a planned change in the number of tasks or raters affects the
+See how a planned change in the number of tasks, raters, or other conditions affects the
 dependability of a mean score. Plot an existing D-study result; no model
 is refitted. Start with \code{plot(d)} for G and Phi, then use
-\code{plot(d, type = "sem")} to examine error in score units.
+\code{plot(d, type = "sem")} to examine error in score units. If the result has
+several composites, select one explicitly with \code{composite}.
 }
 \details{
 G describes consistency of relative ordering: for example, ranking
@@ -63,7 +76,9 @@ in the units of the selected mean score or composite. Relative SEM concerns
 ordering; absolute SEM also includes condition-wide shifts. SEM is not a
 confidence interval for G or Phi. The two SEM panels share a scale, but
 different scores or differently scaled composites need not have comparable
-units. Weights are not normalized.
+units. Weights are not normalized. Changing weights can also change the
+meaning of the score; a higher G or Phi alone does not justify a new set
+of weights.
 
 Points represent only the supplied scenarios. Lines connect them as visual
 guides within a fixed count of the other facet, without fitting a curve or
@@ -71,19 +86,31 @@ evaluating intermediate designs. For example, with tasks on the horizontal
 axis, compare points along one line to change tasks while keeping raters
 constant. Compare lines at the same task count to change raters.
 
-All scenarios describe complete future crossed designs with the same
-conditions for each person and score. Even when the G-study used incomplete
+Scenarios retain the G-study's crossed or nested structure, with complete
+balanced future conditions shared by every person and score. For a nested
+facet, the axis or legend says "per" to identify its count within each parent,
+for example "Raters per Task"; this is not the total rater pool size.
+Even when the G-study used incomplete
 data, the figure does not describe reliability of that sparse roster.
 Projections hold estimated covariance components fixed and have no sampling
 confidence intervals. A flattening curve can indicate limited gains from
 adding one facet alone; it does not identify a cost-effective optimum.
+The highest point alone does not account for uncertainty in the estimated
+components. Read the size of differences as well as their ordering. Equal products
+of rater and task counts give equal rating counts, not necessarily equal
+examinee burden or total cost. Unavailable candidates prevent a complete
+comparison for that metric.
 
 Unavailable estimates stay missing. A panel with no estimates states the
 reason; otherwise a margin note reports unavailable scenarios. The returned
 \code{unavailable} table preserves their counts, metrics, and \code{Status} values.
-For failed covariance checks inspect \code{x$component_diagnostics} and the
-G-study design and data; increasing planned counts cannot repair those
-estimates. Missing values are never plotted as zero.
+Each panel uses its metric's status, so an unavailable Phi does not hide
+an available G. Non-PSD component matrices are noted separately on the
+figure; inspect \code{x$component_diagnostics} before using raw projections.
+Increasing planned counts does not repair those component estimates.
+Missing values are never plotted as zero. Previously saved D-study objects
+retain their recorded values and availability: rerun
+\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} on the saved G-study to apply current rules.
 }
 \examples{
 # Question: how much would doubling the common tasks change dependability?
@@ -100,6 +127,15 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   p <- as_ggplot(d, type = "sem")
   print(p)
   # ggplot2::ggsave("d-study-sem.png", p, width = 7, height = 7, dpi = 300)
+}
+
+# A weight matrix names several choices; explicitly select the plotted one.
+alternatives <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)),
+  weights = cbind(Equal = c(V = 0.5, W = 0.5), Difference = c(V = -1, W = 1)))
+plot(alternatives, composite = "Equal")
+plot(alternatives, composite = "Difference", type = "sem")
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  print(as_ggplot(alternatives, composite = "Equal"))
 }
 }
 \seealso{

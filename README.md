@@ -24,9 +24,9 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the unreleased development version `0.2.4.9001`.
-The external-feature and multivariate G-theory functions below are not part
-of the `0.2.4` release candidate.
+This README describes the unreleased `0.2.4` release candidate, including
+portable calibration, exploratory external-feature groups and multivariate
+G/D-studies. See [the roadmap](ROADMAP.md) for supported scope and future work.
 Functions and options shown here may differ from an installed release; check
 `packageVersion("mfrmr")` and the help shipped with that installation.
 For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
@@ -39,9 +39,9 @@ install.packages("mfrmr")
 ```
 
 The CRAN release and the default GitHub branch do not select the development
-snapshot described here. To install a local copy of this source, use the
+candidate described here. To install a local copy of this source, use the
 directory containing this README and a `DESCRIPTION` file with
-`Version: 0.2.4.9001`:
+`Version: 0.2.4`:
 
 ```r
 if (!requireNamespace("remotes", quietly = TRUE)) {
@@ -964,7 +964,7 @@ their classifications to planned and observed ratings by ID. It distinguishes
 unrecorded values from inapplicable mentoring histories and keeps auxiliary
 imputation predictors separate from clustering features.
 
-In this development version, `mfrm_features()` reviews a table with one row per
+In version 0.2.4, `mfrm_features()` reviews a table with one row per
 person, rater, or task and explicitly selected external attributes, such as
 experience or specialization. `mfrm_cluster()` groups those profiles using Gower distances
 and PAM; install the optional `cluster` package to use it.
@@ -1080,14 +1080,90 @@ automatically infers the intended measurement design from column names.
 
 When an assessment reports several score components, such as content and
 organization, their covariances matter for the dependability of a composite.
-In this development version, `mfrm_multivariate_gstudy()` estimates those
-covariances in Person-by-Task or Person-by-Rater-by-Task designs. The default
+In version 0.2.4, `mfrm_multivariate_gstudy()` estimates those
+covariances for one or two common random measurement facets. The default
 ANOVA method requires a complete balanced design; `method = "minque0"` also
-handles incomplete observed configurations. Each retained cell has one row
+handles incomplete configurations and unequal nested child counts. Each retained cell has one row
 with all selected numeric scores observed.
-Included raters and tasks must denote the same conditions across scores and
+Included facet identifiers must denote the same conditions across scores and
 persons, and represent the random conditions over which scores will be
 generalized. Score components are fixed parts of the assessment.
+
+Choose the facets explicitly:
+
+| Measurement design | G-study arguments | D-study count columns |
+| --- | --- | --- |
+| Persons and common tasks | `rater = NULL` | `Tasks` |
+| Persons and common raters | `task = NULL` | `Raters` |
+| Persons, common raters, and common tasks | Defaults | `Raters`, `Tasks` |
+| Persons and tasks with a different rater team for each task | `nesting = c(Rater = "Task")` | `Raters` **per task**, `Tasks` |
+| One or two other common random facets | `facets = c(Rater = "Assessor", Occasion = "Session")` | Exact labels: `Rater`, `Occasion` |
+
+In `facets`, values select data columns and names label the analysis. Do not
+combine it with `rater`/`task`. Labels carry through component matrices, count
+tables, and plots. For example, with `repeat_ratings` containing `Person`,
+`Assessor`, `Session`, `Content`, and `Organization`:
+
+```r
+g_repeat <- mfrm_multivariate_gstudy(repeat_ratings,
+  scores = c("Content", "Organization"),
+  facets = c(Rater = "Assessor", Occasion = "Session"))
+d_repeat <- mfrm_multivariate_d_study(g_repeat,
+  expand.grid(Rater = c(1, 2), Occasion = c(2, 4)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d_repeat)
+plot(d_repeat, x_var = "Occasion", type = "sem")
+```
+
+Here the question is whether additional occasions reduce error while rater
+counts are held constant within each line. Occasions must be defensibly
+treated as exchangeable random conditions; this specification does not
+estimate learning, growth, a time trend, or serial correlation. All included
+facets are random; the default model is crossed. Fixed facets and three or
+more measurement facets remain unsupported.
+
+### Different rater teams for different tasks
+
+Suppose each task has its own raters, and each team rates the same examinees
+on Content and Organization. Specify `nesting = c(Rater = "Task")` to estimate
+five components: Person, Task, Rater(Task), Person:Task, and the combined
+Person-by-Rater-within-Task/residual component. A local label R1 on Task 1
+identifies a different rater from R1 on Task 2. If the same physical rater
+works on both tasks, this independent nested-rater model does not describe
+that arrangement; relabeling the rater cannot make it so.
+
+With `nested_ratings` containing one row per observed Person/Task/Rater and
+both score columns:
+
+```r
+g_nested <- mfrm_multivariate_gstudy(nested_ratings,
+  scores = c("Content", "Organization"), nesting = c(Rater = "Task"))
+g_nested$design$child_counts # Raters within each observed task.
+g_nested$component_diagnostics
+d_nested <- mfrm_multivariate_d_study(g_nested,
+  expand.grid(Raters = c(2, 3), Tasks = c(4, 6)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d_nested)
+plot(d_nested, x_var = "Raters") # Horizontal axis: raters per task.
+plot(d_nested, x_var = "Tasks", type = "sem")
+```
+
+Here two raters for each of six tasks requires **twelve distinct raters** and
+twelve ratings per examinee. Increasing `Raters` adds raters within each task;
+increasing `Tasks` samples more tasks with their own teams. Read the G/Phi and
+SEM projections together with their status and component diagnostics. They
+are point estimates; the plan-comparison interval method currently requires
+crossed facets and cannot be used for this nested model.
+
+ANOVA requires complete observations and equal numbers of raters per task.
+Use `method = "minque0"` for incomplete observations or unequal team sizes
+when the observed design separates the five components. An explicit future
+grid is then required; it describes a complete design with equal team sizes,
+not reliability of the observed sparse roster. Nesting within examinees,
+partly shared raters and score-specific rater identities are unsupported.
+See `?mfrm_multivariate_gstudy` for a runnable synthetic nested-score example.
+
+### Common tasks and crossed facets
 
 For a design without a rater facet, set `rater = NULL` explicitly. This example
 uses the published synthetic data from Brennan's *Manual for mGENOVA*,
@@ -1145,15 +1221,93 @@ d_grid <- mfrm_multivariate_d_study(g,
 plot(d_grid, x_var = "Tasks") # Each line holds the rater count constant.
 ```
 
-Plots select the composite when weights are supplied, otherwise the first
-score; `score = "Content"` selects an original score. Points show requested
+Plots select a sole composite by default, or the first score when no weights
+are supplied; `score = "Content"` selects an original score. Points show requested
 scenarios and lines only guide comparisons. Inspect exact values with
 `summary(d_grid)` or `plot_data(plot(d_grid, draw = FALSE))`. Unavailable
 estimates are explained and retained in the plot payload rather than shown
 as zero. See `?mfrm_multivariate_d_study` and
 `?plot.mfrm_multivariate_d_study` for the complete workflow and how to read it.
 
-With a rater facet, the G-study includes Person-by-Rater,
+To compare feasible plans with twelve ratings per person, reuse the same
+G-study and score weights:
+
+```r
+plans <- data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))
+d_plans <- mfrm_multivariate_d_study(g, plans,
+  weights = c(Content = 0.6, Organization = 0.4))
+plan_results <- subset(summary(d_plans), Kind == "Composite")
+plan_results$RatingsPerPerson <- with(plan_results, Raters * Tasks)
+plan_results[c("Raters", "Tasks", "RatingsPerPerson", "G", "Phi", "GStatus", "PhiStatus")]
+```
+
+Twelve ratings do not mean equal examinee burden: six tasks scored by two
+raters require twice as many performances as three tasks scored by four
+raters. Consider task duration, rater workload and other costs separately.
+Choose the metric from the intended decision, then compare the size of the
+projected differences. The largest point estimate does not establish a
+reliably better plan, and a rank change can have a small practical effect.
+Component-estimation uncertainty is not included in these comparisons;
+SEM is measurement error, not uncertainty in the comparison itself. If a
+candidate's metric is unavailable, selecting among the remaining values
+does not settle the comparison of all plans.
+
+For plans specified before inspecting their estimates, the two-crossed-facet workflow
+also provides approximate intervals for their differences. Use this method only
+when independent normal random effects are a defensible model for the persons
+and both facets; the function does not test that assumption:
+
+```r
+comparison <- mfrm_multivariate_d_compare(d_plans, reference = 1,
+  assumption = "normal")
+summary(comparison) # Every plan minus row 1: two raters and six tasks.
+plot(comparison) # Positive G/Phi differences favor the comparison plan.
+plot(comparison, type = "sem") # Negative SEM differences favor it.
+plot_data(plot(comparison, draw = FALSE))$table # Exact points and intervals.
+```
+
+The calculation preserves dependence between plans estimated from the same
+data. `SE` describes sampling uncertainty in the difference; it is not SEM.
+An interval containing zero does not establish equivalence. Intervals are
+pointwise, not simultaneous guarantees for all plans or a plan selected after
+examining the results. This approximation is sensitive to nonnormal effects,
+small facet pools and uneven assignments; it is not a robust missing-data
+correction. One-facet and nested-design intervals are not yet provided. A point can remain
+available when its interval is unavailable; inspect `Status`. See
+`?mfrm_multivariate_d_compare` for assumptions and a complete example.
+
+To compare several ways of combining the scores, give `weights` a matrix:
+rows name the original scores and columns name the choices. For example,
+compare an equally weighted total, a content-focused total, and the difference
+between Content and Organization under the same planned assessment designs:
+
+```r
+weight_choices <- cbind(
+  Equal = c(Content = 0.5, Organization = 0.5),
+  ContentFocus = c(Content = 0.8, Organization = 0.2),
+  Difference = c(Content = 1, Organization = -1))
+d_choices <- mfrm_multivariate_d_study(g,
+  expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 9)),
+  weights = weight_choices)
+summary(d_choices) # Original scores and all three composites for every design.
+plot(d_choices, composite = "ContentFocus", x_var = "Tasks")
+plot(d_choices, composite = "Difference", type = "sem")
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  print(as_ggplot(d_choices, composite = "Equal"))
+}
+```
+
+`summary()` identifies original scores and composites with `Kind` and their
+names with `Score`. Each composite uses the same estimated covariance
+components, without refitting the G-study. With several composites, plots
+require `composite` or `score` to identify what to show. Rows of the weight
+matrix are matched by score name; weights are never normalized automatically.
+Changing weights may change what the assessment measures: a higher G or Phi
+alone does not justify adopting a different total. Differences describe a
+different target from totals, and SEM comparisons require comparable score
+scales. Select weights for the intended use before interpreting dependability.
+
+With both rater and task facets, the G-study includes Person-by-Rater,
 Person-by-Task, and Rater-by-Task components. The three-way interaction and
 within-cell error remain combined because each cell has one observation.
 The D-study projects mean scores over the specified raters and tasks. It uses
@@ -1205,22 +1359,106 @@ example, with just one rater per Person/Task cell, Person-by-Task interaction
 and residual error cannot both be estimated by this model. MINQUE stops when
 its scaled moment equations cannot separate the requested components.
 Passing this check does not guarantee useful precision. The thinned example
-also illustrates that non-PSD estimates can leave G/Phi and SEMs unavailable.
+also illustrates that a difference score can have negative estimated universe
+variance while the original scores still have calculable G/Phi.
 Its explicit D-study grid describes a **future complete crossed design**;
 it does not describe the dependability of the observed sparse roster or
 person-specific assignment patterns.
 
-Inspect the matrix diagnostics first. Negative or indefinite component
-estimates remain visible; a materially non-PSD component withholds all
-coefficients and SEMs. Passing this numerical check does not establish precise
-estimation or model fit. These are observed-score point projections conditional
-on estimated components, without sampling intervals. Numeric category scores
+Review an incomplete design in this order:
+
+| Question | What to inspect | What the result can tell you |
+| --- | --- | --- |
+| Were planned ratings actually recorded? | The planned roster, `describe_mfrm_data(..., expected_design = ...)`, and `g_sparse$data_usage` | Unassigned cells and missing assigned scores are different. Omission counts do not identify the cause of missingness. |
+| Can this arrangement separate the components? | The estimation error or `g_sparse$estimation`, including component replication | A full-rank moment system permits calculation. A small condition number is not an estimate of statistical precision. |
+| Are the estimated covariance matrices admissible? | `g_sparse$component_diagnostics` and D-study `ComponentPSD` | Non-PSD components flag a need for review. This diagnostic is separate from whether each requested coefficient can be calculated. |
+| Which requested metrics can be calculated? | `GStatus`, `PhiStatus`, `RelativeSEMStatus`, `AbsoluteSEMStatus` | Each metric uses its own projected variances. An unavailable Phi does not automatically withhold G. Calculability does not establish model fit or precision. |
+| How uncertain is a prespecified improvement between plans? | `mfrm_multivariate_d_compare()` for two common crossed facets under normal random effects, plus evidence for the source design and population | Approximate paired intervals preserve dependence between plans. They do not establish robustness to nonnormality, selective missingness or post-selection inference. |
+
+The arrangement matters even at the same workload. With 120 persons, rating
+four tasks with two distinct raters per performance and rating eight tasks
+with one rater per performance both require 960 ratings. Only the former
+supplies repeated ratings within a Person/Task cell;
+the latter cannot separate Person-by-Task variation from residual variation
+in the seven-component model. Other overlaps are still needed to separate
+the remaining components. Do not interpret a rating count, percentage of
+observed cells, or connected graph as a universal adequacy threshold.
+
+Allocation and missingness affect precision, even when coefficients can be
+calculated. A limited Gaussian simulation used two scores, 120 persons, 12
+raters and eight task levels, with 1,000 replications per condition. At the
+same 960-rating workload, rotating rater pairs gave equal-composite G RMSE
+0.050, compared with 0.066 for a repeated pair per person. Omitting Content
+scores on 25% of rating rows, then using common complete rows for both scores,
+gave mean G of 0.766 under random omission and 0.684 when the highest Content
+scores were omitted, against a true value of 0.767. G was calculable in every
+replication of these conditions. These results concern one specified model;
+they illustrate why successful calculation cannot establish precision or
+correct selective missingness, rather than identify an optimal allocation.
+
+Small or zero true components can produce non-PSD estimates through sampling
+variation under a correct model. Rater-by-Task variation contributes to
+absolute error, but not relative error, so a problem in that component need
+not prevent calculation of G. Review each requested metric and the component
+diagnostics separately; non-PSD frequency is not a model-fit test or a
+coefficient-calculation failure rate.
+
+The number of distinct raters or tasks observed in the G-study affects
+component estimation. It differs from the number each person would receive
+in a future D-study scenario. At a fixed rating budget, expanding the pool
+also reduces ratings per level; there is no universal minimum pool size or
+automatically preferred design established by these checks.
+
+Negative or indefinite component estimates remain visible. **D-study output
+is judged separately for every score/composite and metric.** G requires
+nonnegative universe and relative-error variances with a positive sum; Phi
+uses absolute-error variance instead. Each SEM requires only its corresponding
+nonnegative error variance. Zero universe variance gives zero G/Phi when the
+corresponding error variance is positive; zero total variance leaves the
+coefficient undefined. No negative estimates are automatically replaced.
+
+`Status` summarizes a row as `Available`, `Partially available`, or
+`Unavailable`; the four metric-specific status columns give the reasons.
+`ComponentPSD` separately reports whether all component matrices pass their
+numerical check. Print and plot methods note non-PSD estimates even when the
+requested metrics are calculable. Recalculate a previously saved D-study
+from its G-study to apply these rules; plotting does not change stored values.
+Raw estimates can also yield Phi greater than G when estimated absolute
+error is below relative error. This calls for review of component estimates;
+the model's additional absolute-error contributions are nonnegative, so a
+reversal is not evidence that absolute decisions are more dependable.
+Passing a matrix check does not establish precise estimation or model fit,
+and failing it does not prove that the data or model are wrong. Distinguish the number of
+separable components (`estimation$rank`) from the rank of each between-score
+covariance matrix (`component_diagnostics$Rank`): a true zero component can
+have matrix rank zero without being confounded with another component.
+These are observed-score point projections conditional
+on estimated components. The separate two-facet comparison method provides
+approximate normal-theory intervals for prespecified differences with crossed facets. Numeric category scores
 do not yield latent ordinal or MFRM reliability. Agreement with a published
 numerical example does not establish recovery under missingness or ordinal
-latent models. Nested/local facet models, partial sharing across score
-components, score-specific missing-data estimation, and score imputation
+latent models. Nesting other than the stated Person-by-(Child-within-Parent)
+model, partial sharing across score components, score-specific missing-data estimation, and score imputation
 are not supported.
 The existing main-effects `mfrm_generalizability()` workflow remains separate.
+
+When comparing results with GENOVA programs, check the estimator and the
+negative-component convention. mfrmr retains raw component estimates.
+mGENOVA 2.1 instead replaces negative variance components with zero for its
+D-study unless `DOPTIONS NEGATIVE` is specified. This concerns variances,
+not all negative covariances, and is not a general PSD repair. jGENOVA's
+`NEGATIVE` option controls printing: its D-study zeroes negative variances
+under both `ALGORITHM` and the default `EMS` convention; `EMS` also recalculates
+other components using those zero replacements. See the
+[jGENOVA manual](https://brennancrickgenova.org/genova-suite/) for these options.
+Zeroing components before forming a multivariate composite can also differ
+from zeroing components estimated from a single summed score.
+
+Matched examples confirm the calculations under these respective conventions.
+They check specific formulas and explain output differences; agreement does
+not establish suitability for an assessment, sampling precision, or correction
+for selective missingness. Choose the score meaning, model and assumptions
+from the assessment question rather than from agreement with another program.
 
 ## ICC inputs and intervals
 
@@ -1505,7 +1743,7 @@ neither supplies guaranteed individual or multiple-element false-positive rates.
 
 ## Updating saved analyses
 
-In this development version, `mfrm_generalizability()` stops if scores or
+In version 0.2.4, `mfrm_generalizability()` stops if scores or
 selected facet values are missing. Review the data and use `missing = "omit"`
 only when complete-row selection is intended; invalid score labels must be
 cleaned explicitly. `gt$data_usage` records the input source, row counts, and
@@ -1529,7 +1767,9 @@ step and rebuild everything that depends on it:
 | Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
 | Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
 | ICC and design effects | Rerun `compute_facet_icc()` or `analyze_hierarchical_structure()` from the original data/settings, explicitly choosing how to handle missing values. Recreate design effects from the new ICC result's row accounting. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
-| G/D studies | Rerun the observed-score G-study and D-study using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
+| Main-effects G/D studies | Rerun the observed-score G-study and D-study using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
+| Multivariate G/D studies | Recompute the D-study from its saved G-study, planned counts and weights to update metric-specific availability. Replotting preserves stored values. A changed design, corrected data or incompatible design metadata requires a new G-study; adding nesting requires refitting, not relabeling. Keep the G-study and its data for plan-comparison intervals. |
+| External-feature groups | Replot saved results for updated labels; memberships and trees are preserved. Changed features, weights, group counts or methods require new clustering. Reuse the same fitted imputation object when comparing settings across completions. Use `plot()` or `plot_data()`; automatic ggplot conversion is unsupported. |
 | Shrinkage | Reapply using the original prior and explicit Person settings, then regenerate reports and replay scripts. Switching Person shrinkage off removes old adjustment columns. No MFRM refit is needed to refresh these results. |
 | Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |

@@ -64,6 +64,23 @@ Here \code{results} is the basic summary and \code{res} is the comprehensive obj
 accepted by \code{\link[=mfrm_report]{mfrm_report()}} and \code{\link[=export_mfrm_results]{export_mfrm_results()}}.
 }
 
+\section{Assessment planning and external features}{
+
+To compare tasks, raters or score weights using numeric observed scores,
+start with \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} and \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}.
+Their help covers crossed facets, task-specific rater teams, incomplete
+source designs and reading G/Phi/SEM plots. For prespecified plan differences
+under normal random effects with two crossed facets, see
+\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}. These analyses do not require an MFRM fit
+and do not estimate reliability on its latent scale.
+
+To group persons, raters or tasks by external attributes, use \code{\link[=mfrm_features]{mfrm_features()}}
+followed by \code{\link[=mfrm_cluster]{mfrm_cluster()}} or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}. See
+\code{vignette("mfrmr-external-features", package = "mfrmr")} for imputation and
+setting comparisons. These are exploratory attribute groups, not estimated
+ability classes or rater-quality judgments.
+}
+
 \section{Updating saved analyses for 0.2.4}{
 
 Keep the original objects, data and analysis settings. Installing an update
@@ -129,6 +146,24 @@ and explicit Person choice to refresh shrinkage reports, descriptive bands,
 and replay settings. Reapplication replaces the previous adjustment;
 switching Person shrinkage off removes its old adjustment columns.
 Regenerate replay scripts to retain the post-fit adjustment step.
+\item \strong{Multivariate G/D studies:} to apply metric-specific G/Phi/SEM
+availability rules, rerun \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} from the saved
+G-study with the original planned counts and score weights. Replotting
+alone preserves stored numbers. Refit \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} only
+when changing the measurement design, correcting the source data, or
+replacing an object with missing or incompatible design metadata. In
+particular, a crossed result cannot be converted to a nested model by
+editing its labels; refit with an explicit \code{nesting} specification.
+Retain the G-study object and its data to calculate new prespecified
+plan comparisons with \code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}}. A coefficient
+table alone does not contain the information needed for those intervals.
+\item \strong{External-feature groups:} saved clustering results retain their
+memberships and fitted hierarchy. Replot them to update labels; use
+\code{\link[=plot_data]{plot_data()}} for their stored values. Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion
+is not supported for these plots. A change to features, weights, group
+counts or method requires a new clustering call. For imputation
+comparisons, reuse the original \code{mice} object to preserve pairing across
+completed datasets; do not generate unrelated completions for each setting.
 \item \strong{Fitted-object Person scores:} re-summarize the original prediction object
 to recover stored interval settings and updated explanations. To replace
 older grid-endpoint intervals with continuous posterior intervals, rerun

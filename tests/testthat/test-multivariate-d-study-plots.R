@@ -24,6 +24,7 @@ test_that("D-study plots preserve stored values, units, weights and score identi
   expect_equal(sem$series$Value[sem$series$Metric == "RelativeSEM"], p$table$RelativeSEM)
   expect_equal(sem$series$Value[sem$series$Metric == "AbsoluteSEM"], p$table$AbsoluteSEM)
   v <- plot_data(plot(d, score = "V", draw = FALSE))
+  expect_null(v$weights)
   expect_equal(v$table, d$coefficients[d$coefficients$Kind == "Score" & d$coefficients$Score == "V", ])
   expect_identical(serialize(d, NULL), before)
   # Plotting only needs stored coefficients and identities, not a refittable G-study.
@@ -38,6 +39,54 @@ test_that("D-study plots preserve stored values, units, weights and score identi
   d <- mfrm_multivariate_d_study(g)
   expect_identical(plot_data(plot(d, draw = FALSE))$score, "Composite")
   expect_identical(plot_data(plot(d, draw = FALSE))$kind, "Score")
+})
+
+test_that("named composite plots require an unambiguous selection and keep its weights", {
+  g <- mfrm_multivariate_gstudy(mvgt_plot_data(), c("V", "W"), rater = NULL)
+  # A composite may share an original score's name; Kind distinguishes them.
+  w <- cbind(V = c(V = .5, W = .5), Difference = c(V = -1, W = 1))
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)), w)
+  expect_error(plot(d, draw = FALSE), "Several composites.*select one")
+  expect_error(plot(d, score = "V", composite = "V", draw = FALSE), "not both")
+  for (bad in list("absent", c("V", "Difference"), NA_character_, 1, character())) {
+    expect_error(plot(d, composite = bad, draw = FALSE), "name one composite")
+  }
+  original <- plot_data(plot(d, score = "V", draw = FALSE))
+  expect_identical(original$kind, "Score")
+  expect_null(original$weights)
+  for (name in colnames(w)) {
+    p <- plot_data(plot(d, composite = name, type = "sem", draw = FALSE))
+    expect_identical(p$kind, "Composite")
+    expect_identical(p$score, name)
+    expect_identical(p$weights, w[, name])
+    expect_identical(p$table, d$coefficients[d$coefficients$Kind == "Composite" & d$coefficients$Score == name, ])
+    expect_equal(p$series$Value[p$series$Metric == "AbsoluteSEM"], p$table$AbsoluteSEM)
+    expect_match(p$title, paste0("Composite ", name, ":"), fixed = TRUE)
+    expect_match(p$title, "V =", fixed = TRUE)
+    expect_match(p$title, "W =", fixed = TRUE)
+  }
+  single <- mfrm_multivariate_d_study(g, weights = w[, "Difference", drop = FALSE])
+  expect_identical(plot_data(plot(single, draw = FALSE))$score, "Difference")
+  expect_identical(plot_data(plot(single, draw = FALSE))$weights, w[, "Difference"])
+  vector <- mfrm_multivariate_d_study(g, weights = w[, "Difference"])
+  expect_identical(plot_data(plot(vector, composite = "Composite", draw = FALSE)),
+    plot_data(plot(vector, draw = FALSE)))
+  one_score <- mfrm_multivariate_d_study(
+    mfrm_multivariate_gstudy(mvgt_plot_data(), "V", rater = NULL),
+    weights = matrix(2, 1, 1, dimnames = list("V", "Double")))
+  expect_identical(plot_data(plot(one_score, draw = FALSE))$weights, c(V = 2))
+
+  grDevices::pdf(NULL, width = 7, height = 7)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, composite = "Difference", type = "sem"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_error(as_ggplot(d), "Several composites.*select one")
+    p <- as_ggplot(d, composite = "Difference", type = "sem")
+    payload <- plot_data(plot(d, composite = "Difference", type = "sem", draw = FALSE))
+    expect_identical(p$data$Value, payload$series$Value)
+    expect_identical(p$labels$title, payload$title)
+    expect_no_warning(ggplot2::ggplotGrob(p))
+  }
 })
 
 test_that("D-study plots hold the other facet fixed and keep nonrectangular scenarios", {
@@ -68,22 +117,31 @@ test_that("D-study plots hold the other facet fixed and keep nonrectangular scen
   expect_equal(graphics::par(names(old)), old)
 })
 
-test_that("unavailable D-study estimates remain missing with their reasons", {
+test_that("D-study plots preserve independent metric availability and component notes", {
   tasks <- mvgt_plot_data()
-  sparse <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
-  sparse$V[1] <- NA_real_
-  g <- mfrm_multivariate_gstudy(sparse, c("V", "W"), rater = NULL,
-    method = "minque0", missing = "omit")
+  g <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
+  g$components$Task[,] <- diag(-10, 2)
   d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(6, 12)))
   p <- plot_data(plot(d, draw = FALSE))
-  expect_true(all(is.na(p$series$Value)))
-  expect_identical(p$unavailable, p$series)
-  expect_true(all(p$unavailable$Status == "Non-PSD component estimates"))
+  expect_true(all(is.finite(p$series$Value[p$series$Metric == "G"])))
+  expect_true(all(is.na(p$series$Value[p$series$Metric == "Phi"])))
+  expect_true(all(p$unavailable$Metric == "Phi"))
+  expect_true(all(p$unavailable$Status == "Negative projected error variance"))
+  expect_match(p$component_note, "Non-PSD covariance components")
+  sem <- plot_data(plot(d, type = "sem", draw = FALSE))
+  expect_true(all(is.finite(sem$series$Value[sem$series$Metric == "RelativeSEM"])))
+  expect_true(all(sem$unavailable$Metric == "AbsoluteSEM"))
   expect_match(p$subtitle, "Future complete crossed designs")
   grDevices::pdf(NULL, width = 7, height = 7)
   on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_warning(plot(d))
   expect_no_warning(plot(d, type = "sem"))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(d)
+    expect_equal(gg$data$Value, p$series$Value)
+    expect_match(gg$labels$caption, "Non-PSD covariance components")
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+  }
 
   g <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
   d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3, 6, 12)))
@@ -91,6 +149,8 @@ test_that("unavailable D-study estimates remain missing with their reasons", {
   gap <- d$coefficients$Scenario == 2
   d$coefficients[gap, c("G", "Phi", "RelativeSEM", "AbsoluteSEM")] <- NA_real_
   d$coefficients$Status[gap] <- "Negative projected error variance"
+  d$coefficients[gap, c("GStatus", "PhiStatus", "RelativeSEMStatus", "AbsoluteSEMStatus")] <-
+    "Negative projected error variance"
   p <- plot_data(plot(d, draw = FALSE))
   expect_equal(p$unavailable$Scenario, c(2L, 2L))
   expect_true(all(is.na(p$series$Value[p$series$Scenario == 2])))
@@ -142,6 +202,8 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
   gaps <- d$coefficients$Tasks == 6
   d$coefficients[gaps, c("G", "Phi", "RelativeSEM", "AbsoluteSEM")] <- NA_real_
   d$coefficients$Status[gaps] <- "Negative projected error variance"
+  d$coefficients[gaps, c("GStatus", "PhiStatus", "RelativeSEMStatus", "AbsoluteSEMStatus")] <-
+    "Negative projected error variance"
   p <- as_ggplot(d)
   expect_true(all(is.na(p$data$Value[p$data$X == 6])))
   expect_true(all(is.na(p$layers[[1]]$data$Value[p$layers[[1]]$data$X == 6])))
@@ -150,6 +212,8 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
 
   d$coefficients[c("G", "Phi", "RelativeSEM", "AbsoluteSEM")] <- NA_real_
   d$coefficients$Status <- "Non-PSD component estimates"
+  # Saved results using the old global policy keep their recorded gaps.
+  d$coefficients[c("GStatus", "PhiStatus", "RelativeSEMStatus", "AbsoluteSEMStatus")] <- NULL
   p <- as_ggplot(d)
   expect_true(all(is.na(p$data$Value)))
   expect_match(p$layers[[3]]$data$Label, "Covariance components failed validity checks")
@@ -157,4 +221,49 @@ test_that("ggplot conversion retains D-study metrics, units, groups and unavaila
   expect_no_warning(ggplot2::ggplotGrob(p))
   single <- mfrm_multivariate_d_study(g)
   expect_no_warning(ggplot2::ggplotGrob(as_ggplot(single)))
+})
+
+test_that("rater-only and named-facet plots retain their declared count identities", {
+  data <- mvgt_plot_data()
+  data$Assessor <- data$Task
+  g <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = "Assessor", task = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Raters = c(3, 6, 12)))
+  p <- plot_data(plot(d, draw = FALSE))
+  expect_identical(p$x_var, "Raters")
+  expect_identical(p$x_label, "Number of raters")
+  expect_identical(p$legend$label, "Raters only")
+  expect_equal(p$series$X, rep(c(3, 6, 12), 2))
+  named <- mfrm_multivariate_gstudy(data, c("V", "W"), facets = c("Test occasion" = "Assessor"))
+  named_d <- mfrm_multivariate_d_study(named)
+  one <- plot_data(plot(named_d, draw = FALSE))
+  expect_identical(one$x_label, "Test occasion count")
+  expect_true("Test occasion" %in% names(one$series))
+
+  data <- merge(data, data.frame(Session = 1:3))
+  data$V <- data$V + data$Session
+  data$W <- data$W + 2 * data$Session
+  g <- mfrm_multivariate_gstudy(data, c("V", "W"),
+    facets = c(Occasion = "Session", Rater = "Assessor"))
+  grid <- expand.grid(Occasion = c(2, 4), Rater = c(3, 6))
+  d <- mfrm_multivariate_d_study(g, grid)
+  p <- plot_data(plot(d, draw = FALSE))
+  expect_identical(p$x_var, "Rater")
+  expect_identical(p$group_var, "Occasion")
+  expect_equal(p$series$X, rep(grid$Rater, 2))
+  expect_equal(p$series$Group, rep(paste("Occasion =", grid$Occasion), 2))
+  flipped <- plot_data(plot(d, x_var = "Occasion", type = "sem", draw = FALSE))
+  expect_identical(flipped$x_label, "Occasion count")
+  expect_equal(flipped$series$X, rep(grid$Occasion, 2))
+  grDevices::pdf(NULL, width = 7, height = 7)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  expect_no_warning(plot(d, x_var = "Occasion", type = "sem"))
+  expect_no_warning(plot(named_d))
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    gg <- as_ggplot(d, x_var = "Occasion", type = "sem")
+    expect_identical(gg$labels$x, flipped$x_label)
+    expect_equal(gg$data$X, flipped$series$X)
+    expect_identical(as.character(gg$data$Group), flipped$series$Group)
+    expect_no_warning(ggplot2::ggplotGrob(gg))
+    expect_identical(as_ggplot(named_d)$labels$x, "Test occasion count")
+  }
 })

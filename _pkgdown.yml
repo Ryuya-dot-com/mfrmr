@@ -202,6 +202,8 @@ reference:
       - mfrm_multivariate_gstudy
       - mfrm_multivariate_d_study
       - plot.mfrm_multivariate_d_study
+      - mfrm_multivariate_d_compare
+      - plot.mfrm_multivariate_d_comparison
       - plot.apa_table
       - plot.mfrm_anchor_review
       - plot.mfrm_bundle

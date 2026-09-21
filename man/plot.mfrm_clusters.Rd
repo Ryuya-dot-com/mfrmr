@@ -48,6 +48,7 @@ Invisibly, an \code{mfrm_plot_data} object. Its \code{data} contains the plotted
 table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
 retain the displayed IDs and the number of imputations. Use \code{\link[=plot_data]{plot_data()}}
 to extract this payload for custom graphics.
+Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is not supported for these views.
 }
 \description{
 Inspect within-sample separation, individual feature profiles, or pairwise

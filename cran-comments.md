@@ -1,93 +1,49 @@
-## Development snapshot
+## Unreleased 0.2.4 candidate
 
-This branch is the unreleased 0.2.4.9001 development version, adding external
-feature review and exploratory grouping. It is not a CRAN submission candidate.
-The results below refer to the separately preserved 0.2.4 candidate; they do
-not cover these new functions.
+This update from 0.2.3.1 integrates portable calibration and new-Person scoring,
+external-feature clustering and imputation sensitivity, and multivariate
+observed-score G/D-studies. The maintainer and license are unchanged.
 
-## Candidate submission text
+Portable calibration remains limited to eligible one-scale RSM/PCM MML fits
+with a fixed standard-normal scoring basis. Its intervals condition on the
+saved calibration and prior. Exploratory feature groups do not provide latent
+classes or pooled inference. Multivariate G/D-studies support the documented
+crossed and Person-by-(Child-within-Parent) designs; plan-difference intervals
+are approximate, pointwise and restricted to explicit normal random effects
+with two crossed facets. Missing-row omission does not correct selection bias.
 
-This is an update from mfrmr 0.2.3.1 to 0.2.4. The maintainer and license are
-unchanged.
+The update also includes ICC, shrinkage/replay and result-availability repairs.
+Saved-analysis instructions distinguish reprinting, recomputing, rescoring
+and refitting. External proprietary software is not needed to install or use
+the package.
 
-The release adds portable calibration and scoring for eligible one-scale RSM
-and PCM MML fits under a fixed standard-normal scoring basis. Calibration
-review, validation, freezing, persistence, and scoring are separate public
-operations. Portable calibration for GPCM and JML is not supported in this
-release; their documented fitted-model workflows remain available.
+## Verification of this integrated source
 
-The release also corrects missing-result handling and uncertainty summaries,
-retains residual subgroup comparisons as descriptive observed-minus-expected
-scores, and documents how to update saved analyses. Portable score intervals
-condition on the saved calibration and scoring prior; they do not include
-calibration-estimation uncertainty. New inferential FairZ and omnibus
-differential-functioning methods are outside this release.
+Selected source archive: `mfrmr_0.2.4.tar.gz`, SHA256
+`ae2550a21d3834ddcd42de3e4b985778aad61e2597f2b6a873cd4dd9473b6da5`.
+Local environment: arm64 macOS, R 4.6.1.
 
-## Test environments
+The initial integrated archive completed examples (including `--run-donttest`),
+vignettes and vignette rebuilding. Its standard tests returned 1,901 passes,
+one failure, no test warnings and three intentional CRAN skips. The failure
+was an outdated expected S3-method inventory, missing the three newly added
+plan-comparison methods. The corrected inventory and export check pass all
+four expectations against the installed package.
 
-The current candidate additionally corrects ICC score conversion, explicit
-missing-row handling, and the fixed variance cutoff tied to score units.
-Small positive variances are retained without decimal rounding; constant
-responses have unavailable ICCs, including in bootstrap refits. Design effects
-use the ICC model's retained sample counts and are described as per-facet
-approximations rather than full-design precision estimates.
+The selected archive differs only in that test file and generated DESCRIPTION
+metadata. All executable code, NAMESPACE, help, examples, vignette sources and
+outputs, and remaining tests are byte-identical. Their successful checks are
+reused. The selected archive's own `R CMD check --no-manual --no-tests
+--no-examples --no-vignettes` returns 0 errors, 0 warnings and 0 notes; this is
+not reported as a repeated full test/example execution.
 
-The ICC input and interval tests passed locally (187 expectations, no test
-failures or warnings); these results and prior hierarchical tests are reused.
-Constant-response fitting diagnostics are retained.
+The installed portable-calibration public API additionally passes 224
+expectations, including saved-calibration scoring in a fresh R process, with
+no test failures, warnings or skips. Test transcripts and the initial
+failed check are preserved with the archive comparisons in the repository
+validation records.
 
-The latest change also preserves post-fit shrinkage as a separate replay step
-and removes stale Person adjustments when shrinkage is reapplied without them.
-The affected shrinkage and replay tests pass (101 expectations, no failures or
-test warnings), including execution of a generated script after diagnostic
-attachment. Implementation and tests match between development and the candidate.
-These additional corrections have not been subjected to another full package
-check or hosted matrix; the broader results below belong to the preceding source.
-
-The preceding ICC interval correction (source 79d0d87) passed hosted checks
-on 2026-09-21 in four environments:
-
-- macOS with R 4.6.1;
-- Windows with R 4.6.1;
-- Ubuntu with R-devel (2026-09-19 r90572); and
-- Ubuntu with R 4.5.3.
-
-Each completed environment had 0 package-check errors, warnings, and notes,
-756 passing lightweight test expectations, no test failures/warnings, and
-three intentional skips. Examples, vignette rebuilding, two international-input
-cases, and eight archive-replay cases passed. Checked source contents were
-verified against the candidate, accounting for Windows line endings.
-
-The Ubuntu-release full-suite job was intentionally cancelled after review of
-the verification scope. It is not reported as a pass. The preceding candidate's
-completed full run (19,438 passes, 42 test warnings, 44 skips) remains evidence
-for that earlier source, not a completed full run of this revision. Ordinary
-CI now uses the lightweight suite; a full run is an explicit manual choice for
-broad changes or a batched release review.
-
-The ICC correction withdraws the unsupported transformation of separate
-component-profile bounds, retains bootstrap failure/convergence diagnostics,
-and withholds incomplete intervals. Saved ICC interval analyses require
-recalculation; point estimates alone do not establish interval validity.
-
-The candidate also corrects printing of selected D-study table rows or
-columns, preserving their calculation and interpretation information. G/D
-coefficient calculations are unchanged. The correction was found by running
-the documented examples with `--run-donttest`; its regression tests and the
-additional examples pass.
-
-The preceding 79d0d87 source archive passes `R CMD check --as-cran` on arm64 macOS
-with R 4.6.1: 0 errors, 0 warnings, and 1 NOTE. This includes the additional
-`--run-donttest` examples, 756 passing lightweight test expectations with three
-intentional CRAN skips, vignette rebuilding, and PDF/HTML manual generation.
-
-CRAN incoming feasibility notes seven updates in the past six months. This
-update includes corrections to result availability, uncertainty interpretation
-and reuse of saved analyses, alongside the portable-calibration workflow.
-
-The CRAN source-package index was checked again on 2026-09-21. It reports
-mfrmr 0.2.3.1 and no reverse Depends, Imports, LinkingTo, Suggests, or Enhances
-relationships, so there is no reverse-dependent package suite to run.
-
-External proprietary software is not required to install, check, or use the
-package.
+Package-index access was unavailable in this restricted-network environment;
+the fetch warnings are retained in the logs. CRAN incoming, current reverse
+dependencies, PDF-manual checks and a hosted platform matrix were not rerun
+for this archive. This draft does not authorize submission or publication.

@@ -4,7 +4,7 @@
 \alias{mfrm_multivariate_d_study}
 \alias{print.mfrm_multivariate_d_study}
 \alias{summary.mfrm_multivariate_d_study}
-\title{Plan task and rater counts with a multivariate D-study}
+\title{Plan measurement conditions with a multivariate D-study}
 \usage{
 mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 
@@ -15,20 +15,31 @@ mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 \arguments{
 \item{x}{A result from \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}.}
 
-\item{design_grid}{A nonempty data frame with positive integer \code{Raters} and
-\code{Tasks} columns, or only \code{Tasks} for a G-study with \code{rater = NULL}.
-Each row is one future complete crossed design. \code{NULL} uses the G-study
-counts only when its retained data are complete; an incomplete G-study
-requires an explicit grid.
-Counts need not match or exceed the G-study counts. Conditions are fully
-crossed and shared across persons and scores in every scenario.}
+\item{design_grid}{A nonempty data frame with one positive integer count
+column per G-study facet. With the \code{rater}/\code{task} interface, use \code{Raters}
+and/or \code{Tasks} for the included facets. With \code{facets}, use its exact
+labels, for example \code{Rater} and \code{Occasion} for
+\code{facets = c(Rater = "Assessor", Occasion = "Session")}. The mapping is
+available in \code{x$design$count_columns}.
+Each row is one future complete balanced design preserving the G-study's
+crossed or nested structure. For \code{nesting = c(Rater = "Task")}, \code{Raters}
+means raters per task, not the total rater pool. \code{NULL} uses the G-study
+counts (children per parent for a nested facet) only when its retained
+data are complete and balanced; incomplete or unequal designs require an
+explicit grid. Counts need not match or exceed the G-study counts.
+Conditions are shared across persons and scores in every scenario.}
 
-\item{weights}{Optional named, finite score weights, including every score
-exactly once, with at least one nonzero entry. Signed weights allow
-difference scores, for example \code{c(Content = 1, Organization = -1)}.
-Weights are used as supplied, without normalization. \code{NULL} reports score
-components only; otherwise an additional composite is reported for every
-scenario.}
+\item{weights}{Optional named numeric vector for one composite, or a numeric
+matrix for several named composites. A vector must name every original
+score exactly once; matrix rows must name every score exactly once, and
+columns must have unique, nonempty composite names. Rows are matched by
+name, regardless of order. Every weight must be finite and each composite
+must have at least one nonzero weight. Signed weights allow difference
+scores, for example \code{c(Content = 1, Organization = -1)}. Weights are used
+as supplied, without normalization. \code{NULL} reports original scores only.
+Otherwise, each scenario reports the original scores once, followed by
+each composite. A vector's composite is named \code{"Composite"}; a matrix
+preserves its column names and order.}
 
 \item{...}{Reserved for method compatibility.}
 
@@ -38,16 +49,18 @@ scenario.}
 An \code{mfrm_multivariate_d_study} list containing \code{coefficients}
 (scenario, counts of included facets, score/composite identity, raw
 universe/relative/absolute variances, G/Phi, relative/absolute SEM, and
-status), \code{covariances} (three matrices per scenario), \code{design_grid},
-\code{weights}, \code{component_diagnostics},
+row and metric-specific status, and \code{ComponentPSD}), \code{covariances}
+(three matrices per scenario), \code{design_grid},
+\code{weights} (the supplied vector or matrix, reordered to the G-study score
+order), \code{component_diagnostics},
 and \code{gstudy} (the source result). \code{summary()} returns \code{coefficients}.
 }
 \description{
 Would adding tasks or raters make assessment scores more dependable?
 Use an estimated G-study to compare specified future designs for individual
-score components and an optional weighted composite. Each scenario reports
+score components and optional weighted composites. Each scenario reports
 dependability and measurement error for mean scores over common random
-tasks and, when included, raters. No model is refitted.
+measurement conditions, such as tasks, raters, or occasions. No model is refitted.
 }
 \details{
 Start with a concrete comparison, such as six versus twelve tasks
@@ -55,6 +68,10 @@ for every examinee. Each row of \code{design_grid} is one scenario. With both
 facets, \code{data.frame(Raters = c(2, 4), Tasks = c(3, 3))} compares two versus
 four raters at three tasks; \code{expand.grid(Raters = c(2, 4), Tasks = c(3, 6))} requests all four combinations. These counts apply to
 every person and score, not to the total number of observed ratings.
+For \code{facets = c(Rater = "Assessor", Occasion = "Session")}, use
+\code{expand.grid(Rater = c(1, 2), Occasion = c(2, 4))}. The same workflow
+applies to any supported one- or two-facet model; extra columns cannot
+introduce conditions absent from the G-study.
 
 Read \code{summary(d)} together with \code{plot(d)}:
 \itemize{
@@ -69,17 +86,29 @@ confidence intervals for G or Phi.
 Larger G/Phi and smaller SEM indicate greater dependability under the
 model. There is no universally acceptable coefficient: consider the use
 of scores, consequences of error, and workload before choosing a design.
-\code{plot(d, type = "sem")} shows the SEMs. By default plots select the
-composite if weights were supplied, otherwise the first score; use
+Compare a chosen score/composite and metric across feasible plans. For
+example, \code{data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))} holds the
+number of ratings per person at twelve. It does not hold examinee task
+burden or total cost constant. The largest projected coefficient is a
+point-estimate ranking, not evidence that one plan is reliably better.
+Consider the size of the projected difference and which differences
+would matter for the assessment. Small rank changes need not imply large
+practical losses. If a metric is unavailable for any candidate, comparing
+only the remaining values does not resolve the full planning question.
+\code{plot(d, type = "sem")} shows the SEMs. Plots select a sole composite
+by default, or the first score when there are no composites. With several
+composites, specify one with \code{plot(d, composite = "Equal")}; use
 \code{plot(d, score = "V")} to inspect an original score named V. The title
 always identifies the plotted score and any composite weights.
-Check \code{Status} before reading a coefficient: \code{NA} means unavailable,
-not zero dependability. See \code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}} for
+Check \code{GStatus}, \code{PhiStatus}, \code{RelativeSEMStatus}, and \code{AbsoluteSEMStatus}:
+each explains the corresponding metric's availability. \code{NA} means
+unavailable, not zero dependability. \code{ComponentPSD} separately flags
+covariance components needing review. See \code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}} for
 interpreting curves and unavailable estimates.
 }
 \section{Calculation and interpretation limits}{
 
-For covariance component matrices \code{P}, \code{R}, \code{T}, \code{PR}, \code{PT}, \code{RT},
+For crossed covariance component matrices \code{P}, \code{R}, \code{T}, \code{PR}, \code{PT}, \code{RT},
 and \code{E}, universe-score covariance is \code{P}. Relative-error covariance is
 \code{PR/n_r + PT/n_t + E/(n_r*n_t)}. Absolute-error covariance adds
 \code{R/n_r + T/n_t + RT/(n_r*n_t)}. The G-study number of persons does not
@@ -88,7 +117,21 @@ not turn its random facet into a fixed facet.
 For a Person-by-Task G-study, \code{E} combines Person-by-Task interaction and
 within-cell error: relative-error covariance is \code{E/n_t}, absolute-error
 covariance is \code{(T + E)/n_t}, and universe-score covariance remains \code{P}.
-A D-study cannot introduce a rater facet absent from its G-study.
+The same formulas apply to a Person-by-Rater design or to facets selected
+by \code{facets}, with names replaced in the declared order. For a single
+facet F and its planned count n, relative error is \code{E/n} and absolute
+error is \code{(F + E)/n}. A D-study cannot introduce an absent facet.
+
+For raters nested within tasks, use the five components \code{P}, \code{T},
+\code{R(T)}, \code{PT}, and \code{E}, where \code{E} includes the Person-by-Rater-within-Task
+interaction. With \code{n_r} raters per task and \code{n_t} tasks, relative error is
+\code{PT/n_t + E/(n_r*n_t)}; absolute error adds \code{T/n_t + R(T)/(n_r*n_t)}.
+Universe covariance remains \code{P}. Other nested facet labels follow the
+same rules. All persons receive the same tasks and their nested raters;
+two raters per task at six tasks means twelve distinct raters, not two
+raters each judging six tasks. Future unequal child counts, changes of
+nesting, and nested-design sampling intervals are not supported.
+
 For incomplete source data, counts of distinct observed levels are not
 per-person replication counts. This function projects a future complete
 design; it does not estimate the reliability of the observed sparse
@@ -103,20 +146,48 @@ a nonzero constant multiplies SEMs by its absolute value but leaves G/Phi
 unchanged. Weights express a substantive choice; this function neither
 chooses them nor identifies an optimal design. Interpret a difference
 only when subtraction is meaningful on the supplied score scales.
+Comparing several composites holds the estimated components and planned
+designs constant, but different weights may change the construct being
+assessed. A higher coefficient alone does not justify that change.
+Compare SEMs across composites only when their scales are comparable.
 
 The same weights define the universe-score composite and its observed
 mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
 target and estimation weights, profile reliability, and accuracy at a
 cut score are not provided. Unlike mGENOVA's default D-study procedure,
-negative variance estimates are not replaced with zero.
+negative variance estimates are not replaced with zero. mGENOVA replaces
+negative variance components with zero for the D-study unless its
+\code{NEGATIVE} option is selected (manual, pages 15 and 21). That rule concerns
+variances, not all negative covariances, and does not guarantee PSD
+component matrices.
+Do not transfer that option's meaning to jGENOVA: its \code{NEGATIVE} option
+controls printing of negative estimates. jGENOVA's D-study zeroes negative
+variances with either \code{ALGORITHM} or its default \code{EMS} convention; \code{EMS}
+also recalculates other components using the zero replacements. Matching
+a raw G-study estimate therefore need not give matching default D-studies.
+These conventions are not selectable estimation options in this function.
 
-Raw covariance matrices and projected variances remain available. If any
-G-study component fails its PSD check, all G/Phi and SEM entries are \code{NA}.
-Otherwise, a row requires a positive universe variance and nonnegative
-error variances. Zero estimated universe variance is not perfect
-reliability. \code{Status} explains unavailable rows; inspect
-\code{component_diagnostics} before interpreting estimates. Passing the matrix
-checks does not establish precise estimation or model fit. Outputs are
+Raw covariance matrices and projected variances remain available. G
+requires nonnegative universe and relative-error variances and a positive
+sum; Phi uses absolute-error variance instead. Each SEM requires only its
+corresponding nonnegative error variance. A failed requirement makes
+only that metric \code{NA}. Zero universe variance yields a coefficient of
+zero when its error variance is positive; a zero total variance leaves
+the coefficient undefined. No estimates are clipped or replaced.
+
+\code{Status} summarizes a row as \code{"Available"}, \code{"Partially available"}, or
+\code{"Unavailable"}; the four metric-specific status columns give the reasons.
+\code{ComponentPSD} is TRUE only when all G-study component matrices pass
+their numerical PSD check. A FALSE value flags components for review
+without suppressing otherwise calculable projections. Print and plot
+methods display a note for non-PSD components. Calculability does not
+validate the joint covariance model or establish precise estimation;
+inspect \code{component_diagnostics} before interpreting estimates. Raw estimates
+can yield \code{Phi > G} when projected absolute error is less than relative
+error. Under the stated model, the extra absolute-error contributions
+are nonnegative; such a reversal calls for review of the estimated
+components, not a conclusion that absolute decisions are more dependable.
+Passing the matrix checks does not establish model fit. Outputs are
 point projections conditional on the estimated components, without
 confidence intervals, missing-data correction, or MFRM latent inference.
 }
@@ -138,6 +209,16 @@ plot(d, type = "sem")
 # Without weights, report the original scores without creating a composite.
 individual <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(6, 12)))
 plot(individual, score = "V")
+
+# Compare weight choices on the same task-count scenarios.
+weights <- cbind(Equal = c(V = 0.5, W = 0.5),
+  W_focus = c(V = 0.2, W = 0.8), Difference = c(V = -1, W = 1))
+alternatives <- mfrm_multivariate_d_study(g,
+  data.frame(Tasks = c(6, 12)), weights = weights)
+summary(alternatives) # Original scores plus all three named composites.
+plot(alternatives, composite = "Equal")
+plot(alternatives, composite = "Difference", type = "sem")
+# Choose weights for the intended interpretation, not solely for higher G.
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
@@ -145,6 +226,8 @@ Chapters 9--11.
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
 Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
 Appendices E and F, pages 74--81.
+Crick, J. E., and Brennan, R. L. (2021). \emph{Manual for jGENOVA, Version 1.0}.
+Pages 2-10--2-11, 3-5, and A-22--A-23.
 }
 \seealso{
 \code{\link[=plot.mfrm_multivariate_d_study]{plot.mfrm_multivariate_d_study()}}, \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}},

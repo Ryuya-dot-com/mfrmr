@@ -1,6 +1,6 @@
 # Construct balanced data with exactly specified ANOVA covariance components.
 # Orthonormal tensor contrasts provide independent mean-product targets.
-mvgt_fixture <- function(indefinite = FALSE) {
+mvgt_fixture <- function(indefinite = FALSE, rater_task = NULL) {
   n <- c(4L, 3L, 4L)
   sources <- c("Person", "Rater", "Task", "Person:Rater", "Person:Task", "Rater:Task", "Residual")
   subsets <- list(1L, 2L, 3L, c(1L, 2L), c(1L, 3L), c(2L, 3L), 1:3)
@@ -8,6 +8,7 @@ mvgt_fixture <- function(indefinite = FALSE) {
     c(.3, -.02, -.02, .15), c(.4, .1, .1, .5),
     c(.3, -.06, -.06, .4), c(.15, .03, .03, .1), c(.6, .2, .2, .7))
   if (indefinite) values[[1L]] <- c(.01, .03, .03, .01)
+  if (!is.null(rater_task)) values[[6L]] <- rater_task
   gamma <- setNames(lapply(values, matrix, nrow = 2L,
     dimnames = list(c("Content", "Organization"), c("Content", "Organization"))), sources)
   q <- lapply(n, function(k) qr.Q(qr(stats::contr.helmert(k))))
@@ -126,11 +127,14 @@ test_that("one-facet designs refuse incomplete cells and unavailable rater proje
       data.frame(Tasks = numeric()))) {
     expect_error(mfrm_multivariate_d_study(g, grid), "positive integer Tasks")
   }
-  # The common PSD policy also applies to the one-facet estimator.
+  # Negative universe variance affects only the corresponding score's coefficients.
   data$V <- data$V - ave(data$V, data$Person, FUN = mean)
   negative <- mfrm_multivariate_gstudy(data, scores, rater = NULL)
   expect_lt(negative$components$Person[1, 1], 0)
-  expect_true(all(is.na(mfrm_multivariate_d_study(negative)$coefficients$G)))
+  projected <- mfrm_multivariate_d_study(negative)$coefficients
+  expect_true(is.na(projected$G[1]))
+  expect_identical(projected$GStatus[1], "Negative universe variance")
+  expect_true(is.finite(projected$G[2]))
 })
 
 test_that("balanced multivariate ANOVA recovers cross-covariances and matches a QR reference", {
@@ -288,7 +292,10 @@ test_that("signed weights agree with direct difference scores and respect sign r
     c("Content", "Organization")), weights = w)$coefficients[3, ]
   expect_equal(zero$UniverseVariance, 0)
   expect_true(is.na(zero$G) && is.na(zero$Phi))
-  expect_identical(zero$Status, "Universe variance is not positive")
+  expect_identical(zero$GStatus, "Zero total variance")
+  expect_identical(zero$PhiStatus, "Zero total variance")
+  expect_equal(zero$RelativeSEM, 0)
+  expect_equal(zero$AbsoluteSEM, 0)
 })
 
 test_that("supplied mGENOVA matrices reproduce Appendix F D-study values", {
@@ -327,28 +334,154 @@ test_that("supplied mGENOVA matrices reproduce Appendix F D-study values", {
     matrix(c(.12792, .01150, .01150, .07800), 2))
 })
 
-test_that("inadmissible components are retained without usable coefficients", {
+test_that("negative RT components match executed jGENOVA with explicit D-study conventions", {
+  # Official jGENOVA 1.0 source, run unmodified on 2026-09-21: P=4, R=3, T=4.
+  # Raw Algorithm columns for each score, their sum and their difference;
+  # external output uses seven decimals. No Java dependency for package tests.
+  f <- mvgt_fixture(rater_task = c(-.1, .03, .03, .1))
+  g <- mfrm_multivariate_gstudy(f$data, c("Content", "Organization"))
+  expected <- cbind(Content = c(1.2, .2, .3, .4, .3, -.1, .6),
+    Organization = c(.8, .3, .15, .5, .4, .1, .7),
+    Sum = c(2.6, .58, .41, 1.1, .58, .06, 1.7),
+    Difference = c(1.4, .42, .49, .7, .82, -.06, .9))
+  vectors <- cbind(c(1, 0), c(0, 1), c(1, 1), c(1, -1))
+  actual <- vapply(seq_len(ncol(vectors)), function(j)
+    vapply(g$components, function(a) drop(crossprod(vectors[, j], a %*% vectors[, j])),
+      numeric(1)), numeric(7))
+  expect_equal(unname(actual), unname(expected), tolerance = 5e-8)
+  covariance <- (expected[, "Sum"] - expected[, "Content"] - expected[, "Organization"]) / 2
+  expect_equal(unname(vapply(g$components, function(a) a[1, 2], numeric(1))), covariance,
+    tolerance = 5e-8)
+  # jGENOVA zeroes negative variances before its D-study under both conventions.
+  # The EMS option also changes R and T; mfrmr itself retains all raw estimates.
+  h <- g
+  h$design$scores <- "Content"
+  h$score_scale <- g$score_scale["Content"]
+  h$components <- lapply(g$components, function(a) a["Content", "Content", drop = FALSE])
+  grid <- data.frame(Raters = 2, Tasks = 6)
+  raw <- mfrm_multivariate_d_study(h, grid)$coefficients
+  expect_equal(raw$Phi, .730964467005076, tolerance = 1e-12)
+  h$components$`Rater:Task`[,] <- 0
+  algorithm <- mfrm_multivariate_d_study(h, grid)$coefficients
+  h$components$Rater[,] <- .175
+  h$components$Task[,] <- 4 / 15
+  ems <- mfrm_multivariate_d_study(h, grid)$coefficients
+  metrics <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+    "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  # These rows are printed external D-study output, not mfrmr reference fits.
+  expect_equal(unname(unlist(algorithm[metrics])),
+    c(1.2, .3, .45, .8, .72727, .54772, .67082), tolerance = 5.1e-6)
+  expect_equal(unname(unlist(ems[metrics])),
+    c(1.2, .3, .43194, .8, .73532, .54772, .65722), tolerance = 5.1e-6)
+  expect_equal(g$components, f$components, tolerance = 1e-12)
+})
+
+test_that("negative-component D-studies match executed multivariate mGENOVA", {
+  # Supplied mGENOVA 2.1 executable, run on 2026-09-21 with the same raw
+  # 48-row data as the jGENOVA benchmark. Values below are printed output;
+  # neither Wine nor mGENOVA is a package/test dependency.
+  g <- mfrm_multivariate_gstudy(
+    mvgt_fixture(rater_task = c(-.1, .03, .03, .1))$data,
+    c("Content", "Organization"))
+  weights <- cbind(Equal = c(Content = .5, Organization = .5),
+    Difference = c(Content = 1, Organization = -1))
+  grid <- data.frame(Raters = 2, Tasks = 6)
+  metrics <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+    "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  # DOPTIONS NEGATIVE retains the raw components, as mfrmr does.
+  expected <- rbind(
+    c(1.2, .3, .44167, .8, .73096, .54772, .66458),
+    c(.8, .375, .55833, .68085, .58896, .61237, .74722),
+    c(.65, .19708, .28792, .76734, .69303, .44394, .53658),
+    c(1.4, .56167, .84833, .71368, .62268, .74944, .92105))
+  raw <- mfrm_multivariate_d_study(g, grid, weights)
+  expect_equal(unname(as.matrix(raw$coefficients[metrics])), expected, tolerance = 5.1e-6)
+  expect_false(any(raw$coefficients$ComponentPSD))
+  # Match mGENOVA's default explicitly: zero negative diagonals before
+  # forming composites; preserve covariances. This is not a mfrmr option.
+  g$components$`Rater:Task`[1, 1] <- 0
+  expected[c(1, 3, 4), c(3, 5, 7)] <- rbind(
+    c(.45, .72727, .67082), c(.29, .69149, .53852),
+    c(.85667, .62038, .92556))
+  adjusted <- mfrm_multivariate_d_study(g, grid, weights)
+  expect_equal(unname(as.matrix(adjusted$coefficients[metrics])), expected,
+    tolerance = 5.1e-6)
+})
+
+test_that("component diagnostics do not suppress calculable score projections", {
   f <- mvgt_fixture(indefinite = TRUE)
   g <- mfrm_multivariate_gstudy(f$data, c("Content", "Organization"))
   expect_equal(g$components, f$components, tolerance = 1e-12)
   expect_false(g$component_diagnostics$PositiveSemidefinite[1])
   expect_true(all(diag(g$components$Person) > 0))
   d <- mfrm_multivariate_d_study(g, weights = c(Content = .5, Organization = .5))
-  expect_true(all(is.na(as.matrix(d$coefficients[c("G", "Phi", "RelativeSEM", "AbsoluteSEM")]))))
-  expect_true(all(d$coefficients$Status == "Non-PSD component estimates"))
+  expect_true(all(is.finite(as.matrix(d$coefficients[c("G", "Phi", "RelativeSEM", "AbsoluteSEM")]))))
+  expect_true(all(d$coefficients$Status == "Available"))
+  expect_false(any(d$coefficients$ComponentPSD))
+  expect_output(print(d), "Warning: non-PSD covariance components")
   expect_equal(d$coefficients$UniverseVariance[1], .01)
   # Negative diagonal estimates are also kept, not replaced with zero.
   f <- mvgt_fixture()
   f$data$Content <- f$data$Content - ave(f$data$Content, f$data$Person, FUN = mean)
   negative <- mfrm_multivariate_gstudy(f$data, c("Content", "Organization"))
   expect_lt(negative$components$Person[1, 1], 0)
-  expect_true(all(is.na(mfrm_multivariate_d_study(negative)$coefficients$G)))
+  neg_d <- mfrm_multivariate_d_study(negative)$coefficients
+  expect_true(is.na(neg_d$G[1]))
+  expect_identical(neg_d$GStatus[1], "Negative universe variance")
+  expect_true(is.finite(neg_d$G[2]))
+  expect_true(all(is.finite(neg_d$RelativeSEM)))
   constant <- f$data
   constant$Content <- constant$Organization <- 7
   zero <- mfrm_multivariate_gstudy(constant, c("Content", "Organization"))
   expect_true(all(unlist(zero$components) == 0))
   expect_true(all(is.na(mfrm_multivariate_d_study(zero)$coefficients$G)))
-  expect_true(all(mfrm_multivariate_d_study(zero)$coefficients$Status == "Universe variance is not positive"))
+  zero_d <- mfrm_multivariate_d_study(zero)$coefficients
+  expect_true(all(zero_d$GStatus == "Zero total variance"))
+  expect_true(all(zero_d$RelativeSEM == 0 & zero_d$AbsoluteSEM == 0))
+})
+
+test_that("each D-study metric uses only its own projected variances", {
+  g <- mfrm_multivariate_gstudy(mvgt_fixture()$data, "Content")
+  grid <- data.frame(Raters = 2, Tasks = 6)
+  base <- mfrm_multivariate_d_study(g, grid)$coefficients
+  # Rater:Task affects absolute error only, even when its estimate is negative.
+  g$components$`Rater:Task`[,] <- -12
+  d <- mfrm_multivariate_d_study(g, grid)$coefficients
+  expect_equal(d$G, base$G)
+  expect_equal(d$RelativeSEM, base$RelativeSEM)
+  expect_lt(d$AbsoluteErrorVariance, 0)
+  expect_true(is.na(d$Phi) && is.na(d$AbsoluteSEM))
+  expect_identical(d$GStatus, "Available")
+  expect_identical(d$PhiStatus, "Negative projected error variance")
+  expect_identical(d$Status, "Partially available")
+  expect_false(d$ComponentPSD)
+  # Unconstrained estimates can reverse the usual G/Phi ordering while both
+  # projected errors remain positive. Retain the values and the component flag.
+  g$components$`Rater:Task`[,] <- -2
+  d <- mfrm_multivariate_d_study(g, grid)$coefficients
+  expect_equal(d$G, .8)
+  expect_equal(d$Phi, 72 / 89)
+  expect_gt(d$Phi, d$G)
+  expect_identical(d$Status, "Available")
+  expect_false(d$ComponentPSD)
+  # Absolute error can be positive when relative error is negative.
+  g$components$`Rater:Task`[,] <- .15
+  g$components$`Person:Rater`[,] <- -.4
+  g$components$Rater[,] <- .4
+  d <- mfrm_multivariate_d_study(g, grid)$coefficients
+  expect_equal(d$RelativeErrorVariance, -.1)
+  expect_equal(d$AbsoluteErrorVariance, .1625)
+  expect_true(is.na(d$G) && is.na(d$RelativeSEM))
+  expect_equal(d$Phi, 1.2 / (1.2 + .1625))
+  expect_equal(d$AbsoluteSEM, sqrt(.1625))
+  expect_identical(d$GStatus, "Negative projected error variance")
+  expect_identical(d$PhiStatus, "Available")
+  # Zero universe variance gives zero reliability when total variance is positive.
+  g$components$`Person:Rater`[,] <- .4
+  g$components$Person[,] <- 0
+  d <- mfrm_multivariate_d_study(g, grid)$coefficients
+  expect_equal(c(d$G, d$Phi), c(0, 0))
+  expect_identical(d$Status, "Available")
 })
 
 test_that("incomplete, repeated or malformed observed designs are refused", {
@@ -384,6 +517,79 @@ test_that("incomplete, repeated or malformed observed designs are refused", {
   expect_error(mfrm_multivariate_gstudy(bad, scores), "rescale")
   bad$Content <- data$Content * 1e-200
   expect_error(mfrm_multivariate_gstudy(bad, scores), "rescale")
+})
+
+test_that("named composites match separate projections and direct weighted scores", {
+  data <- mvgt_fixture()$data
+  scores <- c("Content", "Organization")
+  facets <- c(Rater = "Rater", Occasion = "Task")
+  g <- mfrm_multivariate_gstudy(data, scores, facets = facets)
+  grid <- expand.grid(Rater = c(2, 4), Occasion = c(3, 6))
+  weights <- cbind(Equal = c(Organization = .5, Content = .5),
+    ContentFocus = c(Organization = .2, Content = .8),
+    Difference = c(Organization = -1, Content = 1),
+    Scaled = c(Organization = -2, Content = 2))
+  d <- mfrm_multivariate_d_study(g, grid, weights)
+  expect_identical(d$weights, weights[scores, , drop = FALSE])
+  expect_equal(nrow(d$coefficients), nrow(grid) * (length(scores) + ncol(weights)))
+  expect_identical(d$coefficients$Score, rep(c(scores, colnames(weights)), nrow(grid)))
+  baseline <- mfrm_multivariate_d_study(g, grid)
+  expect_equal(d$covariances, baseline$covariances)
+  expect_equal(d$coefficients[d$coefficients$Kind == "Score", ],
+    baseline$coefficients, ignore_attr = TRUE)
+  measures <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+                "G", "Phi", "RelativeSEM", "AbsoluteSEM", "Status")
+  for (name in colnames(weights)) {
+    separate <- mfrm_multivariate_d_study(g, grid, weights[, name])$coefficients
+    actual <- d$coefficients[d$coefficients$Kind == "Composite" & d$coefficients$Score == name, ]
+    expect_equal(actual[measures], separate[separate$Kind == "Composite", measures],
+      ignore_attr = TRUE)
+  }
+  # Estimate one weighted score directly from ratings, independently of the projection.
+  data$Weighted <- .8 * data$Content + .2 * data$Organization
+  direct <- mfrm_multivariate_d_study(
+    mfrm_multivariate_gstudy(data, "Weighted", facets = facets), grid)$coefficients
+  expect_equal(d$coefficients[d$coefficients$Score == "ContentFocus", measures],
+    direct[measures], ignore_attr = TRUE)
+  single <- mfrm_multivariate_gstudy(data, "Content", facets = facets)
+  one <- mfrm_multivariate_d_study(single, grid,
+    matrix(2, 1, 1, dimnames = list("Content", "Double")))$coefficients
+  expect_equal(one$G[one$Kind == "Composite"], one$G[one$Kind == "Score"])
+  expect_equal(one$AbsoluteSEM[one$Kind == "Composite"], 2 * one$AbsoluteSEM[one$Kind == "Score"])
+
+  invalid <- mfrm_multivariate_gstudy(mvgt_fixture(indefinite = TRUE)$data, scores)
+  projected <- mfrm_multivariate_d_study(invalid, weights = weights)$coefficients
+  difference <- projected$Score %in% c("Difference", "Scaled")
+  expect_false(any(projected$ComponentPSD))
+  expect_true(all(is.na(projected$G[difference])))
+  expect_true(all(projected$GStatus[difference] == "Negative universe variance"))
+  expect_true(all(is.finite(projected$G[!difference])))
+  expect_true(all(is.finite(projected$RelativeSEM)))
+})
+
+test_that("weight matrices require explicit identities and usable columns", {
+  g <- mfrm_multivariate_gstudy(mvgt_fixture()$data, c("Content", "Organization"))
+  w <- cbind(Equal = c(Content = .5, Organization = .5), Difference = c(Content = 1, Organization = -1))
+  bad_names <- list(list(NULL, colnames(w)), list(rownames(w), NULL),
+    list(c("Content", "Absent"), colnames(w)),
+    list(c("Content", "Content"), colnames(w)),
+    list(c("Content", NA_character_), colnames(w)),
+    list(rownames(w), c("Equal", "Equal")), list(rownames(w), c("Equal", " ")),
+    list(rownames(w), c("Equal", NA_character_)))
+  for (nm in bad_names) {
+    bad <- w
+    dimnames(bad) <- nm
+    expect_error(mfrm_multivariate_d_study(g, weights = bad), "weights.*matrix must")
+  }
+  for (bad in list(w[1, , drop = FALSE], w[, FALSE, drop = FALSE],
+      cbind(w, Zero = 0), w * Inf, w * NA_real_, w + 1i, matrix(as.character(w), 2))) {
+    expect_error(mfrm_multivariate_d_study(g, weights = bad), "weights.*matrix must")
+  }
+  for (scale in c(1e200, 1e-200)) {
+    bad <- w
+    bad[, 2] <- scale * bad[, 2]
+    expect_error(mfrm_multivariate_d_study(g, weights = bad), "rescale")
+  }
 })
 
 test_that("D-study input checks preserve the declared covariance identities", {
@@ -426,6 +632,30 @@ test_that("MINQUE0 reduces to balanced ANOVA for one and two facets", {
     expect_null(minque$mean_products)
     expect_null(minque$degrees_of_freedom)
     expect_identical(minque$design$calculation_version, 2L)
+  }
+})
+
+test_that("single-score MINQUE0 preserves complete and incomplete G/D-study calculations", {
+  measures <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+    "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  for (rater in list(NULL, "Rater")) {
+    full <- if (is.null(rater)) mvgt_common_task_data() else mvgt_fixture()$data
+    scores <- tail(names(full), 2)
+    for (data in list(full, full[seq_len(nrow(full)) %% 7 != 0, ])) {
+      joint <- mfrm_multivariate_gstudy(data, scores, rater = rater, method = "minque0")
+      one <- mfrm_multivariate_gstudy(data, scores[1L], rater = rater, method = "minque0")
+      expect_equal(one$components,
+        lapply(joint$components, function(a) a[1L, 1L, drop = FALSE]), tolerance = 1e-11)
+      if (nrow(data) == nrow(full)) {
+        anova <- mfrm_multivariate_gstudy(data, scores[1L], rater = rater)
+        expect_equal(one$components, anova$components, tolerance = 1e-11)
+      }
+      grid <- if (is.null(rater)) data.frame(Tasks = 5L) else data.frame(Raters = 2L, Tasks = 3L)
+      individual <- mfrm_multivariate_d_study(one, grid)$coefficients
+      combined <- mfrm_multivariate_d_study(joint, grid)$coefficients
+      expect_equal(individual[measures], combined[combined$Score == scores[1L], measures],
+        tolerance = 1e-11, ignore_attr = TRUE)
+    }
   }
 })
 
@@ -492,8 +722,13 @@ test_that("sparse covariance identification is separate from graph connectedness
   expect_identical(g$estimation$rank, 3L)
   expect_false(all(g$component_diagnostics$PositiveSemidefinite))
   d <- mfrm_multivariate_d_study(g, data.frame(Tasks = 6), c(V = -1, W = 1))
-  expect_true(all(is.na(d$coefficients$G)))
-  expect_true(all(d$coefficients$Status == "Non-PSD component estimates"))
+  expect_false(any(d$coefficients$ComponentPSD))
+  expect_true(all(is.finite(d$coefficients$G[1:2])))
+  expect_equal(d$coefficients$G[1:2], with(d$coefficients[1:2, ],
+    UniverseVariance / (UniverseVariance + RelativeErrorVariance)))
+  expect_lt(d$coefficients$UniverseVariance[3], 0)
+  expect_true(is.na(d$coefficients$G[3]))
+  expect_identical(d$coefficients$GStatus[3], "Negative universe variance")
 })
 
 test_that("missing-score omission retains one shared multivariate sample and exclusions", {
@@ -534,4 +769,80 @@ test_that("literal facet labels cannot merge different interaction cells", {
     other <- mfrm_multivariate_gstudy(renamed, c("Content", "Organization"), method = method)
     expect_equal(other$components, original$components, tolerance = 1e-11)
   }
+})
+
+test_that("rater-only and named one-facet models preserve the reference calculations", {
+  data <- mvgt_common_task_data()
+  data$Assessor <- data$Task
+  for (method in c("anova", "minque0")) {
+    reference <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL, method = method)
+    g <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = "Assessor", task = NULL,
+      method = method)
+    expect_identical(g$design$counts, c(Person = 10L, Rater = 6L))
+    expect_identical(names(g$components), c("Person", "Rater", "Residual"))
+    expect_equal(unname(g$components), unname(reference$components))
+    expect_output(print(g), "10 persons, 6 raters")
+    d <- mfrm_multivariate_d_study(g, weights = c(V = -1, W = 1))
+    expect_identical(d$design_grid, data.frame(Raters = 6L))
+    expect_output(print(d), "Means over common random raters;")
+    expect_equal(d$coefficients[-2L],
+      mfrm_multivariate_d_study(reference, weights = c(V = -1, W = 1))$coefficients[-2L])
+    # Display labels need not be syntactic R identifiers.
+    named <- mfrm_multivariate_gstudy(data, c("V", "W"),
+      facets = c("Test occasion" = "Assessor"), method = method)
+    expect_identical(named$design$facets, c("Test occasion" = "Assessor"))
+    expect_equal(unname(named$components), unname(reference$components))
+    named_d <- mfrm_multivariate_d_study(named)
+    expect_identical(names(named_d$design_grid), "Test occasion")
+    expect_true("Test occasion" %in% names(named_d$coefficients))
+    expect_identical(named_d$coefficients$G, d$coefficients$G[1:2])
+  }
+})
+
+test_that("named facets preserve two-facet estimates and projections after reordering", {
+  data <- mvgt_fixture()$data
+  data$Assessor <- data$Rater
+  data$Session <- data$Task
+  scores <- c("Content", "Organization")
+  for (method in c("anova", "minque0")) {
+    if (method == "minque0") data <- data[-c(1, 12, 29), ]
+    reference <- mfrm_multivariate_gstudy(data, scores, method = method)
+    g <- mfrm_multivariate_gstudy(data, scores,
+      facets = c(Occasion = "Session", Rater = "Assessor"), method = method)
+    expect_equal(unname(g$components), unname(reference$components[c(1, 3, 2, 5, 4, 6, 7)]),
+      tolerance = 1e-10)
+    d <- mfrm_multivariate_d_study(g, data.frame(Rater = c(2, 4), Occasion = c(3, 6)),
+      c(Content = .6, Organization = .4))
+    expected <- mfrm_multivariate_d_study(reference,
+      data.frame(Raters = c(2, 4), Tasks = c(3, 6)), c(Content = .6, Organization = .4))
+    expect_identical(names(d$design_grid), c("Occasion", "Rater"))
+    expect_equal(d$coefficients[-c(2, 3)], expected$coefficients[-c(2, 3)], tolerance = 1e-10)
+    expect_equal(d$covariances, expected$covariances, tolerance = 1e-10)
+    if (method == "minque0") expect_error(mfrm_multivariate_d_study(g), "explicit.*design_grid")
+  }
+  # Existing saved results without the new count mapping remain readable.
+  old <- mfrm_multivariate_gstudy(mvgt_fixture()$data, scores)
+  expected <- mfrm_multivariate_d_study(old)$coefficients
+  old$design$count_columns <- old$design$facets <- NULL
+  expect_equal(mfrm_multivariate_d_study(old)$coefficients, expected)
+})
+
+test_that("facet specifications refuse unsupported models and conflicting identities", {
+  data <- mvgt_fixture()$data
+  scores <- c("Content", "Organization")
+  for (facets in list(character(), c("Rater", "Task", "Person"), c("Rater", "Rater"),
+      c(Occasion = "Absent"), c(Occasion = NA_character_), setNames("Task", ""),
+      c(Score = "Task"), c(Residual = "Task"), c(Panel = "Task"), c("A:B" = "Task"),
+      c(Occasion = "Rater", Occasion = "Task"))) {
+    expect_error(mfrm_multivariate_gstudy(data, scores, facets = facets))
+  }
+  expect_error(mfrm_multivariate_gstudy(data, scores, facets = "Task", rater = NULL), "either")
+  expect_error(mfrm_multivariate_gstudy(data, scores, facets = "Rater", task = NULL), "either")
+  # Selecting a facet never averages away repetitions from an omitted facet.
+  expect_error(mfrm_multivariate_gstudy(data, scores, facets = "Rater"), "Duplicate")
+  g <- mfrm_multivariate_gstudy(data, scores, facets = c("Rater", "Task"))
+  expect_identical(names(g$design$counts), c("Person", "Rater", "Task"))
+  expect_error(mfrm_multivariate_d_study(g, data.frame(Raters = 2, Tasks = 3)), "Rater and Task")
+  g$design$count_columns[1] <- "Score"
+  expect_error(mfrm_multivariate_d_study(g), "count identities")
 })

@@ -4,7 +4,7 @@
 \alias{mfrm_multivariate_gstudy}
 \alias{print.mfrm_multivariate_gstudy}
 \alias{summary.mfrm_multivariate_gstudy}
-\title{Multivariate G-study for complete or incomplete crossed rating data}
+\title{Multivariate G-study for crossed or nested rating data}
 \usage{
 mfrm_multivariate_gstudy(
   data,
@@ -13,7 +13,9 @@ mfrm_multivariate_gstudy(
   rater = "Rater",
   task = "Task",
   method = c("anova", "minque0"),
-  missing = c("error", "omit")
+  missing = c("error", "omit"),
+  facets = NULL,
+  nesting = NULL
 )
 
 \method{print}{mfrm_multivariate_gstudy}(x, ...)
@@ -21,23 +23,24 @@ mfrm_multivariate_gstudy(
 \method{summary}{mfrm_multivariate_gstudy}(object, ...)
 }
 \arguments{
-\item{data}{A data frame with at most one row per observed Person/Rater/Task
-cell, or per Person/Task cell when \code{rater = NULL}. Do not add rows for
-unassigned cells or code absent scores as zero.}
+\item{data}{A data frame with at most one row per observed combination of
+person and selected facet identifiers. Do not add rows for unassigned
+cells or code absent scores as zero.}
 
 \item{scores}{Names of finite numeric score columns, in the desired order.
 A single column is allowed as the univariate special case. Scores are
 neither standardized nor converted from category labels.}
 
-\item{person, rater, task}{Distinct columns identifying the crossed factors.
-Set \code{rater = NULL} explicitly for a Person-by-Task design without a rater
-facet. Each included factor must have at least two observed levels. Labels
+\item{person, rater, task}{Distinct columns identifying persons and facets.
+By default both rater and task facets are included. Set \code{rater = NULL}
+for Person-by-Task, or \code{task = NULL} for Person-by-Rater. At least one
+facet is required. Each included factor must have at least two observed levels. Labels
 may be character, factor, finite numeric, or logical. Blank or infinite
 labels fail; missing labels follow \code{missing}.}
 
 \item{method}{\code{"anova"} (default) requires a complete balanced design.
 \code{"minque0"} estimates the same covariance components from a complete or
-incomplete design using identity-working-covariance MINQUE. Neither
+incomplete or unequal design using identity-working-covariance MINQUE. Neither
 method constrains covariance estimates to be positive semidefinite.}
 
 \item{missing}{\code{"error"} (default) refuses missing selected scores or
@@ -46,34 +49,65 @@ every score's analysis and retains exclusion accounting. It does not
 impute values or correct missing-data bias. Infinite/nonnumeric scores
 are always refused.}
 
+\item{facets}{Optional character vector selecting one or two common random
+facets instead of \code{rater}/\code{task}, for example
+\code{c(Rater = "Assessor", Occasion = "Session")}. Values identify data
+columns; names label covariance components, D-study count columns, and
+plots. An unnamed vector uses the column names as labels. Labels must be
+unique and nonblank, contain no \code{:}, and not use reserved result names
+such as \code{Person}, \code{Residual}, \code{Score}, \code{Scenario}, or plotting fields.
+Do not supply \code{rater} or \code{task} together with \code{facets}. \code{person} and
+\code{scores} remain explicit. \code{NULL} preserves the task/rater interface.}
+
+\item{nesting}{Optional named character vector specifying one measurement
+facet nested within the other, for example \code{c(Rater = "Task")}.
+The name is the child facet label and the value is its parent label;
+with \code{facets}, use its labels rather than input column names. Persons
+remain crossed with these conditions. Child identities are local to each
+parent: R1 within Task 1 differs from R1 within Task 2. \code{NULL} (default)
+specifies crossed facets. See "Nested measurement facets" below.}
+
 \item{x, object}{A result from the corresponding G-study or D-study function.}
 
 \item{...}{Reserved for method compatibility.}
 }
 \value{
-An \code{mfrm_multivariate_gstudy} list with \code{components} (three or seven
+An \code{mfrm_multivariate_gstudy} list with \code{components} (three, five, or seven
 named covariance matrices), ANOVA \code{mean_products} and \code{degrees_of_freedom}
 (\code{NULL} for MINQUE), \code{estimation} (MINQUE moment matrices and diagnostics,
 \code{NULL} for ANOVA), \code{data_usage} (input/used/excluded counts, excluded input
 row positions and missing cells),
 \code{component_diagnostics}, \code{score_scale} (observed SDs used only for matrix
-diagnostics), \code{design} (column identities, levels, counts, method, and
-score convention, completeness and observed cell fraction), and \code{data}
+diagnostics), \code{design} (\code{facets} maps facet labels to input columns and
+\code{count_columns} maps those labels to D-study columns; also levels, counts, method, and
+score convention, \code{nesting}, \code{child_counts}, completeness, balance,
+potential cells and observed cell fraction), and \code{data}
 (the retained selected input columns).
 }
 \description{
 Estimate observed-score variance-covariance components for fixed score
-components in Person-by-Rater-by-Task data, or Person-by-Task data when
-\code{rater = NULL}. Use balanced ANOVA for a complete design or explicitly
-select MINQUE(0) for an incomplete observed design. Included raters and
-tasks have common identities across scores. This is not an MFRM fit.
+components with one or two common random measurement facets, such as
+raters, tasks, or occasions. Use balanced ANOVA for a complete design or
+explicitly select MINQUE(0) for incomplete or unequal observed designs. Conditions
+have common identities across persons and scores. This is not an MFRM fit.
 }
 \details{
 Every retained cell must have every selected score. Duplicate
-cells and nested/local facet identities are not supported. The same
-identifier must denote the same rater or task across persons and scores.
+cells are not supported. The same identifier (parent/child pair for a
+nested child) must denote the same condition across persons and scores.
 Equal level counts alone cannot establish that identity or random sampling
 from the intended universe.
+
+Choose facets from the intended use of scores: common raters for judging
+performances, common tasks for sampling content, or common occasions for
+repeat assessments. All selected facets are random and, unless \code{nesting}
+is supplied, fully crossed; \code{method = "minque0"} permits incomplete observations
+of that model. Naming a column Occasion does not model growth, practice,
+trends, or serial correlation. Its levels must be defensibly treated as
+exchangeable conditions under the stated random-effects assumptions.
+Score columns are fixed components of the assessment, not another random
+facet. Three or more facets, fixed measurement facets, nesting within
+persons, and partial sharing across score components are not supported.
 
 MINQUE(0) models a common mean for each score and independent, zero-mean
 random effects with a common covariance matrix for each component. With
@@ -91,6 +125,13 @@ these equations. \code{estimation} retains the rank, scaled eigenvalues,
 condition number, and per-component replication counts. These are design
 and numerical diagnostics, not precision estimates or model-fit tests.
 Graph connectedness alone does not establish component identifiability.
+For example, four tasks scored by two distinct raters per performance
+and eight tasks scored once have the same per-person workload. Only the
+former provides repeated ratings within a Person/Task cell; with one
+rating per cell, Person-by-Task and residual variation cannot be separated
+in the seven-component model. Other overlaps are still needed for the
+remaining components. Uneven workloads across raters can also affect
+precision even when the moment system has full rank.
 
 Conditioning on the observed assignments must preserve the stated
 random-effect means and covariances. Outcome-dependent assignment or
@@ -98,16 +139,18 @@ missingness may violate this assumption; calling missingness MAR does
 not correct omitted covariates or selection. Review planned assignments
 separately from recorded scores, for example with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}
 and its \code{expected_design} argument. \code{design$observed_fraction} uses the
-cross-product of retained observed levels; it is not an assignment
+cross-product of retained observed levels for crossed facets, or persons
+times the number of observed parent/child pairs for nested facets. It is not an assignment
 completion rate and cannot reveal entirely unobserved persons or facets.
 
-With a rater facet, the seven components are \code{Person}, \code{Rater}, \code{Task}, \code{Person:Rater},
+With crossed rater and task facets, the seven components are \code{Person}, \code{Rater}, \code{Task}, \code{Person:Rater},
 \code{Person:Task}, \code{Rater:Task}, and \code{Residual}. With one observation per cell,
 \code{Residual} combines the three-way interaction and within-cell error;
-they cannot be separated. When \code{rater = NULL}, the three components are
-\code{Person}, \code{Task}, and \code{Residual}; the last combines Person-by-Task
-interaction and within-cell error. Omitting a rater facet does not remove
-rater effects from scores or support generalization to new raters. No
+they cannot be separated. With one facet, the three components are
+\code{Person}, the facet, and \code{Residual}; the last combines Person-by-facet
+interaction and within-cell error. Labels supplied in \code{facets} replace
+Rater/Task in these component names. Omitting a facet does not remove its
+effects from scores or support generalization to new conditions of that facet. No
 scores are averaged automatically. Each component is a matrix whose
 diagonal contains variances and whose off-diagonal contains covariances between
 scores. For ANOVA, mean products replace the mean squares used for a
@@ -118,18 +161,85 @@ matrices, are retained without clipping or nearest-PSD repair. The
 \code{component_diagnostics} assess eigenvalues after scaling by the observed
 score SDs, using a relative numerical tolerance. This is a numerical
 admissibility check, not a significance test or precision assessment.
-Rank-deficient components are reported. If any component is materially
-non-PSD, \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} retains raw projected variances but
-withholds all coefficients and SEMs.
+Rank-deficient components are reported. \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}
+retains raw projected variances and evaluates each score/composite and
+metric separately. A non-PSD component does not automatically withhold
+coefficients: for example, Rater-by-Task does not enter relative error.
+D-study tables and plots flag non-PSD components even when a requested
+projection can be calculated. Inspect these diagnostics before using it.
+Non-PSD estimates can arise from sampling variation even under a correctly
+specified model, particularly when a true component is small or zero.
+They do not by themselves prove bad data, informative missingness, or
+model misspecification. Automatic clipping or deleting a component would
+change the estimation procedure and is not performed.
+Distinguish \code{estimation$rank}, the number of separable components, from
+\code{component_diagnostics$Rank}, the rank of each between-score covariance
+matrix. A true zero covariance component can have matrix rank zero
+while the design still separates that component from the others.
 
 The model concerns numeric observed scores. Treating ordered categories
 as numeric does not estimate latent ordinal or MFRM reliability. The
 mGENOVA Appendix E example checks balanced numerical calculations;
 MINQUE(0) additionally agrees with direct covariance-kernel calculations
 for incomplete designs. These checks do not establish population recovery
-for arbitrary sparse assignments or missingness mechanisms. No sampling
-intervals or variance-component uncertainty propagation are provided.
+for arbitrary sparse assignments or missingness mechanisms. This function
+returns point estimates, not sampling intervals.
 }
+\section{Nested measurement facets}{
+
+Suppose each task has its own rater team, and each team rates the same
+persons on both Content and Organization. Use \code{nesting = c(Rater = "Task")}
+for Person crossed with Rater-within-Task. The five components are
+\code{Person}, \code{Task}, \code{Rater(Task)}, \code{Person:Task}, and \code{Residual}. The last
+combines Person-by-Rater-within-Task interaction and within-cell error.
+There is no separately estimated common Rater or Rater-by-Task component.
+A rater who actually works across tasks is not an independent nested
+rater; changing their identifier cannot establish independence.
+
+ANOVA requires all persons at every observed parent/child combination
+and the same number of children per parent. MINQUE(0) also permits missing
+cells and unequal child counts when its moment equations separate the
+five components. Having only one child per parent confounds parent and
+child components. Neither method corrects informative assignments.
+
+\code{design$counts["Rater"]} is the total number of distinct task/rater
+pairs; \code{design$child_counts} gives the rater count within each task.
+\code{design$levels} retains the original labels, interpreted locally for the
+child facet. A design is \code{complete} when every person has every observed
+nested condition, and \code{balanced} when it also has equal child counts.
+In a future D-study, \code{Raters} instead means raters per task: two raters
+for each of six tasks use twelve distinct raters and twelve ratings per
+person. Future designs preserve this nesting and have equal child counts.
+Other two-facet names and the opposite nesting direction follow the same
+rules; nesting within persons and score-specific child identities do not.
+}
+
+\section{Reviewing incomplete designs}{
+
+Begin with the planned roster and \code{data_usage} to distinguish unassigned
+cells from missing assigned ratings. Then inspect \code{estimation} for
+component separation and replication, \code{component_diagnostics} for
+covariance admissibility, and the D-study metric-specific status columns
+(\code{GStatus}, \code{PhiStatus}, \code{RelativeSEMStatus}, \code{AbsoluteSEMStatus}) before
+reading the corresponding result. None of these checks estimates sampling
+precision or identifies the missingness mechanism. No fixed percentage of observed cells,
+condition-number cutoff, or passed matrix check establishes adequate
+precision. D-studies project future complete balanced designs. The separate
+\code{\link[=mfrm_multivariate_d_compare]{mfrm_multivariate_d_compare()}} offers approximate normal-theory intervals
+for prespecified differences in two-facet crossed designs; nested-design
+intervals are not currently available.
+
+For the same rating workload, changing rater overlap or concentrating
+assignments can change estimation precision. Omitting ratings selected
+by their scores can introduce bias even when every requested coefficient
+is calculable. Neither a returned coefficient nor agreement with another
+program determines whether these assumptions suit the user's assessment.
+Observed pool sizes concern estimation in the G-study; they differ from
+the per-person counts in a future D-study scenario. Review which tasks
+and raters are shared and whether recorded ratings represent the intended
+population and conditions before interpreting a projected improvement.
+}
+
 \examples{
 # Common tasks, without a rater facet: Brennan's published synthetic data.
 # mGENOVA manual Table 12: 10 persons, 6 common items, two scores V and W.
@@ -153,14 +263,15 @@ g_sparse$component_diagnostics
 # Explicit future COMPLETE designs, not reliability of the sparse roster.
 d_sparse <- mfrm_multivariate_d_study(g_sparse,
   data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
-d_sparse$coefficients # Non-PSD components withhold G/Phi and SEMs.
+d_sparse$coefficients # Read metric status and ComponentPSD separately.
 
 # Fictional continuous scores, with two correlated score components.
 set.seed(2026)
-ratings <- expand.grid(Person = 1:40, Rater = 1:8, Task = 1:6)
+# Here occasions are exchangeable repeat assessments, without a time trend.
+ratings <- expand.grid(Person = 1:40, Assessor = 1:8, Session = 1:6)
 ratings$Content <- ratings$Organization <- 0
-sources <- list("Person", "Rater", "Task", c("Person", "Rater"),
-  c("Person", "Task"), c("Rater", "Task"), c("Person", "Rater", "Task"))
+sources <- list("Person", "Assessor", "Session", c("Person", "Assessor"),
+  c("Person", "Session"), c("Assessor", "Session"), c("Person", "Assessor", "Session"))
 for (source in sources) {
   group <- interaction(ratings[source], drop = TRUE)
   effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
@@ -168,17 +279,50 @@ for (source in sources) {
   ratings[c("Content", "Organization")] <-
     ratings[c("Content", "Organization")] + effect[as.integer(group), ]
 }
-g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"))
+g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"),
+  facets = c(Rater = "Assessor", Occasion = "Session"))
 g$components$Person
 g$component_diagnostics
 d <- mfrm_multivariate_d_study(g,
-  design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
+  design_grid = data.frame(Rater = c(2, 4), Occasion = c(3, 3)),
   weights = c(Content = 0.6, Organization = 0.4))
 d$coefficients
 # Difference-score dependability, when subtraction is meaningful on these scales.
 difference <- mfrm_multivariate_d_study(g,
   weights = c(Content = 1, Organization = -1))
 difference$coefficients
+
+# Rater-only planning for one occasion; no generalization across occasions.
+one_session <- ratings[ratings$Session == 1, ]
+g_rater <- mfrm_multivariate_gstudy(one_session, c("Content", "Organization"),
+  rater = "Assessor", task = NULL)
+d_rater <- mfrm_multivariate_d_study(g_rater, data.frame(Raters = c(1, 2, 4)))
+plot(d_rater, score = "Content")
+
+# Different rater teams for different tasks; shared persons and scores.
+# Fictional continuous scores with five independent random-effect sources.
+set.seed(2027)
+nested <- expand.grid(Person = 1:30, Task = 1:6, Rater = paste0("R", 1:3))
+nested$Content <- nested$Organization <- 0
+sources <- list("Person", "Task", c("Task", "Rater"),
+  c("Person", "Task"), c("Person", "Task", "Rater"))
+for (source in sources) {
+  group <- interaction(nested[source], drop = TRUE)
+  effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
+  effect <- effect \%*\% matrix(c(1, 0, 0.4, 1), 2)
+  nested[c("Content", "Organization")] <-
+    nested[c("Content", "Organization")] + effect[as.integer(group), ]
+}
+g_nested <- mfrm_multivariate_gstudy(nested, c("Content", "Organization"),
+  nesting = c(Rater = "Task"))
+g_nested$design$child_counts # Three raters per task; eighteen in total.
+g_nested$component_diagnostics
+d_nested <- mfrm_multivariate_d_study(g_nested,
+  expand.grid(Raters = c(2, 3), Tasks = c(4, 6)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d_nested)
+plot(d_nested, x_var = "Raters") # Raters on the axis means raters PER TASK.
+plot(d_nested, x_var = "Tasks", type = "sem")
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
@@ -186,6 +330,10 @@ Chapters 9--11.
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
 Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
 Table 12 (page 32) and Appendix E (pages 74--77).
+
+Brennan, R. L. (1992). Generalizability theory.
+\emph{Educational Measurement: Issues and Practice}, 11(4), 27--34.
+Equations 13--16 and Table 3.
 
 Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
 theory. \emph{Journal of Multivariate Analysis}, 1, 257--275.

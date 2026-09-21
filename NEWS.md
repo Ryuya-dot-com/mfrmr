@@ -1,129 +1,99 @@
-# mfrmr 0.2.4.9001
-
-This unreleased development version extends the 0.2.4 release candidate.
-
-* `as_ggplot()` now preserves multivariate D-study G/Phi or SEM panels,
-  facet counts, score selection, and unavailable estimates. Previously,
-  automatic conversion could plot scenario numbers instead of the selected
-  metrics. Main-effects `mfrm_d_study` plots now refuse that misleading
-  automatic fallback; use their base `plot()` method or `plot_data()`.
-* Main-effects D-study curves now distinguish every other facet count,
-  including designs with three or more random facets, and retain gaps for
-  unavailable estimates. Surface plots require remaining conditions and
-  residual assumptions to be fixed within each panel, preventing silent
-  cell overwrites. Facet labels identify conditions, count axes use planned
-  counts, and heatmaps have a numeric color key. A dedicated plot help page
-  explains the required settings and points to the G/D-study workflow with
-  separately estimated interactions where applicable. One-column panel grids
-  now create panels, and two-column grids follow the specified row/column order.
-* Multivariate D-studies now have `plot()` methods for G/Phi and relative/
-  absolute SEM, with separate panels, explicit score/composite labels and
-  fixed-count rater/task comparisons. Unavailable results retain their reasons
-  rather than appearing as zero. `draw = FALSE` and `plot_data()` expose the
-  plotted values. The D-study help explains planning questions, metric choice,
-  mean-score units, future complete-design assumptions, and runnable examples.
-* `mfrm_multivariate_gstudy(method = "minque0")` now estimates covariance
-  components from incomplete crossed Person-by-Task or Person-by-Rater-by-Task
-  data. It checks whether the observed configuration separates the components
-  and retains moment-system diagnostics. Missing selected values still stop
-  by default; `missing = "omit"` uses one shared complete-row sample and
-  records exclusions. These calculations do not impute scores or correct
-  informative assignment or nonresponse. D-studies from incomplete data
-  require an explicit future complete-design grid; observed level counts
-  are not interpreted as per-person replication. Non-PSD components continue
-  to withhold coefficients and SEMs, and sampling intervals are not provided.
-* Multivariate G-study interactions now keep distinct combinations of facet
-  IDs containing periods separate. Rerun affected analyses whose IDs could
-  previously form the same concatenated interaction label.
-* `mfrm_multivariate_gstudy()` now also accepts complete Person-by-Task data
-  when `rater = NULL`. It estimates Person, Task, and combined
-  Person-by-Task/residual covariance components. Its D-study uses a `Tasks`
-  column alone, without introducing rater effects or averaging observations.
-  The help includes Brennan's published synthetic two-score data and a
-  difference-score example.
-* Added `mfrm_multivariate_gstudy()` and `mfrm_multivariate_d_study()` for
-  complete, balanced Person-by-Rater-by-Task data with fixed score components
-  and common random raters/tasks. Multivariate ANOVA estimates seven
-  variance-covariance components, including two-way interactions and a combined
-  highest-order/residual component. D-studies project component and optional
-  user-weighted composite G/Phi and SEMs using the full covariance matrices.
-  Signed weights allow difference-score dependability; weights are used
-  without normalization on the supplied score scales.
-  Raw negative or indefinite estimates are retained; materially non-PSD
-  components withhold coefficients and SEMs. These are observed-score point
-  projections, without sampling intervals, missing-data correction,
-  nested-design models, or latent MFRM reliability. Help includes a runnable
-  two-score example. These functions are not part of the 0.2.4 release candidate.
-* `mfrm_cluster_compare()` now compares different feature selections on the
-  same entities, reporting feature counts and selected weights. Shared
-  features must retain their values and types. For multiply imputed results,
-  different selections must reuse the same fitted `mids` object and preserve
-  completion pairing. Selections containing only complete attributes can
-  use an empty `impute` table with `mfrm_cluster_imputed()`. The tutorial
-  demonstrates omitting workload while keeping the imputation model fixed.
-* Extended the external-feature tutorial with separate person, rater, and
-  task groupings linked to rating assignments by ID. It distinguishes
-  unassigned ratings, missing assigned scores, and missing or undefined
-  attributes; demonstrates assignment coverage and connectivity review;
-  and explains the roles and limits of feature weighting, PCA, and k-means.
-* Added `mfrm_cluster_hierarchical()` for Gower-based average or complete
-  linkage, retaining the full tree, a chosen group cut, profiles, and
-  silhouettes. Its `plot()` method draws the stored dendrogram. Hierarchical
-  analyses can also be run within `mfrm_cluster_imputed()` and compared with
-  PAM using the same completed data. Comparison tables now identify methods
-  and linkages. Trees are specific to each completion; no pooled hierarchy
-  or branch-support estimate is provided.
-* Added `plot()` methods for exploratory clustering results: silhouettes,
-  single-feature profiles, and pairwise co-membership heatmaps across
-  imputations. Plots reuse stored results, retain excluded IDs in their data,
-  distinguish unavailable pairs from zero co-membership, and support
-  `draw = FALSE` for custom graphics. PAM remains nonhierarchical.
-* Added a complete rater-attribute tutorial using fictional experience,
-  workload, specialty, training, and certification data. It covers missingness
-  reasons, explicit imputation models, group profiles, and comparisons across
-  group counts and weights, including the distinction between unrecorded and
-  inapplicable attributes.
-* Added `mfrm_features()` to prepare one row per Person, rater, or other entity
-  from explicitly selected external attributes. It retains feature types,
-  missing cells, user-supplied missingness reasons, and all entity identifiers.
-* Added `mfrm_cluster()` for exploratory grouping using Gower distances and
-  PAM. Users choose the number of groups and feature weights. Numeric ranges,
-  cluster profiles, representative entities, and silhouette widths are retained.
-  Missing values stop clustering by default; explicit complete-case selection
-  retains excluded entities with unavailable memberships. This function does
-  not impute values, assess stability, or establish latent classes or rater
-  quality. These functions are not part of the 0.2.4 release candidate.
-* Added `mfrm_cluster_imputed()` to compare exploratory groups across external
-  feature imputations fitted with `mice`. Users explicitly select eligible
-  missing cells; IDs, observed values, remaining missingness, original reasons,
-  and model diagnostics are preserved. All imputations enter pairwise
-  co-membership proportions; a failed analysis stops the comparison. These
-  proportions describe sensitivity to the supplied imputations, not membership
-  probabilities, sampling stability, or pooled inferential estimates.
-* Added `mfrm_cluster_compare()` to compare existing groupings across group
-  counts and feature weights without refitting. It reports label-invariant
-  pair changes and adjusted Rand indices, retaining group sizes, silhouettes,
-  and weights. Multiple-imputation results are compared within the same
-  completed feature tables; different data or included entities are refused.
-  Across-imputation summaries are descriptive, without pooled inference or
-  automatic selection of a setting.
-* External-feature clustering now refuses numeric-range overflow and relative
-  weight underflow, which could otherwise silently remove a feature's
-  contribution to distances. Rescale affected features or revise weight ratios
-  before rerunning affected analyses.
-* `mfrm_generalizability()` now stops on missing scores or selected facet
-  values unless `missing = "omit"` is explicit. Unparseable scores and infinite
-  values are refused rather than silently discarded. G/D results retain input,
-  used, and excluded row counts, their input source, and excluded row positions
-  with missing columns. When stored fitted rows are used, these counts exclude
-  earlier MFRM filtering. Older saved results keep unavailable counts; rerun
-  the G-study with its original data to obtain this accounting. Omission does
-  not impute ratings or correct missing-data bias.
-
 # mfrmr 0.2.4
 
-This version adds reusable calibration and new-Person scoring, and corrects
-uncertainty, subgroup comparisons and design recommendations in existing workflows.
+Unreleased release candidate. This version combines reusable calibration and
+new-Person scoring, external-feature clustering and multivariate G/D-studies,
+with corrections to uncertainty, subgroup comparisons and design planning.
+
+## Multivariate G-theory and assessment planning
+
+* Added `mfrm_multivariate_gstudy()` and `mfrm_multivariate_d_study()` for
+  numeric observed scores with fixed score components and one or two random
+  measurement facets. A single score is also supported. Select common tasks,
+  raters or other named facets through `rater`/`task` or `facets`. ANOVA handles
+  complete balanced data; explicit `method = "minque0"` also handles incomplete
+  designs whose moment equations separate the covariance components.
+* Specify `nesting = c(Rater = "Task")` for persons crossed with task-specific
+  rater teams. This estimates five components, with child identities local to
+  each parent and shared across persons and scores. MINQUE(0) also permits
+  unequal observed team sizes. D-studies preserve the fitted nesting and
+  project complete balanced plans; `Raters` means raters per task. Nesting
+  within persons, partly shared children, score-specific identities and unequal
+  future allocations remain unsupported.
+* D-studies report original scores and named weighted composites, including
+  signed differences. Vector or matrix weights are used without normalization;
+  between-score covariances enter composite projections. Incomplete or unequal
+  source designs require an explicit future grid. Observed pool counts are not
+  future per-person replication or the reliability of a sparse roster.
+* Raw negative or indefinite covariance estimates are retained. Each score,
+  composite and metric has its own availability status: a non-PSD component
+  no longer suppresses every G/Phi/SEM. `ComponentPSD` separately flags the
+  component matrices for review. Zero universe variance gives zero G/Phi when
+  the corresponding error is positive; zero total variance is undefined.
+  Recompute saved D-studies from their G-studies to adopt these rules.
+* Added `mfrm_multivariate_d_compare()` for prespecified differences in G, Phi
+  and SEM between future plans from the same two-crossed-facet G-study.
+  Explicit `assumption = "normal"` requests approximate pointwise paired-delta
+  intervals, preserving dependence between plans. Complete ANOVA and incomplete
+  MINQUE(0) sources are supported. Nonnormal-robust, one-facet, nested and
+  simultaneous intervals are not provided. Unavailable intervals retain their
+  reasons; a returned point estimate need not have an available interval.
+* G/D-study help provides runnable examples, including task-only, named-facet,
+  nested-team and composite planning. It distinguishes ranking from absolute
+  decisions, measurement error from sampling uncertainty, planned assignments
+  from missing scores, and component identification from precision. G/Phi are
+  not pass/fail accuracy or latent MFRM reliability. Omitting missing rows does
+  not impute scores or correct informative assignment. Guidance explains raw
+  negative-component conventions when comparing GENOVA-family results.
+* D-study base plots and ggplot exports preserve selected scores, weights,
+  planned counts, metric-specific omissions and component diagnostics. Nested
+  child counts are labeled per parent. Plan-comparison plots show differences
+  and intervals against zero; `plot_data()` supplies their exact values.
+  Automatic ggplot conversion is unsupported for plan-comparison plots.
+* Corrected single-score MINQUE(0) matrix handling and kept distinct interaction
+  IDs containing periods separate. Rerun affected G-studies. Main-effects
+  D-study curves now distinguish every other facet count and retain missing
+  estimates; surface plots require other conditions to be fixed within panels.
+  Their automatic ggplot fallback is disabled because it could misrepresent
+  the selected quantities.
+* `mfrm_generalizability()` now requires explicit `missing = "omit"` for missing
+  scores or selected facet values, refuses malformed scores, and retains input,
+  used and excluded row accounting. Older saved results require a new G-study
+  from original data to obtain that accounting; an MFRM refit is unnecessary.
+
+## External features and exploratory groups
+
+* Added `mfrm_features()` to prepare one row per Person, rater or task from
+  selected external attributes, preserving types, IDs and missingness reasons.
+  `mfrm_cluster()` uses Gower distances and PAM; `mfrm_cluster_hierarchical()`
+  uses average or complete linkage and retains a dendrogram. Users choose
+  features, weights and group counts. Results include profiles, silhouettes
+  and, for PAM, representative entities. Groups do not establish latent classes,
+  ability levels or rater quality.
+* Missing features stop clustering by default; explicit complete-case selection
+  preserves excluded IDs with unavailable memberships. Numeric-range overflow
+  and relative-weight underflow are refused rather than silently changing
+  feature contributions.
+* `mfrm_cluster_imputed()` uses user-fitted `mice` completions and explicitly
+  selected eligible missing cells. IDs, observed values, remaining missingness,
+  reasons and model diagnostics are preserved. Pairwise co-membership proportions
+  describe sensitivity to those completions, not membership probabilities or
+  pooled inference. A failed analysis stops the comparison; hierarchical trees
+  remain specific to each completion.
+* `mfrm_cluster_compare()` compares fitted groupings across group counts,
+  weights, feature selections and methods without refitting. It reports
+  label-invariant pair changes, adjusted Rand indices, sizes and silhouettes.
+  Analyses must contain the same entities, and shared features must retain their
+  values and types. Imputation comparisons must reuse the same fitted `mice`
+  object and preserve completion pairing; no setting is selected automatically.
+* Plots show silhouettes, feature profiles, stored hierarchies and imputation
+  co-membership heatmaps. `plot_data()` retains plotted values and exclusions,
+  distinguishing unavailable pairs from zero co-membership. Automatic
+  `as_ggplot()` conversion is refused because its generic fallback could display
+  cluster numbers or mislabel the intended quantities.
+* The external-feature tutorial uses fictional experience, workload, specialty,
+  training and certification attributes. It covers separate Person/rater/task
+  groupings linked to assignments, missingness and imputation choices, setting
+  comparisons, sparse designs, and the roles and limits of PCA and k-means.
 
 ## Updating saved analyses
 

@@ -100,6 +100,8 @@ groups. Labels are shown for at most 50 included entities by default; hiding
 labels does not sample or remove entities. Excluded entities have no leaves
 but remain in the result and plot data. Silhouette and feature-profile views
 reuse \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}}. Plots do not refit or choose groups.
+Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion is not supported; use \code{plot()} for the
+stored hierarchy or \code{\link[=plot_data]{plot_data()}} to extract it for custom graphics.
 
 Use \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}} to compare this partition with PAM or another
 linkage on the same data. For multiple imputations, use

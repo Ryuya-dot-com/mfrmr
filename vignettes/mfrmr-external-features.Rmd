@@ -28,7 +28,7 @@ Later sections add separate person and task attributes, link all three
 classifications to a sparse assignment roster, and explain the roles of
 feature selection and PCA.
 
-These APIs belong to development version 0.2.4.9001. Install the optional
+These APIs are available from version 0.2.4. Install the optional
 `cluster` and `mice` packages to run the entire example.
 
 ## Choose attributes and their meaning

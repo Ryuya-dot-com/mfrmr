@@ -957,10 +957,11 @@
     }
   }
   payload$caption <- "Points are requested scenarios; lines are guides."
+  payload$caption <- paste(c(payload$caption, payload$component_note), collapse = "\n")
   if (nrow(payload$unavailable)) payload$caption <- paste(payload$caption,
     sprintf("Unavailable estimates in %d scenario(s); inspect the D-study table for reasons.",
       length(unique(payload$unavailable$Scenario))))
-  .mfrmr_gg_labs(p, payload, x = paste("Number of", tolower(payload$x_var)),
+  .mfrmr_gg_labs(p, payload, x = payload$x_label %||% paste("Number of", tolower(payload$x_var)),
     y = if (coefficients) "Dependability (higher is better)" else "SEM in score units (lower is better)")
 }
 
@@ -976,6 +977,11 @@
 #' score review plots, and multivariate D-study comparisons. D-study conversions
 #' preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
 #' estimates. They do not refit the model or add confidence intervals.
+#' Difference-interval plots from [mfrm_multivariate_d_compare()] use their
+#' base `plot()` method or [plot_data()]; automatic conversion is not supported.
+#' Automatic conversion of exploratory clustering plots is not supported.
+#' Use their `plot()` methods for silhouettes, feature profiles, dendrograms
+#' and imputation co-membership heatmaps, or [plot_data()] for custom graphics.
 #' For main-effects `mfrm_d_study` results, use the base `plot()` method or
 #' [plot_data()] for custom graphics; automatic conversion is refused because
 #' generic column selection does not preserve those design comparisons.
@@ -1083,6 +1089,14 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
   dots <- list(...)
+  if (is.null(component) && identical(x$name, "multivariate_d_comparison")) {
+    stop("Use plot() for D-study difference intervals, or plot_data() for custom graphics; automatic ggplot conversion is not available.", call. = FALSE)
+  }
+  if (is.null(component) && x$name %in% c("cluster_silhouette", "cluster_profile",
+                                        "cluster_dendrogram", "cluster_co_membership")) {
+    stop("Automatic ggplot conversion is not available for exploratory clustering plots. ",
+      "Use plot(x) to preserve the selected view, or plot_data() for custom graphics.", call. = FALSE)
+  }
   if (is.null(component) && identical(x$name, "multivariate_d_study")) {
     return(.mfrmr_gg_multivariate_d_study(payload))
   }

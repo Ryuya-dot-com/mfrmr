@@ -24,6 +24,7 @@
 #'   table or matrix, title, subtitle, legend, and excluded IDs. Heatmaps also
 #'   retain the displayed IDs and the number of imputations. Use [plot_data()]
 #'   to extract this payload for custom graphics.
+#'   Automatic [as_ggplot()] conversion is not supported for these views.
 #' @details
 #' No model or clustering is refitted. Silhouette widths describe separation
 #' in the fitted sample, not stability or probabilities. The dashed line is

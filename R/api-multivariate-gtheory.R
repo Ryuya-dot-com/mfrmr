@@ -1,37 +1,65 @@
-#' Multivariate G-study for complete or incomplete crossed rating data
+#' Multivariate G-study for crossed or nested rating data
 #'
 #' Estimate observed-score variance-covariance components for fixed score
-#' components in Person-by-Rater-by-Task data, or Person-by-Task data when
-#' `rater = NULL`. Use balanced ANOVA for a complete design or explicitly
-#' select MINQUE(0) for an incomplete observed design. Included raters and
-#' tasks have common identities across scores. This is not an MFRM fit.
+#' components with one or two common random measurement facets, such as
+#' raters, tasks, or occasions. Use balanced ANOVA for a complete design or
+#' explicitly select MINQUE(0) for incomplete or unequal observed designs. Conditions
+#' have common identities across persons and scores. This is not an MFRM fit.
 #'
-#' @param data A data frame with at most one row per observed Person/Rater/Task
-#'   cell, or per Person/Task cell when `rater = NULL`. Do not add rows for
-#'   unassigned cells or code absent scores as zero.
+#' @param data A data frame with at most one row per observed combination of
+#'   person and selected facet identifiers. Do not add rows for unassigned
+#'   cells or code absent scores as zero.
 #' @param scores Names of finite numeric score columns, in the desired order.
 #'   A single column is allowed as the univariate special case. Scores are
 #'   neither standardized nor converted from category labels.
-#' @param person,rater,task Distinct columns identifying the crossed factors.
-#'   Set `rater = NULL` explicitly for a Person-by-Task design without a rater
-#'   facet. Each included factor must have at least two observed levels. Labels
+#' @param person,rater,task Distinct columns identifying persons and facets.
+#'   By default both rater and task facets are included. Set `rater = NULL`
+#'   for Person-by-Task, or `task = NULL` for Person-by-Rater. At least one
+#'   facet is required. Each included factor must have at least two observed levels. Labels
 #'   may be character, factor, finite numeric, or logical. Blank or infinite
 #'   labels fail; missing labels follow `missing`.
 #' @param method `"anova"` (default) requires a complete balanced design.
 #'   `"minque0"` estimates the same covariance components from a complete or
-#'   incomplete design using identity-working-covariance MINQUE. Neither
+#'   incomplete or unequal design using identity-working-covariance MINQUE. Neither
 #'   method constrains covariance estimates to be positive semidefinite.
 #' @param missing `"error"` (default) refuses missing selected scores or
 #'   factor identifiers. `"omit"` explicitly excludes any such row from
 #'   every score's analysis and retains exclusion accounting. It does not
 #'   impute values or correct missing-data bias. Infinite/nonnumeric scores
 #'   are always refused.
+#' @param facets Optional character vector selecting one or two common random
+#'   facets instead of `rater`/`task`, for example
+#'   `c(Rater = "Assessor", Occasion = "Session")`. Values identify data
+#'   columns; names label covariance components, D-study count columns, and
+#'   plots. An unnamed vector uses the column names as labels. Labels must be
+#'   unique and nonblank, contain no `:`, and not use reserved result names
+#'   such as `Person`, `Residual`, `Score`, `Scenario`, or plotting fields.
+#'   Do not supply `rater` or `task` together with `facets`. `person` and
+#'   `scores` remain explicit. `NULL` preserves the task/rater interface.
+#' @param nesting Optional named character vector specifying one measurement
+#'   facet nested within the other, for example `c(Rater = "Task")`.
+#'   The name is the child facet label and the value is its parent label;
+#'   with `facets`, use its labels rather than input column names. Persons
+#'   remain crossed with these conditions. Child identities are local to each
+#'   parent: R1 within Task 1 differs from R1 within Task 2. `NULL` (default)
+#'   specifies crossed facets. See "Nested measurement facets" below.
 #'
 #' @details Every retained cell must have every selected score. Duplicate
-#'   cells and nested/local facet identities are not supported. The same
-#'   identifier must denote the same rater or task across persons and scores.
+#'   cells are not supported. The same identifier (parent/child pair for a
+#'   nested child) must denote the same condition across persons and scores.
 #'   Equal level counts alone cannot establish that identity or random sampling
 #'   from the intended universe.
+#'
+#'   Choose facets from the intended use of scores: common raters for judging
+#'   performances, common tasks for sampling content, or common occasions for
+#'   repeat assessments. All selected facets are random and, unless `nesting`
+#'   is supplied, fully crossed; `method = "minque0"` permits incomplete observations
+#'   of that model. Naming a column Occasion does not model growth, practice,
+#'   trends, or serial correlation. Its levels must be defensibly treated as
+#'   exchangeable conditions under the stated random-effects assumptions.
+#'   Score columns are fixed components of the assessment, not another random
+#'   facet. Three or more facets, fixed measurement facets, nesting within
+#'   persons, and partial sharing across score components are not supported.
 #'
 #'   MINQUE(0) models a common mean for each score and independent, zero-mean
 #'   random effects with a common covariance matrix for each component. With
@@ -49,6 +77,13 @@
 #'   condition number, and per-component replication counts. These are design
 #'   and numerical diagnostics, not precision estimates or model-fit tests.
 #'   Graph connectedness alone does not establish component identifiability.
+#'   For example, four tasks scored by two distinct raters per performance
+#'   and eight tasks scored once have the same per-person workload. Only the
+#'   former provides repeated ratings within a Person/Task cell; with one
+#'   rating per cell, Person-by-Task and residual variation cannot be separated
+#'   in the seven-component model. Other overlaps are still needed for the
+#'   remaining components. Uneven workloads across raters can also affect
+#'   precision even when the moment system has full rank.
 #'
 #'   Conditioning on the observed assignments must preserve the stated
 #'   random-effect means and covariances. Outcome-dependent assignment or
@@ -56,16 +91,18 @@
 #'   not correct omitted covariates or selection. Review planned assignments
 #'   separately from recorded scores, for example with [describe_mfrm_data()]
 #'   and its `expected_design` argument. `design$observed_fraction` uses the
-#'   cross-product of retained observed levels; it is not an assignment
+#'   cross-product of retained observed levels for crossed facets, or persons
+#'   times the number of observed parent/child pairs for nested facets. It is not an assignment
 #'   completion rate and cannot reveal entirely unobserved persons or facets.
 #'
-#'   With a rater facet, the seven components are `Person`, `Rater`, `Task`, `Person:Rater`,
+#'   With crossed rater and task facets, the seven components are `Person`, `Rater`, `Task`, `Person:Rater`,
 #'   `Person:Task`, `Rater:Task`, and `Residual`. With one observation per cell,
 #'   `Residual` combines the three-way interaction and within-cell error;
-#'   they cannot be separated. When `rater = NULL`, the three components are
-#'   `Person`, `Task`, and `Residual`; the last combines Person-by-Task
-#'   interaction and within-cell error. Omitting a rater facet does not remove
-#'   rater effects from scores or support generalization to new raters. No
+#'   they cannot be separated. With one facet, the three components are
+#'   `Person`, the facet, and `Residual`; the last combines Person-by-facet
+#'   interaction and within-cell error. Labels supplied in `facets` replace
+#'   Rater/Task in these component names. Omitting a facet does not remove its
+#'   effects from scores or support generalization to new conditions of that facet. No
 #'   scores are averaged automatically. Each component is a matrix whose
 #'   diagonal contains variances and whose off-diagonal contains covariances between
 #'   scores. For ANOVA, mean products replace the mean squares used for a
@@ -76,32 +113,101 @@
 #'   `component_diagnostics` assess eigenvalues after scaling by the observed
 #'   score SDs, using a relative numerical tolerance. This is a numerical
 #'   admissibility check, not a significance test or precision assessment.
-#'   Rank-deficient components are reported. If any component is materially
-#'   non-PSD, [mfrm_multivariate_d_study()] retains raw projected variances but
-#'   withholds all coefficients and SEMs.
+#'   Rank-deficient components are reported. [mfrm_multivariate_d_study()]
+#'   retains raw projected variances and evaluates each score/composite and
+#'   metric separately. A non-PSD component does not automatically withhold
+#'   coefficients: for example, Rater-by-Task does not enter relative error.
+#'   D-study tables and plots flag non-PSD components even when a requested
+#'   projection can be calculated. Inspect these diagnostics before using it.
+#'   Non-PSD estimates can arise from sampling variation even under a correctly
+#'   specified model, particularly when a true component is small or zero.
+#'   They do not by themselves prove bad data, informative missingness, or
+#'   model misspecification. Automatic clipping or deleting a component would
+#'   change the estimation procedure and is not performed.
+#'   Distinguish `estimation$rank`, the number of separable components, from
+#'   `component_diagnostics$Rank`, the rank of each between-score covariance
+#'   matrix. A true zero covariance component can have matrix rank zero
+#'   while the design still separates that component from the others.
 #'
 #'   The model concerns numeric observed scores. Treating ordered categories
 #'   as numeric does not estimate latent ordinal or MFRM reliability. The
 #'   mGENOVA Appendix E example checks balanced numerical calculations;
 #'   MINQUE(0) additionally agrees with direct covariance-kernel calculations
 #'   for incomplete designs. These checks do not establish population recovery
-#'   for arbitrary sparse assignments or missingness mechanisms. No sampling
-#'   intervals or variance-component uncertainty propagation are provided.
+#'   for arbitrary sparse assignments or missingness mechanisms. This function
+#'   returns point estimates, not sampling intervals.
 #'
-#' @return An `mfrm_multivariate_gstudy` list with `components` (three or seven
+#' @section Nested measurement facets:
+#'   Suppose each task has its own rater team, and each team rates the same
+#'   persons on both Content and Organization. Use `nesting = c(Rater = "Task")`
+#'   for Person crossed with Rater-within-Task. The five components are
+#'   `Person`, `Task`, `Rater(Task)`, `Person:Task`, and `Residual`. The last
+#'   combines Person-by-Rater-within-Task interaction and within-cell error.
+#'   There is no separately estimated common Rater or Rater-by-Task component.
+#'   A rater who actually works across tasks is not an independent nested
+#'   rater; changing their identifier cannot establish independence.
+#'
+#'   ANOVA requires all persons at every observed parent/child combination
+#'   and the same number of children per parent. MINQUE(0) also permits missing
+#'   cells and unequal child counts when its moment equations separate the
+#'   five components. Having only one child per parent confounds parent and
+#'   child components. Neither method corrects informative assignments.
+#'
+#'   `design$counts["Rater"]` is the total number of distinct task/rater
+#'   pairs; `design$child_counts` gives the rater count within each task.
+#'   `design$levels` retains the original labels, interpreted locally for the
+#'   child facet. A design is `complete` when every person has every observed
+#'   nested condition, and `balanced` when it also has equal child counts.
+#'   In a future D-study, `Raters` instead means raters per task: two raters
+#'   for each of six tasks use twelve distinct raters and twelve ratings per
+#'   person. Future designs preserve this nesting and have equal child counts.
+#'   Other two-facet names and the opposite nesting direction follow the same
+#'   rules; nesting within persons and score-specific child identities do not.
+#'
+#' @section Reviewing incomplete designs:
+#'   Begin with the planned roster and `data_usage` to distinguish unassigned
+#'   cells from missing assigned ratings. Then inspect `estimation` for
+#'   component separation and replication, `component_diagnostics` for
+#'   covariance admissibility, and the D-study metric-specific status columns
+#'   (`GStatus`, `PhiStatus`, `RelativeSEMStatus`, `AbsoluteSEMStatus`) before
+#'   reading the corresponding result. None of these checks estimates sampling
+#'   precision or identifies the missingness mechanism. No fixed percentage of observed cells,
+#'   condition-number cutoff, or passed matrix check establishes adequate
+#'   precision. D-studies project future complete balanced designs. The separate
+#'   [mfrm_multivariate_d_compare()] offers approximate normal-theory intervals
+#'   for prespecified differences in two-facet crossed designs; nested-design
+#'   intervals are not currently available.
+#'
+#'   For the same rating workload, changing rater overlap or concentrating
+#'   assignments can change estimation precision. Omitting ratings selected
+#'   by their scores can introduce bias even when every requested coefficient
+#'   is calculable. Neither a returned coefficient nor agreement with another
+#'   program determines whether these assumptions suit the user's assessment.
+#'   Observed pool sizes concern estimation in the G-study; they differ from
+#'   the per-person counts in a future D-study scenario. Review which tasks
+#'   and raters are shared and whether recorded ratings represent the intended
+#'   population and conditions before interpreting a projected improvement.
+#'
+#' @return An `mfrm_multivariate_gstudy` list with `components` (three, five, or seven
 #'   named covariance matrices), ANOVA `mean_products` and `degrees_of_freedom`
 #'   (`NULL` for MINQUE), `estimation` (MINQUE moment matrices and diagnostics,
 #'   `NULL` for ANOVA), `data_usage` (input/used/excluded counts, excluded input
 #'   row positions and missing cells),
 #'   `component_diagnostics`, `score_scale` (observed SDs used only for matrix
-#'   diagnostics), `design` (column identities, levels, counts, method, and
-#'   score convention, completeness and observed cell fraction), and `data`
+#'   diagnostics), `design` (`facets` maps facet labels to input columns and
+#'   `count_columns` maps those labels to D-study columns; also levels, counts, method, and
+#'   score convention, `nesting`, `child_counts`, completeness, balance,
+#'   potential cells and observed cell fraction), and `data`
 #'   (the retained selected input columns).
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #'   Chapters 9--11.
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
 #'   Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
 #'   Table 12 (page 32) and Appendix E (pages 74--77).
+#'
+#'   Brennan, R. L. (1992). Generalizability theory.
+#'   *Educational Measurement: Issues and Practice*, 11(4), 27--34.
+#'   Equations 13--16 and Table 3.
 #'
 #'   Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
 #'   theory. *Journal of Multivariate Analysis*, 1, 257--275.
@@ -130,14 +236,15 @@
 #' # Explicit future COMPLETE designs, not reliability of the sparse roster.
 #' d_sparse <- mfrm_multivariate_d_study(g_sparse,
 #'   data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
-#' d_sparse$coefficients # Non-PSD components withhold G/Phi and SEMs.
+#' d_sparse$coefficients # Read metric status and ComponentPSD separately.
 #'
 #' # Fictional continuous scores, with two correlated score components.
 #' set.seed(2026)
-#' ratings <- expand.grid(Person = 1:40, Rater = 1:8, Task = 1:6)
+#' # Here occasions are exchangeable repeat assessments, without a time trend.
+#' ratings <- expand.grid(Person = 1:40, Assessor = 1:8, Session = 1:6)
 #' ratings$Content <- ratings$Organization <- 0
-#' sources <- list("Person", "Rater", "Task", c("Person", "Rater"),
-#'   c("Person", "Task"), c("Rater", "Task"), c("Person", "Rater", "Task"))
+#' sources <- list("Person", "Assessor", "Session", c("Person", "Assessor"),
+#'   c("Person", "Session"), c("Assessor", "Session"), c("Person", "Assessor", "Session"))
 #' for (source in sources) {
 #'   group <- interaction(ratings[source], drop = TRUE)
 #'   effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
@@ -145,22 +252,56 @@
 #'   ratings[c("Content", "Organization")] <-
 #'     ratings[c("Content", "Organization")] + effect[as.integer(group), ]
 #' }
-#' g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"))
+#' g <- mfrm_multivariate_gstudy(ratings, c("Content", "Organization"),
+#'   facets = c(Rater = "Assessor", Occasion = "Session"))
 #' g$components$Person
 #' g$component_diagnostics
 #' d <- mfrm_multivariate_d_study(g,
-#'   design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
+#'   design_grid = data.frame(Rater = c(2, 4), Occasion = c(3, 3)),
 #'   weights = c(Content = 0.6, Organization = 0.4))
 #' d$coefficients
 #' # Difference-score dependability, when subtraction is meaningful on these scales.
 #' difference <- mfrm_multivariate_d_study(g,
 #'   weights = c(Content = 1, Organization = -1))
 #' difference$coefficients
+#'
+#' # Rater-only planning for one occasion; no generalization across occasions.
+#' one_session <- ratings[ratings$Session == 1, ]
+#' g_rater <- mfrm_multivariate_gstudy(one_session, c("Content", "Organization"),
+#'   rater = "Assessor", task = NULL)
+#' d_rater <- mfrm_multivariate_d_study(g_rater, data.frame(Raters = c(1, 2, 4)))
+#' plot(d_rater, score = "Content")
+#'
+#' # Different rater teams for different tasks; shared persons and scores.
+#' # Fictional continuous scores with five independent random-effect sources.
+#' set.seed(2027)
+#' nested <- expand.grid(Person = 1:30, Task = 1:6, Rater = paste0("R", 1:3))
+#' nested$Content <- nested$Organization <- 0
+#' sources <- list("Person", "Task", c("Task", "Rater"),
+#'   c("Person", "Task"), c("Person", "Task", "Rater"))
+#' for (source in sources) {
+#'   group <- interaction(nested[source], drop = TRUE)
+#'   effect <- matrix(rnorm(2 * nlevels(group)), ncol = 2)
+#'   effect <- effect %*% matrix(c(1, 0, 0.4, 1), 2)
+#'   nested[c("Content", "Organization")] <-
+#'     nested[c("Content", "Organization")] + effect[as.integer(group), ]
+#' }
+#' g_nested <- mfrm_multivariate_gstudy(nested, c("Content", "Organization"),
+#'   nesting = c(Rater = "Task"))
+#' g_nested$design$child_counts # Three raters per task; eighteen in total.
+#' g_nested$component_diagnostics
+#' d_nested <- mfrm_multivariate_d_study(g_nested,
+#'   expand.grid(Raters = c(2, 3), Tasks = c(4, 6)),
+#'   weights = c(Content = 0.6, Organization = 0.4))
+#' summary(d_nested)
+#' plot(d_nested, x_var = "Raters") # Raters on the axis means raters PER TASK.
+#' plot(d_nested, x_var = "Tasks", type = "sem")
 #' @export
 mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
                                      rater = "Rater", task = "Task",
                                      method = c("anova", "minque0"),
-                                     missing = c("error", "omit")) {
+                                     missing = c("error", "omit"), facets = NULL,
+                                     nesting = NULL) {
   method <- match.arg(method)
   missing <- match.arg(missing)
   valid_names <- function(x) is.character(x) && length(x) > 0L &&
@@ -168,14 +309,35 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
   if (!is.data.frame(data) || nrow(data) == 0L || !valid_names(names(data))) {
     stop("`data` must be a nonempty data frame with unique, nonblank column names.", call. = FALSE)
   }
-  one_facet <- is.null(rater)
-  id_args <- if (one_facet) list(person, task) else list(person, rater, task)
+  if (is.null(facets)) {
+    facet_args <- list(Rater = rater, Task = task)
+    facet_args <- facet_args[!vapply(facet_args, is.null, logical(1))]
+    facet_names <- names(facet_args)
+    count_columns <- c(Rater = "Raters", Task = "Tasks")[facet_names]
+  } else {
+    if (!missing(rater) || !missing(task)) {
+      stop("Use either `facets` or `rater`/`task`, not both.", call. = FALSE)
+    }
+    if (!is.character(facets) || !is.null(dim(facets)) || !valid_names(facets)) {
+      stop("`facets` must specify one or two distinct identifier columns.", call. = FALSE)
+    }
+    facet_names <- if (is.null(names(facets))) facets else names(facets)
+    if (!.mfrm_mvgt_valid_facets(facet_names)) {
+      stop("Supply one or two unique, nonblank facet labels without ':' or reserved result names (such as Person, Residual, Score, or Scenario).", call. = FALSE)
+    }
+    facet_args <- as.list(unname(facets))
+    count_columns <- setNames(facet_names, facet_names)
+    rater <- task <- NULL
+  }
+  one_facet <- length(facet_args) == 1L
+  nesting <- .mfrm_mvgt_nesting(nesting, facet_names)
+  id_args <- c(list(person), facet_args)
   ids <- unlist(id_args, use.names = FALSE)
-  if (any(lengths(id_args) != 1L) ||
+  if (!length(facet_args) || any(lengths(id_args) != 1L) ||
       !all(vapply(id_args, is.character, logical(1))) ||
       !valid_names(ids) || !valid_names(scores) || any(scores %in% ids) ||
       !all(c(ids, scores) %in% names(data))) {
-    stop("Supply distinct person, rater, task, and score column names present in `data`.", call. = FALSE)
+    stop("Supply distinct person, facet, and score column names present in `data` (at least one facet).", call. = FALSE)
   }
   data <- as.data.frame(data[c(ids, scores)])
   groups <- lapply(data[ids], function(x) {
@@ -210,12 +372,26 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
   }
   data <- data[keep, , drop = FALSE]
   groups <- lapply(groups, function(g) droplevels(g[keep]))
-  factor_names <- if (one_facet) c("Person", "Task") else c("Person", "Rater", "Task")
+  factor_names <- c("Person", facet_names)
   counts <- setNames(vapply(groups, nlevels, integer(1)), factor_names)
   if (any(counts < 2L)) stop("Each included factor needs at least two observed levels.", call. = FALSE)
-  complete <- nrow(data) == prod(as.double(counts))
-  if (!complete && method == "anova") {
-    stop("ANOVA requires a complete, balanced crossed design; consider method = 'minque0' for an incomplete observed design.", call. = FALSE)
+  child_counts <- NULL
+  potential_cells <- prod(as.double(counts))
+  if (!is.null(nesting)) {
+    child <- match(names(nesting), factor_names)
+    parent <- match(unname(nesting), factor_names)
+    pairs <- unique(data.frame(Parent = groups[[parent]], Child = groups[[child]]))
+    child_counts <- setNames(as.integer(table(pairs$Parent)), levels(groups[[parent]]))
+    counts[child] <- nrow(pairs)
+    potential_cells <- as.double(counts[1L]) * sum(child_counts)
+  }
+  complete <- nrow(data) == potential_cells
+  balanced <- complete && (is.null(nesting) || length(unique(child_counts)) == 1L)
+  if (!balanced && method == "anova") {
+    stop("ANOVA requires a complete, balanced design; consider method = 'minque0' for an incomplete or unequal observed design.", call. = FALSE)
+  }
+  if (!is.null(nesting) && method == "anova" && any(child_counts < 2L)) {
+    stop("Cannot separate parent and nested-child components with one child per parent.", call. = FALSE)
   }
   y <- as.matrix(data[scores])
   y <- sweep(y, 2L, colMeans(y), "-")
@@ -229,8 +405,8 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
   # represent the combined interaction/residual kernel.
   subsets <- if (one_facet) list(1L, 2L, 1:2) else
     list(1L, 2L, 3L, c(1L, 2L), c(1L, 3L), c(2L, 3L), 1:3)
-  sources <- if (one_facet) c("Person", "Task", "Residual") else
-    c("Person", "Rater", "Task", "Person:Rater", "Person:Task", "Rater:Task", "Residual")
+  if (!is.null(nesting)) subsets <- list(1L, parent, c(child, parent), c(1L, parent), 1:3)
+  sources <- .mfrm_mvgt_sources(factor_names, nesting)
   # Integer level codes prevent collisions between literal IDs containing dots.
   groupings <- setNames(lapply(subsets, function(s) .mfrm_mvgt_group(groups[s])), sources)
   estimation <- NULL
@@ -250,26 +426,35 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
         if (all(subsets[[j]] %in% subset)) effect <- effect - effects[[j]]
       }
       effects[[i]] <- effect
-      df[i] <- prod(counts[subset] - 1)
+      df[i] <- if (is.null(nesting)) prod(counts[subset] - 1) else {
+        P <- counts[1L]; T <- counts[parent]; R <- child_counts[1L]
+        c(P - 1, T - 1, T * (R - 1), (P - 1) * (T - 1), T * (P - 1) * (R - 1))[i]
+      }
       mean_products[[i]] <- crossprod(effect) / df[i]
     }
     m <- mean_products
-    nt <- counts[["Task"]]
-    if (one_facet) {
-      components <- list(Person = (m$Person - m$Residual) / nt,
-        Task = (m$Task - m$Residual) / counts[["Person"]], Residual = m$Residual)
+    if (!is.null(nesting)) {
+      components <- list((m[[1L]] - m[[4L]]) / (R * T),
+        (m[[2L]] - m[[3L]] - m[[4L]] + m[[5L]]) / (P * R),
+        (m[[3L]] - m[[5L]]) / P, (m[[4L]] - m[[5L]]) / R, m[[5L]])
+    } else if (one_facet) {
+      components <- list((m[[1L]] - m[[3L]]) / counts[2L],
+        (m[[2L]] - m[[3L]]) / counts[1L], m[[3L]])
     } else {
-      nr <- counts[["Rater"]]
+      # The first and second random facets have the same averaging rules
+      # whatever their substantive names (e.g., raters, tasks, occasions).
+      n1 <- counts[2L]
+      n2 <- counts[3L]
       components <- list(
-        Person = (m$Person - m[["Person:Rater"]] - m[["Person:Task"]] + m$Residual) / (nr * nt),
-        Rater = (m$Rater - m[["Person:Rater"]] - m[["Rater:Task"]] + m$Residual) / (counts[["Person"]] * nt),
-        Task = (m$Task - m[["Person:Task"]] - m[["Rater:Task"]] + m$Residual) / (counts[["Person"]] * nr),
-        `Person:Rater` = (m[["Person:Rater"]] - m$Residual) / nt,
-        `Person:Task` = (m[["Person:Task"]] - m$Residual) / nr,
-        `Rater:Task` = (m[["Rater:Task"]] - m$Residual) / counts[["Person"]],
-        Residual = m$Residual
+        (m[[1L]] - m[[4L]] - m[[5L]] + m[[7L]]) / (n1 * n2),
+        (m[[2L]] - m[[4L]] - m[[6L]] + m[[7L]]) / (counts[1L] * n2),
+        (m[[3L]] - m[[5L]] - m[[6L]] + m[[7L]]) / (counts[1L] * n1),
+        (m[[4L]] - m[[7L]]) / n2,
+        (m[[5L]] - m[[7L]]) / n1,
+        (m[[6L]] - m[[7L]]) / counts[1L], m[[7L]]
       )
     }
+    names(components) <- sources
     degrees_of_freedom <- data.frame(Source = sources, DF = unname(df))
   }
   if (any(!is.finite(unlist(components)))) {
@@ -280,13 +465,46 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
     degrees_of_freedom = degrees_of_freedom, estimation = estimation, data_usage = data_usage,
     component_diagnostics = diagnostics, score_scale = score_scale,
     design = list(person = person, rater = rater, task = task, scores = scores,
+      facets = setNames(ids[-1L], facet_names), count_columns = count_columns,
       counts = counts, levels = lapply(groups, levels), rows = nrow(data),
-      complete = complete, potential_cells = prod(as.double(counts)),
-      observed_fraction = nrow(data) / prod(as.double(counts)),
+      nesting = nesting, child_counts = child_counts, balanced = balanced,
+      complete = complete, potential_cells = potential_cells,
+      observed_fraction = nrow(data) / potential_cells,
       method = if (method == "anova") "Balanced multivariate ANOVA" else "Multivariate MINQUE(0)",
-      score_convention = if (one_facet)
-        "Means over common random tasks" else "Means over common random raters and tasks",
-      calculation_version = if (method == "minque0") 2L else 1L), data = data), class = "mfrm_multivariate_gstudy")
+      score_convention = if (!is.null(nesting)) paste0("Means over random ",
+        unname(nesting), " conditions and their distinct random ", names(nesting),
+        " conditions; ", count_columns[[names(nesting)]], " is the count per ", unname(nesting)) else
+        if (is.null(facets)) paste("Means over common random",
+        paste(tolower(count_columns), collapse = " and ")) else
+        paste("Means over common random conditions:", paste(facet_names, collapse = ", ")),
+      calculation_version = if (!is.null(nesting)) 3L else if (method == "minque0") 2L else 1L), data = data), class = "mfrm_multivariate_gstudy")
+}
+
+.mfrm_mvgt_valid_facets <- function(x) {
+  is.character(x) && length(x) %in% 1:2 && !anyNA(x) &&
+    all(nzchar(trimws(x))) && !anyDuplicated(x) && !any(grepl(":", x, fixed = TRUE)) &&
+    !any(x %in% c("Person", "Residual", "Scenario", "Kind", "Score", "UniverseVariance",
+      "RelativeErrorVariance", "AbsoluteErrorVariance", "G", "Phi", "RelativeSEM",
+      "GStatus", "PhiStatus", "RelativeSEMStatus", "AbsoluteSEMStatus", "ComponentPSD",
+      "AbsoluteSEM", "Status", "Metric", "X", "Group", "Value", "Panel"))
+}
+
+.mfrm_mvgt_nesting <- function(nesting, facets) {
+  if (is.null(nesting)) return(NULL)
+  if (length(facets) != 2L || !is.character(nesting) || !is.null(dim(nesting)) ||
+      length(nesting) != 1L || is.na(nesting) || is.null(names(nesting)) ||
+      is.na(names(nesting)) || !names(nesting) %in% facets || !nesting %in% facets ||
+      names(nesting) == unname(nesting)) {
+    stop("`nesting` must name one child facet and its other parent facet, for example c(Rater = 'Task'); nesting within Person is not supported.", call. = FALSE)
+  }
+  nesting
+}
+
+.mfrm_mvgt_sources <- function(factors, nesting = NULL) {
+  if (!is.null(nesting)) return(c("Person", unname(nesting),
+    paste0(names(nesting), "(", nesting, ")"), paste0("Person:", nesting), "Residual"))
+  c(factors, if (length(factors) == 3L) utils::combn(factors, 2L, paste, collapse = ":"),
+    "Residual")
 }
 
 .mfrm_mvgt_group <- function(groups) {
@@ -321,7 +539,7 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
       rank, " of ", k, "). Review facet overlap and confounding; no estimates were returned.", call. = FALSE)
   }
   products <- lapply(groupings, function(g) crossprod(rowsum(y, g)))
-  rhs <- t(vapply(products, as.vector, numeric(ncol(y)^2)))
+  rhs <- do.call(rbind, lapply(products, as.vector))
   estimates <- solve(normalized, rhs / scale) / scale
   components <- setNames(lapply(seq_len(k), function(i) {
     matrix(estimates[i, ], ncol(y), dimnames = list(colnames(y), colnames(y)))
@@ -348,28 +566,39 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
   }))
 }
 
-#' Plan task and rater counts with a multivariate D-study
+#' Plan measurement conditions with a multivariate D-study
 #'
 #' Would adding tasks or raters make assessment scores more dependable?
 #' Use an estimated G-study to compare specified future designs for individual
-#' score components and an optional weighted composite. Each scenario reports
+#' score components and optional weighted composites. Each scenario reports
 #' dependability and measurement error for mean scores over common random
-#' tasks and, when included, raters. No model is refitted.
+#' measurement conditions, such as tasks, raters, or occasions. No model is refitted.
 #'
 #' @param x A result from [mfrm_multivariate_gstudy()].
-#' @param design_grid A nonempty data frame with positive integer `Raters` and
-#'   `Tasks` columns, or only `Tasks` for a G-study with `rater = NULL`.
-#'   Each row is one future complete crossed design. `NULL` uses the G-study
-#'   counts only when its retained data are complete; an incomplete G-study
-#'   requires an explicit grid.
-#'   Counts need not match or exceed the G-study counts. Conditions are fully
-#'   crossed and shared across persons and scores in every scenario.
-#' @param weights Optional named, finite score weights, including every score
-#'   exactly once, with at least one nonzero entry. Signed weights allow
-#'   difference scores, for example `c(Content = 1, Organization = -1)`.
-#'   Weights are used as supplied, without normalization. `NULL` reports score
-#'   components only; otherwise an additional composite is reported for every
-#'   scenario.
+#' @param design_grid A nonempty data frame with one positive integer count
+#'   column per G-study facet. With the `rater`/`task` interface, use `Raters`
+#'   and/or `Tasks` for the included facets. With `facets`, use its exact
+#'   labels, for example `Rater` and `Occasion` for
+#'   `facets = c(Rater = "Assessor", Occasion = "Session")`. The mapping is
+#'   available in `x$design$count_columns`.
+#'   Each row is one future complete balanced design preserving the G-study's
+#'   crossed or nested structure. For `nesting = c(Rater = "Task")`, `Raters`
+#'   means raters per task, not the total rater pool. `NULL` uses the G-study
+#'   counts (children per parent for a nested facet) only when its retained
+#'   data are complete and balanced; incomplete or unequal designs require an
+#'   explicit grid. Counts need not match or exceed the G-study counts.
+#'   Conditions are shared across persons and scores in every scenario.
+#' @param weights Optional named numeric vector for one composite, or a numeric
+#'   matrix for several named composites. A vector must name every original
+#'   score exactly once; matrix rows must name every score exactly once, and
+#'   columns must have unique, nonempty composite names. Rows are matched by
+#'   name, regardless of order. Every weight must be finite and each composite
+#'   must have at least one nonzero weight. Signed weights allow difference
+#'   scores, for example `c(Content = 1, Organization = -1)`. Weights are used
+#'   as supplied, without normalization. `NULL` reports original scores only.
+#'   Otherwise, each scenario reports the original scores once, followed by
+#'   each composite. A vector's composite is named `"Composite"`; a matrix
+#'   preserves its column names and order.
 #'
 #' @details Start with a concrete comparison, such as six versus twelve tasks
 #'   for every examinee. Each row of `design_grid` is one scenario. With both
@@ -377,6 +606,10 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   four raters at three tasks; `expand.grid(Raters = c(2, 4),
 #'   Tasks = c(3, 6))` requests all four combinations. These counts apply to
 #'   every person and score, not to the total number of observed ratings.
+#'   For `facets = c(Rater = "Assessor", Occasion = "Session")`, use
+#'   `expand.grid(Rater = c(1, 2), Occasion = c(2, 4))`. The same workflow
+#'   applies to any supported one- or two-facet model; extra columns cannot
+#'   introduce conditions absent from the G-study.
 #'
 #'   Read `summary(d)` together with `plot(d)`:
 #'   * `G` concerns consistency of relative ordering, such as ranking examinees.
@@ -389,16 +622,28 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   Larger G/Phi and smaller SEM indicate greater dependability under the
 #'   model. There is no universally acceptable coefficient: consider the use
 #'   of scores, consequences of error, and workload before choosing a design.
-#'   `plot(d, type = "sem")` shows the SEMs. By default plots select the
-#'   composite if weights were supplied, otherwise the first score; use
+#'   Compare a chosen score/composite and metric across feasible plans. For
+#'   example, `data.frame(Raters = c(2, 3, 4), Tasks = c(6, 4, 3))` holds the
+#'   number of ratings per person at twelve. It does not hold examinee task
+#'   burden or total cost constant. The largest projected coefficient is a
+#'   point-estimate ranking, not evidence that one plan is reliably better.
+#'   Consider the size of the projected difference and which differences
+#'   would matter for the assessment. Small rank changes need not imply large
+#'   practical losses. If a metric is unavailable for any candidate, comparing
+#'   only the remaining values does not resolve the full planning question.
+#'   `plot(d, type = "sem")` shows the SEMs. Plots select a sole composite
+#'   by default, or the first score when there are no composites. With several
+#'   composites, specify one with `plot(d, composite = "Equal")`; use
 #'   `plot(d, score = "V")` to inspect an original score named V. The title
 #'   always identifies the plotted score and any composite weights.
-#'   Check `Status` before reading a coefficient: `NA` means unavailable,
-#'   not zero dependability. See [plot.mfrm_multivariate_d_study()] for
+#'   Check `GStatus`, `PhiStatus`, `RelativeSEMStatus`, and `AbsoluteSEMStatus`:
+#'   each explains the corresponding metric's availability. `NA` means
+#'   unavailable, not zero dependability. `ComponentPSD` separately flags
+#'   covariance components needing review. See [plot.mfrm_multivariate_d_study()] for
 #'   interpreting curves and unavailable estimates.
 #'
 #' @section Calculation and interpretation limits:
-#'   For covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
+#'   For crossed covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
 #'   and `E`, universe-score covariance is `P`. Relative-error covariance is
 #'   `PR/n_r + PT/n_t + E/(n_r*n_t)`. Absolute-error covariance adds
 #'   `R/n_r + T/n_t + RT/(n_r*n_t)`. The G-study number of persons does not
@@ -407,7 +652,21 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   For a Person-by-Task G-study, `E` combines Person-by-Task interaction and
 #'   within-cell error: relative-error covariance is `E/n_t`, absolute-error
 #'   covariance is `(T + E)/n_t`, and universe-score covariance remains `P`.
-#'   A D-study cannot introduce a rater facet absent from its G-study.
+#'   The same formulas apply to a Person-by-Rater design or to facets selected
+#'   by `facets`, with names replaced in the declared order. For a single
+#'   facet F and its planned count n, relative error is `E/n` and absolute
+#'   error is `(F + E)/n`. A D-study cannot introduce an absent facet.
+#'
+#'   For raters nested within tasks, use the five components `P`, `T`,
+#'   `R(T)`, `PT`, and `E`, where `E` includes the Person-by-Rater-within-Task
+#'   interaction. With `n_r` raters per task and `n_t` tasks, relative error is
+#'   `PT/n_t + E/(n_r*n_t)`; absolute error adds `T/n_t + R(T)/(n_r*n_t)`.
+#'   Universe covariance remains `P`. Other nested facet labels follow the
+#'   same rules. All persons receive the same tasks and their nested raters;
+#'   two raters per task at six tasks means twelve distinct raters, not two
+#'   raters each judging six tasks. Future unequal child counts, changes of
+#'   nesting, and nested-design sampling intervals are not supported.
+#'
 #'   For incomplete source data, counts of distinct observed levels are not
 #'   per-person replication counts. This function projects a future complete
 #'   design; it does not estimate the reliability of the observed sparse
@@ -423,34 +682,66 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   unchanged. Weights express a substantive choice; this function neither
 #'   chooses them nor identifies an optimal design. Interpret a difference
 #'   only when subtraction is meaningful on the supplied score scales.
+#'   Comparing several composites holds the estimated components and planned
+#'   designs constant, but different weights may change the construct being
+#'   assessed. A higher coefficient alone does not justify that change.
+#'   Compare SEMs across composites only when their scales are comparable.
 #'
 #'   The same weights define the universe-score composite and its observed
 #'   mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
 #'   target and estimation weights, profile reliability, and accuracy at a
 #'   cut score are not provided. Unlike mGENOVA's default D-study procedure,
-#'   negative variance estimates are not replaced with zero.
+#'   negative variance estimates are not replaced with zero. mGENOVA replaces
+#'   negative variance components with zero for the D-study unless its
+#'   `NEGATIVE` option is selected (manual, pages 15 and 21). That rule concerns
+#'   variances, not all negative covariances, and does not guarantee PSD
+#'   component matrices.
+#'   Do not transfer that option's meaning to jGENOVA: its `NEGATIVE` option
+#'   controls printing of negative estimates. jGENOVA's D-study zeroes negative
+#'   variances with either `ALGORITHM` or its default `EMS` convention; `EMS`
+#'   also recalculates other components using the zero replacements. Matching
+#'   a raw G-study estimate therefore need not give matching default D-studies.
+#'   These conventions are not selectable estimation options in this function.
 #'
-#'   Raw covariance matrices and projected variances remain available. If any
-#'   G-study component fails its PSD check, all G/Phi and SEM entries are `NA`.
-#'   Otherwise, a row requires a positive universe variance and nonnegative
-#'   error variances. Zero estimated universe variance is not perfect
-#'   reliability. `Status` explains unavailable rows; inspect
-#'   `component_diagnostics` before interpreting estimates. Passing the matrix
-#'   checks does not establish precise estimation or model fit. Outputs are
+#'   Raw covariance matrices and projected variances remain available. G
+#'   requires nonnegative universe and relative-error variances and a positive
+#'   sum; Phi uses absolute-error variance instead. Each SEM requires only its
+#'   corresponding nonnegative error variance. A failed requirement makes
+#'   only that metric `NA`. Zero universe variance yields a coefficient of
+#'   zero when its error variance is positive; a zero total variance leaves
+#'   the coefficient undefined. No estimates are clipped or replaced.
+#'
+#'   `Status` summarizes a row as `"Available"`, `"Partially available"`, or
+#'   `"Unavailable"`; the four metric-specific status columns give the reasons.
+#'   `ComponentPSD` is TRUE only when all G-study component matrices pass
+#'   their numerical PSD check. A FALSE value flags components for review
+#'   without suppressing otherwise calculable projections. Print and plot
+#'   methods display a note for non-PSD components. Calculability does not
+#'   validate the joint covariance model or establish precise estimation;
+#'   inspect `component_diagnostics` before interpreting estimates. Raw estimates
+#'   can yield `Phi > G` when projected absolute error is less than relative
+#'   error. Under the stated model, the extra absolute-error contributions
+#'   are nonnegative; such a reversal calls for review of the estimated
+#'   components, not a conclusion that absolute decisions are more dependable.
+#'   Passing the matrix checks does not establish model fit. Outputs are
 #'   point projections conditional on the estimated components, without
 #'   confidence intervals, missing-data correction, or MFRM latent inference.
 #'
 #' @return An `mfrm_multivariate_d_study` list containing `coefficients`
 #'   (scenario, counts of included facets, score/composite identity, raw
 #'   universe/relative/absolute variances, G/Phi, relative/absolute SEM, and
-#'   status), `covariances` (three matrices per scenario), `design_grid`,
-#'   `weights`, `component_diagnostics`,
+#'   row and metric-specific status, and `ComponentPSD`), `covariances`
+#'   (three matrices per scenario), `design_grid`,
+#'   `weights` (the supplied vector or matrix, reordered to the G-study score
+#'   order), `component_diagnostics`,
 #'   and `gstudy` (the source result). `summary()` returns `coefficients`.
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #'   Chapters 9--11.
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
 #'   Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
 #'   Appendices E and F, pages 74--81.
+#'   Crick, J. E., and Brennan, R. L. (2021). *Manual for jGENOVA, Version 1.0*.
+#'   Pages 2-10--2-11, 3-5, and A-22--A-23.
 #' @seealso [plot.mfrm_multivariate_d_study()], [mfrm_multivariate_gstudy()],
 #'   [mfrm_d_study()]
 #' @examples
@@ -470,18 +761,53 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #' # Without weights, report the original scores without creating a composite.
 #' individual <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(6, 12)))
 #' plot(individual, score = "V")
+#'
+#' # Compare weight choices on the same task-count scenarios.
+#' weights <- cbind(Equal = c(V = 0.5, W = 0.5),
+#'   W_focus = c(V = 0.2, W = 0.8), Difference = c(V = -1, W = 1))
+#' alternatives <- mfrm_multivariate_d_study(g,
+#'   data.frame(Tasks = c(6, 12)), weights = weights)
+#' summary(alternatives) # Original scores plus all three named composites.
+#' plot(alternatives, composite = "Equal")
+#' plot(alternatives, composite = "Difference", type = "sem")
+#' # Choose weights for the intended interpretation, not solely for higher G.
 #' @export
 mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
   if (!inherits(x, "mfrm_multivariate_gstudy") ||
-      !(identical(x$design$calculation_version, 1L) || identical(x$design$calculation_version, 2L))) {
+      !(identical(x$design$calculation_version, 1L) || identical(x$design$calculation_version, 2L) ||
+        identical(x$design$calculation_version, 3L))) {
     stop("`x` must be a current mfrm_multivariate_gstudy result.", call. = FALSE)
   }
   scores <- x$design$scores
-  one_facet <- identical(names(x$design$counts), c("Person", "Task"))
-  sources <- if (one_facet) c("Person", "Task", "Residual") else
-    c("Person", "Rater", "Task", "Person:Rater", "Person:Task", "Rater:Task", "Residual")
+  counts <- x$design$counts
+  facet_names <- names(counts)[-1L]
+  count_columns <- x$design$count_columns
+  # Previously saved task/rater results did not store an explicit count map.
+  if (is.null(count_columns) && all(facet_names %in% c("Rater", "Task"))) {
+    count_columns <- c(Rater = "Raters", Task = "Tasks")[facet_names]
+  }
+  if (!is.numeric(counts) || !identical(names(counts)[1L], "Person") ||
+      !.mfrm_mvgt_valid_facets(facet_names) || any(!is.finite(counts)) ||
+      any(counts < 2 | counts != floor(counts)) ||
+      !identical(names(count_columns), facet_names) ||
+      !.mfrm_mvgt_valid_facets(unname(count_columns))) {
+    stop("The G-study factor or count identities are incomplete or altered; recreate the result.", call. = FALSE)
+  }
+  one_facet <- length(facet_names) == 1L
+  nesting <- .mfrm_mvgt_nesting(x$design$nesting, facet_names)
+  if (identical(x$design$calculation_version, 3L) != !is.null(nesting)) {
+    stop("The G-study nesting specification is incomplete or altered; recreate the result.", call. = FALSE)
+  }
+  if (!is.null(nesting)) {
+    child_counts <- x$design$child_counts
+    if (!is.numeric(child_counts) || length(child_counts) != counts[[unname(nesting)]] ||
+        any(!is.finite(child_counts)) || any(child_counts < 1 | child_counts != floor(child_counts)) ||
+        sum(child_counts) != counts[[names(nesting)]]) {
+      stop("The G-study child counts are incomplete or altered; recreate the result.", call. = FALSE)
+    }
+  }
+  sources <- .mfrm_mvgt_sources(names(counts), nesting)
   if (!is.character(scores) || !length(scores) || anyNA(scores) || anyDuplicated(scores) ||
-      !(one_facet || identical(names(x$design$counts), c("Person", "Rater", "Task"))) ||
       !identical(names(x$components), sources) ||
       !is.numeric(x$score_scale) || !identical(names(x$score_scale), scores) ||
       any(!is.finite(x$score_scale)) || any(x$score_scale < 0) ||
@@ -492,13 +818,15 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
     stop("The G-study covariance matrices or score identities are incomplete or altered; recreate the result.", call. = FALSE)
   }
   diagnostics <- .mfrm_mvgt_diagnostics(x$components, x$score_scale)
-  grid_names <- if (one_facet) "Tasks" else c("Raters", "Tasks")
+  grid_names <- unname(count_columns)
   if (is.null(design_grid)) {
-    if (identical(x$design$complete, FALSE)) {
-      stop("An incomplete G-study requires an explicit `design_grid` for a future complete crossed design; observed level counts are not per-person replication.", call. = FALSE)
+    if (identical(x$design$complete, FALSE) ||
+        (!is.null(nesting) && length(unique(child_counts)) != 1L)) {
+      stop("An incomplete or unequal G-study requires an explicit `design_grid` for a future complete balanced design; observed pool counts are not planned replication.", call. = FALSE)
     }
-    design_grid <- if (one_facet) data.frame(Tasks = unname(x$design$counts["Task"])) else
-      data.frame(Raters = unname(x$design$counts["Rater"]), Tasks = unname(x$design$counts["Task"]))
+    future_counts <- setNames(counts[-1L], grid_names)
+    if (!is.null(nesting)) future_counts[count_columns[[names(nesting)]]] <- child_counts[1L]
+    design_grid <- as.data.frame(as.list(future_counts), check.names = FALSE)
   }
   if (!is.data.frame(design_grid) || !nrow(design_grid) ||
       !setequal(names(design_grid), grid_names) || ncol(design_grid) != length(grid_names) ||
@@ -514,16 +842,31 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
   colnames(vectors) <- scores
   kind <- rep("Score", length(scores))
   if (!is.null(weights)) {
-    if (!is.numeric(weights) || is.object(weights) || is.complex(weights) ||
-        !is.null(dim(weights)) || length(weights) != length(scores) ||
-        is.null(names(weights)) || anyNA(names(weights)) || anyDuplicated(names(weights)) ||
-        !setequal(names(weights), scores) || any(!is.finite(weights)) ||
-        !any(weights != 0)) {
-      stop("`weights` must name every score once with finite values and at least one nonzero value.", call. = FALSE)
+    if (is.matrix(weights)) {
+      if (!is.numeric(weights) || is.object(weights) || is.complex(weights) ||
+          nrow(weights) != length(scores) || !ncol(weights) ||
+          is.null(rownames(weights)) || anyNA(rownames(weights)) ||
+          anyDuplicated(rownames(weights)) || !setequal(rownames(weights), scores) ||
+          is.null(colnames(weights)) || anyNA(colnames(weights)) ||
+          anyDuplicated(colnames(weights)) || any(!nzchar(trimws(colnames(weights)))) ||
+          any(!is.finite(weights)) || any(colSums(weights != 0) == 0)) {
+        stop("A `weights` matrix must name every score once in its rows and have unique, nonempty composite names in its columns, with finite values and at least one nonzero weight per column.", call. = FALSE)
+      }
+      weights <- weights[scores, , drop = FALSE]
+      vectors <- cbind(vectors, weights)
+      kind <- c(kind, rep("Composite", ncol(weights)))
+    } else {
+      if (!is.numeric(weights) || is.object(weights) || is.complex(weights) ||
+          !is.null(dim(weights)) || length(weights) != length(scores) ||
+          is.null(names(weights)) || anyNA(names(weights)) || anyDuplicated(names(weights)) ||
+          !setequal(names(weights), scores) || any(!is.finite(weights)) ||
+          !any(weights != 0)) {
+        stop("`weights` must name every score once with finite values and at least one nonzero value.", call. = FALSE)
+      }
+      weights <- weights[scores]
+      vectors <- cbind(vectors, Composite = weights)
+      kind <- c(kind, "Composite")
     }
-    weights <- weights[scores]
-    vectors <- cbind(vectors, Composite = weights)
-    kind <- c(kind, "Composite")
   }
   projection_scale <- apply(abs(vectors), 2L, max)
   if (any(!is.finite(projection_scale^2)) || any(projection_scale^2 == 0)) {
@@ -534,14 +877,19 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
   covariances <- vector("list", nrow(design_grid))
   tables <- vector("list", nrow(design_grid))
   for (i in seq_len(nrow(design_grid))) {
-    nt <- design_grid$Tasks[i]
-    if (one_facet) {
-      relative <- c$Residual / nt
-      absolute <- relative + c$Task / nt
+    n1 <- design_grid[[1L]][i]
+    if (!is.null(nesting)) {
+      n_child <- design_grid[[count_columns[[names(nesting)]]]][i]
+      n_parent <- design_grid[[count_columns[[unname(nesting)]]]][i]
+      relative <- c[[4L]] / n_parent + c[[5L]] / (n_child * n_parent)
+      absolute <- relative + c[[2L]] / n_parent + c[[3L]] / (n_child * n_parent)
+    } else if (one_facet) {
+      relative <- c[[3L]] / n1
+      absolute <- relative + c[[2L]] / n1
     } else {
-      nr <- design_grid$Raters[i]
-      relative <- c[["Person:Rater"]] / nr + c[["Person:Task"]] / nt + c$Residual / (nr * nt)
-      absolute <- relative + c$Rater / nr + c$Task / nt + c[["Rater:Task"]] / (nr * nt)
+      n2 <- design_grid[[2L]][i]
+      relative <- c[[4L]] / n1 + c[[5L]] / n2 + c[[7L]] / (n1 * n2)
+      absolute <- relative + c[[2L]] / n1 + c[[3L]] / n2 + c[[6L]] / (n1 * n2)
     }
     covariances[[i]] <- list(Universe = c$Person, RelativeError = relative, AbsoluteError = absolute)
     unit_variances <- matrix(vapply(covariances[[i]],
@@ -554,25 +902,30 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
     u <- unit_variances[, 1L]
     r <- unit_variances[, 2L]
     a <- unit_variances[, 3L]
-    status <- rep("Available", length(u))
-    status[u <= 0] <- "Universe variance is not positive"
-    status[r < 0 | a < 0] <- "Negative projected error variance"
-    if (!all(diagnostics$PositiveSemidefinite)) status[] <- "Non-PSD component estimates"
-    available <- status == "Available"
-    g <- phi <- sem_r <- sem_a <- rep(NA_real_, length(u))
-    # Scale each denominator before addition to avoid overflow.
-    relative_scale <- pmax(u[available], r[available])
-    absolute_scale <- pmax(u[available], a[available])
-    g[available] <- (u[available] / relative_scale) /
-      (u[available] / relative_scale + r[available] / relative_scale)
-    phi[available] <- (u[available] / absolute_scale) /
-      (u[available] / absolute_scale + a[available] / absolute_scale)
-    sem_r[available] <- sqrt(r[available]) * projection_scale[available]
-    sem_a[available] <- sqrt(a[available]) * projection_scale[available]
+    metrics <- c("G", "Phi", "RelativeSEM", "AbsoluteSEM")
+    values <- matrix(NA_real_, length(u), 4L, dimnames = list(NULL, metrics))
+    metric_status <- matrix("Available", length(u), 4L,
+      dimnames = list(NULL, paste0(metrics, "Status")))
+    for (j in 1:2) {
+      error <- if (j == 1L) r else a
+      metric_status[error < 0, c(j, j + 2L)] <- "Negative projected error variance"
+      metric_status[u < 0, j] <- "Negative universe variance"
+      metric_status[u == 0 & error == 0, j] <- "Zero total variance"
+      ok <- metric_status[, j] == "Available"
+      # Scale each denominator before addition to avoid overflow.
+      scale <- pmax(u[ok], error[ok])
+      values[ok, j] <- (u[ok] / scale) / (u[ok] / scale + error[ok] / scale)
+      ok_sem <- metric_status[, j + 2L] == "Available"
+      values[ok_sem, j + 2L] <- sqrt(error[ok_sem]) * projection_scale[ok_sem]
+    }
+    available_count <- rowSums(metric_status == "Available")
+    status <- ifelse(available_count == 4L, "Available",
+      ifelse(available_count == 0L, "Unavailable", "Partially available"))
     tables[[i]] <- data.frame(Scenario = i, design_grid[i, , drop = FALSE],
       Kind = kind, Score = colnames(vectors), UniverseVariance = variances[, 1L],
-      RelativeErrorVariance = variances[, 2L], AbsoluteErrorVariance = variances[, 3L], G = g, Phi = phi,
-      RelativeSEM = sem_r, AbsoluteSEM = sem_a, Status = status, row.names = NULL)
+      RelativeErrorVariance = variances[, 2L], AbsoluteErrorVariance = variances[, 3L],
+      values, Status = status, metric_status,
+      ComponentPSD = all(diagnostics$PositiveSemidefinite), row.names = NULL, check.names = FALSE)
   }
   structure(list(coefficients = do.call(rbind, tables), covariances = covariances,
     design_grid = design_grid, weights = weights, component_diagnostics = diagnostics,
@@ -586,10 +939,18 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
 #' @export
 print.mfrm_multivariate_gstudy <- function(x, ...) {
   cat("Multivariate observed-score G-study\n")
-  label <- if (identical(x$design$complete, FALSE)) "Incomplete observed design:" else "Complete crossed design:"
-  cat(label, x$design$counts[["Person"]], "persons,")
-  if ("Rater" %in% names(x$design$counts)) cat("", x$design$counts[["Rater"]], "raters,")
-  cat("", x$design$counts[["Task"]], "tasks\n")
+  label <- if (identical(x$design$complete, FALSE)) "Incomplete observed design:" else
+    if (!is.null(x$design$nesting)) "Complete nested design:" else "Complete crossed design:"
+  counts <- x$design$counts
+  units <- c(Person = "persons", Rater = "raters", Task = "tasks")[names(counts)]
+  units[is.na(units)] <- paste(names(counts)[is.na(units)], "levels")
+  cat(label, paste(counts, units, collapse = ", "), "\n")
+  if (!is.null(x$design$nesting)) {
+    cat(names(x$design$nesting), "identities are local to", unname(x$design$nesting),
+      "; the observed child count is the total across parents.\n")
+    cat("Children per parent:", paste(names(x$design$child_counts), x$design$child_counts,
+      sep = " = ", collapse = ", "), "\n")
+  }
   cat(x$design$method, "; highest-order interaction and residual are combined.\n", sep = "")
   if (!is.null(x$data_usage)) {
     cat("Rows:", x$data_usage$counts[["UsedRows"]], "used of", x$data_usage$counts[["InputRows"]],
@@ -618,8 +979,13 @@ summary.mfrm_multivariate_gstudy <- function(object, ...) {
 #' @export
 print.mfrm_multivariate_d_study <- function(x, ...) {
   cat("Multivariate observed-score D-study\n")
-  conditions <- if ("Raters" %in% names(x$design_grid)) "raters and tasks" else "tasks"
-  cat(paste0("Means over common random ", conditions, "; weights are used as supplied.\n"))
+  convention <- x$gstudy$design$score_convention
+  if (is.null(convention)) convention <- paste("Means over common random",
+    paste(tolower(names(x$design_grid)), collapse = " and "))
+  cat(paste0(convention, "; weights are used as supplied.\n"))
+  if (any(!x$component_diagnostics$PositiveSemidefinite)) {
+    cat("Warning: non-PSD covariance components. Values use raw projections; inspect component_diagnostics.\n")
+  }
   print(x$coefficients, row.names = FALSE)
   cat("Point projections conditional on estimated covariance components; no confidence intervals.\n")
   invisible(x)

@@ -1,361 +1,272 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-21. This roadmap describes the direction
-of development; release dates are not promised.
-See [NEWS](NEWS.md) for implemented changes and the
-[README](README.md) for current usage and interpretation limits.
+Status: public roadmap, updated 2026-09-21. This document sets priorities and
+completion conditions; it does not promise release dates or unimplemented APIs.
+See [NEWS](NEWS.md) for changes and the [README](README.md) for use and examples.
 
 ## Current releases
 
-mfrmr 0.2.4 is a release candidate and has not been released.
-This source branch is the subsequent unreleased development version 0.2.4.9001.
-The README describes this working version; use `packageVersion("mfrmr")`
-and the help shipped with your installation for its available functionality.
+The current source is an unreleased 0.2.4 candidate integrating the selected
+work from stages 1–3 below. Local integration checks are complete; the release
+decision and publication remain pending.
+Use `packageVersion("mfrmr")` and installed help to identify available functionality.
+
+| Workflow | Current position | Role in the planned 0.2.4 |
+| --- | --- | --- |
+| Portable calibration and new-Person scoring | Implemented for the stated fixed-normal RSM/PCM MML scope. | Preserve the supported workflow and corrections during integration. |
+| External-feature clustering and imputation sensitivity | Included in the candidate, including hierarchical trees, plots and setting comparisons. | Preserve descriptive interpretation and paired imputation comparisons. |
+| Multivariate observed-score G/D studies | Crossed/nested point projections and explicit normal-theory intervals for prespecified two-crossed-facet plan differences are included. | Preserve the supported designs, uncertainty assumptions and metric-specific availability. |
+| Structural/model extensions | Person-by-(Child-within-Parent) multivariate G/D-study point estimates are implemented, including identifiable incomplete or unequal source designs. | Integrate this selected stage-3 scope; other nesting structures and random-facet MFRM remain separate extensions. |
 
 ## Purpose and priorities
 
 mfrmr helps users calibrate ratings, compare Persons and facets on an explicit
-measurement scale, reuse a calibration, and report what the results support.
-The immediate release priority is a reliable existing workflow with clear
-uncertainty and compatibility limits. Multivariate observed-score G-theory is
-a priority for subsequent feature development: it addresses the dependability
-of component and composite scores when raters, tasks, or score weights change.
-Rating-design support and models for sampled raters remain separate extensions.
+measurement scale, reuse a calibration, and plan assessments with a clear
+account of what the results support. The development order is:
 
-The estimation core remains frequentist MML/JML. Posterior EAP scoring
-conditional on a fitted calibration does not make the calibration fully
-Bayesian. Future computational choices must preserve the intended measurement
-model, scale and inferential target.
+1. Finish the implemented development workflows: APIs, examples, tables,
+   plots, exports, saved results and failure behavior.
+2. Extend statistical support, beginning with uncertainty in multivariate
+   G/D-study planning comparisons.
+3. Extend the models for specified assessment designs and analysis targets.
+4. Integrate the completed work from stages 1–3, together with the existing
+   calibration workflow and corrections, into mfrmr 0.2.4.
+
+Integration and the release decision follow these stages. A reproduced
+calculation or interpretation defect is corrected when found. Completion requires
+working functionality under stated conditions, applicable evidence and clear
+failure behavior. Research results or documentation alone do not implement an extension.
+
+The estimation core remains frequentist MML/JML. EAP scoring conditional on a
+fitted calibration does not make calibration fully Bayesian. Observed-score
+G-theory, exploratory feature groups and latent MFRM estimates answer different
+questions; they must retain their own scales, assumptions and interpretations.
 
 ## Focus for 0.2.4
 
-The principal addition is portable calibration and new-Person scoring:
+The release combines finished exploratory-feature and multivariate G/D-study
+workflows, statistical support and selected model extensions with portable
+calibration. Current functionality and planned additions remain distinct until
+implementation and validation are complete.
 
-- one observed rating scale, RSM or PCM, and MML calibration with a fixed
-  standard-normal Person distribution;
-- supported direct and group facet anchors and stored two-way facet interactions;
-- review of fitting-integration sensitivity using the same data, score map,
-  model and fitting settings, with estimation completed at every requested order;
-- extraction from the exact highest-order fit in that review, with separate
-  scoring-integration settings;
-- preservation of categories, facet levels, anchors and scoring assumptions
-  when saving, transferring and loading the calibration;
-- EAP scoring of new Persons with compatible data and known non-Person levels,
-  with incompatible inputs refused explicitly.
+| Stage | Deliverable | Completion condition before integration |
+| --- | --- | --- |
+| 1. Finish implemented functions | Consistent clustering/MI comparisons and G/D-study APIs, beginner examples, plots, exports and saved-result behavior. | Supported data-to-result workflows execute; units, identities, exclusions and metric-specific availability are consistent. Remaining defects are corrected with focused checks. |
+| 2. Extend statistical support | A justified uncertainty method for prespecified G/Phi/SEM planning comparisons, preserving dependence between plans and composites. | Implemented output matches a declared sampling target; boundary/failure handling and coverage or decision error are evaluated under explicit conditions. An uncertainty statement alone does not complete this stage. |
+| 3. Extend models | Person-by-(Child-within-Parent) G/D-study point estimates, such as task-specific rater teams, with fitting, projections and user guidance. | The selected design has identifiable components, working raw-data estimation and D-study rules, independent calculation checks and an executable assessment example. Nested intervals, other nesting structures and other model families remain separate extensions. |
+| 4. Integrate as 0.2.4 — local verification complete | The selected work now forms one candidate with consistent APIs, documentation, migration guidance and a distributable archive. | Make the release decision on this source, preserving supported scope and the distinction between local verification and publication. |
 
-No single quadrature order is sufficient for every design. Users must judge
-whether changes across the reviewed orders matter for their analysis.
-Portable intervals condition on the saved point calibration and standard-normal
-prior; they exclude calibration-estimation uncertainty. A successful numerical
-review does not establish that the scoring prior suits a new population.
-See the portable calibration workflow
-(`vignette("mfrmr-portable-calibration", package = "mfrmr")`).
+Selected methods must meet their stated statistical requirements before
+inclusion; changes to the planned scope will be reflected here. Model extensions
+will target specified assessment designs, rather than every G-theory or MFRM
+model family in one version. Compatibility is maintained throughout development;
+stage 4 verifies how the completed features work together.
 
-The other priority is consistent interpretation throughout existing analyses:
+Portable calibration remains part of the integrated release. Its current scope
+is one observed scale, fixed-standard-normal RSM/PCM MML, supported direct/group
+facet anchors and stored two-way facet interactions. Fitting-integration review
+refits at each requested order, extraction uses the reviewed highest-order fit,
+and scoring settings remain separate. Save/load and fresh-session scoring must
+preserve categories, scale, anchors and settings; incompatible inputs must be
+refused. No order is universally sufficient. Portable intervals condition on
+the saved calibration and prior, without calibration-estimation uncertainty.
 
-| Result | Meaning and limits to retain in tables, plots and reports |
-| --- | --- |
-| Fit and precision summaries | Optimizer success, estimability and precision assessment are separate. Brief and full summaries must give the same interpretation decision. |
-| Person scores and posterior draws | EAP, SD and intervals condition on the fitted calibration and stated prior. Estimated-population scoring requires explicit exploratory review. Draws alone do not qualify downstream group or regression inference. |
-| ICC intervals | Use joint parametric bootstrap ratios under the fitted Gaussian model; retain failed refits and withhold incomplete intervals. Separate component-profile bounds are not ICC profile-likelihood intervals. Saved interval results require recalculation. |
-| ICC analysis sample | Preserve numeric score labels, require explicit omission of incomplete rows, and retain exclusion accounting. Calculate design effects using the same observations and grouping-level counts as the ICC model. Omission does not correct missing-data bias. |
-| ICC score units and design-effect scope | Retain small positive variances without a fixed unit-dependent cutoff; constant scores have undefined variance shares. Treat design effects as separate per-facet approximations, not estimates of full-design precision. |
-| Reliability and separation | Report the finite estimates and corresponding SEs used; incomplete SEs cannot produce a complete index. High rater separation means differences in severity, not high agreement. |
-| Fit, category, marginal, PCA and Q3 diagnostics | Preserve missing results and report how many observations or elements were evaluated. Flags are descriptive review aids, without guaranteed individual or multiple-element error rates. Ordered point estimates do not by themselves establish adequate categories. |
-| QC | Assess differentiation only for facets selected for that purpose. An unavailable check cannot become a pass, and an overall QC result does not establish statistical validity. |
-| Agreement, networks and response times | Retain unavailable comparisons, graph scope and the number of observations with valid times. Agreement and graph patterns do not establish rater quality or causal halo; time cutoffs do not establish rapid guessing or effort. |
-| Fair Scores | State the reference profile and omitted uncertainty. Existing approximate intervals remain diagnostic; a new inferential FairZ method is outside 0.2.4. |
-| Group comparisons and linking | Residual differences describe observed-minus-expected scores without tests or confidence intervals. Linked subgroup refits and drift screens retain their separate uncertainty limits. A new omnibus differential-functioning test is outside 0.2.4. |
-| Observed-score G/D studies and shrinkage | Retain their distinct models and conditional assumptions; neither is a jointly estimated random-facet MFRM or a source of fully propagated uncertainty. Reapplying shrinkage replaces the previous adjustment, and replay preserves its position after fitting. |
-| External imports | Preserve source coordinates and uncertainty conventions. Missing joint covariance cannot be reconstructed from marginal SEs. Imported objects do not become native fits or portable calibrations. |
-
-Existing calculations and interpretations still require review before release.
-Clearer wording does not resolve an incorrect formula or unsupported decision.
-Changed behavior and saved-object instructions must agree across NEWS, help,
-examples and exported results. See
-[Updating saved analyses](README.md#updating-saved-analyses) for the user actions.
-
-## Model scope
-
-| Area | Current scope and direction |
-| --- | --- |
-| RSM / PCM | Existing fitted-model workflows and portable fixed-normal MML calibration. Category structure and identification must match the rating design. |
-| GPCM | One selected facet owns both relative slopes and steps. Free-slope uncertainty, automatic information-criterion ranking and the PCM-versus-GPCM chi-square LRT remain unavailable. No portable GPCM in 0.2.4. |
-| JML | Fitting uses observed scores without extreme-score adjustment or finite-item bias correction. Free extreme Persons retain infinite estimates; optional display replacements are separate. SEs and normal bands remain exploratory. No corrected-JML estimator or portable JML in 0.2.4. |
-| Interactions / estimated populations | Compatible fixed-normal RSM/PCM MML calibrations preserve two-way facet interactions. Estimated-population fits remain fitted-object-only. Scoring compatibility or local information rank does not establish formal interaction inference. |
-| Multiple scales | A later extension would identify and fit separate scales explicitly, without silent pooling or automatic cross-scale linking. |
-
-For GPCM, "bounded" refers to documented model and workflow scope, not finite
-parameter box constraints. Numerical convergence alone does not remove its
-inferential restrictions. The model-scope guide
-(`vignette("mfrmr-gpcm-scope", package = "mfrmr")`)
-describes the available routes.
-
-## External features, grouping, and missing values
-
-The development version adds external-feature review and exploratory grouping
-for one row per Person, rater, or other entity. Features, their types, weights,
-and the group count are explicit choices. Group profiles and representative
-entities help users interpret the partition; silhouette widths describe sample
-separation. Groups do not establish ability levels, rater quality, or latent
-measurement classes. Sampling stability and new-entity assignment require
-separate development and validation.
-
-Plots now show silhouettes, individual feature profiles, and co-membership
-across imputations directly from these results. PAM is nonhierarchical.
-Separate hierarchical analyses now support average and complete linkage on
-Gower dissimilarities, with retained trees and dendrograms. Their partitions
-can be compared with PAM, including across the same feature imputations.
-Ward clustering, pooled trees, and branch-support estimates are not provided.
-
-The external-feature tutorial
-(`vignette("mfrmr-external-features", package = "mfrmr")`) now
-demonstrates separate person, rater, and task tables, with classifications
-joined by ID to planned and observed rating rows. This supports descriptive
-assignment review, not a joint clustering model or inference about group
-effects. Many-feature analyses require attention to redundant and irrelevant
-variables. Numeric PCA/k-means integration and joint cross-facet imputation
-remain future work; they need explicit distance,
-scaling, dependence, and uncertainty choices before implementation.
-
-Missing external features remain visible with user-supplied reasons. Clustering
-stops by default; explicit omission retains unclassified IDs. This is not
-imputation or correction for missing-data bias. Planned unassigned ratings,
-unobserved assigned ratings, and missing external attributes need distinct
-handling. The existing rating-design review remains the starting point for
-rating coverage; it does not infer why an observation is absent.
-
-The development version also accepts external-feature imputations fitted with
-`mice` for repeated clustering. Users select eligible missing cells explicitly;
-original observations, IDs, reasons, and model diagnostics are preserved.
-Pairwise co-membership proportions describe sensitivity to the supplied
-imputations without averaging arbitrary group labels. They do not establish
-sampling stability or provide pooled inferential estimates. Numeric ranges are
-recalculated in each completed sample and retained for inspection.
-
-Feature-selection, group-count, feature-weight, and clustering-method
-sensitivity can be reviewed by comparing existing clustering results on the
-same entities. Shared feature values and types must remain unchanged.
-Pair changes and adjusted Rand indices compare
-partitions without relying on group numbers. For multiply imputed features,
-the comparison pairs completed tables and retains every imputation's result.
-When feature selections differ, it requires the same fitted imputation model
-and checks selected values against each completion. Removing a clustering
-feature does not remove it from the imputation model. Group sizes, feature
-counts, profiles, and silhouettes remain available for substantive
-review; no setting is automatically selected. These descriptive comparisons
-do not provide sampling stability or pooled inference.
-
-Further missing-data support for rating responses must preserve rating
-structure and combine downstream estimates and uncertainty on a common scale.
-Nonresponse related to unobserved outcomes requires explicit assumptions and
-sensitivity analysis. No general automatic missing-score correction is
-promised for 0.2.4; the new external-feature APIs belong to subsequent development.
-
-## Random-effects MFRM and testlet covariance
-
-The first intended use is generalization beyond observed raters: how much do
-raters vary, and how uncertain is a Person comparison when the raters are
-replaced? That question differs from dependence among repeated ratings of the
-same response. Current fixed-facet MML and post-fit empirical-Bayes shrinkage
-do not estimate a joint random-facet MFRM.
-
-The initial model would use one observed scale, unit weights, an
-adjacent-category RSM, one shared random-rater intercept, fixed task/criterion
-effects and a declared Person distribution. Each rater's effect must be shared
-across all Persons rated by that rater. A new effect integrated independently
-for every Person would describe a different model.
-
-Development proceeds from a specified target to computation and then to use:
-
-1. Distinguish predictions for observed raters from predictions for replacement
-   raters, and state scale constraints, missingness assumptions and the role
-   of calibration uncertainty in Person and Person-difference results.
-2. Use existing computation where it matches the response probabilities,
-   effect sharing and constraints. A cumulative-link ordinal model is not
-   interchangeable with a polytomous RSM/PCM.
-3. Check identification, likelihood calculations, integration, weak information,
-   variance boundaries and performance at realistic rater counts and workloads.
-   Evaluate estimation and interval/prediction behavior for the intended target.
-4. Preserve those assumptions in scoring, saved results and reports before
-   adding PCM, sampled tasks, local testlets, covariance or random slopes.
-
-Person-local testlets and effects shared across raters need different
-covariance structures. Positive-definite covariance alone does not establish
-identification. A new rater cannot silently be assigned severity zero, and
-independent Person SDs do not express the joint uncertainty of a difference.
-Random slopes on observed covariates also differ from discrimination on
-latent ability. None of these extensions is part of the 0.2.4 promise.
-
-## Rater assignment and anchors
-
-The design question is which assignments provide useful Person or facet
-comparisons within a stated total and per-rater workload. Define whether one
-unit of cost is a scored response or an individual criterion rating.
-Connectedness, balanced workload and an anchor percentage alone cannot answer
-the precision question; there is no single recommended percentage.
-
-The next steps are to:
-
-- preserve correct workload, connectivity, requested-facet and failed-run
-  accounting in existing design tools;
-- compare complete and incomplete rating designs at equal cost for declared
-  targets, retaining disconnected cases and any subgroup disadvantages;
-- distinguish direct anchors, group anchors, and unanchored linking, including
-  the uncertainty introduced by selecting or estimating the link;
-- compare allocations using target-specific estimation error, interval
-  availability and performance, and computation, rather than connectivity alone;
-- extend comparisons to replacement raters only after the matching sampled-rater
-  model and prediction methods are available.
-
-Evidence from one allocation pattern will not be generalized to all designs.
-Facet-estimation accuracy cannot substitute for Person-difference precision.
-An API recommending designs should expose these trade-offs rather than name a
-best design without a user-relevant target and workload constraints.
-
-Deleting a rating, fixing an anchor and excluding a common linking element are
-different changes. Existing linking sensitivity views hold source estimates
-fixed. A future uncertainty analysis that refits models must also repeat any
-selection/linking and account for covariance between the compared results.
+Existing ICC, residual-reporting and shrinkage/replay corrections must also
+survive integration. Migration guidance must distinguish reprinting, recomputing,
+rescoring and refitting. Earlier checks support unchanged content only; the
+expanded 0.2.4 needs its own source identity and final verification. See
+[updating saved analyses](README.md#updating-saved-analyses) and
+`vignette("mfrmr-portable-calibration", package = "mfrmr")`.
 
 ## Generalizability theory
 
-Current `mfrm_generalizability()` and `mfrm_d_study()` provide an observed-score,
-main-effects mixed-model decomposition and planning projection. They do not
-estimate reliability on the MFRM latent scale. Missing variance components
-leave affected coefficients unavailable; convergence warnings require review.
-D-study projections hold estimated variances fixed, and residual-scaling
-choices express assumptions rather than uncertainty bounds. These coefficients
-do not estimate accuracy at a particular cut score.
+The planning question is how tasks, raters or score weights affect the
+dependability of a score used for ranking or for absolute decisions. For
+component and composite scores, between-score covariances matter; averaging
+separate reliability coefficients does not answer the composite question.
 
-In the development version, missing scores or selected facet values require
-explicit omission. G/D results retain the source of their data and the counts
-of rows supplied, used, and excluded. Stored fitted rows cannot reconstruct
-earlier MFRM exclusions, and omission does not correct missing-data bias.
+The development functions `mfrm_multivariate_gstudy()` and
+`mfrm_multivariate_d_study()` provide the following scope:
 
-The development version now provides a bounded multivariate G-study and
-D-study workflow through `mfrm_multivariate_gstudy()` and
-`mfrm_multivariate_d_study()`.
-For example, an assessment may score content, organization, and language on
-each performance. Users need to examine how changing their composite weights,
-or the numbers of raters and tasks, changes score dependability. Correlated
-components require universe-score and error covariances; averaging the
-components' separate reliability coefficients does not answer this question.
+| Part | Implemented scope | Interpretation boundary |
+| --- | --- | --- |
+| G-study model | One or two named random facets: crossed, or one nested within the other with persons crossed. Score components are fixed, with one observation per retained cell. ANOVA handles complete balanced data; MINQUE(0) handles identifiable incomplete or unequal configurations. | Identities, including parent/child pairs, must be shared across persons and scores. Naming an Occasion facet does not model growth. Fixed facets, nesting within persons and partially shared identities are unsupported. |
+| Covariance components | Three components for one facet; seven for two crossed facets; five for Person-by-(Child-within-Parent). Raw negative or indefinite estimates are retained. | Highest-order interaction and within-cell error are combined. Numerical rank and covariance admissibility do not establish estimation precision. |
+| D-study | Future complete balanced scenarios preserving the crossed/nested structure, original scores, named weighted composites and signed differences, with G/Phi and SEMs. | Incomplete or unequal source designs require an explicit future grid. Nested child counts are per parent, not total pool sizes. Projections do not estimate reliability of the sparse roster; unequal future allocations are unsupported. |
+| Output | Metric-specific availability, component diagnostics, base plots, ggplot conversion for point projections and exact plotted values. | A non-PSD component does not automatically suppress every metric. Calculability does not validate the whole covariance model. No automatic design recommendation is provided. |
+| Prespecified plan differences | `mfrm_multivariate_d_compare()` supplies approximate paired-delta intervals and base plots for two common random facets, including incomplete MINQUE(0) sources, when `assumption = "normal"` is explicit. | These are pointwise normal-theory approximations. One-facet, nonnormal-robust, nested/fixed-facet and simultaneous intervals, adaptive weight/plan selection and informative-missingness correction remain unsupported. |
 
-The default ANOVA implementation accepts complete, balanced, fully crossed
-Person-by-Task and Person-by-Rater-by-Task designs. An explicit
-`method = "minque0"` also estimates these covariance components from an
-incomplete observed configuration, provided its moment equations separate
-them. The same condition identities apply across all score components.
-A Person-by-Task design is requested explicitly with `rater = NULL`;
-it estimates Person, Task and combined Person-by-Task/residual covariance
-matrices and permits D-studies of task counts only. Score components are fixed
-parts of the intended assessment; included raters and tasks are random
-conditions of measurement. With a rater facet, the model
-also estimates Person-by-Rater, Person-by-Task and Rater-by-Task components.
-With one observation per cell, the highest-order interaction and residual
-error remain combined. The D-study
-retains their distinct averaging rules, score units, and user-specified
-weights when forming relative-error and absolute-error covariance matrices,
-composite G/Phi, and SEMs.
-The D-study plot method shows G/Phi or SEM for one explicitly identified score
-or composite, with rater/task counts held fixed within each line. It retains
-unavailable results and their reasons. Help leads from a planning question to
-scenario construction, metric interpretation and exact values; these plots
-are conditional projections without confidence intervals or automatic design
-selection.
-Conversion with `as_ggplot()` preserves these multivariate comparisons and
-unavailable estimates. The main-effects D-study's base curves also separate
-every other facet count; its surface plots require remaining conditions to
-be fixed or explicitly separated into panels.
-Signed weights also support difference-score dependability when the score
-scales make subtraction meaningful. The same weights are used for the target
-composite and its observed estimate; distinct estimation weights and profile
-reliability remain outside this workflow.
+The existing `mfrm_generalizability()` / `mfrm_d_study()` main-effects workflow
+remains separate. Neither workflow estimates reliability on the MFRM latent
+scale or pass/fail classification accuracy. Explicit missing-row omission
+records exclusions; it does not correct selective assignment or nonresponse.
 
-Sparse estimation retains numerical rank/conditioning and replication
-diagnostics. Explicit missing-row omission uses a common multivariate sample
-and records excluded rows; it does not impute ratings or correct selective
-assignment or nonresponse. Complete-design D-study projections require an
-explicit grid when the source data are incomplete. Using global facet-level
-counts as per-person replication would describe the wrong measurement design.
-Planned assignment coverage, covariance-component identification, numerical
-admissibility, and statistical precision remain separate questions.
+The next work is organized around decisions, rather than more reference-software
+comparisons:
 
-Raw negative or indefinite component estimates are retained without repair;
-materially non-PSD components withhold coefficients and SEMs. Matrix
-admissibility does not establish precise estimation or adequate model fit.
-The common-task workflow reproduces the numerical example in Brennan's
-mGENOVA manual, from the supplied scores to component matrices and D-study
-coefficients; this does not establish sampling precision or broad recovery.
-This workflow concerns dependability on the observed-score scale.
-Treating ordered categories as numeric scores does not
-make their coefficients measures of latent ordinal dependability.
-Nested/local or partially shared facets, score-specific missing-data models,
-covariate-dependent assignment, sparse-roster D-studies and sampling intervals
-need separate extensions and evidence. Before broad sparse-design claims,
-evaluate recovery and precision under representative overlap, variance
-boundaries and assignment mechanisms, rather than judging support by cell
-coverage or successful calculation alone.
-This workflow complements MFRM on the observed-score scale; it does not
-provide multivariate latent MFRM estimation or cut-score classification accuracy.
-It is developed separately from the 0.2.4 release candidate, with no release
-version promised yet.
+| User question | Next deliverable | Evidence needed to consider it complete |
+| --- | --- | --- |
+| Can I use the current point projections correctly? | Consolidate the existing data → G-study → scenario/composite → table/plot workflow and saved-result behavior. | Examples use supported designs; metric-specific omissions, score units and limitations survive printing, export and replay. No new estimator is required for this step. |
+| How uncertain is the improvement between two feasible plans? | Specify and evaluate joint uncertainty in G/Phi/SEM differences using the same estimated components. | A declared sampling target, design/missingness assumptions and treatment of boundaries/failures; assessment of interval coverage or decision error for that target before offering an inferential API. |
+| Does a sparse source design estimate the quantities needed for planning? | Reuse existing recovery results; investigate only a named unresolved allocation, score-distribution or missingness condition. | Bias/error, unavailable attempts and decision consequences reported together. Rank, graph connectivity or a returned coefficient alone cannot establish adequacy. |
+| Does my assessment require local raters, nested tasks or partial sharing? | Use the implemented Person-by-(Child-within-Parent) model when appropriate, such as separate rater teams for tasks. Specify other nesting/partial-sharing designs separately. | The implemented five-component point workflow has independent QR/kernel and projection checks. These do not establish precision or recovery for arbitrary sparse allocations, nor provide nested-design intervals. |
 
-For the roles of composite weights and design-specific covariance, see
-[Brennan (2016)](https://education.uiowa.edu/sites/education.uiowa.edu/files/2022-10/casma-research-report-50.pdf)
-and [Brennan, Kim, and Lee (2022)](https://doi.org/10.1177/00131644211049746).
+For planning uncertainty, preserve dependence between scenarios and composites;
+separate intervals cannot simply be treated as uncertainty in their difference.
+Distinguish uncertainty for a prespecified comparison from inference after
+selecting the largest estimate. Evaluate how often a plan choice differs and
+how much true dependability it loses; these are different criteria. The paired
+comparison API now supplies approximate pointwise intervals for two crossed facets
+under an explicit normal random-effects assumption. Existing saved-result
+comparisons and targeted distribution checks support this bounded method;
+they do not establish robustness across score distributions and designs.
+
+The first uncertainty scope should use the existing common-facet model and
+prespecified complete future plans. It does not automatically include automatic
+weight selection, optimal sparse assignments, simultaneous guarantees or
+informative-missingness correction. If no method is adequately supported,
+keep current output explicitly at the point-projection scope while revising
+the method or proposed inclusion; do not present an unqualified interval.
+Equal rating counts need not imply equal examinee burden or cost.
+
+See [the G-theory workflow](README.md#multivariate-g-theory). The existing
+GENOVA comparisons remain useful checks of formulas and negative-component
+conventions; full software equivalence is not a development or release goal.
+
+## External features, grouping, and missing values
+
+The implemented development workflow reviews one row per Person, rater or task
+and clusters those entities separately. Gower/PAM supports mixed features;
+Gower with average or complete linkage supplies hierarchical partitions and
+dendrograms. Profiles, silhouettes and setting comparisons help users interpret
+results without identifying groups as ability levels, rater quality or latent
+measurement classes.
+
+`mfrm_cluster_imputed()` accepts user-fitted `mice` completions and an explicit
+set of eligible missing feature cells. Observed values, IDs, feature types,
+missingness reasons and imputation diagnostics are preserved. Co-membership
+across completions describes sensitivity to that model; it is not Rubin pooling,
+sampling stability or a posterior probability of class membership.
+
+`mfrm_cluster_compare()` compares group counts, feature selections, weights and
+methods on the same entities. Imputed comparisons use paired completions from
+the same retained model. Removing a clustering feature does not remove it from
+the imputation model. No setting or consensus partition is selected automatically.
+
+| User need | Next action and completion condition |
+| --- | --- |
+| Use the existing descriptive workflow | Consolidate the tutorial, ID/omission accounting, plots and imputation-pairing behavior for stage 1 of the planned 0.2.4 integration. Reuse existing stress evidence within its tested workload; input caps are not runtime or memory guarantees. |
+| Relate person, rater and task groups | Preserve separate feature tables and join classifications to planned/observed ratings by ID. Descriptive relationships must not become causal group effects or a joint clustering model. |
+| Use many features or numeric PCA/k-means | Add a specific workflow only after stating its purpose, scaling, distance and the role of PCA. Assess redundant/irrelevant features and interpretation of the transformed space; more features or another algorithm is not itself an improvement. |
+| Make claims about stable groups or classify new entities | Specify the sampling or prediction target separately from imputation sensitivity. Evaluate it before adding a stability statistic or assignment API. |
+
+Missing external attributes, unassigned ratings and missing assigned responses
+remain distinct. Response-score imputation is a separate extension: it must
+preserve rating structure and identify how downstream estimates and uncertainty
+are combined on a common scale. It requires an explicit missingness model and
+sensitivity assumptions, not filling every empty cell or treating MAR as a
+correction. Ward linkage, pooled trees, joint cross-facet imputation and pooled
+inferential group effects are outside the present workflow.
+
+See [external-feature examples](README.md#external-features-and-exploratory-groups)
+and `vignette("mfrmr-external-features", package = "mfrmr")`.
+
+## Rater assignment and anchors
+
+Design support asks which allocation serves a declared Person or facet target
+within total workload, per-rater workload and examinee-burden constraints.
+The unit of cost must be explicit: a performance, a scored response and an
+individual criterion rating need not have the same cost.
+
+The next useful extension should reuse existing assignment and coverage review,
+retain disconnected/failed cases and subgroup disadvantages, and compare
+estimation error or qualified interval performance for a named target.
+Connectivity, balanced workload and an anchor percentage alone cannot select
+a design. Facet precision cannot substitute for Person-difference precision.
+
+Direct anchors, group anchors and estimated linking have different uncertainty.
+A future comparison that refits models must repeat any estimated linking or
+selection and preserve covariance between compared results. Design evaluation
+for observed fixed raters can proceed within its own supported model; design
+for replacement raters requires the matching random-rater prediction model.
+
+## Random-effects MFRM and testlet covariance
+
+This is a possible model-extension track for generalization beyond observed raters:
+how uncertain is a Person comparison when different raters are sampled?
+Current fixed-facet MML, post-fit shrinkage and observed-score G-theory do not
+jointly estimate a random-facet MFRM.
+
+The first proposed scope is one observed scale, unit weights, adjacent-category
+RSM probabilities, one random-rater intercept shared across Persons, fixed
+task/criterion effects and a declared Person distribution. Development requires
+observed-rater and replacement-rater targets, identification/scale constraints,
+a matching likelihood, and estimation/prediction evidence at realistic workloads
+and variance boundaries before a public scoring route.
+
+Reuse an existing computation only when its probabilities, effect sharing,
+constraints and target match. A cumulative-link ordinal model or a new random
+effect integrated independently for every Person is a different model.
+Person-local testlets require a different covariance structure. PCM, sampled
+tasks, covariance and random slopes follow concrete needs after this initial
+scope; they are not all prerequisites for a first bounded random-rater method.
+
+## Model scope
+
+| Area | Current restriction or trigger for further work |
+| --- | --- |
+| RSM/PCM | Preserve the supported fitted-model workflows and fixed-normal MML portable scope. Extend only with matching identification and uncertainty evidence. |
+| GPCM | A selected facet owns slopes and steps. Free-slope uncertainty, automatic information-criterion ranking and the PCM-versus-GPCM chi-square LRT remain unavailable. Portable GPCM requires a separate model-extension decision. |
+| JML | Uncorrected estimates retain infinite extreme Persons; optional display replacements do not change primary estimates. SEs and normal bands remain exploratory. A correction or portable JML needs a separate method decision. |
+| Estimated populations and Fair Scores | Existing conditional/diagnostic output retains its limits. New population intervals, omnibus DRF inference or inferential FairZ methods require their own target and evidence. Inclusion requires a specific stage-2/3 scope decision; the new release order does not itself qualify them. |
+| Multiple observed scales | Require explicit scale identifiers and a concrete separate-scale use case. Do not silently pool or link scales. Inclusion requires a specified model-extension scope. |
+
+See [model and interpretation boundaries](README.md#model-and-interpretation-boundaries)
+for the current output rules. Fixing a numerical or reporting defect does not
+by itself qualify a new inferential claim.
 
 ## Response time and decision processes
 
-These are later research directions. A response-time model first needs a
-specific timed event, actor and unit, treatment of missing or censored times,
-and an identified relationship between ability and speed. One respondent's
-production time must not be duplicated because several raters score that
-response; rater scoring time is a different observation.
+These remain later research directions. A response-time model needs a defined
+event and actor, appropriate time units, missing/censored-time treatment and
+an identified relation to the measurement target. Response production time
+must not be duplicated because several raters score the same response; rater
+scoring time is a separate observation.
 
-A drift diffusion model requires an appropriate choice-and-time task and its
-own likelihood. Polytomous ratings or essay completion times alone do not
-justify it. Current descriptive time summaries do not estimate either model.
+A diffusion model requires suitable choice-and-time data and its own likelihood.
+Polytomous ratings or essay completion times alone do not supply that model.
+A concrete assessment need and data take precedence over adding these names
+to the API.
 
 ## External comparison
 
-mfrmr should reuse computation where response probabilities, parameterization,
-identification, effect owners, estimator and target agree. Agreement with
-another program is bounded evidence, not a definition of correctness or a
-promise of feature parity.
+Use a comparator to answer a specific formula, convention or interoperability
+question. Match model, parameterization, estimator, scale and uncertainty
+meaning first; numerical agreement is supporting evidence within that scope.
+It does not establish statistical validity or a promise of feature parity.
 
-The mirt, TAM and eRm adapters preserve the source ability scale for supported
-unidimensional Rasch/partial-credit models. TAM multi-facet displays combine
-effects for each response condition; they do not reconstruct separate facet
-coordinates. Summaries identify source scoring and uncertainty conventions,
-and Wright maps show points only. Posterior SDs do not establish separation
-reliability. Importing a result is neither re-estimation nor reconstruction of
-an unavailable covariance.
+The mirt, TAM and eRm adapters preserve supported source scales and conventions.
+TAM multi-facet displays do not reconstruct separate facet coordinates, and
+marginal SEs cannot reconstruct a missing joint covariance. Imported objects
+are not native fits or portable calibrations. Preserve these distinctions in
+any future adapter extension.
 
 ## Version direction
 
-| Version / horizon | Intended outcome |
+| Horizon | Outcome and sequencing |
 | --- | --- |
-| 0.2.4 | Portable fixed-normal RSM/PCM MML calibration and scoring, corrected existing workflows, and consistent interpretation and migration guidance. |
-| 0.2.5 candidate | Explicit scale identifiers and separate-scale RSM/binary and PCM workflows, if user needs justify them. This would not provide automatic linking. |
-| Later feature releases, version unassigned | A bounded multivariate observed-score G/D-study workflow, target-specific rating-design support, and a limited frequentist random-rater MFRM, introduced separately when their methods and workflows are ready. |
-| 0.3.0 | Consolidate supported APIs, saved-object compatibility and reproducible performance. |
-| 1.0.0 | A deliberately limited stable core with clear use conditions, statistical limits and maintenance commitments. |
-
-## Not part of the 0.2.4 promise
-
-There are no promised versions for portable GPCM/JML/estimated populations,
-automatic cross-scale linking, multidimensional estimation, mixed response
-families, multivariate G-theory, response-time or diffusion models.
+| 0.2.4, release candidate | The selected function, statistical-support and model extensions are implemented. Integrate and verify their combined source before publication. |
+| Further releases | Address needs beyond the selected 0.2.4 scope while maintaining supported APIs, saved-object compatibility and reproducible performance. |
 
 ## Compatibility principles
 
-- Preserve model, scale, categories, anchors and uncertainty meaning when
-  saving results, drawing figures and exporting tables.
-- Refuse incompatible objects clearly and provide a migration or refusal
-  explanation when saved-object requirements change.
-- Use realistic examples without implying that one successful example
-  establishes accuracy for every design or population.
-- Describe a feature as supported only when its documented conditions,
-  implementation and evidence agree. A roadmap entry is not current API support.
+- Preserve model, scale, categories, anchors, score/composite identity and
+  uncertainty meaning across saved results, tables, figures and exports.
+- Explain incompatible inputs and saved-object migration in user-facing terms;
+  internal study identifiers and execution records belong in maintainer material.
+- Keep examples executable, plots in English, and missing results visible.
+  An unavailable estimate must not become zero or a successful check.
+- Add work when it can change a stated user outcome. Reuse applicable evidence;
+  repeat or broaden checks for changed behavior, a failure or a justified
+  release integration need. Test counts and documentation volume are not
+  completion criteria.
