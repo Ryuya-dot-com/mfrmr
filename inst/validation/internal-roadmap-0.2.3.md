@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-20.
+Status: repository-only maintainer plan, refined 2026-09-21.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -181,9 +181,14 @@ It supersedes the ordered queue below. No new large study is launched.
    The exact revised archive passes `R CMD check --as-cran`, including
    additional examples and PDF/HTML manuals, with zero errors/warnings and one
    NOTE about seven updates in six months. Initial failures are retained.
-   CRAN still lists 0.2.3.1 with no reverse dependencies. Next: verify the
-   revised candidate's hosted matrix, preserving the earlier matrix as the
-   previous source's evidence. Publication/submission has not occurred.
+   CRAN still lists 0.2.3.1 with no reverse dependencies. The revised candidate
+   `9010f66` now passes all five environments in run `35543743143`, with zero
+   package-check errors/warnings/notes. Ubuntu's complete suite has 19,438
+   passes, zero failures, the same 42 warning messages/counts and 44 recorded
+   skips. All five source identities and the two input/eight archive cases per
+   cell are verified. The earlier matrix remains the previous source's evidence.
+   Next: review the retained claim dispositions and decide publication/submission
+   for this identified candidate. Publication/submission has not occurred.
    Preserve the claim ledger's restrictions; do not turn every unresolved
    research extension into a requirement for this bounded release.
    Documentation consistency is not statistical claim closure or release approval.

@@ -24,7 +24,7 @@ statistical questions, and records the bounded current-source checks and
 release consequences. Earlier records below retain their original outcomes
 and source identities; they are not blanket current-source approvals.
 
-The [September 20 candidate checks](release-candidate-check-0.2.4.md) verify
+The [September 20–21 candidate checks](release-candidate-check-0.2.4.md) verify
 portable scoring across fresh sessions and Mac/Linux, correct two public-output
 issues, and retain the failed full runs alongside their targeted test repairs.
 The repaired archive passes both standard and complete Mac checks with zero
@@ -37,7 +37,12 @@ The September 21 versioned-candidate follow-up runs `--as-cran`, including
 additional examples and PDF/HTML manuals. It repairs a D-study subset/display
 failure and passes the exact 0.2.4 archive with zero errors/warnings and one
 submission-history NOTE. Its updated namespace list and stale-result refusal
-are tested; the changed candidate still needs its own hosted matrix.
+are tested. The revised candidate `9010f66` passes its own five-environment
+matrix, with zero package-check errors, warnings or notes. The complete Ubuntu
+suite has 19,438 passes, zero failures, the same 42 warning messages/counts and
+44 recorded skips. All five source identities and portability results are
+verified. These checks do not change claim restrictions or constitute
+publication/submission.
 
 The [September 20 structural-SE source review](mml-structural-source-applicability-0.2.4.md)
 reconstructs the original sampling-study source and verifies current numerical

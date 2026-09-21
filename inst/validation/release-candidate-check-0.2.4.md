@@ -362,9 +362,8 @@ exact-archive `NOT_CRAN=false R CMD check --as-cran` exits with status 0:
 673 CRAN-light expectations (zero failures/warnings, three intended skips),
 vignette rebuild and PDF/HTML manual generation pass. The sole NOTE concerns
 the submission history below. Logs and source comparisons are retained under
-`final/`. The September 20 hosted matrix still belongs to `ff5df7c`, not this
-changed candidate; a new hosted matrix is required to claim exact-candidate
-platform coverage.
+`final/`. The September 20 hosted matrix belongs to `ff5df7c`. The new matrix
+below supplies the changed candidate's platform coverage.
 
 The official CRAN source index was retrieved at `2026-09-20T22:39:26Z`
 (September 21 JST). It reports public version 0.2.3.1 and zero direct reverse
@@ -373,3 +372,56 @@ its hash and the five-field result are retained in the September 21 evidence
 directory. CRAN incoming feasibility also reports seven updates in the past
 six months; that submission-history NOTE is retained in the submission text,
 with the concrete correctness/reporting reasons for this update.
+
+The versioned candidate is commit
+`9010f660cb0093f3423550324d8543322dc87892`, tree
+`33049bc8ca94843e939c95d87a14550febdfbed9`. All 537 reference files in the
+final local archive match that committed source. It was pushed to the already
+authorized remote branch `development/0.2.4-prerelease-validation-20260920`.
+Its hosted run,
+[35543743143](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35543743143),
+finishes at `2026-09-21T00:38:15Z` with all five jobs successful. The final run
+JSON and all five receipts identify this commit; receipt tree, version and
+check-log hashes are also verified. Every hosted package check has
+**0 errors, 0 warnings and 0 notes**.
+
+| Hosted environment | R version | Suite | Pass | Fail | Test warnings | Skips |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| macOS release | 4.6.1 | CRAN-light | 673 | 0 | 0 | 3 |
+| Windows release | 4.6.1 | CRAN-light | 673 | 0 | 0 | 3 |
+| Ubuntu devel | 2026-09-19 r90572 | CRAN-light | 673 | 0 | 0 | 3 |
+| Ubuntu release | 4.6.1 | Complete | 19,438 | 0 | 42 | 44 |
+| Ubuntu oldrel-1 | 4.5.3 | CRAN-light | 673 | 0 | 0 | 3 |
+
+The complete suite's seven additional passing expectations cover the D-study
+selection repair. Its 42 warning messages and counts match the retained
+September 20 complete Mac reference exactly: 39 category-support, two
+FACETS-device-size and one JML information-criterion warning. All skips remain
+recorded; they are not counted as successes. Each hosted cell also passes both
+international-input cases and all eight moved-folder archive replays.
+
+| Hosted environment | Checked source-tarball SHA256 from receipt |
+| --- | --- |
+| macOS release | `3c537bd4e931097ebb121c4d7c3751779e0fddfb830da19c3dd1d0350c34e808` |
+| Windows release | `88e8a30c7ed22a2d0d73a8f67a2e7827a5f804ada37987b19f8a5d844825ea11` |
+| Ubuntu devel | `9b316757414a8a937700db9f3c8e91cf3abd0fa1081ee55a0739a600d1917e4a` |
+| Ubuntu release | `e8fabdd55606d88005a1e0abfa9abe951409cc99755f86bd534998f0f21d450d` |
+| Ubuntu oldrel-1 | `d0ef5607b202f4db3a76d2508c1db325a8ef9823c416ff8dc5d321b65dc51cac` |
+
+All 537 reference source files are byte-identical in macOS and all three
+Ubuntu checked sources. Windows has 26 byte-identical files and 511 UTF-8 text
+files differing only in CRLF line endings; LF normalization matches every
+reference hash. No checked source contains generated test PDFs or internal
+validation files. Evidence is retained under
+`validation-results/release-candidate-20260921/hosted-35543743143/`:
+`run-completed.json`, `verified-cells.csv`, `source-comparison.csv`,
+`full-test-warnings.csv` and the downloaded artifacts. These platform-specific
+archives retain their own identities; the local `--as-cran` archive remains
+`21da85a5…47e67`, with its one submission-history NOTE.
+
+The result-record update changes only four build-excluded maintainer files;
+the tested source identity remains `9010f66`. No new numerical study or repeat
+of the unchanged package checks is needed for these records. Current claim
+dispositions and deferred inferential extensions remain unchanged. Review of
+those dispositions and the publication/submission decision remain separate;
+this work does not publish a release or submit to CRAN.

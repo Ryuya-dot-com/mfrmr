@@ -18,8 +18,7 @@ differential-functioning methods are outside this release.
 
 ## Test environments
 
-The development source preceding this candidate passed five-platform checks
-on 2026-09-20:
+The 0.2.4 candidate passed checks in five environments on 2026-09-21:
 
 - macOS with R 4.6.1;
 - Windows with R 4.6.1;
@@ -29,16 +28,20 @@ on 2026-09-20:
 
 All five jobs completed with 0 errors, 0 warnings, and 0 notes. Tests, examples,
 vignette rebuilding, and fresh-process installed-package scoring passed.
-The complete test suite also passed locally on arm64 macOS with R 4.6.1.
-Its 42 recorded test warnings concern sparse category support, plot-label
-space, and the restriction of information-criterion ranking to MML fits;
-these are not package-check warnings.
+Ubuntu release ran the complete suite: 19,438 passing expectations, no
+failures, 42 test warnings, and 44 recorded skips. The other four environments
+each ran the CRAN-light suite: 673 passing expectations, no failures or test
+warnings, and three intentional skips. The 42 complete-suite warnings concern
+sparse category support, plot-label space, and the restriction of
+information-criterion ranking to MML fits. Their messages and counts match the
+preceding development source's complete arm64 macOS run; they are not
+package-check warnings.
 
-The subsequent candidate changes update version/release-status text and
-preserve D-study calculation and interpretation attributes when selecting
-table rows or columns. G/D coefficient calculations are unchanged. The latter
-correction was found by running the documented examples with `--run-donttest`;
-its focused regression tests pass without failures, warnings or skips.
+The candidate also corrects printing of selected D-study table rows or
+columns, preserving their calculation and interpretation information. G/D
+coefficient calculations are unchanged. The correction was found by running
+the documented examples with `--run-donttest`; its regression tests and the
+additional examples pass.
 
 The exact 0.2.4 source archive passes `R CMD check --as-cran` on arm64 macOS
 with R 4.6.1: 0 errors, 0 warnings, and 1 NOTE. This includes the additional
