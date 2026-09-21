@@ -1000,6 +1000,18 @@ counts and `attr(icc, "data_usage")` for excluded positions and missing columns.
 retained in that ICC result. Rerun older ICC results before calculating design
 effects. Omission does not impute scores or correct missing-data bias.
 
+ICC variance shares are not screened against a fixed variance cutoff tied to
+score units. Returned variances retain their numerical precision. Constant
+scores yield unavailable variances and ICCs, including in bootstrap refits.
+Rerun earlier results to obtain these corrections.
+
+Design effects use a per-facet average-cluster-size approximation. `EffectiveN`
+is a descriptive equivalent row count, not a count of independent Persons or
+a precision estimate for the full design. Unequal cluster sizes, crossed or
+nested dependencies, sampling weights, and finite-population corrections are
+not represented. Use a design-appropriate estimator and variance calculation
+for standard errors or sample-size planning; see `?compute_facet_design_effect`.
+
 `compute_facet_icc()` reports observed-score variance shares from a Gaussian
 random-intercept model. Request parametric percentile intervals with
 `ci_method = "boot"` and a recorded `ci_boot_seed`.

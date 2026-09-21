@@ -570,6 +570,16 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' [compute_facet_design_effect()] uses these retained counts for its sample
 #' sizes. Omission does not impute scores or correct missing-data bias.
 #'
+#' @section Score units and zero variation:
+#' A small positive variance is not treated as zero using a fixed cutoff.
+#' Multiplying scores by a nonzero constant leaves the variance shares
+#' unchanged, up to fitting precision, while variances change by its square.
+#' Variance estimates are retained without decimal rounding. If all retained
+#' scores are equal, or the fitted total variance is not positive and finite,
+#' variances and ICCs are unavailable (`NA`); numerical fitting residue is not
+#' interpreted as observed variation. A constant-response bootstrap refit is
+#' also unavailable and withholds the interval.
+#'
 #' @section Interpreting output:
 #' The `Interpretation` column uses **two scales** so the same numeric
 #' ICC reads correctly for each facet role:
@@ -626,12 +636,14 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' 2. Call `compute_facet_icc(data, facets, score, person)` to get the
 #'    complementary variance-share summary.
 #' 3. Feed into [compute_facet_design_effect()] to convert ICCs and
-#'    average cluster sizes into Kish (1965) design effects.
+#'    average cluster sizes into descriptive, per-facet design-effect
+#'    approximations. These do not estimate the precision of the full design.
 #'
 #' @return A data.frame of class `mfrm_facet_icc` with one row per
 #'   variance component (including a `"Residual"` row) and columns:
 #' - `Facet`: the grouping factor name (or `"Residual"`).
-#' - `Variance`: REML variance estimate.
+#' - `Variance`: unrounded variance estimate (REML by default, ML if
+#'   `reml = FALSE`); `NA` when the variance shares are undefined.
 #' - `ICC`: variance share (`Variance / sum(Variance)`), in `[0, 1]`.
 #' - `Interpretation`: band label according to the facet's scale.
 #' - `InterpretationScale`: `"Koo-Li reliability"` for the person
@@ -822,22 +834,20 @@ compute_facet_icc <- function(data, facets, score,
 
   vc <- as.data.frame(lme4::VarCorr(fit))
   vc <- vc[is.na(vc$var2), c("grp", "vcov")]
-  total_var <- sum(vc$vcov, na.rm = TRUE)
-  # Treat "effectively zero" variance as non-identifiable; a positive
-  # tolerance (sqrt(.Machine$double.eps)) prevents the "Variance 0 but
-  # ICC 0.27" artifact that arises when lme4 returns boundary-singular
-  # components on the order of 1e-30.
-  zero_tol <- sqrt(.Machine$double.eps)
-  zero_variance <- is.finite(total_var) && total_var <= zero_tol
-  icc_vec <- if (is.finite(total_var) && total_var > zero_tol) {
+  total_var <- sum(vc$vcov)
+  # Constant responses can leave positive fitting residue. Detect them on the
+  # observed scale without rejecting legitimate small-unit variance estimates.
+  undefined_icc <- all(data[[score]] == data[[score]][1L]) ||
+    !is.finite(total_var) || total_var <= 0
+  icc_vec <- if (!undefined_icc) {
     vc$vcov / total_var
   } else {
     rep(NA_real_, length(vc$vcov))
   }
-  if (isTRUE(zero_variance)) {
-    message("compute_facet_icc(): total variance is numerically zero ",
-            "(non-identifiable); returning NA ICCs. ",
-            "This usually means the score column has no within-facet spread.")
+  if (undefined_icc) {
+    message("compute_facet_icc(): ICCs are undefined: scores are constant or ",
+            "the fitted total variance is not positive and finite. ",
+            "Returning NA variances and ICCs.")
   }
 
   # Variance-share labels. For a _person_ facet in rater-mediated data, this
@@ -864,7 +874,7 @@ compute_facet_icc <- function(data, facets, score,
   }
   interpret <- vapply(seq_along(icc_vec), function(k) {
     if (!is.finite(icc_vec[k])) {
-      return(if (isTRUE(zero_variance)) "Non-identifiable" else NA_character_)
+      return("Non-identifiable")
     }
     grp <- as.character(vc$grp[k])
     if (identical(grp, person_label)) koo_li_band(icc_vec[k])
@@ -873,7 +883,7 @@ compute_facet_icc <- function(data, facets, score,
 
   out <- data.frame(
     Facet = vc$grp,
-    Variance = round(vc$vcov, 6),
+    Variance = if (undefined_icc) NA_real_ else vc$vcov,
     ICC = round(icc_vec, 4),
     Interpretation = interpret,
     InterpretationScale = ifelse(
@@ -891,7 +901,7 @@ compute_facet_icc <- function(data, facets, score,
   out$ICC_CI_Status <- "Not requested"
   fit_diagnostics <- .icc_fit_diagnostics(fit)
   fit_diagnostics$warnings <- lmer_warnings
-  ci_details <- list(calculation_version = 1L, fit = fit_diagnostics)
+  ci_details <- list(calculation_version = 2L, fit = fit_diagnostics)
   if (ci_method == "boot") {
     out$ICC_CI_NRequested <- as.integer(ci_boot_reps)
     out$ICC_CI_NReps <- 0L
@@ -957,7 +967,8 @@ compute_facet_icc <- function(data, facets, score,
     vc <- as.data.frame(lme4::VarCorr(fit_b))
     vc <- vc[is.na(vc$var2), c("grp", "vcov")]
     tot <- sum(vc$vcov)
-    share <- if (!is.finite(tot) || tot <= 0) {
+    response <- lme4::getME(fit_b, "y")
+    share <- if (all(response == response[1L]) || !is.finite(tot) || tot <= 0) {
       rep(NA_real_, n_grp)
     } else {
       as.numeric(stats::setNames(vc$vcov / tot, as.character(vc$grp))[vc_grp])
@@ -1021,7 +1032,7 @@ compute_facet_icc <- function(data, facets, score,
   methods <- x$ICC_CI_Method
   if (any(methods == "profile", na.rm = TRUE) ||
       (any(methods == "boot", na.rm = TRUE) &&
-       !identical(attr(x, "icc_ci")$calculation_version, 1L))) {
+       !identical(attr(x, "icc_ci")$calculation_version, 2L))) {
     stop("These saved ICC intervals need to be recomputed. Rerun ",
          "compute_facet_icc() or analyze_hierarchical_structure() with the ",
          'original data and settings, choosing ci_method = "boot" explicitly ',
@@ -1030,12 +1041,12 @@ compute_facet_icc <- function(data, facets, score,
   invisible(x)
 }
 
-#' Compute Kish design effects for each facet
+#' Compute descriptive design-effect approximations for each facet
 #'
 #' Combines per-facet average cluster size with ICC estimates to return
-#' the Kish (1965) design effect `Deff = 1 + (m - 1) * rho`, where `m`
+#' the Kish-style approximation `Deff = 1 + (m - 1) * rho`, where `m`
 #' is the average number of observations per facet element and `rho` is
-#' the ICC.
+#' the ICC variance share. Each facet is evaluated separately.
 #'
 #' @param data Data frame in long format, used to fit the ICC model when
 #'   `icc_table` is `NULL`. With a supplied ICC table, sample sizes come from
@@ -1052,14 +1063,20 @@ compute_facet_icc <- function(data, facets, score,
 #'   `icc_table` is `NULL`. A supplied table retains its original policy.
 #'
 #' @section Interpreting output:
-#' - `Deff = 1`: facet behaves like simple random sampling; no
-#'   clustering-induced variance inflation.
-#' - `Deff > 1`: variance of the mean estimate is inflated by a factor
-#'   of `Deff` relative to SRS. `EffectiveN = N / Deff` is the sample
-#'   size one would need under SRS to achieve the same precision. For
-#'   rater-mediated designs, `Deff` well above 1 on the Rater facet
-#'   means rater-level clustering is noticeable; consider whether
-#'   rater generalisation is warranted.
+#' The formula describes the variance inflation of an unweighted mean under
+#' a single clustering factor with equal cluster sizes, independent clusters,
+#' and common within-cluster correlation. This helper substitutes the average
+#' cluster size and one fitted facet variance share. It does not calculate
+#' the variance of a specified estimator under the full sampling design.
+#'
+#' - `Deff = 1` means this approximation adds no inflation for that facet;
+#'   it does not establish independence of observations or adequate precision.
+#' - `Deff > 1` signals potential clustering influence under this approximation.
+#'   `EffectiveN = UsedRows / Deff` is a descriptive equivalent row count,
+#'   not a count of independent Persons or an assurance of matching precision.
+#' - Unequal cluster sizes, crossed or nested dependencies, sampling weights,
+#'   and finite-population corrections are not accounted for. Per-facet values
+#'   must not be added or multiplied to obtain an overall design effect.
 #' - Reported `ICC` is pulled from `icc_table$ICC` (the variance share);
 #'   interpretation is the same as in [compute_facet_icc()].
 #'
@@ -1067,9 +1084,9 @@ compute_facet_icc <- function(data, facets, score,
 #' 1. Run [compute_facet_icc()] to get the variance-component shares.
 #' 2. Feed the result and the data into
 #'    `compute_facet_design_effect(data, facets, icc_table = icc)`.
-#' 3. Use `Deff` as part of the Methods discussion when generalising
-#'    over raters or sites. Large `Deff` values argue for reporting
-#'    robust SEs or moving to a hierarchical model.
+#' 3. Use these values to flag facets for design review. For standard errors,
+#'    sample-size planning, or comparisons of precision, use an estimator
+#'    and variance calculation that represent the actual design.
 #'
 #' @return A data.frame of class `mfrm_facet_design_effect` with columns
 #'   `Facet`, `AvgClusterSize`, `ICC`, `DesignEffect`, `EffectiveN`, `InputRows`,
@@ -1082,9 +1099,9 @@ compute_facet_icc <- function(data, facets, score,
 #' @references
 #' Kish, L. (1965). *Survey Sampling*. New York: Wiley.
 #'
-#' Park, I., & Lee, H. (2001). The design effect: Do we know all about
-#' it? In *Proceedings of the American Statistical Association, Survey
-#' Research Methods Section* (pp. 143-148).
+#' Park, I., & Lee, H. (2004). Design effects for the weighted mean and total
+#' estimators under complex survey sampling. *Survey Methodology, 30*(2),
+#' 183-193. \url{https://www150.statcan.gc.ca/n1/pub/12-001-x/2004002/article/7751-eng.pdf}
 #'
 #' @examples
 #' \donttest{
@@ -1096,7 +1113,7 @@ compute_facet_icc <- function(data, facets, score,
 #'                                       facets = c("Rater", "Criterion"),
 #'                                       icc_table = icc)
 #'   print(deff)
-#'   # Large DesignEffect -> modest EffectiveN relative to raw N.
+#'   # Review clustering influence; EffectiveN is a descriptive row count.
 #' }
 #' }
 #' @export
@@ -1203,7 +1220,8 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'   pair = "FacetA__FacetB")`.
 #' - `icc`: per-facet variance shares. See
 #'   [compute_facet_icc()] for the two-scale interpretation.
-#' - `design_effect`: Kish (1965) `Deff` and `EffectiveN`.
+#' - `design_effect`: per-facet design-effect approximations and descriptive
+#'   equivalent row counts; not precision estimates for the full design.
 #' - `connectivity`: number of bipartite components linking
 #'   Person x facet levels. A single component is required for a
 #'   common measurement scale; multiple components indicate a
@@ -1703,7 +1721,8 @@ summary.mfrm_facet_icc <- function(object, ...) {
 
 #' @export
 print.mfrm_facet_design_effect <- function(x, ...) {
-  cat("mfrm_facet_design_effect (Kish, 1965)\n")
+  cat("mfrm_facet_design_effect (per-facet approximation)\n")
+  cat("  EffectiveN is a descriptive row count, not full-design precision.\n")
   .print_icc_data_usage(x)
   print.data.frame(x, row.names = FALSE)
   invisible(x)
@@ -1711,7 +1730,8 @@ print.mfrm_facet_design_effect <- function(x, ...) {
 
 #' @export
 summary.mfrm_facet_design_effect <- function(object, ...) {
-  cat("Kish design-effect summary (mfrmr)\n")
+  cat("Per-facet design-effect approximations (mfrmr)\n")
+  cat("  EffectiveN is a descriptive row count, not full-design precision.\n")
   .print_icc_data_usage(object)
   if (!is.data.frame(object) || nrow(object) == 0L) {
     cat("  (empty)\n")
@@ -1769,7 +1789,7 @@ summary.mfrm_hierarchical_structure <- function(object, ...) {
     print(object$icc, row.names = FALSE)
   }
   if (!is.null(object$design_effect) && nrow(object$design_effect) > 0) {
-    cat("\nDesign effects (Kish):\n")
+    cat("\nDesign-effect approximations:\n")
     print(object$design_effect, row.names = FALSE)
   }
   if (!is.null(object$connectivity)) {

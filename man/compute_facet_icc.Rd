@@ -73,7 +73,8 @@ A data.frame of class \code{mfrm_facet_icc} with one row per
 variance component (including a \code{"Residual"} row) and columns:
 \itemize{
 \item \code{Facet}: the grouping factor name (or \code{"Residual"}).
-\item \code{Variance}: REML variance estimate.
+\item \code{Variance}: unrounded variance estimate (REML by default, ML if
+\code{reml = FALSE}); \code{NA} when the variance shares are undefined.
 \item \code{ICC}: variance share (\code{Variance / sum(Variance)}), in \verb{[0, 1]}.
 \item \code{Interpretation}: band label according to the facet's scale.
 \item \code{InterpretationScale}: \code{"Koo-Li reliability"} for the person
@@ -109,6 +110,18 @@ Missingness is checked only in the score, facets, and optional person column.
 missing columns per row, and observed grouping-level counts after omission.
 \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} uses these retained counts for its sample
 sizes. Omission does not impute scores or correct missing-data bias.
+}
+
+\section{Score units and zero variation}{
+
+A small positive variance is not treated as zero using a fixed cutoff.
+Multiplying scores by a nonzero constant leaves the variance shares
+unchanged, up to fitting precision, while variances change by its square.
+Variance estimates are retained without decimal rounding. If all retained
+scores are equal, or the fitted total variance is not positive and finite,
+variances and ICCs are unavailable (\code{NA}); numerical fitting residue is not
+interpreted as observed variation. A constant-response bootstrap refit is
+also unavailable and withholds the interval.
 }
 
 \section{Interpreting output}{
@@ -174,7 +187,8 @@ separation/reliability.
 \item Call \code{compute_facet_icc(data, facets, score, person)} to get the
 complementary variance-share summary.
 \item Feed into \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} to convert ICCs and
-average cluster sizes into Kish (1965) design effects.
+average cluster sizes into descriptive, per-facet design-effect
+approximations. These do not estimate the precision of the full design.
 }
 }
 

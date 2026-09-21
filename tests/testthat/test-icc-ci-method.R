@@ -180,7 +180,10 @@ test_that("hierarchical wrapper retains CI results and saved intervals require r
                                       ci_method = "boot", ci_boot_reps = 5,
                                       igraph_layout = FALSE)
   expect_true(all(h$icc$ICC_CI_Status == "Available"))
-  expect_equal(attr(h$icc, "icc_ci")$calculation_version, 1L)
+  expect_equal(attr(h$icc, "icc_ci")$calculation_version, 2L)
+  old <- h$icc
+  attr(old, "icc_ci")$calculation_version <- 1L
+  expect_error(print(old), "recomputed")
   grDevices::pdf(NULL)
   on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_warning(plot(h, type = "icc"))
@@ -209,4 +212,16 @@ test_that("hierarchical wrapper retains CI results and saved intervals require r
   h$icc$ICC_CI_Status <- "Incomplete bootstrap"
   expect_no_error(plot(h, type = "icc"))
   expect_match(title, "Intervals unavailable: Incomplete bootstrap")
+})
+
+test_that("constant-response bootstrap refits cannot contribute numerical variance residue", {
+  testthat::local_mocked_bindings(bootMer = function(x, FUN, nsim, ...) {
+    constant <- suppressMessages(suppressWarnings(lme4::refit(x, rep(5, stats::nobs(x)))))
+    draw <- FUN(constant)
+    list(t = matrix(rep(draw, each = nsim), nrow = nsim))
+  }, .package = "lme4")
+  x <- .icc_call(ci_method = "boot", ci_boot_reps = 2)
+  expect_true(all(x$ICC_CI_Status == "Incomplete bootstrap"))
+  expect_true(all(x$ICC_CI_NReps == 0 & x$ICC_CI_NUnavailable == 2))
+  expect_true(all(is.na(attr(x, "icc_ci")$bootstrap$draws)))
 })

@@ -103,7 +103,8 @@ as Crossed / Partially / Near-perfectly / Fully nested.
 one per facet pair. Plot via \code{plot(x, type = "crosstab", pair = "FacetA__FacetB")}.
 \item \code{icc}: per-facet variance shares. See
 \code{\link[=compute_facet_icc]{compute_facet_icc()}} for the two-scale interpretation.
-\item \code{design_effect}: Kish (1965) \code{Deff} and \code{EffectiveN}.
+\item \code{design_effect}: per-facet design-effect approximations and descriptive
+equivalent row counts; not precision estimates for the full design.
 \item \code{connectivity}: number of bipartite components linking
 Person x facet levels. A single component is required for a
 common measurement scale; multiple components indicate a

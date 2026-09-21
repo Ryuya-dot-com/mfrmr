@@ -108,12 +108,18 @@ values require an explicit \code{missing = "omit"} choice; malformed scores
 must be corrected. Inspect \code{attr(icc, "data_usage")}, then recreate
 \code{\link[=compute_facet_design_effect]{compute_facet_design_effect()}} using the new ICC result. Older ICC
 tables lack the row accounting needed to calculate matching sample sizes.
+Recalculation also removes the fixed variance cutoff tied to score units
+and preserves small positive variances without decimal rounding. Constant
+retained scores have unavailable variance components and ICCs. Design
+effects remain per-facet approximations; their equivalent row counts do
+not estimate the precision of a complete crossed or unbalanced design.
 The former \code{ci_method = "profile"} transformed separate component bounds
 and did not calculate a profile-likelihood interval for the ICC ratio.
 Choose \code{"boot"} explicitly for parametric percentile intervals, then read
 \code{ICC_CI_Status} and \code{attr(icc, "icc_ci")}. Failed or nonconverged refits
 and fit warnings withhold intervals. Saved bootstrap results also require
-rerunning to obtain complete failure accounting; reprinting is insufficient.
+rerunning to obtain complete failure accounting and identify
+constant-response refits, which withhold intervals; reprinting is insufficient.
 \item \strong{Observed-score design coefficients and shrinkage:} rerun
 \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with its original data and settings, then
 \code{\link[=mfrm_d_study]{mfrm_d_study()}} with the planned counts and residual-scaling choice.

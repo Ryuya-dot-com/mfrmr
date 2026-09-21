@@ -94,12 +94,18 @@
 #'   must be corrected. Inspect `attr(icc, "data_usage")`, then recreate
 #'   [compute_facet_design_effect()] using the new ICC result. Older ICC
 #'   tables lack the row accounting needed to calculate matching sample sizes.
+#'   Recalculation also removes the fixed variance cutoff tied to score units
+#'   and preserves small positive variances without decimal rounding. Constant
+#'   retained scores have unavailable variance components and ICCs. Design
+#'   effects remain per-facet approximations; their equivalent row counts do
+#'   not estimate the precision of a complete crossed or unbalanced design.
 #'   The former `ci_method = "profile"` transformed separate component bounds
 #'   and did not calculate a profile-likelihood interval for the ICC ratio.
 #'   Choose `"boot"` explicitly for parametric percentile intervals, then read
 #'   `ICC_CI_Status` and `attr(icc, "icc_ci")`. Failed or nonconverged refits
 #'   and fit warnings withhold intervals. Saved bootstrap results also require
-#'   rerunning to obtain complete failure accounting; reprinting is insufficient.
+#'   rerunning to obtain complete failure accounting and identify
+#'   constant-response refits, which withhold intervals; reprinting is insufficient.
 #' - **Observed-score design coefficients and shrinkage:** rerun
 #'   [mfrm_generalizability()] with its original data and settings, then
 #'   [mfrm_d_study()] with the planned counts and residual-scaling choice.

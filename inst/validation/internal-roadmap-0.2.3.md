@@ -9,6 +9,35 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: ICC score units, zero variation, and design-effect scope
+
+Removed the fixed absolute variance cutoff and decimal rounding of returned
+ICC variances. A retained constant response or nonpositive/nonfinite fitted
+total yields unavailable variances and ICCs. Bootstrap callbacks also reject
+constant-response numerical residue, keeping those draws unavailable and
+withholding intervals. ICC calculation version 2 requires saved bootstrap
+results to be recomputed before interval display; point-only objects remain
+readable. Score-unit conversion tests cover factors of 1e-4 and 1e4, including
+positive variance retention in print/summary/CSV and a four-draw seeded
+bootstrap comparison. The short bootstrap checks numerical behavior, not
+interval coverage.
+
+The existing design-effect expression is unchanged. Help and display now
+state its per-facet average-size approximation and distinguish EffectiveN
+from independent Persons or full-design precision. Its simple-cluster
+interpretation does not extend to combined crossed/nested dependencies,
+unequal cluster sizes, weights or finite-population corrections. The help
+references Park and Lee (2004), Survey Methodology 30(2), 183-193, whose
+published discussion distinguishes estimators and sampling designs.
+
+Scoped tests pass: 87 ICC-interval and 100 ICC-input expectations, including
+the hierarchy callers in those files. Constant-response fit diagnostics are
+retained; there are no test failures or test warnings. Rd files are regenerated.
+The prior standalone hierarchical tests are reused; no full suite, package
+check or hosted matrix was run. Both local branches have identical changed
+implementation, tests and generated help. Earlier package/matrix evidence
+remains bound to 79d0d87. These changes are local and do not publish 0.2.4.
+
 ## 2026-09-21: consistent ICC and design-effect analysis rows
 
 ICC input now preserves numeric factor labels and refuses malformed/infinite

@@ -104,6 +104,16 @@ and action needed for each affected workflow.
 
 ## Changes affecting existing analyses
 
+* ICC calculations no longer reject positive variances using a fixed cutoff
+  tied to score units, and returned variances are no longer rounded to six
+  decimal places. Constant retained scores yield unavailable variances and
+  ICCs. Constant-response bootstrap refits count as unavailable draws and
+  withhold intervals; rerun saved bootstrap results to apply this check.
+* Design-effect help and printed summaries now identify the per-facet,
+  average-cluster-size approximation. `EffectiveN` is a descriptive equivalent
+  row count, not a count of independent Persons or a precision estimate for
+  the full crossed, nested, weighted, or unequal-cluster-size design. The
+  design-effect formula itself is unchanged.
 * ICC analyses now preserve numeric character/factor score labels and reject
   malformed scores. Missing scores or selected grouping values stop the
   analysis unless `missing = "omit"` is explicit. Results retain input, used,

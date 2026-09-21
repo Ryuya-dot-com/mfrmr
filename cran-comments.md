@@ -25,13 +25,19 @@ differential-functioning methods are outside this release.
 
 ## Test environments
 
-The current candidate additionally corrects ICC score conversion and explicit
-missing-row handling, and calculates design effects from the ICC model's
-retained sample counts. The affected input, interval, and hierarchical tests
-pass locally (168 expectations, no failures or warnings). Implementation
-and tests match between development and the candidate. This additional
-correction has not been subjected to another full package check or hosted
-matrix; the broader results below belong to the preceding source.
+The current candidate additionally corrects ICC score conversion, explicit
+missing-row handling, and the fixed variance cutoff tied to score units.
+Small positive variances are retained without decimal rounding; constant
+responses have unavailable ICCs, including in bootstrap refits. Design effects
+use the ICC model's retained sample counts and are described as per-facet
+approximations rather than full-design precision estimates.
+
+The latest affected input and interval tests pass locally (187 expectations,
+no test failures or warnings); prior standalone hierarchical tests are reused.
+Constant-response fitting diagnostics are retained. Implementation and tests
+match between development and the candidate. These additional corrections
+have not been subjected to another full package check or hosted matrix; the
+broader results below belong to the preceding source.
 
 The preceding ICC interval correction (source 79d0d87) passed hosted checks
 on 2026-09-21 in four environments:
