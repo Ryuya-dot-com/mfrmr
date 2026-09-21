@@ -30,6 +30,109 @@ mvgt_fixture <- function(indefinite = FALSE) {
   list(data = data, components = gamma, counts = n)
 }
 
+mvgt_common_task_data <- function() {
+  path <- testthat::test_path("..", "..", "inst", "extdata", "mgenova-table12.csv")
+  if (!file.exists(path)) path <- system.file("extdata", "mgenova-table12.csv", package = "mfrmr")
+  read.csv(path)
+}
+
+test_that("common-task raw data reproduce mGENOVA Appendix E G-study and D-study values", {
+  # Brennan (2001), Manual for mGENOVA 2.1, Table 12 (p. 32), Appendix E
+  # (pp. 74-77): synthetic data from Generalizability Theory, Table 9.3.
+  # All persons and items are shared across V and W. Here the item facet is Task.
+  # This estimates matrices from the original scores, without substituting them.
+  data <- mvgt_common_task_data()
+  expect_equal(dim(data), c(60L, 4L))
+  expect_equal(unname(colMeans(data[c("V", "W")])), c(4.516666666666667, 5.083333333333333))
+  g <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL)
+  expect_identical(g$design$counts, c(Person = 10L, Task = 6L))
+  expect_null(g$design$rater)
+  expect_equal(g$degrees_of_freedom$DF, c(9, 5, 45))
+  expected_mp <- list(Person = c(3.46111, 2.62037, 2.62037, 3.75000),
+    Task = c(4.69667, 1.62333, 1.62333, 4.73667),
+    Residual = c(1.25222, .70481, .70481, 1.53667))
+  expected_vc <- list(Person = c(.36815, .31926, .31926, .36889),
+    Task = c(.34444, .09185, .09185, .32000),
+    Residual = c(1.25222, .70481, .70481, 1.53667))
+  # The manual prints only five decimals; upper-triangle component entries
+  # can be correlations. Expected symmetric matrices use the covariances.
+  expect_equal(lapply(g$mean_products, function(m) round(as.vector(m), 5)), expected_mp)
+  expect_equal(lapply(g$components, function(m) round(as.vector(m), 5)), expected_vc)
+  expect_true(all(g$component_diagnostics$PositiveSemidefinite))
+  expect_output(print(g), "10 persons, 6 tasks")
+  d <- mfrm_multivariate_d_study(g, weights = c(V = -1, W = 1))
+  expect_identical(d$design_grid, data.frame(Tasks = 6L))
+  expect_false("Raters" %in% names(d$coefficients))
+  expected <- rbind(
+    c(.36815, .20870, .26611, .63820, .58044, .45684, .51586),
+    c(.36889, .25611, .30944, .59022, .54382, .50607, .55628),
+    c(.09852, .22988, .31000, .30000, .24116, .47945, .55678))
+  measures <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+                "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  expect_equal(unname(round(as.matrix(d$coefficients[measures]), 5)), expected)
+  expect_true(all(d$coefficients$Status == "Available"))
+  expect_equal(unname(round(d$covariances[[1]]$RelativeError, 5)),
+    matrix(c(.20870, .11747, .11747, .25611), 2))
+  expect_equal(unname(round(d$covariances[[1]]$AbsoluteError, 5)),
+    matrix(c(.26611, .13278, .13278, .30944), 2))
+  expect_output(print(d), "Means over common random tasks")
+})
+
+test_that("one-facet projections preserve averaging, score identity and contrast meaning", {
+  data <- mvgt_common_task_data()
+  g <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL)
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(3L, 6L, 12L)), c(V = -1, W = 1))
+  composite <- d$coefficients[d$coefficients$Kind == "Composite", ]
+  expect_equal(composite$UniverseVariance, rep(composite$UniverseVariance[2], 3))
+  expect_equal(composite$RelativeErrorVariance, composite$RelativeErrorVariance[2] * c(2, 1, .5))
+  expect_equal(composite$AbsoluteErrorVariance, composite$AbsoluteErrorVariance[2] * c(2, 1, .5))
+  data$Difference <- data$W - data$V
+  direct <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(data, "Difference", rater = NULL),
+    d$design_grid)$coefficients
+  expect_equal(direct$G, composite$G)
+  expect_equal(direct$AbsoluteSEM, composite$AbsoluteSEM)
+  one <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(data, "V", rater = NULL),
+    d$design_grid)$coefficients
+  expect_equal(one$Phi, d$coefficients$Phi[d$coefficients$Score == "V"])
+  shuffled <- data[rev(seq_len(nrow(data))), ]
+  names(shuffled)[1:2] <- c("Candidate", "Item")
+  again <- mfrm_multivariate_gstudy(shuffled, c("W", "V"),
+    person = "Candidate", rater = NULL, task = "Item")
+  expect_equal(again$components, lapply(g$components, function(m) m[2:1, 2:1]))
+  # Adding an unselected column is explicit and does not introduce a facet.
+  data$Rater <- NA_character_
+  expect_identical(mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL), g)
+  # Missing rater identifiers must not silently switch the default model.
+  expect_error(mfrm_multivariate_gstudy(data, c("V", "W")), "nonmissing, nonblank")
+})
+
+test_that("one-facet designs refuse incomplete cells and unavailable rater projections", {
+  data <- mvgt_common_task_data()
+  scores <- c("V", "W")
+  expect_error(mfrm_multivariate_gstudy(data, scores), "column names")
+  expect_error(mfrm_multivariate_gstudy(data[-1, ], scores, rater = NULL), "complete, balanced")
+  expect_error(mfrm_multivariate_gstudy(rbind(data, data[1, ]), scores, rater = NULL), "Duplicate")
+  expect_error(mfrm_multivariate_gstudy(subset(data, Task == 1), scores, rater = NULL), "at least two")
+  expect_error(mfrm_multivariate_gstudy(data, scores, rater = NULL, task = NULL), "distinct")
+  missing <- data
+  missing$V[1] <- NA_real_
+  expect_error(mfrm_multivariate_gstudy(missing, scores, rater = NULL), "finite numeric")
+  # Multiple raters cannot be dropped or averaged implicitly.
+  crossed <- mvgt_fixture()$data
+  expect_error(mfrm_multivariate_gstudy(crossed, c("Content", "Organization"), rater = NULL), "Duplicate")
+  g <- mfrm_multivariate_gstudy(data, scores, rater = NULL)
+  for (grid in list(data.frame(Raters = 1, Tasks = 6), data.frame(Raters = 6),
+      data.frame(Tasks = 0), data.frame(Tasks = 1.5), data.frame(Tasks = NA_real_),
+      data.frame(Tasks = numeric()))) {
+    expect_error(mfrm_multivariate_d_study(g, grid), "positive integer Tasks")
+  }
+  # The common PSD policy also applies to the one-facet estimator.
+  data$V <- data$V - ave(data$V, data$Person, FUN = mean)
+  negative <- mfrm_multivariate_gstudy(data, scores, rater = NULL)
+  expect_lt(negative$components$Person[1, 1], 0)
+  expect_true(all(is.na(mfrm_multivariate_d_study(negative)$coefficients$G)))
+})
+
 test_that("balanced multivariate ANOVA recovers cross-covariances and matches a QR reference", {
   f <- mvgt_fixture()
   g <- mfrm_multivariate_gstudy(f$data, c("Content", "Organization"))

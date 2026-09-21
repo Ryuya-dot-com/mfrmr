@@ -2,6 +2,12 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* `mfrm_multivariate_gstudy()` now also accepts complete Person-by-Task data
+  when `rater = NULL`. It estimates Person, Task, and combined
+  Person-by-Task/residual covariance components. Its D-study uses a `Tasks`
+  column alone, without introducing rater effects or averaging observations.
+  The help includes Brennan's published synthetic two-score data and a
+  difference-score example.
 * Added `mfrm_multivariate_gstudy()` and `mfrm_multivariate_d_study()` for
   complete, balanced Person-by-Rater-by-Task data with fixed score components
   and common random raters/tasks. Multivariate ANOVA estimates seven

@@ -9,6 +9,41 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: one-facet multivariate G-study with a raw-data reference
+
+The development API now accepts rater=NULL for a complete Person x Task
+design. Shared group-mean projections estimate three matrices: Person, Task,
+and combined Person x Task/residual. The D-study accepts Tasks-only grids and
+uses E/nt for relative error and (T+E)/nt for absolute error; it cannot introduce
+an unestimated rater facet. Counts, coefficient tables and printed summaries
+include only the modeled facets. Default three-factor behavior remains, and
+missing rater columns do not silently select the new route. No observations
+are averaged or duplicated to manufacture a facet.
+
+Brennan's mGENOVA 2.1 Table 12 / Appendix E provides an exactly matched
+reference: 10 persons, 6 common items, two scores V/W. The 120 synthetic scores
+were checked against the supplied control cards and rendered Table 12, then
+stored in inst/extdata/mgenova-table12.csv as 60 Person/Task rows. The help and
+README identify their source and demonstrate the complete public workflow.
+ANOVA mean products, all three covariance-component matrices, D-study error
+covariances, marginal and W-minus-V coefficients and SEMs agree with the
+manual's five-decimal output. The difference has G=.30000 and Phi=.24116 at
+six tasks. This is raw-score-to-estimate agreement, unlike the earlier
+Appendix F supplied-matrix-only check. It validates this numerical example,
+not population recovery, precision, ordinal latent reliability, or missingness.
+
+The focused multivariate test file passes 152 expectations with no failures,
+errors or warnings, including the existing two-facet cases. New checks cover
+task-count projections, direct difference-score and univariate reductions,
+row/column identity, explicit facet omission, missing/duplicate cells, and
+non-PSD withholding. Both help files parse/render, their local topic links
+resolve, and documented examples execute with system.file mapped to source
+extdata. Usage checks pass. No full suite, package check, new simulation or
+remote CI was run. No namespace export or dependency was added; the 0.2.4
+candidate remains separate. Nested/local facets, incomplete designs, interval
+estimation and a matched external two-random-facet raw-data comparison remain
+outside this verification.
+
 ## 2026-09-21: supplied G-theory references and difference scores
 
 Reviewed the user-supplied G-theory directory, chiefly Brennan's mGENOVA 2.1

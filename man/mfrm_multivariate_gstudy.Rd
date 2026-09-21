@@ -19,22 +19,25 @@ mfrm_multivariate_gstudy(
 \method{summary}{mfrm_multivariate_gstudy}(object, ...)
 }
 \arguments{
-\item{data}{A data frame with exactly one row per Person/Rater/Task cell.}
+\item{data}{A data frame with exactly one row per Person/Rater/Task cell,
+or per Person/Task cell when \code{rater = NULL}.}
 
 \item{scores}{Names of finite numeric score columns, in the desired order.
 A single column is allowed as the univariate special case. Scores are
 neither standardized nor converted from category labels.}
 
-\item{person, rater, task}{Distinct columns identifying the three crossed
-factors. Each must have at least two observed levels. Labels may be
-character, factor, finite numeric, or logical; missing/blank labels fail.}
+\item{person, rater, task}{Distinct columns identifying the crossed factors.
+Set \code{rater = NULL} explicitly for a Person-by-Task design without a rater
+facet. Each included factor must have at least two observed levels. Labels
+may be character, factor, finite numeric, or logical; missing/blank labels
+fail.}
 
 \item{x, object}{A result from the corresponding G-study or D-study function.}
 
 \item{...}{Reserved for method compatibility.}
 }
 \value{
-An \code{mfrm_multivariate_gstudy} list with \code{components} (the seven
+An \code{mfrm_multivariate_gstudy} list with \code{components} (three or seven
 named covariance matrices), \code{mean_products}, \code{degrees_of_freedom},
 \code{component_diagnostics}, \code{score_scale} (observed SDs used only for matrix
 diagnostics), \code{design} (column identities, levels, counts, method, and
@@ -42,8 +45,9 @@ score convention), and \code{data} (the selected input columns).
 }
 \description{
 Estimate observed-score variance-covariance components for fixed score
-components measured on every Person-by-Rater-by-Task combination. Raters
-and tasks are random, crossed conditions, shared across score components.
+components measured on every Person-by-Rater-by-Task combination, or on
+every Person-by-Task combination when \code{rater = NULL}. Included raters and
+tasks are random, crossed conditions, shared across score components.
 This is a balanced multivariate ANOVA estimator, not an MFRM fit.
 }
 \details{
@@ -53,11 +57,15 @@ are not supported. The same identifier must denote the same rater or task
 across all persons and scores. Equal level counts alone cannot establish
 that substantive identity or random sampling from the intended universe.
 
-The seven components are \code{Person}, \code{Rater}, \code{Task}, \code{Person:Rater},
+With a rater facet, the seven components are \code{Person}, \code{Rater}, \code{Task}, \code{Person:Rater},
 \code{Person:Task}, \code{Rater:Task}, and \code{Residual}. With one observation per cell,
 \code{Residual} combines the three-way interaction and within-cell error;
-they cannot be separated. Each component is a matrix whose diagonal
-contains variances and whose off-diagonal contains covariances between
+they cannot be separated. When \code{rater = NULL}, the three components are
+\code{Person}, \code{Task}, and \code{Residual}; the last combines Person-by-Task
+interaction and within-cell error. Omitting a rater facet does not remove
+rater effects from scores or support generalization to new raters. No
+scores are averaged automatically. Each component is a matrix whose
+diagonal contains variances and whose off-diagonal contains covariances between
 scores. ANOVA mean products replace the mean squares used for a single
 score. This method does not optimize a likelihood or impose a
 positive-semidefinite constraint on estimates.
@@ -73,12 +81,24 @@ withholds all coefficients and SEMs.
 
 The model concerns numeric observed scores. Treating ordered categories
 as numeric does not estimate latent ordinal or MFRM reliability. The
-initial reference verification covers balanced continuous-score
-calculations; ordinal, sparse, and missing-data recovery and sampling
-intervals are not established by that verification. No missing values
-are imputed, and no variance-component uncertainty is propagated.
+reference verification covers balanced numerical calculations, including
+the common-person/common-item example in mGENOVA Appendix E. Agreement
+with that example does not establish ordinal, sparse, or missing-data
+recovery or sampling intervals. No missing values are imputed, and no
+variance-component uncertainty is propagated.
 }
 \examples{
+# Common tasks, without a rater facet: Brennan's published synthetic data.
+# mGENOVA manual Table 12: 10 persons, 6 common items, two scores V and W.
+# The item facet is named Task in the supplied long-format data.
+tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
+g_task <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
+g_task$components
+d_task <- mfrm_multivariate_d_study(g_task,
+  design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+d_task$coefficients
+# At six tasks, W - V has G = 0.30000 and Phi = 0.24116 (Appendix E).
+
 # Fictional continuous scores, with two correlated score components.
 set.seed(2026)
 ratings <- expand.grid(Person = 1:40, Rater = 1:8, Task = 1:6)
@@ -108,7 +128,8 @@ difference$coefficients
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
 Chapters 9--11.
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
-Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22.
+Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
+Table 12 (page 32) and Appendix E (pages 74--77).
 }
 \seealso{
 \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}

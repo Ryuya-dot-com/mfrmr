@@ -242,13 +242,16 @@ or the numbers of raters and tasks, changes score dependability. Correlated
 components require universe-score and error covariances; averaging the
 components' separate reliability coefficients does not answer this question.
 
-The initial implementation accepts a complete, balanced, fully crossed
-Person-by-Rater-by-Task design, with the same raters and tasks across all score
-components. Score components are fixed parts of the intended assessment;
-raters and tasks are random conditions of measurement. Balanced multivariate
-ANOVA estimates component-specific variance-covariance matrices, including the
-Person-by-facet and Rater-by-Task interactions. With one observation per cell,
-the highest-order interaction and residual error remain combined. The D-study
+The implementation accepts complete, balanced, fully crossed Person-by-Task
+and Person-by-Rater-by-Task designs, with the same conditions across all score
+components. A Person-by-Task design is requested explicitly with `rater = NULL`;
+it estimates Person, Task and combined Person-by-Task/residual covariance
+matrices and permits D-studies of task counts only. Score components are fixed
+parts of the intended assessment; included raters and tasks are random
+conditions of measurement. With a rater facet, balanced multivariate ANOVA
+also estimates Person-by-Rater, Person-by-Task and Rater-by-Task components.
+With one observation per cell, the highest-order interaction and residual
+error remain combined. The D-study
 retains their distinct averaging rules, score units, and user-specified
 weights when forming relative-error and absolute-error covariance matrices,
 composite G/Phi, and SEMs.
@@ -260,7 +263,9 @@ reliability remain outside this workflow.
 Raw negative or indefinite component estimates are retained without repair;
 materially non-PSD components withhold coefficients and SEMs. Matrix
 admissibility does not establish precise estimation or adequate model fit.
-The initial reference verification covers continuous-score calculations.
+The common-task workflow reproduces the numerical example in Brennan's
+mGENOVA manual, from the supplied scores to component matrices and D-study
+coefficients; this does not establish sampling precision or broad recovery.
 This workflow concerns dependability on the observed-score scale.
 Treating ordered categories as numeric scores does not
 make their coefficients measures of latent ordinal dependability.

@@ -1073,11 +1073,29 @@ retain every completed result. Reuse saved results when comparing settings.
 When an assessment reports several score components, such as content and
 organization, their covariances matter for the dependability of a composite.
 In this development version, `mfrm_multivariate_gstudy()` estimates those
-covariances in a complete, balanced Person-by-Rater-by-Task design. Every
-person must have one row for every rater/task combination, with all selected
-numeric scores observed. Raters and tasks must denote the same conditions
-across scores and persons, and represent the random conditions over which
-scores will be generalized. Score components are fixed parts of the assessment.
+covariances in complete, balanced Person-by-Task or Person-by-Rater-by-Task
+designs. Each cell has one row with all selected numeric scores observed.
+Included raters and tasks must denote the same conditions across scores and
+persons, and represent the random conditions over which scores will be
+generalized. Score components are fixed parts of the assessment.
+
+For a design without a rater facet, set `rater = NULL` explicitly. This example
+uses the published synthetic data from Brennan's *Manual for mGENOVA*,
+Table 12: ten persons, six common items (named `Task` here), and scores V and W.
+
+```r
+tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
+g_task <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
+d_task <- mfrm_multivariate_d_study(g_task,
+  design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+summary(d_task)
+```
+
+At six tasks the difference W minus V has G = 0.30000 and Phi = 0.24116,
+matching the manual's Appendix E. Person, Task, and the combined
+Person-by-Task/residual covariance matrices are estimated from the scores.
+The D-study varies task counts; it cannot project new raters from this model.
+No scores are averaged automatically when omitting the rater facet.
 
 With `ratings` containing `Person`, `Rater`, `Task`, `Content`, and
 `Organization` columns:
@@ -1092,7 +1110,7 @@ d <- mfrm_multivariate_d_study(g,
 summary(d)
 ```
 
-The G-study uses balanced multivariate ANOVA and includes Person-by-Rater,
+With a rater facet, the G-study uses balanced multivariate ANOVA and includes Person-by-Rater,
 Person-by-Task, and Rater-by-Task components. The three-way interaction and
 within-cell error remain combined because each cell has one observation.
 The D-study projects mean scores over the specified raters and tasks. It uses
@@ -1114,8 +1132,9 @@ estimates remain visible; a materially non-PSD component withholds all
 coefficients and SEMs. Passing this numerical check does not establish precise
 estimation or model fit. These are observed-score point projections conditional
 on estimated components, without sampling intervals. Numeric category scores
-do not yield latent ordinal or MFRM reliability. Initial reference verification
-covers continuous-score calculations. Incomplete, unbalanced, nested, or
+do not yield latent ordinal or MFRM reliability. Agreement with a published
+numerical example does not establish recovery under missingness or ordinal
+latent models. Incomplete, unbalanced, nested, or
 partially shared designs and missing-score imputation are not supported.
 The existing main-effects `mfrm_generalizability()` workflow remains separate.
 

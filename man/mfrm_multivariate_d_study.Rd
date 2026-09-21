@@ -4,7 +4,7 @@
 \alias{mfrm_multivariate_d_study}
 \alias{print.mfrm_multivariate_d_study}
 \alias{summary.mfrm_multivariate_d_study}
-\title{Project multivariate G-theory coefficients for common raters and tasks}
+\title{Project multivariate G-theory coefficients for common measurement conditions}
 \usage{
 mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 
@@ -16,7 +16,8 @@ mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 \item{x}{A result from \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}.}
 
 \item{design_grid}{A nonempty data frame with positive integer \code{Raters} and
-\code{Tasks} columns, one planned design per row. \code{NULL} uses the G-study counts.
+\code{Tasks} columns, or only \code{Tasks} for a G-study with \code{rater = NULL}.
+Each row is one planned design. \code{NULL} uses the G-study counts.
 Counts need not match or exceed the G-study counts. Conditions are fully
 crossed and shared across scores in every scenario.}
 
@@ -33,15 +34,17 @@ scenario.}
 }
 \value{
 An \code{mfrm_multivariate_d_study} list containing \code{coefficients}
-(scenario, counts, score/composite identity, raw universe/relative/absolute
-variances, G/Phi, relative/absolute SEM, and status), \code{covariances} (three
-matrices per scenario), \code{design_grid}, \code{weights}, \code{component_diagnostics},
+(scenario, counts of included facets, score/composite identity, raw
+universe/relative/absolute variances, G/Phi, relative/absolute SEM, and
+status), \code{covariances} (three matrices per scenario), \code{design_grid},
+\code{weights}, \code{component_diagnostics},
 and \code{gstudy} (the source result). \code{summary()} returns \code{coefficients}.
 }
 \description{
 Use a balanced multivariate G-study to examine mean-score dependability
-under specified numbers of random raters and tasks, and optional composite
-weights. This reuses estimated covariance components without refitting.
+under specified numbers of common random tasks and, when included, raters,
+with optional composite weights. This reuses estimated covariance components
+without refitting.
 }
 \details{
 For covariance component matrices \code{P}, \code{R}, \code{T}, \code{PR}, \code{PT}, \code{RT},
@@ -50,6 +53,10 @@ and \code{E}, universe-score covariance is \code{P}. Relative-error covariance i
 \code{R/n_r + T/n_t + RT/(n_r*n_t)}. The G-study number of persons does not
 divide individual-score universe variance. Holding a count constant does
 not turn its random facet into a fixed facet.
+For a Person-by-Task G-study, \code{E} combines Person-by-Task interaction and
+within-cell error: relative-error covariance is \code{E/n_t}, absolute-error
+covariance is \code{(T + E)/n_t}, and universe-score covariance remains \code{P}.
+A D-study cannot introduce a rater facet absent from its G-study.
 
 Each score uses diagonal entries; a composite uses \verb{w' Sigma w} for each
 of the three covariance matrices. Thus between-score covariance affects
@@ -85,7 +92,7 @@ Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
 Chapters 9--11.
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
 Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
-Appendix F, pages 79--81.
+Appendices E and F, pages 74--81.
 }
 \seealso{
 \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}
