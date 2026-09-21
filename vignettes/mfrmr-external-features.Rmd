@@ -269,6 +269,52 @@ view <- plot(analyses$ThreeGroups, ids = raters$Rater[1:5], draw = FALSE)
 plot_data(view)$matrix
 ```
 
+## Compare PAM with a hierarchy
+
+A hierarchy asks which groups merge as dissimilarity increases. Fit it
+separately from PAM: `mfrm_cluster_hierarchical()` uses average linkage
+(the mean of all cross-group Gower dissimilarities) or complete linkage
+(their maximum). The same feature types, weights, and missingness rules apply.
+Choose the group count explicitly; a tree does not automatically identify it.
+
+For multiply imputed features, reuse the same model and eligible cells. This
+holds the completed tables fixed while changing the grouping method.
+
+```{r hierarchical-comparison}
+average <- mfrm_cluster_imputed(features, model, eligible, k = 3,
+  method = "hierarchical", linkage = "average")
+complete <- mfrm_cluster_imputed(features, model, eligible, k = 3,
+  method = "hierarchical", linkage = "complete")
+method_comparison <- mfrm_cluster_compare(list(
+  PAM = analyses$ThreeGroups, Average = average, Complete = complete))
+method_comparison$analysis_summary
+summary(method_comparison)
+```
+
+The comparison identifies methods and linkages, alongside group sizes and
+separation. As before, pair-change summaries describe sensitivity to the
+supplied choices; they do not select a preferred algorithm or establish true
+rater types. Substantively different profiles or very small groups deserve
+inspection even when the overall pair agreement is high.
+
+```{r dendrogram, fig.width=7, fig.height=5}
+plot(average$analyses[[1]])
+```
+
+This is the full tree for **one completion**, with boxes marking its three
+groups. The 120 raters are all included; ID labels are hidden by default above
+50 entities. For a smaller cohort, labels appear automatically. Use
+`plot_data(plot(average$analyses[[1]], draw = FALSE))$table` to inspect IDs and
+memberships in leaf order. Excluded raters retain unavailable memberships but
+have no leaves. No entities are sampled to draw the tree.
+
+Merge heights are linkage dissimilarities, not significance levels or branch
+support. Tied distances can produce alternative trees; the group cut uses
+merge order, so a unique horizontal cutting height may not exist. Inspect
+each completion's profiles with `type = "profile"` or silhouettes with
+`type = "silhouette"`. `plot(average)` displays pairwise co-membership across
+imputations; it does not combine the trees into a consensus hierarchy.
+
 ## How this relates to MFRM rater-type research
 
 Clustering has been used alongside MFRM, with both hierarchical and
@@ -285,7 +331,11 @@ indices, followed by prediction of the resulting labels.
 Those analyses ask about patterns of rating behaviour. This tutorial instead
 groups external backgrounds such as experience and specialty. Its Gower
 distances accommodate the selected mix of variable types, and PAM produces
-a partition rather than a hierarchy. It therefore has no dendrogram. The cited
+a partition rather than a hierarchy. The separate hierarchical API uses
+average or complete linkage. Ward's variance criterion requires appropriate
+Euclidean geometry; this Gower interface does not define a Euclidean
+conversion and does not offer Ward clustering (see
+[Murtagh and Legendre, 2014](https://doi.org/10.1007/s00357-014-9161-z)). The cited
 studies do not validate the present attributes, weights, imputation model, or
 PAM groups, and do not establish that one method is preferable for all uses.
 Grouping estimated MFRM effects would additionally require consideration of

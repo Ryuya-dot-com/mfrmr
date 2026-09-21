@@ -1,10 +1,12 @@
-#' Compare exploratory groups across group counts and feature weights
+#' Compare exploratory groups across settings and clustering methods
 #'
 #' Compare existing external-feature clustering results without refitting.
 #' Review how group membership changes when the number of groups or feature
-#' weights changes, including paired comparisons across the same imputations.
+#' weights or clustering method changes, including paired comparisons across
+#' the same imputations.
 #'
-#' @param analyses A named list of at least two results from [mfrm_cluster()],
+#' @param analyses A named list of at least two results from [mfrm_cluster()]
+#'   and/or [mfrm_cluster_hierarchical()],
 #'   or a named list of results from [mfrm_cluster_imputed()]. Do not mix the two
 #'   result types. Names must be unique and nonblank. All results must use the
 #'   same original feature values, types, IDs, and included entities. Row and
@@ -13,7 +15,8 @@
 #'   fitting each setting. Different imputation models are not compared here.
 #' @return An `mfrm_cluster_comparison` object containing:
 #'   \itemize{
-#'   \item `analysis_summary`: group count, included/excluded entity counts,
+#'   \item `analysis_summary`: method, linkage (unavailable for PAM), group
+#'     count, included/excluded entity counts,
 #'     smallest/largest group sizes, and mean silhouette for each analysis and
 #'     imputation. `Imputation` is `NA` for ordinary clustering results.
 #'   \item `weights`: supplied feature weights for each analysis.
@@ -53,7 +56,8 @@
 #'   across settings, see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @references Hubert, L. and Arabie, P. (1985). Comparing partitions.
 #'   Journal of Classification, 2, 193--218. \doi{10.1007/BF01908075}.
-#' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_imputed()]
+#' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_imputed()],
+#'   [mfrm_cluster_hierarchical()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   # Fictional attributes; experience is measured in completed years.
@@ -80,7 +84,7 @@ mfrm_cluster_compare <- function(analyses) {
   }
   imputed <- all(vapply(analyses, inherits, logical(1), "mfrm_imputed_clusters"))
   if (!imputed && !all(vapply(analyses, inherits, logical(1), "mfrm_clusters"))) {
-    stop("Supply only mfrm_cluster() results or only mfrm_cluster_imputed() results.", call. = FALSE)
+    stop("Supply only mfrm_cluster() / mfrm_cluster_hierarchical() results, or only mfrm_cluster_imputed() results.", call. = FALSE)
   }
   partitions <- if (imputed) lapply(analyses, `[[`, "analyses") else lapply(analyses, list)
   m <- length(partitions[[1L]])
@@ -117,7 +121,7 @@ mfrm_cluster_compare <- function(analyses) {
     for (j in seq_len(m)) {
       a <- partitions[[i]][[j]]
       if (!inherits(a, "mfrm_clusters")) {
-        stop("Every retained partition must be an mfrm_cluster() result.", call. = FALSE)
+        stop("Every retained partition must be an external-feature clustering result.", call. = FALSE)
       }
       if (!isTRUE(all.equal(feature_table(a$feature_data), completed_data[[j]], tolerance = 0))) {
         stop("Completed feature values and types must match at imputation ", j, ".", call. = FALSE)
@@ -139,6 +143,7 @@ mfrm_cluster_compare <- function(analyses) {
       memberships[[i]][[j]] <- labels
       sizes <- table(labels)
       summaries[[i]][[j]] <- data.frame(Analysis = names(analyses)[i],
+        Method = a$settings$method, Linkage = a$settings$linkage %||% NA_character_,
         Imputation = if (imputed) j else NA_integer_, K = a$settings$k,
         Included = sum(included), Excluded = sum(!included),
         MinGroupSize = min(sizes), MaxGroupSize = max(sizes),
@@ -187,7 +192,7 @@ mfrm_cluster_compare <- function(analyses) {
 #' @param ... Reserved for method compatibility.
 #' @export
 print.mfrm_cluster_comparison <- function(x, ...) {
-  cat("Exploratory grouping sensitivity to group count and feature weights\n")
+  cat("Exploratory grouping sensitivity to settings and clustering methods\n")
   print(x$comparison_summary, row.names = FALSE)
   cat("ChangedFraction counts pairs whose together/apart status changes; group numbers are arbitrary.\n")
   cat("Summaries are descriptive, not pooled inference, sampling stability, or automatic setting selection.\n")

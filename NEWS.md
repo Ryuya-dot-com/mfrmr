@@ -2,6 +2,13 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* Added `mfrm_cluster_hierarchical()` for Gower-based average or complete
+  linkage, retaining the full tree, a chosen group cut, profiles, and
+  silhouettes. Its `plot()` method draws the stored dendrogram. Hierarchical
+  analyses can also be run within `mfrm_cluster_imputed()` and compared with
+  PAM using the same completed data. Comparison tables now identify methods
+  and linkages. Trees are specific to each completion; no pooled hierarchy
+  or branch-support estimate is provided.
 * Added `plot()` methods for exploratory clustering results: silhouettes,
   single-feature profiles, and pairwise co-membership heatmaps across
   imputations. Plots reuse stored results, retain excluded IDs in their data,

@@ -41,7 +41,8 @@
 #' not membership probabilities, sampling stability, or a consensus partition.
 #' Rows and columns follow input order or explicit `ids`; no hierarchical
 #' clustering is performed. PAM is nonhierarchical and these plots do not
-#' provide a dendrogram.
+#' provide a dendrogram. Use [mfrm_cluster_hierarchical()] for a separate
+#' hierarchical analysis and its dendrogram.
 #' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
@@ -69,8 +70,10 @@ plot.mfrm_clusters <- function(x, type = c("silhouette", "profile"),
   check_cluster_plot_flags(draw, labels)
   style <- resolve_plot_preset(preset)
   excluded <- x$membership$ID[is.na(x$membership$Cluster)]
-  subtitle <- sprintf("PAM / Gower | Included: %d | Excluded: %d",
-    x$settings$included, length(excluded))
+  method <- if (is.null(x$settings$linkage)) x$settings$method else
+    paste(x$settings$linkage, "linkage")
+  subtitle <- sprintf("%s / Gower | Included: %d | Excluded: %d",
+    method, x$settings$included, length(excluded))
   if (type == "silhouette") {
     if (!is.null(feature)) stop("`feature` is only used for type = 'profile'.", call. = FALSE)
     tab <- x$membership[!is.na(x$membership$Cluster), , drop = FALSE]
@@ -159,12 +162,14 @@ plot.mfrm_imputed_clusters <- function(x, ids = NULL, labels = NULL, draw = TRUE
   mat <- x$co_membership[ids, ids, drop = FALSE]
   excluded <- all_ids[is.na(diag(x$co_membership))]
   show_labels <- labels %||% (length(ids) <= 50L)
-  title <- "Co-membership across imputations"
+  method <- x$settings$method %||% "PAM"
+  linkage <- x$settings$linkage
+  title <- paste("Co-membership:", if (is.null(linkage)) method else paste(linkage, "linkage"))
   subtitle <- sprintf("Imputations: %d | Displayed: %d of %d | Excluded in view: %d",
     x$settings$imputations, length(ids), length(all_ids), sum(ids %in% excluded))
   out <- new_mfrm_plot_data("cluster_co_membership", list(matrix = mat,
     ids = ids, excluded_ids = excluded, imputations = x$settings$imputations,
-    labels = show_labels, title = title, subtitle = subtitle,
+    labels = show_labels, method = method, linkage = linkage, title = title, subtitle = subtitle,
     legend = cluster_proportion_legend(style), preset = style$name))
   if (!draw) return(invisible(out))
   apply_plot_preset(style)

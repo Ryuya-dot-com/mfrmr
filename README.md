@@ -989,6 +989,21 @@ clustering result, a co-membership heatmap. All views reuse stored results;
 `draw = FALSE` returns the values for custom graphics. See `?plot.mfrm_clusters`
 and the tutorial for examples. PAM is nonhierarchical and has no dendrogram.
 
+For a hierarchy, fit a separate Gower-based analysis using average linkage
+(default) or complete linkage:
+
+```r
+hierarchy <- mfrm_cluster_hierarchical(features, k = 3, linkage = "average")
+plot(hierarchy)
+summary(mfrm_cluster_compare(list(PAM = groups, Average = hierarchy)))
+```
+
+The dendrogram uses the stored tree; boxes mark the chosen groups. Heights
+are linkage dissimilarities, not branch support. With missing features, use an
+explicit omission policy or the imputation workflow below. Set
+`method = "hierarchical", linkage = "average"` in `mfrm_cluster_imputed()`
+to retain a tree for each completion. No pooled tree is estimated.
+
 For incomplete external attributes, `mfrm_cluster_imputed()` accepts a model
 fitted with the optional `mice` package. Select eligible missing cells explicitly
 after reviewing their reasons; structurally undefined attributes should remain

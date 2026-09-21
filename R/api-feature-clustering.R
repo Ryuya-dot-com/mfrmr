@@ -196,7 +196,7 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   For feature selection, missingness review, and multiple-imputation examples,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
-#'   [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
+#'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()], [cluster::daisy()], [cluster::pam()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
 #'   # Fictional raters; R2 has unrecorded experience, not zero years.
@@ -214,11 +214,15 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #' }
 #' @export
 mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
+  cluster_external_features(x, k, weights, match.arg(missing))
+}
+
+cluster_external_features <- function(x, k, weights, missing, linkage = NULL) {
   if (!inherits(x, "mfrm_features")) {
     stop("`x` must be prepared with mfrm_features().", call. = FALSE)
   }
   x <- mfrm_features(x$data, x$id, x$features, x$missing)
-  missing <- match.arg(missing)
+  missing <- match.arg(missing, c("error", "omit"))
   keep <- x$row_summary$Complete
   if (any(!keep) && missing == "error") {
     stop("Selected features contain missing values. Inspect `x$missing`; use missing = 'omit' to exclude incomplete entities explicitly.", call. = FALSE)
@@ -253,28 +257,40 @@ mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
     stop("Numeric feature ranges overflow; rescale these features before clustering.", call. = FALSE)
   }
   if (!requireNamespace("cluster", quietly = TRUE)) {
-    stop("Install the optional 'cluster' package to use mfrm_cluster().", call. = FALSE)
+    stop("Install the optional 'cluster' package for external-feature clustering.", call. = FALSE)
   }
   rownames(values) <- as.character(seq_len(n))
   binary <- which(vapply(values, is.logical, logical(1)))
   distance <- cluster::daisy(values, metric = "gower", weights = unname(distance_weights),
                              type = list(symm = binary), warnBin = FALSE)
   if (any(!is.finite(distance))) stop("The selected features do not produce finite distances; review their scales.", call. = FALSE)
-  fit <- cluster::pam(distance, k = as.integer(k), diss = TRUE, variant = "original",
+  if (is.null(linkage)) {
+    fit <- cluster::pam(distance, k = as.integer(k), diss = TRUE, variant = "original",
                       keep.diss = FALSE, keep.data = FALSE)
-  silhouette <- numeric(n)
-  silhouette[as.integer(rownames(fit$silinfo$widths))] <- fit$silinfo$widths[, "sil_width"]
+    labels <- fit$clustering
+    silhouette <- numeric(n)
+    silhouette[as.integer(rownames(fit$silinfo$widths))] <- fit$silinfo$widths[, "sil_width"]
+  } else {
+    tree <- stats::hclust(distance, method = linkage)
+    tree$labels <- x$row_summary$ID[keep]
+    labels <- stats::cutree(tree, k = as.integer(k))
+    silhouette <- unname(cluster::silhouette(labels, distance)[, "sil_width"])
+  }
   membership <- data.frame(ID = x$row_summary$ID, Cluster = NA_integer_,
                            Medoid = NA, Silhouette = NA_real_)
-  membership$Cluster[keep] <- as.integer(fit$clustering)
-  membership$Medoid[keep] <- seq_len(n) %in% fit$id.med
+  membership$Cluster[keep] <- as.integer(labels)
+  if (is.null(linkage)) {
+    membership$Medoid[keep] <- seq_len(n) %in% fit$id.med
+  } else {
+    membership$Medoid <- NULL
+  }
   membership$Silhouette[keep] <- silhouette
-  sizes <- as.integer(tabulate(fit$clustering, nbins = k))
+  sizes <- as.integer(tabulate(labels, nbins = k))
   cluster_summary <- data.frame(Cluster = seq_len(k), N = sizes,
-    MeanSilhouette = as.numeric(tapply(silhouette, fit$clustering, mean)))
+    MeanSilhouette = as.numeric(tapply(silhouette, labels, mean)))
   numeric_profiles <- categorical_profiles <- list()
   for (g in seq_len(k)) for (name in x$features) {
-    value <- values[[name]][fit$clustering == g]
+    value <- values[[name]][labels == g]
     if (is.numeric(value)) {
       numeric_profiles[[length(numeric_profiles) + 1L]] <- data.frame(
         Cluster = g, Feature = name, N = length(value), Mean = mean(value),
@@ -292,12 +308,18 @@ mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
         N = integer(), Mean = numeric(), Median = numeric(), SD = numeric()), numeric_profiles),
       categorical = dplyr::bind_rows(data.frame(Cluster = integer(), Feature = character(),
         Level = character(), N = integer(), Proportion = numeric()), categorical_profiles)),
-    medoids = x$data[which(keep)[fit$id.med], c(x$id, x$features), drop = FALSE],
+    medoids = if (is.null(linkage)) x$data[which(keep)[fit$id.med], c(x$id, x$features), drop = FALSE] else NULL,
     feature_data = x,
     settings = list(k = as.integer(k), method = "PAM", distance = "Gower",
       weights = weights, numeric_ranges = ranges, missing = missing,
       included = n, excluded = sum(!keep)))
   class(out) <- "mfrm_clusters"
+  if (!is.null(linkage)) {
+    out$tree <- tree
+    out$settings$method <- "Hierarchical"
+    out$settings$linkage <- linkage
+    class(out) <- c("mfrm_hierarchical_clusters", "mfrm_clusters")
+  }
   out
 }
 
@@ -306,7 +328,8 @@ mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
 #' @param ... Reserved for method compatibility.
 #' @export
 print.mfrm_clusters <- function(x, ...) {
-  cat("Exploratory feature groups (Gower distance, PAM)\n")
+  cat(sprintf("Exploratory feature groups (Gower distance, %s%s)\n", x$settings$method,
+    if (!is.null(x$settings$linkage)) paste0(" / ", x$settings$linkage, " linkage") else ""))
   cat(x$settings$included, "entities included;", x$settings$excluded, "excluded for missing features\n")
   print(x$cluster_summary, row.names = FALSE)
   cat("Group labels are arbitrary. Silhouette describes separation in this sample; stability is not assessed.\n")
@@ -320,7 +343,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 
 #' Compare exploratory groups across external-feature imputations
 #'
-#' Apply the same Gower/PAM analysis to each completed data set from `mice`,
+#' Apply the same Gower clustering analysis to each completed data set from `mice`,
 #' retaining all analyses and the fraction of imputations in which each pair
 #' of entities belongs to the same group.
 #'
@@ -339,6 +362,11 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #' @param missing Either `"error"` (default) or `"omit"`, applied to missing
 #'   features remaining after imputation. Explicit omission retains excluded
 #'   IDs with unavailable memberships and pairwise proportions.
+#' @param method `"pam"` (default) or `"hierarchical"`. The same method is used
+#'   for every completion. Hierarchical analyses retain separate trees.
+#' @param linkage For `method = "hierarchical"`, `"average"` (the default when
+#'   `NULL`) or `"complete"`; see [mfrm_cluster_hierarchical()]. Must be `NULL`
+#'   for PAM, which has no linkage.
 #' @return An `mfrm_imputed_clusters` object containing `analyses` (one
 #'   `mfrm_clusters` object per imputation), `co_membership` (a symmetric matrix
 #'   indexed by ID), `analysis_summary`, original `feature_data`, `imputed_cells`
@@ -347,6 +375,8 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   its denominator; pairs involving excluded entities are `NA`, including
 #'   their diagonal entries. `summary()` returns per-imputation counts and mean
 #'   silhouette widths. Numeric ranges are retained in each analysis.
+#'   Hierarchical partitions inherit from `mfrm_clusters` and retain their
+#'   trees. Method and linkage are retained in `settings`.
 #' @details Fit and review the imputation model using [mice::mice()] before
 #'   calling this function. Choose methods, predictors (including relevant
 #'   auxiliary variables), iteration count, and number of imputations for the
@@ -373,6 +403,8 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   Remaining missingness, and thus the included sample, is the same across
 #'   imputations. Gower numeric ranges are recalculated in each completed sample;
 #'   differences may reflect changes in both feature values and scaling.
+#'   Hierarchical trees belong to individual completions; no pooled tree,
+#'   consensus hierarchy, or branch-support estimate is returned.
 #'
 #'   Co-membership proportions are invariant to arbitrary group numbering.
 #'   They describe sensitivity to the supplied imputations, conditional on the
@@ -389,7 +421,7 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   reasons, imputation diagnostics, and comparisons of group counts and weights,
 #'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
-#'   [plot.mfrm_clusters()],
+#'   [mfrm_cluster_hierarchical()], [plot.mfrm_clusters()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples
 #' if (requireNamespace("mice", quietly = TRUE) &&
@@ -414,7 +446,14 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #' }
 #' @export
 mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
-                                 missing = c("error", "omit")) {
+                                 missing = c("error", "omit"),
+                                 method = c("pam", "hierarchical"), linkage = NULL) {
+  method <- match.arg(method)
+  if (method == "hierarchical") {
+    linkage <- match.arg(linkage, c("average", "complete"))
+  } else if (!is.null(linkage)) {
+    stop("PAM has no linkage; `linkage` must be NULL for method = 'pam'.", call. = FALSE)
+  }
   if (!inherits(x, "mfrm_features")) {
     stop("`x` must be prepared with mfrm_features().", call. = FALSE)
   }
@@ -510,8 +549,13 @@ mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
     analyses[[i]] <- tryCatch({
       completed <- align(mice::complete(imputed, action = i), completion = TRUE)
       check_values(completed, remaining)
-      mfrm_cluster(mfrm_features(completed, x$id, x$features, reasons),
-                   k = k, weights = weights, missing = missing)
+      reviewed <- mfrm_features(completed, x$id, x$features, reasons)
+      if (method == "pam") {
+        mfrm_cluster(reviewed, k = k, weights = weights, missing = missing)
+      } else {
+        mfrm_cluster_hierarchical(reviewed, k = k, weights = weights,
+          missing = missing, linkage = linkage)
+      }
     }, error = function(e) {
       stop("Imputation ", i, ": ", conditionMessage(e), call. = FALSE)
     })
@@ -529,6 +573,7 @@ mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
     imputed_cells = dplyr::left_join(cells, x$missing, by = c("ID", "Feature")),
     imputation_model = imputed,
     settings = list(imputations = as.integer(imputed$m), k = as.integer(k),
+      method = analyses[[1L]]$settings$method, linkage = linkage,
       weights = analyses[[1L]]$settings$weights, missing = missing,
       scaling = "Gower ranges recalculated within each completed sample"))
   class(out) <- "mfrm_imputed_clusters"
@@ -541,6 +586,8 @@ mfrm_cluster_imputed <- function(x, imputed, impute, k, weights = NULL,
 #' @export
 print.mfrm_imputed_clusters <- function(x, ...) {
   cat("Exploratory groups across external-feature imputations\n")
+  cat("Method:", x$settings$method %||% "PAM",
+    if (!is.null(x$settings$linkage)) paste0(" / ", x$settings$linkage, " linkage") else "", "\n")
   cat(x$settings$imputations, "imputations;", nrow(x$imputed_cells), "selected missing cells\n")
   print(x$analysis_summary, row.names = FALSE)
   events <- x$imputation_model$loggedEvents

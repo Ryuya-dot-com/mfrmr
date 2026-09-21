@@ -99,8 +99,10 @@ separate development and validation.
 
 Plots now show silhouettes, individual feature profiles, and co-membership
 across imputations directly from these results. PAM is nonhierarchical.
-A dendrogram would require a separately specified hierarchical analysis with
-an appropriate distance and linkage; it cannot be added as a view of PAM.
+Separate hierarchical analyses now support average and complete linkage on
+Gower dissimilarities, with retained trees and dendrograms. Their partitions
+can be compared with PAM, including across the same feature imputations.
+Ward clustering, pooled trees, and branch-support estimates are not provided.
 
 Missing external features remain visible with user-supplied reasons. Clustering
 stops by default; explicit omission retains unclassified IDs. This is not
@@ -117,7 +119,7 @@ imputations without averaging arbitrary group labels. They do not establish
 sampling stability or provide pooled inferential estimates. Numeric ranges are
 recalculated in each completed sample and retained for inspection.
 
-Group-count and feature-weight sensitivity can be reviewed by comparing
+Group-count, feature-weight, and clustering-method sensitivity can be reviewed by comparing
 existing clustering results. Pair changes and adjusted Rand indices compare
 partitions without relying on group numbers. For multiply imputed features,
 the comparison pairs identical completed tables and retains every imputation's

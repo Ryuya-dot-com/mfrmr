@@ -21,6 +21,7 @@ cran_light_tests <- c(
   "data-and-citation",
   "example-datasets",
   "feature-clustering",
+  "hierarchical-clustering",
   "gauss-hermite-weights",
   "generalizability-missing",
   "icc-ci-method",

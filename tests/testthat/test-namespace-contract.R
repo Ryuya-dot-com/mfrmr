@@ -9,6 +9,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
   expected_exports <- c(
     "mfrm_features",
     "mfrm_cluster",
+    "mfrm_cluster_hierarchical",
     "mfrm_cluster_imputed",
     "mfrm_cluster_compare",
     "analyze_dff",
@@ -191,6 +192,7 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "S3method(print,mfrm_clusters)",
     "S3method(summary,mfrm_clusters)",
     "S3method(plot,mfrm_clusters)",
+    "S3method(plot,mfrm_hierarchical_clusters)",
     "S3method(print,mfrm_imputed_clusters)",
     "S3method(summary,mfrm_imputed_clusters)",
     "S3method(plot,mfrm_imputed_clusters)",

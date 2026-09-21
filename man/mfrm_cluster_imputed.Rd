@@ -12,7 +12,9 @@ mfrm_cluster_imputed(
   impute,
   k,
   weights = NULL,
-  missing = c("error", "omit")
+  missing = c("error", "omit"),
+  method = c("pam", "hierarchical"),
+  linkage = NULL
 )
 
 \method{print}{mfrm_imputed_clusters}(x, ...)
@@ -40,6 +42,13 @@ imputation.}
 features remaining after imputation. Explicit omission retains excluded
 IDs with unavailable memberships and pairwise proportions.}
 
+\item{method}{\code{"pam"} (default) or \code{"hierarchical"}. The same method is used
+for every completion. Hierarchical analyses retain separate trees.}
+
+\item{linkage}{For \code{method = "hierarchical"}, \code{"average"} (the default when
+\code{NULL}) or \code{"complete"}; see \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}. Must be \code{NULL}
+for PAM, which has no linkage.}
+
 \item{...}{Reserved for method compatibility.}
 
 \item{object}{An object returned by \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}.}
@@ -53,9 +62,11 @@ Every available matrix entry uses all \code{settings$imputations} analyses as
 its denominator; pairs involving excluded entities are \code{NA}, including
 their diagonal entries. \code{summary()} returns per-imputation counts and mean
 silhouette widths. Numeric ranges are retained in each analysis.
+Hierarchical partitions inherit from \code{mfrm_clusters} and retain their
+trees. Method and linkage are retained in \code{settings}.
 }
 \description{
-Apply the same Gower/PAM analysis to each completed data set from \code{mice},
+Apply the same Gower clustering analysis to each completed data set from \code{mice},
 retaining all analyses and the fraction of imputations in which each pair
 of entities belongs to the same group.
 }
@@ -86,6 +97,8 @@ stops the comparison with its imputation number; no failures are discarded.
 Remaining missingness, and thus the included sample, is the same across
 imputations. Gower numeric ranges are recalculated in each completed sample;
 differences may reflect changes in both feature values and scaling.
+Hierarchical trees belong to individual completions; no pooled tree,
+consensus hierarchy, or branch-support estimate is returned.
 
 Co-membership proportions are invariant to arbitrary group numbering.
 They describe sensitivity to the supplied imputations, conditional on the
@@ -126,6 +139,6 @@ if (requireNamespace("mice", quietly = TRUE) &&
 }
 \seealso{
 \code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
-\code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}},
+\code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}, \code{\link[=plot.mfrm_clusters]{plot.mfrm_clusters()}},
 \code{\link[mice:mice]{mice::mice()}}, \code{\link[mice:complete]{mice::complete()}}
 }

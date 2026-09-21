@@ -29,6 +29,7 @@ reference:
     contents:
       - mfrm_features
       - mfrm_cluster
+      - mfrm_cluster_hierarchical
       - mfrm_cluster_imputed
       - mfrm_cluster_compare
       - plot.mfrm_clusters

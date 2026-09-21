@@ -9,6 +9,43 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: hierarchical external-feature clustering
+
+Added mfrm_cluster_hierarchical with average (UPGMA) and complete linkage on
+the same weighted Gower distances as PAM. Both paths share input validation,
+missingness handling, scales and profile construction. The hierarchical result
+inherits the common partition interface and retains its own hclust tree, cut
+memberships and silhouettes. It selects no medoids. Ward is not exposed:
+this interface defines neither a Euclidean transformation nor a variance-based
+clustering criterion (Murtagh and Legendre, 2014, DOI 10.1007/s00357-014-9161-z).
+Linkage arguments are validated before data preparation.
+
+The S3 dendrogram plot consumes the saved tree. Its boxes use the stored cut,
+including tied merge heights, and remain inside the plotting window for small
+trees. Excluded IDs remain in the payload. Silhouette/profile captions and
+imputation heatmap titles identify the method; plots do not refit. The same
+hierarchical route is available in mfrm_cluster_imputed. Every completion
+retains its tree and enters co-membership denominators; no pooled tree or
+branch support is estimated. Comparison tables identify method and linkage,
+including PAM-versus-hierarchy comparisons on paired completions.
+
+Scoped verification passed: hierarchical-clustering (80 expectations),
+feature-clustering (127), cluster-comparison (53), cluster-plots (38), and
+namespace-contract (4). The hierarchy tests independently construct weighted
+mixed-type distances, compare both linkages and silhouettes to standard R,
+exercise tied cuts/singletons/omitted IDs, check an explicit two-completion
+pair fraction, and retain imputation failures. Plot checks verify no refitting
+and graphics-state restoration. The initial new checks prompted eager linkage
+validation and correction of a vector-versus-array test expectation.
+
+Five affected help pages passed Rd/HTML checks; the new hierarchy example and
+updated tutorial executed. Visual inspection covers labelled/excluded entities,
+tied heights, and all 120 tutorial raters. Rendered tutorial and figures:
+/private/tmp/mfrmr-hierarchical-clustering-20260921/.
+No whole suite, package check, stress matrix, or CI was rerun. Prior stress
+measurements remain evidence for the PAM workflow, not benchmarks for the new
+hierarchical route. The separate 0.2.4 release candidate remains unchanged.
+
 ## 2026-09-21: clustering plots and relation to MFRM research
 
 Development-only S3 plot methods now consume mfrm_clusters and

@@ -4,7 +4,7 @@
 \alias{mfrm_cluster_compare}
 \alias{print.mfrm_cluster_comparison}
 \alias{summary.mfrm_cluster_comparison}
-\title{Compare exploratory groups across group counts and feature weights}
+\title{Compare exploratory groups across settings and clustering methods}
 \usage{
 mfrm_cluster_compare(analyses)
 
@@ -13,7 +13,8 @@ mfrm_cluster_compare(analyses)
 \method{summary}{mfrm_cluster_comparison}(object, ...)
 }
 \arguments{
-\item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster]{mfrm_cluster()}},
+\item{analyses}{A named list of at least two results from \code{\link[=mfrm_cluster]{mfrm_cluster()}}
+and/or \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}},
 or a named list of results from \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}. Do not mix the two
 result types. Names must be unique and nonblank. All results must use the
 same original feature values, types, IDs, and included entities. Row and
@@ -28,7 +29,8 @@ fitting each setting. Different imputation models are not compared here.}
 \value{
 An \code{mfrm_cluster_comparison} object containing:
 \itemize{
-\item \code{analysis_summary}: group count, included/excluded entity counts,
+\item \code{analysis_summary}: method, linkage (unavailable for PAM), group
+count, included/excluded entity counts,
 smallest/largest group sizes, and mean silhouette for each analysis and
 imputation. \code{Imputation} is \code{NA} for ordinary clustering results.
 \item \code{weights}: supplied feature weights for each analysis.
@@ -47,7 +49,8 @@ imputation-specific partitions, profiles, and settings.
 \description{
 Compare existing external-feature clustering results without refitting.
 Review how group membership changes when the number of groups or feature
-weights changes, including paired comparisons across the same imputations.
+weights or clustering method changes, including paired comparisons across
+the same imputations.
 }
 \details{
 Comparisons align entities by ID and do not compare numeric group
@@ -97,5 +100,6 @@ Hubert, L. and Arabie, P. (1985). Comparing partitions.
 Journal of Classification, 2, 193--218. \doi{10.1007/BF01908075}.
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}},
+\code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}}
 }

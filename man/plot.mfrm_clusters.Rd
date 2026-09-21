@@ -70,7 +70,8 @@ These fractions describe sensitivity to imputations under fixed settings,
 not membership probabilities, sampling stability, or a consensus partition.
 Rows and columns follow input order or explicit \code{ids}; no hierarchical
 clustering is performed. PAM is nonhierarchical and these plots do not
-provide a dendrogram.
+provide a dendrogram. Use \code{\link[=mfrm_cluster_hierarchical]{mfrm_cluster_hierarchical()}} for a separate
+hierarchical analysis and its dendrogram.
 }
 \examples{
 if (requireNamespace("cluster", quietly = TRUE)) {
