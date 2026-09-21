@@ -9,6 +9,57 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: prioritize multivariate observed-score G-theory
+
+The user's request to work on multivariate G-theory changes its priority from
+deferred research to the next substantive G-theory implementation target.
+Freezing the 0.2.4 candidate does not require freezing subsequent development.
+Further clustering algorithms are lower priority than this measurement use:
+dependability of fixed score components and their user-weighted composite under
+changes in rater/task counts. No named external decision owner or operational
+deployment is required before developing a general-purpose package capability.
+
+The current exported helper is univariate and main-effects-only. Existing
+supplied-matrix multivariate algebra, allocation identities, and fixtures can
+be reused after source review; they are not an estimator or public API. The
+first implementation should connect data to jointly estimated covariance
+components, a formal result object, and component/composite D-study outputs.
+Do not create another governance layer, admission packet, or broad simulation
+campaign instead of that implementation.
+
+Start with complete balanced Person x Rater x Task data, common conditions
+across fixed score components, and random Rater/Task sampling. Estimate the
+Person, Rater, Task, Person:Rater, Person:Task, Rater:Task, and combined
+Person:Rater:Task/residual matrices. Preserve raw negative/indefinite component
+estimates and report their effect on coefficient availability; do not silently
+clip components or repair PSD matrices. Score scale, average-versus-total
+convention, weights, and D-study denominators must be explicit. Univariate
+reduction means the corresponding full-interaction model, not agreement with
+the current collapsed-residual approximation.
+
+Read-only review reused the D-SIM-6 disposition and the completed D4-S006
+root-cause audit. Source inspection confirms that ordinal_aggregate thresholds
+the latent response while its truth route uses pre-threshold covariance
+diagonals, and the worker forms per-stratum observed-score coefficients.
+The historical failure remains unchanged: it is not same-scale recovery and
+does not validate a multivariate composite estimator. It also does not show
+that properly specified observed-score multivariate G-theory is impossible.
+No optimization or repeated bootstrap can fix that target mismatch.
+
+Initial estimator verification should use independent balanced-design
+cross-product calculations or an exactly matched external reference, analytic
+same-scale fixtures, off-diagonal covariance sensitivity, and full-interaction
+one-score reduction. Reuse existing algebra/identity evidence. Any later
+simulation must answer a remaining estimator or interval question with matched
+truth; preserve earlier negative results and use fresh seeds. Sparse/nested
+designs, partially shared conditions, missingness/MI, and interval claims are
+outside the first implementation. Ordered numeric scores require observed-scale
+truth validation, not an assertion that all G-theory must use an ordinal model.
+
+Only the development roadmap is updated here. No API implementation, new
+simulation, test rerun, candidate change, or release claim is made. Public
+wording describes the use and limits; internal study identifiers stay here.
+
 ## 2026-09-21: documentation routes and candidate evidence scope
 
 The development README now describes feature-selection comparisons, including
@@ -968,7 +1019,8 @@ LRT, because that could approve unrelated SEs, intervals and predictions.
 | Design for replacement raters | Equal-cost allocation comparisons for the same Persons and prespecified Person differences under an explicitly sampled rater population. | Requires the matching shared-rater model and joint prediction route. Preserve paired covariance and all-attempt availability; use the saved layouts/target table with layout B's known confounding and C as a negative control. |
 | Model breadth | PCM random facets, sampled tasks, local/correlated testlets, crossed/nested interactions and random slopes. | Admit one concrete user question at a time after its target/identification is specified. The entire correlated-testlet family is not a mandatory prerequisite for a scalar shared-rater model. |
 | Scale and API consolidation | Explicit scale identifiers/separate-scale routing, then stable schemas/migration and maintenance of validated routes. | Post-0.2.4 scope decision and user need; multiple-scale routing and random-rater research do not establish or require each other. |
-| Deferred research | Multivariate G-theory, hierarchical response time, diffusion models, portable GPCM and other response families. | A concrete measurement use case, suitable data and a separate evidence plan. No automatic assignment to 0.2.4, 0.3.0 or 1.0.0. |
+| Multivariate observed-score G-theory | Complete balanced Person x Rater x Task covariance estimation and component/composite D-study results; now a priority feature track. | Reuse matrix algebra, match estimator and truth scales, check a full-interaction univariate reduction and an independent estimator reference. Keep sparse, nested, partial-sharing and interval extensions separate. No automatic assignment to 0.2.4. |
+| Deferred research | Hierarchical response time, diffusion models, portable GPCM and other response families. | A concrete measurement use case, suitable data and a separate evidence plan. No automatic assignment to 0.2.4, 0.3.0 or 1.0.0. |
 
 The [measurement-extension decision](measurement-extension-next-decisions-0.2.4.md)
 retains the literature and completed references. Its historical brms and

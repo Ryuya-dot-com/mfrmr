@@ -16,9 +16,11 @@ and the help shipped with your installation for its available functionality.
 
 mfrmr helps users calibrate ratings, compare Persons and facets on an explicit
 measurement scale, reuse a calibration, and report what the results support.
-The immediate priority is a reliable existing workflow with clear uncertainty
-and compatibility limits. Rating-design support and models for sampled raters
-follow as separate extensions.
+The immediate release priority is a reliable existing workflow with clear
+uncertainty and compatibility limits. Multivariate observed-score G-theory is
+a priority for subsequent feature development: it addresses the dependability
+of component and composite scores when raters, tasks, or score weights change.
+Rating-design support and models for sampled raters remain separate extensions.
 
 The estimation core remains frequentist MML/JML. Posterior EAP scoring
 conditional on a fitted calibration does not make the calibration fully
@@ -231,10 +233,37 @@ explicit omission. G/D results retain the source of their data and the counts
 of rows supplied, used, and excluded. Stored fitted rows cannot reconstruct
 earlier MFRM exclusions, and omission does not correct missing-data bias.
 
-Future support for interactions and multivariate designs needs explicit
-universe-score and error covariances, relative/absolute decisions, and the
-averaging rules for each design. Univariate calculations alone do not establish
-that extension. Multivariate G-theory is not required for the 0.2.4 workflow.
+The next G-theory priority is a multivariate G-study and D-study workflow.
+For example, an assessment may score content, organization, and language on
+each performance. Users need to examine how changing their composite weights,
+or the numbers of raters and tasks, changes score dependability. Correlated
+components require universe-score and error covariances; averaging the
+components' separate reliability coefficients does not answer this question.
+
+The first implementation target is a complete, balanced, fully crossed
+Person-by-Rater-by-Task design, with the same raters and tasks across all score
+components. Score components are fixed parts of the intended assessment;
+raters and tasks are random conditions of measurement. The G-study must
+estimate component-specific variance-covariance matrices, including the
+Person-by-facet and Rater-by-Task interactions. With one observation per cell,
+the highest-order interaction and residual error remain combined. The D-study
+must retain their distinct averaging rules, score units, and user-specified
+weights when forming relative-error and absolute-error covariance matrices,
+composite G/Phi, and SEMs.
+
+This target is not yet a public capability. It concerns dependability on the
+observed-score scale. Treating ordered categories as numeric scores does not
+make their coefficients measures of latent ordinal dependability.
+Incomplete or unbalanced designs, nested or partially shared raters
+and tasks, and interval estimation need separate extensions and evidence.
+This workflow will complement MFRM on the observed-score scale; it will not
+provide multivariate latent MFRM estimation or cut-score classification accuracy.
+It is developed separately from the 0.2.4 release candidate, with no release
+version promised yet.
+
+For the roles of composite weights and design-specific covariance, see
+[Brennan (2016)](https://education.uiowa.edu/sites/education.uiowa.edu/files/2022-10/casma-research-report-50.pdf)
+and [Brennan, Kim, and Lee (2022)](https://doi.org/10.1177/00131644211049746).
 
 ## Response time and decision processes
 
@@ -269,7 +298,7 @@ an unavailable covariance.
 | --- | --- |
 | 0.2.4 | Portable fixed-normal RSM/PCM MML calibration and scoring, corrected existing workflows, and consistent interpretation and migration guidance. |
 | 0.2.5 candidate | Explicit scale identifiers and separate-scale RSM/binary and PCM workflows, if user needs justify them. This would not provide automatic linking. |
-| Later feature releases, version unassigned | Target-specific rating-design support and a limited frequentist random-rater MFRM, introduced separately when their methods and workflows are ready. |
+| Later feature releases, version unassigned | A bounded multivariate observed-score G/D-study workflow, target-specific rating-design support, and a limited frequentist random-rater MFRM, introduced separately when their methods and workflows are ready. |
 | 0.3.0 | Consolidate supported APIs, saved-object compatibility and reproducible performance. |
 | 1.0.0 | A deliberately limited stable core with clear use conditions, statistical limits and maintenance commitments. |
 
