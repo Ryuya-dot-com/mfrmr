@@ -469,18 +469,3 @@ test_that("anchored reparameterization preserves likelihood and artifact semanti
   expect_true("ANCHOR_COORDINATE_MISMATCH" %in%
                 mfrmr:::mfrmr_review_calibration(mismatch)$Code)
 })
-
-test_that("roadmap records G2 closure without public promotion", {
-  ctx <- load_fixed_calibration_g2_contract()
-  roadmap <- paste(readLines(file.path(ctx$root, "ROADMAP.md"), warn = FALSE),
-                   collapse = "\n")
-  expect_match(roadmap, "- [x] **CORE-03 — Typed anchors:**", fixed = TRUE)
-  expect_match(roadmap, "- [x] **G2 — Anchor and identification closure**",
-               fixed = TRUE)
-  expect_match(roadmap, "  - [x] Freeze distinct namespaces", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Replace ambiguous duplicate", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Implement shared and owner-specific", fixed = TRUE)
-  expect_match(roadmap, "  - [x] Run unanchored reduction", fixed = TRUE)
-  expect_match(roadmap, "  - [x] **G2 exit:**", fixed = TRUE)
-  expect_match(roadmap, "No public 0.2.4 API is authorized", fixed = TRUE)
-})

@@ -1,0 +1,6 @@
+"Type","Text"
+"definition","Edges show common elements in the recorded comparisons, not an all-pairs assessment or an inventory of fixed anchors. Element nodes are repeated per link; AnchorId identifies the same facet/level across links."
+"interpretation","Connectedness and retention do not establish anchor invariance, model identification, scale comparability, or precision. Review drift, link support and source-fit readiness separately."
+"screening","Retained is the screening set, not a guarantee of positive weight in the offset. Flag is a separate residual-drift check; counts and edge widths do not represent precision."
+"warning","No retained common-element connection for: C | D, Long form name with a shared prefix and final suffix."
+"warning","Thin or absent linking support recorded for link(s): 1, 2, 3. Inspect the link and common_by_facet tables; retention alone does not imply adequate support."

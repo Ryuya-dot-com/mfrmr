@@ -181,16 +181,19 @@ or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy_small,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML",
+  model = "RSM",
   quad_points = 7,
-  maxit = 30
+  maxit = 30,
+  reltol = 1e-11
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 

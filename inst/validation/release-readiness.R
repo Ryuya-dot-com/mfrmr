@@ -1589,6 +1589,8 @@ mfrmr_release_readiness_source_truth_status <- function(paths) {
     mfrmr_release_readiness_path_is_ignored("ROADMAP.md", patterns)
   roadmap_lines <- mfrmr_release_readiness_read_lines(paths$roadmap)
   roadmap_text <- tolower(paste(roadmap_lines, collapse = "\n"))
+  # Evidence links are reader-facing citations, not internal operations prose.
+  roadmap_text <- gsub("\\]\\(inst/validation/[^)\n]+\\)", "]", roadmap_text)
   roadmap_required_markers <- c(
     "# mfrmr roadmap",
     "status: public roadmap",
@@ -1772,7 +1774,7 @@ mfrmr_release_readiness_public_scope_status <- function(
   )
   coverage_schema_ok <- all(required_columns %in% names(coverage))
   future_features <- c(
-    "Versioned frozen-calibration import and operational scoring",
+    "FACETS or third-party frozen-calibration import",
     "General threshold or step anchors and starting-value import",
     "Multiple observed scales and scale-specific PCM",
     "Native multidimensional estimation and dimension-specific scores",

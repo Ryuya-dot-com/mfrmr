@@ -1,0 +1,6 @@
+File,MD5
+tests/testthat/test-as-ggplot.R,3f225f4dce2f305e005dfb4e0298e56c
+tests/testthat/test-plot-device-state.R,145f677a957be046c970baf7ceba59bf
+man/plot.mfrm_fit.Rd,a068db5cdaaa9339582481ce9120fd04
+man/as_ggplot.Rd,75a40caa1251b40cef8925378efee0f2
+inst/validation/plot-color-0.2.4/tests.R,96fa726b6f8524057885a99a30bfa9e7

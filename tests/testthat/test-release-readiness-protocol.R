@@ -18,6 +18,7 @@ test_that("public roadmap and current NEWS exclude internal release operations",
 
   public <- paste(readLines(public_path, warn = FALSE, encoding = "UTF-8"),
                   collapse = "\n")
+  public <- gsub("\\]\\(inst/validation/[^)\n]+\\)", "]", public)
   news <- readLines(news_path, warn = FALSE, encoding = "UTF-8")
   historical_boundary <- match("# mfrmr 0.2.2", news)
   expect_true(is.finite(historical_boundary))
@@ -39,7 +40,8 @@ test_that("public roadmap and current NEWS exclude internal release operations",
   news_forbidden <- c(
     "candidate manifest", "frozen gate", "gate-development",
     "unauthorized confirmation", "candidate-linked result",
-    "internal development and validation roadmap"
+    "internal development and validation roadmap", "D-SIM", "D5-SHARD",
+    "seed band", "adjudication closed", "complete denominator"
   )
   for (pattern in news_forbidden) {
     expect_false(grepl(pattern, current_news, fixed = TRUE), info = pattern)
@@ -2732,6 +2734,13 @@ test_that("release-readiness protocol checks source-truth alignment", {
   expect_identical(status$RoadmapInternalLanguage, "")
   expect_identical(status$DevelopmentOnlyCurrentClaims, "")
   expect_true(status$SourceTruthOK)
+
+  roadmap <- readLines(paths$roadmap)
+  writeLines(c(roadmap, "[Numerical evidence](inst/validation/example.md)"), paths$roadmap)
+  expect_true(env$mfrmr_release_readiness_source_truth_status(paths)$RoadmapReaderFacing)
+  writeLines(c(roadmap, "Run internal operations from inst/validation."), paths$roadmap)
+  expect_false(env$mfrmr_release_readiness_source_truth_status(paths)$RoadmapReaderFacing)
+  writeLines(roadmap, paths$roadmap)
 
   write_public_baseline("0.2.0")
   stale_public_baseline <- env$mfrmr_release_readiness_source_truth_status(

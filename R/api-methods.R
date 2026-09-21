@@ -1533,9 +1533,16 @@ summarize_unexpected_bundle <- function(object, digits = 3, top_n = 10) {
 summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
   top_n <- max(1L, as.integer(top_n))
   stacked <- bundle_component_table(object, "stacked")
+  zero_reference <- identical(object$settings$reference, "zero") ||
+    (!any(c("AdjustedAverage", "Fair(M) Average") %in% names(stacked)) &&
+       any(c("StandardizedAdjustedAverage", "Fair(Z) Average") %in% names(stacked)))
 
   first_present <- function(candidates) {
     candidates <- as.character(candidates %||% character(0))
+    if (zero_reference) {
+      candidates <- sub("AdjustedAverage", "StandardizedAdjustedAverage", candidates, fixed = TRUE)
+      candidates <- sub("Fair(M)", "Fair(Z)", candidates, fixed = TRUE)
+    }
     hit <- candidates[candidates %in% names(stacked)]
     if (length(hit) == 0L) NA_character_ else hit[1]
   }
@@ -1590,12 +1597,12 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     if (length(dif) > 0) mean_abs_gap <- mean(dif)
   }
 
-  has_fair_se_columns <- any(c(
+  has_fair_se_columns <- !is.na(first_present(c(
     "AdjustedAverageSE", "Fair(M) S.E.",
     "AdjustedAverageCI_Lower", "Fair(M) CI Lower",
     "AdjustedAverageCI_Upper", "Fair(M) CI Upper",
     "AdjustedAverageSEStatus", "Fair(M) S.E. Status"
-  ) %in% names(stacked))
+  )))
   fair_se_requested <- isTRUE(object$settings$fair_se %||% FALSE) || has_fair_se_columns
   status_values <- fair_m_status[!is.na(fair_m_status) & nzchar(fair_m_status)]
   method_values <- fair_m_method[!is.na(fair_m_method) & nzchar(fair_m_method)]
@@ -1620,6 +1627,8 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     Facets = if ("Facet" %in% names(stacked)) length(unique(as.character(stacked$Facet))) else length(object$by_facet %||% list()),
     Levels = nrow(stacked),
     MeanAbsObservedFairM = mean_abs_gap,
+    FairMetric = if (zero_reference) "FairZ" else "FairM",
+    FairCIEligible = FALSE,
     FairSERequested = fair_se_requested,
     FairSEAvailableRows = sum(is.finite(fair_m_se)),
     FairSEUnavailableRows = if (fair_se_requested) sum(!is.finite(fair_m_se)) else 0L,
@@ -1645,6 +1654,7 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
       preview_tbl$AdjustedAverageCI_Lower <- fair_m_ci_lower
       preview_tbl$AdjustedAverageCI_Upper <- fair_m_ci_upper
       preview_tbl$AdjustedAverageSEStatus <- fair_m_status
+      preview_tbl$FairCIEligible <- FALSE
     }
     abs_gap <- abs(obs_avg - fair_m)
     if (fair_se_requested && any(is.finite(fair_m_se))) {
@@ -1656,11 +1666,16 @@ summarize_fair_average_bundle <- function(object, digits = 3, top_n = 10) {
     preview_tbl <- utils::head(preview_tbl, n = top_n)
   }
 
+  if (zero_reference) {
+    names(summary_tbl) <- sub("AdjustedAverage", "StandardizedAdjustedAverage", names(summary_tbl), fixed = TRUE)
+    names(summary_tbl) <- sub("MeanAbsObservedFairM", "MeanAbsObservedFairZ", names(summary_tbl), fixed = TRUE)
+    names(preview_tbl) <- sub("AdjustedAverage", "StandardizedAdjustedAverage", names(preview_tbl), fixed = TRUE)
+  }
   notes <- "Adjusted-score reference summary by facet level."
   if (fair_se_requested) {
     notes <- c(
       notes,
-      "Fair-average SE columns summarize structural delta-method uncertainty when available; unavailable rows are reported explicitly."
+      "Fair-average SE columns describe computable diagnostic delta-method intervals, not qualified formal inference; full-refit coverage is unverified and unavailable rows are explicit."
     )
   } else {
     notes <- c(
@@ -2015,6 +2030,9 @@ summary_mfrm_bundle_impl <- function(object,
                                      ...) {
   if (!is.list(object)) {
     stop("`object` must be a bundle-like list output.")
+  }
+  if (inherits(object, "mfrm_facet_equivalence")) {
+    validate_facet_equivalence_bundle(object)
   }
   digits <- max(0L, as.integer(digits))
   top_n <- max(1L, as.integer(top_n))
@@ -3525,7 +3543,7 @@ draw_category_curves_bundle <- function(x,
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     if (type == "overview") {
-      old_par <- graphics::par(no.readonly = TRUE)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex", "mar", "oma")]
       on.exit(graphics::par(old_par), add = TRUE)
       graphics::par(mfrow = c(2, 2), mar = c(4.2, 4.2, 3.2, 1.2), oma = c(0, 0, 2.2, 0))
       draw_ccc_panel("Category probability")
@@ -4469,6 +4487,8 @@ draw_data_quality_bundle <- function(x,
 
     if (isTRUE(draw)) {
       apply_plot_preset(style)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex")]
+      on.exit(graphics::par(old_par), add = TRUE)
       graphics::par(mfrow = c(2, 2))
       if (nrow(row_tbl) > 0 && all(c("Status", "N") %in% names(row_tbl))) {
         barplot_rot45(
@@ -5743,7 +5763,7 @@ draw_subset_connectivity_bundle <- function(x,
     }
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      old_par <- graphics::par(no.readonly = TRUE)
+      old_par <- graphics::par()[c("mfrow", "cex", "mex", "mar", "oma")]
       on.exit(graphics::par(old_par), add = TRUE)
       graphics::layout(matrix(c(1, 2), nrow = 2), heights = c(0.8, 2.7))
       graphics::par(mar = c(1.2, 7.5, 2.5, 2.2))
@@ -7077,21 +7097,25 @@ plot.mfrm_bundle <- function(x, y = NULL, type = NULL, ...) {
 #' @seealso [diagnose_mfrm()], [summary.mfrm_fit()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy <- toy[toy$Person %in% unique(toy$Person)[1:4], ]
-#' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-#' diag <- diagnose_mfrm(fit, residual_pca = "none")
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 #' s <- summary(diag, top_n = 3)
+#' s$decision
 #' s$key_warnings
-#' # Look for: lines beginning with "MnSq misfit:" name the worst
-#' #   element + Infit / Outfit values; "Unexpected responses flagged"
-#' #   counts how many cell-level surprises the screen returned.
 #' s$top_fit
-#' # Large absolute standardized values identify rows for follow-up; they do
-#' # not create a universal accept/reject rule.
-#' s$facets_chisq
-#' # Read the fixed-effect chi-square as a heterogeneity screen in the context
-#' # of the design and intended score use.
 #' }
 #' @export
 summary.mfrm_diagnostics <- function(object,
@@ -7139,7 +7163,7 @@ summary.mfrm_diagnostics <- function(object,
   )[1L]
   diagnostic_mode <- as.character(object$diagnostic_mode %||% "legacy")
   fit_readiness_tbl <- tibble::as_tibble(
-    object$fit_readiness %||% data.frame()
+    mfrmr_get_readiness_record(object)$fit
   )
   fit_readiness_components_tbl <- tibble::as_tibble(
     object$fit_readiness_components %||% data.frame()
@@ -7156,6 +7180,14 @@ summary.mfrm_diagnostics <- function(object,
   }
   source_inference_ready <- fit_readiness_known &&
     isTRUE(fit_readiness_tbl$InferenceReady[1])
+  if (!source_inference_ready && nrow(precision_profile_tbl) > 0L) {
+    precision_profile_tbl$InferenceReady <- FALSE
+    precision_profile_tbl$SupportsFormalInference <- FALSE
+    precision_profile_tbl$RecommendedUse <-
+      "Diagnostic review only; ordinary inference is unavailable under the fit-readiness contract."
+    precision_profile_tbl$CIBasis <- "Diagnostic normal bands only"
+    precision_profile_tbl$ReliabilityBasis <- "Descriptive variance decomposition only"
+  }
   source_fit_label <- switch(
     source_fit_state,
     ready = "ready; fit-readiness requirements satisfied, with formal precision evaluated separately",
@@ -8174,7 +8206,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   follow `...` must be supplied by name.
 #' @param profile Summary profile. `"fit"` preserves the lightweight fit-only
 #'   contract and does not compute diagnostics. `"facets"` adds a
-#'   FACETS-organized measurement review, while `"reporting"` adds the
+#'   comprehensive measurement review using familiar FACETS-style section
+#'   organization; it does not require FACETS knowledge or software.
+#'   `"reporting"` adds the
 #'   reporting-oriented results profile.
 #' @param detail Printed detail. When `NULL` (the default), the lightweight
 #'   `"fit"` profile retains the legacy `"full"` print while expanded profiles
@@ -8237,6 +8271,9 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' - `step_overview`: threshold spread and monotonicity checks, reported by
 #'   `StepFacet` ladder for PCM/GPCM fits and as one common ladder for RSM fits.
 #' - `settings_overview`: estimation settings that affect interpretation.
+#'   For MML fits, the printed fit and summary also state the engine, fixed
+#'   non-adaptive Gauss--Hermite rule and order, one-dimensional latent
+#'   structure, population identification, and discrimination constraint.
 #' - `population_coding`: fitted categorical levels and contrasts that must be
 #'   reused when scoring new persons under the population-model posterior.
 #' - `key_warnings` / `notes`: short triage subset of retained zero-count score
@@ -8262,7 +8299,8 @@ print.summary.mfrm_bias <- function(x, ...) {
 #' 1. Review data and score support with [describe_mfrm_data()].
 #' 2. Fit with [fit_mfrm()] and read `summary(fit, profile = "fit")`.
 #' 3. Request `summary(fit, profile = "facets")` for the comprehensive
-#'    FACETS-organized review.
+#'    measurement review. The historical profile name does not mean that
+#'    FACETS is run.
 #' 4. Draw the required native Wright map with
 #'    `plot(fit, type = "wright", show_ci = TRUE)`; add the FACETS renderer or
 #'    Infit pathway only when they answer a specific follow-up question.
@@ -8341,48 +8379,31 @@ print.summary.mfrm_bias <- function(x, ...) {
 #'   `NULL` for the lightweight `"fit"` profile
 #' @seealso [fit_mfrm()], [diagnose_mfrm()]
 #' @examples
-#' toy <- load_mfrmr_data("example_operational")
+#' ratings <- load_mfrmr_data("example_operational")
 #' # Seven quadrature points keep this executable example short. For a final
 #' # analysis, restore the default or a prespecified grid and review sensitivity.
 #' fit <- fit_mfrm(
-#'   toy, "Person", c("Rater", "Criterion"), "Score",
-#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
+#'   reltol = 1e-11
 #' )
-#' s <- summary(fit)
-#' s$overview[, c(
-#'   "Model", "Method", "Converged", "FitReadiness", "InferenceReady",
-#'   "ConvergenceSeverity"
-#' )]
-#' s$readiness
+#' fit_review <- summary(fit, profile = "fit", detail = "brief")
+#' fit_review$decision
 #' # `InferenceReady = TRUE` means all five stored fit components passed.
 #' # It does not, by itself, support formal SE/CI or reliability.
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
-#' summary(fit, diagnostics = diag)$decision
-#' # Design, Stability, Diagnostics, and Reporting remain purpose-specific
-#' # workflow reviews rather than alternative fit-readiness derivations.
-#' # If Numerical is not a pass, inspect the retained polish stages; increasing
-#' # `maxit` alone may not resolve the review.
-#' s$person_overview
-#' # Interpret location and spread on the fitted logit scale together with the
-#' # score distribution and extreme-score counts.
-#' s$targeting
-#' # Targeting and spread are descriptive. Their practical importance depends
-#' # on the assessment purpose, sample, and facet orientation.
-#' facets_summary <- summary(fit, profile = "facets", compute = "never")
-#' res <- facets_summary$results
-#' native_map <- plot(
+#' full_review <- summary(
+#'   fit, profile = "facets", detail = "brief", diagnostics = diag
+#' )
+#' full_review$decision
+#' plot(
 #'   fit, type = "wright", renderer = "native", show_ci = TRUE, draw = FALSE
-#' )
-#' facets_map <- plot(
-#'   fit, type = "wright", renderer = "facets", show_ci = FALSE,
-#'   category_labels = c(
-#'     `1` = "Beginning", `2` = "Developing",
-#'     `3` = "Secure", `4` = "Advanced"
-#'   ),
-#'   draw = FALSE
-#' )
-#' # For fit statistics and the optional person-inclusive pathway, rerun the
-#' # FACETS profile with diagnostics available, then use its `results` object.
+#' )$name
 #' @export
 summary.mfrm_fit <- function(object, digits = 3, top_n = 5, ...,
                              profile = c("fit", "facets", "reporting"),
@@ -9614,7 +9635,7 @@ mfrm_fit_summary_core <- function(object, digits = 3, top_n = 5) {
 
   key_warnings <- clean_summary_lines(c(fit_caveat_messages, preparation_review_messages, notes), max_n = 4L)
   next_actions <- c(
-    "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive FACETS-organized result surface.",
+    "After reviewing convergence, run `review <- summary(fit, profile = \"facets\", detail = \"brief\")` for the comprehensive measurement review; FACETS software is not required.",
     "Then draw the complete native Wright map with `plot(fit, type = \"wright\", show_ci = TRUE, top_n = Inf, preset = \"publication\")`."
   )
   if (!identical(numerical_status, "pass")) {
@@ -10193,7 +10214,9 @@ mfrm_fit_decision_summary <- function(readiness,
     "InputState", "EstimabilityState", "CategoryState", "BoundaryState",
     "NumericalState", "FitReadiness", "InferenceReady"
   )
-  if (nrow(readiness) != 1L || !all(required %in% names(readiness))) {
+  if (nrow(readiness) != 1L || !all(required %in% names(readiness)) ||
+      !identical(as.character(readiness$ReadinessContractVersion),
+                 mfrmr_readiness_contract_version())) {
     return(data.frame(
       Interpretation = "Re-audit or refit before interpretation",
       FormalInference = "No",
@@ -10228,6 +10251,9 @@ mfrm_fit_decision_summary <- function(readiness,
     "Review before reporting or inference"
   )
   reasons <- c(
+    if ("nonunit_observation_weights_inference_unvalidated" %in%
+        mfrmr_readiness_split_codes(readiness$ReasonCodes))
+      "Ordinary inference for non-unit observation weights is not validated",
     if (value("InputState") == "review")
       "Input preparation requires review",
     if (value("InputState") == "blocked")
@@ -10314,6 +10340,55 @@ print_fit_decision_section <- function(decision) {
     }
   ))
   invisible(NULL)
+}
+
+mfrm_mml_integration_console_lines <- function(summary_object) {
+  overview <- as.data.frame(
+    summary_object$overview %||% data.frame(), stringsAsFactors = FALSE
+  )
+  if (nrow(overview) == 0L ||
+      !identical(as.character(overview$Method[1] %||% ""), "MML")) {
+    return(character(0))
+  }
+  settings <- as.data.frame(
+    summary_object$settings_overview %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  population <- as.data.frame(
+    summary_object$population_overview %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  engine_used <- as.character(overview$MMLEngineUsed[1] %||% "unknown")
+  engine_requested <- as.character(
+    overview$MMLEngineRequested[1] %||% engine_used
+  )
+  quad_points <- suppressWarnings(as.integer(
+    settings$QuadPoints[1] %||% overview$ICQuadraturePoints[1] %||% NA_integer_
+  ))
+  integration <- paste0(
+    "MML engine: ", engine_used, " (requested: ", engine_requested, ") | ",
+    "Integration: fixed non-adaptive Gauss-Hermite (Golub-Welsch), q=",
+    if (is.finite(quad_points)) quad_points else "unknown",
+    " | latent dimensions=1"
+  )
+  population_text <- if (isTRUE(population$PopulationModel[1] %||% FALSE)) {
+    formula <- gsub("[[:space:]]+", "", as.character(
+      population$Formula[1] %||% ""
+    ))
+    if (identical(formula, "~1")) {
+      "Population identification: estimated N(beta0,sigma^2)"
+    } else {
+      "Population identification: estimated N(X beta,sigma^2)"
+    }
+  } else {
+    "Population identification: fixed N(0,1)"
+  }
+  scale_text <- if (identical(as.character(overview$Model[1] %||% ""), "GPCM")) {
+    "relative slopes: geometric mean=1"
+  } else {
+    "discrimination=1"
+  }
+  c(integration, paste(population_text, scale_text, sep = " | "))
 }
 
 mfrm_console_width <- function() {
@@ -10479,13 +10554,12 @@ print.summary.mfrm_fit <- function(x, ...) {
         !identical(as.character(used_public), as.character(ov$Method))) {
       print_wrapped_line(paste0("Resolved estimator: ", ov$MethodUsed))
     }
+    mml_contract_lines <- mfrm_mml_integration_console_lines(x)
+    if (length(mml_contract_lines) > 0L) {
+      print_wrapped_line(mml_contract_lines)
+    }
     if (identical(as.character(ov$Method %||% NA_character_), "MML") &&
         !is.na(ov$MMLEngineUsed %||% NA_character_)) {
-      print_wrapped_line(sprintf(
-        "MML engine: %s (requested: %s)",
-        ov$MMLEngineUsed %||% NA_character_,
-        ov$MMLEngineRequested %||% NA_character_
-      ))
       if (is.finite(ov$EMIterations %||% NA_real_)) {
         print_wrapped_line(sprintf(
           "EM iterations: %s | EM converged: %s | Last relative change: %s",
@@ -10765,7 +10839,7 @@ print.summary.mfrm_fit <- function(x, ...) {
         profile
       ))
     } else {
-      cat(" - Use `summary(fit, profile = \"facets\")` for the computed FACETS-organized review.\n")
+      cat(" - Use `summary(fit, profile = \"facets\")` for the comprehensive measurement review; FACETS software is not required.\n")
       cat(" - Use `summary(fit, detail = \"full\")` for legacy fit-level detail.\n")
     }
     return(invisible(x))

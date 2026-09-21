@@ -17,7 +17,9 @@
 #'    as `expected_design` so absent rows are not confused with unassigned cells
 #' 2. Fit with [fit_mfrm()] using `method = "MML"`
 #' 3. Read `summary(fit, profile = "fit")`, then request the comprehensive
-#'    FACETS-organized view with `summary(fit, profile = "facets")`
+#'    measurement review with `summary(fit, profile = "facets")`. The profile
+#'    name describes a familiar organization; FACETS knowledge or software is
+#'    not required
 #' 4. Create the required native Wright map with
 #'    `plot(fit, type = "wright", show_ci = TRUE)`; use the FACETS renderer
 #'    only as an optional familiar presentation
@@ -239,6 +241,10 @@
 #'   structured rows into printed `Caveats` and `$caveats`, with `Key warnings`
 #'   as a short triage subset. Summary-table exports route those rows through
 #'   `score_category_caveats` or `analysis_caveats`.
+#' - A category can be observed globally but unused by one rater or other facet
+#'   level. Review that local pattern with [data_quality_report()] rather than
+#'   treating it as a globally missing step or an automatic reason to select
+#'   `GPCM`.
 #' - Optional columns such as `Subset`, `Weight`, and `Group` support linking,
 #'   weighted analysis, and fairness-focused follow-up workflows.
 #' - Packaged synthetic data is available via [load_mfrmr_data()] or `data()`.
@@ -724,22 +730,34 @@
 #' incomplete, or arbitrary imported designs.
 #'
 #' @examples
-#' mfrm_threshold_profiles()
-#' list_mfrmr_data(details = TRUE)
-#'
-#' \donttest{
-#' toy <- load_mfrmr_data("example_operational")
-#' fit <- fit_mfrm(
-#'   toy,
+#' ratings <- load_mfrmr_data("example_operational")
+#' head(ratings)
+#' review <- describe_mfrm_data(
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4
+#' )
+#' summary(review)$overview
+#'
+#' \donttest{
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
 #'   method = "MML",
 #'   model = "RSM",
-#'   quad_points = 7
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
 #' )
-#' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-#' summary(diag)
+#' summary(fit, profile = "fit", detail = "brief")$decision
+#' plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)$name
 #' }
 #'
 #' @importFrom dplyr across all_of any_of arrange bind_cols bind_rows

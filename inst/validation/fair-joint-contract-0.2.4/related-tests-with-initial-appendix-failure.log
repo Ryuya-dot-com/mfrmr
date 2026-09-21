@@ -1,0 +1,24 @@
+bundle-dispatch-contracts: .......................................................................................................................................................................
+fair-interval-contract: ..........................
+fair-score-plots: ................................................................................................................................................................................................................................................................
+gpcm-fair-average: ........................................1.................................................
+observation-weight-readiness: ................................................................................................................................
+readiness-propagation: ............................................................................................
+results-readiness-propagation: ..........................................................................
+
+══ Failed ══════════════════════════════════════════════════════════════════════
+── 1. Error ('test-gpcm-fair-average.R:184:3'): fair_average_table() no longer h
+Error: `x` must be an mfrm_fit, mfrm_diagnostics, mfrm_precision_review, mfrm_fit_measures, mfrm_facets_fit_review, mfrm_person_fit_indices, mfrm_data_description, mfrm_reporting_checklist, mfrm_apa_outputs, mfrm_design_evaluation, mfrm_signal_detection, mfrm_diagnostic_screening, mfrm_recovery_simulation, mfrm_recovery_assessment, mfrm_population_prediction, a structural design-review component, mfrm_facets_run, mfrm_results, mfrm_report, mfrm_bias, mfrm_anchor_review, mfrm_peer_review_design_review, mfrm_network_review, mfrm_linking_review, mfrm_misfit_casebook, mfrm_model_choice_review, mfrm_weighting_review, mfrm_unit_prediction, or mfrm_plausible_values object, or one of their summary() outputs.
+Backtrace:
+    ▆
+ 1. └─mfrmr::export_summary_appendix(restored, output_dir = tmp, include_html = FALSE) at test-gpcm-fair-average.R:184:3
+ 2.   └─mfrmr:::export_normalize_summary_table_inputs(...) at development/R/api-export-bundles.R:4054:3
+ 3.     └─mfrmr:::export_as_summary_table_bundle(...) at development/R/api-export-bundles.R:5679:7
+ 4.       └─mfrmr::build_summary_table_bundle(...) at development/R/api-export-bundles.R:5559:5
+ 5.         └─mfrmr:::validate_summary_table_bundle_inputs(...) at development/R/api-reports.R:7707:3
+ 6.           └─mfrmr:::resolve_summary_table_bundle_input(...) at development/R/api-reports.R:6124:3
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+Error:
+! Test failures.
+Execution halted

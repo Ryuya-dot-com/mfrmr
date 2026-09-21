@@ -122,7 +122,11 @@ uses \code{future.apply::future_lapply} and respects whatever
 \code{future::plan()} is currently active. The Suggests package
 \code{future.apply} must be installed for the parallel path to
 activate; otherwise the call falls back to serial execution with a single
-message. Parallel execution applies to replications within each design row.}
+message. A fixed explicit \code{seed} preallocates the same per-cell simulation
+seeds before either route, so serial and future execution receive identical
+stochastic inputs for the same ordered design grid. Parallel dispatch
+applies to replications within each design row; actual worker concurrency
+depends on the active future plan.}
 }
 \value{
 An object of class \code{mfrm_design_evaluation} with components:

@@ -1,7 +1,7 @@
 # External repository privacy and license boundary audit
 
 Status: deterministic structural closure of release-spine row 66
-`external_privacy_and_license_boundary`, 2026-08-11. This record authorizes no
+`external_privacy_and_license_boundary`, updated 2026-09-07. This record authorizes no
 external execution, numerical comparison, tolerance, candidate freeze,
 confirmation, or release.
 
@@ -24,9 +24,9 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 
 | Quantity | Result |
 | --- | ---: |
-| External artifact paths | 100 |
+| External artifact paths | 377 |
 | External software families | 4 |
-| Classified tracked data assets | 34 |
+| Classified tracked data assets | 69 |
 | Unclassified tracked data assets | 0 |
 | Allowed synthetic local-path fixtures | 1 |
 | Prohibited findings | 0 |
@@ -34,7 +34,7 @@ ConQuest, FACETS, TAM, or immer numerical claim has passed.
 | Non-relative tracked paths | 0 |
 
 The four separately retained families are ConQuest, FACETS, TAM, and immer.
-The 34 data assets are explicitly limited to documented synthetic package
+The 69 data assets are explicitly limited to documented synthetic package
 data, synthetic vignette aggregates, schema/contract fixtures, and one
 synthetic compatibility fixture; an unclassified CSV, R data object, or
 serialized table fails closed.
@@ -75,7 +75,7 @@ copies a matched value into its result or test output.
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `external-repository-boundary-audit-0.2.3.R` | `ca4a9ae6556bc6e1ff7c8d612f65a8f1d329ac2851872aace8381a0ef0cd199e` |
+| `external-repository-boundary-audit-0.2.3.R` | `cdd3d408a9d65b2751ceccdff27665a1399fe5abc00158ce3c59296c4bfcbd55` |
 | sanitized portfolio/ConQuest audit | `2fdaa8f70add2f2da5122f2e68f879d27711fab18e1231931249254e7b0b7358` |
 
 Twenty-five expectations passed. The negative fixture combines a mock

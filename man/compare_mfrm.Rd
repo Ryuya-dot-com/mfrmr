@@ -64,8 +64,8 @@ and have a selectable integration tier. For fixed-facet MML,
 \code{ICSampleSize} is the number of independent
 Persons and \code{ICSampleSizeBasis} is \code{"person_count"}; response rows and their
 weighted total are retained separately. Explicit all-unit weights are
-eligible, whereas every non-unit observation-weight fit fails closed in
-version 0.2.3.
+eligible, whereas every non-unit observation-weight fit fails closed under
+the current package contract.
 
 Canonical \code{AIC}, \code{BIC}, and \code{SABIC} are recomputed from the retained
 objective, optimizer-vector dimension, and Person count. A stale stored

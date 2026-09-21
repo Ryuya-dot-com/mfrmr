@@ -31,7 +31,8 @@ anchor_to_baseline(
 \arguments{
 \item{new_data}{Data frame in long format (one row per rating).}
 
-\item{baseline_fit}{An \code{mfrm_fit} object from a previous calibration.}
+\item{baseline_fit}{An inference-ready \code{mfrm_fit} object from a previous
+calibration under the current readiness contract.}
 
 \item{person}{Character column name for person/examinee.}
 
@@ -42,7 +43,8 @@ anchor_to_baseline(
 \item{anchor_facets}{Character vector of facets to anchor (default: all
 non-Person facets).}
 
-\item{include_person}{If \code{TRUE}, also anchor person estimates.}
+\item{include_person}{If \code{TRUE}, also anchor person estimates. Use only when
+the same persons are intentionally constrained across runs.}
 
 \item{weight}{Optional character column name for observation weights.}
 
@@ -53,7 +55,8 @@ non-Person facets).}
 \item{anchor_policy}{How to handle anchor issues: \code{"warn"}, \code{"error"},
 \code{"silent"}.}
 
-\item{...}{Ignored.}
+\item{...}{For \code{anchor_to_baseline()}, additional arguments passed to
+\code{\link[=fit_mfrm]{fit_mfrm()}}. Ignored by the S3 print and summary methods on this page.}
 
 \item{x}{An \code{mfrm_anchored_fit} object.}
 
@@ -71,9 +74,9 @@ Object of class \code{mfrm_anchored_fit} with components:
 \description{
 Re-estimates a fitted many-facet model on new data while holding selected
 facet parameters fixed at the values from a previous (baseline) calibration.
-This is the standard workflow for placing new data onto an existing scale,
-linking test forms, or carrying a baseline calibration across
-administration windows.
+This transfers baseline coordinates into a new fit through direct equality
+constraints. Common-scale interpretation is conditional on a defensible
+baseline and invariant cross-run element identity.
 For bounded \code{GPCM}, treat this as direct exploratory anchor/drift support
 rather than as the package's formal linking-synthesis route.
 }
@@ -87,6 +90,14 @@ This function automates the baseline-anchored calibration workflow:
 \item Computes element-level differences (new estimate minus baseline
 estimate) for every common element.
 }
+
+The helper refuses a baseline unless its current readiness record has
+\code{InferenceReady = TRUE}. Also confirm compatible model, score coding,
+orientation, and population conventions, and document that anchor labels
+denote the same elements with invariant meaning. The function checks object
+shape and receiving-data anchor compatibility, but does not establish those
+substantive conditions. Fixing parameters can identify coordinates; it does
+not create observed common-rating links.
 
 The \code{model} and \code{method} arguments default to the baseline fit's settings
 so the calibration framework remains consistent.  Elements present in the
@@ -106,6 +117,11 @@ both the baseline and the new calibration:
 An element is \strong{flagged} when \eqn{|\Delta_e| > 0.5} logits or
 \eqn{|\Delta_e / SE_{\Delta_e}| > 2.0}, where
 \eqn{SE_{\Delta_e} = \sqrt{SE_{\mathrm{base}}^2 + SE_{\mathrm{new}}^2}}.
+\code{SE_Diff} is a plug-in independence calculation. It does not propagate
+baseline-anchor uncertainty or cross-fit covariance, and anchored estimates
+in the new fit are constrained rather than independently re-estimated.
+Consequently, \code{Drift_SE_Ratio} and \code{Flag} are descriptive consistency
+screens, not formal z tests or calibrated error-rate decisions.
 }
 \section{Which function should I use?}{
 

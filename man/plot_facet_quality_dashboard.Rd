@@ -11,7 +11,7 @@ plot_facet_quality_dashboard(
   bias_results = NULL,
   severity_warn = 1,
   misfit_warn = 1.5,
-  central_tendency_max = 0.25,
+  central_tendency_max = NULL,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
   bias_abs_size_warn = 0.5,
@@ -39,8 +39,9 @@ outliers.}
 
 \item{misfit_warn}{Mean-square cutoff used to flag misfit.}
 
-\item{central_tendency_max}{Absolute estimate cutoff used to flag central
-tendency.}
+\item{central_tendency_max}{Legacy opt-in absolute estimate cutoff for
+marking facet estimates near the fitted origin. Default \code{NULL}; use
+\code{\link[=data_quality_report]{data_quality_report()}} for observed category-use screening.}
 
 \item{bias_count_warn}{Minimum flagged-bias row count required to flag a
 level.}

@@ -177,17 +177,19 @@ facet (exact agreement, correlation, and mean differences per pair).
 }
 
 \examples{
-toy <- load_mfrmr_data("example_core")
-ds <- describe_mfrm_data(
-  data = toy,
+ratings <- load_mfrmr_data("example_operational")
+data_review <- describe_mfrm_data(
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
-  score = "Score"
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4
 )
-s_ds <- summary(ds)
-s_ds$overview
-p_ds <- plot(ds, draw = FALSE)
-p_ds$data$plot
+review <- summary(data_review)
+review$overview
+review$score_distribution
+review$design_connectivity
 }
 \seealso{
 \code{\link[=fit_mfrm]{fit_mfrm()}}, \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}}

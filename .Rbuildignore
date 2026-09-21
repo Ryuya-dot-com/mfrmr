@@ -38,6 +38,7 @@
 ^man/.*DESKTOP-.*\.Rd$
 ^revdep$
 ^design-notes$
+^scripts$
 ^inst/validation$
 ^tests/testthat/test-external-recovery-review[.]R$
 ^tests/testthat/test-recovery-validation-protocol[.]R$
@@ -71,5 +72,6 @@
 ^tests/testthat/test-fixed-calibration-g2-anchors[.]R$
 ^tests/testthat/test-fixed-calibration-g3-scoring[.]R$
 ^tests/testthat/test-fixed-calibration-g4-evidence[.]R$
+^tests/testthat/test-measurement-model-extension-gate05-probe[.]R$
 ^tests/testthat/test-fixed-calibration-g4-v6-evidence[.]R$
 ^tests/testthat/test-fixed-calibration-g5-disposition[.]R$

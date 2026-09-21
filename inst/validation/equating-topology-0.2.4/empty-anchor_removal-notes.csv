@@ -1,0 +1,7 @@
+"Type","Text"
+"definition","Edges show common elements in the recorded comparisons, not an all-pairs assessment or an inventory of fixed anchors. Element nodes are repeated per link; AnchorId identifies the same facet/level across links."
+"interpretation","Connectedness and retention do not establish anchor invariance, model identification, scale comparability, or precision. Review drift, link support and source-fit readiness separately."
+"screening","Retained is the screening set, not a guarantee of positive weight in the offset. Flag is a separate residual-drift check; counts and edge widths do not represent precision."
+"warning","No retained common-element connection for: Form A, Form B, Form C, Form D."
+"definition","A wave-to-wave edge exists when at least one common element is recorded as Retained = TRUE. Flagged retained elements are included; unknown retention is not counted. Component labels describe only this recorded graph."
+"interpretation","Each scenario removes one facet/level identity from all recorded comparisons, starting from the unchanged baseline. Screening and other retained flags are held fixed. Newly disconnected pairs were connected at baseline, including indirect paths. Zero means no new graph disconnection, not negligible statistical influence. No offsets, estimates or SEs are recomputed."

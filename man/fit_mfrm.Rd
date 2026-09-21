@@ -141,9 +141,13 @@ each interaction cell. Cells below this value are flagged in
 \item{interaction_policy}{How to handle sparse interaction cells:
 \code{"warn"} (default), \code{"error"}, or \code{"silent"}.}
 
-\item{anchors}{Optional anchor table.}
+\item{anchors}{Optional direct-anchor table with facet, level, and fixed
+logit value columns. Each retained row is a computational equality
+constraint; it is not merely a declaration that an element is common.}
 
-\item{group_anchors}{Optional group-anchor table.}
+\item{group_anchors}{Optional group-mean constraint table with facet, level,
+group, and target-value columns. Its use requires a defensible external
+assumption about the group target; it does not create observed overlap.}
 
 \item{noncenter_facet}{One facet to leave non-centered.}
 
@@ -154,8 +158,9 @@ each interaction cell. Cells below this value are flagged in
 \item{anchor_policy}{How to handle anchor-review issues: \code{"warn"} (default),
 \code{"error"}, or \code{"silent"}.}
 
-\item{min_common_anchors}{Minimum anchored levels per linking facet used in
-anchor-review recommendations.}
+\item{min_common_anchors}{Minimum directly anchored levels per non-Person
+facet used in the package's local count recommendation. This does not
+verify cross-run element identity, invariance, or empirical connectedness.}
 
 \item{min_obs_per_element}{Minimum weighted observations per facet level used
 in anchor-review recommendations.}
@@ -173,15 +178,19 @@ weights, preferences, and LRT are disabled. Helpers such as
 \code{\link[=reference_case_benchmark]{reference_case_benchmark()}} use this value. \cr
 \code{15} \tab intermediate review run when runtime matters; automatic
 model ranking remains disabled. \cr
-\code{31} \tab package default and the starting grid for model comparison. \cr
-\verb{61+} \tab sensitivity analysis for narrow score distributions or
-demanding numerical comparisons.
+\code{31} \tab package default and a starting grid, not evidence by itself
+that numerical integration is adequate. \cr
+\verb{61+} \tab user-selected denser grids for same-data sensitivity review;
+no single order is adequate for every response pattern.
 }
 Quadrature adequacy depends on the fitted distribution and score support.
-When substantive conclusions are sensitive, compare results under a
-denser rule and report the setting used. Raw AIC/BIC/SABIC remain visible
-below 31 points for diagnosis, but \code{\link[=compare_mfrm]{compare_mfrm()}} fails closed rather
-than turning a screening/review grid into automatic selection.}
+Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to compare the same model and data on
+user-selected grids before portable calibration and whenever numerical
+movement could affect a consequential result. The helper reports
+continuous differences without choosing a cutoff. Raw AIC/BIC/SABIC
+remain visible below 31 points for diagnosis, but \code{\link[=compare_mfrm]{compare_mfrm()}} fails
+closed rather than turning a screening/review grid into automatic
+selection.}
 
 \item{maxit}{Computational ceiling on optimizer iterations. The default is
 \code{400}. This is not a convergence criterion or a model-selection control:
@@ -224,7 +233,12 @@ component passes.}
 latent-regression population model, for example \code{~ grade + ses}. Latent
 regression is implemented only for
 \code{method = "MML"} with a unidimensional conditional-normal population
-model.}
+model. With \code{NULL}, RSM/PCM MML uses a fixed \eqn{N(0,1)} basis;
+default GPCM MML instead estimates an intercept-only normal population.
+Version 0.2.4 does not accept arbitrary fixed normal means or standard
+deviations: portable RSM/PCM calibration and its anchors are defined on
+the standard-normal basis, and a silent change of basis would change the
+meaning of those stored values.}
 
 \item{person_data}{Optional one-row-per-person data.frame holding background
 variables for \code{population_formula}. Numeric, logical, factor, ordered
@@ -329,7 +343,8 @@ reportable when the source fit is blocked.
 \item \code{steps}: estimated threshold/step parameters as a one-row-per-step
 \code{tibble} with \code{Estimate}. Bare fits keep this table as point estimates.
 \code{diagnose_mfrm()} exposes MML observed-information step uncertainty in
-\code{diagnostics$parameter_uncertainty$steps}; when
+\code{diagnostics$parameter_uncertainty$steps}. Check \code{CIEligible} and \code{CIUse}:
+finite curvature-based bands alone do not establish ordinary inference. When
 \code{attach_diagnostics = TRUE}, those \code{SE}, confidence-limit, and status
 columns are attached to \code{fit$steps} when the Hessian is available.
 For step-structure quality, also use the step-collapse and disordering
@@ -550,7 +565,14 @@ pattern is not the same as replicating a complete Person pattern after
 marginalization. A weight also does not turn the score into a count outcome
 or model dependence among repeated ratings. Non-positive finite weights are
 excluded during preparation, and non-unit observation-weight fits are not
-eligible for the common MML information-criterion panel in version 0.2.3.
+eligible for ordinary inference, facet equivalence, or the common MML
+information-criterion panel under the current package contract. Normalizing
+weights to mean one does not remove this restriction. Point estimates and
+computed curvature/posterior precision remain available for diagnostic
+review; they do not establish sampling SEs or confidence coverage for the
+weighted objective. Omitted weights and explicitly all-unit weights use
+the same eligibility rules. Earlier saved fits require refitting or a
+current readiness audit; their old inference flags are not carried forward.
 
 The fitted many-facet ordered-response model assumes conditional
 independence of observations given the person and facet parameters
@@ -791,16 +813,16 @@ on EAP or MLE scores.
 \section{Latent-regression standard-error caveat}{
 
 \code{summary(fit)$population_coefficients} reports point estimates of
-\eqn{\hat{\boldsymbol{\beta}}} and \eqn{\hat{\sigma}^2} only. mfrmr does
-\strong{not} currently compute standard errors, confidence intervals, or
-asymptotic z / Wald statistics for the population-model parameters: no
-Hessian on \eqn{(\boldsymbol{\beta}, \log\sigma^2)} is extracted from the
-marginal log-likelihood, and no \code{vcov()} method is exposed for these
-coefficients. Treat the coefficient table as point estimates suitable
-for descriptive reporting; \strong{do not} quote \eqn{\hat{\beta}_j \pm 1.96
-\cdot \mathrm{SE}} bounds because the SE column is not provided. A
-marginal-Hessian-based SE for \eqn{(\boldsymbol{\beta}, \sigma^2)} is not
-available from this function.
+\eqn{\hat{\boldsymbol{\beta}}}; \code{population_overview} reports the estimated
+population variance. These tables do \strong{not} provide standard errors,
+confidence intervals, or asymptotic z / Wald statistics for the population
+parameters, and no \code{vcov()} method is exposed for these coefficients.
+The internal MML observed-information calculation includes
+\eqn{(\boldsymbol{\beta}, \log\sigma^2)} when computing joint covariance
+for structural-parameter SEs. That internal calculation does not establish
+a supported population-parameter inference API. Treat the population
+tables as point estimates for descriptive reporting; \strong{do not} quote
+\eqn{\hat{\beta}_j \pm 1.96 \cdot \mathrm{SE}} bounds from these tables.
 
 Identification: the latent-regression intercept is identifiable only
 under the default \code{noncenter_facet = "Person"} (which sum-to-zero-
@@ -808,10 +830,16 @@ centers all non-Person facets). \code{fit_mfrm()} therefore rejects an active
 latent-regression model with a different \code{noncenter_facet} rather than
 returning a confounded intercept.
 
-Anchor inputs are optional:
+Anchor inputs are optional and have distinct roles:
 \itemize{
-\item \code{anchors} should contain facet/level/fixed-value information.
-\item \code{group_anchors} should contain facet/level/group/group-value information.
+\item \code{anchors} contains facet/level/fixed-value information and imposes direct
+equality constraints on selected parameters.
+\item \code{group_anchors} contains facet/level/group/group-value information and
+constrains each declared group mean. Its interpretation is conditional on
+the externally justified target or equal-mean assumption.
+\item Common Persons, raters, items, or rating events are properties of the
+observed design. Neither constraint type creates empirical overlap or
+proves that disconnected subsets are substantively comparable.
 Both are normalized internally, so column names can be flexible
 (\code{facet}, \code{level}, \code{anchor}, \code{group}, \code{groupvalue}, etc.).
 }
@@ -823,6 +851,9 @@ Anchor review behavior:
 \item duplicate rows keep the last occurrence for each key.
 \item \code{anchor_policy} controls whether detected issues are warned, treated as
 errors, or kept silent.
+\item the review checks table/data compatibility and local support counts; it
+does not establish source-fit readiness, cross-run identity, parameter
+invariance, or the validity of a group-mean assumption.
 }
 
 Facet sign orientation:
@@ -942,11 +973,13 @@ in short:
 values for automatic model selection.
 \item \code{quad_points = 15} is an intermediate review option when runtime matters;
 automatic IC ranking remains disabled.
-\item \code{quad_points = 31} is the package default and a suitable starting point
-for a final analysis; always review convergence and, when conclusions are
-sensitive, compare a denser quadrature rule.
-\item \code{quad_points = 61} (or higher) supports sensitivity checks on narrow score
-distributions at additional computational cost.
+\item \code{quad_points = 31} is the package default and a starting point, not a
+guarantee that integration error is negligible.
+\item \code{quad_points = 61} (or higher) supplies candidate denser grids at
+additional computational cost; no fixed order is sufficient for every
+response pattern.
+\item Use \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} to inspect same-data movement without
+an automatic stable/unstable decision.
 \item \code{mml_engine = "direct"} remains the most stable general-purpose path.
 \item \code{mml_engine = "em"} or \code{"hybrid"} currently target \code{RSM} / \code{PCM} fits
 without a latent-regression population model.
@@ -1016,8 +1049,8 @@ panel is \code{AIC = D + 2 * k}, \code{BIC = D + log(N_person) * k}, and
 
 \code{ResponseRows}, \code{WeightedResponseTotal}, \code{Persons}, and \code{ICSampleSize} are
 separate fields. The compatibility field \code{N} retains its earlier
-response-row or summed-observation-weight meaning and is not the 0.2.3 BIC
-sample size. Explicit all-unit weights remain eligible; every non-unit
+response-row or summed-observation-weight meaning and is not the BIC sample
+size. Explicit all-unit weights remain eligible; every non-unit
 observation-weight fit, JML fit, and object without the current contract
 identity is excluded from the common MML panel. Its canonical
 \code{AIC}/\code{BIC}/\code{SABIC} fields are \code{NA}, while any retained raw values are
@@ -1076,112 +1109,27 @@ problems in multivariate analysis}. Psychometrika, 52(3), 333-343.
 }
 
 \examples{
-# Short demonstration on the connected teaching data. The tighter portable
-# tolerance keeps this reduced example numerically stable. Use the documented
-# default grid and a sensitivity check for substantive work.
-toy <- load_mfrmr_data("example_operational")
-fit_quick <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
+# Each quoted role below is a column name in the long-format data.
+ratings <- load_mfrmr_data("example_operational")
+names(ratings)
+
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML", model = "RSM", quad_points = 7, maxit = 30,
   reltol = 1e-11
 )
-fit_quick$summary[, c(
-  "Model", "Method", "N", "Converged", "FitReadiness",
-  "InferenceReady", "ConvergenceSeverity"
-)]
+fit_review <- summary(fit, profile = "fit", detail = "brief")
+fit_review$decision
+fit_review$overview[, c("Model", "Method", "FitReadiness", "InferenceReady")]
 
-\donttest{
-# Full run with the package default MML estimator. This route integrates
-# person parameters under an N(0, 1) population model, so its reporting
-# value depends on the response-model and population assumptions. The
-# default `quad_points = 31` is a practical starting value; compare a
-# larger grid when quadrature sensitivity matters.
-fit <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  model = "RSM",
-  quad_points = 31
-)
-fit$summary
-s_fit <- summary(fit)
-s_fit$overview[, c("Model", "Method", "Converged", "FitReadiness",
-                   "InferenceReady", "ConvergenceSeverity")]
-# `InferenceReady = FALSE` is a conservative fit-level stop signal. The
-# stored component states identify whether input, estimability, category,
-# boundary, or numerical review caused it.
-s_fit$person_overview
-# Compare the person distribution with the facet and step locations. The
-# scale identification does not create universal targeting thresholds.
-s_fit$targeting
-# Interpret targeting magnitude against the intended population and score
-# use rather than a universal pass/fail cutoff.
-p_fit <- plot(fit, draw = FALSE)
-p_fit$name
-head(p_fit$data$locations)
-# The bare plot route is the native Wright map and includes available
-# facet uncertainty. Use plot(fit, type = "bundle") for the three-plot
-# Wright/pathway/category overview.
-
-# JML is a distinct fixed-person-effects route, not a drop-in speed setting:
-fit_jml <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "JML",
-  model = "RSM"
-)
-summary(fit_jml)$overview[, c(
-  "Model", "Method", "Converged", "InferenceReady",
-  "ConvergenceSeverity"
-)]
-
-# Latent regression (MML only) uses person-level background variables:
-person_tbl <- unique(toy[c("Person")])
-person_tbl$Grade <- seq_len(nrow(person_tbl))
-person_tbl$Group <- rep(c("A", "B"), length.out = nrow(person_tbl))
-fit_pop <- fit_mfrm(
-  data = toy,
-  person = "Person",
-  facets = c("Rater", "Criterion"),
-  score = "Score",
-  method = "MML",
-  population_formula = ~ Grade + Group,
-  person_data = person_tbl
-)
-summary(fit_pop)$population_overview
-summary(fit_pop)$population_coding
-
-# Binary responses are supported as ordered two-category scores:
-set.seed(1)
-binary_toy <- expand.grid(
-  Person = paste0("P", 1:30),
-  Item = paste0("I", 1:4),
-  stringsAsFactors = FALSE
-)
-theta <- stats::rnorm(length(unique(binary_toy$Person)))
-beta <- seq(-0.8, 0.8, length.out = length(unique(binary_toy$Item)))
-eta <- theta[match(binary_toy$Person, unique(binary_toy$Person))] -
-  beta[match(binary_toy$Item, unique(binary_toy$Item))]
-binary_toy$Score <- stats::rbinom(nrow(binary_toy), 1, stats::plogis(eta))
-fit_binary <- fit_mfrm(
-  data = binary_toy,
-  person = "Person",
-  facets = "Item",
-  score = "Score",
-  model = "RSM",
-  method = "JML",
-  maxit = 30
-)
-fit_binary$summary[, c("Model", "Categories", "Converged")]
-
-# Next steps after fitting:
-diag <- diagnose_mfrm(fit, residual_pca = "none")
-chk <- reporting_checklist(fit, diagnostics = diag)
-head(chk$checklist[, c("Section", "Item", "DraftReady")])
-}
+# This seven-point grid keeps the example short. Use the default 31-point
+# grid, and a denser sensitivity check when needed, for substantive work.
+plot(fit, type = "wright", draw = FALSE)$name
 }
 \seealso{
 \code{\link[=diagnose_mfrm]{diagnose_mfrm()}}, \code{\link[=estimate_bias]{estimate_bias()}}, \code{\link[=build_apa_outputs]{build_apa_outputs()}},

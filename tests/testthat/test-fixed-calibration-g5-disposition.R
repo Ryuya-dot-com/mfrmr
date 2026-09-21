@@ -7,9 +7,6 @@ test_that("G5 narrows portable calibration without relabelling fitted GPCM", {
   skip_if_not(file.exists(record_path), "Fixed-calibration G5 record is excluded.")
 
   record <- paste(readLines(record_path, warn = FALSE), collapse = "\n")
-  roadmap <- paste(
-    readLines(file.path(root, "ROADMAP.md"), warn = FALSE), collapse = "\n"
-  )
   gpcm_help <- paste(
     readLines(file.path(root, "R", "help_gpcm_scope.R"), warn = FALSE),
     collapse = "\n"
@@ -25,12 +22,6 @@ test_that("G5 narrows portable calibration without relabelling fitted GPCM", {
                fixed = TRUE)
   expect_match(record, "`NextGate=G6-release-candidate-hardening`",
                fixed = TRUE)
-
-  expect_match(roadmap, "- [x] **G5 — Optional-lane qualification**",
-               fixed = TRUE)
-  expect_match(roadmap, "- [ ] **G6 — Release-candidate hardening**",
-               fixed = TRUE)
-  expect_match(roadmap, "### Public-document audience boundary", fixed = TRUE)
 
   expect_match(
     gpcm_help, '"Fitted-object posterior scoring and information"', fixed = TRUE

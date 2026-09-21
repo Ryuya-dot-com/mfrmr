@@ -1,0 +1,10 @@
+"NodeId","Label","Kind","WaveID","AnchorId","LinkID","Facet","Level","Status","RetainedDegree"
+"wave_1","Form A","wave",1,NA,NA,NA,NA,NA,2
+"wave_2","Form B","wave",2,NA,NA,NA,NA,NA,2
+"wave_3","Form C","wave",3,NA,NA,NA,NA,NA,0
+"wave_4","Form D","wave",4,NA,NA,NA,NA,NA,0
+"element_1","Item: I1 [L1]","element",NA,"anchor_1","1","Item","I1","retained",2
+"element_2","Item: I2 [L1]","element",NA,"anchor_2","1","Item","I2","retained_review",2
+"element_3","Item: I3 [L1]","element",NA,"anchor_3","1","Item","I3","excluded",0
+"element_4","Item: I1 [L2]","element",NA,"anchor_1","2","Item","I1","excluded",0
+"element_5","Item: I4 [L2]","element",NA,"anchor_4","2","Item","I4","candidate",0

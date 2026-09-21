@@ -575,7 +575,7 @@ plot_response_time_review <- function(x,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     if (identical(type, "distribution")) {
       graphics::hist(

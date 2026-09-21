@@ -1,0 +1,11 @@
+"Id","Q","WeightMode","ParameterChange","ObjectiveChange","CovarianceChange","StructuralSEChange","InferenceReady","FormalInference","EquivalenceAvailable","ReasonCodes","Warnings","Seconds"
+"RSM-weights",31,"nonunit",0,0,0,0,FALSE,FALSE,FALSE,"nonunit_observation_weights_inference_unvalidated",0,2.15
+"RSM-weights",61,"nonunit",0,0,0,0,FALSE,FALSE,FALSE,"nonunit_observation_weights_inference_unvalidated",0,2.493
+"RSM-weights",121,"nonunit",0,0,0,0,FALSE,FALSE,FALSE,"nonunit_observation_weights_inference_unvalidated",0,1.485
+"PCM-weights",31,"nonunit",0,0,0,0,FALSE,FALSE,FALSE,"nonunit_observation_weights_inference_unvalidated",0,1.281
+"PCM-weights",61,"nonunit",0,0,0,0,FALSE,FALSE,FALSE,"nonunit_observation_weights_inference_unvalidated",0,1.413
+"PCM-weights",121,"nonunit",0,0,0,0,FALSE,FALSE,FALSE,"nonunit_observation_weights_inference_unvalidated",0,1.709
+"coverage-1",61,"omitted",0,0,0,0,TRUE,TRUE,TRUE,"",0,0.655000000000001
+"coverage-1",61,"explicit_unit",0,0,0,0,TRUE,TRUE,TRUE,"",0,0.661999999999999
+"coverage-5",61,"omitted",0,0,0,0,TRUE,TRUE,TRUE,"",0,0.731
+"coverage-5",61,"explicit_unit",0,0,0,0,TRUE,TRUE,TRUE,"",0,0.744

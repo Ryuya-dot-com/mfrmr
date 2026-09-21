@@ -1,0 +1,37 @@
+"Case","Type","Compared","Identical","LocationsBefore","LocationsAfter"
+"minimal-RSM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,5,5
+"minimal-RSM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"minimal-RSM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"minimal-PCM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,6,6
+"minimal-PCM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"minimal-PCM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"many_levels-RSM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,27,27
+"many_levels-RSM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"many_levels-RSM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"many_levels-PCM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,36,60
+"many_levels-PCM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"many_levels-PCM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"many_categories-RSM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,17,17
+"many_categories-RSM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"many_categories-RSM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"many_categories-PCM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,36,44
+"many_categories-PCM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"many_categories-PCM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"coincident-RSM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,16,16
+"coincident-RSM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"coincident-RSM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"coincident-PCM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,30,36
+"coincident-PCM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"coincident-PCM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"long_english-RSM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,11,11
+"long_english-RSM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"long_english-RSM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"long_english-PCM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,20,20
+"long_english-PCM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"long_english-PCM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"japanese-RSM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,11,11
+"japanese-RSM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"japanese-RSM","ccc","probabilities; curve_basis",TRUE,NA,NA
+"japanese-PCM","wright","person table and matched locations: Estimate, SE, CI_Lower/Upper, OriginalEstimate, OriginalCI_Lower/Upper",TRUE,20,20
+"japanese-PCM","pathway","expected; steps; pathway_long",TRUE,NA,NA
+"japanese-PCM","ccc","probabilities; curve_basis",TRUE,NA,NA

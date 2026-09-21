@@ -19,6 +19,9 @@
 #' [build_apa_outputs()] ->
 #' [build_summary_table_bundle()] -> [apa_table()] or
 #' [export_summary_appendix()].
+#' The `"facets"` profile name is historical: it provides a comprehensive
+#' measurement review and does not require FACETS, TAM, or sirt knowledge or
+#' software.
 #'
 #' Use `JML` only when its fixed-person-parameter estimand is methodologically
 #' intended, for example for a JMLE-oriented external comparison, descriptive
@@ -333,43 +336,33 @@
 #'
 #' @examples
 #' \donttest{
-#' toy_full <- load_mfrmr_data("example_core")
-#' keep_people <- unique(toy_full$Person)[1:12]
-#' toy <- toy_full[toy_full$Person %in% keep_people, , drop = FALSE]
-#'
+#' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
-#'   toy,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
 #'   method = "MML",
+#'   model = "RSM",
 #'   quad_points = 7,
-#'   maxit = 30
+#'   maxit = 30,
+#'   reltol = 1e-11
 #' )
-#' summary(fit)$next_actions
+#' fit_review <- summary(fit, profile = "fit", detail = "brief")
+#' fit_review$decision
 #'
-#' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-#' summary(diag)$next_actions
-#'
-#' chk <- reporting_checklist(fit, diagnostics = diag)
-#' subset(
-#'   chk$checklist,
-#'   Section == "Visual Displays",
-#'   c("Item", "DraftReady", "NextAction")
+#' full_review <- summary(
+#'   fit,
+#'   profile = "facets", # Historical profile name; FACETS is not required.
+#'   detail = "brief"
 #' )
+#' results <- full_review$results
+#' plot(results, type = "wright", show_ci = TRUE, draw = FALSE)$name
 #'
-#' qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
-#' qc$data$preset
-#' p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-#' p_marg$data$preset
-#'
-#' sc <- subset_connectivity_report(fit, diagnostics = diag)
-#' p_design <- plot(sc, type = "design_matrix", draw = FALSE, preset = "publication")
-#' p_design$data$plot
-#'
-#' bundle <- build_summary_table_bundle(chk, appendix_preset = "recommended")
-#' summary(bundle)$role_summary
-#' plot(bundle, type = "appendix_presets", draw = FALSE)$data$plot
+#' report <- mfrm_report(results)
+#' summary(report, view = "reader")
 #' }
 #'
 #' @name mfrmr_workflow_methods

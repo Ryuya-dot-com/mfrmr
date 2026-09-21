@@ -1,0 +1,346 @@
+MAIN RUN
+1 / 184 RSM variance 0 q 1 retained pass TRUE reference TRUE  
+2 / 184 RSM variance 0 q 1 zero pass TRUE reference TRUE  
+3 / 184 RSM variance 1e-06 q 61 retained pass TRUE reference TRUE  
+4 / 184 RSM variance 1e-06 q 121 retained pass TRUE reference TRUE  
+5 / 184 RSM variance 1e-06 q 61 zero pass TRUE reference TRUE  
+6 / 184 RSM variance 1e-06 q 121 zero pass TRUE reference TRUE  
+7 / 184 RSM variance 0.01 q 61 retained pass TRUE reference TRUE  
+8 / 184 RSM variance 0.01 q 121 retained pass TRUE reference TRUE  
+9 / 184 RSM variance 0.01 q 61 zero pass TRUE reference TRUE  
+10 / 184 RSM variance 0.01 q 121 zero pass TRUE reference TRUE  
+11 / 184 RSM variance 0.1 q 61 retained pass TRUE reference TRUE  
+12 / 184 RSM variance 0.1 q 121 retained pass TRUE reference TRUE  
+13 / 184 RSM variance 0.1 q 61 zero pass TRUE reference TRUE  
+14 / 184 RSM variance 0.1 q 121 zero pass TRUE reference TRUE  
+15 / 184 RSM variance 0.3 q 61 retained pass TRUE reference TRUE  
+16 / 184 RSM variance 0.3 q 121 retained pass TRUE reference TRUE  
+17 / 184 RSM variance 0.3 q 61 zero pass TRUE reference TRUE  
+18 / 184 RSM variance 0.3 q 121 zero pass TRUE reference TRUE  
+19 / 184 RSM variance 0.5 q 61 retained pass TRUE reference TRUE  
+20 / 184 RSM variance 0.5 q 121 retained pass TRUE reference TRUE  
+21 / 184 RSM variance 0.5 q 61 zero pass TRUE reference TRUE  
+22 / 184 RSM variance 0.5 q 121 zero pass TRUE reference TRUE  
+23 / 184 RSM variance 0.6739621 q 61 retained pass TRUE reference TRUE  
+24 / 184 RSM variance 0.6739621 q 121 retained pass TRUE reference TRUE  
+25 / 184 RSM variance 0.6739621 q 61 zero pass TRUE reference TRUE  
+26 / 184 RSM variance 0.6739621 q 121 zero pass TRUE reference TRUE  
+27 / 184 RSM variance 1 q 61 retained pass TRUE reference TRUE  
+28 / 184 RSM variance 1 q 121 retained pass TRUE reference TRUE  
+29 / 184 RSM variance 1 q 61 zero pass TRUE reference TRUE  
+30 / 184 RSM variance 1 q 121 zero pass TRUE reference TRUE  
+31 / 184 RSM variance 2 q 61 retained pass TRUE reference TRUE  
+32 / 184 RSM variance 2 q 121 retained pass TRUE reference TRUE  
+33 / 184 RSM variance 2 q 61 zero pass TRUE reference TRUE  
+34 / 184 RSM variance 2 q 121 zero pass TRUE reference TRUE  
+35 / 184 RSM variance 4 q 61 retained pass TRUE reference FALSE  
+36 / 184 RSM variance 4 q 121 retained pass TRUE reference TRUE  
+37 / 184 RSM variance 4 q 61 zero pass TRUE reference FALSE  
+38 / 184 RSM variance 4 q 121 zero pass TRUE reference TRUE  
+39 / 184 RSM variance 16 q 61 retained pass TRUE reference FALSE  
+40 / 184 RSM variance 16 q 121 retained pass TRUE reference FALSE  
+41 / 184 RSM variance 16 q 61 zero pass TRUE reference FALSE  
+42 / 184 RSM variance 16 q 121 zero pass TRUE reference FALSE  
+43 / 184 RSM variance 64 q 61 retained pass TRUE reference FALSE  
+44 / 184 RSM variance 64 q 121 retained pass TRUE reference FALSE  
+45 / 184 RSM variance 64 q 61 zero pass TRUE reference FALSE  
+46 / 184 RSM variance 64 q 121 zero pass TRUE reference FALSE  
+47 / 184 PCM variance 0 q 1 retained pass TRUE reference TRUE  
+48 / 184 PCM variance 0 q 1 zero pass TRUE reference TRUE  
+49 / 184 PCM variance 1e-06 q 61 retained pass TRUE reference TRUE  
+50 / 184 PCM variance 1e-06 q 121 retained pass TRUE reference TRUE  
+51 / 184 PCM variance 1e-06 q 61 zero pass TRUE reference TRUE  
+52 / 184 PCM variance 1e-06 q 121 zero pass TRUE reference TRUE  
+53 / 184 PCM variance 0.01 q 61 retained pass TRUE reference TRUE  
+54 / 184 PCM variance 0.01 q 121 retained pass TRUE reference TRUE  
+55 / 184 PCM variance 0.01 q 61 zero pass TRUE reference TRUE  
+56 / 184 PCM variance 0.01 q 121 zero pass TRUE reference TRUE  
+57 / 184 PCM variance 0.1 q 61 retained pass TRUE reference TRUE  
+58 / 184 PCM variance 0.1 q 121 retained pass TRUE reference TRUE  
+59 / 184 PCM variance 0.1 q 61 zero pass TRUE reference TRUE  
+60 / 184 PCM variance 0.1 q 121 zero pass TRUE reference TRUE  
+61 / 184 PCM variance 0.3 q 61 retained pass TRUE reference TRUE  
+62 / 184 PCM variance 0.3 q 121 retained pass TRUE reference TRUE  
+63 / 184 PCM variance 0.3 q 61 zero pass TRUE reference TRUE  
+64 / 184 PCM variance 0.3 q 121 zero pass TRUE reference TRUE  
+65 / 184 PCM variance 0.5 q 61 retained pass TRUE reference TRUE  
+66 / 184 PCM variance 0.5 q 121 retained pass TRUE reference TRUE  
+67 / 184 PCM variance 0.5 q 61 zero pass TRUE reference TRUE  
+68 / 184 PCM variance 0.5 q 121 zero pass TRUE reference TRUE  
+69 / 184 PCM variance 0.5824963 q 61 retained pass TRUE reference TRUE  
+70 / 184 PCM variance 0.5824963 q 121 retained pass TRUE reference TRUE  
+71 / 184 PCM variance 0.5824963 q 61 zero pass TRUE reference TRUE  
+72 / 184 PCM variance 0.5824963 q 121 zero pass TRUE reference TRUE  
+73 / 184 PCM variance 1 q 61 retained pass TRUE reference TRUE  
+74 / 184 PCM variance 1 q 121 retained pass TRUE reference TRUE  
+75 / 184 PCM variance 1 q 61 zero pass TRUE reference TRUE  
+76 / 184 PCM variance 1 q 121 zero pass TRUE reference TRUE  
+77 / 184 PCM variance 2 q 61 retained pass TRUE reference FALSE  
+78 / 184 PCM variance 2 q 121 retained pass TRUE reference TRUE  
+79 / 184 PCM variance 2 q 61 zero pass TRUE reference FALSE  
+80 / 184 PCM variance 2 q 121 zero pass TRUE reference TRUE  
+81 / 184 PCM variance 4 q 61 retained pass TRUE reference FALSE  
+82 / 184 PCM variance 4 q 121 retained pass TRUE reference TRUE  
+83 / 184 PCM variance 4 q 61 zero pass TRUE reference FALSE  
+84 / 184 PCM variance 4 q 121 zero pass TRUE reference TRUE  
+85 / 184 PCM variance 16 q 61 retained pass TRUE reference FALSE  
+86 / 184 PCM variance 16 q 121 retained pass TRUE reference FALSE  
+87 / 184 PCM variance 16 q 61 zero pass TRUE reference FALSE  
+88 / 184 PCM variance 16 q 121 zero pass TRUE reference FALSE  
+89 / 184 PCM variance 64 q 61 retained pass TRUE reference FALSE  
+90 / 184 PCM variance 64 q 121 retained pass TRUE reference FALSE  
+91 / 184 PCM variance 64 q 61 zero pass TRUE reference FALSE  
+92 / 184 PCM variance 64 q 121 zero pass TRUE reference FALSE  
+93 / 184 single variance 0 q 1 retained pass TRUE reference TRUE  
+94 / 184 single variance 0 q 1 zero pass TRUE reference TRUE  
+95 / 184 single variance 1e-06 q 61 retained pass TRUE reference TRUE  
+96 / 184 single variance 1e-06 q 121 retained pass TRUE reference TRUE  
+97 / 184 single variance 1e-06 q 61 zero pass TRUE reference TRUE  
+98 / 184 single variance 1e-06 q 121 zero pass TRUE reference TRUE  
+99 / 184 single variance 0.01 q 61 retained pass TRUE reference TRUE  
+100 / 184 single variance 0.01 q 121 retained pass TRUE reference TRUE  
+101 / 184 single variance 0.01 q 61 zero pass TRUE reference TRUE  
+102 / 184 single variance 0.01 q 121 zero pass TRUE reference TRUE  
+103 / 184 single variance 0.1 q 61 retained pass TRUE reference TRUE  
+104 / 184 single variance 0.1 q 121 retained pass TRUE reference TRUE  
+105 / 184 single variance 0.1 q 61 zero pass TRUE reference TRUE  
+106 / 184 single variance 0.1 q 121 zero pass TRUE reference TRUE  
+107 / 184 single variance 0.3 q 61 retained pass TRUE reference TRUE  
+108 / 184 single variance 0.3 q 121 retained pass TRUE reference TRUE  
+109 / 184 single variance 0.3 q 61 zero pass TRUE reference TRUE  
+110 / 184 single variance 0.3 q 121 zero pass TRUE reference TRUE  
+111 / 184 single variance 0.5 q 61 retained pass TRUE reference TRUE  
+112 / 184 single variance 0.5 q 121 retained pass TRUE reference TRUE  
+113 / 184 single variance 0.5 q 61 zero pass TRUE reference TRUE  
+114 / 184 single variance 0.5 q 121 zero pass TRUE reference TRUE  
+115 / 184 single variance 0.9972967 q 61 retained pass TRUE reference TRUE  
+116 / 184 single variance 0.9972967 q 121 retained pass TRUE reference TRUE  
+117 / 184 single variance 0.9972967 q 61 zero pass TRUE reference TRUE  
+118 / 184 single variance 0.9972967 q 121 zero pass TRUE reference TRUE  
+119 / 184 single variance 1 q 61 retained pass TRUE reference TRUE  
+120 / 184 single variance 1 q 121 retained pass TRUE reference TRUE  
+121 / 184 single variance 1 q 61 zero pass TRUE reference TRUE  
+122 / 184 single variance 1 q 121 zero pass TRUE reference TRUE  
+123 / 184 single variance 2 q 61 retained pass TRUE reference TRUE  
+124 / 184 single variance 2 q 121 retained pass TRUE reference TRUE  
+125 / 184 single variance 2 q 61 zero pass TRUE reference TRUE  
+126 / 184 single variance 2 q 121 zero pass TRUE reference TRUE  
+127 / 184 single variance 4 q 61 retained pass TRUE reference TRUE  
+128 / 184 single variance 4 q 121 retained pass TRUE reference TRUE  
+129 / 184 single variance 4 q 61 zero pass TRUE reference TRUE  
+130 / 184 single variance 4 q 121 zero pass TRUE reference TRUE  
+131 / 184 single variance 16 q 61 retained pass TRUE reference TRUE  
+132 / 184 single variance 16 q 121 retained pass TRUE reference TRUE  
+133 / 184 single variance 16 q 61 zero pass TRUE reference TRUE  
+134 / 184 single variance 16 q 121 zero pass TRUE reference TRUE  
+135 / 184 single variance 64 q 61 retained pass TRUE reference FALSE  
+136 / 184 single variance 64 q 121 retained pass TRUE reference FALSE  
+137 / 184 single variance 64 q 61 zero pass TRUE reference FALSE  
+138 / 184 single variance 64 q 121 zero pass TRUE reference FALSE  
+139 / 184 paired variance 0 q 1 retained pass TRUE reference TRUE  
+140 / 184 paired variance 0 q 1 zero pass TRUE reference TRUE  
+141 / 184 paired variance 1e-06 q 61 retained pass TRUE reference TRUE  
+142 / 184 paired variance 1e-06 q 121 retained pass TRUE reference TRUE  
+143 / 184 paired variance 1e-06 q 61 zero pass TRUE reference TRUE  
+144 / 184 paired variance 1e-06 q 121 zero pass TRUE reference TRUE  
+145 / 184 paired variance 0.01 q 61 retained pass TRUE reference TRUE  
+146 / 184 paired variance 0.01 q 121 retained pass TRUE reference TRUE  
+147 / 184 paired variance 0.01 q 61 zero pass TRUE reference TRUE  
+148 / 184 paired variance 0.01 q 121 zero pass TRUE reference TRUE  
+149 / 184 paired variance 0.1 q 61 retained pass TRUE reference TRUE  
+150 / 184 paired variance 0.1 q 121 retained pass TRUE reference TRUE  
+151 / 184 paired variance 0.1 q 61 zero pass TRUE reference TRUE  
+152 / 184 paired variance 0.1 q 121 zero pass TRUE reference TRUE  
+153 / 184 paired variance 0.3 q 61 retained pass TRUE reference TRUE  
+154 / 184 paired variance 0.3 q 121 retained pass TRUE reference TRUE  
+155 / 184 paired variance 0.3 q 61 zero pass TRUE reference TRUE  
+156 / 184 paired variance 0.3 q 121 zero pass TRUE reference TRUE  
+157 / 184 paired variance 0.5 q 61 retained pass TRUE reference TRUE  
+158 / 184 paired variance 0.5 q 121 retained pass TRUE reference TRUE  
+159 / 184 paired variance 0.5 q 61 zero pass TRUE reference TRUE  
+160 / 184 paired variance 0.5 q 121 zero pass TRUE reference TRUE  
+161 / 184 paired variance 1 q 61 retained pass TRUE reference TRUE  
+162 / 184 paired variance 1 q 121 retained pass TRUE reference TRUE  
+163 / 184 paired variance 1 q 61 zero pass TRUE reference TRUE  
+164 / 184 paired variance 1 q 121 zero pass TRUE reference TRUE  
+165 / 184 paired variance 1.561533 q 61 retained pass TRUE reference TRUE  
+166 / 184 paired variance 1.561533 q 121 retained pass TRUE reference TRUE  
+167 / 184 paired variance 1.561533 q 61 zero pass TRUE reference TRUE  
+168 / 184 paired variance 1.561533 q 121 zero pass TRUE reference TRUE  
+169 / 184 paired variance 2 q 61 retained pass TRUE reference TRUE  
+170 / 184 paired variance 2 q 121 retained pass TRUE reference TRUE  
+171 / 184 paired variance 2 q 61 zero pass TRUE reference TRUE  
+172 / 184 paired variance 2 q 121 zero pass TRUE reference TRUE  
+173 / 184 paired variance 4 q 61 retained pass TRUE reference TRUE  
+174 / 184 paired variance 4 q 121 retained pass TRUE reference TRUE  
+175 / 184 paired variance 4 q 61 zero pass TRUE reference TRUE  
+176 / 184 paired variance 4 q 121 zero pass TRUE reference TRUE  
+177 / 184 paired variance 16 q 61 retained pass TRUE reference FALSE  
+178 / 184 paired variance 16 q 121 retained pass TRUE reference FALSE  
+179 / 184 paired variance 16 q 61 zero pass TRUE reference FALSE  
+180 / 184 paired variance 16 q 121 zero pass TRUE reference FALSE  
+181 / 184 paired variance 64 q 61 retained pass TRUE reference FALSE  
+182 / 184 paired variance 64 q 121 retained pass TRUE reference FALSE  
+183 / 184 paired variance 64 q 61 zero pass TRUE reference FALSE  
+184 / 184 paired variance 64 q 121 zero pass TRUE reference FALSE  
+Envelope RSM 0 1 TRUE 
+Envelope RSM 1e-06 61 FALSE 
+Envelope RSM 1e-06 121 TRUE 
+Envelope RSM 0.01 61 FALSE 
+Envelope RSM 0.01 121 TRUE 
+Envelope RSM 0.1 61 FALSE 
+Envelope RSM 0.1 121 TRUE 
+Envelope RSM 0.3 61 FALSE 
+Envelope RSM 0.3 121 TRUE 
+Envelope RSM 0.5 61 FALSE 
+Envelope RSM 0.5 121 TRUE 
+Envelope RSM 0.6739621 61 FALSE 
+Envelope RSM 0.6739621 121 TRUE 
+Envelope RSM 1 61 FALSE 
+Envelope RSM 1 121 TRUE 
+Envelope RSM 2 61 FALSE 
+Envelope RSM 2 121 TRUE 
+Envelope RSM 4 61 FALSE 
+Envelope RSM 4 121 TRUE 
+Envelope RSM 16 61 FALSE 
+Envelope RSM 16 121 FALSE 
+Envelope RSM 64 61 FALSE 
+Envelope RSM 64 121 FALSE 
+Envelope PCM 0 1 TRUE 
+Envelope PCM 1e-06 61 FALSE 
+Envelope PCM 1e-06 121 TRUE 
+Envelope PCM 0.01 61 FALSE 
+Envelope PCM 0.01 121 TRUE 
+Envelope PCM 0.1 61 FALSE 
+Envelope PCM 0.1 121 TRUE 
+Envelope PCM 0.3 61 FALSE 
+Envelope PCM 0.3 121 TRUE 
+Envelope PCM 0.5 61 FALSE 
+Envelope PCM 0.5 121 TRUE 
+Envelope PCM 0.5824963 61 FALSE 
+Envelope PCM 0.5824963 121 TRUE 
+Envelope PCM 1 61 FALSE 
+Envelope PCM 1 121 TRUE 
+Envelope PCM 2 61 FALSE 
+Envelope PCM 2 121 TRUE 
+Envelope PCM 4 61 FALSE 
+Envelope PCM 4 121 TRUE 
+Envelope PCM 16 61 FALSE 
+Envelope PCM 16 121 FALSE 
+Envelope PCM 64 61 FALSE 
+Envelope PCM 64 121 FALSE 
+Envelope single 0 1 TRUE 
+Envelope single 1e-06 61 FALSE 
+Envelope single 1e-06 121 TRUE 
+Envelope single 0.01 61 FALSE 
+Envelope single 0.01 121 TRUE 
+Envelope single 0.1 61 FALSE 
+Envelope single 0.1 121 TRUE 
+Envelope single 0.3 61 FALSE 
+Envelope single 0.3 121 TRUE 
+Envelope single 0.5 61 FALSE 
+Envelope single 0.5 121 TRUE 
+Envelope single 0.9972967 61 FALSE 
+Envelope single 0.9972967 121 TRUE 
+Envelope single 1 61 FALSE 
+Envelope single 1 121 TRUE 
+Envelope single 2 61 FALSE 
+Envelope single 2 121 TRUE 
+Envelope single 4 61 FALSE 
+Envelope single 4 121 TRUE 
+Envelope single 16 61 FALSE 
+Envelope single 16 121 TRUE 
+Envelope single 64 61 FALSE 
+Envelope single 64 121 FALSE 
+Envelope paired 0 1 TRUE 
+Envelope paired 1e-06 61 FALSE 
+Envelope paired 1e-06 121 TRUE 
+Envelope paired 0.01 61 FALSE 
+Envelope paired 0.01 121 TRUE 
+Envelope paired 0.1 61 FALSE 
+Envelope paired 0.1 121 TRUE 
+Envelope paired 0.3 61 FALSE 
+Envelope paired 0.3 121 TRUE 
+Envelope paired 0.5 61 FALSE 
+Envelope paired 0.5 121 TRUE 
+Envelope paired 1 61 FALSE 
+Envelope paired 1 121 TRUE 
+Envelope paired 1.561533 61 FALSE 
+Envelope paired 1.561533 121 TRUE 
+Envelope paired 2 61 FALSE 
+Envelope paired 2 121 TRUE 
+Envelope paired 4 61 FALSE 
+Envelope paired 4 121 TRUE 
+Envelope paired 16 61 FALSE 
+Envelope paired 16 121 FALSE 
+Envelope paired 64 61 FALSE 
+Envelope paired 64 121 FALSE 
+TARGETED REFINEMENT
+1 / 32 RSM 16 481 retained TRUE TRUE  
+2 / 32 PCM 16 481 retained TRUE TRUE  
+3 / 32 single 16 481 retained TRUE TRUE  
+4 / 32 paired 16 481 retained TRUE TRUE  
+5 / 32 RSM 64 481 retained TRUE FALSE  
+6 / 32 PCM 64 481 retained TRUE FALSE  
+7 / 32 single 64 481 retained TRUE TRUE  
+8 / 32 paired 64 481 retained TRUE TRUE  
+9 / 32 RSM 16 961 retained TRUE TRUE  
+10 / 32 PCM 16 961 retained TRUE TRUE  
+11 / 32 single 16 961 retained TRUE TRUE  
+12 / 32 paired 16 961 retained TRUE TRUE  
+13 / 32 RSM 64 961 retained TRUE FALSE  
+14 / 32 PCM 64 961 retained TRUE FALSE  
+15 / 32 single 64 961 retained TRUE TRUE  
+16 / 32 paired 64 961 retained TRUE TRUE  
+17 / 32 RSM 16 481 zero TRUE TRUE  
+18 / 32 PCM 16 481 zero TRUE TRUE  
+19 / 32 single 16 481 zero TRUE TRUE  
+20 / 32 paired 16 481 zero TRUE TRUE  
+21 / 32 RSM 64 481 zero TRUE FALSE  
+22 / 32 PCM 64 481 zero TRUE FALSE  
+23 / 32 single 64 481 zero TRUE TRUE  
+24 / 32 paired 64 481 zero TRUE TRUE  
+25 / 32 RSM 16 961 zero TRUE TRUE  
+26 / 32 PCM 16 961 zero TRUE TRUE  
+27 / 32 single 16 961 zero TRUE TRUE  
+28 / 32 paired 16 961 zero TRUE TRUE  
+29 / 32 RSM 64 961 zero TRUE FALSE  
+30 / 32 PCM 64 961 zero TRUE FALSE  
+31 / 32 single 64 961 zero TRUE TRUE  
+32 / 32 paired 64 961 zero TRUE TRUE  
+Envelope RSM 16 481 FALSE 
+Envelope PCM 16 481 FALSE 
+Envelope single 16 481 FALSE 
+Envelope paired 16 481 FALSE 
+Envelope RSM 64 481 FALSE 
+Envelope PCM 64 481 FALSE 
+Envelope single 64 481 FALSE 
+Envelope paired 64 481 FALSE 
+Envelope RSM 16 961 TRUE 
+Envelope PCM 16 961 TRUE 
+Envelope single 16 961 TRUE 
+Envelope paired 16 961 TRUE 
+Envelope RSM 64 961 FALSE 
+Envelope PCM 64 961 FALSE 
+Envelope single 64 961 TRUE 
+Envelope paired 64 961 TRUE 
+EXISTING HELPER TESTS
+gpcm-zero-variance-boundary-p1c: .....................................................S
+
+══ Skipped ═════════════════════════════════════════════════════════════════════
+1. P1c full four-scenario boundary audit remains explicitly opt-in ('test-gpcm-zero-variance-boundary-p1c.R:260:3') - Reason: set MFRMR_RUN_LONG_VALIDATION=true for the P1c boundary audit
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+💅 Your tests are beautiful 💅
+Passed: 216 fixed-variance vectors, exact zero, analytical ridge, interior improvement, source/input integrity.
+null device 
+          1 
+DOCUMENTATION TESTS
+release-readiness-protocol: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════ 
+FINAL DOCUMENTATION RECHECK
+ release-readiness-protocol: ..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+Final documentation recheck: 834 expectations passed. 

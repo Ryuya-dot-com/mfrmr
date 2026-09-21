@@ -1,0 +1,2 @@
+"LinkID","FromID","ToID","From","To","N_Common","N_Retained","N_Contributing","Offset","Offset_Prelim","Offset_Method","ScreeningFallback","LinkSupportAdequate","Status","RemovedAnchorId","Offset_Before","Change"
+"1",1,2,"A","B",0,0,0,NA,NA,"none",FALSE,FALSE,"no_common","anchor_1",0.5,NA

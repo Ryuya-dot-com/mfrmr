@@ -20,15 +20,26 @@
 }
 
 .mfrmr_gg_labs <- function(p, payload, x = NULL, y = NULL, fallback = NULL) {
-  title <- as.character(payload$title %||% fallback %||% "")
-  subtitle <- as.character(payload$subtitle %||% "")
-  caption <- as.character(payload$caption %||% "")
-  title <- title[!is.na(title) & nzchar(title)][1] %||% NULL
-  subtitle <- subtitle[!is.na(subtitle) & nzchar(subtitle)][1] %||% NULL
-  caption <- caption[!is.na(caption) & nzchar(caption)][1] %||% NULL
-  p + ggplot2::labs(
-    title = title, subtitle = subtitle, caption = caption, x = x, y = y
+  labels <- lapply(list(title = payload$title %||% fallback,
+                       subtitle = payload$subtitle, caption = payload$caption), function(value) {
+    value <- as.character(value)
+    value <- value[!is.na(value) & nzchar(value)]
+    if (!length(value)) return(NULL)
+    # ponytail: wrap at 72 columns; use labs() for unusually narrow export sizes.
+    paste(unlist(lapply(strsplit(value[1L], "\n", fixed = TRUE)[[1L]],
+                        strwrap, width = 72L)), collapse = "\n")
+  })
+  display <- payload[["display"]]
+  if (is.list(display) && identical(display$show_title, FALSE)) labels$title <- NULL
+  if (is.list(display) && identical(display$show_notes, FALSE)) {
+    labels$subtitle <- NULL
+    labels$caption <- NULL
+  }
+  p <- p + ggplot2::labs(
+    title = labels$title, subtitle = labels$subtitle, caption = labels$caption, x = x, y = y
   )
+  if (!is.null(payload$notes)) attr(p, "mfrmr_notes") <- payload$notes
+  p
 }
 
 .mfrmr_gg_add_references <- function(p, reference_lines) {
@@ -182,6 +193,9 @@
   loc$Estimate <- suppressWarnings(as.numeric(loc$Estimate))
   loc$X <- suppressWarnings(as.numeric(loc$X))
   loc <- loc[is.finite(loc$Estimate) & is.finite(loc$X), , drop = FALSE]
+  location_colors <- resolve_palette(payload[["palette"]],
+    .plot_series_colors(c("facet_level", "step_threshold"), payload$preset %||% "standard"))
+  names(location_colors) <- c("Facet level", "Step threshold")
   groups <- as.character(payload$group_levels %||% unique(loc$Group))
   groups <- groups[!is.na(groups) & nzchar(groups)]
   hist_obj <- payload$person_hist
@@ -243,7 +257,7 @@
         data = density,
         ggplot2::aes(
           x = .data$DensityX, y = .data$Theta,
-          colour = .data$Group, group = .data$Group
+          colour = .data$Group, linetype = .data$Group, group = .data$Group
         ),
         inherit.aes = FALSE, linewidth = 0.7
       )
@@ -306,7 +320,7 @@
           x = .data$XBase, xend = .data$XBase,
           y = .data$Min, yend = .data$Max
         ),
-        inherit.aes = FALSE, colour = "#D95F02",
+        inherit.aes = FALSE, colour = location_colors[["Step threshold"]],
         linewidth = 0.55, alpha = 0.5
       )
     }
@@ -398,6 +412,11 @@
         inherit.aes = FALSE, size = 2.5, check_overlap = FALSE
       )
   }
+  density_groups <- unique(as.character(density$Group))
+  p <- p + ggplot2::scale_colour_manual(values = c(location_colors,
+      .plot_series_colors(density_groups, payload$preset %||% "standard"))) +
+    ggplot2::scale_linetype_manual(values = c(.plot_series_linetypes(density_groups),
+      `Person mean` = "dotted", `Person median` = "dashed"))
   .mfrmr_gg_labs(p, payload, x = NULL, y = "Logit scale", fallback = "Wright map")
 }
 
@@ -410,6 +429,8 @@
   expected$ExpectedScore <- suppressWarnings(as.numeric(expected$ExpectedScore))
   expected <- expected[is.finite(expected$Theta) & is.finite(expected$ExpectedScore), , drop = FALSE]
   groups <- unique(as.character(expected$CurveGroup))
+  colors <- resolve_palette(payload[["palette"]],
+    .plot_series_colors(groups, payload$preset %||% "standard"))
   y_rng <- range(expected$ExpectedScore, finite = TRUE)
   dominance <- as.data.frame(payload$dominance_regions %||% data.frame(), stringsAsFactors = FALSE)
   use_strips <- nrow(dominance) > 0L && length(groups) <= 8L && all(
@@ -439,7 +460,7 @@
         data = dominance,
         ggplot2::aes(
           x = .data$ThetaMid, y = .data$ymid,
-          label = .data$Category, colour = .data$CurveGroup
+          label = .data$Category
         ),
         inherit.aes = FALSE, size = 2.3, show.legend = FALSE,
         check_overlap = TRUE
@@ -464,7 +485,7 @@
         data = steps,
         ggplot2::aes(
           x = .data$Threshold, y = .data$PathY,
-          label = .data$LabelShort, colour = .data$CurveGroup
+          label = .data$LabelShort
         ),
         inherit.aes = FALSE, vjust = -0.7, size = 2.3,
         show.legend = FALSE, check_overlap = TRUE
@@ -475,10 +496,13 @@
       data = expected,
       ggplot2::aes(
         x = .data$Theta, y = .data$ExpectedScore,
-        colour = .data$CurveGroup, group = .data$CurveGroup
+        colour = .data$CurveGroup, linetype = .data$CurveGroup, group = .data$CurveGroup
       ),
       linewidth = 0.85
     ) +
+    ggplot2::scale_colour_manual(values = colors, limits = groups) +
+    ggplot2::scale_fill_manual(values = colors, limits = groups) +
+    ggplot2::scale_linetype_manual(values = .plot_series_linetypes(groups), limits = groups) +
     ggplot2::coord_cartesian(ylim = y_limits, clip = "off") +
     .mfrmr_gg_theme() +
     ggplot2::theme(legend.position = "bottom")
@@ -532,6 +556,8 @@
       size = 2.2, alpha = 0.85
     ) +
     ggplot2::scale_shape_manual(values = c(`Facet level` = 16, Person = 15)) +
+    ggplot2::scale_colour_manual(values = resolve_palette(payload[["palette"]],
+      .plot_series_colors(unique(as.character(tbl$Facet)), payload$preset %||% "standard"))) +
     .mfrmr_gg_theme()
   labels <- tbl[nzchar(as.character(tbl$LabelText)), , drop = FALSE]
   if (nrow(labels) > 0L) {
@@ -539,7 +565,7 @@
       data = labels,
       ggplot2::aes(
         x = .data$FitValue, y = .data$Measure,
-        label = .data$LabelText, colour = .data$Facet
+        label = .data$LabelText
       ),
       inherit.aes = FALSE, hjust = -0.1, size = 2.5,
       show.legend = FALSE, check_overlap = TRUE
@@ -592,6 +618,10 @@
   if (!all(required %in% names(prob))) {
     stop("CCC conversion requires Theta, Probability, Category, and CurveGroup.", call. = FALSE)
   }
+  categories <- unique(as.character(prob$Category))
+  prob$Category <- factor(as.character(prob$Category), levels = categories)
+  colors <- resolve_palette(payload[["palette"]],
+    .plot_series_colors(categories, payload$preset %||% "standard"))
   if (!"Slope" %in% names(prob)) prob$Slope <- 1
   prob$Slope <- suppressWarnings(as.numeric(prob$Slope))
   prob$Trace <- paste(prob$CurveGroup, prob$Category, sep = " | ")
@@ -599,11 +629,11 @@
     slope_aes,
     linewidth = ggplot2::aes(
       x = .data$Theta, y = .data$Probability, colour = .data$Category,
-      group = .data$Trace, linewidth = .data$Slope
+      group = .data$Trace, linetype = .data$Category, linewidth = .data$Slope
     ),
     alpha = ggplot2::aes(
       x = .data$Theta, y = .data$Probability, colour = .data$Category,
-      group = .data$Trace, alpha = .data$Slope
+      group = .data$Trace, linetype = .data$Category, alpha = .data$Slope
     ),
     colour = ggplot2::aes(
       x = .data$Theta, y = .data$Probability, colour = .data$Slope,
@@ -611,7 +641,7 @@
     ),
     none = ggplot2::aes(
       x = .data$Theta, y = .data$Probability, colour = .data$Category,
-      group = .data$Trace
+      group = .data$Trace, linetype = .data$Category
     )
   )
   p <- ggplot2::ggplot(prob, mapping)
@@ -622,6 +652,14 @@
   } else {
     p + ggplot2::geom_line(linewidth = 0.85)
   }
+  p <- p + ggplot2::scale_linetype_manual(
+    values = .plot_series_linetypes(categories), limits = categories) +
+    ggplot2::scale_fill_manual(values = colors, limits = categories)
+  p <- p + if (identical(slope_aes, "colour")) {
+    if (identical(payload$preset, "monochrome")) {
+      ggplot2::scale_colour_gradient(low = "gray15", high = "gray55")
+    } else ggplot2::scale_colour_viridis_c(end = 0.8)
+  } else ggplot2::scale_colour_manual(values = colors, limits = categories)
   p <- p + ggplot2::coord_cartesian(ylim = c(0, 1)) +
     .mfrmr_gg_theme() +
     ggplot2::theme(legend.position = "bottom")
@@ -633,13 +671,16 @@
   overlay <- as.data.frame(payload$overlay %||% data.frame(), stringsAsFactors = FALSE)
   if (isTRUE(show_overlay) && nrow(overlay) > 0L &&
       all(c("Theta", "Proportion", "Category") %in% names(overlay))) {
+    overlay$Category <- factor(as.character(overlay$Category), levels = categories)
     p <- p + ggplot2::geom_point(
       data = overlay,
       ggplot2::aes(
-        x = .data$Theta, y = .data$Proportion, fill = .data$Category
+          x = .data$Theta, y = .data$Proportion, fill = .data$Category,
+          shape = .data$Category
       ),
-      inherit.aes = FALSE, shape = 21, alpha = 0.75
-    )
+      inherit.aes = FALSE, alpha = 0.75
+    ) + ggplot2::scale_shape_manual(values = stats::setNames(
+      rep(c(21, 22, 24, 23, 25), length.out = length(categories)), categories))
   }
   p <- .mfrmr_gg_add_references(p, payload$reference_lines)
   .mfrmr_gg_labs(
@@ -888,6 +929,18 @@
 #' score review plots. Other draw-free payloads use a conservative tabular
 #' fallback; inspect [plot_data_components()] when automatic inference is not
 #' appropriate.
+#' Titles, subtitles, and captions are wrapped at 72 text columns for ordinary
+#' figure widths; missing text is omitted. For narrower exports or custom line
+#' breaks, override these labels with `ggplot2::labs()` on the returned plot.
+#' Fit plots created with `show_title = FALSE` or `show_notes = FALSE` retain
+#' those settings on conversion. To set them when converting a fit directly,
+#' pass the flags through `...`. Interpretation and display notes remain
+#' available in `attr(plot, "mfrmr_notes")`, when present in the source payload.
+#' Wright, pathway, and CCC conversions share the fit-family series palette,
+#' honour monochrome presets and supplied palette overrides, and preserve
+#' line-type or point-shape distinctions. CCC categories retain their source
+#' order. When `slope_aes = "colour"`, slopes instead use a continuous viridis
+#' scale (a grey gradient in monochrome); categories still have line types.
 #'
 #' @param x An `mfrm_plot_data` object, or an mfrmr object with a draw-free
 #'   plot method.
@@ -896,7 +949,10 @@
 #' @param ... Arguments passed to the draw-free plot method. CCC conversion
 #'   additionally accepts `slope_aes`, `facet_by`, and `show_overlay`.
 #'
-#' @return A `ggplot2` plot object.
+#' @return A `ggplot2` plot object, with a `mfrmr_notes` attribute when the
+#'   source plot payload contains a `notes` table.
+#'   Paired Wright/CCC payloads from [plot_compare_mfrm()] retain their selected
+#'   comparison or difference view, group selection and monochrome panel policy.
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
@@ -974,6 +1030,39 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
   dots <- list(...)
+  if (is.null(component) && identical(x$name, "fair_average") && !is.null(payload$plot_data)) {
+    df <- payload$plot_data
+    p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Y))
+    ci <- df[is.finite(df$Lower) & is.finite(df$Upper), , drop = FALSE]
+    if (payload$plot == "difference") {
+      p <- p + ggplot2::geom_segment(ggplot2::aes(x = 0, xend = .data$X, yend = .data$Y), colour = "grey65") +
+        ggplot2::geom_vline(xintercept = 0, linetype = "dashed", colour = "grey50") +
+        ggplot2::scale_y_continuous(breaks = df$Y, labels = df$Label)
+    } else if (payload$plot == "scatter") {
+      limits <- range(df$X, df$Y, ci$Lower, ci$Upper, finite = TRUE)
+      p <- p + ggplot2::geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50") +
+        ggplot2::coord_equal(xlim = limits, ylim = limits)
+    }
+    if (nrow(ci)) {
+      p <- p + if (payload$plot == "measure") {
+        ggplot2::geom_segment(data = ci, ggplot2::aes(y = .data$Lower, yend = .data$Upper, xend = .data$X, colour = .data$Facet))
+      } else ggplot2::geom_segment(data = ci, ggplot2::aes(x = .data$Lower, xend = .data$Upper, yend = .data$Y, colour = .data$Facet))
+    }
+    p <- p + ggplot2::geom_point(ggplot2::aes(colour = .data$Facet, shape = .data$Facet)) +
+      ggplot2::scale_colour_manual(values = stats::setNames(payload$encoding$Color, payload$encoding$Facet)) +
+      ggplot2::scale_shape_manual(values = stats::setNames(payload$encoding$Shape, payload$encoding$Facet)) +
+      .mfrmr_gg_theme()
+    if (nrow(payload$encoding) == 1L || payload$plot == "difference") p <- p + ggplot2::theme(legend.position = "none")
+    # Long reference/uncertainty explanations remain available outside the figure.
+    payload$subtitle <- if (!is.null(payload$ci_note)) "Approximate intervals; see returned notes for uncertainty scope." else NULL
+    if (identical(payload$interpretation_status, "review_only")) {
+      payload$subtitle <- paste(c("REVIEW ONLY", payload$subtitle), collapse = " - ")
+    }
+    return(.mfrmr_gg_labs(p, payload, x = payload$xlab, y = payload$ylab))
+  }
+  if (is.null(component) && identical(x$name, "paired_model_comparison")) {
+    return(.mfrmr_gg_comparison(payload))
+  }
   if (is.null(component) && identical(x$name, "wright_map")) {
     return(.mfrmr_gg_wright(payload))
   }

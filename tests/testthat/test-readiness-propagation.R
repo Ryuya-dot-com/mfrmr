@@ -31,6 +31,7 @@ make_unified_readiness_fixture <- function(
     mfrmr:::bind_mfrm_preparation_notes(list())
   }
   prep <- list(
+    data = data.frame(Person = c("P1", "P2"), Weight = c(1, 1)),
     facet_names = "Rater",
     levels = list(Person = c("P1", "P2"), Rater = c("R1", "R2")),
     preparation_notes = notes

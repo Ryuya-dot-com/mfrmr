@@ -362,6 +362,7 @@ test_that("metric gates encode paired denominators and unconditional companions"
 })
 
 test_that("G4N freezes the contract but does not authorize calibration", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_diagnostic_numeric_eligibility()
   review <- ctx$env$mfrmr_cq_adne_review(ctx$output)
 

@@ -1,0 +1,2 @@
+"Link","FromID","ToID","From","To","N_Common","N_Retained","Min_Common_Per_Facet","Min_Retained_Per_Facet","Offset_Prelim","Offset","Offset_SD","Max_Residual","LinkSupportAdequate","Offset_Method","LinkID","from","to","RetainedElements","UnknownRetention","ReviewElements","Connected","Status"
+1,1,2,"A","B",4,4,4,4,0,0,0,0,FALSE,"inverse_variance","1","wave_1","wave_2",4,0,0,TRUE,"retained_review"

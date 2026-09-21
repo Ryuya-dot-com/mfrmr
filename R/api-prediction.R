@@ -1064,8 +1064,7 @@ prediction_source_scoring_readiness <- function(fit) {
     isTRUE(fit$config$population_active)
   estimability_state <- value("EstimabilityState", "legacy_unknown")
   estimability_ready <- estimability_state %in%
-    c("identified", "population_assumption_linked") ||
-    (population_active && identical(estimability_state, "not_evaluated"))
+    c("identified", "population_assumption_linked")
   category_state <- value("CategoryState", "legacy_unknown")
   category_ready <- category_state %in% c("adequate", "not_applicable")
   boundary_state <- value("BoundaryState", "legacy_unknown")
@@ -1079,9 +1078,14 @@ prediction_source_scoring_readiness <- function(fit) {
     all(is.finite(par)) && !is.null(sizes) &&
     length(par) == sum(as.integer(unlist(sizes, use.names = FALSE)))
 
-  ready <- contract_ready && input_ready && estimability_ready &&
+  # Estimated-population scoring has no validated acceptance rule yet.
+  # Local rank and optimizer convergence do not settle boundaries or integration.
+  ready <- !population_active && contract_ready && input_ready && estimability_ready &&
     category_ready && boundary_ready && numerical_ready && parameter_ready
   reason_codes <- character(0)
+  if (population_active) {
+    reason_codes <- c(reason_codes, "population_scoring_validity_not_evaluated")
+  }
   if (!contract_ready) {
     reason_codes <- c(reason_codes, "readiness_contract_not_current")
   }
@@ -1117,7 +1121,7 @@ prediction_source_scoring_readiness <- function(fit) {
   list(
     ready = isTRUE(ready),
     status = if (isTRUE(ready)) "ready" else "review_only",
-    policy_basis = "scoring_readiness_components_and_parameter_layout_v1",
+    policy_basis = "scoring_readiness_components_and_parameter_layout_v2",
     reason_codes = unique(reason_codes),
     fit_readiness = as.character(state$fit_readiness %||% "unknown"),
     inference_ready = isTRUE(state$inference_ready),
@@ -1125,6 +1129,24 @@ prediction_source_scoring_readiness <- function(fit) {
       state$readiness_contract_version %||% ""
     )
   )
+}
+
+prediction_validate_population_output <- function(x) {
+  if (!inherits(x, c("mfrm_unit_prediction", "mfrm_plausible_values",
+                      "summary.mfrm_unit_prediction", "summary.mfrm_plausible_values")) ||
+      !identical(x$settings$posterior_basis, "population_model")) return(invisible(x))
+  if (!identical(x$settings$source_scoring_ready, FALSE) ||
+      !identical(x$settings$readiness_policy, "review") ||
+      !identical(x$settings$source_scoring_status, "review_only") ||
+      !all(c("SourceScoringReady", "EstimateUse") %in% names(x$estimates)) ||
+      anyNA(x$estimates$SourceScoringReady) || any(x$estimates$SourceScoringReady) ||
+      anyNA(x$estimates$EstimateUse) ||
+      any(x$estimates$EstimateUse != "review_only_nonready_source")) {
+    stop("Population-model scoring output requires explicit review-only eligibility. ",
+         "Regenerate it with `readiness_policy = \"review\"` before summary or export.",
+         call. = FALSE)
+  }
+  invisible(x)
 }
 
 #' Score future or partially observed units under the fitted scoring basis
@@ -1170,6 +1192,10 @@ prediction_source_scoring_readiness <- function(fit) {
 #'   handled. `"error"` (default) refuses scoring. `"review"` permits an
 #'   explicitly review-only fitted-object calculation and labels the returned
 #'   estimates and settings accordingly; it does not make the source fit ready.
+#'   Estimated-population fits currently require `"review"` because their
+#'   identification, boundary and numerical-accuracy acceptance rule is incomplete.
+#'   Earlier population-model predictions labelled scoring-ready must be
+#'   regenerated with explicit review before summary or export.
 #' @param n_draws Optional number of quadrature-grid posterior draws to return
 #'   per scored person. Use 0 to skip draws.
 #' @param seed Optional seed for reproducible posterior draws.
@@ -1551,6 +1577,7 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
   if (!inherits(object, "mfrm_unit_prediction")) {
     stop("`object` must be output from predict_mfrm_units().", call. = FALSE)
   }
+  prediction_validate_population_output(object)
   digits <- prediction_validate_integer(digits, "digits", min_value = 0L, positive = FALSE)
 
   round_df <- function(df) {
@@ -1574,6 +1601,7 @@ summary.mfrm_unit_prediction <- function(object, digits = 3, ...) {
 
 #' @export
 print.summary.mfrm_unit_prediction <- function(x, ...) {
+  prediction_validate_population_output(x)
   digits <- prediction_validate_integer(x$digits %||% 3L, "digits", min_value = 0L, positive = FALSE)
   round_df <- function(df) {
     if (!is.data.frame(df) || nrow(df) == 0) return(df)
@@ -1647,7 +1675,8 @@ print.summary.mfrm_unit_prediction <- function(x, ...) {
 #'   scoring call. Passed to [predict_mfrm_units()] and independent of the
 #'   fit-time quadrature order.
 #' @param readiness_policy Source-fit readiness policy passed to
-#'   [predict_mfrm_units()].
+#'   [predict_mfrm_units()]. Estimated-population fits currently require
+#'   `"review"`; the returned notes and eligibility labels retain that restriction.
 #' @param seed Optional seed for reproducible posterior draws.
 #'
 #' @details
@@ -1775,7 +1804,8 @@ sample_mfrm_plausible_values <- function(fit,
 
   notes <- c(
     draw_note,
-    "Use them as approximate plausible-value summaries for posterior uncertainty, not as deterministic future truth values."
+    "Use them as approximate plausible-value summaries for posterior uncertainty, not as deterministic future truth values.",
+    pred$notes
   )
 
   structure(
@@ -1832,6 +1862,7 @@ summary.mfrm_plausible_values <- function(object, digits = 3, ...) {
   if (!inherits(object, "mfrm_plausible_values")) {
     stop("`object` must be output from sample_mfrm_plausible_values().", call. = FALSE)
   }
+  prediction_validate_population_output(object)
   digits <- prediction_validate_integer(digits, "digits", min_value = 0L, positive = FALSE)
 
   round_df <- function(df) {
@@ -1867,6 +1898,7 @@ summary.mfrm_plausible_values <- function(object, digits = 3, ...) {
 
 #' @export
 print.summary.mfrm_plausible_values <- function(x, ...) {
+  prediction_validate_population_output(x)
   digits <- prediction_validate_integer(x$digits %||% 3L, "digits", min_value = 0L, positive = FALSE)
   round_df <- function(df) {
     if (!is.data.frame(df) || nrow(df) == 0) return(df)

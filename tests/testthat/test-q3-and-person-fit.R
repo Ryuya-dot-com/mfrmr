@@ -253,8 +253,9 @@ test_that("mfrm_generalizability returns variance components and G/Phi", {
                   %in% names(gt$coefficients)))
   expect_true(all(c(
     "identification_status", "identification_note", "boundary_fit",
-    "singular_fit", "lmer_messages"
+    "singular_fit", "lmer_messages", "estimand_scale"
   ) %in% names(gt$design)))
+  expect_identical(gt$design$estimand_scale, "observed_numeric_score")
 })
 
 test_that("mfrm_generalizability records singular boundary fits", {
@@ -352,8 +353,11 @@ test_that("mfrm_d_study projects G and Phi across planned counts", {
   ) %in% names(ds)))
   expect_equal(nrow(ds), 6L)
   expect_true(all(c("highest_order", "single_condition", "none") %in% ds$ResidualScaling))
+  expect_identical(attr(ds, "estimand_scale"), "observed_numeric_score")
   expect_true(all(is.na(ds$G) | (ds$G >= 0 & ds$G <= 1)))
   expect_true(all(is.na(ds$Phi) | (ds$Phi >= 0 & ds$Phi <= 1)))
+  expect_true(all(is.na(ds$G) | is.na(ds$Phi) |
+                    ds$Phi <= ds$G + 1e-8))
 
   highest <- ds[ds$ResidualScaling == "highest_order", , drop = FALSE]
   if (all(is.finite(highest$G))) {

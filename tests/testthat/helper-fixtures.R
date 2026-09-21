@@ -31,6 +31,13 @@
   invisible(asNamespace("mfrmr"))
 }
 
+.mfrmr_test_skip_unless_version <- function(version) {
+  testthat::skip_if_not(
+    identical(as.character(utils::packageVersion("mfrmr")), version),
+    paste("Historical source-bound replay requires mfrmr", version)
+  )
+}
+
 # Muffle only warnings that a test has explicitly classified as unrelated
 # setup noise. Any warning that does not match one of `patterns` continues to
 # propagate, so new package warnings cannot be hidden accidentally.

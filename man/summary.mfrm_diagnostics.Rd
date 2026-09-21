@@ -116,21 +116,25 @@ before comparing legacy and strict outputs.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:4], ]
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
+)
+diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 s <- summary(diag, top_n = 3)
+s$decision
 s$key_warnings
-# Look for: lines beginning with "MnSq misfit:" name the worst
-#   element + Infit / Outfit values; "Unexpected responses flagged"
-#   counts how many cell-level surprises the screen returned.
 s$top_fit
-# Large absolute standardized values identify rows for follow-up; they do
-# not create a universal accept/reject rule.
-s$facets_chisq
-# Read the fixed-effect chi-square as a heterogeneity screen in the context
-# of the design and intended score use.
 }
 }
 \seealso{

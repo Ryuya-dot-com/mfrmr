@@ -217,8 +217,14 @@ mfrmr_calibration_score_overview <- function(x) {
 #'   training, "Person", c("Rater", "Criterion"), "Score",
 #'   model = "RSM", method = "MML", quad_points = 5, maxit = 20
 #' )
+#' q_review <- mml_quadrature_sensitivity(
+#'   fit, training, quad_points = c(5, 7), theta_points = 41
+#' )
+#' fit <- q_review$fits$q7
 #' calibration <- freeze_mfrm_calibration(
-#'   validate_mfrm_calibration(extract_mfrm_calibration(fit))
+#'   validate_mfrm_calibration(extract_mfrm_calibration(
+#'     fit, quadrature_review = q_review
+#'   ))
 #' )
 #' new_rows <- dat[dat$Person %in% ids[19:20], , drop = FALSE]
 #' scores <- score_mfrm_calibration(calibration, new_rows)

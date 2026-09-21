@@ -202,36 +202,26 @@ interactive session.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:8], , drop = FALSE]
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
+)
+results <- mfrm_results(fit)
 
-# JML keeps the help example fast; use the recommended workflow settings
-# for final analyses.
-fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-res <- mfrm_results(fit)
-
-wright <- plot(res, draw = FALSE)
-wright$name
-fit_bundle <- plot(res, type = "fit", draw = FALSE)
-
-sx <- summary(res)
-sx$overview
-sx$readiness
-sx$triage
-sx$plot_map
-sx$next_actions
-mfrm_results(fit, include = "validation", output = "summary")$status
-
-plot(res, type = "qc", draw = FALSE)
-
-# Direct data-frame input is available only after selecting unambiguous
-# measurement columns. Extra study/group columns require an explicit fit.
-mfrm_results(
-  toy_small[, c("Person", "Rater", "Criterion", "Score")],
-  include = c("fit", "diagnostics"),
-  output = "summary"
-)$mapping
+results_review <- summary(results, view = "brief")
+results_review$decision
+results_review$next_actions
+plot(results, type = "wright", draw = FALSE)$name
 }
 }
 \seealso{

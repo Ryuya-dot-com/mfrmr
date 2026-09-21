@@ -1,0 +1,11 @@
+"Type","Text","Fit"
+"interpretation","Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.","RSM"
+"description","Category response probabilities across theta; reference profile fixes additive facet effects and fitted interactions at zero","RSM"
+"reference_profile","Estimated step and, for GPCM, slope parameters are retained; additive facet main effects and fitted interactions are fixed at zero.","RSM"
+"interpretation","Stored fit readiness plus numerical, data-support, connectivity, and stability checks passed. Treat this display as diagnostic evidence, not automatic publication approval.","PCM"
+"description","Category response probabilities across theta; reference profile fixes additive facet effects and fitted interactions at zero","PCM"
+"reference_profile","Estimated step and, for GPCM, slope parameters are retained; additive facet main effects and fitted interactions are fixed at zero.","PCM"
+"basis","Descriptive comparison on fitted coordinates; no alignment or refitting. Matching recorded settings does not prove scale equivalence or identical observations. Differences are comparison minus reference.",NA
+"uncertainty","No difference SE, covariance, confidence interval or significance test is computed. Source readiness is retained; overlap does not establish equivalence.",NA
+"selection","Selected 1 of 4 step groups. RSM shared steps/curves are reused for each selected non-RSM group, not independently estimated.",NA
+"score_coding","Category is the internal code; OriginalCategory is the displayed score label. ExpectedScoreDifference uses native internal score coding, not necessarily original score increments.",NA

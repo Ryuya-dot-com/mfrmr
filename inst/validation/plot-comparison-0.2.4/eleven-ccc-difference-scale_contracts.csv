@@ -1,0 +1,3 @@
+"Model","Method","CoordinateBasis","PopulationSD","SlopeBasis","GpcmModelFamily","GpcmSlopeAction","GpcmSlopeComposition","GpcmLatentDimensionCount","GpcmMmlIdentification","GpcmEstimatorFamily","GpcmStatisticalPenalty","GpcmFiniteParameterBox","GpcmExtremePersonPolicy","FixedLatentSDSlopeField","Fit"
+"RSM","JML","joint_person_coordinate_scale",NA,"unit_discrimination","not_applicable","not_applicable","not_applicable",NA,"not_applicable","not_applicable","not_applicable",NA,"not_applicable",NA,"Reference"
+"RSM","JML","joint_person_coordinate_scale",NA,"unit_discrimination","not_applicable","not_applicable","not_applicable",NA,"not_applicable","not_applicable","not_applicable",NA,"not_applicable",NA,"Comparison"

@@ -40,7 +40,7 @@ reference:
       - gpcm_score_side_contract
       - build_model_choice_review
       - build_weighting_review
-      - gpcm_mml_quadrature_sensitivity
+      - mml_quadrature_sensitivity
       - compute_information
       - plot_information
       - category_structure_report

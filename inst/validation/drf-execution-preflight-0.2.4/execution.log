@@ -1,0 +1,74 @@
+RSM-null error:  
+RSM-group_mean_only error:  
+RSM-drf error:  
+RSM-interaction error:  
+RSM-combined error:  
+RSM-connected_incomplete error:  
+RSM-no_common_raters error:  
+PCM-null error:  
+PCM-group_mean_only error:  
+PCM-drf error:  
+PCM-interaction error:  
+PCM-combined error:  
+PCM-connected_incomplete error:  
+PCM-no_common_raters error:  
+                       Cell     Seed GroupMeanShift DRFAmplitude
+1                  RSM-null 75010001            0.0          0.0
+2       RSM-group_mean_only 75010002            0.6          0.0
+3                   RSM-drf 75010003            0.0          0.4
+4           RSM-interaction 75010004            0.0          0.0
+5              RSM-combined 75010005            0.6          0.4
+6  RSM-connected_incomplete 75010006            0.0          0.4
+7      RSM-no_common_raters 75010007            0.0          0.4
+8                  PCM-null 75020001            0.0          0.0
+9       PCM-group_mean_only 75020002            0.6          0.0
+10                  PCM-drf 75020003            0.0          0.4
+11          PCM-interaction 75020004            0.0          0.0
+12             PCM-combined 75020005            0.6          0.4
+13 PCM-connected_incomplete 75020006            0.0          0.4
+14     PCM-no_common_raters 75020007            0.0          0.4
+   InteractionAmplitude Observations ProbabilityError     EtaError FitSeconds
+1                   0.0          480     4.440892e-16 0.000000e+00      0.769
+2                   0.0          480     4.440892e-16 6.661338e-16      0.196
+3                   0.0          480     2.220446e-16 0.000000e+00      0.203
+4                   0.3          480     3.330669e-16 0.000000e+00      0.203
+5                   0.3          480     4.440892e-16 8.881784e-16      0.194
+6                   0.0          320     3.330669e-16 0.000000e+00      0.200
+7                   0.0          240     3.330669e-16 0.000000e+00      0.189
+8                   0.0          480     3.330669e-16 0.000000e+00      0.329
+9                   0.0          480     4.440892e-16 4.440892e-16      0.226
+10                  0.0          480     3.330669e-16 0.000000e+00      0.207
+11                  0.3          480     4.440892e-16 0.000000e+00      0.223
+12                  0.3          480     6.661338e-16 8.881784e-16      0.213
+13                  0.0          320     4.440892e-16 0.000000e+00      0.214
+14                  0.0          240     2.220446e-16 0.000000e+00      0.199
+   TotalSeconds Error
+1         5.196      
+2         7.765      
+3         2.710      
+4         4.078      
+5         4.107      
+6         2.010      
+7         1.745      
+8         2.896      
+9         8.225      
+10        2.792      
+11        4.255      
+12        4.214      
+13        2.173      
+14        1.760      
+                                                                                                                                                                                                                                                                                                                                                                        Warnings
+1                                                                                                                                                                                                                                                                                                                                                                               
+2                                                                                                                                                                                                                                                                                                                                                                               
+3                                                                                                                                                                                                                                                                                                                                                                               
+4                                                                                                                                                                                                                                                                                                                                                                               
+5                                                                                                                                                                                                                                                                                                                                                                               
+6                                                                                                                                                                                                                                                                                                                                                                               
+7  The MML fixed-effect design is full rank, but the corresponding free-Person JML design is rank deficient. Cross-panel identification therefore relies on the common latent-population assumption; review assignment and population invariance before reporting facet contrasts. | Unknown or uninitialised column: `Contrast`. | Unknown or uninitialised column: `Contrast`.
+8                                                                                                                                                                                                                                                                                                                                                                               
+9                                                                                                                                                                                                                                                                                                                                                                               
+10                                                                                                                                                                                                                                                                                                                                                                              
+11                                                                                                                                                                                                                                                                                                                                                                              
+12                                                                                                                                                                                                                                                                                                                                                                              
+13                                                                                                                                                                                                                                                                                                                                                                              
+14 The MML fixed-effect design is full rank, but the corresponding free-Person JML design is rank deficient. Cross-panel identification therefore relies on the common latent-population assumption; review assignment and population invariance before reporting facet contrasts. | Unknown or uninitialised column: `Contrast`. | Unknown or uninitialised column: `Contrast`.

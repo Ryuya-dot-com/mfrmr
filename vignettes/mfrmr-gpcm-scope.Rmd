@@ -58,9 +58,9 @@ The phrase *generalized many-facet Rasch model* is broader and is not a unique
 synonym for this implementation. For example, Uto and Ueno (2020, equation 9)
 use multiplicative task and rater slope blocks,
 \(\alpha_i\alpha_r\), together with rater severity and rater-specific steps.
-By contrast, mfrmr 0.2.3 requires one facet to own both the slope and step
-blocks: `slope_facet == step_facet`. It does not jointly estimate task and
-rater slopes, decouple the slope owner from the step owner, or introduce a
+By contrast, the current mfrmr GPCM requires one facet to own both the slope
+and step blocks: `slope_facet == step_facet`. It does not jointly estimate task
+and rater slopes, decouple the slope owner from the step owner, or introduce a
 multidimensional ability vector. The implementation is therefore described as
 an **aligned single-owner relative-slope GPCM**.
 
@@ -84,8 +84,8 @@ to one.
 |---|---|---|
 | `step_facet = "Criterion"`, `slope_facet = "Criterion"` | Each criterion has its own relative discrimination and criterion-specific steps. | Supported bounded route. |
 | `step_facet = "Rater"`, `slope_facet = "Rater"` | Each rater has its own model-conditional relative discrimination and rater-specific steps. | Code-supported with rater-interpretation caveats; a slope is not automatically evidence of rater consistency. |
-| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in 0.2.3. |
-| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in 0.2.3; this is closer to a multiplicative generalized-MFRM extension. |
+| Criterion steps with rater slopes, or conversely | Slope owner and step owner differ. | Unsupported in the current package. |
+| Criterion slopes and rater slopes together | Effective discrimination could involve two slope blocks. | Unsupported in the current package; this is closer to a multiplicative generalized-MFRM extension. |
 
 Every facet that is not selected remains an additive location term inside
 \(\eta\). For example, a criterion-owned GPCM can still estimate rater severity,
@@ -132,6 +132,15 @@ equal-weighting reference route; bounded `GPCM` is a slope-aware extension.
 If equal contribution of items, criteria, or raters is part of the validity
 argument, a better-fitting bounded `GPCM` should be reported as sensitivity
 evidence rather than as an automatic replacement.
+
+Category avoidance is a separate decision. For example, a rater who uses only
+3--8 on a declared 1--10 scale shows local restriction of range if the omitted
+categories are used elsewhere. Start with `data_quality_report()` and inspect
+`category_usage_by_facet` and `category_usage_summary`; also examine assignment
+and case mix, fit, and unexpected responses. Do not move to `GPCM` merely
+because a rater avoids extreme categories. A rater-owned PCM/GPCM may expose
+owner-specific threshold or slope support problems, but it changes the model
+being estimated and does not by itself explain or repair the scoring practice.
 
 ### Comparing PCM and bounded GPCM
 
@@ -226,7 +235,7 @@ than an automatic selection rule.
 Every current `fit_mfrm()` likelihood is ordered categorical. The distinction
 between response values and observation frequencies is essential:
 
-| Input or estimand | 0.2.3 treatment |
+| Input or estimand | Current mfrmr treatment |
 |---|---|
 | Ordered binary response | Supported as a two-category ordered response. |
 | Ordered polytomous response | Supported through RSM, PCM, or bounded GPCM. |
@@ -351,8 +360,10 @@ maximum exists or that slope uncertainty is inferentially eligible.
 
 The same distinction applies to uncertainty. `diagnose_mfrm()` can retain the
 local covariance calculation as `Optimizer*SE` and `Optimizer*CI` fields for
-numerical review. Ordinary slope `SE` and confidence-limit fields remain
-unavailable when `SEEligible` or `CIEligible` is false. This avoids presenting
+numerical review. Free slopes currently have `SEEligible = FALSE` and
+`CIEligible = FALSE`; ordinary slope `SE` and confidence-limit fields remain
+unavailable. Convergence or quadrature stability does not change this status.
+This avoids presenting
 a local Hessian around a finite stopping point as uncertainty for a parameter
 whose applicable global boundary status has not been established.
 
@@ -571,8 +582,11 @@ screens rather than as Rasch-style invariance evidence:
 
 The dashboard marks the fair-average panel unavailable under `GPCM`; use
 `fair_average_table()` directly for the slope-aware element-conditional table
-and `fair_average_table(fair_se = TRUE)` when you need structural
-fair-average SEs for non-person rows.
+and `fair_average_table(fit_gpcm, fair_se = TRUE)` to inspect structural
+fair-average SEs for non-person rows. These condition on Person EAP/reference
+means and remain diagnostic-only: `FairCIEligible = FALSE`, including when
+the covariance is computable or regularized. Full-refit coverage remains
+unverified. Historical measure-level SE columns are not fair-score SEs.
 
 ## What is intentionally restricted
 

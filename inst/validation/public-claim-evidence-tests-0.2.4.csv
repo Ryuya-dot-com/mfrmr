@@ -1,0 +1,51 @@
+"file","test","nb","failed","skipped","error","warning","passed"
+"test-first-use-readiness-contracts.R","exactly aliased disconnected designs stop before optimization",8,0,FALSE,FALSE,0,8
+"test-first-use-readiness-contracts.R","boundary separation is a stability hold, not a numerical pass",12,0,FALSE,FALSE,1,11
+"test-first-use-readiness-contracts.R","first-use controls and non-finite inputs fail before fitting",8,0,FALSE,FALSE,0,8
+"test-first-use-readiness-contracts.R","duplicate cells warn once and propagate a data-review state",4,0,FALSE,FALSE,0,4
+"test-gpcm-capability-matrix.R","gpcm_capability_matrix exposes only user-facing route guidance",22,0,FALSE,FALSE,0,22
+"test-gpcm-capability-matrix.R","fit-specific GPCM boundaries expose owner and primary-slope status",10,0,FALSE,FALSE,0,10
+"test-gpcm-capability-matrix.R","gpcm_capability_matrix filters by status",6,0,FALSE,FALSE,0,6
+"test-gpcm-capability-matrix.R","gpcm_capability_matrix prints a compact first screen",5,0,FALSE,FALSE,0,5
+"test-gpcm-capability-matrix.R","gpcm_score_side_contract exposes user-facing availability only",21,0,FALSE,FALSE,0,21
+"test-gpcm-capability-matrix.R","private GPCM route data contain only runtime product fields",11,0,FALSE,FALSE,0,11
+"test-gpcm-capability-matrix.R","GPCM unavailable-route table stays user-facing",8,0,FALSE,FALSE,0,8
+"test-gpcm-capability-matrix.R","GPCM runtime guards return matrix-synchronized conditions",7,0,FALSE,FALSE,0,7
+"test-gpcm-capability-matrix.R","GPCM scorefile export is caveated while full contract review stays blocked",14,0,FALSE,FALSE,0,14
+"test-gpcm-capability-matrix.R","GPCM partial report, QC, export, and linking helpers return caveated objects",58,0,FALSE,FALSE,0,58
+"test-gpcm-capability-matrix.R","GPCM score-side delta SE stays on the expected-score scale",4,0,FALSE,FALSE,0,4
+"test-gpcm-capability-matrix.R","GPCM design evaluation and population forecasts return caveated objects",16,0,FALSE,FALSE,0,16
+"test-gpcm-capability-matrix.R","GPCM diagnostic and signal-detection screening return caveated objects",26,0,FALSE,FALSE,0,26
+"test-gpcm-capability-matrix.R","GPCM scope errors can be caught by class",7,0,FALSE,FALSE,0,7
+"test-gpcm-verification.R","GPCM core fit returns a populated mfrm_fit",8,0,FALSE,FALSE,0,8
+"test-gpcm-verification.R","GPCM print / summary do not error",19,0,FALSE,FALSE,0,19
+"test-gpcm-verification.R","q31 and q41 separate stable local evidence from formal readiness",21,0,FALSE,FALSE,0,21
+"test-gpcm-verification.R","GPCM iteration report is an explicitly caveated replay",7,0,FALSE,FALSE,0,7
+"test-gpcm-verification.R","GPCM diagnose_mfrm returns measures with caveat status",15,0,FALSE,FALSE,0,15
+"test-gpcm-verification.R","GPCM compute_information + plot_information work",3,0,FALSE,FALSE,0,3
+"test-gpcm-verification.R","GPCM CCC / pathway / Wright plots return mfrm_plot_data",6,0,FALSE,FALSE,3,3
+"test-gpcm-verification.R","GPCM Wright intervals remain visibly screening-only",6,0,FALSE,FALSE,0,6
+"test-gpcm-verification.R","GPCM capability matrix is consistent with the helper",3,0,FALSE,FALSE,0,3
+"test-gpcm-verification.R","GPCM APA/QC reporting bundle returns with explicit caveats",5,0,FALSE,FALSE,0,5
+"test-gpcm-verification.R","GPCM public results, APA report, export, and replay stay connected",18,0,FALSE,FALSE,0,18
+"test-gpcm-verification.R","five-category all-maximum persons and raters retain distinct contracts",48,0,FALSE,FALSE,0,48
+"test-identified-step-parameterization.R","step parameter counts match the sum-zero identification",14,0,FALSE,FALSE,0,14
+"test-identified-step-parameterization.R","GPCM diagnostics retain covariance traces but gate slope inference",17,0,FALSE,FALSE,0,17
+"test-identified-step-parameterization.R","identified GPCM MML gradient agrees with finite differences",1,0,FALSE,FALSE,0,1
+"test-information-criteria-contract.R","the common MML information-criterion panel uses Persons exactly",27,0,FALSE,FALSE,0,27
+"test-information-criteria-contract.R","IC eligibility fails closed for JML, non-unit weights, and small-N SABIC",22,0,FALSE,FALSE,0,22
+"test-information-criteria-contract.R","IC integration tiers retain raw values but fail closed below q=31",14,0,FALSE,FALSE,0,14
+"test-information-criteria-contract.R","free-parameter fixtures cover constraints and every 0.2.3 family",4,0,FALSE,FALSE,0,4
+"test-information-criteria-contract.R","fitted-object IC comparison audits weights, legacy state, and identities",37,0,FALSE,FALSE,1,36
+"test-readiness-propagation.R","fit readiness precedence is deterministic and fail-closed",5,0,FALSE,FALSE,0,5
+"test-readiness-propagation.R","the unified builder preserves component causes",14,0,FALSE,FALSE,0,14
+"test-readiness-propagation.R","estimator and nonlinear boundary scope are not conflated",9,0,FALSE,FALSE,0,9
+"test-readiness-propagation.R","new native fits store and consume one fit-readiness record",9,0,FALSE,FALSE,0,9
+"test-readiness-propagation.R","PCM readiness propagates without upgrading numerical holds",22,0,FALSE,FALSE,0,22
+"test-readiness-propagation.R","legacy objects are not upgraded from the old scalar",9,0,FALSE,FALSE,0,9
+"test-readiness-propagation.R","legacy objects fail closed at convergence, summary, and plot entry points",7,0,FALSE,FALSE,0,7
+"test-readiness-propagation.R","a real serialized 0.2.2 fit cannot acquire current readiness",17,0,FALSE,FALSE,0,17
+"test-results-readiness-propagation.R","iteration-limited MML fits remain review-only across results",18,0,FALSE,FALSE,0,18
+"test-results-readiness-propagation.R","mfrm_results propagates a disconnected-design hold",28,0,FALSE,FALSE,0,28
+"test-results-readiness-propagation.R","a shared Criterion does not replace shared-Person MML evidence",15,0,FALSE,FALSE,0,15
+"test-results-readiness-propagation.R","fully connected results remain interpretation-ready",13,0,FALSE,FALSE,0,13

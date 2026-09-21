@@ -1,0 +1,2 @@
+"LinkID","FromID","ToID","From","To","N_Common","N_Retained","N_Contributing","Offset","Offset_Prelim","Offset_Method","ScreeningFallback","LinkSupportAdequate","Status"
+"1",1,2,"A","B",4,2,2,0.6,0.8,"unweighted",FALSE,FALSE,"computed"

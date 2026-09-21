@@ -1,0 +1,17 @@
+RSM-80-3 error:  
+RSM-80-6 error:  
+RSM-320-3 error:  
+RSM-320-6 error:  
+PCM-80-3 error:  
+PCM-80-6 error:  
+PCM-320-3 error:  
+PCM-320-6 error:  
+       Cell     Seed Error Warnings Q61FitSeconds Q121FitSeconds TotalSeconds
+1  RSM-80-3 73018003                        0.773          1.105        4.492
+2  RSM-80-6 73018006                        0.207          0.239        2.655
+3 RSM-320-3 73042003                        0.484          0.647        2.873
+4 RSM-320-6 73042006                        0.645          0.865        8.357
+5  PCM-80-3 73028003                        0.208          0.232        2.554
+6  PCM-80-6 73028006                        0.218          0.276        2.741
+7 PCM-320-3 73052003                        0.531          0.614        3.071
+8 PCM-320-6 73052006                        0.665          0.902        8.894

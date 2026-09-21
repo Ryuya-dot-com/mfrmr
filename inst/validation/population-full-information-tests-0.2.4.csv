@@ -1,0 +1,51 @@
+"file","test","nb","failed","skipped","error","warning","passed"
+"test-mml-quadrature-sensitivity.R","RSM and PCM expose continuous same-data quadrature movement",24,0,FALSE,FALSE,0,24
+"test-mml-quadrature-sensitivity.R","RSM quadrature probabilities retain fitted interactions",4,0,FALSE,FALSE,0,4
+"test-mml-quadrature-sensitivity.R","the general entry point keeps the GPCM-specific scope guard",1,0,FALSE,FALSE,0,1
+"test-numerical-stationarity-pilot.R","the numerical stationarity plan is fixed and never auto-executes",15,0,FALSE,FALSE,0,15
+"test-numerical-stationarity-pilot.R","fixed stationarity fixtures preserve identity and category support",18,0,FALSE,FALSE,0,18
+"test-numerical-stationarity-pilot.R","the independent central score uses declared free coordinates",10,0,FALSE,FALSE,0,10
+"test-numerical-stationarity-pilot.R","the positive-slope GPCM Jacobian is explicit and checked",13,0,FALSE,FALSE,0,13
+"test-numerical-stationarity-pilot.R","canonical-score summaries reject incomplete step ladders",14,0,FALSE,FALSE,0,14
+"test-numerical-stationarity-pilot.R","the five-run pilot records review evidence and fails closed",1,0,TRUE,FALSE,0,0
+"test-release-readiness-protocol.R","public roadmap and current NEWS exclude internal release operations",48,0,FALSE,FALSE,0,48
+"test-release-readiness-protocol.R","internal draft.62 roadmap and GPCM work remain explicit and private",277,0,FALSE,FALSE,0,277
+"test-release-readiness-protocol.R","WP0 readiness contract freezes scoped fail-closed semantics",27,0,FALSE,FALSE,0,27
+"test-release-readiness-protocol.R","WP0 fixture validator rejects post-hoc readiness upgrades",2,0,FALSE,FALSE,0,2
+"test-release-readiness-protocol.R","FACETS and diagnostic stress registries retain prior edge cells under draft.31",15,0,FALSE,FALSE,0,15
+"test-release-readiness-protocol.R","FACETS divergence audit fails closed on rank and category contracts",8,0,FALSE,FALSE,0,8
+"test-release-readiness-protocol.R","release-readiness protocol exposes review steps and parses check logs",24,0,FALSE,FALSE,0,24
+"test-release-readiness-protocol.R","release-readiness timing excludes check infrastructure overhead",4,0,FALSE,FALSE,0,4
+"test-release-readiness-protocol.R","release-readiness protocol flags check timing above ten minutes",8,0,FALSE,FALSE,0,8
+"test-release-readiness-protocol.R","release-readiness protocol rejects a check log without Status",8,0,FALSE,FALSE,0,8
+"test-release-readiness-protocol.R","release-readiness protocol rejects stale check logs by version",3,0,FALSE,FALSE,0,3
+"test-release-readiness-protocol.R","release-readiness protocol requires --as-cran provenance",3,0,FALSE,FALSE,0,3
+"test-release-readiness-protocol.R","release-readiness binds a 0.2.3 candidate to frozen hashed inputs",26,0,FALSE,FALSE,0,26
+"test-release-readiness-protocol.R","release-readiness reconstructs checklist decisions from hashed result rows",16,0,FALSE,FALSE,0,16
+"test-release-readiness-protocol.R","release-readiness keeps the 0.2.3 current/future API truth explicit",7,0,FALSE,FALSE,0,7
+"test-release-readiness-protocol.R","release-readiness rejects stale numeric pass counts in current prose",8,0,FALSE,FALSE,0,8
+"test-release-readiness-protocol.R","release-readiness protocol rejects stale tarball and check evidence",14,0,FALSE,FALSE,0,14
+"test-release-readiness-protocol.R","release-readiness protocol finds common check-log locations",2,0,FALSE,FALSE,0,2
+"test-release-readiness-protocol.R","release-readiness prefers candidate check logs over newer archives",1,0,FALSE,FALSE,0,1
+"test-release-readiness-protocol.R","release-readiness prefers submission and checked tarballs over backups",2,0,FALSE,FALSE,0,2
+"test-release-readiness-protocol.R","release-readiness protocol checks CI workflow contract",12,0,FALSE,FALSE,0,12
+"test-release-readiness-protocol.R","release-readiness follows local reusable CI workflows",9,0,FALSE,FALSE,0,9
+"test-release-readiness-protocol.R","release-readiness accepts check-only runner and rejects legacy G4",9,0,FALSE,FALSE,0,9
+"test-release-readiness-protocol.R","release-readiness protocol checks source-truth alignment",36,0,FALSE,FALSE,0,36
+"test-release-readiness-protocol.R","release-readiness protocol enforces semantic example guards",8,0,FALSE,FALSE,0,8
+"test-release-readiness-protocol.R","release-readiness protocol checks GPCM scope alignment",11,0,FALSE,FALSE,0,11
+"test-release-readiness-protocol.R","release-readiness protocol reviews the source tree shape",26,0,FALSE,FALSE,0,26
+"test-release-readiness-protocol.R","GPCM stress manifest covers every prespecified axis pair",15,0,FALSE,FALSE,0,15
+"test-release-readiness-protocol.R","GPCM stress smoke generator is deterministic and fails closed",12,0,FALSE,FALSE,0,12
+"test-release-readiness-protocol.R","GPCM local-dependence corner reaches exploratory residual PCA",7,0,FALSE,FALSE,0,7
+"test-release-readiness-protocol.R","target-scale sparse feasibility execution is fixed and guarded",19,0,FALSE,FALSE,0,19
+"test-release-readiness-protocol.R","target-scale completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"test-release-readiness-protocol.R","target baseline and bridge execution is fixed and guarded",18,0,FALSE,FALSE,0,18
+"test-release-readiness-protocol.R","target baseline completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"test-release-readiness-protocol.R","JML bottleneck decomposition manifest is fixed and guarded",24,0,FALSE,FALSE,0,24
+"test-release-readiness-protocol.R","JML profile completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"test-release-readiness-protocol.R","GPCM attribution manifest isolates one axis and four fit routes",21,0,FALSE,FALSE,0,21
+"test-release-readiness-protocol.R","GPCM attribution routes retain identical paired data and fail closed",14,0,FALSE,FALSE,0,14
+"test-release-readiness-protocol.R","GPCM replicated pilot prespecifies tiers and uncertainty summaries",23,0,FALSE,FALSE,0,23
+"test-release-readiness-protocol.R","GPCM replicated checkpoints resume atomically and fail closed",31,0,FALSE,FALSE,0,31
+"test-release-readiness-protocol.R","MML metamorphic grid is prespecified, guarded, and fail closed",30,0,FALSE,FALSE,0,30

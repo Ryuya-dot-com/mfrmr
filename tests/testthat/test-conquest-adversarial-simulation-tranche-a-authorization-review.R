@@ -41,6 +41,7 @@ load_conquest_adversarial_simulation_tranche_a_authorization_review <-
   }
 
 test_that("G4A binds the exact unopened tranche-A denominator", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_tranche_a_authorization_review()
   audit <- ctx$env$mfrmr_cq_ataa_identity_audit(
     ctx$g4x_output, ctx$calibration_output
@@ -105,6 +106,7 @@ test_that("G4A values calibration but forbids precision inflation", {
 })
 
 test_that("G4X resources support only a preliminary feasibility inference", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_tranche_a_authorization_review()
   identity <- ctx$env$mfrmr_cq_ataa_identity_audit(
     ctx$g4x_output, ctx$calibration_output
@@ -176,6 +178,7 @@ test_that("a same-named fake provider cannot satisfy the harness boundary", {
 })
 
 test_that("existing output and elapsed runtime window fail closed", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_tranche_a_authorization_review()
   parent <- withr::local_tempdir()
   existing <- file.path(parent, ctx$env$mfrmr_cq_ataa_output_basename)
@@ -204,6 +207,7 @@ test_that("existing output and elapsed runtime window fail closed", {
 })
 
 test_that("G4A authorizes harness work but no data generation or execution", {
+  .mfrmr_test_skip_unless_version("0.2.3")
   ctx <- load_conquest_adversarial_simulation_tranche_a_authorization_review()
   review <- ctx$env$mfrmr_cq_ataa_review(
     ctx$g4x_output, ctx$calibration_output

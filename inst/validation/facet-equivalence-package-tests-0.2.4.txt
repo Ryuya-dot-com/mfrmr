@@ -1,0 +1,55 @@
+══ Skipped tests (45) ══════════════════════════════════════════════════════════
+• Fresh-process evidence requires the check-installed package. (1):
+  'test-calibration-public-api.R:547:3'
+• repository-internal validation artifacts are excluded (25):
+  'test-gpcm-estimator-asymptotics.R:14:3',
+  'test-gpcm-estimator-asymptotics.R:51:3',
+  'test-gpcm-estimator-asymptotics.R:95:3',
+  'test-gpcm-estimator-asymptotics.R:109:3',
+  'test-gpcm-estimator-asymptotics.R:132:3',
+  'test-gpcm-estimator-asymptotics.R:213:3',
+  'test-gpcm-estimator-asymptotics.R:232:3',
+  'test-gpcm-estimator-asymptotics.R:251:3',
+  'test-gpcm-latent-distribution-stress.R:22:3',
+  'test-gpcm-latent-distribution-stress.R:34:3',
+  'test-gpcm-latent-distribution-stress.R:56:3',
+  'test-gpcm-latent-distribution-stress.R:73:3',
+  'test-gpcm-latent-distribution-stress.R:113:3',
+  'test-gpcm-latent-distribution-stress.R:140:3',
+  'test-gpcm-latent-distribution-stress.R:167:3',
+  'test-gpcm-latent-distribution-stress.R:190:3',
+  'test-gpcm-model-identity-contract.R:20:3',
+  'test-jml-extreme-profile-limit-prototype.R:61:3',
+  'test-jml-extreme-profile-limit-prototype.R:94:3',
+  'test-jml-extreme-profile-limit-prototype.R:126:3',
+  'test-jml-extreme-profile-limit-prototype.R:154:3',
+  'test-jml-extreme-profile-recovery-pilot.R:18:3',
+  'test-jml-extreme-profile-recovery-pilot.R:41:3',
+  'test-jml-extreme-profile-recovery-pilot.R:49:3',
+  'test-jml-extreme-profile-recovery-pilot.R:106:3'
+• Repository-only GPCM non-unit score oracle is unavailable. (4):
+  'test-gpcm-nonunit-score-oracle.R:27:3',
+  'test-gpcm-nonunit-score-oracle.R:54:3',
+  'test-gpcm-nonunit-score-oracle.R:78:3',
+  'test-gpcm-nonunit-score-oracle.R:115:3'
+• Repository-only validation files are not installed with the package. (3):
+  'test-external-ic-contract.R:61:3', 'test-external-ic-contract.R:100:3',
+  'test-external-ic-contract.R:292:3'
+• source documentation files are not available (10):
+  'test-documentation-terminology.R:46:3',
+  'test-documentation-terminology.R:65:3',
+  'test-documentation-terminology.R:83:3',
+  'test-documentation-terminology.R:116:3',
+  'test-documentation-terminology.R:140:3',
+  'test-documentation-terminology.R:156:3',
+  'test-documentation-terminology.R:182:3',
+  'test-documentation-terminology.R:200:3',
+  'test-documentation-terminology.R:290:3',
+  'test-documentation-terminology.R:381:3'
+• source help files are not available (1): 'test-api-s3-consistency.R:44:3'
+• source package files are not available (1):
+  'test-documentation-terminology.R:302:3'
+
+
+[ FAIL 0 | WARN 40 | SKIP 45 | PASS 16546 ]
+Warnings: 35 category-support, 3 GPCM review-only display, 2 IC-suppression conditions.

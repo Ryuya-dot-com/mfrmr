@@ -1,0 +1,9 @@
+"Cell","Model","Persons","Exposure","Stage","Assigned","Attempted","NativePass","InferenceReady","ScoringReady","Computable","NumericalConflicts","Errors","Warnings","CoreSeconds","Seconds"
+1,"RSM",80,3,"preflight",5,5,5,0,0,5,0,0,0,29.781,34.947
+2,"RSM",80,6,"preflight",5,5,5,0,0,5,0,0,0,3.81,8.90600000000001
+3,"RSM",320,3,"preflight",5,5,5,0,0,5,0,0,0,5.51499999999999,25.48
+4,"RSM",320,6,"preflight",5,5,5,0,0,5,0,0,0,8.07900000000001,26.31
+5,"PCM",80,3,"preflight",5,5,5,0,0,5,0,0,0,33.271,39.286
+6,"PCM",80,6,"preflight",5,5,5,0,0,5,0,0,0,4.66199999999999,10.477
+7,"PCM",320,3,"preflight",5,5,5,0,0,5,0,0,0,6.00799999999999,27.523
+8,"PCM",320,6,"preflight",5,5,5,0,0,5,0,0,0,9.37,30.526

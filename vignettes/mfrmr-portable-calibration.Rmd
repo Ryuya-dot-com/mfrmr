@@ -65,11 +65,21 @@ fit <- suppressWarnings(fit_mfrm(
   maxit = 20
 ))
 
+quadrature_review <- suppressWarnings(mml_quadrature_sensitivity(
+  fit,
+  training,
+  quad_points = c(5, 7),
+  theta_points = 41
+))
+summary(quadrature_review)
+fit <- quadrature_review$fits$q7
+
 draft <- extract_mfrm_calibration(
   fit,
   calibration_id = "portable-rsm-example",
   source_fit_id = "synthetic-rsm-fit",
-  scoring_quad_points = 31
+  scoring_quad_points = 31,
+  quadrature_review = quadrature_review
 )
 review_mfrm_calibration(draft)
 
@@ -81,9 +91,14 @@ artifact_file <- tempfile(fileext = ".rds")
 save_mfrm_calibration(frozen, artifact_file)
 ```
 
-The fit-time quadrature and the scoring-time quadrature are distinct. Here the
-small fit-time grid keeps the example quick, while the artifact explicitly
-records the 31-point grid used for later posterior scoring.
+The fit-time quadrature and the scoring-time quadrature are distinct. The two
+small fit grids above keep this example quick; they are not recommendations
+for substantive work. Inspect the continuous movement on grids chosen for the
+application and extend them when needed. Public extraction accepts the exact
+highest-grid fit in that review but does not decide whether its movement is
+small enough. The artifact separately records the 31-point grid used for later
+posterior scoring, and the response-linked review should be archived outside
+the portable artifact when it is needed for an audit trail.
 
 ## Fresh scoring session
 
@@ -108,7 +123,7 @@ rownames(new_rows) <- NULL
 # scoring, never alter observed responses to manufacture a disposition.
 new_rows$Score[new_rows$Person == "NEW_PERSON_2"] <- max(training$Score)
 
-rm(fit, draft, validated, frozen, training, synthetic)
+rm(fit, quadrature_review, draft, validated, frozen, training, synthetic)
 invisible(gc())
 
 calibration <- load_mfrm_calibration(artifact_file)

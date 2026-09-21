@@ -1,0 +1,17 @@
+"AnchorId","WaveID","Wave","Before","After"
+"anchor_1",1,"Shared -> form name",1,1
+"anchor_1",2,"Shared -> form name",1,1
+"anchor_1",3,"C | D",1,2
+"anchor_1",4,"A long isolated form name",2,3
+"anchor_2",1,"Shared -> form name",1,1
+"anchor_2",2,"Shared -> form name",1,1
+"anchor_2",3,"C | D",1,1
+"anchor_2",4,"A long isolated form name",2,2
+"anchor_3",1,"Shared -> form name",1,1
+"anchor_3",2,"Shared -> form name",1,1
+"anchor_3",3,"C | D",1,1
+"anchor_3",4,"A long isolated form name",2,2
+"anchor_4",1,"Shared -> form name",1,1
+"anchor_4",2,"Shared -> form name",1,1
+"anchor_4",3,"C | D",1,1
+"anchor_4",4,"A long isolated form name",2,2

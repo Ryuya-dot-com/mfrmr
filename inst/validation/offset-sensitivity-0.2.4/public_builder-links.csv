@@ -1,0 +1,5 @@
+"LinkID","FromID","ToID","From","To","N_Common","N_Retained","N_Contributing","Offset","Offset_Prelim","Offset_Method","ScreeningFallback","LinkSupportAdequate","Status","RemovedAnchorId","Offset_Before","Change"
+"1",1,2,"A","B",3,3,3,0,0,"inverse_variance",FALSE,FALSE,"computed","anchor_1",0,0
+"1",1,2,"A","B",3,3,3,0,0,"inverse_variance",FALSE,FALSE,"computed","anchor_2",0,0
+"1",1,2,"A","B",3,3,3,0,0,"inverse_variance",FALSE,FALSE,"computed","anchor_3",0,0
+"1",1,2,"A","B",3,3,3,0,0,"inverse_variance",FALSE,FALSE,"computed","anchor_4",0,0

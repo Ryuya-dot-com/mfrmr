@@ -444,7 +444,7 @@ test_that("build_anchor_recommendations handles issue_counts", {
     dummy_facets = character(0)
   )
   expect_true(length(recs) >= 5)
-  expect_true(any(grepl("precedence", recs)))
+  expect_true(any(grepl("retain both constraints", recs)))
   expect_true(any(grepl("default 0", recs)))
   expect_true(any(grepl("Duplicate anchors", recs)))
   expect_true(any(grepl("multiple groups", recs)))

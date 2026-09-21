@@ -51,6 +51,9 @@ they do not replace source-fit diagnostics or establish calibration fit.
 Use \code{plot(fit, type = "wright")} or \code{\link[=plot_wright_unified]{plot_wright_unified()}}.
 \item "Where do score categories transition across theta?"
 Use \code{plot(fit, type = "pathway")} and \code{plot(fit, type = "ccc")}.
+\item "How do measures and observed scores relate to Fair Scores?"
+Use \code{\link[=plot_fair_average]{plot_fair_average()}} with \code{plot_type = "measure"}, \code{"scatter"}, or
+\code{"difference"}. FairZ is a zero-reference expected score, not a z-score.
 \item "Is the design linked well enough across subsets or administrations?"
 Use \code{plot(subset_connectivity_report(...), type = "design_matrix")},
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}},
@@ -61,9 +64,10 @@ Use \code{\link[=plot_unexpected]{plot_unexpected()}} and \code{\link[=plot_disp
 Use \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}.
 \item "Which level pairs drive strict local-dependence follow-up?"
 Use \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
-\item "Do raters agree and do facets separate meaningfully?"
-Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=rater_network_analysis]{rater_network_analysis()}}, and
-\code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+\item "Do raters agree within observed shared scoring contexts?"
+Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} and \code{\link[=rater_network_analysis]{rater_network_analysis()}}.
+\item "Do facet levels separate meaningfully?"
+Use \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
 \item "Do criteria within the same rater move together in a halo-like way?"
 Use \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} and
 \code{plot(..., type = "edge_distribution")}.
@@ -126,6 +130,19 @@ theta-by-category-by-probability plot data for exploratory teaching or
 downstream interactive rendering. Keep 2D pathway/CCC plots as the
 default reporting figures.
 }
+}
+
+\section{Keep the network questions separate}{
+
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} describes the assignment/co-observation graph and
+is the relevant network route for disconnected measurement subsets.
+\code{\link[=rater_network_analysis]{rater_network_analysis()}} describes pairwise score agreement,
+disagreement, or severity direction, while \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}
+describes rater-by-criterion score-profile correlations. The latter two do
+not establish assignment connectedness or a common scale. In all three,
+degree, strength, betweenness, and closeness are graph-theoretic quantities;
+they are not rating-scale central tendency, MFRM severity logits, or causal
+halo evidence.
 }
 
 \section{Recommended visual route}{
@@ -403,6 +420,33 @@ inspect \code{"Visual Displays"} rows -> chosen public plot helper.
 inspect the explicit facet, level, and group-pair columns before
 writing interpretation.
 }
+}
+
+\section{Figures with separate titles and interpretation}{
+
+Wright, expected-score pathway, CCC, and \code{\link[=plot_fair_average]{plot_fair_average()}} displays
+accept \code{show_title = FALSE} and \code{show_notes = FALSE}. These options hide
+figure annotations while retaining axes, legends, structural panel labels,
+and the original title and notes in the returned \code{mfrm_plot_data} object.
+With \code{p <- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE, show_notes = FALSE)}, inspect \code{p$data$notes} before writing a caption.
+\code{\link[=as_ggplot]{as_ggplot()}} respects the display options and retains notes in
+\code{attr(as_ggplot(p), "mfrmr_notes")}. Hiding annotations does not change
+readiness or interval eligibility.
+
+Use \code{preset = "monochrome"} for grayscale. Expected-score and CCC curves
+have six line types: solid, dashed, dotted, dotdash, longdash, and twodash.
+Fair-score plots have six point shapes. Encodings repeat beyond six series;
+use panels or select a facet instead of relying on gray levels alone.
+These controls are documented for the named routes, not every plotting
+helper in the package. Check the individual help page for other plots.
+
+Fair-score intervals remain diagnostic-only with full-refit coverage
+unverified. RSM/PCM plots propagate the focal measure SE while holding
+thresholds and reference measures fixed. GPCM-MML plots can use structural
+table SEs for non-Person rows, conditioning on Person EAP/reference means.
+\code{fair_average_table(fair_se = TRUE)} does not provide RSM/PCM fair-score
+SEs. See \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} and \code{\link[=plot_fair_average]{plot_fair_average()}} for the status
+columns and the observed-minus-fair gap caveat.
 }
 
 \section{Companion vignette}{

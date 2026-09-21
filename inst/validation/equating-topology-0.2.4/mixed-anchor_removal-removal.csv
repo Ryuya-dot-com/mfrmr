@@ -1,0 +1,5 @@
+"AnchorId","Facet","Level","NewlyDisconnectedPairs","LostLinks","UnknownOccurrences","RetainedOccurrences","ComponentsAfter"
+"anchor_1","Item","I1",2,1,0,2,3
+"anchor_2","Item","I2",0,0,0,1,2
+"anchor_3","Item","I3",0,0,0,0,2
+"anchor_4","Item","I4",0,0,1,0,2

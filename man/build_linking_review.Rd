@@ -42,6 +42,9 @@ into one operational review surface with:
 The helper keeps the current conservative interpretation policy:
 anchor drift and screened links are operational review tools, not automatic
 proofs of scale equivalence or score comparability.
+It also does not verify source-fit readiness, cross-wave element identity,
+invariance, or the external assumptions behind group anchors; these must be
+established before promoting the synthesized review.
 }
 \section{Recommended input route}{
 

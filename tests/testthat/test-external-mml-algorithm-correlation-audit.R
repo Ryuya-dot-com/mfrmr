@@ -1,6 +1,7 @@
 .external_mml_algorithm_audit_cache <- new.env(parent = emptyenv())
 
 load_external_mml_algorithm_correlation_audit <- function() {
+  .mfrmr_test_skip_unless_version("0.2.3")
   if (exists("context", envir = .external_mml_algorithm_audit_cache,
              inherits = FALSE)) {
     return(get("context", envir = .external_mml_algorithm_audit_cache,

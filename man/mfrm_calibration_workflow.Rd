@@ -18,7 +18,8 @@ extract_mfrm_calibration(
   calibration_id = NULL,
   source_fit_id = NULL,
   created_at_utc = NULL,
-  scoring_quad_points = 31L
+  scoring_quad_points = 31L,
+  quadrature_review = NULL
 )
 
 review_mfrm_calibration(calibration)
@@ -60,6 +61,11 @@ current time.}
 \item{scoring_quad_points}{Integer quadrature order of at least 2 used for
 later artifact scoring. It is independent of the fit-time quadrature and
 defaults to 31.}
+
+\item{quadrature_review}{An \code{mfrm_quadrature_sensitivity} from
+\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} for the same data and model. \code{fit} must be
+the exact highest-grid fit stored in this object. The package checks this
+procedural evidence but leaves acceptable numerical movement to the user.}
 
 \item{calibration}{An \code{mfrm_calibration} object.}
 
@@ -114,6 +120,14 @@ interactions. Estimated-population or latent-regression MML, JML, and
 bounded \code{GPCM} remain available only through their fitted-object routes; see
 \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}}.
 
+Before extraction, run \code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}} on user-selected grids
+and inspect its continuous differences. Pass the exact highest-grid fit in
+that object together with \code{quadrature_review}. This procedural requirement
+does not declare the fit numerically stable: the package does not choose the
+application-specific tolerance or decide whether more grids are needed.
+Archive the review separately when it is part of the audit trail, because
+response-linked fits are deliberately not embedded in the portable artifact.
+
 Posterior EAP estimates, posterior standard deviations, and intervals are
 conditional on the frozen point calibration and its recorded fixed
 standard-normal prior. They do not include calibration-parameter
@@ -121,6 +135,6 @@ uncertainty. Loading validates structure and semantic consistency, but does
 not authenticate an artifact from an untrusted source.
 }
 \seealso{
-\link{mfrm_calibration_score_methods} for concise review and
-visualization of returned score batches.
+\code{\link[=mml_quadrature_sensitivity]{mml_quadrature_sensitivity()}}, \link{mfrm_calibration_score_methods}
+for concise review and visualization of returned score batches.
 }

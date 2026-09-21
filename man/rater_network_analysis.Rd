@@ -47,16 +47,21 @@ for disagreement. Available pair columns include \code{Exact}, \code{Adjacent},
 \item{min_pair_n}{Minimum number of shared contexts required for a rater
 pair to contribute an edge.}
 
-\item{min_weight}{Minimum edge weight retained in the graph.}
+\item{min_weight}{Minimum edge weight retained in the graph. This is an
+analysis threshold: it changes graph topology and all graph-derived
+centrality summaries, not only the displayed edges.}
 
 \item{score_diff_tolerance}{Score-difference tolerance for directed
 severity networks. With the default \code{0}, any higher score contributes to
-the outgoing leniency edge. Larger values reproduce thresholded
-disagreement displays such as "only differences greater than 3 marks".}
+the outgoing leniency edge. This is an analysis tolerance: increasing it
+changes directional counts, strengths, and \code{SeverityIndex}; it is not a
+plot-only filter.}
 
 \item{severity_continuity}{Continuity constant added to incoming and
 outgoing strengths before computing the finite severity index
-\code{-log((OutStrength + c) / (InStrength + c))}.}
+\code{-log((OutStrength + c) / (InStrength + c))}. The default \code{0.5} is a
+package finite-value correction. Setting \code{c = 0} gives the uncorrected
+published form but can produce non-finite values for zero strengths.}
 
 \item{exact_warn, corr_warn}{Passed to \code{\link[=interrater_agreement_table]{interrater_agreement_table()}} to keep
 pair flags consistent with the tabular agreement view.}
@@ -68,11 +73,12 @@ returned bundle.}
 A bundle of class \code{mfrm_rater_network} containing:
 \describe{
 \item{\code{summary}}{One-row graph summary.}
-\item{\code{node_metrics}}{Rater-level degree, strength, centrality, and
-severity-direction summaries.}
+\item{\code{node_metrics}}{Rater-level degree, strength, graph-theoretic
+centrality, and severity-direction summaries.}
 \item{\code{edge_metrics}}{Retained rater-pair network edges.}
-\item{\code{pair_metrics}}{All eligible pairwise agreement and directional
-comparison metrics before edge thresholding.}
+\item{\code{pair_metrics}}{All estimated pairwise agreement and directional
+comparison metrics, including \code{EligiblePair}, before \code{min_weight}
+filtering.}
 \item{\code{caveats}}{Interpretation notes and sparse-design warnings.}
 \item{\code{source_interrater}}{The underlying \code{\link[=interrater_agreement_table]{interrater_agreement_table()}}
 output used for agreement statistics.}
@@ -88,7 +94,15 @@ Lamprianou's rater-effect network work: nodes are raters, edges summarize
 pairwise relationships among raters in shared scoring contexts, and directed
 disagreement edges can be interpreted as relative leniency/severity
 indicators. These network summaries are descriptive diagnostics, not Rasch
-logit estimates and not formal fit statistics.
+logit estimates and not formal fit statistics. They describe score
+relationships conditional on observed shared contexts; they do not test the
+assignment graph's connectedness or establish a common measurement scale.
+
+\code{Degree}, \code{Strength}, \code{Betweenness}, and \code{Closeness} are graph-theoretic
+quantities computed after \code{min_pair_n}, \code{min_weight}, and (for directed
+networks) \code{score_diff_tolerance} are applied. They are not rating-scale
+central tendency or restriction-of-range measures. Use
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} for assignment/co-observation connectedness.
 
 For \code{mode = "severity_direction"}, outgoing strength means the rater more
 often assigned higher scores than comparison raters; incoming strength means
