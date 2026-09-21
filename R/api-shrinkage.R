@@ -170,6 +170,19 @@ validate_shrinkage_output <- function(fit) {
   if (!is.logical(shrink_person) || length(shrink_person) != 1L || is.na(shrink_person)) {
     stop("`shrink_person` must be a single logical value.", call. = FALSE)
   }
+  fit$config$facet_shrinkage <- as.character(method)
+  fit$config$facet_prior_sd <- facet_prior_sd
+  fit$config$shrinkage_settings <- list(
+    facet_prior_sd = facet_prior_sd, shrink_person = shrink_person,
+    applied_after_fit = FALSE
+  )
+  # Reapplication always starts from the original estimates and SEs. In
+  # particular, turning Person shrinkage off must not retain old adjustments.
+  person <- fit$facets$person
+  if (is.data.frame(person)) {
+    person[intersect(c("ShrunkEstimate", "ShrunkSE", "ShrinkageFactor"), names(person))] <- NULL
+    fit$facets$person <- person
+  }
   others <- fit$facets$others
   if (is.null(others) || nrow(others) == 0L) {
     fit$shrinkage_report <- data.frame(
@@ -179,8 +192,6 @@ validate_shrinkage_output <- function(fit) {
       PriorSource = character(0), Note = character(0),
       stringsAsFactors = FALSE
     )
-    fit$config$facet_shrinkage <- as.character(method)
-    fit$config$facet_prior_sd <- facet_prior_sd
     return(fit)
   }
 
@@ -265,11 +276,6 @@ validate_shrinkage_output <- function(fit) {
   fit$facets$others <- others
   fit$shrinkage_report <- do.call(rbind, report_rows)
   rownames(fit$shrinkage_report) <- NULL
-
-  # Record settings so downstream consumers (manifest, replay, checklist,
-  # APA narrative) can report them consistently.
-  fit$config$facet_shrinkage <- as.character(method)
-  fit$config$facet_prior_sd <- facet_prior_sd
 
   # Optional: shrink Person estimates too. JML exposes each theta as a
   # fixed effect so EB has real bite; MML already integrates the prior
@@ -363,6 +369,12 @@ validate_shrinkage_output <- function(fit) {
 #' chosen prior variance; it is not model degrees of freedom for testing or IC.
 #' Reapply this helper to existing fits to refresh old reports; no MFRM refit
 #' is needed. Regenerate previously saved plots and exports as well.
+#' Reapplication replaces the previous adjustment; `shrink_person = FALSE`
+#' removes any previous Person shrinkage columns. The original fitting inputs
+#' remain recorded separately from the latest post-fit shrinkage settings.
+#' [build_mfrm_replay_script()] replays the adjustment after fitting, preserving
+#' whether diagnostic SEs were attached by [fit_mfrm()]. Manually edited SEs
+#' or other table edits require their own reproducible editing steps.
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()] with a non-empty
 #'   `facets$others` table.
@@ -430,12 +442,14 @@ apply_empirical_bayes_shrinkage <- function(fit,
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit from fit_mfrm().", call. = FALSE)
   }
-  .apply_shrinkage_to_fit(
+  fit <- .apply_shrinkage_to_fit(
     fit = fit,
     method = "empirical_bayes",
     facet_prior_sd = facet_prior_sd,
     shrink_person = shrink_person
   )
+  fit$config$shrinkage_settings$applied_after_fit <- TRUE
+  fit
 }
 
 

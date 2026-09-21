@@ -63,7 +63,7 @@ The other priority is consistent interpretation throughout existing analyses:
 | Agreement, networks and response times | Retain unavailable comparisons, graph scope and the number of observations with valid times. Agreement and graph patterns do not establish rater quality or causal halo; time cutoffs do not establish rapid guessing or effort. |
 | Fair Scores | State the reference profile and omitted uncertainty. Existing approximate intervals remain diagnostic; a new inferential FairZ method is outside 0.2.4. |
 | Group comparisons and linking | Residual differences describe observed-minus-expected scores without tests or confidence intervals. Linked subgroup refits and drift screens retain their separate uncertainty limits. A new omnibus differential-functioning test is outside 0.2.4. |
-| Observed-score G/D studies and shrinkage | Retain their distinct models and conditional assumptions; neither is a jointly estimated random-facet MFRM or a source of fully propagated uncertainty. |
+| Observed-score G/D studies and shrinkage | Retain their distinct models and conditional assumptions; neither is a jointly estimated random-facet MFRM or a source of fully propagated uncertainty. Reapplying shrinkage replaces the previous adjustment, and replay preserves its position after fitting. |
 | External imports | Preserve source coordinates and uncertainty conventions. Missing joint covariance cannot be reconstructed from marginal SEs. Imported objects do not become native fits or portable calibrations. |
 
 Existing calculations and interpretations still require review before release.

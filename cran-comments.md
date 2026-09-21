@@ -32,12 +32,17 @@ responses have unavailable ICCs, including in bootstrap refits. Design effects
 use the ICC model's retained sample counts and are described as per-facet
 approximations rather than full-design precision estimates.
 
-The latest affected input and interval tests pass locally (187 expectations,
-no test failures or warnings); prior standalone hierarchical tests are reused.
-Constant-response fitting diagnostics are retained. Implementation and tests
-match between development and the candidate. These additional corrections
-have not been subjected to another full package check or hosted matrix; the
-broader results below belong to the preceding source.
+The ICC input and interval tests passed locally (187 expectations, no test
+failures or warnings); these results and prior hierarchical tests are reused.
+Constant-response fitting diagnostics are retained.
+
+The latest change also preserves post-fit shrinkage as a separate replay step
+and removes stale Person adjustments when shrinkage is reapplied without them.
+The affected shrinkage and replay tests pass (101 expectations, no failures or
+test warnings), including execution of a generated script after diagnostic
+attachment. Implementation and tests match between development and the candidate.
+These additional corrections have not been subjected to another full package
+check or hosted matrix; the broader results below belong to the preceding source.
 
 The preceding ICC interval correction (source 79d0d87) passed hosted checks
 on 2026-09-21 in four environments:

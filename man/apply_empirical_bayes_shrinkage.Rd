@@ -65,6 +65,12 @@ The report records complete-pair counts and mean shrinkage over those pairs.
 chosen prior variance; it is not model degrees of freedom for testing or IC.
 Reapply this helper to existing fits to refresh old reports; no MFRM refit
 is needed. Regenerate previously saved plots and exports as well.
+Reapplication replaces the previous adjustment; \code{shrink_person = FALSE}
+removes any previous Person shrinkage columns. The original fitting inputs
+remain recorded separately from the latest post-fit shrinkage settings.
+\code{\link[=build_mfrm_replay_script]{build_mfrm_replay_script()}} replays the adjustment after fitting, preserving
+whether diagnostic SEs were attached by \code{\link[=fit_mfrm]{fit_mfrm()}}. Manually edited SEs
+or other table edits require their own reproducible editing steps.
 }
 \section{Typical workflow}{
 

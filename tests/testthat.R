@@ -24,6 +24,7 @@ cran_light_tests <- c(
   "icc-ci-method",
   "icc-input",
   "posterior-intervals",
+  "shrinkage-replay",
   "mml-cpp11-backend",
   "missing-codes-integration",
   "bundle-summary-privacy",

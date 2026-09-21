@@ -71,6 +71,16 @@ Anchor and group-anchor constraints are embedded directly from the fitted
 object's stored configuration, so the script can replay anchored analyses
 without manual table reconstruction.
 
+Adjustments made with \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} are replayed after
+fitting, using the most recently recorded prior and Person settings. The
+original fitting settings remain separate so that attaching diagnostic SEs
+and then applying shrinkage is reproduced in the same order. For a workflow
+object with a post-fit adjustment, \code{"auto"} selects \code{"fit"} mode; an explicit
+\code{"facets"} request is refused because it cannot retain that operation order.
+Older shrinkage results without complete settings must first be refreshed
+with \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}}. Manually edited SEs or other table
+edits require their own reproducible editing steps.
+
 When the supplied fit uses the latent-regression \code{MML} branch, the generated
 fit-mode script also carries the stored replay-ready person table together
 with the corresponding \code{population_formula} / \code{person_id} /

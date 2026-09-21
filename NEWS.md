@@ -104,6 +104,13 @@ and action needed for each affected workflow.
 
 ## Changes affecting existing analyses
 
+* Reapplying empirical-Bayes shrinkage now replaces previous Person adjustments:
+  `shrink_person = FALSE` removes stale Person shrinkage columns. Replay scripts
+  retain the latest post-fit adjustment as a separate step after the original
+  fit, including when diagnostic SEs were attached before shrinkage. Refresh
+  older shrinkage results with the original prior and Person settings before
+  regenerating replay scripts. Automatic replay selects fit mode for workflow
+  objects with post-fit shrinkage.
 * ICC calculations no longer reject positive variances using a fixed cutoff
   tied to score units, and returned variances are no longer rounded to six
   decimal places. Constant retained scores yield unavailable variances and

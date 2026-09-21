@@ -79,6 +79,10 @@ test_that("fit_mfrm(facet_shrinkage = 'empirical_bayes') populates schema", {
              facet_shrinkage = "empirical_bayes")
   ))
   expect_identical(as.character(fit$config$facet_shrinkage), "empirical_bayes")
+  expect_false(fit$config$shrinkage_settings$applied_after_fit)
+  script <- build_mfrm_replay_script(fit)$script
+  expect_match(script, 'facet_shrinkage = "empirical_bayes"', fixed = TRUE)
+  expect_false(grepl("fit <- apply_empirical_bayes_shrinkage(", script, fixed = TRUE))
   expect_true(all(c("ShrunkEstimate", "ShrunkSE", "ShrinkageFactor") %in%
                     names(fit$facets$others)))
   expect_s3_class(fit$shrinkage_report, "data.frame")

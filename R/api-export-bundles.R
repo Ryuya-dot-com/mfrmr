@@ -1142,6 +1142,16 @@ build_mfrm_session_info_table <- function() {
 #' object's stored configuration, so the script can replay anchored analyses
 #' without manual table reconstruction.
 #'
+#' Adjustments made with [apply_empirical_bayes_shrinkage()] are replayed after
+#' fitting, using the most recently recorded prior and Person settings. The
+#' original fitting settings remain separate so that attaching diagnostic SEs
+#' and then applying shrinkage is reproduced in the same order. For a workflow
+#' object with a post-fit adjustment, `"auto"` selects `"fit"` mode; an explicit
+#' `"facets"` request is refused because it cannot retain that operation order.
+#' Older shrinkage results without complete settings must first be refreshed
+#' with [apply_empirical_bayes_shrinkage()]. Manually edited SEs or other table
+#' edits require their own reproducible editing steps.
+#'
 #' When the supplied fit uses the latent-regression `MML` branch, the generated
 #' fit-mode script also carries the stored replay-ready person table together
 #' with the corresponding `population_formula` / `person_id` /
@@ -1254,6 +1264,21 @@ build_mfrm_replay_script <- function(fit,
   }
 
   cfg <- fit$config %||% list()
+  shrinkage_settings <- cfg$shrinkage_settings
+  if (!identical(as.character(cfg$facet_shrinkage %||% "none"), "none") &&
+      is.null(shrinkage_settings)) {
+    stop("The saved shrinkage settings are incomplete. Reapply ",
+         "apply_empirical_bayes_shrinkage() with the original prior and Person ",
+         "settings before generating a replay script.", call. = FALSE)
+  }
+  if (isTRUE(shrinkage_settings$applied_after_fit) && resolved_mode == "facets") {
+    if (script_mode == "auto") {
+      resolved_mode <- "fit"
+    } else {
+      stop("Post-fit shrinkage replay requires script_mode = 'fit'. ",
+           "Use that mode to preserve the fitting and adjustment order.", call. = FALSE)
+    }
+  }
   src <- cfg$source_columns %||% list(
     person = "Person",
     facets = as.character(cfg$facet_names %||% character(0)),
@@ -1560,6 +1585,14 @@ build_mfrm_replay_script <- function(fit,
         diagnostic_call
       )
     }
+  }
+
+  if (isTRUE(shrinkage_settings$applied_after_fit)) {
+    lines <- c(lines, "", "# Reapply the recorded post-fit shrinkage",
+      "fit <- apply_empirical_bayes_shrinkage(", "  fit,",
+      paste0("  facet_prior_sd = ", render_r_object_literal(shrinkage_settings$facet_prior_sd), ","),
+      paste0("  shrink_person = ", render_r_object_literal(shrinkage_settings$shrink_person)),
+      ")")
   }
 
   lines <- c(

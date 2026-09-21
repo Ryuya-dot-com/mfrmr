@@ -125,7 +125,10 @@ constant-response refits, which withhold intervals; reprinting is insufficient.
 \code{\link[=mfrm_d_study]{mfrm_d_study()}} with the planned counts and residual-scaling choice.
 This re-estimates the separate observed-score mixed model, not the MFRM.
 Reapply \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} with the original prior settings
-to refresh shrinkage reports and descriptive bands.
+and explicit Person choice to refresh shrinkage reports, descriptive bands,
+and replay settings. Reapplication replaces the previous adjustment;
+switching Person shrinkage off removes its old adjustment columns.
+Regenerate replay scripts to retain the post-fit adjustment step.
 \item \strong{Fitted-object Person scores:} re-summarize the original prediction object
 to recover stored interval settings and updated explanations. To replace
 older grid-endpoint intervals with continuous posterior intervals, rerun

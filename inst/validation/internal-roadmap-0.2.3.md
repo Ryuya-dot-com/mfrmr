@@ -9,6 +9,35 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: post-fit shrinkage replacement and replay
+
+Traced two inconsistent states in the public post-fit helper: its current
+settings were absent from the replay recipe, and turning Person shrinkage
+off left old adjusted columns in the fit while removing the Person report.
+Reapplication now clears previous Person adjustment columns before applying
+the selected settings. A small settings record distinguishes adjustments made
+inside fit_mfrm from those applied afterward. Original fitting inputs remain
+unchanged; overwriting them would put shrinkage before attached diagnostic SEs
+and could change Person results.
+
+Replay emits the latest post-fit adjustment after the original fit. Automatic
+workflow replay chooses fit mode for that case; explicit facets-mode replay
+is refused with a usable alternative. Saved shrinkage objects lacking the
+settings record require reapplication with the original prior and Person
+choice before script generation. Manual SE/table edits still need their own
+reproducible steps. No shrinkage formula or inference eligibility is changed.
+
+Scoped checks pass: 78 existing shrinkage expectations (including three new
+integrated-replay assertions) and 23 post-fit replay expectations. The generated
+script is executed and reproduces adjusted estimates, SEs, reports and original
+likelihood after diagnostic attachment. Replacement matches a fresh call with
+the same settings; the NULL prior, legacy refusal and automatic/explicit modes
+are covered. After refining automatic mode selection, only the affected replay
+file was rerun. Rd generation and whitespace checks pass. The earlier ICC
+results are reused; no whole suite, broad replay suite, package check or hosted
+CI was run. Changed implementation, tests and help match in the development
+and 0.2.4 candidate branches. Changes remain local.
+
 ## 2026-09-21: ICC score units, zero variation, and design-effect scope
 
 Removed the fixed absolute variance cutoff and decimal rounding of returned
