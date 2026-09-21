@@ -17,9 +17,11 @@ mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 
 \item{design_grid}{A nonempty data frame with positive integer \code{Raters} and
 \code{Tasks} columns, or only \code{Tasks} for a G-study with \code{rater = NULL}.
-Each row is one planned design. \code{NULL} uses the G-study counts.
+Each row is one future complete crossed design. \code{NULL} uses the G-study
+counts only when its retained data are complete; an incomplete G-study
+requires an explicit grid.
 Counts need not match or exceed the G-study counts. Conditions are fully
-crossed and shared across scores in every scenario.}
+crossed and shared across persons and scores in every scenario.}
 
 \item{weights}{Optional named, finite score weights, including every score
 exactly once, with at least one nonzero entry. Signed weights allow
@@ -41,7 +43,7 @@ status), \code{covariances} (three matrices per scenario), \code{design_grid},
 and \code{gstudy} (the source result). \code{summary()} returns \code{coefficients}.
 }
 \description{
-Use a balanced multivariate G-study to examine mean-score dependability
+Use a multivariate G-study to examine mean-score dependability
 under specified numbers of common random tasks and, when included, raters,
 with optional composite weights. This reuses estimated covariance components
 without refitting.
@@ -57,6 +59,10 @@ For a Person-by-Task G-study, \code{E} combines Person-by-Task interaction and
 within-cell error: relative-error covariance is \code{E/n_t}, absolute-error
 covariance is \code{(T + E)/n_t}, and universe-score covariance remains \code{P}.
 A D-study cannot introduce a rater facet absent from its G-study.
+For incomplete source data, counts of distinct observed levels are not
+per-person replication counts. This function projects a future complete
+design; it does not estimate the reliability of the observed sparse
+roster, heterogeneous person-specific assignments, or averages of them.
 
 Each score uses diagonal entries; a composite uses \verb{w' Sigma w} for each
 of the three covariance matrices. Thus between-score covariance affects

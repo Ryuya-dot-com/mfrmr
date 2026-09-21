@@ -2,6 +2,19 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* `mfrm_multivariate_gstudy(method = "minque0")` now estimates covariance
+  components from incomplete crossed Person-by-Task or Person-by-Rater-by-Task
+  data. It checks whether the observed configuration separates the components
+  and retains moment-system diagnostics. Missing selected values still stop
+  by default; `missing = "omit"` uses one shared complete-row sample and
+  records exclusions. These calculations do not impute scores or correct
+  informative assignment or nonresponse. D-studies from incomplete data
+  require an explicit future complete-design grid; observed level counts
+  are not interpreted as per-person replication. Non-PSD components continue
+  to withhold coefficients and SEMs, and sampling intervals are not provided.
+* Multivariate G-study interactions now keep distinct combinations of facet
+  IDs containing periods separate. Rerun affected analyses whose IDs could
+  previously form the same concatenated interaction label.
 * `mfrm_multivariate_gstudy()` now also accepts complete Person-by-Task data
   when `rater = NULL`. It estimates Person, Task, and combined
   Person-by-Task/residual covariance components. Its D-study uses a `Tasks`

@@ -1073,8 +1073,10 @@ retain every completed result. Reuse saved results when comparing settings.
 When an assessment reports several score components, such as content and
 organization, their covariances matter for the dependability of a composite.
 In this development version, `mfrm_multivariate_gstudy()` estimates those
-covariances in complete, balanced Person-by-Task or Person-by-Rater-by-Task
-designs. Each cell has one row with all selected numeric scores observed.
+covariances in Person-by-Task or Person-by-Rater-by-Task designs. The default
+ANOVA method requires a complete balanced design; `method = "minque0"` also
+handles incomplete observed configurations. Each retained cell has one row
+with all selected numeric scores observed.
 Included raters and tasks must denote the same conditions across scores and
 persons, and represent the random conditions over which scores will be
 generalized. Score components are fixed parts of the assessment.
@@ -1110,7 +1112,7 @@ d <- mfrm_multivariate_d_study(g,
 summary(d)
 ```
 
-With a rater facet, the G-study uses balanced multivariate ANOVA and includes Person-by-Rater,
+With a rater facet, the G-study includes Person-by-Rater,
 Person-by-Task, and Rater-by-Task components. The three-way interaction and
 within-cell error remain combined because each cell has one observation.
 The D-study projects mean scores over the specified raters and tasks. It uses
@@ -1127,6 +1129,46 @@ be meaningful on the supplied score scales. The same weights define the
 universe-score target and its observed mean-score estimate; distinct target
 and estimation weights are not supported.
 
+For incomplete crossed data, explicitly select `method = "minque0"`. It
+estimates covariance components from observed overlaps, without constructing
+the full assignment grid. The identity-working-covariance MINQUE method
+uses a common mean per score and common covariance components across the
+sample ([Rao, 1971](https://doi.org/10.1016/0047-259X(71)90001-7)). It does not
+fit a selection model or covariate-dependent means.
+
+```r
+# Thin the example to illustrate an incomplete assignment roster.
+sparse <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
+sparse$V[1] <- NA_real_ # Additionally, one assigned score was not recorded.
+g_sparse <- mfrm_multivariate_gstudy(sparse, c("V", "W"), rater = NULL,
+  method = "minque0", missing = "omit")
+g_sparse$data_usage
+g_sparse$estimation$component_support
+g_sparse$component_diagnostics
+d_sparse <- mfrm_multivariate_d_study(g_sparse,
+  data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+summary(d_sparse)
+```
+
+Unassigned cells need no invented score. Missing assigned scores are a
+different issue: omission removes the whole row for all selected scores and
+records its input position. It can lose information and introduce bias.
+Neither sparse estimation nor labeling missingness MAR corrects selective
+assignment, nonresponse, or omitted predictors. Preserve the original roster
+and review coverage with `describe_mfrm_data(..., expected_design = ...)`.
+The G-study's `observed_fraction` concerns retained level combinations, not
+completion of planned assignments or entirely unobserved entities.
+
+Connectedness alone does not guarantee separable variance components. For
+example, with just one rater per Person/Task cell, Person-by-Task interaction
+and residual error cannot both be estimated by this model. MINQUE stops when
+its scaled moment equations cannot separate the requested components.
+Passing this check does not guarantee useful precision. The thinned example
+also illustrates that non-PSD estimates can leave G/Phi and SEMs unavailable.
+Its explicit D-study grid describes a **future complete crossed design**;
+it does not describe the dependability of the observed sparse roster or
+person-specific assignment patterns.
+
 Inspect the matrix diagnostics first. Negative or indefinite component
 estimates remain visible; a materially non-PSD component withholds all
 coefficients and SEMs. Passing this numerical check does not establish precise
@@ -1134,8 +1176,9 @@ estimation or model fit. These are observed-score point projections conditional
 on estimated components, without sampling intervals. Numeric category scores
 do not yield latent ordinal or MFRM reliability. Agreement with a published
 numerical example does not establish recovery under missingness or ordinal
-latent models. Incomplete, unbalanced, nested, or
-partially shared designs and missing-score imputation are not supported.
+latent models. Nested/local facet models, partial sharing across score
+components, score-specific missing-data estimation, and score imputation
+are not supported.
 The existing main-effects `mfrm_generalizability()` workflow remains separate.
 
 ## ICC inputs and intervals

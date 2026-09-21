@@ -1,27 +1,63 @@
-#' Multivariate G-study for a complete crossed rating design
+#' Multivariate G-study for complete or incomplete crossed rating data
 #'
 #' Estimate observed-score variance-covariance components for fixed score
-#' components measured on every Person-by-Rater-by-Task combination, or on
-#' every Person-by-Task combination when `rater = NULL`. Included raters and
-#' tasks are random, crossed conditions, shared across score components.
-#' This is a balanced multivariate ANOVA estimator, not an MFRM fit.
+#' components in Person-by-Rater-by-Task data, or Person-by-Task data when
+#' `rater = NULL`. Use balanced ANOVA for a complete design or explicitly
+#' select MINQUE(0) for an incomplete observed design. Included raters and
+#' tasks have common identities across scores. This is not an MFRM fit.
 #'
-#' @param data A data frame with exactly one row per Person/Rater/Task cell,
-#'   or per Person/Task cell when `rater = NULL`.
+#' @param data A data frame with at most one row per observed Person/Rater/Task
+#'   cell, or per Person/Task cell when `rater = NULL`. Do not add rows for
+#'   unassigned cells or code absent scores as zero.
 #' @param scores Names of finite numeric score columns, in the desired order.
 #'   A single column is allowed as the univariate special case. Scores are
 #'   neither standardized nor converted from category labels.
 #' @param person,rater,task Distinct columns identifying the crossed factors.
 #'   Set `rater = NULL` explicitly for a Person-by-Task design without a rater
 #'   facet. Each included factor must have at least two observed levels. Labels
-#'   may be character, factor, finite numeric, or logical; missing/blank labels
-#'   fail.
+#'   may be character, factor, finite numeric, or logical. Blank or infinite
+#'   labels fail; missing labels follow `missing`.
+#' @param method `"anova"` (default) requires a complete balanced design.
+#'   `"minque0"` estimates the same covariance components from a complete or
+#'   incomplete design using identity-working-covariance MINQUE. Neither
+#'   method constrains covariance estimates to be positive semidefinite.
+#' @param missing `"error"` (default) refuses missing selected scores or
+#'   factor identifiers. `"omit"` explicitly excludes any such row from
+#'   every score's analysis and retains exclusion accounting. It does not
+#'   impute values or correct missing-data bias. Infinite/nonnumeric scores
+#'   are always refused.
 #'
-#' @details All cells and all selected scores must be observed. Duplicates,
-#'   incomplete designs, missing scores, and nested/local facet identifiers
-#'   are not supported. The same identifier must denote the same rater or task
-#'   across all persons and scores. Equal level counts alone cannot establish
-#'   that substantive identity or random sampling from the intended universe.
+#' @details Every retained cell must have every selected score. Duplicate
+#'   cells and nested/local facet identities are not supported. The same
+#'   identifier must denote the same rater or task across persons and scores.
+#'   Equal level counts alone cannot establish that identity or random sampling
+#'   from the intended universe.
+#'
+#'   MINQUE(0) models a common mean for each score and independent, zero-mean
+#'   random effects with a common covariance matrix for each component. With
+#'   intercept-removal matrix `H` and shared-level covariance kernels `K_s`, it
+#'   solves `S_st = tr(H K_s H K_t)` against `Q_s = Y' H K_s H Y` for every
+#'   score pair. Group-count calculations avoid an observation-by-observation
+#'   matrix or a full Cartesian grid. On balanced data it agrees with ANOVA.
+#'   It does not optimize a likelihood, fit covariate-dependent means, or
+#'   iteratively estimate working covariance weights.
+#'
+#'   The diagonally scaled moment system must have all eigenvalues above
+#'   `sqrt(.Machine$double.eps)` times its largest eigenvalue. Otherwise the
+#'   function stops because the components cannot be separated reliably by
+#'   these equations. `estimation` retains the rank, scaled eigenvalues,
+#'   condition number, and per-component replication counts. These are design
+#'   and numerical diagnostics, not precision estimates or model-fit tests.
+#'   Graph connectedness alone does not establish component identifiability.
+#'
+#'   Conditioning on the observed assignments must preserve the stated
+#'   random-effect means and covariances. Outcome-dependent assignment or
+#'   missingness may violate this assumption; calling missingness MAR does
+#'   not correct omitted covariates or selection. Review planned assignments
+#'   separately from recorded scores, for example with [describe_mfrm_data()]
+#'   and its `expected_design` argument. `design$observed_fraction` uses the
+#'   cross-product of retained observed levels; it is not an assignment
+#'   completion rate and cannot reveal entirely unobserved persons or facets.
 #'
 #'   With a rater facet, the seven components are `Person`, `Rater`, `Task`, `Person:Rater`,
 #'   `Person:Task`, `Rater:Task`, and `Residual`. With one observation per cell,
@@ -32,9 +68,8 @@
 #'   rater effects from scores or support generalization to new raters. No
 #'   scores are averaged automatically. Each component is a matrix whose
 #'   diagonal contains variances and whose off-diagonal contains covariances between
-#'   scores. ANOVA mean products replace the mean squares used for a single
-#'   score. This method does not optimize a likelihood or impose a
-#'   positive-semidefinite constraint on estimates.
+#'   scores. For ANOVA, mean products replace the mean squares used for a
+#'   single score.
 #'
 #'   Raw component estimates, including negative variances and indefinite
 #'   matrices, are retained without clipping or nearest-PSD repair. The
@@ -47,22 +82,30 @@
 #'
 #'   The model concerns numeric observed scores. Treating ordered categories
 #'   as numeric does not estimate latent ordinal or MFRM reliability. The
-#'   reference verification covers balanced numerical calculations, including
-#'   the common-person/common-item example in mGENOVA Appendix E. Agreement
-#'   with that example does not establish ordinal, sparse, or missing-data
-#'   recovery or sampling intervals. No missing values are imputed, and no
-#'   variance-component uncertainty is propagated.
+#'   mGENOVA Appendix E example checks balanced numerical calculations;
+#'   MINQUE(0) additionally agrees with direct covariance-kernel calculations
+#'   for incomplete designs. These checks do not establish population recovery
+#'   for arbitrary sparse assignments or missingness mechanisms. No sampling
+#'   intervals or variance-component uncertainty propagation are provided.
 #'
 #' @return An `mfrm_multivariate_gstudy` list with `components` (three or seven
-#'   named covariance matrices), `mean_products`, `degrees_of_freedom`,
+#'   named covariance matrices), ANOVA `mean_products` and `degrees_of_freedom`
+#'   (`NULL` for MINQUE), `estimation` (MINQUE moment matrices and diagnostics,
+#'   `NULL` for ANOVA), `data_usage` (input/used/excluded counts, excluded input
+#'   row positions and missing cells),
 #'   `component_diagnostics`, `score_scale` (observed SDs used only for matrix
 #'   diagnostics), `design` (column identities, levels, counts, method, and
-#'   score convention), and `data` (the selected input columns).
+#'   score convention, completeness and observed cell fraction), and `data`
+#'   (the retained selected input columns).
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #'   Chapters 9--11.
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
 #'   Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
 #'   Table 12 (page 32) and Appendix E (pages 74--77).
+#'
+#'   Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
+#'   theory. *Journal of Multivariate Analysis*, 1, 257--275.
+#'   \doi{10.1016/0047-259X(71)90001-7}.
 #' @seealso [mfrm_multivariate_d_study()], [mfrm_generalizability()]
 #' @examples
 #' # Common tasks, without a rater facet: Brennan's published synthetic data.
@@ -75,6 +118,19 @@
 #'   design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 #' d_task$coefficients
 #' # At six tasks, W - V has G = 0.30000 and Phi = 0.24116 (Appendix E).
+#'
+#' # An illustrative incomplete assignment roster, not a missingness model.
+#' sparse <- tasks[(tasks$Person + tasks$Task) %% 3 != 0, ]
+#' sparse$V[1] <- NA_real_ # One assigned score is additionally unrecorded.
+#' g_sparse <- mfrm_multivariate_gstudy(sparse, c("V", "W"), rater = NULL,
+#'   method = "minque0", missing = "omit")
+#' g_sparse$data_usage
+#' g_sparse$estimation$component_support
+#' g_sparse$component_diagnostics
+#' # Explicit future COMPLETE designs, not reliability of the sparse roster.
+#' d_sparse <- mfrm_multivariate_d_study(g_sparse,
+#'   data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+#' d_sparse$coefficients # Non-PSD components withhold G/Phi and SEMs.
 #'
 #' # Fictional continuous scores, with two correlated score components.
 #' set.seed(2026)
@@ -102,7 +158,11 @@
 #' difference$coefficients
 #' @export
 mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
-                                     rater = "Rater", task = "Task") {
+                                     rater = "Rater", task = "Task",
+                                     method = c("anova", "minque0"),
+                                     missing = c("error", "omit")) {
+  method <- match.arg(method)
+  missing <- match.arg(missing)
   valid_names <- function(x) is.character(x) && length(x) > 0L &&
     !anyNA(x) && all(nzchar(trimws(x))) && !anyDuplicated(x)
   if (!is.data.frame(data) || nrow(data) == 0L || !valid_names(names(data))) {
@@ -121,24 +181,41 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
   groups <- lapply(data[ids], function(x) {
     if (!is.null(dim(x)) || !(is.factor(x) || (!is.object(x) &&
         (is.character(x) || is.logical(x) || (is.numeric(x) && !is.complex(x))))) ||
-        anyNA(x) || (is.numeric(x) && any(!is.finite(x))) ||
-        any(!nzchar(trimws(as.character(x))))) {
+        (is.numeric(x) && any(!is.na(x) & !is.finite(x))) ||
+        any(!is.na(x) & !nzchar(trimws(as.character(x))))) {
       stop("Factor identifiers must be finite, nonmissing, nonblank labels.", call. = FALSE)
     }
     factor(x)
   })
+  if (!all(vapply(data[scores], function(x) is.numeric(x) && !is.object(x) &&
+      !is.complex(x) && is.null(dim(x)) && all(is.na(x) | is.finite(x)), logical(1)))) {
+    stop("All selected scores must be finite numeric values or NA; correct invalid scores explicitly.", call. = FALSE)
+  }
+  absent <- is.na(data)
+  keep <- rowSums(absent) == 0L
+  cells <- which(absent, arr.ind = TRUE)
+  data_usage <- list(source = "data", missing = missing,
+    counts = c(InputRows = nrow(data), UsedRows = sum(keep), ExcludedRows = sum(!keep)),
+    excluded_rows = which(!keep),
+    missing_cells = data.frame(InputRow = cells[, 1L], Column = names(data)[cells[, 2L]],
+      row.names = NULL))
+  if (any(!keep) && missing == "error") {
+    stop("Scores must be finite numeric values and identifiers nonmissing, nonblank; choose missing = 'omit' explicitly to exclude incomplete rows.", call. = FALSE)
+  }
+  if (!any(keep)) stop("No complete rows remain for the G-study.", call. = FALSE)
+  # Refuse duplicate identifiable cells before omission can hide a replicate.
+  identified <- rowSums(absent[, ids, drop = FALSE]) == 0L
+  if (anyDuplicated(data[identified, ids, drop = FALSE])) {
+    stop("Duplicate cells in the selected design are not supported; do not average replicates silently.", call. = FALSE)
+  }
+  data <- data[keep, , drop = FALSE]
+  groups <- lapply(groups, function(g) droplevels(g[keep]))
   factor_names <- if (one_facet) c("Person", "Task") else c("Person", "Rater", "Task")
   counts <- setNames(vapply(groups, nlevels, integer(1)), factor_names)
   if (any(counts < 2L)) stop("Each included factor needs at least two observed levels.", call. = FALSE)
-  if (anyDuplicated(data[ids])) {
-    stop("Duplicate cells in the selected design are not supported; do not average replicates silently.", call. = FALSE)
-  }
-  if (nrow(data) != prod(as.double(counts))) {
-    stop("Supply a complete, balanced crossed design with common conditions across scores.", call. = FALSE)
-  }
-  if (!all(vapply(data[scores], function(x) is.numeric(x) && !is.object(x) &&
-      !is.complex(x) && is.null(dim(x)) && all(is.finite(x)), logical(1)))) {
-    stop("All selected scores must be finite numeric values; missing scores are not omitted or imputed.", call. = FALSE)
+  complete <- nrow(data) == prod(as.double(counts))
+  if (!complete && method == "anova") {
+    stop("ANOVA requires a complete, balanced crossed design; consider method = 'minque0' for an incomplete observed design.", call. = FALSE)
   }
   y <- as.matrix(data[scores])
   y <- sweep(y, 2L, colMeans(y), "-")
@@ -148,54 +225,114 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
     stop("Score variation exceeds numeric range; rescale the scores.", call. = FALSE)
   }
   names(score_scale) <- scores
-  # Orthogonal balanced-design projections, using group means rather than an
-  # observation-by-observation projection matrix.
+  # Shared groupings for the crossed components; unique highest-order cells
+  # represent the combined interaction/residual kernel.
   subsets <- if (one_facet) list(1L, 2L, 1:2) else
     list(1L, 2L, 3L, c(1L, 2L), c(1L, 3L), c(2L, 3L), 1:3)
   sources <- if (one_facet) c("Person", "Task", "Residual") else
     c("Person", "Rater", "Task", "Person:Rater", "Person:Task", "Rater:Task", "Residual")
-  effects <- mean_products <- setNames(vector("list", length(sources)), sources)
-  df <- setNames(numeric(length(sources)), sources)
-  for (i in seq_along(subsets)) {
-    subset <- subsets[[i]]
-    group <- as.integer(interaction(groups[subset], drop = TRUE))
-    effect <- (rowsum(y, group) / tabulate(group))[group, , drop = FALSE]
-    for (j in seq_len(i - 1L)) {
-      if (all(subsets[[j]] %in% subset)) effect <- effect - effects[[j]]
-    }
-    effects[[i]] <- effect
-    df[i] <- prod(counts[subset] - 1)
-    mean_products[[i]] <- crossprod(effect) / df[i]
-  }
-  m <- mean_products
-  nt <- counts[["Task"]]
-  if (one_facet) {
-    components <- list(Person = (m$Person - m$Residual) / nt,
-      Task = (m$Task - m$Residual) / counts[["Person"]], Residual = m$Residual)
+  # Integer level codes prevent collisions between literal IDs containing dots.
+  groupings <- setNames(lapply(subsets, function(s) .mfrm_mvgt_group(groups[s])), sources)
+  estimation <- NULL
+  if (method == "minque0") {
+    fitted <- .mfrm_mvgt_minque0(y, groupings)
+    components <- fitted$components
+    estimation <- fitted$estimation
+    mean_products <- degrees_of_freedom <- NULL
   } else {
-    nr <- counts[["Rater"]]
-    components <- list(
-      Person = (m$Person - m[["Person:Rater"]] - m[["Person:Task"]] + m$Residual) / (nr * nt),
-      Rater = (m$Rater - m[["Person:Rater"]] - m[["Rater:Task"]] + m$Residual) / (counts[["Person"]] * nt),
-      Task = (m$Task - m[["Person:Task"]] - m[["Rater:Task"]] + m$Residual) / (counts[["Person"]] * nr),
-      `Person:Rater` = (m[["Person:Rater"]] - m$Residual) / nt,
-      `Person:Task` = (m[["Person:Task"]] - m$Residual) / nr,
-      `Rater:Task` = (m[["Rater:Task"]] - m$Residual) / counts[["Person"]],
-      Residual = m$Residual
-    )
+    effects <- mean_products <- setNames(vector("list", length(sources)), sources)
+    df <- setNames(numeric(length(sources)), sources)
+    for (i in seq_along(subsets)) {
+      subset <- subsets[[i]]
+      group <- groupings[[i]]
+      effect <- (rowsum(y, group) / tabulate(group))[group, , drop = FALSE]
+      for (j in seq_len(i - 1L)) {
+        if (all(subsets[[j]] %in% subset)) effect <- effect - effects[[j]]
+      }
+      effects[[i]] <- effect
+      df[i] <- prod(counts[subset] - 1)
+      mean_products[[i]] <- crossprod(effect) / df[i]
+    }
+    m <- mean_products
+    nt <- counts[["Task"]]
+    if (one_facet) {
+      components <- list(Person = (m$Person - m$Residual) / nt,
+        Task = (m$Task - m$Residual) / counts[["Person"]], Residual = m$Residual)
+    } else {
+      nr <- counts[["Rater"]]
+      components <- list(
+        Person = (m$Person - m[["Person:Rater"]] - m[["Person:Task"]] + m$Residual) / (nr * nt),
+        Rater = (m$Rater - m[["Person:Rater"]] - m[["Rater:Task"]] + m$Residual) / (counts[["Person"]] * nt),
+        Task = (m$Task - m[["Person:Task"]] - m[["Rater:Task"]] + m$Residual) / (counts[["Person"]] * nr),
+        `Person:Rater` = (m[["Person:Rater"]] - m$Residual) / nt,
+        `Person:Task` = (m[["Person:Task"]] - m$Residual) / nr,
+        `Rater:Task` = (m[["Rater:Task"]] - m$Residual) / counts[["Person"]],
+        Residual = m$Residual
+      )
+    }
+    degrees_of_freedom <- data.frame(Source = sources, DF = unname(df))
   }
   if (any(!is.finite(unlist(components)))) {
     stop("Covariance estimation exceeded numeric range; rescale the scores.", call. = FALSE)
   }
   diagnostics <- .mfrm_mvgt_diagnostics(components, score_scale)
   structure(list(components = components, mean_products = mean_products,
-    degrees_of_freedom = data.frame(Source = sources, DF = unname(df)),
+    degrees_of_freedom = degrees_of_freedom, estimation = estimation, data_usage = data_usage,
     component_diagnostics = diagnostics, score_scale = score_scale,
     design = list(person = person, rater = rater, task = task, scores = scores,
       counts = counts, levels = lapply(groups, levels), rows = nrow(data),
-      method = "Balanced multivariate ANOVA", score_convention = if (one_facet)
+      complete = complete, potential_cells = prod(as.double(counts)),
+      observed_fraction = nrow(data) / prod(as.double(counts)),
+      method = if (method == "anova") "Balanced multivariate ANOVA" else "Multivariate MINQUE(0)",
+      score_convention = if (one_facet)
         "Means over common random tasks" else "Means over common random raters and tasks",
-      calculation_version = 1L), data = data), class = "mfrm_multivariate_gstudy")
+      calculation_version = if (method == "minque0") 2L else 1L), data = data), class = "mfrm_multivariate_gstudy")
+}
+
+.mfrm_mvgt_group <- function(groups) {
+  as.integer(interaction(lapply(groups, as.integer), drop = TRUE))
+}
+
+.mfrm_mvgt_minque0 <- function(y, groupings) {
+  # With H = I - 11'/n and K_s the shared-level covariance kernels, solve
+  # S_st = tr(H K_s H K_t), Q_s = Y' H K_s H Y. y is already centered.
+  # Group counts compute the traces without any n-by-n matrix or full grid.
+  n <- as.double(nrow(y))
+  k <- length(groupings)
+  sizes <- lapply(groupings, tabulate)
+  row_sizes <- Map(function(g, size) as.double(size[g]), groupings, sizes)
+  totals <- vapply(row_sizes, sum, numeric(1))
+  gram <- matrix(0, k, k, dimnames = list(names(groupings), names(groupings)))
+  for (i in seq_len(k)) for (j in seq_len(i)) {
+    joint_sizes <- tabulate(.mfrm_mvgt_group(list(groupings[[i]], groupings[[j]])))
+    gram[i, j] <- gram[j, i] <- sum(as.double(joint_sizes)^2) -
+      2 * sum(row_sizes[[i]] * row_sizes[[j]]) / n + totals[i] * totals[j] / n^2
+  }
+  if (any(!is.finite(gram)) || any(diag(gram) <= 0)) {
+    stop("The observed design cannot support the requested covariance components.", call. = FALSE)
+  }
+  scale <- sqrt(diag(gram))
+  normalized <- gram / outer(scale, scale)
+  eigenvalues <- eigen(normalized, symmetric = TRUE, only.values = TRUE)$values
+  tolerance <- sqrt(.Machine$double.eps)
+  rank <- sum(eigenvalues > tolerance * max(eigenvalues))
+  if (rank < k) {
+    stop("Cannot separate covariance components in this observed design (numerical rank ",
+      rank, " of ", k, "). Review facet overlap and confounding; no estimates were returned.", call. = FALSE)
+  }
+  products <- lapply(groupings, function(g) crossprod(rowsum(y, g)))
+  rhs <- t(vapply(products, as.vector, numeric(ncol(y)^2)))
+  estimates <- solve(normalized, rhs / scale) / scale
+  components <- setNames(lapply(seq_len(k), function(i) {
+    matrix(estimates[i, ], ncol(y), dimnames = list(colnames(y), colnames(y)))
+  }), names(groupings))
+  list(components = components, estimation = list(
+    kernel_gram = gram, quadratic_products = products,
+    scaled_eigenvalues = eigenvalues, rank = rank, relative_tolerance = tolerance,
+    condition_number = max(eigenvalues) / min(eigenvalues),
+    component_support = data.frame(Source = names(groupings),
+      Groups = lengths(sizes), MinimumRows = vapply(sizes, min, integer(1)),
+      MaximumRows = vapply(sizes, max, integer(1)), row.names = NULL)))
 }
 
 .mfrm_mvgt_diagnostics <- function(components, score_scale) {
@@ -213,7 +350,7 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 
 #' Project multivariate G-theory coefficients for common measurement conditions
 #'
-#' Use a balanced multivariate G-study to examine mean-score dependability
+#' Use a multivariate G-study to examine mean-score dependability
 #' under specified numbers of common random tasks and, when included, raters,
 #' with optional composite weights. This reuses estimated covariance components
 #' without refitting.
@@ -221,9 +358,11 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #' @param x A result from [mfrm_multivariate_gstudy()].
 #' @param design_grid A nonempty data frame with positive integer `Raters` and
 #'   `Tasks` columns, or only `Tasks` for a G-study with `rater = NULL`.
-#'   Each row is one planned design. `NULL` uses the G-study counts.
+#'   Each row is one future complete crossed design. `NULL` uses the G-study
+#'   counts only when its retained data are complete; an incomplete G-study
+#'   requires an explicit grid.
 #'   Counts need not match or exceed the G-study counts. Conditions are fully
-#'   crossed and shared across scores in every scenario.
+#'   crossed and shared across persons and scores in every scenario.
 #' @param weights Optional named, finite score weights, including every score
 #'   exactly once, with at least one nonzero entry. Signed weights allow
 #'   difference scores, for example `c(Content = 1, Organization = -1)`.
@@ -241,6 +380,10 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   within-cell error: relative-error covariance is `E/n_t`, absolute-error
 #'   covariance is `(T + E)/n_t`, and universe-score covariance remains `P`.
 #'   A D-study cannot introduce a rater facet absent from its G-study.
+#'   For incomplete source data, counts of distinct observed levels are not
+#'   per-person replication counts. This function projects a future complete
+#'   design; it does not estimate the reliability of the observed sparse
+#'   roster, heterogeneous person-specific assignments, or averages of them.
 #'
 #'   Each score uses diagonal entries; a composite uses `w' Sigma w` for each
 #'   of the three covariance matrices. Thus between-score covariance affects
@@ -286,7 +429,7 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #' @export
 mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
   if (!inherits(x, "mfrm_multivariate_gstudy") ||
-      !identical(x$design$calculation_version, 1L)) {
+      !(identical(x$design$calculation_version, 1L) || identical(x$design$calculation_version, 2L))) {
     stop("`x` must be a current mfrm_multivariate_gstudy result.", call. = FALSE)
   }
   scores <- x$design$scores
@@ -307,6 +450,9 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
   diagnostics <- .mfrm_mvgt_diagnostics(x$components, x$score_scale)
   grid_names <- if (one_facet) "Tasks" else c("Raters", "Tasks")
   if (is.null(design_grid)) {
+    if (identical(x$design$complete, FALSE)) {
+      stop("An incomplete G-study requires an explicit `design_grid` for a future complete crossed design; observed level counts are not per-person replication.", call. = FALSE)
+    }
     design_grid <- if (one_facet) data.frame(Tasks = unname(x$design$counts["Task"])) else
       data.frame(Raters = unname(x$design$counts["Rater"]), Tasks = unname(x$design$counts["Task"]))
   }
@@ -396,10 +542,19 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
 #' @export
 print.mfrm_multivariate_gstudy <- function(x, ...) {
   cat("Multivariate observed-score G-study\n")
-  cat("Complete crossed design:", x$design$counts[["Person"]], "persons,")
+  label <- if (identical(x$design$complete, FALSE)) "Incomplete observed design:" else "Complete crossed design:"
+  cat(label, x$design$counts[["Person"]], "persons,")
   if ("Rater" %in% names(x$design$counts)) cat("", x$design$counts[["Rater"]], "raters,")
   cat("", x$design$counts[["Task"]], "tasks\n")
-  cat("Balanced ANOVA; highest-order interaction and residual are combined.\n")
+  cat(x$design$method, "; highest-order interaction and residual are combined.\n", sep = "")
+  if (!is.null(x$data_usage)) {
+    cat("Rows:", x$data_usage$counts[["UsedRows"]], "used of", x$data_usage$counts[["InputRows"]],
+      ";", x$data_usage$counts[["ExcludedRows"]], "explicitly omitted.\n")
+  }
+  if (!is.null(x$estimation)) {
+    cat("Covariance-component rank:", x$estimation$rank,
+      "; scaled moment-system condition number:", format(x$estimation$condition_number, digits = 4), "\n")
+  }
   print(x$component_diagnostics, row.names = FALSE)
   cat("Raw covariance components are retained. Sampling uncertainty is not estimated.\n")
   invisible(x)

@@ -4,14 +4,16 @@
 \alias{mfrm_multivariate_gstudy}
 \alias{print.mfrm_multivariate_gstudy}
 \alias{summary.mfrm_multivariate_gstudy}
-\title{Multivariate G-study for a complete crossed rating design}
+\title{Multivariate G-study for complete or incomplete crossed rating data}
 \usage{
 mfrm_multivariate_gstudy(
   data,
   scores,
   person = "Person",
   rater = "Rater",
-  task = "Task"
+  task = "Task",
+  method = c("anova", "minque0"),
+  missing = c("error", "omit")
 )
 
 \method{print}{mfrm_multivariate_gstudy}(x, ...)
@@ -19,8 +21,9 @@ mfrm_multivariate_gstudy(
 \method{summary}{mfrm_multivariate_gstudy}(object, ...)
 }
 \arguments{
-\item{data}{A data frame with exactly one row per Person/Rater/Task cell,
-or per Person/Task cell when \code{rater = NULL}.}
+\item{data}{A data frame with at most one row per observed Person/Rater/Task
+cell, or per Person/Task cell when \code{rater = NULL}. Do not add rows for
+unassigned cells or code absent scores as zero.}
 
 \item{scores}{Names of finite numeric score columns, in the desired order.
 A single column is allowed as the univariate special case. Scores are
@@ -29,8 +32,19 @@ neither standardized nor converted from category labels.}
 \item{person, rater, task}{Distinct columns identifying the crossed factors.
 Set \code{rater = NULL} explicitly for a Person-by-Task design without a rater
 facet. Each included factor must have at least two observed levels. Labels
-may be character, factor, finite numeric, or logical; missing/blank labels
-fail.}
+may be character, factor, finite numeric, or logical. Blank or infinite
+labels fail; missing labels follow \code{missing}.}
+
+\item{method}{\code{"anova"} (default) requires a complete balanced design.
+\code{"minque0"} estimates the same covariance components from a complete or
+incomplete design using identity-working-covariance MINQUE. Neither
+method constrains covariance estimates to be positive semidefinite.}
+
+\item{missing}{\code{"error"} (default) refuses missing selected scores or
+factor identifiers. \code{"omit"} explicitly excludes any such row from
+every score's analysis and retains exclusion accounting. It does not
+impute values or correct missing-data bias. Infinite/nonnumeric scores
+are always refused.}
 
 \item{x, object}{A result from the corresponding G-study or D-study function.}
 
@@ -38,24 +52,54 @@ fail.}
 }
 \value{
 An \code{mfrm_multivariate_gstudy} list with \code{components} (three or seven
-named covariance matrices), \code{mean_products}, \code{degrees_of_freedom},
+named covariance matrices), ANOVA \code{mean_products} and \code{degrees_of_freedom}
+(\code{NULL} for MINQUE), \code{estimation} (MINQUE moment matrices and diagnostics,
+\code{NULL} for ANOVA), \code{data_usage} (input/used/excluded counts, excluded input
+row positions and missing cells),
 \code{component_diagnostics}, \code{score_scale} (observed SDs used only for matrix
 diagnostics), \code{design} (column identities, levels, counts, method, and
-score convention), and \code{data} (the selected input columns).
+score convention, completeness and observed cell fraction), and \code{data}
+(the retained selected input columns).
 }
 \description{
 Estimate observed-score variance-covariance components for fixed score
-components measured on every Person-by-Rater-by-Task combination, or on
-every Person-by-Task combination when \code{rater = NULL}. Included raters and
-tasks are random, crossed conditions, shared across score components.
-This is a balanced multivariate ANOVA estimator, not an MFRM fit.
+components in Person-by-Rater-by-Task data, or Person-by-Task data when
+\code{rater = NULL}. Use balanced ANOVA for a complete design or explicitly
+select MINQUE(0) for an incomplete observed design. Included raters and
+tasks have common identities across scores. This is not an MFRM fit.
 }
 \details{
-All cells and all selected scores must be observed. Duplicates,
-incomplete designs, missing scores, and nested/local facet identifiers
-are not supported. The same identifier must denote the same rater or task
-across all persons and scores. Equal level counts alone cannot establish
-that substantive identity or random sampling from the intended universe.
+Every retained cell must have every selected score. Duplicate
+cells and nested/local facet identities are not supported. The same
+identifier must denote the same rater or task across persons and scores.
+Equal level counts alone cannot establish that identity or random sampling
+from the intended universe.
+
+MINQUE(0) models a common mean for each score and independent, zero-mean
+random effects with a common covariance matrix for each component. With
+intercept-removal matrix \code{H} and shared-level covariance kernels \code{K_s}, it
+solves \verb{S_st = tr(H K_s H K_t)} against \verb{Q_s = Y' H K_s H Y} for every
+score pair. Group-count calculations avoid an observation-by-observation
+matrix or a full Cartesian grid. On balanced data it agrees with ANOVA.
+It does not optimize a likelihood, fit covariate-dependent means, or
+iteratively estimate working covariance weights.
+
+The diagonally scaled moment system must have all eigenvalues above
+\code{sqrt(.Machine$double.eps)} times its largest eigenvalue. Otherwise the
+function stops because the components cannot be separated reliably by
+these equations. \code{estimation} retains the rank, scaled eigenvalues,
+condition number, and per-component replication counts. These are design
+and numerical diagnostics, not precision estimates or model-fit tests.
+Graph connectedness alone does not establish component identifiability.
+
+Conditioning on the observed assignments must preserve the stated
+random-effect means and covariances. Outcome-dependent assignment or
+missingness may violate this assumption; calling missingness MAR does
+not correct omitted covariates or selection. Review planned assignments
+separately from recorded scores, for example with \code{\link[=describe_mfrm_data]{describe_mfrm_data()}}
+and its \code{expected_design} argument. \code{design$observed_fraction} uses the
+cross-product of retained observed levels; it is not an assignment
+completion rate and cannot reveal entirely unobserved persons or facets.
 
 With a rater facet, the seven components are \code{Person}, \code{Rater}, \code{Task}, \code{Person:Rater},
 \code{Person:Task}, \code{Rater:Task}, and \code{Residual}. With one observation per cell,
@@ -66,9 +110,8 @@ interaction and within-cell error. Omitting a rater facet does not remove
 rater effects from scores or support generalization to new raters. No
 scores are averaged automatically. Each component is a matrix whose
 diagonal contains variances and whose off-diagonal contains covariances between
-scores. ANOVA mean products replace the mean squares used for a single
-score. This method does not optimize a likelihood or impose a
-positive-semidefinite constraint on estimates.
+scores. For ANOVA, mean products replace the mean squares used for a
+single score.
 
 Raw component estimates, including negative variances and indefinite
 matrices, are retained without clipping or nearest-PSD repair. The
@@ -81,11 +124,11 @@ withholds all coefficients and SEMs.
 
 The model concerns numeric observed scores. Treating ordered categories
 as numeric does not estimate latent ordinal or MFRM reliability. The
-reference verification covers balanced numerical calculations, including
-the common-person/common-item example in mGENOVA Appendix E. Agreement
-with that example does not establish ordinal, sparse, or missing-data
-recovery or sampling intervals. No missing values are imputed, and no
-variance-component uncertainty is propagated.
+mGENOVA Appendix E example checks balanced numerical calculations;
+MINQUE(0) additionally agrees with direct covariance-kernel calculations
+for incomplete designs. These checks do not establish population recovery
+for arbitrary sparse assignments or missingness mechanisms. No sampling
+intervals or variance-component uncertainty propagation are provided.
 }
 \examples{
 # Common tasks, without a rater facet: Brennan's published synthetic data.
@@ -98,6 +141,19 @@ d_task <- mfrm_multivariate_d_study(g_task,
   design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 d_task$coefficients
 # At six tasks, W - V has G = 0.30000 and Phi = 0.24116 (Appendix E).
+
+# An illustrative incomplete assignment roster, not a missingness model.
+sparse <- tasks[(tasks$Person + tasks$Task) \%\% 3 != 0, ]
+sparse$V[1] <- NA_real_ # One assigned score is additionally unrecorded.
+g_sparse <- mfrm_multivariate_gstudy(sparse, c("V", "W"), rater = NULL,
+  method = "minque0", missing = "omit")
+g_sparse$data_usage
+g_sparse$estimation$component_support
+g_sparse$component_diagnostics
+# Explicit future COMPLETE designs, not reliability of the sparse roster.
+d_sparse <- mfrm_multivariate_d_study(g_sparse,
+  data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
+d_sparse$coefficients # Non-PSD components withhold G/Phi and SEMs.
 
 # Fictional continuous scores, with two correlated score components.
 set.seed(2026)
@@ -130,6 +186,10 @@ Chapters 9--11.
 Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
 Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22;
 Table 12 (page 32) and Appendix E (pages 74--77).
+
+Rao, C. R. (1971). Estimation of variance and covariance components--MINQUE
+theory. \emph{Journal of Multivariate Analysis}, 1, 257--275.
+\doi{10.1016/0047-259X(71)90001-7}.
 }
 \seealso{
 \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}

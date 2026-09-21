@@ -242,13 +242,16 @@ or the numbers of raters and tasks, changes score dependability. Correlated
 components require universe-score and error covariances; averaging the
 components' separate reliability coefficients does not answer this question.
 
-The implementation accepts complete, balanced, fully crossed Person-by-Task
-and Person-by-Rater-by-Task designs, with the same conditions across all score
-components. A Person-by-Task design is requested explicitly with `rater = NULL`;
+The default ANOVA implementation accepts complete, balanced, fully crossed
+Person-by-Task and Person-by-Rater-by-Task designs. An explicit
+`method = "minque0"` also estimates these covariance components from an
+incomplete observed configuration, provided its moment equations separate
+them. The same condition identities apply across all score components.
+A Person-by-Task design is requested explicitly with `rater = NULL`;
 it estimates Person, Task and combined Person-by-Task/residual covariance
 matrices and permits D-studies of task counts only. Score components are fixed
 parts of the intended assessment; included raters and tasks are random
-conditions of measurement. With a rater facet, balanced multivariate ANOVA
+conditions of measurement. With a rater facet, the model
 also estimates Person-by-Rater, Person-by-Task and Rater-by-Task components.
 With one observation per cell, the highest-order interaction and residual
 error remain combined. The D-study
@@ -260,6 +263,15 @@ scales make subtraction meaningful. The same weights are used for the target
 composite and its observed estimate; distinct estimation weights and profile
 reliability remain outside this workflow.
 
+Sparse estimation retains numerical rank/conditioning and replication
+diagnostics. Explicit missing-row omission uses a common multivariate sample
+and records excluded rows; it does not impute ratings or correct selective
+assignment or nonresponse. Complete-design D-study projections require an
+explicit grid when the source data are incomplete. Using global facet-level
+counts as per-person replication would describe the wrong measurement design.
+Planned assignment coverage, covariance-component identification, numerical
+admissibility, and statistical precision remain separate questions.
+
 Raw negative or indefinite component estimates are retained without repair;
 materially non-PSD components withhold coefficients and SEMs. Matrix
 admissibility does not establish precise estimation or adequate model fit.
@@ -269,8 +281,12 @@ coefficients; this does not establish sampling precision or broad recovery.
 This workflow concerns dependability on the observed-score scale.
 Treating ordered categories as numeric scores does not
 make their coefficients measures of latent ordinal dependability.
-Incomplete or unbalanced designs, nested or partially shared raters
-and tasks, and interval estimation need separate extensions and evidence.
+Nested/local or partially shared facets, score-specific missing-data models,
+covariate-dependent assignment, sparse-roster D-studies and sampling intervals
+need separate extensions and evidence. Before broad sparse-design claims,
+evaluate recovery and precision under representative overlap, variance
+boundaries and assignment mechanisms, rather than judging support by cell
+coverage or successful calculation alone.
 This workflow complements MFRM on the observed-score scale; it does not
 provide multivariate latent MFRM estimation or cut-score classification accuracy.
 It is developed separately from the 0.2.4 release candidate, with no release

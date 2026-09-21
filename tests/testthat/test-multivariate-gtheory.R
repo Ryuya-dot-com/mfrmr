@@ -413,3 +413,125 @@ test_that("D-study input checks preserve the declared covariance identities", {
   expect_error(mfrm_multivariate_d_study(g, weights = c(Content = 1e308, Organization = 1e308)), "rescale")
   expect_error(mfrm_multivariate_d_study(g, weights = c(Content = 1e-200, Organization = 1e-200)), "rescale")
 })
+
+test_that("MINQUE0 reduces to balanced ANOVA for one and two facets", {
+  for (rater in list(NULL, "Rater")) {
+    data <- if (is.null(rater)) mvgt_common_task_data() else mvgt_fixture()$data
+    scores <- names(data)[(ncol(data) - 1):ncol(data)]
+    anova <- mfrm_multivariate_gstudy(data, scores, rater = rater)
+    minque <- mfrm_multivariate_gstudy(data, scores, rater = rater, method = "minque0")
+    expect_equal(minque$components, anova$components, tolerance = 1e-11)
+    expect_equal(mfrm_multivariate_d_study(minque)$coefficients,
+      mfrm_multivariate_d_study(anova)$coefficients, tolerance = 1e-11)
+    expect_null(minque$mean_products)
+    expect_null(minque$degrees_of_freedom)
+    expect_identical(minque$design$calculation_version, 2L)
+  }
+})
+
+test_that("incomplete multivariate MINQUE0 matches independent dense kernel calculations", {
+  for (rater in list(NULL, "Rater")) {
+    data <- if (is.null(rater)) mvgt_common_task_data() else mvgt_fixture()$data
+    data <- data[seq_len(nrow(data)) %% 7 != 0, ]
+    scores <- tail(names(data), 2)
+    g <- mfrm_multivariate_gstudy(data, scores, rater = rater, method = "minque0")
+    ids <- if (is.null(rater)) c("Person", "Task") else c("Person", "Rater", "Task")
+    subsets <- if (is.null(rater)) list(1, 2, 1:2) else list(1, 2, 3, 1:2, c(1,3), 2:3, 1:3)
+    n <- nrow(data)
+    h <- diag(n) - matrix(1/n, n, n)
+    # Dense pairwise equality kernels do not use the production group-count trace code.
+    kernels <- lapply(subsets, function(s) {
+      Reduce(`*`, lapply(data[ids[s]], function(x) outer(x, x, `==`) * 1))
+    })
+    b <- lapply(kernels, function(k) h %*% k %*% h)
+    dense_gram <- outer(seq_along(b), seq_along(b), Vectorize(function(i, j) sum(b[[i]] * b[[j]])))
+    y <- as.matrix(data[scores])
+    dense_q <- t(vapply(b, function(k) as.vector(t(y) %*% k %*% y), numeric(4)))
+    reference <- solve(dense_gram, dense_q)
+    expect_equal(unname(g$estimation$kernel_gram), dense_gram, tolerance = 1e-11)
+    expect_equal(unname(t(vapply(g$components, as.vector, numeric(4)))), reference, tolerance = 1e-10)
+    # Expected quadratic products under a specified covariance model must
+    # recover its components, including off-diagonals, without simulation.
+    truth <- seq_along(b) / 10
+    covariance <- Reduce(`+`, Map(`*`, kernels, truth))
+    expected_q <- vapply(b, function(k) sum(k * covariance), numeric(1))
+    expect_equal(as.vector(solve(g$estimation$kernel_gram, expected_q)), truth, tolerance = 1e-11)
+    expect_false(g$design$complete)
+    expect_equal(g$design$observed_fraction, nrow(data) / g$design$potential_cells)
+    expect_error(mfrm_multivariate_d_study(g), "explicit.*design_grid")
+    grid <- if (is.null(rater)) data.frame(Tasks = 5L) else data.frame(Raters = 2L, Tasks = 3L)
+    expect_s3_class(mfrm_multivariate_d_study(g, grid), "mfrm_multivariate_d_study")
+    reversed <- mfrm_multivariate_gstudy(data[rev(seq_len(nrow(data))), ], rev(scores),
+      rater = rater, method = "minque0")
+    expect_equal(reversed$components, lapply(g$components, function(m) m[2:1, 2:1]), tolerance = 1e-10)
+    # Covariances must also transform linearly when score units change.
+    rescaled <- data
+    rescaled[scores] <- sweep(as.matrix(data[scores]), 2, c(.01, 100), `*`)
+    other <- mfrm_multivariate_gstudy(rescaled, scores, rater = rater, method = "minque0")
+    expect_equal(other$components, lapply(g$components, function(m) m * outer(c(.01, 100), c(.01, 100))),
+      tolerance = 1e-10)
+  }
+})
+
+test_that("sparse covariance identification is separate from graph connectedness", {
+  # A completely aliased pattern (one task unique to each person).
+  diagonal <- data.frame(Person = 1:8, Task = 1:8, V = 1:8)
+  expect_error(mfrm_multivariate_gstudy(diagonal, "V", rater = NULL, method = "minque0"),
+    "Cannot separate covariance components")
+  # In a connected two-facet design, one rater assigned per Person/Task
+  # still aliases Person:Task with Residual; connectedness cannot fix this.
+  crossed <- expand.grid(Person = 1:12, Task = 1:6)
+  crossed$Rater <- (crossed$Person + crossed$Task) %% 4
+  crossed$V <- sin(seq_len(nrow(crossed)))
+  expect_error(mfrm_multivariate_gstudy(crossed, "V", method = "minque0"),
+    "Cannot separate covariance components")
+  # Negative estimates are retained, even with full-rank sparse moment equations.
+  data <- mvgt_common_task_data()
+  thin <- data[(data$Person + data$Task) %% 3 != 0, ]
+  g <- mfrm_multivariate_gstudy(thin, c("V", "W"), rater = NULL, method = "minque0")
+  expect_identical(g$estimation$rank, 3L)
+  expect_false(all(g$component_diagnostics$PositiveSemidefinite))
+  d <- mfrm_multivariate_d_study(g, data.frame(Tasks = 6), c(V = -1, W = 1))
+  expect_true(all(is.na(d$coefficients$G)))
+  expect_true(all(d$coefficients$Status == "Non-PSD component estimates"))
+})
+
+test_that("missing-score omission retains one shared multivariate sample and exclusions", {
+  data <- mvgt_common_task_data()
+  data$V[2] <- NA_real_
+  data$W[7] <- NA_real_
+  data$Person[13] <- NA_integer_
+  expect_error(mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL, method = "minque0"),
+    "missing = 'omit'")
+  g <- mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL, method = "minque0", missing = "omit")
+  explicit <- mfrm_multivariate_gstudy(data[-c(2, 7, 13), ], c("V", "W"), rater = NULL, method = "minque0")
+  expect_equal(g$components, explicit$components)
+  expect_equal(g$data_usage$counts, c(InputRows = 60, UsedRows = 57, ExcludedRows = 3))
+  expect_identical(g$data_usage$excluded_rows, c(2L, 7L, 13L))
+  expect_equal(g$data_usage$missing_cells,
+    data.frame(InputRow = c(13L, 2L, 7L), Column = c("Person", "V", "W")))
+  expect_error(mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL, missing = "omit"),
+    "ANOVA requires")
+  bad <- data
+  bad$V[1] <- Inf
+  expect_error(mfrm_multivariate_gstudy(bad, c("V", "W"), rater = NULL,
+    method = "minque0", missing = "omit"), "finite numeric")
+  duplicate <- rbind(data, data[2, ])
+  expect_error(mfrm_multivariate_gstudy(duplicate, c("V", "W"), rater = NULL,
+    method = "minque0", missing = "omit"), "Duplicate")
+  data$V[] <- NA_real_
+  expect_error(mfrm_multivariate_gstudy(data, c("V", "W"), rater = NULL,
+    method = "minque0", missing = "omit"), "No complete rows")
+})
+
+test_that("literal facet labels cannot merge different interaction cells", {
+  data <- mvgt_fixture()$data
+  renamed <- data
+  renamed$Person <- c("a.b", "a", "x", "z")[match(data$Person, unique(data$Person))]
+  renamed$Rater <- c("c", "b.c", "r")[match(data$Rater, unique(data$Rater))]
+  for (method in c("anova", "minque0")) {
+    original <- mfrm_multivariate_gstudy(data, c("Content", "Organization"), method = method)
+    other <- mfrm_multivariate_gstudy(renamed, c("Content", "Organization"), method = method)
+    expect_equal(other$components, original$components, tolerance = 1e-11)
+  }
+})

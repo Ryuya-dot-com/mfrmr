@@ -9,6 +9,69 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: incomplete crossed multivariate G-study via MINQUE(0)
+
+The user requested sparse-data support and a broader critical review. The
+existing balanced ANOVA is preserved as default; method="minque0" now fits
+the same three/seven covariance components to an incomplete observed crossed
+design. Every retained cell has all selected score components. Explicit
+missing="omit" drops a shared row across scores and stores input/used/excluded
+counts, excluded positions and missing cells. No grid completion, imputation,
+score-specific pairwise deletion, covariate mean model or selection model is
+introduced. Identifiable duplicates are rejected before omission can hide a
+replicate. MINQUE results use calculation_version 2 so earlier D-study code
+cannot silently default them to observed global facet counts.
+
+With intercept-removal H and shared-level kernels K, the estimator solves
+S_st=tr(H K_s H K_t) against Y' H K_s H Y. The identity working covariance
+defines MINQUE(0), following Rao (1971), doi:10.1016/0047-259X(71)90001-7;
+the scalar trace form also corresponds to the MIVQUE0 equations described in
+SAS VARCOMP documentation. This is neither REML nor an iterative fit. Group
+counts compute the traces without n-by-n kernels or a Cartesian rating grid.
+After diagonal scaling, eigenvalues at/below sqrt(machine epsilon) times the
+largest eigenvalue stop estimation; no pseudoinverse fills unidentified
+components. Moment products, the Gram matrix, conditioning and replication
+counts are retained. Raw non-PSD estimates retain the existing coefficient
+withholding rule. These two checks concern different problems.
+
+An incomplete G-study requires an explicit future COMPLETE crossed D-study
+grid. A global count of observed tasks/raters is not an individual's number
+of measurements, and these projections do not estimate sparse-roster or
+heterogeneous-assignment reliability. Roster coverage and graph connectivity
+remain the role of describe_mfrm_data and expected_design; covariance rank
+does not replace them. Conversely, graph connectedness cannot separate a
+Person:Task component from residual when only one rater observes each such
+cell. An ignorable assignment must preserve the stated random-effect means
+and covariances; a MAR label alone does not fix omitted selection predictors.
+
+The focused test file passes 197 expectations, no failures/errors/warnings.
+Evidence includes balanced ANOVA reduction (one and two facets), independent
+dense centered-kernel estimates on incomplete data, conditional expectation
+identities, row/score ordering and units, confounding refusal, non-PSD
+withholding, shared-sample missing-row accounting, and duplicate protection.
+Review also found that interaction() could merge literal facet combinations
+containing periods. Grouping now uses integer codes; the regression covers
+both estimators and NEWS asks users to rerun affected analyses.
+
+A single computational stress case used 40,000 rows, two scores, 10,000
+persons, 20 raters and 40 tasks (0.5% of 8 million combinations). It returned
+rank 7 and a scaled moment-system condition number of 29.18965 in 0.868 s on
+this machine. Rprofmem's largest recorded allocation was 2,097,200 bytes;
+this is an allocation observation, not peak resident memory or a general
+performance bound. Synthetic deterministic scores test computation only,
+not statistical recovery. No Monte Carlo campaign or full suite was run.
+
+Help, README, NEWS and the public roadmap cover these distinctions. Help
+parses/renders, usage checks pass, and its sparse example retains 40 assigned
+rows, analyzes 39 after explicit omission and withholds coefficients for
+non-PSD components. Local help links resolve despite isolated roxygen topic
+lookup notices. No dependency, export, candidate change, remote CI or push.
+Remaining priorities are representative sparse-design recovery/precision,
+covariate/selection assumptions, and sparse-roster D-study targets; nested or
+partially shared facets, score-specific missingness and intervals remain
+unsupported. A direct external sparse multivariate estimator comparison has
+not been completed; the dense-kernel comparison is an independent calculation.
+
 ## 2026-09-21: one-facet multivariate G-study with a raw-data reference
 
 The development API now accepts rater=NULL for a complete Person x Task
