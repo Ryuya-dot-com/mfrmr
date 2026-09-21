@@ -50,7 +50,9 @@
 #'   diagnostics), `design` (column identities, levels, counts, method, and
 #'   score convention), and `data` (the selected input columns).
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
-#'   Chapters 9 and 10.
+#'   Chapters 9--11.
+#'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
+#'   Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22.
 #' @seealso [mfrm_multivariate_d_study()], [mfrm_generalizability()]
 #' @examples
 #' # Fictional continuous scores, with two correlated score components.
@@ -73,6 +75,10 @@
 #'   design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
 #'   weights = c(Content = 0.6, Organization = 0.4))
 #' d$coefficients
+#' # Difference-score dependability, when subtraction is meaningful on these scales.
+#' difference <- mfrm_multivariate_d_study(g,
+#'   weights = c(Content = 1, Organization = -1))
+#' difference$coefficients
 #' @export
 mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
                                      rater = "Rater", task = "Task") {
@@ -184,10 +190,12 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   `Tasks` columns, one planned design per row. `NULL` uses the G-study counts.
 #'   Counts need not match or exceed the G-study counts. Conditions are fully
 #'   crossed and shared across scores in every scenario.
-#' @param weights Optional named, finite, nonnegative score weights, including
-#'   every score exactly once, with at least one positive entry. They are used
-#'   as supplied, without normalization. `NULL` reports score components only;
-#'   otherwise an additional composite is reported for every scenario.
+#' @param weights Optional named, finite score weights, including every score
+#'   exactly once, with at least one nonzero entry. Signed weights allow
+#'   difference scores, for example `c(Content = 1, Organization = -1)`.
+#'   Weights are used as supplied, without normalization. `NULL` reports score
+#'   components only; otherwise an additional composite is reported for every
+#'   scenario.
 #'
 #' @details For covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
 #'   and `E`, universe-score covariance is `P`. Relative-error covariance is
@@ -202,9 +210,16 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   RelativeErrorVariance)` and `Phi` uses absolute error instead. SEMs are
 #'   square roots of the corresponding error variances, in the units of the
 #'   score or specified composite of mean scores. Multiplying all weights by
-#'   a positive constant changes SEM units but not G/Phi. Weights express a
-#'   substantive choice; this function neither chooses them nor identifies an
-#'   optimal design. It does not estimate accuracy at a cut score.
+#'   a nonzero constant multiplies SEMs by its absolute value but leaves G/Phi
+#'   unchanged. Weights express a substantive choice; this function neither
+#'   chooses them nor identifies an optimal design. Interpret a difference
+#'   only when subtraction is meaningful on the supplied score scales.
+#'
+#'   The same weights define the universe-score composite and its observed
+#'   mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
+#'   target and estimation weights, profile reliability, and accuracy at a
+#'   cut score are not provided. Unlike mGENOVA's default D-study procedure,
+#'   negative variance estimates are not replaced with zero.
 #'
 #'   Raw covariance matrices and projected variances remain available. If any
 #'   G-study component fails its PSD check, all G/Phi and SEM entries are `NA`.
@@ -222,7 +237,10 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   matrices per scenario), `design_grid`, `weights`, `component_diagnostics`,
 #'   and `gstudy` (the source result). `summary()` returns `coefficients`.
 #' @references Brennan, R. L. (2001). *Generalizability theory*. Springer.
-#'   Chapters 9 and 10.
+#'   Chapters 9--11.
+#'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
+#'   Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
+#'   Appendix F, pages 79--81.
 #' @seealso [mfrm_multivariate_gstudy()], [mfrm_d_study()]
 #' @examples
 #' # See mfrm_multivariate_gstudy() for a complete data-to-D-study example.
@@ -266,8 +284,8 @@ mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
         !is.null(dim(weights)) || length(weights) != length(scores) ||
         is.null(names(weights)) || anyNA(names(weights)) || anyDuplicated(names(weights)) ||
         !setequal(names(weights), scores) || any(!is.finite(weights)) ||
-        any(weights < 0) || !any(weights > 0)) {
-      stop("`weights` must name every score once with finite nonnegative values and at least one positive value.", call. = FALSE)
+        !any(weights != 0)) {
+      stop("`weights` must name every score once with finite values and at least one nonzero value.", call. = FALSE)
     }
     weights <- weights[scores]
     vectors <- cbind(vectors, Composite = weights)

@@ -8,6 +8,8 @@ This unreleased development version extends the 0.2.4 release candidate.
   variance-covariance components, including two-way interactions and a combined
   highest-order/residual component. D-studies project component and optional
   user-weighted composite G/Phi and SEMs using the full covariance matrices.
+  Signed weights allow difference-score dependability; weights are used
+  without normalization on the supplied score scales.
   Raw negative or indefinite estimates are retained; materially non-PSD
   components withhold coefficients and SEMs. These are observed-score point
   projections, without sampling intervals, missing-data or nested-design

@@ -160,6 +160,70 @@ test_that("score order, score units and composite units are respected", {
   expect_true(all(three$component_diagnostics$Dimension == 3L))
 })
 
+test_that("signed weights agree with direct difference scores and respect sign reversal", {
+  data <- mvgt_fixture()$data
+  g <- mfrm_multivariate_gstudy(data, c("Content", "Organization"))
+  w <- c(Content = 1, Organization = -1)
+  difference <- mfrm_multivariate_d_study(g, weights = w)$coefficients[3, ]
+  data$Difference <- data$Content - data$Organization
+  direct <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(data, "Difference"))$coefficients
+  measures <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+                "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  expect_equal(difference[measures], direct[measures], ignore_attr = TRUE)
+  expect_equal(difference$UniverseVariance, 1.2 + .8 - 2 * .3)
+  reversed <- mfrm_multivariate_d_study(g, weights = -w)$coefficients[3, ]
+  expect_equal(reversed[measures], difference[measures])
+  scaled <- mfrm_multivariate_d_study(g, weights = -2 * w)$coefficients[3, ]
+  expect_equal(scaled[c("G", "Phi")], difference[c("G", "Phi")])
+  expect_equal(scaled$AbsoluteSEM, 2 * difference$AbsoluteSEM)
+  negative <- mfrm_multivariate_d_study(g,
+    weights = c(Content = -1, Organization = 0))$coefficients
+  expect_equal(negative[3, measures], negative[1, measures], ignore_attr = TRUE)
+  # A contrast of identical scores has no universe variance, not perfect reliability.
+  data$Organization <- data$Content
+  zero <- mfrm_multivariate_d_study(mfrm_multivariate_gstudy(data,
+    c("Content", "Organization")), weights = w)$coefficients[3, ]
+  expect_equal(zero$UniverseVariance, 0)
+  expect_true(is.na(zero$G) && is.na(zero$Phi))
+  expect_identical(zero$Status, "Universe variance is not positive")
+})
+
+test_that("supplied mGENOVA matrices reproduce Appendix F D-study values", {
+  # Brennan (2001), Manual for mGENOVA Version 2.1, Table 14 and Appendix F,
+  # pp. 79-81. This is a D-study-only fixture, NOT a G-study estimate.
+  # The original design has common tasks but local raters. Its zero
+  # rater-related cross-covariances give the same arithmetic for this balanced
+  # projection. This does not validate raw-data estimation or local-rater support.
+  scores <- c("Listening", "Writing")
+  values <- list(Person = c(.324, .356, .356, .691),
+    Rater = c(.012, 0, 0, .010), Task = c(.127, .039, .039, .025),
+    `Person:Rater` = c(.014, 0, 0, .047),
+    `Person:Task` = c(.393, .030, .030, .159),
+    `Rater:Task` = c(.022, 0, 0, .008), Residual = c(.317, 0, 0, .218))
+  g <- structure(list(
+    components = lapply(values, matrix, nrow = 2, dimnames = list(scores, scores)),
+    score_scale = setNames(c(1, 1), scores),
+    design = list(scores = scores, calculation_version = 1L,
+      counts = c(Person = 50L, Rater = 2L, Task = 6L))),
+    class = "mfrm_multivariate_gstudy")
+  d <- mfrm_multivariate_d_study(g, weights = c(Listening = 1, Writing = -1))
+  expect_true(all(d$coefficients$Status == "Available"))
+  # Printed values have five decimal places. Upper triangles of the manual's
+  # output matrices contain correlations; lower triangles contain covariances.
+  expected <- rbind(
+    c(.32400, .09892, .12792, .76611, .71695, .31451, .35765),
+    c(.69100, .06817, .07800, .91021, .89857, .26109, .27928),
+    c(.30300, .15708, .18292, .65858, .62356, .39634, .42769))
+  measures <- c("UniverseVariance", "RelativeErrorVariance", "AbsoluteErrorVariance",
+                "G", "Phi", "RelativeSEM", "AbsoluteSEM")
+  expect_equal(unname(round(as.matrix(d$coefficients[measures]), 5)), expected)
+  expect_equal(unname(d$covariances[[1]]$Universe), matrix(values$Person, 2))
+  expect_equal(unname(round(d$covariances[[1]]$RelativeError, 5)),
+    matrix(c(.09892, .00500, .00500, .06817), 2))
+  expect_equal(unname(round(d$covariances[[1]]$AbsoluteError, 5)),
+    matrix(c(.12792, .01150, .01150, .07800), 2))
+})
+
 test_that("inadmissible components are retained without usable coefficients", {
   f <- mvgt_fixture(indefinite = TRUE)
   g <- mfrm_multivariate_gstudy(f$data, c("Content", "Organization"))
@@ -228,7 +292,7 @@ test_that("D-study input checks preserve the declared covariance identities", {
     expect_error(mfrm_multivariate_d_study(g, grid), "positive integer")
   }
   for (w in list(c(.6, .4), c(Content = .6), c(Content = .6, Absent = .4),
-      c(Content = .6, Content = .4), c(Content = -1, Organization = 2),
+      c(Content = .6, Content = .4),
       c(Content = 0, Organization = 0), c(Content = Inf, Organization = 1),
       c(Content = NA_real_, Organization = 1))) {
     expect_error(mfrm_multivariate_d_study(g, weights = w), "name every score")

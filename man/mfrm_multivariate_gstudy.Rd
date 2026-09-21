@@ -99,10 +99,16 @@ d <- mfrm_multivariate_d_study(g,
   design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
   weights = c(Content = 0.6, Organization = 0.4))
 d$coefficients
+# Difference-score dependability, when subtraction is meaningful on these scales.
+difference <- mfrm_multivariate_d_study(g,
+  weights = c(Content = 1, Organization = -1))
+difference$coefficients
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
-Chapters 9 and 10.
+Chapters 9--11.
+Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
+Iowa Testing Programs Occasional Papers, No. 50. Pages 7--8 and 19--22.
 }
 \seealso{
 \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}

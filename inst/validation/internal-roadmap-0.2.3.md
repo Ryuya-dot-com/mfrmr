@@ -9,6 +9,60 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: supplied G-theory references and difference scores
+
+Reviewed the user-supplied G-theory directory, chiefly Brennan's mGENOVA 2.1
+manual, control cards and example matrices. The fully shared p x r x t subset,
+mean-product estimation, and relative/absolute error divisors agree with the
+current implementation. Common facet identities, not merely equal counts,
+are essential. The manual also distinguishes universe-score weights (WWTS)
+from estimation weights (AWTS). The public API uses the same weights for both;
+it does not implement the distinct-weight mean-squared-error calculations.
+mGENOVA's default truncation of negative variance components is not adopted:
+raw estimates and the existing PSD checks remain unchanged.
+
+Signed nonzero weights now support difference-score dependability through the
+existing quadratic-form calculation, without a new API or dependency. Help,
+README, NEWS and the public roadmap state the score-scale meaning. Direct
+analysis of a score difference agrees with the multivariate projection;
+negative rescaling and the zero-universe-variance contrast are also checked.
+
+The mGENOVA Table 14 / Appendix F supplied matrices provide a D-study reference
+at two raters and six tasks. Marginal and Listening-minus-Writing variances,
+G/Phi and SEMs agree at the manual's five printed decimals, including composite
+G .65858, Phi .62356, relative SEM .39634 and absolute SEM .42769. Input and
+output tables were checked visually, including the distinction between lower
+triangle covariances and upper triangle correlations. The test substitutes
+published matrices in a D-study-only fixture; it does not run mGENOVA or
+estimate these matrices from responses. The source design has local raters;
+zero rater-related cross-covariances make this particular balanced projection
+algebraically identical. This is not evidence of local-facet support or an
+external validation of the G-study estimator.
+
+The focused multivariate test file passes 112 expectations with no failures,
+warnings or skips. The two help files were regenerated, parsed and rendered;
+the expanded example runs and provides available difference-score results.
+No full suite, package check, simulation campaign or remote CI was run.
+
+The bundled common-person/common-item example in mGENOVA (Appendix E) is a
+useful next raw-data benchmark, but it has one random facet. Supporting that
+design should be explicit; inventing a second facet to satisfy the current
+three-factor API would change the model. The RCG and GENOVA control-card
+examples inspected here also have local or nested facets and cannot validate
+the current estimator by relabeling their columns. A matched data-to-component
+external comparison remains outstanding.
+
+urGENOVA's empty-cell discussion (pp. 13-15) encodes observed cell counts; it
+does not impute responses or establish ignorable missingness, and it cautions
+against extensive missingness. Its D-study discussion (p. 20) distinguishes
+incidental imbalance from a deliberately unbalanced future design. Preserve
+this distinction when extending mfrmr: an unbalanced G-study does not by itself
+justify a balanced D-study. The supplied emreliability 1.0.0 source contains
+composite internal-consistency and CSEM functions, not a multivariate G-study
+variance-covariance estimator. It is not a substitute for this missing
+external estimator comparison. References remain outside the repository;
+source PDFs and Windows executables were not copied or modified.
+
 ## 2026-09-21: balanced multivariate G-study and D-study implementation
 
 Development now exports mfrm_multivariate_gstudy and

@@ -1102,6 +1102,13 @@ Weights are used as supplied. Omitting `weights` reports the score components
 without creating a composite. See `?mfrm_multivariate_gstudy` for a runnable
 fictional continuous-score example.
 
+Signed weights also allow difference scores. For example,
+`mfrm_multivariate_d_study(g, weights = c(Content = 1, Organization = -1))`
+projects the dependability of Content minus Organization. Subtraction must
+be meaningful on the supplied score scales. The same weights define the
+universe-score target and its observed mean-score estimate; distinct target
+and estimation weights are not supported.
+
 Inspect the matrix diagnostics first. Negative or indefinite component
 estimates remain visible; a materially non-PSD component withholds all
 coefficients and SEMs. Passing this numerical check does not establish precise

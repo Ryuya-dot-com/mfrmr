@@ -20,10 +20,12 @@ mfrm_multivariate_d_study(x, design_grid = NULL, weights = NULL)
 Counts need not match or exceed the G-study counts. Conditions are fully
 crossed and shared across scores in every scenario.}
 
-\item{weights}{Optional named, finite, nonnegative score weights, including
-every score exactly once, with at least one positive entry. They are used
-as supplied, without normalization. \code{NULL} reports score components only;
-otherwise an additional composite is reported for every scenario.}
+\item{weights}{Optional named, finite score weights, including every score
+exactly once, with at least one nonzero entry. Signed weights allow
+difference scores, for example \code{c(Content = 1, Organization = -1)}.
+Weights are used as supplied, without normalization. \code{NULL} reports score
+components only; otherwise an additional composite is reported for every
+scenario.}
 
 \item{...}{Reserved for method compatibility.}
 
@@ -54,9 +56,16 @@ of the three covariance matrices. Thus between-score covariance affects
 composite dependability. \code{G = UniverseVariance / (UniverseVariance + RelativeErrorVariance)} and \code{Phi} uses absolute error instead. SEMs are
 square roots of the corresponding error variances, in the units of the
 score or specified composite of mean scores. Multiplying all weights by
-a positive constant changes SEM units but not G/Phi. Weights express a
-substantive choice; this function neither chooses them nor identifies an
-optimal design. It does not estimate accuracy at a cut score.
+a nonzero constant multiplies SEMs by its absolute value but leaves G/Phi
+unchanged. Weights express a substantive choice; this function neither
+chooses them nor identifies an optimal design. Interpret a difference
+only when subtraction is meaningful on the supplied score scales.
+
+The same weights define the universe-score composite and its observed
+mean-score estimate (the equal WWTS/AWTS case in mGENOVA). Different
+target and estimation weights, profile reliability, and accuracy at a
+cut score are not provided. Unlike mGENOVA's default D-study procedure,
+negative variance estimates are not replaced with zero.
 
 Raw covariance matrices and projected variances remain available. If any
 G-study component fails its PSD check, all G/Phi and SEM entries are \code{NA}.
@@ -73,7 +82,10 @@ confidence intervals, missing-data correction, or MFRM latent inference.
 }
 \references{
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
-Chapters 9 and 10.
+Chapters 9--11.
+Brennan, R. L. (2001). \emph{Manual for mGENOVA, Version 2.1}.
+Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
+Appendix F, pages 79--81.
 }
 \seealso{
 \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}, \code{\link[=mfrm_d_study]{mfrm_d_study()}}
