@@ -1234,6 +1234,15 @@ neither supplies guaranteed individual or multiple-element false-positive rates.
 
 ## Updating saved analyses
 
+In this development version, `mfrm_generalizability()` stops if scores or
+selected facet values are missing. Review the data and use `missing = "omit"`
+only when complete-row selection is intended; invalid score labels must be
+cleaned explicitly. `gt$data_usage` records the input source, row counts, and
+missing cells. The counts also accompany G/D coefficient tables and exports.
+Counts based on stored fitted rows exclude any earlier MFRM filtering.
+Older saved G/D results cannot recover that accounting by reprinting; rerun
+the G-study with the original data if it is needed.
+
 Installing 0.2.4 does not recalculate saved diagnostics, scores or reports.
 Keep the originals and the settings used to create them. First print
 `summary(fit)` with the updated package. A native fit lacking the current

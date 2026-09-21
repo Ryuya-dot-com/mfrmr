@@ -9,6 +9,49 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: explicit G-study missingness and source-row accounting
+
+After the external-feature work, the public G/D workflow was reviewed against
+the user's missing-data and G-theory questions. The existing balanced-estimator
+and multivariate disposition records were reused; no new research execution or
+promotion of their prototypes was undertaken. A concrete current-API defect
+took priority: `mfrm_generalizability()` silently converted invalid score labels
+to NA and removed incomplete rows without retaining exclusion accounting.
+A 770-row input containing two missing/unparseable score rows returned G/Phi
+with no source-row accounting.
+
+The development API now defaults to `missing = "error"`; explicit `"omit"`
+selects complete rows only for the chosen facets and Score. Malformed/nonfinite
+scores and blank facet labels require explicit cleaning. Numeric/factor score
+labels retain their values, numeric NaN facet IDs remain missing, and literal
+facet names are quoted when constructing the formula. Required-column and
+REML controls are validated before fitting; lmer receives `na.action = na.fail`.
+The underlying main-effects model and G/D coefficient formulas are unchanged.
+
+G-study results retain their input source, counts, excluded row positions, and
+missing columns. Coefficient tables and D-study exports carry counts and their
+source; D-study subsetting preserves the detailed accounting. Counts from stored
+fitted rows explicitly exclude earlier MFRM filtering. Current-version saved
+objects without this metadata remain usable with unavailable counts, never
+invented zero exclusions. Migration guidance asks users to rerun the G-study
+with the original data if accounting is needed.
+
+The new missingness tests and existing Q3/person-fit/G/D regressions pass 157
+expectations without failures, errors, warnings, or skips. Checks cover exact
+agreement with the retained-row fit, overlapping reasons without double-counted
+exclusions, direct fit-to-D-study forwarding, subsetting, CSV export, legacy
+unknown counts, malformed scores, and numeric/factor/literal-name handling.
+The 42 new expectations are included in the lightweight installed suite.
+
+The exact development archive passes `NOT_CRAN=false R CMD check --no-manual`
+with zero errors, warnings, and notes. Its lightweight suite passes 838
+expectations with zero failures/warnings and three intentional skips; examples
+and vignette rebuilding also pass. The archive, logs, source hashes, and
+summary are retained under `validation-results/gstudy-missing-20260921/final/`.
+Archive SHA-256: `93321573501e35ed8d1a4cb06021b28acf483536868a70bf22f83eb3bb030510`.
+Changed packaged files match the checked archive. This is local standard-check
+coverage, not a new full-suite, hosted-matrix, or CRAN `--as-cran` result.
+
 ## 2026-09-21: clustering sensitivity to external-feature imputations
 
 Continued the user's external-attribute workflow on the same 0.2.4.9001

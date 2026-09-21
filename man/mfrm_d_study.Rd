@@ -44,6 +44,11 @@ An object of class \code{mfrm_d_study}, a data.frame with one row per
 design scenario and columns for planned facet counts, variance terms,
 projected \code{G}, projected \code{Phi}, interpretation bands, and identification
 status inherited from \code{\link[=mfrm_generalizability]{mfrm_generalizability()}}.
+\code{InputRows}, \code{UsedRows}, and \code{ExcludedRows} describe the source G-study,
+not the planned D-study sample; \code{GStudyDataSource} identifies their scope.
+The \code{data_usage} attribute retains its
+row accounting, including after subsetting. Older source results without
+accounting have \code{NA} counts; they are not assumed to have used all rows.
 }
 \description{
 \code{mfrm_d_study()} applies a practical D-study projection to the

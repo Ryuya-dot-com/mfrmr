@@ -101,6 +101,22 @@ gtheory_scaling_label <- function(x) {
   ifelse(x %in% names(labels), unname(labels[x]), x)
 }
 
+print_gtheory_data_usage <- function(usage) {
+  if (is.null(usage)) {
+    cat("  Input-row accounting is unavailable for this saved result.\n")
+  } else {
+    counts <- usage$counts
+    cat("  G-study rows:", counts[["InputRows"]], "input;",
+        counts[["UsedRows"]], "used;", counts[["ExcludedRows"]], "excluded.\n")
+    if (identical(usage$source, "Stored fitted rows")) {
+      cat("  Counts start from stored fitted rows; earlier MFRM filtering is not included.\n")
+    }
+    if (counts[["ExcludedRows"]] > 0L) {
+      cat("  Incomplete rows were explicitly omitted; no missing values were imputed.\n")
+    }
+  }
+}
+
 #' Generalizability-theory variance decomposition for an MFRM design
 #'
 #' Re-fits the rating data underlying an `mfrm_fit` as a crossed
@@ -117,13 +133,21 @@ gtheory_scaling_label <- function(x) {
 #'
 #' @param fit An `mfrm_fit` from [fit_mfrm()].
 #' @param data Optional data frame. When `NULL`, the rating data
-#'   stored on `fit$prep$data` is used.
+#'   stored on `fit$prep$data` is used. Required columns are the selected facets
+#'   and `Score`. Scores must be numeric or numeric character/factor labels;
+#'   nonnumeric labels and infinite values are refused. Use `NA` for missing
+#'   values. Facet labels must be nonblank; `Score` and `Residual` are reserved
+#'   and cannot be facet names.
 #' @param object_facet Facet that plays the role of the "object of
 #'   measurement" -- typically `"Person"` (default).
 #' @param random_facets Character vector of non-person facets to
 #'   treat as random conditions of measurement. Default uses every
 #'   facet other than `object_facet`.
 #' @param reml Logical, passed to [lme4::lmer()] (default `TRUE`).
+#' @param missing Either `"error"` (default) or `"omit"`. Missing scores or
+#'   selected facet values stop the analysis by default. Explicit omission
+#'   fits only complete rows and records the excluded row positions and missing
+#'   columns. Missingness in unselected columns does not exclude a row.
 #'
 #' @return An object of class `mfrm_generalizability` with:
 #' \describe{
@@ -136,6 +160,13 @@ gtheory_scaling_label <- function(x) {
 #'     status labels, and the identification status of the fitted
 #'     random-effects model.}
 #'   \item{`design`}{Description of the crossed-random model.}
+#'   \item{`data_usage`}{Input source, omission policy, named `counts`
+#'     (`InputRows`, `UsedRows`, `ExcludedRows`), `excluded_rows`, and
+#'     `missing_cells` (`InputRow`, `Column`). Row positions refer to the supplied
+#'     data, or stored fitted rows when `data = NULL`. They cannot recover rows
+#'     previously removed during MFRM fitting. Counts also accompany the
+#'     coefficient table and D-study projections, including tabular exports;
+#'     `GStudyDataSource` identifies the scope of those counts.}
 #' }
 #'
 #' @section Interpretation:
@@ -176,6 +207,15 @@ gtheory_scaling_label <- function(x) {
 #' Boundary or singular `lme4` fits are retained as diagnostic evidence but are
 #' not treated as decision-ready G/D-study evidence.
 #'
+#' Omission does not correct missing-data bias or identify why ratings are
+#' absent. Entirely absent assignments are not reconstructed. Review the
+#' rating design and missingness assumptions before interpreting G/D results.
+#' Earlier versions silently omitted incomplete rows and unparseable scores.
+#' To reproduce complete-row selection, clean invalid labels explicitly and
+#' choose `missing = "omit"`. Older saved results remain usable when their
+#' calculation version is current, but unavailable row counts are not guessed;
+#' rerun the G-study with the original data to obtain row accounting.
+#'
 #' @section References:
 #' - Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
 #'   (1972). *The dependability of behavioral measurements: Theory
@@ -212,7 +252,8 @@ mfrm_generalizability <- function(fit,
                                   data = NULL,
                                   object_facet = "Person",
                                   random_facets = NULL,
-                                  reml = TRUE) {
+                                  reml = TRUE,
+                                  missing = c("error", "omit")) {
   if (!inherits(fit, "mfrm_fit")) {
     stop("`fit` must be an mfrm_fit object from fit_mfrm().", call. = FALSE)
   }
@@ -220,26 +261,37 @@ mfrm_generalizability <- function(fit,
     stop("`mfrm_generalizability()` requires the `lme4` package ",
          "(in Suggests). Install it and retry.", call. = FALSE)
   }
+  missing <- match.arg(missing)
+  if (!is.logical(reml) || length(reml) != 1L || is.na(reml)) {
+    stop("`reml` must be TRUE or FALSE.", call. = FALSE)
+  }
+  data_source <- if (is.null(data)) "Stored fitted rows" else "Supplied data"
   if (is.null(data)) {
     data <- as.data.frame(fit$prep$data %||% data.frame(),
                           stringsAsFactors = FALSE)
   }
-  if (!is.data.frame(data) || nrow(data) == 0L) {
-    stop("`data` is empty or not a data frame.", call. = FALSE)
+  if (!is.data.frame(data) || nrow(data) == 0L || anyNA(names(data)) ||
+      anyDuplicated(names(data)) || any(!nzchar(names(data)))) {
+    stop("`data` must be a nonempty data frame with unique, nonmissing column names.", call. = FALSE)
   }
+  data <- as.data.frame(data)
 
   facet_names <- as.character(fit$config$facet_names %||% character(0))
   if (is.null(random_facets)) {
     random_facets <- setdiff(facet_names, object_facet)
   }
   random_facets <- as.character(random_facets)
-  if (length(object_facet) != 1L || is.na(object_facet) ||
-      anyNA(random_facets) || anyDuplicated(c(object_facet, random_facets))) {
+  if (!is.character(object_facet) || length(object_facet) != 1L || is.na(object_facet) ||
+      anyNA(random_facets) || anyDuplicated(c(object_facet, random_facets)) ||
+      any(!nzchar(c(object_facet, random_facets)))) {
     stop("The object facet and random facets must be distinct, non-missing names.", call. = FALSE)
   }
   if (length(random_facets) == 0L) {
     stop("At least one non-person facet is required as a random ",
          "condition of measurement.", call. = FALSE)
+  }
+  if (any(c(object_facet, random_facets) %in% c("Score", "Residual"))) {
+    stop("`Score` and `Residual` are reserved and cannot be facet names.", call. = FALSE)
   }
   needed_cols <- c(object_facet, random_facets, "Score")
   missing_cols <- setdiff(needed_cols, names(data))
@@ -249,17 +301,49 @@ mfrm_generalizability <- function(fit,
   }
 
   for (col in c(object_facet, random_facets)) {
+    value <- data[[col]]
+    if (!is.null(dim(value)) || !(is.factor(value) || (!is.object(value) &&
+        (is.character(value) || is.logical(value) || (is.numeric(value) && !is.complex(value))))) ||
+        (is.numeric(value) && any(is.infinite(value)))) {
+      stop("Facet '", col, "' must contain finite numeric, character, factor, or logical labels, or NA.", call. = FALSE)
+    }
+    if (any(!is.na(value) & !nzchar(trimws(as.character(value))))) {
+      stop("Facet '", col, "' contains blank labels; use NA for missing values.", call. = FALSE)
+    }
     if (!is.factor(data[[col]])) {
-      data[[col]] <- as.factor(as.character(data[[col]]))
+      labels <- as.character(value)
+      labels[is.na(value)] <- NA_character_
+      data[[col]] <- as.factor(labels)
     }
   }
-  data$Score <- suppressWarnings(as.numeric(if (is.factor(data$Score)) as.character(data$Score) else data$Score))
-  data <- data[is.finite(data$Score) & stats::complete.cases(data[, c(object_facet, random_facets), drop = FALSE]), , drop = FALSE]
+  score <- data$Score
+  if (!is.null(dim(score)) || !(is.factor(score) || (!is.object(score) &&
+      (is.character(score) || (is.numeric(score) && !is.complex(score)))))) {
+    stop("`Score` must be numeric or numeric character/factor labels, with NA for missing values.", call. = FALSE)
+  }
+  data$Score <- suppressWarnings(as.numeric(if (is.factor(score)) as.character(score) else score))
+  if (any(!is.na(score) & !is.finite(data$Score))) {
+    stop("`Score` contains nonnumeric or infinite values; correct them explicitly and use NA for missing values.", call. = FALSE)
+  }
+  absent <- is.na(data[, needed_cols, drop = FALSE])
+  keep <- rowSums(absent) == 0L
+  cells <- which(absent, arr.ind = TRUE)
+  data_usage <- list(source = data_source, missing = missing,
+    counts = c(InputRows = nrow(data), UsedRows = sum(keep), ExcludedRows = sum(!keep)),
+    excluded_rows = which(!keep),
+    missing_cells = data.frame(InputRow = cells[, 1L], Column = needed_cols[cells[, 2L]],
+                               row.names = NULL))
+  if (any(!keep) && missing == "error") {
+    stop(sum(!keep), " row(s) have missing Score or selected facet values. Review the data or choose missing = 'omit' explicitly.", call. = FALSE)
+  }
+  if (!any(keep)) stop("No complete rows remain for the G-study.", call. = FALSE)
+  data <- data[keep, , drop = FALSE]
 
   random_terms <- c(object_facet, random_facets)
   formula_str <- paste0(
     "Score ~ 1 + ",
-    paste0("(1 | ", random_terms, ")", collapse = " + ")
+    paste0("(1 | ", vapply(random_terms, function(name) deparse1(as.name(name), backtick = TRUE),
+                          character(1)), ")", collapse = " + ")
   )
   formula <- stats::as.formula(formula_str)
 
@@ -267,7 +351,7 @@ mfrm_generalizability <- function(fit,
   lmer_messages <- character(0)
   fit_lmer <- tryCatch(
     withCallingHandlers(
-      lme4::lmer(formula, data = data, REML = isTRUE(reml)),
+      lme4::lmer(formula, data = data, REML = reml, na.action = stats::na.fail),
       warning = function(w) {
         lmer_warnings <<- c(lmer_warnings, conditionMessage(w))
         invokeRestart("muffleWarning")
@@ -337,8 +421,13 @@ mfrm_generalizability <- function(fit,
         boundary_status$identification_status
       ),
       IdentificationStatus = boundary_status$identification_status,
+      InputRows = data_usage$counts[["InputRows"]],
+      UsedRows = data_usage$counts[["UsedRows"]],
+      ExcludedRows = data_usage$counts[["ExcludedRows"]],
+      GStudyDataSource = data_usage$source,
       stringsAsFactors = FALSE
     ),
+    data_usage = data_usage,
     design = list(
       calculation_version = 2L,
       object_facet = object_facet,
@@ -424,6 +513,11 @@ mfrm_generalizability <- function(fit,
 #'   design scenario and columns for planned facet counts, variance terms,
 #'   projected `G`, projected `Phi`, interpretation bands, and identification
 #'   status inherited from [mfrm_generalizability()].
+#'   `InputRows`, `UsedRows`, and `ExcludedRows` describe the source G-study,
+#'   not the planned D-study sample; `GStudyDataSource` identifies their scope.
+#'   The `data_usage` attribute retains its
+#'   row accounting, including after subsetting. Older source results without
+#'   accounting have `NA` counts; they are not assumed to have used all rows.
 #'
 #' @references
 #' Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N.
@@ -588,6 +682,10 @@ mfrm_d_study <- function(x,
       IdentificationStatus = rep(identification_status, nrow(counts)),
       BoundaryFit = rep(boundary_fit, nrow(counts)),
       IdentificationNote = rep(identification_note, nrow(counts)),
+      InputRows = x$data_usage$counts[["InputRows"]] %||% NA_integer_,
+      UsedRows = x$data_usage$counts[["UsedRows"]] %||% NA_integer_,
+      ExcludedRows = x$data_usage$counts[["ExcludedRows"]] %||% NA_integer_,
+      GStudyDataSource = x$data_usage$source %||% NA_character_,
       stringsAsFactors = FALSE
     )
   )
@@ -601,6 +699,7 @@ mfrm_d_study <- function(x,
   attr(out, "identification_status") <- identification_status
   attr(out, "identification_note") <- identification_note
   attr(out, "boundary_fit") <- boundary_fit
+  attr(out, "data_usage") <- x$data_usage
   class(out) <- c("mfrm_d_study", "data.frame")
   out
 }
@@ -622,6 +721,7 @@ print.mfrm_d_study <- function(x, ...) {
   cat("  Object of measurement:", attr(x, "object_facet") %||% NA_character_, "\n")
   cat("  Random facets:", paste(attr(x, "random_facets") %||% character(0), collapse = ", "), "\n\n")
   cat("  Estimand scale: observed numeric score\n")
+  print_gtheory_data_usage(attr(x, "data_usage", exact = TRUE))
   cat("  Residual assumption:", gtheory_scaling_label(attr(x, "residual_scaling") %||% unique(x$ResidualScaling)), "\n\n")
   if (!identical(attr(x, "identification_status") %||% "identified", "identified")) {
     cat("  Model fit requires review.\n")
@@ -635,7 +735,8 @@ print.mfrm_d_study <- function(x, ...) {
   if ("ResidualScaling" %in% names(shown)) {
     shown$ResidualScaling <- gtheory_scaling_label(shown$ResidualScaling)
   }
-  shown <- shown[, setdiff(names(shown), c("GStatus", "PhiStatus", "IdentificationStatus", "BoundaryFit", "IdentificationNote")), drop = FALSE]
+  shown <- shown[, setdiff(names(shown), c("GStatus", "PhiStatus", "IdentificationStatus", "BoundaryFit", "IdentificationNote",
+                                         "InputRows", "UsedRows", "ExcludedRows", "GStudyDataSource")), drop = FALSE]
   print.data.frame(shown, row.names = FALSE, ...)
   print_wrapped_line("Observed-score planning projections hold estimated variance components fixed. They do not establish cut-score accuracy or an adequate rating design.")
   cat("\n  Note: 0.70 and 0.80 are reference guides, not universal decision rules.\n")
@@ -1085,6 +1186,7 @@ print.mfrm_generalizability <- function(x, ...) {
   cat(sprintf("  Random facets: %s\n",
               paste(x$design$random_facets, collapse = ", ")))
   cat("  Estimand scale: observed numeric score\n")
+  print_gtheory_data_usage(x$data_usage)
   print_wrapped_line("This main-effects model does not separate person-by-facet interactions. G/Phi are point summaries; uncertainty in estimated variance components is omitted.")
   cat("\nVariance components\n")
   print(x$variance_components, row.names = FALSE, digits = 4)

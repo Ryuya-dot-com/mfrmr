@@ -446,7 +446,7 @@ test_that("G-study retains variance precision and fitted-row counts", {
   data$Person <- as.character(data$Person)
   data$Rater <- as.character(data$Rater)
   dropped <- data[1, ]; dropped$Person <- "OnlyMissing"; dropped$Rater <- NA_character_
-  complete <- mfrm_generalizability(.fit, data = rbind(data, dropped))
+  complete <- mfrm_generalizability(.fit, data = rbind(data, dropped), missing = "omit")
   expect_equal(complete$design$observed_levels, scaled$design$observed_levels)
   stale <- regular; stale$design$calculation_version <- NULL
   expect_error(mfrm_d_study(stale), "Recreate mfrm_generalizability", fixed = TRUE)

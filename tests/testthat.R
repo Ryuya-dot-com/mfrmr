@@ -20,6 +20,7 @@ cran_light_tests <- c(
   "example-datasets",
   "feature-clustering",
   "gauss-hermite-weights",
+  "generalizability-missing",
   "posterior-intervals",
   "mml-cpp11-backend",
   "missing-codes-integration",

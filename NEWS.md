@@ -19,6 +19,14 @@ This unreleased development version extends the 0.2.4 release candidate.
   co-membership proportions; a failed analysis stops the comparison. These
   proportions describe sensitivity to the supplied imputations, not membership
   probabilities, sampling stability, or pooled inferential estimates.
+* `mfrm_generalizability()` now stops on missing scores or selected facet
+  values unless `missing = "omit"` is explicit. Unparseable scores and infinite
+  values are refused rather than silently discarded. G/D results retain input,
+  used, and excluded row counts, their input source, and excluded row positions
+  with missing columns. When stored fitted rows are used, these counts exclude
+  earlier MFRM filtering. Older saved results keep unavailable counts; rerun
+  the G-study with its original data to obtain this accounting. Omission does
+  not impute ratings or correct missing-data bias.
 
 # mfrmr 0.2.4
 
@@ -262,7 +270,7 @@ and action needed for each affected workflow.
   are unchanged.
 
 * G-study variance components now retain full precision, so changing score
-  units does not erase small components before G/Phi are calculated. Counts
+  units does not erase small components before G/Phi are calculated. Facet-level counts
   reflect rows actually used by the mixed model; numerical warnings remain
   visible as reasons to review the result.
 

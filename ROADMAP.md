@@ -191,6 +191,11 @@ D-study projections hold estimated variances fixed, and residual-scaling
 choices express assumptions rather than uncertainty bounds. These coefficients
 do not estimate accuracy at a particular cut score.
 
+In the development version, missing scores or selected facet values require
+explicit omission. G/D results retain the source of their data and the counts
+of rows supplied, used, and excluded. Stored fitted rows cannot reconstruct
+earlier MFRM exclusions, and omission does not correct missing-data bias.
+
 Future support for interactions and multivariate designs needs explicit
 universe-score and error covariances, relative/absolute decisions, and the
 averaging rules for each design. Univariate calculations alone do not establish

@@ -9,14 +9,19 @@ mfrm_generalizability(
   data = NULL,
   object_facet = "Person",
   random_facets = NULL,
-  reml = TRUE
+  reml = TRUE,
+  missing = c("error", "omit")
 )
 }
 \arguments{
 \item{fit}{An \code{mfrm_fit} from \code{\link[=fit_mfrm]{fit_mfrm()}}.}
 
 \item{data}{Optional data frame. When \code{NULL}, the rating data
-stored on \code{fit$prep$data} is used.}
+stored on \code{fit$prep$data} is used. Required columns are the selected facets
+and \code{Score}. Scores must be numeric or numeric character/factor labels;
+nonnumeric labels and infinite values are refused. Use \code{NA} for missing
+values. Facet labels must be nonblank; \code{Score} and \code{Residual} are reserved
+and cannot be facet names.}
 
 \item{object_facet}{Facet that plays the role of the "object of
 measurement" -- typically \code{"Person"} (default).}
@@ -26,6 +31,11 @@ treat as random conditions of measurement. Default uses every
 facet other than \code{object_facet}.}
 
 \item{reml}{Logical, passed to \code{\link[lme4:lmer]{lme4::lmer()}} (default \code{TRUE}).}
+
+\item{missing}{Either \code{"error"} (default) or \code{"omit"}. Missing scores or
+selected facet values stop the analysis by default. Explicit omission
+fits only complete rows and records the excluded row positions and missing
+columns. Missingness in unselected columns does not exclude a row.}
 }
 \value{
 An object of class \code{mfrm_generalizability} with:
@@ -39,6 +49,13 @@ residual, with columns \code{Source}, \code{Variance}, and
 status labels, and the identification status of the fitted
 random-effects model.}
 \item{\code{design}}{Description of the crossed-random model.}
+\item{\code{data_usage}}{Input source, omission policy, named \code{counts}
+(\code{InputRows}, \code{UsedRows}, \code{ExcludedRows}), \code{excluded_rows}, and
+\code{missing_cells} (\code{InputRow}, \code{Column}). Row positions refer to the supplied
+data, or stored fitted rows when \code{data = NULL}. They cannot recover rows
+previously removed during MFRM fitting. Counts also accompany the
+coefficient table and D-study projections, including tabular exports;
+\code{GStudyDataSource} identifies the scope of those counts.}
 }
 }
 \description{
@@ -96,6 +113,15 @@ stored at full precision; rounding is only for display. Recreate older
 G/D results from the existing MFRM fit before reuse.
 Boundary or singular \code{lme4} fits are retained as diagnostic evidence but are
 not treated as decision-ready G/D-study evidence.
+
+Omission does not correct missing-data bias or identify why ratings are
+absent. Entirely absent assignments are not reconstructed. Review the
+rating design and missingness assumptions before interpreting G/D results.
+Earlier versions silently omitted incomplete rows and unparseable scores.
+To reproduce complete-row selection, clean invalid labels explicitly and
+choose \code{missing = "omit"}. Older saved results remain usable when their
+calculation version is current, but unavailable row counts are not guessed;
+rerun the G-study with the original data to obtain row accounting.
 }
 
 \section{References}{
