@@ -62,9 +62,25 @@ both the sample and numeric ranges and does not correct missing-data bias.
 Pairwise distances require quadratic memory. This interface is limited
 to 5,000 included entities. It does not silently sample larger inputs.
 This input limit does not guarantee low memory use or acceptable run time.
+
+For feature selection, missingness review, and multiple-imputation examples,
+see \code{vignette("mfrmr-external-features", package = "mfrmr")}.
 }
 \examples{
-# See mfrm_features() for a complete mixed-feature example.
+if (requireNamespace("cluster", quietly = TRUE)) {
+  # Fictional raters; R2 has unrecorded experience, not zero years.
+  raters <- data.frame(Rater = paste0("R", 1:6),
+    ExperienceYears = c(1, NA, 3, 12, 13, 14),
+    Specialty = rep(c("Language", "Science"), each = 3))
+  features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
+  # The default stops on missing features. Here omission is explicit.
+  groups <- mfrm_cluster(features, k = 2,
+    weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
+  groups$membership  # R2 remains present with unavailable membership.
+  summary(groups)
+  groups$profiles
+  groups$medoids
+}
 }
 \seealso{
 \code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},

@@ -48,20 +48,24 @@
 #'   Different input data or inclusion masks cause an error rather than a
 #'   silent intersection of entities or imputations. No preferred setting,
 #'   consensus partition, or hypothesis test is returned.
+#'
+#'   For an executable rater-attribute example that pairs multiple imputations
+#'   across settings, see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @references Hubert, L. and Arabie, P. (1985). Comparing partitions.
 #'   Journal of Classification, 2, 193--218. \doi{10.1007/BF01908075}.
 #' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_imputed()]
 #' @examples
 #' if (requireNamespace("cluster", quietly = TRUE)) {
+#'   # Fictional attributes; experience is measured in completed years.
 #'   raters <- data.frame(Rater = paste0("R", 1:8),
-#'     Experience = c(1, 2, 3, 4, 11, 12, 13, 14),
+#'     ExperienceYears = c(1, 2, 3, 4, 11, 12, 13, 14),
 #'     Specialty = rep(c("Language", "Science"), 4))
-#'   features <- mfrm_features(raters, "Rater", c("Experience", "Specialty"))
+#'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
 #'   fits <- list(
 #'     TwoGroups = mfrm_cluster(features, k = 2),
 #'     ThreeGroups = mfrm_cluster(features, k = 3),
 #'     ExperienceWeighted = mfrm_cluster(features, k = 2,
-#'       weights = c(Experience = 3, Specialty = 1)))
+#'       weights = c(ExperienceYears = 3, Specialty = 1)))
 #'   comparison <- mfrm_cluster_compare(fits)
 #'   summary(comparison)
 #'   comparison$analysis_summary

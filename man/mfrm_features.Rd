@@ -56,16 +56,19 @@ See \code{vignette("mfrmr-external-features")} for a complete rater-attribute
 example including missingness review and multiple imputation.
 }
 \examples{
+# Fictional rater attributes; experience is measured in completed years.
 raters <- data.frame(
   Rater = paste0("R", 1:6),
-  Experience = c(1, 2, 3, 12, 13, 14),
+  ExperienceYears = c(1, NA, 3, 12, 13, 14),
   Specialty = c("Language", "Language", "Language", "Science", "Science", "Science")
 )
-features <- mfrm_features(raters, "Rater", c("Experience", "Specialty"))
+reasons <- data.frame(ID = "R2", Feature = "ExperienceYears", Reason = "Not recorded")
+features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"),
+                          missing_reasons = reasons)
 summary(features)
-if (requireNamespace("cluster", quietly = TRUE)) {
-  groups <- mfrm_cluster(features, k = 2)
-  groups$membership
-  summary(groups)
+features$missing
+features$row_summary
 }
+\seealso{
+\code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}}
 }

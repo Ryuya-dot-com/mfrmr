@@ -965,7 +965,7 @@ and PAM; install the optional `cluster` package to use it.
 
 ```r
 features <- mfrm_features(rater_attributes, id = "Rater",
-                         features = c("Experience", "Specialty"))
+                         features = c("ExperienceYears", "Specialty"))
 summary(features)
 features$missing
 groups <- mfrm_cluster(features, k = 3)
@@ -973,7 +973,8 @@ groups$membership
 groups$profiles
 ```
 
-Here `rater_attributes` is your entity-level table. Group count and feature
+Here `rater_attributes` is your entity-level table, with `ExperienceYears`
+measured in completed years. Group count and feature
 selection are substantive choices. Missing features stop clustering by default;
 `missing = "omit"` explicitly selects complete cases and retains excluded IDs
 with missing group membership. Optional missingness reasons are documented in
@@ -1005,7 +1006,7 @@ alternatives <- list(
   TwoGroups = mfrm_cluster(features, k = 2),
   ThreeGroups = groups,
   ExperienceWeighted = mfrm_cluster(features, k = 3,
-    weights = c(Experience = 3, Specialty = 1))
+    weights = c(ExperienceYears = 3, Specialty = 1))
 )
 comparison <- mfrm_cluster_compare(alternatives)
 comparison$analysis_summary

@@ -29,19 +29,20 @@
 #'   from estimated ability, severity, or fit statistics.
 #'   See `vignette("mfrmr-external-features")` for a complete rater-attribute
 #'   example including missingness review and multiple imputation.
+#' @seealso [mfrm_cluster()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()]
 #' @examples
+#' # Fictional rater attributes; experience is measured in completed years.
 #' raters <- data.frame(
 #'   Rater = paste0("R", 1:6),
-#'   Experience = c(1, 2, 3, 12, 13, 14),
+#'   ExperienceYears = c(1, NA, 3, 12, 13, 14),
 #'   Specialty = c("Language", "Language", "Language", "Science", "Science", "Science")
 #' )
-#' features <- mfrm_features(raters, "Rater", c("Experience", "Specialty"))
+#' reasons <- data.frame(ID = "R2", Feature = "ExperienceYears", Reason = "Not recorded")
+#' features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"),
+#'                           missing_reasons = reasons)
 #' summary(features)
-#' if (requireNamespace("cluster", quietly = TRUE)) {
-#'   groups <- mfrm_cluster(features, k = 2)
-#'   groups$membership
-#'   summary(groups)
-#' }
+#' features$missing
+#' features$row_summary
 #' @export
 mfrm_features <- function(data, id, features, missing_reasons = NULL) {
   if (!is.data.frame(data) || nrow(data) == 0L || anyDuplicated(names(data)) ||
@@ -191,10 +192,26 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   Pairwise distances require quadratic memory. This interface is limited
 #'   to 5,000 included entities. It does not silently sample larger inputs.
 #'   This input limit does not guarantee low memory use or acceptable run time.
+#'
+#'   For feature selection, missingness review, and multiple-imputation examples,
+#'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
 #'   [cluster::daisy()], [cluster::pam()]
 #' @examples
-#' # See mfrm_features() for a complete mixed-feature example.
+#' if (requireNamespace("cluster", quietly = TRUE)) {
+#'   # Fictional raters; R2 has unrecorded experience, not zero years.
+#'   raters <- data.frame(Rater = paste0("R", 1:6),
+#'     ExperienceYears = c(1, NA, 3, 12, 13, 14),
+#'     Specialty = rep(c("Language", "Science"), each = 3))
+#'   features <- mfrm_features(raters, "Rater", c("ExperienceYears", "Specialty"))
+#'   # The default stops on missing features. Here omission is explicit.
+#'   groups <- mfrm_cluster(features, k = 2,
+#'     weights = c(ExperienceYears = 2, Specialty = 1), missing = "omit")
+#'   groups$membership  # R2 remains present with unavailable membership.
+#'   summary(groups)
+#'   groups$profiles
+#'   groups$medoids
+#' }
 #' @export
 mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
   if (!inherits(x, "mfrm_features")) {
@@ -366,6 +383,11 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   quadratic memory, so this comparison is limited to 5,000 total entities.
 #'   This input limit is not a memory or run-time guarantee. Retaining all
 #'   completed analyses also increases memory use with the imputation count.
+#'
+#'   The short example below illustrates the interface using `mice::nhanes2`.
+#'   For a complete example with fictional rater attributes, explicit missingness
+#'   reasons, imputation diagnostics, and comparisons of group counts and weights,
+#'   see `vignette("mfrmr-external-features", package = "mfrmr")`.
 #' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples

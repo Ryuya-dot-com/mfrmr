@@ -96,6 +96,11 @@ is produced. Both the full ID-indexed matrix and pairwise distances require
 quadratic memory, so this comparison is limited to 5,000 total entities.
 This input limit is not a memory or run-time guarantee. Retaining all
 completed analyses also increases memory use with the imputation count.
+
+The short example below illustrates the interface using \code{mice::nhanes2}.
+For a complete example with fictional rater attributes, explicit missingness
+reasons, imputation diagnostics, and comparisons of group counts and weights,
+see \code{vignette("mfrmr-external-features", package = "mfrmr")}.
 }
 \examples{
 if (requireNamespace("mice", quietly = TRUE) &&

@@ -24,6 +24,14 @@ on average; the explanation distinguishes pairs from persons and fictional
 sensitivity from evidence about an assessment program. Five imputations and
 five iterations are illustrative, not model-adequacy recommendations.
 
+Follow-up help review adds a standalone mfrm_cluster example instead of a
+comment-only referral, illustrates missingness reasons in mfrm_features, and
+links all four API help pages to the complete vignette. Short rater examples
+and the README name the experience unit explicitly. All four Rd pages pass
+syntax and HTML conversion checks; only the three changed executable examples
+were run. The unchanged mice example and full tutorial reuse prior evidence.
+No API behavior, regression suite, stress condition or CI was rerun.
+
 The standalone `external-feature-stress-0.2.4.R` checks 11 conditions in fresh
 R processes: n = 100/1,000/5,000; 40 features at n = 1,000; k = 100/101 at
 n = 500; duplicate profiles; rare categories with 485/5/5/5 strata; no planted
