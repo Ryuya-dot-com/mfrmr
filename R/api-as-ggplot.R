@@ -917,6 +917,53 @@
   )
 }
 
+.mfrmr_gg_multivariate_d_study <- function(payload) {
+  df <- payload$series
+  df$Panel <- factor(payload$panel_labels[match(df$Metric, payload$metric)],
+    levels = payload$panel_labels)
+  groups <- payload$legend$label
+  df$Group <- factor(df$Group, levels = groups)
+  df$Value[df$Status != "Available" | !is.finite(df$Value)] <- NA_real_
+  coefficients <- identical(payload$plot, "coefficients")
+  top <- if (coefficients || !any(is.finite(df$Value))) 1 else max(df$Value, na.rm = TRUE)
+  if (top == 0) top <- 1
+  ticks <- sort(unique(df$X))
+  if (length(ticks) > 15L) ticks <- pretty(range(ticks))
+  ticks <- ticks[ticks >= min(df$X) & ticks <= max(df$X) & ticks == floor(ticks)]
+  # Keep internal NA rows so lines break at unavailable scenarios. A series
+  # with fewer than two available points has no line to draw.
+  line_rows <- stats::ave(as.integer(is.finite(df$Value)), df$Metric, df$Group, FUN = sum) >= 2L
+  p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Value,
+    colour = .data$Group, linetype = .data$Group, shape = .data$Group, group = .data$Group)) +
+    ggplot2::geom_line(data = df[line_rows, , drop = FALSE], linewidth = 0.7, na.rm = TRUE) +
+    ggplot2::geom_point(size = 2.2, na.rm = TRUE) +
+    ggplot2::facet_wrap(~Panel, ncol = 1, drop = FALSE) +
+    ggplot2::scale_x_continuous(limits = range(df$X), breaks = ticks) +
+    ggplot2::scale_y_continuous(limits = c(0, top),
+      breaks = if (coefficients) seq(0, 1, 0.2) else ggplot2::waiver()) +
+    ggplot2::scale_colour_manual(values = stats::setNames(payload$legend$value, groups), drop = FALSE, name = NULL) +
+    ggplot2::scale_linetype_manual(values = stats::setNames(payload$line_types, groups), drop = FALSE, name = NULL) +
+    ggplot2::scale_shape_manual(values = stats::setNames(payload$point_shapes, groups), drop = FALSE, name = NULL) +
+    .mfrmr_gg_theme() +
+    ggplot2::theme(legend.position = if (length(payload$group_var)) "bottom" else "none")
+  for (metric in payload$metric) {
+    s <- df[df$Metric == metric, , drop = FALSE]
+    if (all(is.na(s$Value))) {
+      note <- data.frame(Panel = s$Panel[1L], X = mean(range(s$X)), Y = top / 2,
+        Label = .mfrm_mvds_unavailable_message(s$Status))
+      p <- p + ggplot2::geom_text(data = note,
+        ggplot2::aes(x = .data$X, y = .data$Y, label = .data$Label),
+        inherit.aes = FALSE, size = 3.2)
+    }
+  }
+  payload$caption <- "Points are requested scenarios; lines are guides."
+  if (nrow(payload$unavailable)) payload$caption <- paste(payload$caption,
+    sprintf("Unavailable estimates in %d scenario(s); inspect the D-study table for reasons.",
+      length(unique(payload$unavailable$Scenario))))
+  .mfrmr_gg_labs(p, payload, x = paste("Number of", tolower(payload$x_var)),
+    y = if (coefficients) "Dependability (higher is better)" else "SEM in score units (lower is better)")
+}
+
 #' Convert draw-free mfrmr plot data to ggplot2
 #'
 #' `as_ggplot()` is an optional renderer for an `mfrm_plot_data` object or an
@@ -925,8 +972,14 @@
 #'
 #' Dedicated conversions are provided for Wright maps, theta-to-expected-score
 #' pathways, fit-statistic-to-measure pathways, category characteristic curves,
-#' bubble charts, DIF/DFF summaries and heatmaps, and portable-calibration
-#' score review plots. Other draw-free payloads use a conservative tabular
+#' bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
+#' score review plots, and multivariate D-study comparisons. D-study conversions
+#' preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
+#' estimates. They do not refit the model or add confidence intervals.
+#' For main-effects `mfrm_d_study` results, use the base `plot()` method or
+#' [plot_data()] for custom graphics; automatic conversion is refused because
+#' generic column selection does not preserve those design comparisons.
+#' Other draw-free payloads use a conservative tabular
 #' fallback; inspect [plot_data_components()] when automatic inference is not
 #' appropriate.
 #' Titles, subtitles, and captions are wrapped at 72 text columns for ordinary
@@ -1030,6 +1083,13 @@ as_ggplot.mfrm_plot_data <- function(x, type = NULL, component = NULL, ...) {
   .require_mfrmr_ggplot2()
   payload <- x$data %||% list()
   dots <- list(...)
+  if (is.null(component) && identical(x$name, "multivariate_d_study")) {
+    return(.mfrmr_gg_multivariate_d_study(payload))
+  }
+  if (is.null(component) && identical(x$name, "d_study")) {
+    stop("Automatic ggplot conversion is not available for mfrm_d_study plots. ",
+      "Use plot(x) to preserve the selected design comparisons, or plot_data() for custom graphics.", call. = FALSE)
+  }
   if (is.null(component) && identical(x$name, "fair_average") && !is.null(payload$plot_data)) {
     df <- payload$plot_data
     p <- ggplot2::ggplot(df, ggplot2::aes(x = .data$X, y = .data$Y))

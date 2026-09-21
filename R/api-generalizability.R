@@ -498,9 +498,12 @@ mfrm_generalizability <- function(fit,
 #'
 #' This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 #' decomposition. If person-by-rater or person-by-item interactions are a
-#' primary estimand, use `residual_scaling = "sensitivity"` and treat the output
-#' as planning evidence; fit a fully crossed G-theory model externally when
-#' those interaction components must be estimated separately.
+#' primary estimand, consider [mfrm_multivariate_gstudy()] and
+#' [mfrm_multivariate_d_study()] for supported Person-by-Task or
+#' Person-by-Rater-by-Task designs with common condition identities. Those
+#' functions also accept a single score and estimate the corresponding
+#' interaction components explicitly. Changing `residual_scaling` here only
+#' explores assumptions; it does not estimate the omitted interactions.
 #'
 #' The `G` and `Phi` values returned here belong to the generalizability-theory
 #' metric family. They should not be interpreted as coefficient alpha, omega,
@@ -526,7 +529,8 @@ mfrm_generalizability <- function(fit,
 #'
 #' Brennan, R. L. (2001). *Generalizability theory*. Springer.
 #'
-#' @seealso [mfrm_generalizability()], [evaluate_mfrm_design()],
+#' @seealso [plot.mfrm_d_study()], [mfrm_generalizability()],
+#'   [mfrm_multivariate_d_study()], [evaluate_mfrm_design()],
 #'   [recommend_mfrm_design()], [plot_data()]
 #' @examples
 #' \donttest{
@@ -743,6 +747,65 @@ print.mfrm_d_study <- function(x, ...) {
   invisible(x)
 }
 
+#' Plot design comparisons from a main-effects D-study
+#'
+#' Compare planned facet counts using an existing [mfrm_d_study()] result.
+#' G concerns relative ordering; Phi also includes shifts in absolute score
+#' levels. Larger coefficients mean greater dependability under the selected
+#' model and residual assumption, not proven pass/fail accuracy.
+#'
+#' @param x An [mfrm_d_study()] result.
+#' @param y Reserved for method compatibility.
+#' @param type `"coefficients"` for G/Phi curves, `"error_variance"` for error
+#'   variance curves, or `"heatmap"`, `"contour"`, or `"surface3d"` for one
+#'   metric over two facet counts. Error variance is in squared score units,
+#'   not SEM. Lower error variance is better.
+#' @param x_var,y_var Planned-count columns such as `"n_Rater"`. The default
+#'   horizontal axis is the first count column; surface plots use the next
+#'   column on the other axis. The two axes must differ.
+#' @param group_var Optional additional column distinguishing curves. All
+#'   non-horizontal facet counts and residual assumptions remain separate
+#'   within each panel, including when `group_var` is supplied.
+#' @param panel_by One column defining panels, or `NULL`.
+#' @param panel_grid One or two columns defining panels. Use this or
+#'   `panel_by`, not both. Surface plots require every other facet count and
+#'   residual assumption to be constant within each panel. Subset the result
+#'   or add panels when they vary; they cannot be silently averaged or overlaid.
+#' @param metric Optional selection from `"G"`, `"Phi"`,
+#'   `"RelativeErrorVariance"`, or `"AbsoluteErrorVariance"`, compatible with
+#'   `type`. Surface plots require one metric and default to `"Phi"`.
+#' @param draw Draw when `TRUE`; `FALSE` only returns plot data.
+#' @param main Optional plot title.
+#' @param palette Optional colors.
+#' @param preset Plot style: `"standard"`, `"publication"`, `"compact"`, or
+#'   `"monochrome"`.
+#' @param ... Reserved for method compatibility.
+#' @details Points represent requested scenarios; connecting lines and
+#'   contours are visual guides. Missing estimates remain missing and break
+#'   curves. If none are available, inspect the D-study table and source
+#'   variance components. Coefficient curves show 0.70 and 0.80 reference
+#'   lines; these are not universal acceptance criteria.
+#'   Heatmaps include a numeric color key; exact values remain in the table.
+#'
+#'   The main-effects G-study combines unmodeled interactions in its residual.
+#'   Different residual-scaling curves describe assumptions, not confidence
+#'   bounds. All projections hold estimated components fixed. Check source
+#'   fit warnings before interpreting even large coefficients. For supported
+#'   designs with separately estimated interactions, including a single score,
+#'   use [mfrm_multivariate_gstudy()] and [mfrm_multivariate_d_study()].
+#' @return Invisibly, an `mfrm_plot_data` object with the scenario `table`,
+#'   metric `series`, axis/group/panel settings, and labels. Use [plot_data()]
+#'   for custom graphics. Automatic [as_ggplot()] conversion is not provided
+#'   for this class; the base plots preserve the chosen comparisons.
+#' @seealso [mfrm_d_study()], [plot.mfrm_multivariate_d_study()]
+#' @examples
+#' # After creating ds with mfrm_d_study():
+#' # plot(ds, x_var = "n_Rater", panel_grid = c("Metric", "ResidualScaling"))
+#' # For Rater x Task x Occasion scenarios, separate occasions explicitly:
+#' # plot(ds, type = "heatmap", x_var = "n_Rater", y_var = "n_Task",
+#' #      metric = "Phi", panel_by = "n_Occasion")
+#' # With residual_scaling = "sensitivity", use
+#' # panel_grid = c("n_Occasion", "ResidualScaling") instead.
 #' @export
 plot.mfrm_d_study <- function(x,
                               y = NULL,
@@ -770,6 +833,10 @@ plot.mfrm_d_study <- function(x,
   }, character(1))
   tbl <- as.data.frame(x, stringsAsFactors = FALSE)
   n_cols <- grep("^n_", names(tbl), value = TRUE)
+  column_labels <- function(nm, data) {
+    if (nm %in% n_cols) paste(sub("^n_", "", nm), "=", data[[nm]]) else as.character(data[[nm]])
+  }
+  axis_label <- function(nm) paste(sub("^n_", "", nm), "count")
   if (length(n_cols) == 0L) {
     stop("D-study table does not contain planned-count columns.", call. = FALSE)
   }
@@ -777,7 +844,7 @@ plot.mfrm_d_study <- function(x,
     x_var <- n_cols[1L]
   }
   x_var <- as.character(x_var[1L])
-  if (!x_var %in% names(tbl)) {
+  if (!x_var %in% n_cols) {
     stop("`x_var` must be one of: ", paste(n_cols, collapse = ", "), call. = FALSE)
   }
 
@@ -791,7 +858,7 @@ plot.mfrm_d_study <- function(x,
       y_var <- candidates[1L]
     }
     y_var <- as.character(y_var[1L])
-    if (!y_var %in% names(tbl)) {
+    if (!y_var %in% n_cols) {
       stop("`y_var` must be one of: ", paste(setdiff(n_cols, x_var), collapse = ", "), call. = FALSE)
     }
     if (identical(y_var, x_var)) {
@@ -856,7 +923,8 @@ plot.mfrm_d_study <- function(x,
     tmp$Value <- suppressWarnings(as.numeric(tmp[[metric_name]]))
     tmp
   }))
-  series_tbl <- series_tbl[is.finite(series_tbl$X) & is.finite(series_tbl$Value), , drop = FALSE]
+  series_tbl <- series_tbl[is.finite(series_tbl$X), , drop = FALSE]
+  series_tbl$Value[!is.finite(series_tbl$Value)] <- NA_real_
   if (is_surface) {
     series_tbl <- series_tbl[is.finite(series_tbl$Y), , drop = FALSE]
   }
@@ -895,6 +963,10 @@ plot.mfrm_d_study <- function(x,
   if (!is.null(panel_by) && !is.null(panel_grid)) {
     stop("Use either `panel_by` or `panel_grid`, not both.", call. = FALSE)
   }
+  if (length(panel_grid) == 1L) {
+    panel_by <- panel_grid
+    panel_grid <- NULL
+  }
   if (is_surface && is.null(panel_by) && is.null(panel_grid) &&
       "ResidualScaling" %in% names(series_tbl) &&
       dplyr::n_distinct(series_tbl$ResidualScaling) > 1L) {
@@ -902,17 +974,26 @@ plot.mfrm_d_study <- function(x,
   }
 
   style <- resolve_plot_preset(preset)
-  if (nrow(series_tbl) == 0L) {
-    stop("No finite D-study values are available for plotting.", call. = FALSE)
+  if (nrow(series_tbl) == 0L || !any(is.finite(series_tbl$Value))) {
+    stop("No finite D-study values are available for plotting. Inspect the D-study table and source variance components.", call. = FALSE)
   }
 
   if (is_surface) {
     panel_vars <- c(panel_by, panel_grid)
+    conditions <- setdiff(c(n_cols, "ResidualScaling"), c(x_var, y_var, panel_vars))
+    unfixed <- conditions[vapply(conditions, function(nm) {
+      values <- unique(series_tbl[c(panel_vars, nm)])
+      if (!length(panel_vars)) nrow(values) > 1L else anyDuplicated(values[panel_vars]) > 0L
+    }, logical(1))]
+    if (length(unfixed)) {
+      stop("Surface plots must hold remaining conditions fixed within each panel. Varying: ",
+        paste(unfixed, collapse = ", "), ". Subset to one value or use `panel_by` / `panel_grid`.", call. = FALSE)
+    }
     if (length(panel_vars) == 0L) {
       series_tbl$Panel <- "All designs"
       panel_levels <- "All designs"
     } else {
-      series_tbl$Panel <- do.call(paste, c(series_tbl[, panel_vars, drop = FALSE], sep = " / "))
+      series_tbl$Panel <- do.call(paste, c(lapply(panel_vars, column_labels, data = series_tbl), sep = " / "))
       panel_levels <- unique(series_tbl$Panel)
     }
     series_tbl$Panel <- display_labels(series_tbl$Panel)
@@ -927,12 +1008,18 @@ plot.mfrm_d_study <- function(x,
     } else {
       rep(as.character(palette), length.out = 18L)
     }
+    if (fill_values[1L] == fill_values[2L]) fill_cols[] <- fill_cols[9L]
+    key_values <- unique(seq(fill_values[1L], fill_values[2L], length.out = 5L))
+    key_colors <- fill_cols[if (length(key_values) == 1L) 9L else round(seq(1, length(fill_cols), length.out = 5L))]
+    heat_key <- new_plot_legend(format(signif(key_values, 3), trim = TRUE),
+      rep("metric_value", length(key_values)), rep("fill", length(key_values)), key_colors)
     if (isTRUE(draw)) {
       apply_plot_preset(style)
-      old_par <- graphics::par()[c("mfrow", "cex", "mex")]
+      old_par <- graphics::par()[c("mfrow", "cex", "mex", "mar", "oma")]
       on.exit(graphics::par(old_par), add = TRUE)
       panel_n <- length(panel_levels)
-      graphics::par(mfrow = grDevices::n2mfrow(panel_n))
+      graphics::par(mfrow = grDevices::n2mfrow(panel_n), oma = c(1.8, 0, 0, 0),
+        mar = c(4.1, 4.1, 3.1, if (type == "heatmap") 7 else 2.1))
       for (panel in panel_levels) {
         s <- series_tbl[series_tbl$Panel == panel, , drop = FALSE]
         x_levels <- sort(unique(s$X))
@@ -944,25 +1031,38 @@ plot.mfrm_d_study <- function(x,
           z[xi, yi] <- s$Value[i]
         }
         z_finite <- z[is.finite(z)]
+        if (!length(z_finite)) {
+          graphics::plot(range(x_levels), range(y_levels), type = "n",
+            xlab = axis_label(x_var), ylab = axis_label(y_var), xaxt = "n", yaxt = "n",
+            main = main %||% paste(metric_cols[1L], panel, sep = " / "))
+          graphics::axis(1, at = x_levels)
+          graphics::axis(2, at = y_levels, las = 1)
+          graphics::text(mean(range(x_levels)), mean(range(y_levels)),
+            "Estimates unavailable\nInspect the D-study table.", cex = 0.8)
+          next
+        }
         has_contours <- length(unique(z_finite)) > 1L
         if (identical(type, "heatmap")) {
           graphics::image(
             x_levels, y_levels, z,
             col = fill_cols,
             zlim = fill_values,
-            xlab = x_var,
-            ylab = y_var,
+            xlab = axis_label(x_var),
+            ylab = axis_label(y_var), xaxt = "n", yaxt = "n",
             main = main %||% paste(metric_cols[1L], panel, sep = " / ")
           )
-          if (has_contours) {
-            graphics::contour(x_levels, y_levels, z, add = TRUE, drawlabels = TRUE)
-          }
+          graphics::axis(1, at = x_levels)
+          graphics::axis(2, at = y_levels, las = 1)
+          usr <- graphics::par("usr")
+          graphics::legend(usr[2] + 0.03 * diff(usr[1:2]), usr[4],
+            legend = heat_key$label, fill = heat_key$value, title = metric_cols[1L],
+            bty = "n", xpd = NA, cex = 0.75)
         } else if (identical(type, "contour")) {
           if (has_contours) {
             graphics::contour(
               x_levels, y_levels, z,
-              xlab = x_var,
-              ylab = y_var,
+              xlab = axis_label(x_var),
+              ylab = axis_label(y_var),
               main = main %||% paste(metric_cols[1L], panel, sep = " / "),
               drawlabels = TRUE
             )
@@ -971,8 +1071,8 @@ plot.mfrm_d_study <- function(x,
               range(x_levels, na.rm = TRUE),
               range(y_levels, na.rm = TRUE),
               type = "n",
-              xlab = x_var,
-              ylab = y_var,
+              xlab = axis_label(x_var),
+              ylab = axis_label(y_var),
               main = main %||% paste(metric_cols[1L], panel, sep = " / ")
             )
             graphics::text(mean(range(x_levels, na.rm = TRUE)), mean(range(y_levels, na.rm = TRUE)), "constant surface")
@@ -998,15 +1098,15 @@ plot.mfrm_d_study <- function(x,
             col = z_cols,
             border = grDevices::adjustcolor(style$foreground, alpha.f = 0.35),
             ticktype = "detailed",
-            xlab = x_var,
-            ylab = y_var,
+            xlab = axis_label(x_var),
+            ylab = axis_label(y_var),
             zlab = metric_cols[1L],
             zlim = zlim,
             main = main %||% paste(metric_cols[1L], panel, sep = " / ")
           )
         }
-        graphics::mtext(projection_note, side = 1, line = 3, cex = 0.6)
       }
+      graphics::mtext(projection_note, side = 1, outer = TRUE, line = 0.3, cex = 0.65)
     }
     return(invisible(new_mfrm_plot_data(
       "d_study",
@@ -1024,7 +1124,7 @@ plot.mfrm_d_study <- function(x,
         panel_grid = panel_grid %||% character(0),
         title = main %||% paste("D-study", metric_cols[1L], type),
         subtitle = projection_note,
-        legend = new_plot_legend(
+        legend = if (type == "heatmap") heat_key else new_plot_legend(
           label = metric_cols[1L],
           role = "metric",
           aesthetic = switch(type, heatmap = "fill", contour = "contour", surface3d = "surface", "value"),
@@ -1037,19 +1137,20 @@ plot.mfrm_d_study <- function(x,
   }
 
   panel_vars <- c(panel_by, panel_grid)
-  group_components <- unique(c("Metric", "ResidualScaling", group_var))
+  group_components <- unique(c("Metric", "ResidualScaling", group_var, setdiff(n_cols, x_var)))
   group_components <- setdiff(group_components[!is.na(group_components) & nzchar(group_components)], panel_vars)
   if (length(group_components) == 0L) {
     series_tbl$Series <- "Projection"
   } else {
-    series_tbl$Series <- do.call(paste, c(series_tbl[, group_components, drop = FALSE], sep = " / "))
+    series_labels <- lapply(group_components, column_labels, data = series_tbl)
+    series_tbl$Series <- do.call(paste, c(series_labels, sep = " / "))
   }
   if (length(panel_grid) == 2L) {
-    series_tbl$PanelRow <- as.character(series_tbl[[panel_grid[1L]]])
-    series_tbl$PanelCol <- as.character(series_tbl[[panel_grid[2L]]])
+    series_tbl$PanelRow <- column_labels(panel_grid[1L], series_tbl)
+    series_tbl$PanelCol <- column_labels(panel_grid[2L], series_tbl)
     series_tbl$Panel <- paste(series_tbl$PanelRow, series_tbl$PanelCol, sep = " / ")
   } else if (!is.null(panel_by)) {
-    series_tbl$Panel <- as.character(series_tbl[[panel_by]])
+    series_tbl$Panel <- column_labels(panel_by, series_tbl)
     series_tbl$PanelRow <- series_tbl$Panel
     series_tbl$PanelCol <- "panel"
   } else {
@@ -1078,13 +1179,14 @@ plot.mfrm_d_study <- function(x,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par()[c("mfrow", "cex", "mex")]
+    old_par <- graphics::par()[c("mfrow", "cex", "mex", "oma")]
     on.exit(graphics::par(old_par), add = TRUE)
+    graphics::par(oma = c(1.8, 0, 0, 0))
     if (length(panel_grid) == 2L) {
       row_levels <- unique(series_tbl$PanelRow)
       col_levels <- unique(series_tbl$PanelCol)
       graphics::par(mfrow = c(length(row_levels), length(col_levels)))
-      panel_specs <- expand.grid(PanelRow = row_levels, PanelCol = col_levels, stringsAsFactors = FALSE)
+      panel_specs <- expand.grid(PanelCol = col_levels, PanelRow = row_levels, stringsAsFactors = FALSE)
     } else {
       panel_levels <- unique(series_tbl$Panel)
       graphics::par(mfrow = grDevices::n2mfrow(length(panel_levels)))
@@ -1112,13 +1214,15 @@ plot.mfrm_d_study <- function(x,
         s_panel$X,
         s_panel$Value,
         type = "n",
-        xlab = x_var,
+        xlab = axis_label(x_var), xaxt = "n",
         ylab = if (identical(type, "coefficients")) "Coefficient" else "Error variance",
         ylim = y_lim,
         main = main %||% panel_title
       )
+      graphics::axis(1, at = sort(unique(s_panel$X)))
       graphics::grid(col = style$grid)
-      graphics::mtext(projection_note, side = 1, line = 3, cex = 0.6)
+      if (anyNA(s_panel$Value)) graphics::mtext("Unavailable estimates: inspect the D-study table.",
+        side = 3, line = 0.2, cex = 0.7)
       for (series in unique(s_panel$Series)) {
         s <- s_panel[s_panel$Series == series, , drop = FALSE]
         s <- s[order(s$X), , drop = FALSE]
@@ -1138,6 +1242,7 @@ plot.mfrm_d_study <- function(x,
         cex = 0.72
       )
     }
+    graphics::mtext(projection_note, side = 1, outer = TRUE, line = 0.3, cex = 0.65)
   }
 
   invisible(new_mfrm_plot_data(

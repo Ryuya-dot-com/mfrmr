@@ -59,6 +59,8 @@
 #'   `table` (the selected score/composite), `series` (one row per scenario and
 #'   plotted metric, including missing values), `unavailable`, `design_grid`,
 #'   `weights`, score identity, axis/group names, labels, and legend settings.
+#'   [as_ggplot()] preserves these comparisons for editing or export with
+#'   the optional ggplot2 package; for example, `as_ggplot(d, type = "sem")`.
 #' @seealso [mfrm_multivariate_d_study()], [mfrm_multivariate_gstudy()]
 #' @examples
 #' # Question: how much would doubling the common tasks change dependability?
@@ -71,6 +73,11 @@
 #' plot(d, score = "V") # Inspect an original score separately.
 #' values <- plot_data(plot(d, draw = FALSE))
 #' values$table # Exact values and availability, rather than reading off a line.
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   p <- as_ggplot(d, type = "sem")
+#'   print(p)
+#'   # ggplot2::ggsave("d-study-sem.png", p, width = 7, height = 7, dpi = 300)
+#' }
 #' @export
 plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem"),
                                           score = NULL, x_var = NULL, draw = TRUE,
@@ -159,11 +166,8 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem"),
       if (any(!ok)) graphics::mtext(sprintf("Unavailable: %d of %d scenarios; see returned unavailable table.",
         sum(!ok), nrow(s)), side = 1, line = 3.5, cex = 0.7)
     } else {
-      reasons <- unique(s$Status)
-      reasons[reasons == "Non-PSD component estimates"] <- "Covariance components failed validity checks."
-      reasons[reasons == "Available"] <- "No finite estimates in the stored result."
-      message <- paste(c("Estimates unavailable", reasons, "Inspect the D-study table and component diagnostics."), collapse = "\n")
-      graphics::text(mean(range(s$X)), mean(y_lim), message, cex = 0.8, col = style$foreground)
+      graphics::text(mean(range(s$X)), mean(y_lim), .mfrm_mvds_unavailable_message(s$Status),
+        cex = 0.8, col = style$foreground)
     }
     if (length(group_var)) {
       usr <- graphics::par("usr")
@@ -178,4 +182,12 @@ plot.mfrm_multivariate_d_study <- function(x, type = c("coefficients", "sem"),
   graphics::mtext("Points are requested scenarios; lines are guides. No confidence intervals.",
     side = 1, outer = TRUE, line = 1.4, cex = 0.75)
   invisible(out)
+}
+
+.mfrm_mvds_unavailable_message <- function(status) {
+  reasons <- unique(status)
+  reasons[reasons == "Non-PSD component estimates"] <- "Covariance components failed validity checks."
+  reasons[reasons == "Available"] <- "No finite estimates in the stored result."
+  paste(c("Estimates unavailable", reasons,
+    "Inspect the D-study table and component diagnostics."), collapse = "\n")
 }

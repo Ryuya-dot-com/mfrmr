@@ -42,6 +42,8 @@ Invisibly, an \code{mfrm_plot_data} object. Use \code{\link[=plot_data]{plot_dat
 \code{table} (the selected score/composite), \code{series} (one row per scenario and
 plotted metric, including missing values), \code{unavailable}, \code{design_grid},
 \code{weights}, score identity, axis/group names, labels, and legend settings.
+\code{\link[=as_ggplot]{as_ggplot()}} preserves these comparisons for editing or export with
+the optional ggplot2 package; for example, \code{as_ggplot(d, type = "sem")}.
 }
 \description{
 See how a planned change in the number of tasks or raters affects the
@@ -94,6 +96,11 @@ plot(d, type = "sem") # Error in difference-score units; lower is better.
 plot(d, score = "V") # Inspect an original score separately.
 values <- plot_data(plot(d, draw = FALSE))
 values$table # Exact values and availability, rather than reading off a line.
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  p <- as_ggplot(d, type = "sem")
+  print(p)
+  # ggplot2::ggsave("d-study-sem.png", p, width = 7, height = 7, dpi = 300)
+}
 }
 \seealso{
 \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}}

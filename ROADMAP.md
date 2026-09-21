@@ -264,6 +264,10 @@ unavailable results and their reasons. Help leads from a planning question to
 scenario construction, metric interpretation and exact values; these plots
 are conditional projections without confidence intervals or automatic design
 selection.
+Conversion with `as_ggplot()` preserves these multivariate comparisons and
+unavailable estimates. The main-effects D-study's base curves also separate
+every other facet count; its surface plots require remaining conditions to
+be fixed or explicitly separated into panels.
 Signed weights also support difference-score dependability when the score
 scales make subtraction meaningful. The same weights are used for the target
 composite and its observed estimate; distinct estimation weights and profile

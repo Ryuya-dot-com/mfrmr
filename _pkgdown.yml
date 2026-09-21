@@ -197,6 +197,7 @@ reference:
       - rater_network_analysis
       - rater_halo_network_analysis
       - mfrm_d_study
+      - plot.mfrm_d_study
       - mfrm_generalizability
       - mfrm_multivariate_gstudy
       - mfrm_multivariate_d_study

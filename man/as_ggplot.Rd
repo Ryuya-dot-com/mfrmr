@@ -49,8 +49,14 @@ the default; the returned \code{ggplot} can be restyled or composed downstream.
 \details{
 Dedicated conversions are provided for Wright maps, theta-to-expected-score
 pathways, fit-statistic-to-measure pathways, category characteristic curves,
-bubble charts, DIF/DFF summaries and heatmaps, and portable-calibration
-score review plots. Other draw-free payloads use a conservative tabular
+bubble charts, DIF/DFF summaries and heatmaps, portable-calibration
+score review plots, and multivariate D-study comparisons. D-study conversions
+preserve G/Phi or SEM panels, fixed-count groups, score units, and unavailable
+estimates. They do not refit the model or add confidence intervals.
+For main-effects \code{mfrm_d_study} results, use the base \code{plot()} method or
+\code{\link[=plot_data]{plot_data()}} for custom graphics; automatic conversion is refused because
+generic column selection does not preserve those design comparisons.
+Other draw-free payloads use a conservative tabular
 fallback; inspect \code{\link[=plot_data_components]{plot_data_components()}} when automatic inference is not
 appropriate.
 Titles, subtitles, and captions are wrapped at 72 text columns for ordinary

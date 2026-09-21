@@ -2,6 +2,20 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* `as_ggplot()` now preserves multivariate D-study G/Phi or SEM panels,
+  facet counts, score selection, and unavailable estimates. Previously,
+  automatic conversion could plot scenario numbers instead of the selected
+  metrics. Main-effects `mfrm_d_study` plots now refuse that misleading
+  automatic fallback; use their base `plot()` method or `plot_data()`.
+* Main-effects D-study curves now distinguish every other facet count,
+  including designs with three or more random facets, and retain gaps for
+  unavailable estimates. Surface plots require remaining conditions and
+  residual assumptions to be fixed within each panel, preventing silent
+  cell overwrites. Facet labels identify conditions, count axes use planned
+  counts, and heatmaps have a numeric color key. A dedicated plot help page
+  explains the required settings and points to the G/D-study workflow with
+  separately estimated interactions where applicable. One-column panel grids
+  now create panels, and two-column grids follow the specified row/column order.
 * Multivariate D-studies now have `plot()` methods for G/Phi and relative/
   absolute SEM, with separate panels, explicit score/composite labels and
   fixed-count rater/task comparisons. Unavailable results retain their reasons

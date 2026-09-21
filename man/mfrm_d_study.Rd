@@ -70,9 +70,12 @@ not uncertainty bounds or automatic recommendations for sample size.
 
 This is a pragmatic D-study planning layer, not a full p x r x i ANOVA
 decomposition. If person-by-rater or person-by-item interactions are a
-primary estimand, use \code{residual_scaling = "sensitivity"} and treat the output
-as planning evidence; fit a fully crossed G-theory model externally when
-those interaction components must be estimated separately.
+primary estimand, consider \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} and
+\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} for supported Person-by-Task or
+Person-by-Rater-by-Task designs with common condition identities. Those
+functions also accept a single score and estimate the corresponding
+interaction components explicitly. Changing \code{residual_scaling} here only
+explores assumptions; it does not estimate the omitted interactions.
 
 The \code{G} and \code{Phi} values returned here belong to the generalizability-theory
 metric family. They should not be interpreted as coefficient alpha, omega,
@@ -104,6 +107,7 @@ generalizability for scores and profiles}. Wiley.
 Brennan, R. L. (2001). \emph{Generalizability theory}. Springer.
 }
 \seealso{
-\code{\link[=mfrm_generalizability]{mfrm_generalizability()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
+\code{\link[=plot.mfrm_d_study]{plot.mfrm_d_study()}}, \code{\link[=mfrm_generalizability]{mfrm_generalizability()}},
+\code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}}, \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}},
 \code{\link[=recommend_mfrm_design]{recommend_mfrm_design()}}, \code{\link[=plot_data]{plot_data()}}
 }

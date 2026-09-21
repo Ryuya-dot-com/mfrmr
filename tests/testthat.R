@@ -19,6 +19,7 @@ cran_light_tests <- c(
   "compatibility-aliases",
   "compiled-header-contract",
   "data-and-citation",
+  "d-study-plots",
   "example-datasets",
   "feature-clustering",
   "hierarchical-clustering",

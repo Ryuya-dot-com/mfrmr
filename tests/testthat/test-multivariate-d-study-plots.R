@@ -103,3 +103,58 @@ test_that("unavailable D-study estimates remain missing with their reasons", {
   expect_error(plot(single, draw = NA), "TRUE or FALSE")
   expect_error(plot(single, unused = TRUE), "must be empty")
 })
+
+test_that("ggplot conversion retains D-study metrics, units, groups and unavailable gaps", {
+  skip_if_not_installed("ggplot2", minimum_version = "3.4.0")
+  ratings <- merge(mvgt_plot_data(), data.frame(Rater = 1:3))
+  ratings$V <- ratings$V + ratings$Rater
+  ratings$W <- ratings$W + 2 * ratings$Rater
+  g <- mfrm_multivariate_gstudy(ratings, c("V", "W"))
+  d <- mfrm_multivariate_d_study(g, expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 12)),
+    c(V = .4, W = .6))
+  before <- grDevices::dev.cur()
+  as_ggplot(d)
+  expect_identical(grDevices::dev.cur(), before)
+  grDevices::pdf(NULL, width = 7, height = 7)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  for (type in c("coefficients", "sem")) {
+    before <- grDevices::dev.cur()
+    payload <- plot(d, type = type, preset = "monochrome", draw = FALSE)
+    p <- as_ggplot(payload)
+    expect_identical(grDevices::dev.cur(), before)
+    expect_equal(p$data$Value, payload$data$series$Value)
+    expect_equal(p$data$X, payload$data$series$X)
+    expect_identical(as.character(p$data$Group), payload$data$series$Group)
+    expect_identical(levels(p$data$Panel), payload$data$panel_labels)
+    expect_identical(p$labels$x, "Number of tasks")
+    expect_match(p$labels$y, if (type == "sem") "score units" else "Dependability")
+    built <- ggplot2::ggplot_build(p)
+    expect_identical(unname(built$plot$scales$get_scales("colour")$map(payload$data$legend$label)),
+      payload$data$legend$value)
+    expect_equal(sort(built$data[[2]]$y), sort(payload$data$series$Value))
+    expect_no_warning(ggplot2::ggplotGrob(p))
+  }
+  direct <- as_ggplot(d, type = "sem", score = "V", x_var = "Raters")
+  expect_identical(direct$labels$title, "Score: V")
+  expect_identical(direct$labels$x, "Number of raters")
+  expect_true(all(direct$data$Kind == "Score"))
+
+  gaps <- d$coefficients$Tasks == 6
+  d$coefficients[gaps, c("G", "Phi", "RelativeSEM", "AbsoluteSEM")] <- NA_real_
+  d$coefficients$Status[gaps] <- "Negative projected error variance"
+  p <- as_ggplot(d)
+  expect_true(all(is.na(p$data$Value[p$data$X == 6])))
+  expect_true(all(is.na(p$layers[[1]]$data$Value[p$layers[[1]]$data$X == 6])))
+  expect_match(gsub("\n", " ", p$labels$caption), "Unavailable estimates in 2 scenario")
+  expect_no_warning(ggplot2::ggplotGrob(p))
+
+  d$coefficients[c("G", "Phi", "RelativeSEM", "AbsoluteSEM")] <- NA_real_
+  d$coefficients$Status <- "Non-PSD component estimates"
+  p <- as_ggplot(d)
+  expect_true(all(is.na(p$data$Value)))
+  expect_match(p$layers[[3]]$data$Label, "Covariance components failed validity checks")
+  expect_match(p$layers[[4]]$data$Label, "Covariance components failed validity checks")
+  expect_no_warning(ggplot2::ggplotGrob(p))
+  single <- mfrm_multivariate_d_study(g)
+  expect_no_warning(ggplot2::ggplotGrob(as_ggplot(single)))
+})

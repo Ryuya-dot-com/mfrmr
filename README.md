@@ -1070,6 +1070,14 @@ retain every completed result. Reuse saved results when comparing settings.
 
 ## Multivariate G-theory
 
+Choose the G-study model before comparing designs. The existing
+`mfrm_generalizability()` / `mfrm_d_study()` route fits main effects and uses
+an explicit assumption to scale its combined residual. The
+`mfrm_multivariate_gstudy()` / `mfrm_multivariate_d_study()` route estimates
+the supported interaction covariance components separately; it also accepts
+a **single score**, so its use is not restricted to composites. Neither route
+automatically infers the intended measurement design from column names.
+
 When an assessment reports several score components, such as content and
 organization, their covariances matter for the dependability of a composite.
 In this development version, `mfrm_multivariate_gstudy()` estimates those
@@ -1094,6 +1102,11 @@ summary(d_task)
 plot(d_task) # G and Phi for W minus V, identified by the title and weights.
 plot(d_task, type = "sem") # Error in difference-score units.
 plot(d_task, score = "V") # An original score, shown separately.
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  p <- as_ggplot(d_task, type = "sem")
+  print(p)
+  # ggplot2::ggsave("d-study-sem.png", p, width = 7, height = 7, dpi = 300)
+}
 ```
 
 At six tasks the difference W minus V has G = 0.30000 and Phi = 0.24116,

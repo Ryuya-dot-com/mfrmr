@@ -9,6 +9,37 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: D-study comparison semantics and export corrections
+
+Follow-up review reproduced two misleading plot behaviors. The generic
+as_ggplot fallback selected Scenario and Kind from a multivariate D-study's
+table and drew scenario-number bars instead of G/Phi or SEM. It now uses the
+stored metric series, panels, groups, weights and labels. Missing estimates
+stay missing, break lines, and retain explanatory text. No refit is performed.
+The same generic fallback is refused for main-effects mfrm_d_study results;
+their base plot and plot_data routes remain available.
+
+Main-effects D-study curves previously distinguished only one non-horizontal
+facet, so a three-facet grid merged different conditions into one curve.
+Surface plots could silently overwrite cells when a third facet or residual
+assumption varied. Curves now retain every non-horizontal count within panels;
+surfaces require remaining conditions to be fixed within each panel. Missing
+values are retained, and an entirely unavailable surface panel is not described
+as a constant surface. Facet-count labels identify conditions, heatmaps have a
+numeric color key, and the shared projection note no longer overlaps axes.
+One-column panel_grid requests now create actual panels; two-column requests
+draw columns within rows, matching the declared layout rather than transposing
+the order of six-panel displays.
+
+Focused multivariate plot checks and the new main-effects plot regressions
+pass. They cover exact metric values, grouping, units, monochrome encodings,
+gaps/all-unavailable results, figure construction, mixed-condition refusal,
+panel identities and graphics-state restoration. Saved ggplot coefficient,
+SEM, missing-point and unavailable figures and base three-facet curves and
+heatmaps were inspected. Dedicated plot help, cross-links, export examples,
+README and NEWS describe the behavior. Existing estimator evidence is reused;
+no estimator changes, full test suite, new Monte Carlo study or CI were needed.
+
 ## 2026-09-21: beginner-facing multivariate D-study plots and help
 
 The multivariate D-study now has a public plot method using its stored
