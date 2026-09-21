@@ -46,7 +46,8 @@ whether changes across the reviewed orders matter for their analysis.
 Portable intervals condition on the saved point calibration and standard-normal
 prior; they exclude calibration-estimation uncertainty. A successful numerical
 review does not establish that the scoring prior suits a new population.
-See the [portable calibration workflow](vignettes/mfrmr-portable-calibration.Rmd).
+See the portable calibration workflow
+(`vignette("mfrmr-portable-calibration", package = "mfrmr")`).
 
 The other priority is consistent interpretation throughout existing analyses:
 
@@ -84,7 +85,8 @@ examples and exported results. See
 
 For GPCM, "bounded" refers to documented model and workflow scope, not finite
 parameter box constraints. Numerical convergence alone does not remove its
-inferential restrictions. The [model-scope guide](vignettes/mfrmr-gpcm-scope.Rmd)
+inferential restrictions. The model-scope guide
+(`vignette("mfrmr-gpcm-scope", package = "mfrmr")`)
 describes the available routes.
 
 ## External features, grouping, and missing values
@@ -104,7 +106,8 @@ Gower dissimilarities, with retained trees and dendrograms. Their partitions
 can be compared with PAM, including across the same feature imputations.
 Ward clustering, pooled trees, and branch-support estimates are not provided.
 
-The [external-feature tutorial](vignettes/mfrmr-external-features.Rmd) now
+The external-feature tutorial
+(`vignette("mfrmr-external-features", package = "mfrmr")`) now
 demonstrates separate person, rater, and task tables, with classifications
 joined by ID to planned and observed rating rows. This supports descriptive
 assignment review, not a joint clustering model or inference about group

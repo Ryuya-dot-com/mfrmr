@@ -31,21 +31,24 @@ Functions and options shown here may differ from an installed release; check
 For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
 before reusing saved diagnostics, scores or reports.
 
-Install the CRAN package with:
+Install the published CRAN release with:
 
 ```r
 install.packages("mfrmr")
 ```
 
-Install the GitHub version with:
+The CRAN release and the default GitHub branch do not select the development
+snapshot described here. To install a local copy of this source, use the
+directory containing this README and a `DESCRIPTION` file with
+`Version: 0.2.4.9001`:
 
 ```r
 if (!requireNamespace("remotes", quietly = TRUE)) {
   install.packages("remotes")
 }
 
-remotes::install_github(
-  "Ryuya-dot-com/mfrmr",
+remotes::install_local(
+  "path/to/mfrmr",
   build_vignettes = TRUE
 )
 ```
@@ -867,8 +870,8 @@ explicit `fit_mfrm()` workflow is easier to review and is recommended.
 
 Use these guides for the full migration details:
 
-- [Migrating from FACETS to mfrmr](vignettes/mfrmr-facets-migration.Rmd)
-- [Visual diagnostics](vignettes/mfrmr-visual-diagnostics.Rmd)
+- [Migrating from FACETS to mfrmr](#documentation)
+- [Visual diagnostics](#documentation)
 
 The installed `references/FACETS_manual_mapping.md` maps concepts and output
 routes. It is not evidence that FACETS was executed.
@@ -951,16 +954,18 @@ before sharing.
 
 ## External features and exploratory groups
 
-The [rater-attribute tutorial](vignettes/mfrmr-external-features.Rmd) follows
+The [external-feature tutorial](#documentation) follows
 120 fictional raters from experience, workload, specialty, training, and
 certification attributes through missingness review, multiple imputation,
-group profiles, and sensitivity to group count and weights. It distinguishes
+group profiles, and sensitivity to feature selection, group count, weights,
+and clustering method. It also groups persons and tasks separately and joins
+their classifications to planned and observed ratings by ID. It distinguishes
 unrecorded values from inapplicable mentoring histories and keeps auxiliary
 imputation predictors separate from clustering features.
 
 In this development version, `mfrm_features()` reviews a table with one row per
-Person or rater and explicitly selected external attributes, such as experience
-or specialization. `mfrm_cluster()` groups those profiles using Gower distances
+person, rater, or task and explicitly selected external attributes, such as
+experience or specialization. `mfrm_cluster()` groups those profiles using Gower distances
 and PAM; install the optional `cluster` package to use it.
 
 ```r
@@ -1019,7 +1024,8 @@ describe sensitivity to the imputations, conditional on the chosen model and
 clustering settings; they are not membership probabilities or sampling
 stability. No automatic missing-score correction is performed.
 
-To review sensitivity to group count or feature weights, fit the settings you
+To review sensitivity to selected features, group count, weights, or clustering
+method, fit the settings you
 want to compare and pass the named results to `mfrm_cluster_compare()`. The
 comparison reuses these results without refitting:
 
@@ -1041,16 +1047,21 @@ changes; `SplitPairs` and `JoinedPairs` show the direction. `AdjustedRand`
 also compares the partitions while correcting for agreement expected under
 random partitions with fixed group sizes. Both measures ignore arbitrary group
 numbering. Inspect group sizes and profiles alongside them. Mean silhouettes
-under different feature weights use different distances and do not establish
-the best weights.
+under different feature selections or weights use different distances and do
+not establish the best selection or weights.
 
 For multiple imputations, supply a named list of `mfrm_cluster_imputed()`
-results fitted with the same reviewed features, selected missing cells, and
-`mids` object, varying `k` or `weights`. Each comparison pairs the same completed
-feature table on both sides. Changed data, unmatched imputations, or different
-included entities are refused. The summary reports descriptive means and
-ranges across imputations; these are not pooled inference or sampling
-stability. No setting is automatically selected.
+results. Selected features may differ, but entity IDs and included entities
+must match; shared features must retain their values and types. When feature
+selections differ, all results must retain the same fitted `mids` object, and
+selected values are checked against its corresponding completion. Changing a
+clustering feature selection does not change the imputation model. See
+the "Compare feature selections" section of the external-feature tutorial
+listed under [Documentation](#documentation) for an example. Unmatched
+completions or different included entities are refused. The summary reports
+descriptive means and ranges across imputations;
+these are not pooled inference or sampling stability. No setting is
+automatically selected.
 
 Pairwise distances use quadratic memory. The 5,000-entity limits are input
 guards, not performance or memory guarantees; multiply imputed analyses also
@@ -1378,20 +1389,23 @@ its calculations, and updating an object does not broaden its statistical use.
 
 ## Documentation
 
-The package includes the following vignettes:
+The package includes the following tutorials. On the documentation website,
+open them from the **Articles** menu. In R, run the command below to read the guide
+shipped with your installed version.
 
-- [End-to-end workflow](vignettes/mfrmr-workflow.Rmd)
-- [MML estimation and marginal-fit diagnostics](vignettes/mfrmr-mml-and-marginal-fit.Rmd)
-- [Portable calibration and fresh-session scoring](vignettes/mfrmr-portable-calibration.Rmd)
-- [Rater attributes, multiple imputation, and exploratory grouping](vignettes/mfrmr-external-features.Rmd)
-- [Migrating from FACETS](vignettes/mfrmr-facets-migration.Rmd)
-- [Visual diagnostics](vignettes/mfrmr-visual-diagnostics.Rmd)
-- [Reporting and APA-oriented output](vignettes/mfrmr-reporting-and-apa.Rmd)
-- [Linking and DFF](vignettes/mfrmr-linking-and-dff.Rmd)
-- [Bounded GPCM scope](vignettes/mfrmr-gpcm-scope.Rmd)
+| Guide | Open in R |
+| --- | --- |
+| End-to-end workflow | `vignette("mfrmr-workflow", package = "mfrmr")` |
+| MML estimation and marginal-fit diagnostics | `vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")` |
+| Portable calibration and fresh-session scoring | `vignette("mfrmr-portable-calibration", package = "mfrmr")` |
+| Exploring person, rater, and task attributes | `vignette("mfrmr-external-features", package = "mfrmr")` |
+| Migrating from FACETS | `vignette("mfrmr-facets-migration", package = "mfrmr")` |
+| Visual diagnostics | `vignette("mfrmr-visual-diagnostics", package = "mfrmr")` |
+| Reporting and APA-oriented output | `vignette("mfrmr-reporting-and-apa", package = "mfrmr")` |
+| Linking and DFF | `vignette("mfrmr-linking-and-dff", package = "mfrmr")` |
+| Bounded GPCM scope | `vignette("mfrmr-gpcm-scope", package = "mfrmr")` |
 
-Open a guide with `vignette("mfrmr-workflow", package = "mfrmr")` or list
-them with `browseVignettes("mfrmr")`. A printable API overview is installed
+List installed guides with `browseVignettes("mfrmr")`. A printable API overview is installed
 at `cheatsheet/mfrmr-cheatsheet.pdf`. Function-level help starts with
 `?fit_mfrm`, `?summary.mfrm_fit`, and `?plot.mfrm_fit`.
 

@@ -4,7 +4,11 @@ template:
   bootstrap: 5
 
 development:
-  mode: release
+  mode: auto
+
+redirects:
+  - [README.html, index.html]
+  - [NEWS.html, news/index.html]
 
 reference:
   - title: "Primary workflow"

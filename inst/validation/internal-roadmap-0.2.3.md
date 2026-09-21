@@ -9,6 +9,53 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: documentation routes and candidate evidence scope
+
+The development README now describes feature-selection comparisons, including
+pairing selected values to the same retained imputation model. Installation
+instructions distinguish the published release from the local source described
+by each README; no unpublished GitHub branch is presented as a download route.
+README/roadmap tutorial references use installed vignette commands and site
+article links. pkgdown uses automatic development routing for 0.2.4.9001 and
+unreleased styling for the 0.2.4 candidate; README/NEWS redirects retain the
+appropriate site prefix. No site was deployed.
+
+Local pkgdown 2.2.1 home-page builds passed for both trees. The generated
+HTML was checked for installation wording, development noindex/unreleased
+labels, tutorial links backed by source vignettes, local section anchors,
+and README/NEWS redirect destinations. Preview and verification log:
+/private/tmp/mfrmr-docs-review-20260921/. Article contents were not rebuilt;
+their existing execution evidence is reused. The source-download instructions
+were reviewed, not exercised as an installation into the user's R library.
+
+Candidate scope was checked at ff640bc against 79d0d87. The four changed R
+files and four affected test files match development b3ab4ca byte for byte.
+No compiled source, dependency declaration, namespace, estimation-core, or
+portable-calibration implementation changed. The candidate's test entry point
+adds only icc-input and shrinkage-replay to the lightweight suite; development
+also has its later feature tests. Documentation edits here do not change R code.
+
+| Evidence | Applicable source and limit |
+| --- | --- |
+| Completed full run, 19,438 passes / 42 warnings / 44 skips | Earlier 9010f66; reused historical evidence, not a full run of the current candidate. |
+| Local as-CRAN, 0 errors / 0 warnings / 1 incoming-feasibility NOTE | 79d0d87 archive, SHA256 e8db9b21b9751dcb214b6aef3f01e9b9d99311f1c52c002170af92ab0088ef32. |
+| Hosted run 35554924292 | Four successful environments for 79d0d87; Ubuntu-release cancelled. Neither a completed workflow nor a five-environment pass. |
+| ICC input/interval correction | Existing 187 passing scoped expectations cover the current ICC changes, including score units and retained rows. |
+| Shrinkage/replay correction | Existing 101 passing scoped expectations cover replacement and generated-script execution after diagnostic attachment. |
+
+The old receipt field PackagePayloadUnchangedAfterCheckedCandidate applies to
+its recorded f5cba9d documentation revision, not to ff640bc. README changes also
+change a source archive even when runtime files are unchanged. Do not transfer
+an old archive identity or whole-check status to the current source.
+
+Before submission, freeze one source archive and perform one batched package
+check with the existing lightweight entry point, including build, examples,
+help, and vignettes. This remains outstanding; repeated full-suite runs or a
+fresh five-environment matrix are not required by these documentation changes.
+Escalate to additional platform checks only for a concrete changed path or
+failure. No numerical tests, full suite, package check, stress run, or CI was
+rerun during this documentation review.
+
 ## 2026-09-21: compare selected feature sets
 
 mfrm_cluster_compare now compares different feature selections on the same
