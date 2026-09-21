@@ -2,6 +2,11 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* Extended the external-feature tutorial with separate person, rater, and
+  task groupings linked to rating assignments by ID. It distinguishes
+  unassigned ratings, missing assigned scores, and missing or undefined
+  attributes; demonstrates assignment coverage and connectivity review;
+  and explains the roles and limits of feature weighting, PCA, and k-means.
 * Added `mfrm_cluster_hierarchical()` for Gower-based average or complete
   linkage, retaining the full tree, a chosen group cut, profiles, and
   silhouettes. Its `plot()` method draws the stored dendrogram. Hierarchical

@@ -9,6 +9,60 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: many-feature workloads and cross-facet interpretation
+
+The user selected separate Person, Rater, and Task classifications followed
+by review of their relationships in the rating data. The public tutorial now
+uses the existing entity-level APIs and describe_mfrm_data(expected_design =
+...) rather than introducing a joint clustering or missing-score API. It adds
+240 fictional persons and 12 tasks to the existing 120-rater example, joins
+saved memberships by ID, and reports assignment/observation counts for all
+27 group combinations. One rater completion illustrates the join; the text
+does not present this as pooled multiple-imputation inference.
+
+The updated tutorial executed successfully. Its declared roster contains
+1,440 cells out of 345,600 possible combinations; 1,368 scores are observed
+and 72 assigned scores are absent (95% coverage). Observed and declared
+Person-Rater and Person-Task graphs each have one component. Checks confirmed
+row preservation, coverage totals, all 27 group combinations, and no unexpected
+observed cells. The join starts from the declared roster; an additional check
+removed all missing-score rows and recovered the identical group coverage,
+including its assigned denominator. Connectivity is not treated as proof of
+full identification.
+Preview and checked results are in
+/private/tmp/mfrmr-multifacet-features-20260921/.
+
+Primary-source review supports the public distinction between planned
+allocation and missingness mechanisms (Rubin, 1976), design-dependent DRF
+detection (Wind and Ge, 2021), noise-variable sensitivity (Steinley and Brusco,
+2008), and the continuous-relaxation relationship between PCA and k-means
+(Ding and He, 2004). Existing Eckes/Wesolowski MFRM clustering references
+remain. The tutorial explains why repeated entity attributes on rating rows,
+independently paired facet imputations, numeric nominal-category codes,
+PCA truncation, and range-scaling PC scores can change the intended analysis.
+
+Only new high-dimensional workloads were run. The existing runner adds
+100, 500, and 1,000 mixed features at n = 1,000, with no imputation or planted
+groups. Each case fits k = 4 with equal weights and k = 5 with Feature1
+weight 3, then compares partitions. All nine cases passed without warnings:
+
+| Features | PAM seconds / RSS MiB | Average seconds / RSS MiB | Complete seconds / RSS MiB |
+| ---: | ---: | ---: | ---: |
+| 100 | 1.215 / 254.719 | 0.998 / 228.875 | 0.999 / 223.547 |
+| 500 | 3.135 / 284.109 | 3.017 / 280.406 | 3.138 / 268.266 |
+| 1,000 | 6.065 / 426.016 | 5.903 / 399.766 | 6.268 / 403.750 |
+
+The unchanged API source is recorded at base a6d56a1; runner/source snapshots,
+settings, checks, process measurements, session information, and summary are
+in validation-results/high-dimensional-feature-stress-20260921/.
+Measurements include startup, data generation, both fits, comparison, and
+checks in fresh R/Python processes on the previously documented macOS/R setup.
+These single-seed results establish operational execution only. They do not
+validate recovery, stability, missingness correction, joint maximal n/p, or
+high-dimensional imputation. No package implementation changed; prior API
+tests are reused. No full suite, package check, previous workload matrix,
+or CI run was repeated. The 0.2.4 candidate remains unchanged.
+
 ## 2026-09-21: scoped hierarchical workload checks
 
 The hierarchy API's declared size limit previously had only small-case and

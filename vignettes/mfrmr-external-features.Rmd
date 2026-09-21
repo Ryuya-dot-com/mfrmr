@@ -1,8 +1,8 @@
 ---
-title: "Exploring rater attributes with missing data"
+title: "Exploring person, rater, and task attributes"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Exploring rater attributes with missing data}
+  %\VignetteIndexEntry{Exploring person, rater, and task attributes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -24,6 +24,9 @@ program. No true groups are planted. Successful execution does not establish
 that these features, imputation models, or groups are appropriate for your
 raters. The groups describe backgrounds; they do not measure rater quality,
 severity, or ability, and do not identify which training will be effective.
+Later sections add separate person and task attributes, link all three
+classifications to a sparse assignment roster, and explain the roles of
+feature selection and PCA.
 
 These APIs belong to development version 0.2.4.9001. Install the optional
 `cluster` and `mice` packages to run the entire example.
@@ -342,6 +345,207 @@ Grouping estimated MFRM effects would additionally require consideration of
 their measurement uncertainty and comparability. The present external-feature
 API does not propagate that uncertainty.
 
+## Link separately grouped persons, raters, and tasks
+
+An assessment team may also ask whether different kinds of persons and tasks
+are represented across its rater groups. Keep three feature tables, with one
+row per person, rater, or task, and a separate rating table containing their
+IDs. The tables can have different numbers and types of features. Clustering
+the joined rating rows would repeat attributes according to assignment
+frequency and answer a different question about rating events.
+
+| Table | Example features | Unit classified |
+| --- | --- | --- |
+| Persons | Years of language study, preparation hours, instruction mode | One person |
+| Raters | Experience, workload, specialty, training, certification | One rater |
+| Tasks | Time limit, word limit, response format | One task |
+
+The following extends the fictional example with 240 persons and 12 tasks.
+It uses the existing rater partition from **one completed table** only to
+illustrate joining by ID. The other two tables have no missing attributes.
+The group counts are illustrative choices, not estimated numbers of types.
+
+```{r other-facet-features}
+set.seed(7241)
+persons <- data.frame(
+  Person = sprintf("P%03d", 1:240),
+  LanguageStudyYears = sample(0:15, 240, replace = TRUE),
+  PreparationHours = round(exp(rnorm(240, log(20), 0.5))),
+  InstructionMode = factor(sample(c("Classroom", "Online", "Hybrid"),
+                                  240, replace = TRUE)))
+tasks <- data.frame(
+  Task = sprintf("T%02d", 1:12),
+  TimeLimitMinutes = sample(c(10, 20, 30), 12, replace = TRUE),
+  WordLimit = sample(c(100, 200, 400), 12, replace = TRUE),
+  ResponseFormat = factor(rep(c("Summary", "Argument", "Explanation"), 4)))
+person_groups <- mfrm_cluster(mfrm_features(persons, "Person",
+  c("LanguageStudyYears", "PreparationHours", "InstructionMode")), k = 3)
+task_groups <- mfrm_cluster(mfrm_features(tasks, "Task",
+  c("TimeLimitMinutes", "WordLimit", "ResponseFormat")), k = 3)
+```
+
+Record the planned assignments before collecting scores. Here each person
+receives three distinct tasks and each performance is assigned two distinct
+raters. The full Person-by-Rater-by-Task cross-product is not the assignment
+roster. Random scores below are placeholders for demonstrating coverage;
+they provide no evidence about achievement, rater effects, or model fit.
+
+```{r sparse-rating-roster}
+assignments <- do.call(rbind, lapply(persons$Person, function(id) {
+  do.call(rbind, lapply(sample(tasks$Task, 3), function(task) {
+    data.frame(Person = id, Rater = sample(raters$Rater, 2), Task = task)
+  }))
+}))
+ratings <- assignments
+ratings$Score <- sample(1:4, nrow(ratings), replace = TRUE)
+ratings$Score[sample(nrow(ratings), 72)] <- NA_integer_
+rating_review <- describe_mfrm_data(ratings, person = "Person",
+  facets = c("Rater", "Task"), score = "Score",
+  rating_min = 1, rating_max = 4, keep_original = TRUE,
+  include_agreement = FALSE, expected_design = assignments)
+rating_review$structural_missingness$summary
+rating_review$design_connectivity
+```
+
+There are 1,440 assigned cells out of 345,600 possible combinations, and
+72 assigned scores are absent. Assignment coverage is therefore 95%, even
+though fewer than 0.5% of all combinations were assigned. Neither a zero
+score nor an imputed score is inserted into unassigned cells. With actual
+data, supply the original roster: reconstructing it from observed scores
+would conceal missing assigned ratings.
+
+Start from the assignment roster so that even an entirely absent rating row
+remains in the denominator. This example has one score per Person-Rater-Task
+key; check uniqueness before joining. For repeated occasions, include the
+occasion in the key. Attach the three independently obtained group labels
+by ID with `match()`; row position in a feature table is not an ID.
+The check stops this illustration if an ID is unknown or an entity has no
+classification. In an analysis allowing omitted entities, report their
+unclassified ratings separately rather than silently dropping them.
+
+```{r link-facet-groups}
+rating_key <- c("Person", "Rater", "Task")
+stopifnot(!anyDuplicated(assignments[rating_key]),
+          !anyDuplicated(ratings[rating_key]))
+labeled <- merge(assignments, ratings, by = rating_key,
+                 all.x = TRUE, sort = FALSE)
+labeled$PersonGroup <- person_groups$membership$Cluster[
+  match(labeled$Person, person_groups$membership$ID)]
+labeled$RaterGroup <- one_completion$membership$Cluster[
+  match(labeled$Rater, one_completion$membership$ID)]
+labeled$TaskGroup <- task_groups$membership$Cluster[
+  match(labeled$Task, task_groups$membership$ID)]
+group_columns <- c("PersonGroup", "RaterGroup", "TaskGroup")
+stopifnot(!anyNA(labeled[group_columns]))
+for (column in group_columns) labeled[[column]] <- factor(labeled[[column]], 1:3)
+labeled$Assigned <- 1L
+labeled$Observed <- as.integer(!is.na(labeled$Score))
+planned_counts <- xtabs(Assigned ~ PersonGroup + RaterGroup + TaskGroup,
+                        data = labeled)
+observed_counts <- xtabs(Observed ~ PersonGroup + RaterGroup + TaskGroup,
+                         data = labeled)
+group_coverage <- as.data.frame(planned_counts, responseName = "Assigned")
+group_coverage$Observed <- as.vector(observed_counts)
+group_coverage$Coverage <- ifelse(group_coverage$Assigned > 0,
+  group_coverage$Observed / group_coverage$Assigned, NA_real_)
+group_coverage
+```
+
+This table answers which group combinations were assigned and how many of
+their scores were recorded. A combination with no assignments has unavailable
+coverage, not zero coverage. Counts reflect the assignment design; they do
+not demonstrate associations between traits or differences in rating quality.
+Ratings share persons, raters, and tasks, so an ordinary independent-row
+test of group differences would not account for this dependence. Raw score
+means also confound person composition, rater severity, and task difficulty.
+Such comparisons need an appropriate measurement model and sufficient
+overlap, rather than treating the group labels as established latent classes.
+
+If attributes are imputed for several facets, each imputation model must
+respect its unit of analysis and relevant dependencies. The current API
+analyzes one entity table at a time; it does not fit a joint cross-facet
+imputation model or pool group-by-group rating effects. Pairing the first
+completion of independently fitted person and rater models does not establish
+a valid joint imputation. Nor can numeric group labels be matched across
+completions without addressing label changes and membership uncertainty.
+
+## Distinguish sparse assignment from missing attributes
+
+Four situations require different decisions:
+
+| Situation | Example | What to retain or review |
+| --- | --- | --- |
+| Unassigned rating | A rater was never scheduled to score a performance | Original assignment roster; no invented observation |
+| Missing assigned rating | A scheduled score was not submitted | Assigned denominator, absence reason, observed overlap |
+| Unrecorded external attribute | Training hours were not recorded | Eligible cells, predictors, imputation assumptions |
+| Undefined external attribute | Mentoring years for someone with no mentoring role | Meaning of the attribute; not an ordinary imputation target |
+
+Sparseness describes how much of a design is observed and how those
+observations connect. MCAR means that missingness does not depend on the
+observed or missing values. MAR allows dependence on observed values, but
+not on missing values after conditioning on the observed information. MNAR
+allows additional dependence on the missing values. Planned allocation
+does not automatically imply MCAR: assignment may depend on recorded
+proficiency or on information absent from the analysis. A missingness rate
+or diagnostic test alone cannot establish MAR. See
+[Rubin (1976), *Inference and Missing Data*](https://doi.org/10.1093/biomet/63.3.581)
+for the conditions for ignoring a missingness process in inference.
+
+Inspect both planned and observed connectivity, per-level support, and
+coverage within relevant subgroups. Connected Person-facet graphs do not
+by themselves establish identification of a complete model, especially with
+interactions, or adequate precision. In a simulation of sparse MFRM designs,
+[Wind and Ge (2021)](https://doi.org/10.1177/0013164420988108)
+found that detecting differential rater functioning depended on the linking
+design, not merely on having incomplete ratings. Their findings do not give
+a universal acceptable missingness percentage. Imputing external attributes
+does not add observed links or resolve confounding between disconnected
+rating blocks. Grouping noisy estimated effects from sparse data may also
+reflect differences in precision, which this feature API does not model.
+
+## Many features, k-means, and PCA
+
+More columns are not necessarily more useful information. Repeated measures
+of one attribute can dominate a distance through their combined weight;
+unrelated columns can obscure the differences of interest.
+[Steinley and Brusco (2008)](https://doi.org/10.1007/s11336-007-9019-y)
+examined variable selection for clustering and found that non-informative
+variables and their distributions affected performance. Choose features and
+their substantive domains before choosing weights. For example, equal total
+weight for a domain containing ten features and one containing two requires
+different per-feature weights. This is a substantive choice, not an automatic
+correction for correlations. The current comparison API varies positive
+weights on the same features; comparisons that change the selected feature
+set are not currently supported.
+
+PCA and k-means answer different questions. PCA represents variation in
+numeric features with orthogonal continuous components. K-means partitions
+entities to minimize within-group squared Euclidean distances to centroids.
+[Ding and He (2004), *Principal Component Analysis and Effective K-means
+Clustering*](https://doi.org/10.1137/1.9781611972740.54)
+describe their relationship through a continuous relaxation of discrete
+cluster membership. This does not make ordinary PCA and discrete clustering
+equivalent, or establish that the first two PCs recover useful groups.
+
+For a fixed numeric input, retaining all nonzero PC scores without further
+rescaling preserves its Euclidean distances. Truncating components changes
+those distances and may remove low-variance separation as well as noise.
+Standardizing features before PCA, or whitening the scores afterwards,
+also changes the chosen geometry. An explained-variance threshold alone is
+not evidence that a clustering structure was preserved. A two-component
+plot is a projection, not a test for the existence of clusters.
+
+Ordinary PCA and k-means should not receive arbitrary numeric codes for
+nominal categories such as specialty. The present mixed-feature API uses
+Gower distances with PAM or average/complete linkage; it does not implement
+PCA, k-means, or automatic feature selection. Base R provides
+[`prcomp()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/prcomp.html)
+and [`kmeans()`](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html)
+for separately specified numeric analyses. A future integrated route needs
+explicit scaling, retained dimensions, initialization, and uncertainty
+handling. Simply sending PC scores to the current Gower interface would
+range-scale them again and would not reproduce Euclidean k-means.
+
 ## Plan for the size of the analysis
 
 Pairwise distances require memory that grows quadratically with the number
@@ -361,3 +565,14 @@ memory requirements in this example. These single-run measurements include
 R startup and data preparation; they are not a memory bound or a prediction
 for other machines, features, or imputation counts. The 5,000-entity imputation
 workflow was not evaluated in that example.
+
+Increasing feature count also increases distance calculations and stored
+profiles. A separate run with 1,000 entities and 1,000 mixed-type features,
+again fitting and comparing two configurations, took about six seconds per
+method and used approximately 400--430 MiB of peak process memory on the
+same platform, for PAM, average linkage, and complete linkage. This was a
+complete-feature workload without planted groups. It does not establish
+useful classification, joint performance at the largest entity and feature
+counts, or feasibility of a 1,000-feature imputation model. A large imputation
+model requires its own predictor selection and checks for information,
+dependence, and model fit.

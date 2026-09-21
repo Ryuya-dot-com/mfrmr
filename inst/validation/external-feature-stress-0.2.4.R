@@ -24,6 +24,10 @@ design <- data.frame(
   K = c(4L, 4L, 4L, 4L, 100L, 8L, 4L, 4L, 4L, 4L, 4L),
   M = c(rep(0L, 8L), 5L, 20L, 5L),
   MissingRate = c(rep(0, 8L), .2, .2, .6))
+design <- rbind(design, data.frame(
+  Case = paste0("features_", c(100L, 500L, 1000L)),
+  N = 1000L, P = c(100L, 500L, 1000L), K = 4L, M = 0L,
+  MissingRate = 0))
 stopifnot(case %in% design$Case)
 condition <- design[match(case, design$Case), ]
 condition$Backend <- backend

@@ -104,6 +104,15 @@ Gower dissimilarities, with retained trees and dendrograms. Their partitions
 can be compared with PAM, including across the same feature imputations.
 Ward clustering, pooled trees, and branch-support estimates are not provided.
 
+The [external-feature tutorial](vignettes/mfrmr-external-features.Rmd) now
+demonstrates separate person, rater, and task tables, with classifications
+joined by ID to planned and observed rating rows. This supports descriptive
+assignment review, not a joint clustering model or inference about group
+effects. Many-feature analyses require attention to redundant and irrelevant
+variables. Feature-set comparisons, numeric PCA/k-means integration, and
+joint cross-facet imputation remain future work; they need explicit distance,
+scaling, dependence, and uncertainty choices before implementation.
+
 Missing external features remain visible with user-supplied reasons. Clustering
 stops by default; explicit omission retains unclassified IDs. This is not
 imputation or correction for missing-data bias. Planned unassigned ratings,
