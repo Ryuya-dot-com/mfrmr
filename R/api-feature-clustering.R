@@ -176,6 +176,8 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'   Numeric 0/1 features are treated as numeric, not asymmetric presence/absence.
 #'   Every selected feature must vary among included entities. Gower scaling,
 #'   feature types, weights, omission policy, and numeric ranges are retained.
+#'   Numeric ranges and relative weights must be representable without overflow
+#'   or underflow; rescale features or revise extreme weight ratios if refused.
 #'
 #'   PAM uses deterministic BUILD/SWAP initialization; tied distances may admit
 #'   alternative partitions. Group numbers are arbitrary labels. These are
@@ -186,7 +188,8 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'
 #'   Pairwise distances require quadratic memory. This interface is limited
 #'   to 5,000 included entities. It does not silently sample larger inputs.
-#' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [cluster::daisy()], [cluster::pam()]
+#' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
+#'   [cluster::daisy()], [cluster::pam()]
 #' @examples
 #' # See mfrm_features() for a complete mixed-feature example.
 #' @export
@@ -218,12 +221,23 @@ mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
     stop("`weights` must be a named, positive finite numeric vector covering each selected feature once.", call. = FALSE)
   }
   weights <- weights[x$features]
+  distance_weights <- weights / max(weights)
+  if (any(distance_weights == 0)) {
+    stop("Relative feature weights underflow to zero; revise the weight ratios.", call. = FALSE)
+  }
+  numeric_names <- x$features[vapply(values, is.numeric, logical(1))]
+  ranges <- data.frame(Feature = numeric_names,
+    Minimum = vapply(values[numeric_names], min, numeric(1)),
+    Maximum = vapply(values[numeric_names], max, numeric(1)), row.names = NULL)
+  if (any(!is.finite(ranges$Maximum - ranges$Minimum))) {
+    stop("Numeric feature ranges overflow; rescale these features before clustering.", call. = FALSE)
+  }
   if (!requireNamespace("cluster", quietly = TRUE)) {
     stop("Install the optional 'cluster' package to use mfrm_cluster().", call. = FALSE)
   }
   rownames(values) <- as.character(seq_len(n))
   binary <- which(vapply(values, is.logical, logical(1)))
-  distance <- cluster::daisy(values, metric = "gower", weights = unname(weights / max(weights)),
+  distance <- cluster::daisy(values, metric = "gower", weights = unname(distance_weights),
                              type = list(symm = binary), warnBin = FALSE)
   if (any(!is.finite(distance))) stop("The selected features do not produce finite distances; review their scales.", call. = FALSE)
   fit <- cluster::pam(distance, k = as.integer(k), diss = TRUE, variant = "original",
@@ -252,10 +266,6 @@ mfrm_cluster <- function(x, k, weights = NULL, missing = c("error", "omit")) {
         Proportion = as.numeric(counts) / length(value))
     }
   }
-  numeric_names <- x$features[vapply(values, is.numeric, logical(1))]
-  ranges <- data.frame(Feature = numeric_names,
-    Minimum = vapply(values[numeric_names], min, numeric(1)),
-    Maximum = vapply(values[numeric_names], max, numeric(1)), row.names = NULL)
   out <- list(membership = membership, cluster_summary = cluster_summary,
     profiles = list(
       numeric = dplyr::bind_rows(data.frame(Cluster = integer(), Feature = character(),
@@ -351,7 +361,8 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   No consensus partition, confidence interval, or automatic group selection
 #'   is produced. Both the full ID-indexed matrix and pairwise distances require
 #'   quadratic memory, so this comparison is limited to 5,000 total entities.
-#' @seealso [mfrm_features()], [mfrm_cluster()], [mice::mice()], [mice::complete()]
+#' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
+#'   [mice::mice()], [mice::complete()]
 #' @examples
 #' if (requireNamespace("mice", quietly = TRUE) &&
 #'     requireNamespace("cluster", quietly = TRUE)) {

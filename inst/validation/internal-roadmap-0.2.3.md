@@ -9,6 +9,32 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: group-count and feature-weight sensitivity
+
+The user selected comparison across group counts and feature weights as the
+next clustering extension. `mfrm_cluster_compare()` reuses named, existing
+ordinary or multiply imputed results. It aligns IDs, requires the same original
+features and included sample, and pairs matching completed tables by imputation
+number. Pair splits/joins, changed fractions and adjusted Rand indices are
+label-invariant; group sizes, silhouettes, weights and original analyses remain
+available. Across-imputation summaries are descriptive, with no automatic
+setting selection, inferential pooling or sampling-stability claim.
+
+Review also reproduced silent loss of a numeric feature when finite endpoints
+overflow their range: all silhouettes became one despite within-group numeric
+variation. Range overflow and relative-weight underflow now stop before daisy.
+The error asks users to rescale features or revise weight ratios.
+
+Scoped validation passes: 53 comparison expectations, 127 feature-clustering
+expectations and four namespace expectations. Checks include hand-derived pair
+counts/ARI, independent pair enumeration, label/row/feature-order invariance,
+excluded IDs, mismatched completions and a no-refitting check. The first run
+found a test fixture that altered the exclusion mask while targeting invalid
+group counts; correcting that fixture required rerunning only the comparison
+file. Roxygen generation and the new public help example pass. No whole suite,
+package check or hosted CI was run. This remains local 0.2.4.9001 development;
+the separate 0.2.4 release candidate is unchanged.
+
 ## 2026-09-21: post-fit shrinkage replacement and replay
 
 Traced two inconsistent states in the public post-fit helper: its current

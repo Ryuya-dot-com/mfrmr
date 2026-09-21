@@ -989,6 +989,39 @@ describe sensitivity to the imputations, conditional on the chosen model and
 clustering settings; they are not membership probabilities or sampling
 stability. No automatic missing-score correction is performed.
 
+To review sensitivity to group count or feature weights, fit the settings you
+want to compare and pass the named results to `mfrm_cluster_compare()`. The
+comparison reuses these results without refitting:
+
+```r
+alternatives <- list(
+  TwoGroups = mfrm_cluster(features, k = 2),
+  ThreeGroups = groups,
+  ExperienceWeighted = mfrm_cluster(features, k = 3,
+    weights = c(Experience = 3, Specialty = 1))
+)
+comparison <- mfrm_cluster_compare(alternatives)
+comparison$analysis_summary
+comparison$comparisons
+summary(comparison)
+```
+
+`ChangedFraction` is the fraction of entity pairs whose together/apart status
+changes; `SplitPairs` and `JoinedPairs` show the direction. `AdjustedRand`
+also compares the partitions while correcting for agreement expected under
+random partitions with fixed group sizes. Both measures ignore arbitrary group
+numbering. Inspect group sizes and profiles alongside them. Mean silhouettes
+under different feature weights use different distances and do not establish
+the best weights.
+
+For multiple imputations, supply a named list of `mfrm_cluster_imputed()`
+results fitted with the same reviewed features, selected missing cells, and
+`mids` object, varying `k` or `weights`. Each comparison pairs the same completed
+feature table on both sides. Changed data, unmatched imputations, or different
+included entities are refused. The summary reports descriptive means and
+ranges across imputations; these are not pooled inference or sampling
+stability. No setting is automatically selected.
+
 ## ICC inputs and intervals
 
 `compute_facet_icc()` preserves numeric character/factor score labels. Missing

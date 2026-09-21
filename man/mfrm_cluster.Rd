@@ -49,6 +49,8 @@ declared order, and logical features use symmetric binary differences.
 Numeric 0/1 features are treated as numeric, not asymmetric presence/absence.
 Every selected feature must vary among included entities. Gower scaling,
 feature types, weights, omission policy, and numeric ranges are retained.
+Numeric ranges and relative weights must be representable without overflow
+or underflow; rescale features or revise extreme weight ratios if refused.
 
 PAM uses deterministic BUILD/SWAP initialization; tied distances may admit
 alternative partitions. Group numbers are arbitrary labels. These are
@@ -64,5 +66,6 @@ to 5,000 included entities. It does not silently sample larger inputs.
 # See mfrm_features() for a complete mixed-feature example.
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[cluster:daisy]{cluster::daisy()}}, \code{\link[cluster:pam]{cluster::pam()}}
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster_imputed]{mfrm_cluster_imputed()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
+\code{\link[cluster:daisy]{cluster::daisy()}}, \code{\link[cluster:pam]{cluster::pam()}}
 }

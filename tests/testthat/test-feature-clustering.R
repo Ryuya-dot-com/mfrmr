@@ -114,6 +114,20 @@ test_that("unusable features and clustering requests are refused before fitting"
   expect_equal(names(out$profiles$numeric), c("Cluster", "Feature", "N", "Mean", "Median", "SD"))
 })
 
+test_that("numeric overflow and weight underflow cannot silently discard features", {
+  skip_if_not_installed("cluster")
+  input <- data.frame(ID = letters[1:6],
+    Wide = c(-1e308, -1e307, 0, 1e307, 5e307, 1e308), Group = rep(c("a", "b"), each = 3))
+  x <- mfrm_features(input, "ID", c("Wide", "Group"))
+  expect_error(mfrm_cluster(x, 2), "ranges overflow.*rescale")
+  input$Wide <- input$Wide / 1e308
+  x <- mfrm_features(input, "ID", c("Wide", "Group"))
+  groups <- mfrm_cluster(x, 2)
+  expect_true(all(is.finite(groups$membership$Silhouette)))
+  expect_true(all(groups$membership$Silhouette < 1))
+  expect_error(mfrm_cluster(x, 2, weights = c(Wide = 1e-308, Group = 1e308)), "underflow")
+})
+
 test_that("mice completions preserve observed mixed features and model diagnostics", {
   skip_if_not_installed("mice")
   skip_if_not_installed("cluster")

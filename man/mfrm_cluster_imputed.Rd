@@ -118,5 +118,6 @@ if (requireNamespace("mice", quietly = TRUE) &&
 }
 }
 \seealso{
-\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[mice:mice]{mice::mice()}}, \code{\link[mice:complete]{mice::complete()}}
+\code{\link[=mfrm_features]{mfrm_features()}}, \code{\link[=mfrm_cluster]{mfrm_cluster()}}, \code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}},
+\code{\link[mice:mice]{mice::mice()}}, \code{\link[mice:complete]{mice::complete()}}
 }

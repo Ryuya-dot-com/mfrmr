@@ -112,6 +112,14 @@ imputations without averaging arbitrary group labels. They do not establish
 sampling stability or provide pooled inferential estimates. Numeric ranges are
 recalculated in each completed sample and retained for inspection.
 
+Group-count and feature-weight sensitivity can be reviewed by comparing
+existing clustering results. Pair changes and adjusted Rand indices compare
+partitions without relying on group numbers. For multiply imputed features,
+the comparison pairs identical completed tables and retains every imputation's
+result. Group sizes, profiles, and silhouettes remain available for substantive
+review; no setting is automatically selected. These descriptive comparisons
+do not provide sampling stability or pooled inference.
+
 Further missing-data support for rating responses must preserve rating
 structure and combine downstream estimates and uncertainty on a common scale.
 Nonresponse related to unobserved outcomes requires explicit assumptions and

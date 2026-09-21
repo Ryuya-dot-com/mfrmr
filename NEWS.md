@@ -19,6 +19,17 @@ This unreleased development version extends the 0.2.4 release candidate.
   co-membership proportions; a failed analysis stops the comparison. These
   proportions describe sensitivity to the supplied imputations, not membership
   probabilities, sampling stability, or pooled inferential estimates.
+* Added `mfrm_cluster_compare()` to compare existing groupings across group
+  counts and feature weights without refitting. It reports label-invariant
+  pair changes and adjusted Rand indices, retaining group sizes, silhouettes,
+  and weights. Multiple-imputation results are compared within the same
+  completed feature tables; different data or included entities are refused.
+  Across-imputation summaries are descriptive, without pooled inference or
+  automatic selection of a setting.
+* External-feature clustering now refuses numeric-range overflow and relative
+  weight underflow, which could otherwise silently remove a feature's
+  contribution to distances. Rescale affected features or revise weight ratios
+  before rerunning affected analyses.
 * `mfrm_generalizability()` now stops on missing scores or selected facet
   values unless `missing = "omit"` is explicit. Unparseable scores and infinite
   values are refused rather than silently discarded. G/D results retain input,
