@@ -1,3 +1,18 @@
+# mfrmr 0.2.4.9001
+
+This unreleased development version extends the 0.2.4 release candidate.
+
+* Added `mfrm_features()` to prepare one row per Person, rater, or other entity
+  from explicitly selected external attributes. It retains feature types,
+  missing cells, user-supplied missingness reasons, and all entity identifiers.
+* Added `mfrm_cluster()` for exploratory grouping using Gower distances and
+  PAM. Users choose the number of groups and feature weights. Numeric ranges,
+  cluster profiles, representative entities, and silhouette widths are retained.
+  Missing values stop clustering by default; explicit complete-case selection
+  retains excluded entities with unavailable memberships. No imputation,
+  stability assessment, latent-class interpretation, or rater-quality decision
+  is provided. These functions are not part of the 0.2.4 release candidate.
+
 # mfrmr 0.2.4
 
 This version adds reusable calibration and new-Person scoring, and corrects

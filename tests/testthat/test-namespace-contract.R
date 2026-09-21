@@ -7,6 +7,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
 
   exports <- sub("^export\\((.*)\\)$", "\\1", grep("^export\\(", ns_lines, value = TRUE))
   expected_exports <- c(
+    "mfrm_features",
+    "mfrm_cluster",
     "analyze_dff",
     "analyze_dif",
     "analyze_facet_equivalence",
@@ -182,6 +184,10 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
 
   s3 <- grep("^S3method\\(", ns_lines, value = TRUE)
   expected_s3 <- c(
+    "S3method(print,mfrm_features)",
+    "S3method(summary,mfrm_features)",
+    "S3method(print,mfrm_clusters)",
+    "S3method(summary,mfrm_clusters)",
     "S3method(print,mfrm_fit)",
     "S3method(print,mfrm_person_fit_indices)",
     "S3method(print,mfrm_plot_bundle)",

@@ -24,7 +24,8 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the `0.2.4` release candidate, which has not been released.
+This README describes the unreleased development version `0.2.4.9001`.
+The external-feature functions below are not part of the `0.2.4` release candidate.
 Functions and options shown here may differ from an installed release; check
 `packageVersion("mfrmr")` and the help shipped with that installation.
 For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
@@ -947,6 +948,31 @@ case-EAP files contain identifiers and person-level estimates. The helper warns
 when writing these files and creates `*_privacy_notice.csv`. Store the bundle in
 an approved restricted location and pseudonymize or redact it as required
 before sharing.
+
+## External features and exploratory groups
+
+In this development version, `mfrm_features()` reviews a table with one row per
+Person or rater and explicitly selected external attributes, such as experience
+or specialization. `mfrm_cluster()` groups those profiles using Gower distances
+and PAM; install the optional `cluster` package to use it.
+
+```r
+features <- mfrm_features(rater_attributes, id = "Rater",
+                         features = c("Experience", "Specialty"))
+summary(features)
+features$missing
+groups <- mfrm_cluster(features, k = 3)
+groups$membership
+groups$profiles
+```
+
+Here `rater_attributes` is your entity-level table. Group count and feature
+selection are substantive choices. Missing features stop clustering by default;
+`missing = "omit"` explicitly selects complete cases and retains excluded IDs
+with missing group membership. Optional missingness reasons are documented in
+`?mfrm_features`. No value is imputed. Silhouette widths describe separation
+in this sample; stability, inferential comparisons, and measurement uncertainty
+are not assessed. The groups do not establish ability levels or rater quality.
 
 ## Model scope
 

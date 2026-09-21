@@ -1,4 +1,11 @@
-## Submission
+## Development snapshot
+
+This branch is the unreleased 0.2.4.9001 development version, adding external
+feature review and exploratory grouping. It is not a CRAN submission candidate.
+The results below refer to the separately preserved 0.2.4 candidate; they do
+not cover these new functions.
+
+## Previous candidate submission text
 
 This is an update from mfrmr 0.2.3.1 to 0.2.4. The maintainer and license are
 unchanged.

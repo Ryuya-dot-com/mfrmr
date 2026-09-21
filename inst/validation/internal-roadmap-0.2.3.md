@@ -9,9 +9,46 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: external-feature review and exploratory grouping
+
+The user selected external attributes such as experience, specialization, and
+background for the first clustering workflow. Development continues on
+`development/external-feature-clustering-20260921` as 0.2.4.9001, based on
+`c4867b7`. The 0.2.4 candidate branch and its verified source remain unchanged.
+
+`mfrm_features()` retains one row per entity, explicit feature selection/types,
+missing cells, and optional user-supplied reasons. `mfrm_cluster()` uses the
+optional cluster package's Gower/PAM implementation, explicit group count and
+positive feature weights, and an error-by-default missingness policy. Explicit
+complete-case selection retains excluded IDs with unavailable memberships.
+Results preserve profiles, medoids, silhouette widths, and the numeric ranges
+actually used. Public displays explain sample separation without inferring
+latent classes, rater quality, or stability. Pairwise-distance memory limits
+this first interface to 5,000 included entities. No imputation, latent-feature
+uncertainty propagation, resampling stability, or multivariate G-theory is added.
+
+The new API tests pass 60 expectations and the namespace contract passes four,
+without failures, warnings or skips. The first installed check finds one old
+vignette-artifact test tying the recorded generator version to the package's
+current version. Existing estimator code and all ten saved artifacts are
+unchanged. The repaired test pins their actual 0.2.4.9000 provenance and retains
+all semantic checks; its 70 repository expectations pass. No artifact is
+regenerated or relabelled. The initial failed archive/logs are retained.
+
+The final exact archive passes `NOT_CRAN=false R CMD check --no-manual` with
+zero errors, warnings and notes; its 733 lightweight expectations have zero
+failures/warnings and three intentional skips. Examples and vignette rebuilding
+pass. Logs, source identity, checksums and both archives are retained under
+`validation-results/external-features-20260921/`. This is local standard-check
+coverage, not a new full-suite, hosted-matrix, or CRAN `--as-cran` result.
+Next missing-data work should address external-feature imputation and compatible
+downstream pooling; it must preserve entity structure and distinguish omitted
+ratings from missing attributes. The G-theory scope and deferred multivariate
+work remain unchanged.
+
 ## 2026-09-19: existing public outputs before new tests
 
-This is the active execution order, following the user's acceptance of the
+This records the 0.2.4 candidate execution order, following the user's acceptance of the
 release review and instruction to keep internal language out of user output.
 It supersedes the ordered queue below. No new large study is launched.
 

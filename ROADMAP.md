@@ -8,6 +8,7 @@ See [NEWS](NEWS.md) for implemented changes and the
 ## Current releases
 
 mfrmr 0.2.4 is a release candidate and has not been released.
+This source branch is the subsequent unreleased development version 0.2.4.9001.
 The README describes this working version; use `packageVersion("mfrmr")`
 and the help shipped with your installation for its available functionality.
 
@@ -82,6 +83,29 @@ For GPCM, "bounded" refers to documented model and workflow scope, not finite
 parameter box constraints. Numerical convergence alone does not remove its
 inferential restrictions. The [model-scope guide](vignettes/mfrmr-gpcm-scope.Rmd)
 describes the available routes.
+
+## External features, grouping, and missing values
+
+The development version adds external-feature review and exploratory grouping
+for one row per Person, rater, or other entity. Features, their types, weights,
+and the group count are explicit choices. Group profiles and representative
+entities help users interpret the partition; silhouette widths describe sample
+separation. Groups do not establish ability levels, rater quality, or latent
+measurement classes. Sampling stability and new-entity assignment require
+separate development and validation.
+
+Missing external features remain visible with user-supplied reasons. Clustering
+stops by default; explicit omission retains unclassified IDs. This is not
+imputation or correction for missing-data bias. Planned unassigned ratings,
+unobserved assigned ratings, and missing external attributes need distinct
+handling. The existing rating-design review remains the starting point for
+rating coverage; it does not infer why an observation is absent.
+
+Further missing-data support should reuse suitable multiple-imputation tools,
+preserve entity and rating structure, and combine downstream estimates and
+uncertainty on a common scale. Nonresponse related to unobserved outcomes
+requires explicit assumptions and sensitivity analysis. No general automatic
+missing-score correction or multiple-imputation API is promised for 0.2.4.
 
 ## Random-effects MFRM and testlet covariance
 

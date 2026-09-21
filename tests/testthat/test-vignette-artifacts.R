@@ -29,13 +29,10 @@ test_that("precomputed vignette artifacts match their semantic manifest", {
     ))
   }
   expect_true(all(manifest$DataKey == "example_operational"))
-  package_version <- as.character(utils::packageVersion("mfrmr"))
-  admissible_generator_versions <- if (grepl("[.]9000$", package_version)) {
-    package_version
-  } else {
-    c(package_version, paste0(package_version, ".9000"))
-  }
-  expect_true(all(manifest$GeneratedWith %in% admissible_generator_versions))
+  # Pin the actual provenance of these saved tables. An unrelated package
+  # version change does not regenerate their estimates. Intentional artifact
+  # regeneration must update this expectation and retain the semantic checks.
+  expect_true(all(manifest$GeneratedWith == "0.2.4.9000"))
 
   for (i in seq_len(nrow(manifest))) {
     path <- file.path(artifact_dir, manifest$Artifact[i])

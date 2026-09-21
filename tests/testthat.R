@@ -18,6 +18,7 @@ cran_light_tests <- c(
   "compiled-header-contract",
   "data-and-citation",
   "example-datasets",
+  "feature-clustering",
   "gauss-hermite-weights",
   "posterior-intervals",
   "mml-cpp11-backend",
