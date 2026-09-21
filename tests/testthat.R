@@ -19,6 +19,7 @@ cran_light_tests <- c(
   "data-and-citation",
   "example-datasets",
   "gauss-hermite-weights",
+  "icc-ci-method",
   "posterior-intervals",
   "mml-cpp11-backend",
   "missing-codes-integration",

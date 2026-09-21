@@ -948,6 +948,23 @@ when writing these files and creates `*_privacy_notice.csv`. Store the bundle in
 an approved restricted location and pseudonymize or redact it as required
 before sharing.
 
+## ICC intervals
+
+`compute_facet_icc()` reports observed-score variance shares from a Gaussian
+random-intercept model. Request parametric percentile intervals with
+`ci_method = "boot"` and a recorded `ci_boot_seed`.
+Read `ICC_CI_Status`, the requested/available replicate counts, and
+`attr(icc, "icc_ci")` before reporting them. Failed or nonconverged refits and
+fit warnings withhold intervals. Converged zero-variance components remain in
+the bootstrap distribution; coverage can be unreliable at such boundaries or
+with few grouping levels. The bootstrap does not correct missing-data bias.
+
+The former `"profile"` method transformed separate variance-component bounds
+and did not calculate a profile-likelihood interval for the ICC ratio. It is
+now refused. Rerun saved ICC interval analyses from their original data and
+settings; reprinting old results cannot fix their intervals or recover omitted
+bootstrap diagnostics. See `help("compute_facet_icc")` for details.
+
 ## Model scope
 
 For GPCM, *bounded* refers to the documented model and workflow scope; it does
@@ -1207,6 +1224,7 @@ step and rebuild everything that depends on it:
 | Fit-summary wording | Reprint the summary. Stored calculations and missing precision evidence do not change. |
 | Diagnostics, QC, fair scores and reports | Recompute diagnostics with the original options, rerun the affected helpers and recreate plots/exports. This includes updated treatment of missing results and SE eligibility. |
 | Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
+| ICC intervals | Rerun `compute_facet_icc()` or `analyze_hierarchical_structure()` from the original data/settings. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
 | G/D studies or shrinkage | Rerun the observed-score G-study and D-study, or reapply shrinkage, using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
 | Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |

@@ -74,6 +74,22 @@ and action needed for each affected workflow.
 
 ## Changes affecting existing analyses
 
+* Withdrew `ci_method = "profile"` from `compute_facet_icc()` and
+  `analyze_hierarchical_structure()`: transforming separate variance-component
+  intervals while fixing the other components did not produce a
+  profile-likelihood interval for the ICC ratio. Choose `"boot"` explicitly
+  for parametric percentile intervals, subject to the fitted Gaussian model.
+* ICC bootstrap results now retain all draws, requested and unavailable counts,
+  convergence/singularity diagnostics, and refit warnings/errors. Any missing
+  or nonconverged replicate, or a fit warning, withholds intervals; successful
+  draws are not silently selected for quantiles. Converged boundary fits remain
+  in the distribution. Invalid replicate counts, CPU counts, and seeds are
+  rejected rather than truncated. Snow workers now load lme4 before refitting.
+  Saved interval results must be rerun from
+  their original data/settings before printing, summarizing, or plotting with
+  this version. ICC plots explain unavailable intervals and no longer apply
+  reliability-band reference lines to every facet's variance share.
+
 * Selecting rows or columns from a D-study table now preserves its calculation
   and interpretation information. Printing selected columns no longer mistakes
   a newly computed result for an older saved result. Coefficients are unchanged;

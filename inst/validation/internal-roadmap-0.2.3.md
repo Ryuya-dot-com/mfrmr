@@ -9,6 +9,26 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: ICC interval correction backported to the 0.2.4 candidate
+
+The ICC correction from development commit `dfa5f4c` is backported onto
+candidate `c4867b7`. Its ICC implementation, focused tests, function help, and
+cheatsheet are identical to the verified development files. Only R's bundled
+parallel dependency is added. External-feature APIs/dependencies, imputation
+comparison, and the later G-study missingness changes are not included.
+
+The candidate now refuses the unsupported component-bound `profile` transform,
+retains every bootstrap draw and convergence/singularity/error/warning record,
+and withholds incomplete or warned intervals. Saved interval results require
+recalculation. Snow workers initialize lme4 explicitly. The public release
+notes, saved-analysis guide, README, and roadmap describe the user-visible
+correction and its assumptions without internal validation language.
+
+The matrix for `9010f66` below remains historical evidence for the previous
+candidate. New source-package and hosted checks must cover this backport before
+it can replace that candidate's validation record. The package remains an
+unreleased 0.2.4 candidate; no tag, publication, or CRAN submission is made.
+
 ## 2026-09-19: existing public outputs before new tests
 
 This is the active execution order, following the user's acceptance of the

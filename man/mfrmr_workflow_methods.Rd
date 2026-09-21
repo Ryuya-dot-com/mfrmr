@@ -101,6 +101,14 @@ from an eligible MML fit with matching current diagnostics and the original
 practical bound; old equivalence bundles cannot supply the required joint
 covariance. Rebuild model-choice and weighting reviews from their source
 fits as well.
+\item \strong{ICC intervals:} rerun \code{\link[=compute_facet_icc]{compute_facet_icc()}} or
+\code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} from the original data and settings.
+The former \code{ci_method = "profile"} transformed separate component bounds
+and did not calculate a profile-likelihood interval for the ICC ratio.
+Choose \code{"boot"} explicitly for parametric percentile intervals, then read
+\code{ICC_CI_Status} and \code{attr(icc, "icc_ci")}. Failed or nonconverged refits
+and fit warnings withhold intervals. Saved bootstrap results also require
+rerunning to obtain complete failure accounting; reprinting is insufficient.
 \item \strong{Observed-score design coefficients and shrinkage:} rerun
 \code{\link[=mfrm_generalizability]{mfrm_generalizability()}} with its original data and settings, then
 \code{\link[=mfrm_d_study]{mfrm_d_study()}} with the planned counts and residual-scaling choice.

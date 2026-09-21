@@ -138,14 +138,19 @@ summary(review)
 icc <- compute_facet_icc(
   toy, facets = c("Rater", "Criterion"),
   score = "Score", person = "Person",
-  ci_method = "profile"      # "boot" for parametric bootstrap CI
+  ci_method = "boot", ci_boot_seed = 2026
 )
 
 h <- analyze_hierarchical_structure(
   toy, facets = c("Rater", "Criterion"),
-  ci_method = "profile"
+  ci_method = "boot", ci_boot_seed = 2026
 )
 ```
+
+Read `ICC_CI_Status` and `attr(icc, "icc_ci")` before reporting intervals.
+Bootstrap intervals require the fitted Gaussian model and complete, converged
+refits without warnings. The former `"profile"` method is no longer supported;
+rerun saved interval analyses with the original data and settings.
 
 ## 8. Empirical-Bayes shrinkage for small-N facets
 
