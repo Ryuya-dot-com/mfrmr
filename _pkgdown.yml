@@ -29,6 +29,7 @@ reference:
     contents:
       - mfrm_features
       - mfrm_cluster
+      - mfrm_cluster_imputed
 
   - title: "Portable fixed calibration"
     desc: "Create, validate, freeze, persist, and apply the bounded RSM/PCM MML calibration artifact."

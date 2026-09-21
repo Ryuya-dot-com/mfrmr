@@ -974,6 +974,21 @@ with missing group membership. Optional missingness reasons are documented in
 in this sample; stability, inferential comparisons, and measurement uncertainty
 are not assessed. The groups do not establish ability levels or rater quality.
 
+For incomplete external attributes, `mfrm_cluster_imputed()` accepts a model
+fitted with the optional `mice` package. Select eligible missing cells explicitly
+after reviewing their reasons; structurally undefined attributes should remain
+missing. The imputation model may include auxiliary variables that are not
+clustering features. Choose and review its methods, predictors, and diagnostics
+in `mice`; see `?mfrm_cluster_imputed` for a runnable example.
+
+The result retains every imputation's groups, original missingness reasons, and
+the fitted imputation model. Its `co_membership` matrix reports how often each
+pair belongs to the same group across all supplied imputations, independent of
+group numbering. A failed analysis stops the comparison. These proportions
+describe sensitivity to the imputations, conditional on the chosen model and
+clustering settings; they are not membership probabilities or sampling
+stability. No automatic missing-score correction is performed.
+
 ## Model scope
 
 For GPCM, *bounded* refers to the documented model and workflow scope; it does

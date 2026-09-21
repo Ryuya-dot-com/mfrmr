@@ -101,11 +101,19 @@ unobserved assigned ratings, and missing external attributes need distinct
 handling. The existing rating-design review remains the starting point for
 rating coverage; it does not infer why an observation is absent.
 
-Further missing-data support should reuse suitable multiple-imputation tools,
-preserve entity and rating structure, and combine downstream estimates and
-uncertainty on a common scale. Nonresponse related to unobserved outcomes
-requires explicit assumptions and sensitivity analysis. No general automatic
-missing-score correction or multiple-imputation API is promised for 0.2.4.
+The development version also accepts external-feature imputations fitted with
+`mice` for repeated clustering. Users select eligible missing cells explicitly;
+original observations, IDs, reasons, and model diagnostics are preserved.
+Pairwise co-membership proportions describe sensitivity to the supplied
+imputations without averaging arbitrary group labels. They do not establish
+sampling stability or provide pooled inferential estimates. Numeric ranges are
+recalculated in each completed sample and retained for inspection.
+
+Further missing-data support for rating responses must preserve rating
+structure and combine downstream estimates and uncertainty on a common scale.
+Nonresponse related to unobserved outcomes requires explicit assumptions and
+sensitivity analysis. No general automatic missing-score correction is
+promised for 0.2.4; the new external-feature APIs belong to subsequent development.
 
 ## Random-effects MFRM and testlet covariance
 

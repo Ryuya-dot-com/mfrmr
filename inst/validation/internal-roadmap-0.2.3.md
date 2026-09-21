@@ -9,6 +9,50 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: clustering sensitivity to external-feature imputations
+
+Continued the user's external-attribute workflow on the same 0.2.4.9001
+development branch, starting from `de6a4af`. `mfrm_cluster_imputed()` accepts
+an existing mice `mids` model, original reviewed features, and an explicit
+ID/feature list of eligible missing cells. It does not wrap or automatically
+choose the imputation model. Auxiliary predictors stay in the retained model
+without becoming clustering features. Observed values, IDs, factor levels/order,
+original missing reasons, and noneligible missingness are checked/preserved.
+Mice's numeric 0/1 completions of originally logical columns are restored to
+logical type; invalid binary completions are refused.
+
+Every completed table enters the same Gower/PAM analysis. A failed completion
+or clustering stops the comparison with its imputation number. Remaining
+missingness requires explicit omission, preserving excluded IDs with NA
+memberships and NA pairwise entries. Pairwise co-membership uses all imputations,
+is label-invariant, and is descriptive sensitivity conditional on the chosen
+model and settings, not Rubin pooling, posterior membership probabilities,
+sampling stability, or a consensus partition. Per-completion numeric ranges
+are retained; scaling changes can contribute to partition changes. The full
+ID-indexed matrix limits this adapter to 5,000 total entities.
+
+The focused feature tests pass 123 expectations without failures, errors,
+warnings, or skips. They include actual mice continuous/categorical/logical/
+ordered completions, a hand-derived co-membership matrix, ID reordering,
+structurally undefined cells, changed observations/types/levels, and a failure
+in a later imputation. The namespace contract also passes. A first pre-roxygen
+test run exposed missing S3 registration; generating the namespace resolved it.
+No new recovery study or full-suite/hosted matrix is launched for this adapter.
+
+The exact development archive passes `NOT_CRAN=false R CMD check --no-manual`
+with zero errors, warnings, and notes. Its lightweight suite passes 796
+expectations with zero failures/warnings and three intentional skips; examples
+and vignette rebuilding pass. The archive, logs, source hashes, and summary
+are retained under `validation-results/external-feature-imputation-20260921/final/`.
+Archive SHA-256: `384562e245b3c8303fc9f8dec65c4c0b1aa1c1a9d3e6b4a596026a5849090ef1`.
+Changed packaged source files match the tested archive. Repository-only
+validation records and generated test PDFs are absent from the archive.
+
+The help, README, NEWS, and public roadmap describe the workflow and limits.
+Model diagnostics remain available for substantive review; successful API
+checks do not establish imputation-model adequacy or a missingness mechanism.
+Rating-response imputation and multivariate G-theory remain separate work.
+
 ## 2026-09-21: external-feature review and exploratory grouping
 
 The user selected external attributes such as experience, specialization, and
@@ -41,10 +85,10 @@ failures/warnings and three intentional skips. Examples and vignette rebuilding
 pass. Logs, source identity, checksums and both archives are retained under
 `validation-results/external-features-20260921/`. This is local standard-check
 coverage, not a new full-suite, hosted-matrix, or CRAN `--as-cran` result.
-Next missing-data work should address external-feature imputation and compatible
-downstream pooling; it must preserve entity structure and distinguish omitted
-ratings from missing attributes. The G-theory scope and deferred multivariate
-work remain unchanged.
+This first implementation deferred external-feature imputation; its subsequent
+integration is recorded above. Inferential pooling and rating-response
+imputation remain outside that adapter. The G-theory scope and deferred
+multivariate work remain unchanged.
 
 ## 2026-09-19: existing public outputs before new tests
 

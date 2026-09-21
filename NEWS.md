@@ -9,9 +9,16 @@ This unreleased development version extends the 0.2.4 release candidate.
   PAM. Users choose the number of groups and feature weights. Numeric ranges,
   cluster profiles, representative entities, and silhouette widths are retained.
   Missing values stop clustering by default; explicit complete-case selection
-  retains excluded entities with unavailable memberships. No imputation,
-  stability assessment, latent-class interpretation, or rater-quality decision
-  is provided. These functions are not part of the 0.2.4 release candidate.
+  retains excluded entities with unavailable memberships. This function does
+  not impute values, assess stability, or establish latent classes or rater
+  quality. These functions are not part of the 0.2.4 release candidate.
+* Added `mfrm_cluster_imputed()` to compare exploratory groups across external
+  feature imputations fitted with `mice`. Users explicitly select eligible
+  missing cells; IDs, observed values, remaining missingness, original reasons,
+  and model diagnostics are preserved. All imputations enter pairwise
+  co-membership proportions; a failed analysis stops the comparison. These
+  proportions describe sensitivity to the supplied imputations, not membership
+  probabilities, sampling stability, or pooled inferential estimates.
 
 # mfrmr 0.2.4
 

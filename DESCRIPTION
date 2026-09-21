@@ -51,6 +51,7 @@ LinkingTo:
     cpp11
 Suggests:
     cluster,
+    mice,
     testthat (>= 3.0.0),
     covr,
     knitr,
