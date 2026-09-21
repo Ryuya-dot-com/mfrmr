@@ -61,6 +61,7 @@ both the sample and numeric ranges and does not correct missing-data bias.
 
 Pairwise distances require quadratic memory. This interface is limited
 to 5,000 included entities. It does not silently sample larger inputs.
+This input limit does not guarantee low memory use or acceptable run time.
 }
 \examples{
 # See mfrm_features() for a complete mixed-feature example.

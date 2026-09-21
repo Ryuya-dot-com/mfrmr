@@ -27,6 +27,8 @@
 #'   distances. These functions are intended for external attributes such as
 #'   training, experience, or specialization. They do not propagate uncertainty
 #'   from estimated ability, severity, or fit statistics.
+#'   See `vignette("mfrmr-external-features")` for a complete rater-attribute
+#'   example including missingness review and multiple imputation.
 #' @examples
 #' raters <- data.frame(
 #'   Rater = paste0("R", 1:6),
@@ -188,6 +190,7 @@ summary.mfrm_features <- function(object, ...) object$feature_summary
 #'
 #'   Pairwise distances require quadratic memory. This interface is limited
 #'   to 5,000 included entities. It does not silently sample larger inputs.
+#'   This input limit does not guarantee low memory use or acceptable run time.
 #' @seealso [mfrm_features()], [mfrm_cluster_imputed()], [mfrm_cluster_compare()],
 #'   [cluster::daisy()], [cluster::pam()]
 #' @examples
@@ -361,6 +364,8 @@ summary.mfrm_clusters <- function(object, ...) object$cluster_summary
 #'   No consensus partition, confidence interval, or automatic group selection
 #'   is produced. Both the full ID-indexed matrix and pairwise distances require
 #'   quadratic memory, so this comparison is limited to 5,000 total entities.
+#'   This input limit is not a memory or run-time guarantee. Retaining all
+#'   completed analyses also increases memory use with the imputation count.
 #' @seealso [mfrm_features()], [mfrm_cluster()], [mfrm_cluster_compare()],
 #'   [mice::mice()], [mice::complete()]
 #' @examples

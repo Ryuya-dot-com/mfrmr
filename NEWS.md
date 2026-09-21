@@ -2,6 +2,11 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* Added a complete rater-attribute tutorial using fictional experience,
+  workload, specialty, training, and certification data. It covers missingness
+  reasons, explicit imputation models, group profiles, and comparisons across
+  group counts and weights, including the distinction between unrecorded and
+  inapplicable attributes.
 * Added `mfrm_features()` to prepare one row per Person, rater, or other entity
   from explicitly selected external attributes. It retains feature types,
   missing cells, user-supplied missingness reasons, and all entity identifiers.

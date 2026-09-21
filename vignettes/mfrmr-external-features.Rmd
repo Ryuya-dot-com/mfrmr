@@ -1,0 +1,236 @@
+---
+title: "Exploring rater attributes with missing data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Exploring rater attributes with missing data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+available <- requireNamespace("mice", quietly = TRUE) &&
+  requireNamespace("cluster", quietly = TRUE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = available)
+```
+
+An assessment team wants to describe its raters' backgrounds before planning
+training. Do groups summarize different combinations of experience, workload,
+and training? Would those descriptions change with the number of groups,
+feature weights, or plausible replacements for unrecorded attributes?
+
+This example follows that question from a feature table to a comparison of
+partitions. It uses **120 fictional raters**, not observations from an assessment
+program. No true groups are planted. Successful execution does not establish
+that these features, imputation models, or groups are appropriate for your
+raters. The groups describe backgrounds; they do not measure rater quality,
+severity, or ability, and do not identify which training will be effective.
+
+These APIs belong to development version 0.2.4.9001. Install the optional
+`cluster` and `mice` packages to run the entire example.
+
+## Choose attributes and their meaning
+
+Use one row per rater, rather than repeating attributes for every rating.
+Keep identifiers separate from features. Select variables for the question
+before examining which choices produce attractive groups.
+
+| Column | Meaning and coding | Role here |
+| --- | --- | --- |
+| `ExperienceYears` | Completed years of rating experience; numeric | Feature |
+| `AnnualRatings` | Number of responses rated in the previous year; numeric | Feature |
+| `Specialty` | Main subject area; unordered factor | Feature |
+| `TrainingLevel` | Highest completed training stage; ordered factor | Feature |
+| `Certified` | Holds the relevant certification; logical | Feature |
+| `WorkshopHours` | Hours of workshops attended in the previous year; numeric | Auxiliary imputation predictor |
+| `MentoringYears` | Years in a formal mentoring role; undefined without that role | Reviewed, then excluded from the all-rater feature set |
+
+```{r attributes}
+library(mfrmr)
+set.seed(20260921)
+n <- 120L
+raters <- data.frame(
+  Rater = sprintf("R%03d", seq_len(n)),
+  ExperienceYears = sample(0:30, n, replace = TRUE),
+  AnnualRatings = round(exp(rnorm(n, log(250), 0.6))),
+  Specialty = factor(sample(c("Language", "Science", "Social science"),
+                            n, replace = TRUE)),
+  TrainingLevel = ordered(sample(c("Introductory", "Intermediate", "Advanced"),
+                                 n, replace = TRUE),
+                          levels = c("Introductory", "Intermediate", "Advanced")),
+  Certified = sample(c(FALSE, TRUE), n, replace = TRUE),
+  WorkshopHours = sample(0:80, n, replace = TRUE)
+)
+has_mentoring_role <- sample(c(FALSE, TRUE), n, replace = TRUE, prob = c(.7, .3))
+raters$MentoringYears <- ifelse(has_mentoring_role,
+  pmin(raters$ExperienceYears, sample(0:10, n, replace = TRUE)), NA_real_)
+
+# Introduce unrecorded values only after generating the fictional attributes.
+feature_names <- c("ExperienceYears", "AnnualRatings", "Specialty",
+                   "TrainingLevel", "Certified")
+missing_counts <- c(12L, 18L, 6L, 10L, 10L)
+for (j in seq_along(feature_names)) {
+  raters[[feature_names[j]]][sample.int(n, missing_counts[j])] <- NA
+}
+head(raters)
+```
+
+The [Gower distance calculation](https://stat.ethz.ch/R-manual/R-devel/library/cluster/html/daisy.html)
+accommodates these mixed types. Numeric features use their
+observed ranges. Ordered levels use ordered integer codes, so the declared
+order and the spacing implicit in that coding matter. Logical features treat
+both matches (`FALSE/FALSE` and `TRUE/TRUE`) alike. Certification is therefore
+not coded as a special presence-only attribute. Equal feature weights are a
+starting choice; correlated or redundant attributes can still receive too much
+combined influence. A highly unusual numeric value can also change its
+feature's range and hence other raters' distances.
+
+## Distinguish unrecorded and undefined values
+
+Here a missing mentoring duration means that the attribute does not apply.
+It is not a duration waiting to be estimated. A duration of zero would instead
+mean an applicable mentoring role with no completed years.
+
+```{r missing-reasons}
+all_features <- c(feature_names, "MentoringYears")
+initial <- mfrm_features(raters, "Rater", all_features)
+reasons <- initial$missing
+reasons$Reason <- ifelse(reasons$Feature == "MentoringYears",
+                        "Not applicable: no mentoring role", "Not recorded")
+review <- mfrm_features(raters, "Rater", all_features, reasons)
+summary(review)
+table(review$missing$Reason)
+```
+
+The target is a description of **all raters**. Requiring a mentoring duration
+would exclude nonmentors. We therefore leave it out of the selected features
+and the imputation predictors, retaining the original review. A separate
+analysis confined to mentors would address a different population.
+
+```{r selected-features}
+selected_reasons <- subset(review$missing, Feature %in% feature_names)
+features <- mfrm_features(raters, "Rater", feature_names, selected_reasons)
+features$feature_summary
+table(features$row_summary$Complete)
+```
+
+`mfrm_cluster(features, k = 3)` would stop on the remaining missing values.
+Explicit `missing = "omit"` is available, but selects complete raters and
+changes the population being described. It does not correct missing-data bias.
+
+## Fit an explicit imputation model
+
+Only cells reviewed as unrecorded are eligible here. The fictional omissions
+were introduced at random; in an actual program, an explanation based on the
+data collection process is needed. Missingness reasons alone do not identify
+a statistical missingness mechanism. Unobserved-value-dependent nonresponse
+requires additional sensitivity assumptions.
+
+The [mice documentation](https://amices.org/mice/reference/mice.html) describes
+the methods and predictor controls used below. `WorkshopHours` can help predict
+unrecorded attributes without becoming a clustering feature. The identifier
+is neither imputed nor used to predict other variables.
+
+```{r imputation}
+eligible <- subset(features$missing, Reason == "Not recorded")
+imputation_data <- raters[c("Rater", feature_names, "WorkshopHours")]
+where <- matrix(FALSE, nrow(imputation_data), ncol(imputation_data),
+                dimnames = dimnames(imputation_data))
+where[cbind(match(eligible$ID, imputation_data$Rater),
+            match(eligible$Feature, names(imputation_data)))] <- TRUE
+methods <- mice::make.method(imputation_data, where = where)
+methods[feature_names] <- c("pmm", "pmm", "polyreg", "polr", "logreg")
+methods["Rater"] <- ""
+predictors <- mice::make.predictorMatrix(imputation_data)
+predictors[, "Rater"] <- 0
+predictors["Rater", ] <- 0
+model <- mice::mice(imputation_data, m = 5, maxit = 5,
+  method = methods, predictorMatrix = predictors, where = where,
+  seed = 724, printFlag = FALSE)
+model$loggedEvents
+head(mice::convergence(model))
+```
+
+Five imputations and five iterations keep this executable example short; they
+are not an adequacy recommendation. Inspect logged events, chain behavior,
+observed versus imputed distributions, and substantive plausibility. A lack
+of logged events does not establish convergence or a suitable model.
+`mfrm_cluster_imputed()` checks consistency of the data, not these assumptions.
+
+## Describe groups and compare choices
+
+Reuse the **same fitted imputation model** for every setting. Changing the
+imputations as well as the weights would change two things at once.
+
+```{r grouping}
+experience_weights <- setNames(rep(1, length(feature_names)), feature_names)
+experience_weights["ExperienceYears"] <- 3
+analyses <- list(
+  TwoGroups = mfrm_cluster_imputed(features, model, eligible, k = 2),
+  ThreeGroups = mfrm_cluster_imputed(features, model, eligible, k = 3),
+  ExperienceWeighted = mfrm_cluster_imputed(features, model, eligible, k = 3,
+                                          weights = experience_weights)
+)
+comparison <- mfrm_cluster_compare(analyses)
+comparison$analysis_summary
+summary(comparison)
+weight_effect <- subset(comparison$comparison_summary,
+  First == "ThreeGroups" & Second == "ExperienceWeighted")
+```
+
+`MeanChangedFraction` describes the fraction of rater pairs whose together/apart
+status changes between settings, averaged over the supplied imputations.
+The minimum and maximum show its range. The individual rows in
+`comparison$comparisons` retain every imputation, including split/join counts
+and adjusted Rand indices. An adjusted Rand index of one indicates identical
+partitions, allowing arbitrary group numbering. Neither high agreement nor a
+large silhouette proves that the groups are meaningful. Silhouettes under
+different weights use different distances and should not automatically select
+the weights.
+
+In this fictional example, keeping three groups and raising the experience
+weight from one to three changes the together/apart status of
+`r if (available) sprintf("%.1f%%", 100 * weight_effect$MeanChangedFraction) else "the fraction shown in the table"`
+of rater pairs on average across imputations. Thus, the selected weights
+materially affect this particular description; presenting a single partition
+would conceal that dependence. This percentage concerns pairs, not the
+percentage of raters assigned to a different numbered group. It is not evidence
+about an actual assessment program.
+
+Also inspect `MinGroupSize`. A rare category can produce a very small group,
+and repeated profiles can give high separation values. A high overall
+silhouette can coexist with these conditions.
+
+Inspect the actual profiles before attaching interpretations to the groups:
+
+```{r interpretation}
+one_completion <- analyses$ThreeGroups$analyses[[1]]
+one_completion$profiles$numeric
+subset(one_completion$profiles$categorical, Feature == "TrainingLevel")
+head(one_completion$membership)
+analyses$ThreeGroups$co_membership[1:5, 1:5]
+```
+
+These profiles describe **one completion**, not an average cluster or a final
+assignment. Group numbers can change across completions. The `co_membership`
+matrix instead records how often each pair is grouped together across all
+imputations. For example, 0.8 means four of the five completions, conditional
+on this model and these settings. It is not an 80% probability of a true shared
+class. Numeric ranges are recalculated within each completion; their changes
+also contribute to sensitivity.
+
+The workflow answers whether proposed background descriptions depend strongly
+on the supplied choices. It supplies no automatic preferred group count,
+consensus assignment, resampling stability, Rubin-pooled inference, or
+imputation of rating responses. Before using groups to make decisions about
+raters, establish that the attributes and proposed use address the intended
+question and assess the consequences with appropriate evidence.
+
+## Plan for the size of the analysis
+
+Pairwise distances require memory that grows quadratically with the number
+of raters. Ordinary clustering permits up to 5,000 included entities; the
+imputation workflow permits up to 5,000 total entities because its comparison
+matrix includes excluded IDs. These are input limits, not a guarantee of low
+memory use or acceptable run time. Multiple imputations also retain every
+completed analysis. Save the fitted imputation model and clustering results;
+`mfrm_cluster_compare()` reuses them without repeating the fits.

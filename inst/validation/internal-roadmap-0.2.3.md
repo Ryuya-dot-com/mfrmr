@@ -9,6 +9,61 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: external-feature stress checks and applied tutorial
+
+The user requested the outstanding stress checks and concrete feature examples.
+The new public `mfrmr-external-features` vignette uses 120 explicitly fictional
+raters: experience in years, annual rating count, specialty, ordered training
+stage, and certification. It reviews inapplicable mentoring duration separately,
+retains missingness reasons, explicitly selects imputation cells, excludes IDs
+from prediction, and includes workshop hours only as an auxiliary predictor.
+One retained mice model supplies all three settings. The example renders and
+executes from preparation through profiles and comparisons. At fixed k = 3,
+raising the experience weight from 1 to 3 changes 30.64% of pairwise relations
+on average; the explanation distinguishes pairs from persons and fictional
+sensitivity from evidence about an assessment program. Five imputations and
+five iterations are illustrative, not model-adequacy recommendations.
+
+The standalone `external-feature-stress-0.2.4.R` checks 11 conditions in fresh
+R processes: n = 100/1,000/5,000; 40 features at n = 1,000; k = 100/101 at
+n = 500; duplicate profiles; rare categories with 485/5/5/5 strata; no planted
+latent groups; m = 5/20 at n = 300; and approximately 60% missing feature cells
+with 15 structurally inapplicable entities explicitly excluded. Each condition
+computes two settings and compares them. Checks preserve IDs, omissions, group
+counts, finite outputs and medoids; MI checks also verify the all-imputation
+co-membership denominator independently on sampled pairs. All 11 final cases
+pass without warnings or mice logged events.
+
+Representative process measurements on macOS arm64, R 4.6.1, cluster 2.1.8.3
+and mice 3.19.0:
+
+| Condition | Wall seconds | Peak RSS MiB |
+| --- | ---: | ---: |
+| 1,000 entities, 8 features | 0.675 | 215.406 |
+| 5,000 entities, 8 features | 11.265 | 1,448.750 |
+| 1,000 entities, 40 features | 0.778 | 236.078 |
+| 300 entities, 20 imputations | 4.652 | 383.156 |
+| 300 entities, high missingness, 5 imputations | 1.657 | 335.781 |
+
+Wall time includes startup, generation, imputation where applicable, both
+settings, comparison, assertions and output. RSS uses getrusage in a fresh
+Python wrapper for each R child; macOS byte units are converted to MiB. The
+initial /usr/bin/time -l wrapper could not query sandbox-blocked clock metadata:
+R assertions passed but instrumentation exited 1. Those logs are retained,
+and only this bounded stress run was repeated with working measurement. The
+rare/skewed condition was tightened to contain explicitly imbalanced strata.
+
+Evidence, source snapshots, driver, per-condition logs and rendered tutorial
+are in `validation-results/external-feature-stress-20260921/`. API source hashes
+match f36eba6; subsequent source edits are documentation only, with identical
+parsed R expressions. One realization per condition on one platform establishes
+operational behavior in these cases, not recovery, bias correction, convergence,
+sampling stability or universal performance. The 5,000-entity MI case and joint
+maxima of size, feature count and imputation count remain untested. Public help
+now distinguishes the input caps from memory/time guarantees. No ordinary/full
+regression suite, package check or CI was repeated. This is development-only;
+the separate 0.2.4 candidate is unchanged.
+
 ## 2026-09-21: group-count and feature-weight sensitivity
 
 The user selected comparison across group counts and feature weights as the

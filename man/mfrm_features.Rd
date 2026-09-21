@@ -52,6 +52,8 @@ cannot be used by \code{\link[=mfrm_cluster]{mfrm_cluster()}}. IDs and unselecte
 distances. These functions are intended for external attributes such as
 training, experience, or specialization. They do not propagate uncertainty
 from estimated ability, severity, or fit statistics.
+See \code{vignette("mfrmr-external-features")} for a complete rater-attribute
+example including missingness review and multiple imputation.
 }
 \examples{
 raters <- data.frame(

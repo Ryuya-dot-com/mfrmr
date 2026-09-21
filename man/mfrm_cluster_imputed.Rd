@@ -94,6 +94,8 @@ membership probabilities, sampling stability, or Rubin-pooled estimates.
 No consensus partition, confidence interval, or automatic group selection
 is produced. Both the full ID-indexed matrix and pairwise distances require
 quadratic memory, so this comparison is limited to 5,000 total entities.
+This input limit is not a memory or run-time guarantee. Retaining all
+completed analyses also increases memory use with the imputation count.
 }
 \examples{
 if (requireNamespace("mice", quietly = TRUE) &&

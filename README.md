@@ -951,6 +951,13 @@ before sharing.
 
 ## External features and exploratory groups
 
+The [rater-attribute tutorial](vignettes/mfrmr-external-features.Rmd) follows
+120 fictional raters from experience, workload, specialty, training, and
+certification attributes through missingness review, multiple imputation,
+group profiles, and sensitivity to group count and weights. It distinguishes
+unrecorded values from inapplicable mentoring histories and keeps auxiliary
+imputation predictors separate from clustering features.
+
 In this development version, `mfrm_features()` reviews a table with one row per
 Person or rater and explicitly selected external attributes, such as experience
 or specialization. `mfrm_cluster()` groups those profiles using Gower distances
@@ -1021,6 +1028,10 @@ feature table on both sides. Changed data, unmatched imputations, or different
 included entities are refused. The summary reports descriptive means and
 ranges across imputations; these are not pooled inference or sampling
 stability. No setting is automatically selected.
+
+Pairwise distances use quadratic memory. The 5,000-entity limits are input
+guards, not performance or memory guarantees; multiply imputed analyses also
+retain every completed result. Reuse saved results when comparing settings.
 
 ## ICC inputs and intervals
 
@@ -1349,6 +1360,7 @@ The package includes the following vignettes:
 - [End-to-end workflow](vignettes/mfrmr-workflow.Rmd)
 - [MML estimation and marginal-fit diagnostics](vignettes/mfrmr-mml-and-marginal-fit.Rmd)
 - [Portable calibration and fresh-session scoring](vignettes/mfrmr-portable-calibration.Rmd)
+- [Rater attributes, multiple imputation, and exploratory grouping](vignettes/mfrmr-external-features.Rmd)
 - [Migrating from FACETS](vignettes/mfrmr-facets-migration.Rmd)
 - [Visual diagnostics](vignettes/mfrmr-visual-diagnostics.Rmd)
 - [Reporting and APA-oriented output](vignettes/mfrmr-reporting-and-apa.Rmd)
