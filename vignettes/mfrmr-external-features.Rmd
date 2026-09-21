@@ -351,3 +351,13 @@ matrix includes excluded IDs. These are input limits, not a guarantee of low
 memory use or acceptable run time. Multiple imputations also retain every
 completed analysis. Save the fitted imputation model and clustering results;
 `mfrm_cluster_compare()` reuses them without repeating the fits.
+
+Plan for temporary distance and silhouette calculations as well as the saved
+result. For scale, a run with 5,000 entities and eight mixed-type features,
+fitting two hierarchical configurations and comparing them, used about
+1.5 GiB of peak process memory on macOS arm64 with R 4.6.1. The returned
+comparison occupied about 3.3 MiB. Average and complete linkage gave similar
+memory requirements in this example. These single-run measurements include
+R startup and data preparation; they are not a memory bound or a prediction
+for other machines, features, or imputation counts. The 5,000-entity imputation
+workflow was not evaluated in that example.

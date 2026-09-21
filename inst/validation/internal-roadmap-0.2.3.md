@@ -9,6 +9,51 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: scoped hierarchical workload checks
+
+The hierarchy API's declared size limit previously had only small-case and
+tutorial evidence; the old workload matrix exercised PAM. The existing
+external-feature-stress-0.2.4.R now accepts an optional pam/average/complete
+backend while preserving its default PAM invocation. It loads the package's
+shared helpers explicitly, validates tree/ID/cut consistency for hierarchies,
+and retains the existing pair-denominator and omission checks. A 100-entity
+PAM invocation before and after the runner change preserved numerical results.
+No package API implementation changed.
+
+On API source 8394a7f, only three conditions were run for each new linkage:
+5,000 entities with eight mixed features; 500 entities with k = 100/101; and
+300 entities with about 60% missing cells, five imputations, and 15 structural
+omissions. Each process fits two configurations and compares them. All six
+selected workloads passed, with no warnings or mice logged events. Source
+snapshots, per-case settings/results/session information, a measurement runner,
+and evidence.json are retained in
+validation-results/hierarchical-feature-stress-20260921/.
+
+| Condition | Linkage | Process seconds | Peak RSS MiB |
+| --- | --- | ---: | ---: |
+| 5,000 entities, 8 features | Average | 2.737 | 1548.562 |
+| 5,000 entities, 8 features | Complete | 2.634 | 1550.547 |
+| 500 entities, k = 100/101 | Average | 0.727 | 154.109 |
+| 500 entities, k = 100/101 | Complete | 0.681 | 161.656 |
+| 300 entities, high missingness, m = 5 | Average | 1.819 | 300.703 |
+| 300 entities, high missingness, m = 5 | Complete | 1.757 | 311.297 |
+
+Measurements use a fresh R process and fresh Python RSS wrapper per workload
+on macOS arm64, R 4.6.1, including startup, generation, both configurations,
+comparison and checks. The 5,000-entity returned comparison is about 3.3 MiB,
+far below its working-memory peak; the public tutorial now explains this
+planning distinction. At k = 5 and the same weights in this synthetic input,
+the minimum group size was 5 with average linkage and 435 with complete
+linkage. This illustrates sensitivity, not superiority of either method.
+
+One realization per selected condition does not establish recovery, model
+adequacy, missingness-bias correction, branch support, or performance on other
+platforms. Joint maximum n/p/k/m and 5,000-entity MI remain untested. Prior
+targeted numerical/plotting tests and executable examples are reused; the full
+PAM workload matrix, regression suite, package check, tutorial computations,
+and CI were not repeated. Only a prose resource-planning paragraph was added
+to the public tutorial. These checks do not change the 0.2.4 candidate scope.
+
 ## 2026-09-21: hierarchical external-feature clustering
 
 Added mfrm_cluster_hierarchical with average (UPGMA) and complete linkage on

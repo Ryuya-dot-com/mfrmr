@@ -1,13 +1,20 @@
 # Run one condition from the package root in a fresh R process.
-# Rscript --vanilla inst/validation/external-feature-stress-0.2.4.R CASE OUTPUT
+# Rscript --vanilla inst/validation/external-feature-stress-0.2.4.R CASE OUTPUT [BACKEND]
+# BACKEND is pam (default), average, or complete. Select only new or affected
+# conditions; adding a backend does not require repeating the full design.
 # Use an external timeout and process RSS measurement. These are single-seed
 # operational stress checks, not recovery, coverage, or model-adequacy studies.
 args <- commandArgs(trailingOnly = TRUE)
-stopifnot(length(args) == 2L)
+stopifnot(length(args) %in% 2:3)
 case <- args[1L]
 out <- args[2L]
+backend <- if (length(args) == 3L) match.arg(args[3L], c("pam", "average", "complete")) else "pam"
+method <- if (backend == "pam") "pam" else "hierarchical"
+linkage <- if (backend == "pam") NULL else backend
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
+source("R/reporting.R") # Package helpers, also on R versions without base %||%.
 source("R/api-feature-clustering.R")
+source("R/api-hierarchical-clustering.R")
 source("R/api-cluster-comparison.R")
 design <- data.frame(
   Case = c("size_100", "size_1000", "size_5000", "features_40", "groups_100",
@@ -19,6 +26,7 @@ design <- data.frame(
   MissingRate = c(rep(0, 8L), .2, .2, .6))
 stopifnot(case %in% design$Case)
 condition <- design[match(case, design$Case), ]
+condition$Backend <- backend
 write.csv(condition, file.path(out, "condition.csv"), row.names = FALSE)
 set.seed(20260921L)
 n <- condition$N
@@ -75,8 +83,10 @@ result <- tryCatch(withCallingHandlers({
       method = methods, predictorMatrix = predictors, seed = 3107, printFlag = FALSE)
     model_seconds <- proc.time()[["elapsed"]] - model_start
     events <- model$loggedEvents
-    a <- mfrm_cluster_imputed(review, model, cells, condition$K, missing = "omit")
-    b <- mfrm_cluster_imputed(review, model, cells, condition$K + 1L, weights, missing = "omit")
+    a <- mfrm_cluster_imputed(review, model, cells, condition$K, missing = "omit",
+      method = method, linkage = linkage)
+    b <- mfrm_cluster_imputed(review, model, cells, condition$K + 1L, weights, missing = "omit",
+      method = method, linkage = linkage)
     stopifnot(length(a$analyses) == condition$M,
       identical(a$imputation_model, model), identical(a$feature_data, review),
       all(a$analysis_summary$Excluded == length(structural)))
@@ -95,8 +105,13 @@ result <- tryCatch(withCallingHandlers({
     stopifnot(isTRUE(all.equal(unname(a$co_membership[cbind(left, right)]), rowMeans(together))))
     fits <- c(a$analyses, b$analyses)
   } else {
-    a <- mfrm_cluster(review, condition$K)
-    b <- mfrm_cluster(review, condition$K + 1L, weights)
+    if (backend == "pam") {
+      a <- mfrm_cluster(review, condition$K)
+      b <- mfrm_cluster(review, condition$K + 1L, weights)
+    } else {
+      a <- mfrm_cluster_hierarchical(review, condition$K, linkage = linkage)
+      b <- mfrm_cluster_hierarchical(review, condition$K + 1L, weights, linkage = linkage)
+    }
     fits <- list(a, b)
   }
   comparison_start <- proc.time()[["elapsed"]]
@@ -110,8 +125,18 @@ result <- tryCatch(withCallingHandlers({
       length(unique(labels[included])) == fit$settings$k,
       sum(fit$cluster_summary$N) == sum(included),
       all(is.finite(fit$membership$Silhouette[included])),
-      all(abs(fit$membership$Silhouette[included]) <= 1 + 1e-12),
-      sum(fit$membership$Medoid, na.rm = TRUE) == fit$settings$k)
+      all(abs(fit$membership$Silhouette[included]) <= 1 + 1e-12))
+    if (backend == "pam") {
+      stopifnot(sum(fit$membership$Medoid, na.rm = TRUE) == fit$settings$k)
+    } else {
+      stopifnot(inherits(fit, "mfrm_hierarchical_clusters"),
+        identical(fit$settings$linkage, linkage),
+        identical(fit$tree$labels, data$ID[included]),
+        nrow(fit$tree$merge) == sum(included) - 1L,
+        all(is.finite(fit$tree$height)), all(diff(fit$tree$height) >= -1e-12),
+        identical(labels[included], unname(stats::cutree(fit$tree, k = fit$settings$k))),
+        is.null(fit$medoids), !"Medoid" %in% names(fit$membership))
+    }
   }
   stopifnot(all(is.finite(compared$comparisons$AdjustedRand)),
     all(compared$comparisons$AdjustedRand >= -1 & compared$comparisons$AdjustedRand <= 1),
@@ -120,7 +145,7 @@ result <- tryCatch(withCallingHandlers({
     nrow(compared$comparisons) == max(1L, condition$M))
   write.csv(compared$analysis_summary, file.path(out, "analyses.csv"), row.names = FALSE)
   write.csv(compared$comparisons, file.path(out, "comparisons.csv"), row.names = FALSE)
-  data.frame(Case = case, Passed = TRUE, N = n, P = p, M = condition$M,
+  data.frame(Case = case, Backend = backend, Passed = TRUE, N = n, P = p, M = condition$M,
     SelectedMissingCells = nrow(review$missing), Excluded = length(structural),
     ModelSeconds = model_seconds, ComparisonSeconds = comparison_seconds,
     AnalysisSeconds = proc.time()[["elapsed"]] - started,
@@ -131,12 +156,12 @@ result <- tryCatch(withCallingHandlers({
 }, warning = function(w) {
   warnings <<- c(warnings, conditionMessage(w))
   invokeRestart("muffleWarning")
-}), error = function(e) data.frame(Case = case, Passed = FALSE, Error = conditionMessage(e)))
+}), error = function(e) data.frame(Case = case, Backend = backend, Passed = FALSE, Error = conditionMessage(e)))
 write.csv(result, file.path(out, "result.csv"), row.names = FALSE)
 writeLines(warnings, file.path(out, "warnings.txt"))
 if (!is.null(events)) write.csv(events, file.path(out, "mice-events.csv"), row.names = FALSE)
 writeLines(capture.output(sessionInfo()), file.path(out, "session-info.txt"))
-files <- c("R/api-feature-clustering.R", "R/api-cluster-comparison.R",
+files <- c("R/reporting.R", "R/api-feature-clustering.R", "R/api-hierarchical-clustering.R", "R/api-cluster-comparison.R",
            "inst/validation/external-feature-stress-0.2.4.R")
 write.csv(data.frame(File = files, MD5 = unname(tools::md5sum(files))),
           file.path(out, "source-md5.csv"), row.names = FALSE)
