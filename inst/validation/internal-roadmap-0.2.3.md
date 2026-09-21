@@ -29,6 +29,40 @@ candidate. New source-package and hosted checks must cover this backport before
 it can replace that candidate's validation record. The package remains an
 unreleased 0.2.4 candidate; no tag, publication, or CRAN submission is made.
 
+### Verification result and revised test policy
+
+Candidate code `79d0d870233e5e14e46e2f19ca6e7c4ab93cc448` passes the local
+`NOT_CRAN=false R CMD check --as-cran` with zero errors/warnings and the single
+incoming NOTE about seven updates in six months. Its 756 lightweight
+expectations, additional examples, vignette rebuilding, and PDF/HTML manuals
+pass. The archive SHA-256 is
+`e8db9b21b9751dcb214b6aef3f01e9b9d99311f1c52c002170af92ab0088ef32`.
+
+Hosted run `35554924292` completes macOS release, Windows release, Ubuntu devel,
+and Ubuntu oldrel-1 successfully: each has zero package-check errors/warnings/
+notes, 756 passing expectations, zero test failures/warnings, three intentional
+skips, two passing input cases, and eight passing archive cases. Their receipts
+bind to `79d0d87` and tree `07a61c5860585882713ae82534ac7eb483a37419`.
+All 518 compared source files per cell match the candidate; Windows has 503
+line-ending-only differences. The remaining Ubuntu-release full job was
+cancelled following the user's objection to repeated broad testing. The
+workflow conclusion is `cancelled`, not a five-environment success or a new
+full-suite result. Prior full-suite evidence remains bound to `9010f66`.
+Logs, archives, receipts and source comparisons are retained under
+`validation-results/icc-candidate-20260921/` in the main development worktree.
+
+Following the user's September 21 objection to repeated broad testing, the
+default policy now uses affected tests/callers and reuses unaffected evidence. Ordinary
+push/PR jobs use the lightweight suite; a manual `full_suite = true` dispatch
+adds the complete Ubuntu-release suite for a reasoned broad change or batched
+release review. The workflow's five environments, warning failures, artifacts,
+and repository checks remain. CONTRIBUTING now reflects this policy. YAML
+parsing, manual/default routing and the existing workflow-contract check are
+verified directly; this configuration/documentation-only change does not
+trigger another package matrix. Result-record commits use `[skip ci]`.
+No package payload changes are made after the checked candidate. Publication,
+tagging, and CRAN submission remain unperformed.
+
 ## 2026-09-19: existing public outputs before new tests
 
 This is the active execution order, following the user's acceptance of the

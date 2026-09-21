@@ -1,7 +1,9 @@
 # Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
 # Runs the macOS/R-release cell first on every push and pull request. The
 # remaining Windows/Linux R-version cells start only after that prerequisite
-# succeeds. Fixed-calibration G4 receipt issuance is held until the
+# succeeds. Push/PR checks use the lightweight suite; the complete Ubuntu
+# release suite is an explicit manual choice for broad changes or a batched
+# release review. Fixed-calibration G4 receipt issuance is held until the
 # post-maintenance successor contract is frozen. Isolated G-theory
 # execution/resume validation remains an explicit slow tier and is not a
 # release check unless MFRMR_RUN_GTHEORY_SLOW is set by a dedicated run.
@@ -9,6 +11,13 @@ on:
   push:
     branches: [main, master, 'dev/**', 'development/**']
   pull_request:
+  workflow_dispatch:
+    inputs:
+      full_suite:
+        description: Run the complete Ubuntu release test suite
+        type: boolean
+        required: false
+        default: false
 
 name: R-CMD-check
 
@@ -32,14 +41,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {id: windows-release,  os: windows-latest, r: 'release',  full: false}
-          - {id: ubuntu-devel,     os: ubuntu-latest,  r: 'devel',    full: false, http-user-agent: 'release'}
-          - {id: ubuntu-release,   os: ubuntu-latest,  r: 'release',  full: true}
-          - {id: ubuntu-oldrel-1,  os: ubuntu-latest,  r: 'oldrel-1', full: false}
+          - {id: windows-release,  os: windows-latest, r: 'release'}
+          - {id: ubuntu-devel,     os: ubuntu-latest,  r: 'devel',   http-user-agent: 'release'}
+          - {id: ubuntu-release,   os: ubuntu-latest,  r: 'release'}
+          - {id: ubuntu-oldrel-1,  os: ubuntu-latest,  r: 'oldrel-1'}
     uses: ./.github/workflows/R-CMD-check-cell.yaml
     with:
       os: ${{ matrix.config.os }}
       r: ${{ matrix.config.r }}
       cell-id: ${{ matrix.config.id }}
-      full: ${{ matrix.config.full }}
+      full: ${{ github.event_name == 'workflow_dispatch' && inputs.full_suite && matrix.config.id == 'ubuntu-release' }}
       http-user-agent: ${{ matrix.config['http-user-agent'] || '' }}
