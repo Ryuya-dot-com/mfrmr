@@ -6,9 +6,10 @@ See [NEWS](NEWS.md) for changes and the [README](README.md) for use and examples
 
 ## Current releases
 
-The current source is an unreleased 0.2.4 candidate integrating the selected
-work from stages 1–3 below. Local integration checks are complete; the release
-decision and publication remain pending.
+mfrmr 0.2.4 is a release candidate and has not been released on CRAN. It
+integrates the selected work from stages 1–3 below. GitHub pre-releases are
+available for evaluation; their release pages link to the applicable CI results.
+The final release decision remains pending.
 Use `packageVersion("mfrmr")` and installed help to identify available functionality.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
