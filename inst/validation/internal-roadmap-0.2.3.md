@@ -9,6 +9,35 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: beginner-facing multivariate D-study plots and help
+
+The multivariate D-study now has a public plot method using its stored
+coefficients, without refitting or changing estimation. Two panels show G/Phi
+or relative/absolute SEM for one outcome: the supplied composite by default,
+otherwise the first score. An explicit score name selects an original score,
+including an original named Composite. Titles identify the outcome and weights;
+lines hold the other facet count fixed. No intermediate design, target cutoff,
+cost optimum, confidence interval, or sparse-roster reliability is inferred.
+Unavailable values and their original Status remain in the plot payload, with
+an explanation when an entire panel is unavailable. Graphics labels are English.
+
+The D-study help now starts with a concrete task/rater planning question,
+explains G/Phi/SEM and score units before covariance formulae, and provides a
+runnable data-to-table-to-plot example from the existing published synthetic
+data. README, NEWS and the public roadmap describe the same bounded behavior.
+Package plot helpers, styles and plot_data() are reused; no dependency or
+estimator change was needed. The 0.2.4 candidate remains separate.
+
+The focused plot tests pass 45 expectations and the namespace contract passes
+four, with no failures, errors or warnings. Validation covers exact stored values, signed weights, score-name
+collisions, one/two facets, automatic/explicit axes, nonrectangular grids,
+unavailable results and line gaps, graphics-state restoration, and invalid
+arguments. Both help examples execute and render; coefficient, SEM,
+difference-score and unavailable plots were visually inspected at 7 by 7
+inches. Usage and method-declaration checks pass. Existing estimator evidence
+is reused; no full suite, package-wide documentation regeneration, CI, or
+new statistical simulation was run for this presentation change.
+
 ## 2026-09-21: incomplete crossed multivariate G-study via MINQUE(0)
 
 The user requested sparse-data support and a broader critical review. The

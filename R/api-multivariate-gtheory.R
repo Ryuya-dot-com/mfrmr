@@ -348,12 +348,13 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
   }))
 }
 
-#' Project multivariate G-theory coefficients for common measurement conditions
+#' Plan task and rater counts with a multivariate D-study
 #'
-#' Use a multivariate G-study to examine mean-score dependability
-#' under specified numbers of common random tasks and, when included, raters,
-#' with optional composite weights. This reuses estimated covariance components
-#' without refitting.
+#' Would adding tasks or raters make assessment scores more dependable?
+#' Use an estimated G-study to compare specified future designs for individual
+#' score components and an optional weighted composite. Each scenario reports
+#' dependability and measurement error for mean scores over common random
+#' tasks and, when included, raters. No model is refitted.
 #'
 #' @param x A result from [mfrm_multivariate_gstudy()].
 #' @param design_grid A nonempty data frame with positive integer `Raters` and
@@ -370,7 +371,34 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   components only; otherwise an additional composite is reported for every
 #'   scenario.
 #'
-#' @details For covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
+#' @details Start with a concrete comparison, such as six versus twelve tasks
+#'   for every examinee. Each row of `design_grid` is one scenario. With both
+#'   facets, `data.frame(Raters = c(2, 4), Tasks = c(3, 3))` compares two versus
+#'   four raters at three tasks; `expand.grid(Raters = c(2, 4),
+#'   Tasks = c(3, 6))` requests all four combinations. These counts apply to
+#'   every person and score, not to the total number of observed ratings.
+#'
+#'   Read `summary(d)` together with `plot(d)`:
+#'   * `G` concerns consistency of relative ordering, such as ranking examinees.
+#'   * `Phi` concerns absolute score levels and also counts shifts from easier
+#'     tasks or more lenient raters as error. It is not pass/fail accuracy.
+#'   * `RelativeSEM` and `AbsoluteSEM` express these errors in the units of the
+#'     mean score or composite. Smaller SEMs mean less error. They are not
+#'     confidence intervals for G or Phi.
+#'
+#'   Larger G/Phi and smaller SEM indicate greater dependability under the
+#'   model. There is no universally acceptable coefficient: consider the use
+#'   of scores, consequences of error, and workload before choosing a design.
+#'   `plot(d, type = "sem")` shows the SEMs. By default plots select the
+#'   composite if weights were supplied, otherwise the first score; use
+#'   `plot(d, score = "V")` to inspect an original score named V. The title
+#'   always identifies the plotted score and any composite weights.
+#'   Check `Status` before reading a coefficient: `NA` means unavailable,
+#'   not zero dependability. See [plot.mfrm_multivariate_d_study()] for
+#'   interpreting curves and unavailable estimates.
+#'
+#' @section Calculation and interpretation limits:
+#'   For covariance component matrices `P`, `R`, `T`, `PR`, `PT`, `RT`,
 #'   and `E`, universe-score covariance is `P`. Relative-error covariance is
 #'   `PR/n_r + PT/n_t + E/(n_r*n_t)`. Absolute-error covariance adds
 #'   `R/n_r + T/n_t + RT/(n_r*n_t)`. The G-study number of persons does not
@@ -423,9 +451,25 @@ mfrm_multivariate_gstudy <- function(data, scores, person = "Person",
 #'   Brennan, R. L. (2001). *Manual for mGENOVA, Version 2.1*.
 #'   Iowa Testing Programs Occasional Papers, No. 50. Pages 16 and 20--22;
 #'   Appendices E and F, pages 74--81.
-#' @seealso [mfrm_multivariate_gstudy()], [mfrm_d_study()]
+#' @seealso [plot.mfrm_multivariate_d_study()], [mfrm_multivariate_gstudy()],
+#'   [mfrm_d_study()]
 #' @examples
-#' # See mfrm_multivariate_gstudy() for a complete data-to-D-study example.
+#' # Published synthetic two-score data: the same six tasks for ten persons.
+#' tasks <- read.csv(system.file("extdata", "mgenova-table12.csv", package = "mfrmr"))
+#' g <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
+#'
+#' # Question: would doubling tasks improve the dependability of W minus V?
+#' d <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(6, 12)),
+#'   weights = c(V = -1, W = 1))
+#' summary(d)
+#' plot(d)
+#' plot(d, type = "sem")
+#' # G rises from 0.300 to 0.462, conditional on these estimated components.
+#' # This is a planning projection, not evidence from twelve observed tasks.
+#'
+#' # Without weights, report the original scores without creating a composite.
+#' individual <- mfrm_multivariate_d_study(g, data.frame(Tasks = c(6, 12)))
+#' plot(individual, score = "V")
 #' @export
 mfrm_multivariate_d_study <- function(x, design_grid = NULL, weights = NULL) {
   if (!inherits(x, "mfrm_multivariate_gstudy") ||

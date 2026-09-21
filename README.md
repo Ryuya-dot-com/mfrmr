@@ -1091,6 +1091,9 @@ g_task <- mfrm_multivariate_gstudy(tasks, c("V", "W"), rater = NULL)
 d_task <- mfrm_multivariate_d_study(g_task,
   design_grid = data.frame(Tasks = c(6, 12)), weights = c(V = -1, W = 1))
 summary(d_task)
+plot(d_task) # G and Phi for W minus V, identified by the title and weights.
+plot(d_task, type = "sem") # Error in difference-score units.
+plot(d_task, score = "V") # An original score, shown separately.
 ```
 
 At six tasks the difference W minus V has G = 0.30000 and Phi = 0.24116,
@@ -1098,6 +1101,16 @@ matching the manual's Appendix E. Person, Task, and the combined
 Person-by-Task/residual covariance matrices are estimated from the scores.
 The D-study varies task counts; it cannot project new raters from this model.
 No scores are averaged automatically when omitting the rater facet.
+
+The planning question is whether adding common tasks would improve the
+dependability of the difference score. Under the estimated components,
+doubling tasks from six to twelve raises G from 0.300 to 0.462. This is a
+projection, not evidence from twelve observed tasks. G concerns relative
+ordering; Phi also includes shifts in absolute score levels. Larger values
+mean greater dependability under the model. SEM expresses error in score
+units, where smaller is better; it is not a confidence interval for G or Phi.
+Neither coefficient gives pass/fail classification accuracy, and no universal
+acceptable threshold or optimal design is selected.
 
 With `ratings` containing `Person`, `Rater`, `Task`, `Content`, and
 `Organization` columns:
@@ -1110,7 +1123,22 @@ d <- mfrm_multivariate_d_study(g,
   design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
   weights = c(Content = 0.6, Organization = 0.4))
 summary(d)
+plot(d) # Rater counts on the horizontal axis because tasks are held at three.
+
+# To vary both counts, request all combinations explicitly.
+d_grid <- mfrm_multivariate_d_study(g,
+  expand.grid(Raters = c(2, 4), Tasks = c(3, 6, 9)),
+  weights = c(Content = 0.6, Organization = 0.4))
+plot(d_grid, x_var = "Tasks") # Each line holds the rater count constant.
 ```
+
+Plots select the composite when weights are supplied, otherwise the first
+score; `score = "Content"` selects an original score. Points show requested
+scenarios and lines only guide comparisons. Inspect exact values with
+`summary(d_grid)` or `plot_data(plot(d_grid, draw = FALSE))`. Unavailable
+estimates are explained and retained in the plot payload rather than shown
+as zero. See `?mfrm_multivariate_d_study` and
+`?plot.mfrm_multivariate_d_study` for the complete workflow and how to read it.
 
 With a rater facet, the G-study includes Person-by-Rater,
 Person-by-Task, and Rater-by-Task components. The three-way interaction and

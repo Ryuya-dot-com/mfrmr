@@ -2,6 +2,12 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* Multivariate D-studies now have `plot()` methods for G/Phi and relative/
+  absolute SEM, with separate panels, explicit score/composite labels and
+  fixed-count rater/task comparisons. Unavailable results retain their reasons
+  rather than appearing as zero. `draw = FALSE` and `plot_data()` expose the
+  plotted values. The D-study help explains planning questions, metric choice,
+  mean-score units, future complete-design assumptions, and runnable examples.
 * `mfrm_multivariate_gstudy(method = "minque0")` now estimates covariance
   components from incomplete crossed Person-by-Task or Person-by-Rater-by-Task
   data. It checks whether the observed configuration separates the components
@@ -31,9 +37,9 @@ This unreleased development version extends the 0.2.4 release candidate.
   without normalization on the supplied score scales.
   Raw negative or indefinite estimates are retained; materially non-PSD
   components withhold coefficients and SEMs. These are observed-score point
-  projections, without sampling intervals, missing-data or nested-design
-  support, or latent MFRM reliability. Help includes a runnable two-score
-  example. These functions are not part of the 0.2.4 release candidate.
+  projections, without sampling intervals, missing-data correction,
+  nested-design models, or latent MFRM reliability. Help includes a runnable
+  two-score example. These functions are not part of the 0.2.4 release candidate.
 * `mfrm_cluster_compare()` now compares different feature selections on the
   same entities, reporting feature counts and selected weights. Shared
   features must retain their values and types. For multiply imputed results,

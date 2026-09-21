@@ -258,6 +258,12 @@ error remain combined. The D-study
 retains their distinct averaging rules, score units, and user-specified
 weights when forming relative-error and absolute-error covariance matrices,
 composite G/Phi, and SEMs.
+The D-study plot method shows G/Phi or SEM for one explicitly identified score
+or composite, with rater/task counts held fixed within each line. It retains
+unavailable results and their reasons. Help leads from a planning question to
+scenario construction, metric interpretation and exact values; these plots
+are conditional projections without confidence intervals or automatic design
+selection.
 Signed weights also support difference-score dependability when the score
 scales make subtraction meaningful. The same weights are used for the target
 composite and its observed estimate; distinct estimation weights and profile
