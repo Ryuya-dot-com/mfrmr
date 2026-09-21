@@ -198,6 +198,8 @@ reference:
       - rater_halo_network_analysis
       - mfrm_d_study
       - mfrm_generalizability
+      - mfrm_multivariate_gstudy
+      - mfrm_multivariate_d_study
       - plot.apa_table
       - plot.mfrm_anchor_review
       - plot.mfrm_bundle

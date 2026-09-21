@@ -233,30 +233,36 @@ explicit omission. G/D results retain the source of their data and the counts
 of rows supplied, used, and excluded. Stored fitted rows cannot reconstruct
 earlier MFRM exclusions, and omission does not correct missing-data bias.
 
-The next G-theory priority is a multivariate G-study and D-study workflow.
+The development version now provides a bounded multivariate G-study and
+D-study workflow through `mfrm_multivariate_gstudy()` and
+`mfrm_multivariate_d_study()`.
 For example, an assessment may score content, organization, and language on
 each performance. Users need to examine how changing their composite weights,
 or the numbers of raters and tasks, changes score dependability. Correlated
 components require universe-score and error covariances; averaging the
 components' separate reliability coefficients does not answer this question.
 
-The first implementation target is a complete, balanced, fully crossed
+The initial implementation accepts a complete, balanced, fully crossed
 Person-by-Rater-by-Task design, with the same raters and tasks across all score
 components. Score components are fixed parts of the intended assessment;
-raters and tasks are random conditions of measurement. The G-study must
-estimate component-specific variance-covariance matrices, including the
+raters and tasks are random conditions of measurement. Balanced multivariate
+ANOVA estimates component-specific variance-covariance matrices, including the
 Person-by-facet and Rater-by-Task interactions. With one observation per cell,
 the highest-order interaction and residual error remain combined. The D-study
-must retain their distinct averaging rules, score units, and user-specified
+retains their distinct averaging rules, score units, and user-specified
 weights when forming relative-error and absolute-error covariance matrices,
 composite G/Phi, and SEMs.
 
-This target is not yet a public capability. It concerns dependability on the
-observed-score scale. Treating ordered categories as numeric scores does not
+Raw negative or indefinite component estimates are retained without repair;
+materially non-PSD components withhold coefficients and SEMs. Matrix
+admissibility does not establish precise estimation or adequate model fit.
+The initial reference verification covers continuous-score calculations.
+This workflow concerns dependability on the observed-score scale.
+Treating ordered categories as numeric scores does not
 make their coefficients measures of latent ordinal dependability.
 Incomplete or unbalanced designs, nested or partially shared raters
 and tasks, and interval estimation need separate extensions and evidence.
-This workflow will complement MFRM on the observed-score scale; it will not
+This workflow complements MFRM on the observed-score scale; it does not
 provide multivariate latent MFRM estimation or cut-score classification accuracy.
 It is developed separately from the 0.2.4 release candidate, with no release
 version promised yet.

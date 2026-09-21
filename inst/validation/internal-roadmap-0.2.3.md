@@ -9,6 +9,55 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: balanced multivariate G-study and D-study implementation
+
+Development now exports mfrm_multivariate_gstudy and
+mfrm_multivariate_d_study with print/summary methods. The first estimates all
+seven observed-score covariance components by balanced ANOVA mean products
+from complete Person x Rater x Task data; the second retains the source result
+and projects component and optional composite G/Phi and SEMs under common
+random rater/task sampling. A one-score input is the full-interaction
+univariate special case, not the old main-effects approximation.
+
+No new dependency or estimator backend was added. The existing supplied-matrix
+algebra informed the common-condition quadratic forms; repository-only hash,
+admission and execution machinery is not a package dependency. Between-score
+covariances are estimated from joint mean products, not discarded or inferred
+from marginal G/Phi values. Person counts affect estimation but do not divide
+individual-score universe variance in a D-study.
+
+Raw negative/indefinite estimates remain available. Matrix diagnostics use
+observed-score SD units to avoid unit-dependent PSD decisions; no PSD repair
+or clipping is performed. Material non-PSD components withhold all coefficients
+and SEMs. Rank-deficient PSD components are reported and may support a point
+projection; no interval, precision or general identification claim follows.
+Composite weights retain their supplied units. Overflow/underflow that makes
+stored score/composite variances unrepresentable is refused with rescaling
+guidance rather than being interpreted as zero variance.
+
+The new focused test file passes 99 expectations with no failures, warnings,
+or skips. Tensor-contrast data recover specified covariance components, and
+independent saturated-model QR effects plus EMS-matrix inversion agree.
+Checks also cover hand-calculated composite errors, changed off-diagonal
+covariance, full-interaction univariate reduction, three-score linear
+reparameterization, duplicated-score rank deficiency, score order/units,
+weight scaling, negative components, constant data, incomplete designs, and
+invalid identities. The updated namespace contract passes its four checks.
+
+Both new Rd files parse and render, new function usage checks pass, and the
+documented continuous-score example executes. In that fictional example,
+holding three tasks and weights Content=.6/Organization=.4 fixed, increasing
+raters from two to four changes composite G from .4052639 to .5007910 and Phi
+from .2390680 to .3411615. These are example projections, not recommendations
+or population recovery evidence. Help previews are under
+/private/tmp/mfrmr-multivariate-gtheory-20260921/.
+
+NEWS, README, the public roadmap, and pkgdown reference entries describe this
+bounded development API. It is outside the 0.2.4 candidate. No full suite,
+package check, stress matrix, new Monte Carlo study, CI, or external publication
+was run. Unbalanced/nested/partial-sharing designs, missing-data/MI integration,
+ordinal same-scale recovery and sampling intervals remain separate work.
+
 ## 2026-09-21: prioritize multivariate observed-score G-theory
 
 The user's request to work on multivariate G-theory changes its priority from
@@ -1019,7 +1068,7 @@ LRT, because that could approve unrelated SEs, intervals and predictions.
 | Design for replacement raters | Equal-cost allocation comparisons for the same Persons and prespecified Person differences under an explicitly sampled rater population. | Requires the matching shared-rater model and joint prediction route. Preserve paired covariance and all-attempt availability; use the saved layouts/target table with layout B's known confounding and C as a negative control. |
 | Model breadth | PCM random facets, sampled tasks, local/correlated testlets, crossed/nested interactions and random slopes. | Admit one concrete user question at a time after its target/identification is specified. The entire correlated-testlet family is not a mandatory prerequisite for a scalar shared-rater model. |
 | Scale and API consolidation | Explicit scale identifiers/separate-scale routing, then stable schemas/migration and maintenance of validated routes. | Post-0.2.4 scope decision and user need; multiple-scale routing and random-rater research do not establish or require each other. |
-| Multivariate observed-score G-theory | Complete balanced Person x Rater x Task covariance estimation and component/composite D-study results; now a priority feature track. | Reuse matrix algebra, match estimator and truth scales, check a full-interaction univariate reduction and an independent estimator reference. Keep sparse, nested, partial-sharing and interval extensions separate. No automatic assignment to 0.2.4. |
+| Multivariate observed-score G-theory | Complete balanced Person x Rater x Task ANOVA covariance estimation and component/composite D-study point results are now implemented in development. | Deterministic recovery, independent QR/EMS reference and full-interaction univariate reduction pass. Keep sparse, nested, partial-sharing, ordinal recovery and interval extensions separate. Outside the 0.2.4 candidate. |
 | Deferred research | Hierarchical response time, diffusion models, portable GPCM and other response families. | A concrete measurement use case, suitable data and a separate evidence plan. No automatic assignment to 0.2.4, 0.3.0 or 1.0.0. |
 
 The [measurement-extension decision](measurement-extension-next-decisions-0.2.4.md)

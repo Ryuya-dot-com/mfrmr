@@ -25,7 +25,8 @@ Questions and bug reports:
 ## Installation
 
 This README describes the unreleased development version `0.2.4.9001`.
-The external-feature functions below are not part of the `0.2.4` release candidate.
+The external-feature and multivariate G-theory functions below are not part
+of the `0.2.4` release candidate.
 Functions and options shown here may differ from an installed release; check
 `packageVersion("mfrmr")` and the help shipped with that installation.
 For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
@@ -1066,6 +1067,50 @@ automatically selected.
 Pairwise distances use quadratic memory. The 5,000-entity limits are input
 guards, not performance or memory guarantees; multiply imputed analyses also
 retain every completed result. Reuse saved results when comparing settings.
+
+## Multivariate G-theory
+
+When an assessment reports several score components, such as content and
+organization, their covariances matter for the dependability of a composite.
+In this development version, `mfrm_multivariate_gstudy()` estimates those
+covariances in a complete, balanced Person-by-Rater-by-Task design. Every
+person must have one row for every rater/task combination, with all selected
+numeric scores observed. Raters and tasks must denote the same conditions
+across scores and persons, and represent the random conditions over which
+scores will be generalized. Score components are fixed parts of the assessment.
+
+With `ratings` containing `Person`, `Rater`, `Task`, `Content`, and
+`Organization` columns:
+
+```r
+g <- mfrm_multivariate_gstudy(ratings, scores = c("Content", "Organization"))
+g$component_diagnostics
+g$components$Person
+d <- mfrm_multivariate_d_study(g,
+  design_grid = data.frame(Raters = c(2, 4), Tasks = c(3, 3)),
+  weights = c(Content = 0.6, Organization = 0.4))
+summary(d)
+```
+
+The G-study uses balanced multivariate ANOVA and includes Person-by-Rater,
+Person-by-Task, and Rater-by-Task components. The three-way interaction and
+within-cell error remain combined because each cell has one observation.
+The D-study projects mean scores over the specified raters and tasks. It uses
+the full covariance matrices to report relative G, absolute Phi, and their
+corresponding error SEMs; it does not average separate reliability coefficients.
+Weights are used as supplied. Omitting `weights` reports the score components
+without creating a composite. See `?mfrm_multivariate_gstudy` for a runnable
+fictional continuous-score example.
+
+Inspect the matrix diagnostics first. Negative or indefinite component
+estimates remain visible; a materially non-PSD component withholds all
+coefficients and SEMs. Passing this numerical check does not establish precise
+estimation or model fit. These are observed-score point projections conditional
+on estimated components, without sampling intervals. Numeric category scores
+do not yield latent ordinal or MFRM reliability. Initial reference verification
+covers continuous-score calculations. Incomplete, unbalanced, nested, or
+partially shared designs and missing-score imputation are not supported.
+The existing main-effects `mfrm_generalizability()` workflow remains separate.
 
 ## ICC inputs and intervals
 

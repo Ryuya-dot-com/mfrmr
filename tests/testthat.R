@@ -24,6 +24,7 @@ cran_light_tests <- c(
   "hierarchical-clustering",
   "gauss-hermite-weights",
   "generalizability-missing",
+  "multivariate-gtheory",
   "icc-ci-method",
   "icc-input",
   "posterior-intervals",

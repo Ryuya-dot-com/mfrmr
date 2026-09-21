@@ -2,6 +2,17 @@
 
 This unreleased development version extends the 0.2.4 release candidate.
 
+* Added `mfrm_multivariate_gstudy()` and `mfrm_multivariate_d_study()` for
+  complete, balanced Person-by-Rater-by-Task data with fixed score components
+  and common random raters/tasks. Multivariate ANOVA estimates seven
+  variance-covariance components, including two-way interactions and a combined
+  highest-order/residual component. D-studies project component and optional
+  user-weighted composite G/Phi and SEMs using the full covariance matrices.
+  Raw negative or indefinite estimates are retained; materially non-PSD
+  components withhold coefficients and SEMs. These are observed-score point
+  projections, without sampling intervals, missing-data or nested-design
+  support, or latent MFRM reliability. Help includes a runnable two-score
+  example. These functions are not part of the 0.2.4 release candidate.
 * `mfrm_cluster_compare()` now compares different feature selections on the
   same entities, reporting feature counts and selected weights. Shared
   features must retain their values and types. For multiply imputed results,

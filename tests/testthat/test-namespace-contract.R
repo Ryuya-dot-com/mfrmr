@@ -166,6 +166,8 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     "q3_statistic",
     "compute_person_fit_indices",
     "mfrm_generalizability",
+    "mfrm_multivariate_gstudy",
+    "mfrm_multivariate_d_study",
     "import_mirt_fit",
     "import_tam_fit",
     "import_erm_fit"
@@ -355,6 +357,10 @@ test_that("NAMESPACE roxygen contract keeps expected exports and methods", {
     # 0.1.6 second-pass: print methods for the new public classes.
     "S3method(print,mfrm_q3)",
     "S3method(print,mfrm_generalizability)",
+    "S3method(print,mfrm_multivariate_gstudy)",
+    "S3method(summary,mfrm_multivariate_gstudy)",
+    "S3method(print,mfrm_multivariate_d_study)",
+    "S3method(summary,mfrm_multivariate_d_study)",
     "S3method(print,mfrm_imported_fit)",
     "S3method(print,summary.mfrm_imported_fit)",
     "S3method(summary,mfrm_imported_fit)",
