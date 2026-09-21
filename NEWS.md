@@ -28,22 +28,6 @@ This unreleased development version extends the 0.2.4 release candidate.
   the G-study with its original data to obtain this accounting. Omission does
   not impute ratings or correct missing-data bias.
 
-* Withdrew `ci_method = "profile"` from `compute_facet_icc()` and
-  `analyze_hierarchical_structure()`: transforming separate variance-component
-  intervals while fixing the other components did not produce a
-  profile-likelihood interval for the ICC ratio. Choose `"boot"` explicitly
-  for parametric percentile intervals, subject to the fitted Gaussian model.
-* ICC bootstrap results now retain all draws, requested and unavailable counts,
-  convergence/singularity diagnostics, and refit warnings/errors. Any missing
-  or nonconverged replicate, or a fit warning, withholds intervals; successful
-  draws are not silently selected for quantiles. Converged boundary fits remain
-  in the distribution. Invalid replicate counts, CPU counts, and seeds are
-  rejected rather than truncated. Snow workers now load lme4 before refitting.
-  Saved interval results must be rerun from
-  their original data/settings before printing, summarizing, or plotting with
-  this version. ICC plots explain unavailable intervals and no longer apply
-  reliability-band reference lines to every facet's variance share.
-
 # mfrmr 0.2.4
 
 This version adds reusable calibration and new-Person scoring, and corrects
@@ -119,6 +103,22 @@ and action needed for each affected workflow.
   current capability statements.
 
 ## Changes affecting existing analyses
+
+* Withdrew `ci_method = "profile"` from `compute_facet_icc()` and
+  `analyze_hierarchical_structure()`: transforming separate variance-component
+  intervals while fixing the other components did not produce a
+  profile-likelihood interval for the ICC ratio. Choose `"boot"` explicitly
+  for parametric percentile intervals, subject to the fitted Gaussian model.
+* ICC bootstrap results now retain all draws, requested and unavailable counts,
+  convergence/singularity diagnostics, and refit warnings/errors. Any missing
+  or nonconverged replicate, or a fit warning, withholds intervals; successful
+  draws are not silently selected for quantiles. Converged boundary fits remain
+  in the distribution. Invalid replicate counts, CPU counts, and seeds are
+  rejected rather than truncated. Snow workers now load lme4 before refitting.
+  Saved interval results must be rerun from
+  their original data/settings before printing, summarizing, or plotting with
+  this version. ICC plots explain unavailable intervals and no longer apply
+  reliability-band reference lines to every facet's variance share.
 
 * Selecting rows or columns from a D-study table now preserves its calculation
   and interpretation information. Printing selected columns no longer mistakes

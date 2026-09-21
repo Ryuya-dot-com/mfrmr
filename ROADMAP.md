@@ -54,6 +54,7 @@ The other priority is consistent interpretation throughout existing analyses:
 | --- | --- |
 | Fit and precision summaries | Optimizer success, estimability and precision assessment are separate. Brief and full summaries must give the same interpretation decision. |
 | Person scores and posterior draws | EAP, SD and intervals condition on the fitted calibration and stated prior. Estimated-population scoring requires explicit exploratory review. Draws alone do not qualify downstream group or regression inference. |
+| ICC intervals | Use joint parametric bootstrap ratios under the fitted Gaussian model; retain failed refits and withhold incomplete intervals. Separate component-profile bounds are not ICC profile-likelihood intervals. Saved interval results require recalculation. |
 | Reliability and separation | Report the finite estimates and corresponding SEs used; incomplete SEs cannot produce a complete index. High rater separation means differences in severity, not high agreement. |
 | Fit, category, marginal, PCA and Q3 diagnostics | Preserve missing results and report how many observations or elements were evaluated. Flags are descriptive review aids, without guaranteed individual or multiple-element error rates. Ordered point estimates do not by themselves establish adequate categories. |
 | QC | Assess differentiation only for facets selected for that purpose. An unavailable check cannot become a pass, and an overall QC result does not establish statistical validity. |
@@ -62,11 +63,6 @@ The other priority is consistent interpretation throughout existing analyses:
 | Group comparisons and linking | Residual differences describe observed-minus-expected scores without tests or confidence intervals. Linked subgroup refits and drift screens retain their separate uncertainty limits. A new omnibus differential-functioning test is outside 0.2.4. |
 | Observed-score G/D studies and shrinkage | Retain their distinct models and conditional assumptions; neither is a jointly estimated random-facet MFRM or a source of fully propagated uncertainty. |
 | External imports | Preserve source coordinates and uncertainty conventions. Missing joint covariance cannot be reconstructed from marginal SEs. Imported objects do not become native fits or portable calibrations. |
-
-The release candidate still needs the ICC interval corrections described in
-the development NEWS. Separate component bounds must not be reported as
-profile-likelihood intervals for an ICC ratio, and failed bootstrap attempts
-must remain visible.
 
 Existing calculations and interpretations still require review before release.
 Clearer wording does not resolve an incorrect formula or unsupported decision.

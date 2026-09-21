@@ -5,7 +5,7 @@ feature review and exploratory grouping. It is not a CRAN submission candidate.
 The results below refer to the separately preserved 0.2.4 candidate; they do
 not cover these new functions.
 
-## Previous candidate submission text
+## Candidate submission text
 
 This is an update from mfrmr 0.2.3.1 to 0.2.4. The maintainer and license are
 unchanged.
@@ -25,24 +25,31 @@ differential-functioning methods are outside this release.
 
 ## Test environments
 
-The 0.2.4 candidate passed checks in five environments on 2026-09-21:
+The ICC correction in the current 0.2.4 candidate passed hosted checks on
+2026-09-21 in four environments:
 
 - macOS with R 4.6.1;
 - Windows with R 4.6.1;
-- Ubuntu with R-devel (2026-09-19 r90572);
-- Ubuntu with R 4.6.1, including the full package test suite; and
+- Ubuntu with R-devel (2026-09-19 r90572); and
 - Ubuntu with R 4.5.3.
 
-All five jobs completed with 0 errors, 0 warnings, and 0 notes. Tests, examples,
-vignette rebuilding, and fresh-process installed-package scoring passed.
-Ubuntu release ran the complete suite: 19,438 passing expectations, no
-failures, 42 test warnings, and 44 recorded skips. The other four environments
-each ran the CRAN-light suite: 673 passing expectations, no failures or test
-warnings, and three intentional skips. The 42 complete-suite warnings concern
-sparse category support, plot-label space, and the restriction of
-information-criterion ranking to MML fits. Their messages and counts match the
-preceding development source's complete arm64 macOS run; they are not
-package-check warnings.
+Each completed environment had 0 package-check errors, warnings, and notes,
+756 passing lightweight test expectations, no test failures/warnings, and
+three intentional skips. Examples, vignette rebuilding, two international-input
+cases, and eight archive-replay cases passed. Checked source contents were
+verified against the candidate, accounting for Windows line endings.
+
+The Ubuntu-release full-suite job was intentionally cancelled after review of
+the verification scope. It is not reported as a pass. The preceding candidate's
+completed full run (19,438 passes, 42 test warnings, 44 skips) remains evidence
+for that earlier source, not a completed full run of this revision. Ordinary
+CI now uses the lightweight suite; a full run is an explicit manual choice for
+broad changes or a batched release review.
+
+The ICC correction withdraws the unsupported transformation of separate
+component-profile bounds, retains bootstrap failure/convergence diagnostics,
+and withholds incomplete intervals. Saved ICC interval analyses require
+recalculation; point estimates alone do not establish interval validity.
 
 The candidate also corrects printing of selected D-study table rows or
 columns, preserving their calculation and interpretation information. G/D
@@ -52,7 +59,7 @@ additional examples pass.
 
 The exact 0.2.4 source archive passes `R CMD check --as-cran` on arm64 macOS
 with R 4.6.1: 0 errors, 0 warnings, and 1 NOTE. This includes the additional
-`--run-donttest` examples, 673 passing lightweight test expectations with three
+`--run-donttest` examples, 756 passing lightweight test expectations with three
 intentional CRAN skips, vignette rebuilding, and PDF/HTML manual generation.
 
 CRAN incoming feasibility notes seven updates in the past six months. This

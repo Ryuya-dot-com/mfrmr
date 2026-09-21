@@ -87,6 +87,14 @@
 #'   practical bound; old equivalence bundles cannot supply the required joint
 #'   covariance. Rebuild model-choice and weighting reviews from their source
 #'   fits as well.
+#' - **ICC intervals:** rerun [compute_facet_icc()] or
+#'   [analyze_hierarchical_structure()] from the original data and settings.
+#'   The former `ci_method = "profile"` transformed separate component bounds
+#'   and did not calculate a profile-likelihood interval for the ICC ratio.
+#'   Choose `"boot"` explicitly for parametric percentile intervals, then read
+#'   `ICC_CI_Status` and `attr(icc, "icc_ci")`. Failed or nonconverged refits
+#'   and fit warnings withhold intervals. Saved bootstrap results also require
+#'   rerunning to obtain complete failure accounting; reprinting is insufficient.
 #' - **Observed-score design coefficients and shrinkage:** rerun
 #'   [mfrm_generalizability()] with its original data and settings, then
 #'   [mfrm_d_study()] with the planned counts and residual-scaling choice.
