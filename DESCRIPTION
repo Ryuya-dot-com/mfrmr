@@ -45,6 +45,7 @@ Imports:
     lifecycle,
     rlang,
     methods,
+    parallel,
     stats,
     utils
 LinkingTo:

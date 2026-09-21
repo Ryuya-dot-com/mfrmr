@@ -533,35 +533,30 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #'   out.
 #' @param reml Logical; whether to fit with REML. Default `TRUE`.
 #' @param ci_method Confidence-interval method for the ICC column.
-#'   One of `"none"` (default, point estimate only), `"profile"`
-#'   (a **first-order approximation**: marginal likelihood-profile
-#'   bounds for each variance-component SD via
-#'   [lme4::confint.merMod()] with `method = "profile"`, squared to
-#'   variances, then plugged into the ICC ratio while holding the
-#'   other components at their point estimate; fast and deterministic,
-#'   the default recommendation for reporting), or `"boot"`
-#'   (parametric bootstrap via [lme4::bootMer()]; slower but robust
-#'   to non-normal ICC sampling distributions because each bootstrap
-#'   replicate resamples the full variance decomposition jointly).
+#'   One of `"none"` (default, point estimate only) or `"boot"`
+#'   (parametric percentile bootstrap via [lme4::bootMer()]). Each
+#'   simulated data set is refitted and its full variance decomposition
+#'   used to calculate the ICC ratios. The former `"profile"` method
+#'   is no longer supported; see Updating saved intervals below.
 #' @param ci_level Confidence level when `ci_method != "none"`; default
 #'   `0.95`. Koo & Li (2016) recommend banding the CI rather than the
 #'   point estimate when classifying reliability as Poor / Moderate /
 #'   Good / Excellent.
 #' @param ci_boot_reps Number of bootstrap replicates used when
-#'   `ci_method = "boot"`. Default `1000`.
+#'   `ci_method = "boot"`. An integer of at least 2; default `1000`.
+#'   Small counts give imprecise tail quantiles; choose enough replicates
+#'   for the precision required in the application.
 #' @param ci_boot_seed Optional integer seed for the bootstrap path
-#'   (`NULL` leaves the RNG state untouched).
+#'   (between 0 and `.Machine$integer.max`). `NULL` uses the current
+#'   random-number state. Bootstrap simulation advances that state.
 #' @param ci_boot_parallel Parallelisation strategy for the
 #'   parametric-bootstrap CI path, passed through to
 #'   [lme4::bootMer()]: `"no"` (default), `"multicore"` (POSIX
 #'   `mclapply`), or `"snow"` (PSOCK cluster). `"multicore"` does
-#'   nothing on Windows and falls back to serial; in that case use
-#'   `"snow"` with [parallel::makeCluster()] in scope.
+#'   nothing on Windows and falls back to serial; use `"snow"` there.
 #' @param ci_boot_ncpus Number of CPUs to use for the parallel
-#'   bootstrap path (ignored when `ci_boot_parallel = "no"`). The
-#'   per-replicate progress bar is suppressed under parallel
-#'   execution because worker processes cannot push updates to the
-#'   parent's cli console.
+#'   bootstrap path (ignored when `ci_boot_parallel = "no"`). A positive
+#'   integer. Interactive progress is available for serial execution.
 #'
 #' @section Interpreting output:
 #' The `Interpretation` column uses **two scales** so the same numeric
@@ -587,17 +582,31 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' Rasch-metric version in `diagnostics$reliability` and this
 #' variance-share view here.
 #'
-#' Note: Koo & Li (2016) recommend applying the reliability bands to
-#' the **95% confidence interval** of the ICC rather than to the point
-#' estimate alone. Set `ci_method = "profile"` (default `"none"`) to
-#' obtain likelihood-profile CI bounds alongside the point estimate,
-#' or `ci_method = "boot"` for a parametric bootstrap with
-#' `ci_boot_reps` replicates. The returned data frame gains
-#' `ICC_CI_Lower` / `ICC_CI_Upper` columns so downstream reporting can
-#' apply the band to the CI rather than the point estimate. The
-#' `Interpretation` column still uses the point estimate so
-#' callers who want CI-aware banding can implement it externally from
-#' the supplied bounds.
+#' Set `ci_method = "boot"` to request intervals alongside the point
+#' estimates. The `Interpretation` column still uses point estimates.
+#' The bootstrap simulates Gaussian random effects and errors from the
+#' fitted model; it does not correct model misspecification or missing-data
+#' bias. Percentile coverage can be unreliable near zero variance components
+#' or with few grouping levels.
+#'
+#' Intervals are withheld if the original fit has convergence problems or
+#' warnings, or if any requested bootstrap refit fails, has convergence
+#' problems or warnings, or produces an undefined ICC. Finite draws are
+#' retained but never silently selected to calculate an interval. Singular
+#' fits (zero random-effect components) are recorded separately and retained
+#' when they converge; they are not automatically treated as failures.
+#' Inspect `ICC_CI_Status` and `attr(x, "icc_ci")` before reporting intervals.
+#'
+#' @section Updating saved intervals:
+#' The former `ci_method = "profile"` transformed separate standard-deviation
+#' intervals while holding other variance components fixed. These are not
+#' profile-likelihood intervals for the ICC ratio and should not be reported
+#' as ICC confidence intervals. Requests now stop with an explanation.
+#' Rerun [compute_facet_icc()] or [analyze_hierarchical_structure()] with the
+#' original data and settings, choosing `ci_method = "boot"` explicitly if
+#' intervals are needed. Saved bootstrap results from earlier versions must
+#' also be rerun to obtain complete failure accounting. Printing, summarizing,
+#' or plotting old interval results cannot correct their calculations.
 #'
 #' @section Typical workflow:
 #' 1. Fit the MFRM model with `fit_mfrm()` for the Rasch-metric
@@ -616,10 +625,18 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' - `InterpretationScale`: `"Koo-Li reliability"` for the person
 #'   facet, `"Variance share"` for others.
 #' - `ICC_CI_Lower` / `ICC_CI_Upper` / `ICC_CI_Level` / `ICC_CI_Method`:
-#'   CI bounds, level, and method (populated when `ci_method != "none"`;
-#'   `NA_real_` otherwise).
-#' - `ICC_CI_NReps`: bootstrap replicate count when
-#'   `ci_method = "boot"` (absent otherwise).
+#'   CI bounds (unavailable bounds are `NA`), requested level, and method.
+#' - `ICC_CI_Status`: whether intervals are available and, otherwise, why.
+#' - `ICC_CI_NRequested` / `ICC_CI_NReps` / `ICC_CI_NUnavailable`: requested
+#'   bootstrap count, number of converged refits with all ICCs finite, and
+#'   number without such a result (absent for `"none"`). Counts are `NA` when
+#'   the bootstrap aborts without returning its draws. Warnings can withhold
+#'   intervals even when all draws are finite and all refits converge.
+#'
+#' The `icc_ci` attribute retains the original fit's convergence and singularity
+#' diagnostics and warnings. When bootstrap results are returned, its `bootstrap`
+#' entry contains every draw, per-refit convergence and singularity indicators,
+#' the number of refit errors, and lme4's message/warning/error tables.
 #'
 #' @seealso [compute_facet_design_effect()],
 #'   [analyze_hierarchical_structure()], [detect_facet_nesting()],
@@ -658,20 +675,31 @@ facet_small_sample_review <- function(fit, diagnostics = NULL,
 #' @export
 compute_facet_icc <- function(data, facets, score,
                               person = NULL, reml = TRUE,
-                              ci_method = c("none", "profile", "boot"),
+                              ci_method = c("none", "boot"),
                               ci_level = 0.95,
                               ci_boot_reps = 1000L,
                               ci_boot_seed = NULL,
                               ci_boot_parallel = c("no", "multicore", "snow"),
                               ci_boot_ncpus = 1L) {
-  ci_method <- match.arg(ci_method)
+  ci_method <- .icc_ci_method(ci_method)
   ci_boot_parallel <- match.arg(ci_boot_parallel)
-  if (!is.numeric(ci_level) || length(ci_level) != 1L ||
+  if (!is.numeric(ci_level) || is.complex(ci_level) || length(ci_level) != 1L ||
       !is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be a single number in (0, 1).", call. = FALSE)
   }
-  ci_boot_reps <- max(1L, as.integer(ci_boot_reps))
-  ci_boot_ncpus <- max(1L, as.integer(ci_boot_ncpus))
+  if (ci_method == "boot") {
+    for (arg in c("ci_boot_reps", "ci_boot_ncpus", "ci_boot_seed")) {
+      value <- get(arg)
+      if (arg == "ci_boot_seed" && is.null(value)) next
+      minimum <- switch(arg, ci_boot_reps = 2, ci_boot_ncpus = 1, 0)
+      if (!is.numeric(value) || is.complex(value) || length(value) != 1L ||
+          !is.finite(value) || value < minimum ||
+          value > .Machine$integer.max || value != floor(value)) {
+        stop("`", arg, "` must be a single integer between ", minimum,
+             " and .Machine$integer.max.", call. = FALSE)
+      }
+    }
+  }
   if (!requireNamespace("lme4", quietly = TRUE)) {
     message("`compute_facet_icc()` requires the `lme4` package ",
             "(in Suggests). Install it and retry.")
@@ -706,9 +734,7 @@ compute_facet_icc <- function(data, facets, score,
     score, " ~ 1 + ",
     paste0("(1 | ", re_terms, ")", collapse = " + ")
   ))
-  # Capture lme4 convergence warnings so users know when the variance
-  # decomposition rests on a near-singular fit. Silently refitting under
-  # suppressWarnings() hid genuine problems (e.g. all-same scores).
+  # Retain fit warnings separately from convergence codes and boundary messages.
   lmer_warnings <- character(0)
   fit <- tryCatch(
     withCallingHandlers(
@@ -725,7 +751,7 @@ compute_facet_icc <- function(data, facets, score,
   }
   if (length(lmer_warnings) > 0L) {
     message("compute_facet_icc(): lme4 reported ",
-            length(lmer_warnings), " convergence warning(s); ",
+            length(lmer_warnings), " fit warning(s); ",
             "the ICC table is returned but results may be unreliable. ",
             "First message: ", lmer_warnings[1])
   }
@@ -738,13 +764,13 @@ compute_facet_icc <- function(data, facets, score,
   # ICC 0.27" artifact that arises when lme4 returns boundary-singular
   # components on the order of 1e-30.
   zero_tol <- sqrt(.Machine$double.eps)
-  is_singular <- is.finite(total_var) && total_var <= zero_tol
+  zero_variance <- is.finite(total_var) && total_var <= zero_tol
   icc_vec <- if (is.finite(total_var) && total_var > zero_tol) {
     vc$vcov / total_var
   } else {
     rep(NA_real_, length(vc$vcov))
   }
-  if (isTRUE(is_singular)) {
+  if (isTRUE(zero_variance)) {
     message("compute_facet_icc(): total variance is numerically zero ",
             "(non-identifiable); returning NA ICCs. ",
             "This usually means the score column has no within-facet spread.")
@@ -774,7 +800,7 @@ compute_facet_icc <- function(data, facets, score,
   }
   interpret <- vapply(seq_along(icc_vec), function(k) {
     if (!is.finite(icc_vec[k])) {
-      return(if (isTRUE(is_singular)) "Non-identifiable" else NA_character_)
+      return(if (isTRUE(zero_variance)) "Non-identifiable" else NA_character_)
     }
     grp <- as.character(vc$grp[k])
     if (identical(grp, person_label)) koo_li_band(icc_vec[k])
@@ -794,205 +820,148 @@ compute_facet_icc <- function(data, facets, score,
     stringsAsFactors = FALSE
   )
 
-  # Optional ICC confidence intervals. Koo & Li (2016) recommend
-  # applying the reliability bands to the 95% CI rather than the point
-  # estimate; this block adds CI columns so callers can implement that
-  # recommendation. Two methods are supported:
-  #   * "profile": likelihood-profile bounds on the standard-deviation
-  #     components via lme4::confint(method = "profile"), then
-  #     transformed to ICC share (Variance_j / sum of squared bounds).
-  #     Fast and deterministic, but may fail on singular fits.
-  #   * "boot": parametric bootstrap via lme4::bootMer, draws
-  #     `ci_boot_reps` simulated datasets from the fitted model and
-  #     refits to build the empirical CI distribution. Slow, but
-  #     robust to non-normality of the ICC sampling distribution.
   out$ICC_CI_Lower <- NA_real_
   out$ICC_CI_Upper <- NA_real_
   out$ICC_CI_Level <- ci_level
   out$ICC_CI_Method <- ci_method
-  if (ci_method != "none" && !is_singular && is.finite(total_var)) {
-    ci_result <- tryCatch(
-      .compute_icc_ci(
-        fit = fit, vc_grp = as.character(vc$grp),
-        method = ci_method, ci_level = ci_level,
-        boot_reps = ci_boot_reps, boot_seed = ci_boot_seed,
-        boot_parallel = ci_boot_parallel,
-        boot_ncpus = ci_boot_ncpus
-      ),
-      error = function(e) {
-        message("compute_facet_icc(): CI computation (",
-                ci_method, ") failed: ", conditionMessage(e),
-                ". Returning point estimates only.")
-        NULL
-      }
-    )
-    if (!is.null(ci_result)) {
-      out$ICC_CI_Lower <- round(ci_result$lower, 4)
-      out$ICC_CI_Upper <- round(ci_result$upper, 4)
-      if ("n_reps" %in% names(ci_result)) {
-        out$ICC_CI_NReps <- ci_result$n_reps
-      }
-    }
-  }
-  structure(out, class = c("mfrm_facet_icc", "data.frame"))
-}
-
-#' @keywords internal
-#' @noRd
-# Map lme4::confint()-style row names to VarCorr component positions.
-#
-# lme4 uses two row-name conventions for the SD components returned
-# by stats::confint(, method = "profile") / "Wald" / "boot":
-#
-#   (a) Terse form: ".sig01", ".sig02", ..., ".sigNN" for each random-
-#       effect SD (in VarCorr formula order), plus ".sigma" for the
-#       residual SD. This is the default return from
-#       stats::confint(fit, method = "profile") on older / current
-#       lme4 releases and for simple random-intercept-only models.
-#
-#   (b) Verbose form: "sd_(Intercept)|<group>" for each random-effect
-#       SD plus "sigma" for the residual SD. Some lme4 branches and
-#       broom.mixed post-processing surface this form.
-#
-# This helper returns an integer vector of length `length(vc_grp)`,
-# where each entry is the row index in `row_names` corresponding to
-# that VarCorr component's SD, or NA_integer_ when no row matches.
-# Extracting it lets us add format-variant regression tests
-# (see test-lme4-confint-helper.R) instead of relying on the inline
-# grep pattern.
-.lme4_confint_components <- function(row_names, vc_grp) {
-  row_names <- as.character(row_names)
-  vc_grp <- as.character(vc_grp)
-  n_grp <- length(vc_grp)
-  ordered <- rep(NA_integer_, n_grp)
-  if (n_grp == 0L || length(row_names) == 0L) return(ordered)
-
-  # Terse form first: ".sig01"..".sigNN" + ".sigma".
-  terse_sig <- grep("^\\.sig[0-9]+$", row_names)
-  terse_sigma <- which(row_names == ".sigma")
-  if (length(terse_sig) > 0L || length(terse_sigma) > 0L) {
-    re_positions <- which(vc_grp != "Residual")
-    resid_position <- which(vc_grp == "Residual")
-    for (k in seq_along(re_positions)) {
-      if (k <= length(terse_sig)) ordered[re_positions[k]] <- terse_sig[k]
-    }
-    if (length(resid_position) == 1L && length(terse_sigma) == 1L) {
-      ordered[resid_position] <- terse_sigma
-    }
-    return(ordered)
-  }
-
-  # Verbose form: "sd_<anything>|<group>" + "sigma". We use a literal
-  # suffix match via endsWith() so group names containing regex
-  # metacharacters (e.g. "Rater[1]") do not need manual escaping.
-  for (i in seq_len(n_grp)) {
-    grp <- vc_grp[i]
-    if (identical(grp, "Residual")) {
-      idx <- which(row_names == "sigma")
+  out$ICC_CI_Status <- "Not requested"
+  fit_diagnostics <- .icc_fit_diagnostics(fit)
+  fit_diagnostics$warnings <- lmer_warnings
+  ci_details <- list(calculation_version = 1L, fit = fit_diagnostics)
+  if (ci_method == "boot") {
+    out$ICC_CI_NRequested <- as.integer(ci_boot_reps)
+    out$ICC_CI_NReps <- 0L
+    out$ICC_CI_NUnavailable <- as.integer(ci_boot_reps)
+    if (!all(is.finite(icc_vec))) {
+      out$ICC_CI_Status <- "Undefined ICC"
+    } else if (!fit_diagnostics$converged || length(lmer_warnings) > 0L) {
+      out$ICC_CI_Status <- "Original fit requires review"
     } else {
-      idx <- which(endsWith(row_names, paste0("|", grp)))
+      ci_result <- tryCatch(
+        .compute_icc_ci(
+          fit = fit, vc_grp = as.character(vc$grp), ci_level = ci_level,
+          boot_reps = ci_boot_reps, boot_seed = ci_boot_seed,
+          boot_parallel = ci_boot_parallel, boot_ncpus = ci_boot_ncpus
+        ),
+        error = function(e) e
+      )
+      if (inherits(ci_result, "error")) {
+        out$ICC_CI_Status <- "Bootstrap failed"
+        out$ICC_CI_NReps <- out$ICC_CI_NUnavailable <- NA_integer_
+        ci_details$error <- conditionMessage(ci_result)
+        message("compute_facet_icc(): bootstrap failed: ", ci_details$error,
+                ". Returning point estimates without intervals.")
+      } else {
+        out$ICC_CI_Lower <- round(ci_result$lower, 4)
+        out$ICC_CI_Upper <- round(ci_result$upper, 4)
+        out$ICC_CI_Status <- ci_result$status
+        out$ICC_CI_NReps <- ci_result$n_reps
+        out$ICC_CI_NUnavailable <- ci_boot_reps - ci_result$n_reps
+        ci_details$bootstrap <- ci_result$diagnostics
+      }
     }
-    if (length(idx) == 1L) ordered[i] <- idx
   }
-  ordered
+  structure(out, class = c("mfrm_facet_icc", "data.frame"), icc_ci = ci_details)
 }
 
-# Internal helper: compute ICC confidence intervals by profile likelihood
-# or parametric bootstrap, aligned with the component order returned by
-# lme4::VarCorr.
-.compute_icc_ci <- function(fit, vc_grp, method, ci_level,
+.icc_ci_method <- function(method) {
+  if (identical(method, "profile")) {
+    stop('`ci_method = "profile"` has been withdrawn: transforming separate ',
+         'variance-component bounds does not give an ICC confidence interval. ',
+         'Use "none", or explicitly choose "boot" for a parametric bootstrap.',
+         call. = FALSE)
+  }
+  match.arg(method, c("none", "boot"))
+}
+
+.icc_fit_diagnostics <- function(fit) {
+  conv <- fit@optinfo$conv
+  codes <- c(conv$opt, conv$lme4$code)
+  list(converged = all(is.finite(codes)) && all(codes == 0),
+       singular = lme4::isSingular(fit), convergence = conv)
+}
+
+# Each row contains the jointly refitted variance shares plus fit indicators.
+# Boundary components remain in the distribution; failed refits do not disappear.
+.compute_icc_ci <- function(fit, vc_grp, ci_level,
                             boot_reps = 1000L, boot_seed = NULL,
                             boot_parallel = "no", boot_ncpus = 1L) {
-  alpha <- 1 - ci_level
   n_grp <- length(vc_grp)
-  if (identical(method, "profile")) {
-    # Profile CIs for each SD component plus residual sigma. Row
-    # labels depend on lme4 version (see `.lme4_confint_components`
-    # for the supported formats).
-    ci <- suppressWarnings(suppressMessages(
-      stats::confint(fit, level = ci_level, method = "profile")
-    ))
-    ordered_rows <- .lme4_confint_components(rownames(ci), vc_grp)
-    comp_sd_lo <- rep(NA_real_, n_grp)
-    comp_sd_hi <- rep(NA_real_, n_grp)
-    for (i in seq_len(n_grp)) {
-      if (!is.finite(ordered_rows[i]) || ordered_rows[i] < 1L) next
-      comp_sd_lo[i] <- ci[ordered_rows[i], 1L]
-      comp_sd_hi[i] <- ci[ordered_rows[i], 2L]
-    }
-    # Approximate ICC CI by holding other components at their point
-    # estimate while the focal component moves across its sd CI.
-    vc_point <- as.data.frame(lme4::VarCorr(fit))
-    vc_point <- vc_point[is.na(vc_point$var2), c("grp", "vcov")]
-    point_var <- stats::setNames(vc_point$vcov, as.character(vc_point$grp))[vc_grp]
-    lo <- rep(NA_real_, n_grp)
-    hi <- rep(NA_real_, n_grp)
-    for (i in seq_len(n_grp)) {
-      if (!is.finite(comp_sd_lo[i]) || !is.finite(comp_sd_hi[i])) next
-      var_lo <- comp_sd_lo[i]^2
-      var_hi <- comp_sd_hi[i]^2
-      others <- sum(point_var[-i], na.rm = TRUE)
-      total_lo <- var_lo + others
-      total_hi <- var_hi + others
-      lo[i] <- if (total_lo > 0) var_lo / total_lo else NA_real_
-      hi[i] <- if (total_hi > 0) var_hi / total_hi else NA_real_
-    }
-    return(list(lower = lo, upper = hi))
-  }
-  # Parametric bootstrap path.
-  if (!is.null(boot_seed) && is.finite(boot_seed)) {
-    set.seed(as.integer(boot_seed))
-  }
-  # Show an interactive progress bar for parametric bootstrap CIs because
-  # `lme4::bootMer` can take many seconds even at default `nsim = 1000`.
-  # cli::cli_progress_bar is silent in non-interactive contexts (e.g.
-  # R CMD check) and respects options(cli.progress_show_after).
-  # The bar is disabled when bootMer runs in parallel because worker
-  # processes hold their own copy of `progress_id` / `reps_done`, so
-  # in-process updates do not reach the parent.
-  reps_done <- 0L
-  total_reps <- as.integer(boot_reps)
-  progress_id <- NULL
-  use_progress <- total_reps > 1L && identical(boot_parallel, "no")
-  if (use_progress) {
-    progress_id <- cli::cli_progress_bar(
-      name = "compute_facet_icc(boot)",
-      total = total_reps,
-      format = "{cli::pb_spin} bootstrap ICC: {cli::pb_current}/{cli::pb_total} [{cli::pb_elapsed}]",
-      clear = TRUE,
-      .envir = parent.frame()
-    )
-    on.exit(cli::cli_progress_done(id = progress_id), add = TRUE)
-  }
   icc_of <- function(fit_b) {
     vc <- as.data.frame(lme4::VarCorr(fit_b))
     vc <- vc[is.na(vc$var2), c("grp", "vcov")]
-    tot <- sum(vc$vcov, na.rm = TRUE)
-    out <- if (!is.finite(tot) || tot <= 0) {
+    tot <- sum(vc$vcov)
+    share <- if (!is.finite(tot) || tot <= 0) {
       rep(NA_real_, n_grp)
     } else {
-      share <- stats::setNames(vc$vcov / tot, as.character(vc$grp))
-      as.numeric(share[vc_grp])
+      as.numeric(stats::setNames(vc$vcov / tot, as.character(vc$grp))[vc_grp])
     }
-    if (!is.null(progress_id)) {
-      reps_done <<- reps_done + 1L
-      cli::cli_progress_update(id = progress_id, set = reps_done)
-    }
-    out
+    conv <- fit_b@optinfo$conv
+    codes <- c(conv$opt, conv$lme4$code)
+    c(share, converged = as.numeric(all(is.finite(codes)) && all(codes == 0)),
+      singular = as.numeric(lme4::isSingular(fit_b)))
   }
-  b <- suppressWarnings(suppressMessages(
-    lme4::bootMer(fit, FUN = icc_of, nsim = boot_reps,
-                  type = "parametric",
-                  parallel = boot_parallel, ncpus = boot_ncpus,
-                  use.u = FALSE)
-  ))
-  t_mat <- b$t
-  lo <- apply(t_mat, 2L, stats::quantile, probs = alpha / 2,
-              na.rm = TRUE, names = FALSE)
-  hi <- apply(t_mat, 2L, stats::quantile, probs = 1 - alpha / 2,
-              na.rm = TRUE, names = FALSE)
-  list(lower = unname(lo), upper = unname(hi),
-       n_reps = sum(stats::complete.cases(t_mat)))
+  bootstrap_warnings <- character()
+  cl <- NULL
+  if (boot_parallel == "snow" && boot_ncpus > 1L) {
+    cl <- parallel::makePSOCKcluster(boot_ncpus)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    parallel::clusterEvalQ(cl, loadNamespace("lme4"))
+  }
+  b <- withCallingHandlers(
+    lme4::bootMer(fit, FUN = icc_of, nsim = boot_reps, seed = boot_seed,
+                  type = "parametric", use.u = FALSE,
+                  parallel = boot_parallel, ncpus = boot_ncpus, cl = cl,
+                  .progress = if (interactive() && boot_parallel == "no") "txt" else "none"),
+    warning = function(w) {
+      bootstrap_warnings <<- c(bootstrap_warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  draws <- b$t[, seq_len(n_grp), drop = FALSE]
+  colnames(draws) <- vc_grp
+  converged <- b$t[, n_grp + 1L] == 1
+  singular <- b$t[, n_grp + 2L] == 1
+  finite <- apply(is.finite(draws) & draws >= 0 & draws <= 1, 1L, all)
+  usable <- finite & !is.na(converged) & converged
+  n_reps <- sum(usable)
+  all_messages <- attr(b, "boot.all.msgs")
+  has_warnings <- length(bootstrap_warnings) > 0L ||
+    sum(all_messages$`factory-warning`) > 0L
+  n_errors <- attr(b, "bootFail") %||% 0L
+  status <- if (n_reps != boot_reps || n_errors > 0L) {
+    "Incomplete bootstrap"
+  } else if (has_warnings) {
+    "Bootstrap warnings require review"
+  } else "Available"
+  lo <- hi <- rep(NA_real_, n_grp)
+  if (status == "Available") {
+    bounds <- apply(draws, 2L, stats::quantile,
+                    probs = c((1 - ci_level) / 2, (1 + ci_level) / 2),
+                    names = FALSE)
+    lo <- bounds[1L, ]
+    hi <- bounds[2L, ]
+  }
+  list(lower = unname(lo), upper = unname(hi), n_reps = n_reps, status = status,
+       diagnostics = list(draws = draws, converged = converged, singular = singular,
+                          usable = usable, n_errors = n_errors,
+                          failure_messages = attr(b, "boot.fail.msgs"),
+                          messages = all_messages, warnings = bootstrap_warnings,
+                          seed = boot_seed, parallel = boot_parallel, ncpus = boot_ncpus))
+}
+
+# Saved results cannot acquire corrected numerical intervals merely by printing.
+.check_icc_intervals <- function(x) {
+  methods <- x$ICC_CI_Method
+  if (any(methods == "profile", na.rm = TRUE) ||
+      (any(methods == "boot", na.rm = TRUE) &&
+       !identical(attr(x, "icc_ci")$calculation_version, 1L))) {
+    stop("These saved ICC intervals need to be recomputed. Rerun ",
+         "compute_facet_icc() or analyze_hierarchical_structure() with the ",
+         'original data and settings, choosing ci_method = "boot" explicitly ',
+         'for intervals or "none" for point estimates.', call. = FALSE)
+  }
+  invisible(x)
 }
 
 #' Compute Kish design effects for each facet
@@ -1117,7 +1086,8 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #'   ICC and design-effect tables.
 #' @param ci_method ICC confidence-interval method passed through to
 #'   [compute_facet_icc()]. One of `"none"` (default, point estimate
-#'   only), `"profile"`, or `"boot"`. Deprecated alias:
+#'   only) or `"boot"`. The former `"profile"` method is refused because it
+#'   did not calculate an ICC profile-likelihood interval. Deprecated alias:
 #'   `icc_ci_method` (kept for backward compatibility, emits a
 #'   lifecycle warning).
 #' @param ci_level Confidence level when `ci_method != "none"`;
@@ -1220,7 +1190,7 @@ analyze_hierarchical_structure <- function(data,
                                            person = "Person",
                                            score = "Score",
                                            compute_icc = TRUE,
-                                           ci_method = c("none", "profile", "boot"),
+                                           ci_method = c("none", "boot"),
                                            ci_level = 0.95,
                                            ci_boot_reps = 1000L,
                                            ci_boot_seed = NULL,
@@ -1264,7 +1234,7 @@ analyze_hierarchical_structure <- function(data,
     )
     ci_boot_seed <- icc_ci_boot_seed
   }
-  ci_method <- match.arg(ci_method)
+  ci_method <- .icc_ci_method(ci_method)
   if (inherits(data, "mfrm_fit")) {
     fit_ref <- data
     if (is.null(facets)) facets <- fit_ref$prep$facet_names
@@ -1596,6 +1566,7 @@ summary.mfrm_facet_sample_review <- function(object, ...) {
 
 #' @export
 print.mfrm_facet_icc <- function(x, ...) {
+  .check_icc_intervals(x)
   cat("mfrm_facet_icc\n")
   if (nrow(x) == 0L) {
     cat("  (empty; lme4 unavailable or fit failed)\n")
@@ -1607,6 +1578,7 @@ print.mfrm_facet_icc <- function(x, ...) {
 
 #' @export
 summary.mfrm_facet_icc <- function(object, ...) {
+  .check_icc_intervals(object)
   # Condensed view that separates the two interpretation scales so
   # readers don't conflate person reliability with non-person variance
   # share; see `compute_facet_icc()` "Interpreting output".
@@ -1676,6 +1648,7 @@ print.mfrm_hierarchical_structure <- function(x, ...) {
 
 #' @export
 summary.mfrm_hierarchical_structure <- function(object, ...) {
+  if (!is.null(object$icc)) .check_icc_intervals(object$icc)
   cat("mfrm_hierarchical_structure\n\n")
   cat("Summary:\n")
   print(object$summary, row.names = FALSE)
@@ -1748,22 +1721,23 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
            call. = FALSE)
     }
     icc_tbl <- x$icc
+    .check_icc_intervals(icc_tbl)
     has_ci <- all(c("ICC_CI_Lower", "ICC_CI_Upper") %in% names(icc_tbl)) &&
-      any(is.finite(icc_tbl$ICC_CI_Lower) | is.finite(icc_tbl$ICC_CI_Upper))
+      any(is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper))
     ci_level <- if (has_ci && "ICC_CI_Level" %in% names(icc_tbl)) {
       suppressWarnings(as.numeric(icc_tbl$ICC_CI_Level[1L]))
     } else NA_real_
-    ci_method <- if (has_ci && "ICC_CI_Method" %in% names(icc_tbl)) {
-      as.character(icc_tbl$ICC_CI_Method[1L])
-    } else NA_character_
     y_max <- max(
       1,
       max(c(icc_tbl$ICC, icc_tbl$ICC_CI_Upper), na.rm = TRUE) * 1.1
     )
     main_txt <- "Facet ICC (variance component share)"
     if (has_ci && is.finite(ci_level)) {
-      main_txt <- sprintf("%s\n%g%% CI via %s",
-                          main_txt, round(100 * ci_level), ci_method)
+      main_txt <- sprintf("%s\n%g%% parametric bootstrap CI",
+                          main_txt, 100 * ci_level)
+    } else if (any(icc_tbl$ICC_CI_Method == "boot", na.rm = TRUE)) {
+      main_txt <- paste0(main_txt, "\nIntervals unavailable: ",
+                         paste(unique(icc_tbl$ICC_CI_Status), collapse = "; "))
     }
     mids <- graphics::barplot(
       height = icc_tbl$ICC,
@@ -1772,16 +1746,20 @@ plot.mfrm_hierarchical_structure <- function(x, type = c("crosstab", "icc"),
       ylab = "ICC",
       ylim = c(0, y_max)
     )
-    graphics::abline(h = c(0.5, 0.75, 0.9), lty = 2,
-                     col = c("grey70", "grey50", "grey30"))
     if (has_ci) {
       valid <- is.finite(icc_tbl$ICC_CI_Lower) & is.finite(icc_tbl$ICC_CI_Upper)
-      if (any(valid)) {
+      nonzero <- valid & icc_tbl$ICC_CI_Upper > icc_tbl$ICC_CI_Lower
+      if (any(nonzero)) {
         graphics::arrows(
-          x0 = mids[valid], y0 = icc_tbl$ICC_CI_Lower[valid],
-          x1 = mids[valid], y1 = icc_tbl$ICC_CI_Upper[valid],
+          x0 = mids[nonzero], y0 = icc_tbl$ICC_CI_Lower[nonzero],
+          x1 = mids[nonzero], y1 = icc_tbl$ICC_CI_Upper[nonzero],
           angle = 90, code = 3, length = 0.05, col = "black", lwd = 1.5
         )
+      }
+      flat <- valid & icc_tbl$ICC_CI_Upper == icc_tbl$ICC_CI_Lower
+      if (any(flat)) {
+        graphics::segments(mids[flat] - 0.05, icc_tbl$ICC_CI_Lower[flat],
+                           mids[flat] + 0.05, icc_tbl$ICC_CI_Upper[flat], lwd = 1.5)
       }
     }
   }

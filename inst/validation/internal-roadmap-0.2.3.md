@@ -9,6 +9,65 @@ user-visible changes. Other files under `inst/validation/` provide
 technical evidence or historical context and are subordinate to this roadmap.
 The roadmap is repository-only and is excluded from source-package tarballs.
 
+## 2026-09-21: withdraw unsupported ICC profile intervals and retain bootstrap failures
+
+The ICC review found a release-blocking calculation in the existing public API:
+`profile` squared marginal SD endpoints and inserted them into a variance-share
+ratio while fixing other components at their point estimates. This is not a
+profile-likelihood interval for that ratio. The same code remains in candidate
+`c4867b7`; the development correction must be backported and the candidate
+rechecked before 0.2.4 is released. External-feature additions remain separate.
+The distinction follows the implemented transformation and lme4's documented
+[SD interval target](https://lme4.github.io/lme4/reference/confint.merMod.html).
+
+Both ICC entry points now refuse `profile`, including the deprecated argument
+alias. Parametric percentile bootstrap remains an explicit option. It computes
+each ratio from the jointly refitted decomposition and retains every requested
+draw plus convergence/singularity indicators and lme4 error/warning tables.
+Intervals are withheld for original-fit warnings/nonconvergence, incomplete
+bootstrap results, or bootstrap warnings; successful draws are never silently
+selected for quantiles. Converged boundary fits remain in the distribution.
+Counts remain unknown if bootMer aborts without returning draws. Settings and
+messages stay available for review, without claiming model adequacy or coverage
+at a variance boundary. See lme4's
+[bootstrap diagnostics](https://lme4.github.io/lme4/reference/bootMer.html).
+
+Saved interval outputs require recalculation before package print/summary/plot
+methods will present them. Point-only saved results remain usable. The plot
+states when intervals are unavailable, shows degenerate bounds without an arrow
+warning, and no longer draws reliability-band lines across non-person variance
+shares. Public help, NEWS, README, and the packaged cheatsheet explain the
+withdrawal, assumptions, counts, and migration; the public roadmap flags the
+remaining candidate correction. The obsolete profile-only helper and tests
+were removed rather than preserving an unsupported calculation.
+
+The numerical regression matches independently computed joint ratios and
+percentiles with identical score/factor input representations. Controlled
+failures cover missing draws, nonconvergence, warnings, total bootstrap errors,
+original-fit diagnostics, and legacy reporting. The corrected snow route
+initializes lme4 on its workers; four seeded serial/snow draws and convergence
+indicators match exactly. The first parallel attempt exposed this initialization
+failure after local socket access was permitted. Parallel worker cleanup uses
+`on.exit`; R's bundled parallel package is now declared in Imports.
+
+The final development archive passes `NOT_CRAN=false R CMD check --no-manual`
+with zero errors, warnings, and notes. Its installed lightweight suite passes
+921 expectations with zero failures/warnings and three intentional CRAN skips;
+83 expectations exercise ICC interval behavior. The existing hierarchical
+regression file also passes 27 expectations. Examples and vignette rebuilding
+pass. Source/archive hashes, logs, and the serial/snow comparison are retained
+under `validation-results/icc-ci-20260921/final/`. Archive SHA-256:
+`01d5dbcb4a142a69e3e337e5f09d6c8311dbfbfc04a3e63e46e2b474a5132016`.
+Changed packaged files match the archive (DESCRIPTION fields normalized for
+build formatting); the removed helper test and repository-only validation
+records are absent. This is a local standard check, not CRAN `--as-cran`.
+
+Remaining ICC review is distinct from this interval correction: score coercion
+and silent row filtering, the scale-dependent near-zero variance threshold,
+and the design-effect sample basis/interpretation still require attention.
+No multivariate G-theory implementation, rating imputation, broad Monte Carlo
+coverage claim, new hosted matrix, or full-suite result is implied here.
+
 ## 2026-09-21: explicit G-study missingness and source-row accounting
 
 After the external-feature work, the public G/D workflow was reviewed against

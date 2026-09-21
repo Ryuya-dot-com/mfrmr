@@ -63,6 +63,11 @@ The other priority is consistent interpretation throughout existing analyses:
 | Observed-score G/D studies and shrinkage | Retain their distinct models and conditional assumptions; neither is a jointly estimated random-facet MFRM or a source of fully propagated uncertainty. |
 | External imports | Preserve source coordinates and uncertainty conventions. Missing joint covariance cannot be reconstructed from marginal SEs. Imported objects do not become native fits or portable calibrations. |
 
+The release candidate still needs the ICC interval corrections described in
+the development NEWS. Separate component bounds must not be reported as
+profile-likelihood intervals for an ICC ratio, and failed bootstrap attempts
+must remain visible.
+
 Existing calculations and interpretations still require review before release.
 Clearer wording does not resolve an incorrect formula or unsupported decision.
 Changed behavior and saved-object instructions must agree across NEWS, help,

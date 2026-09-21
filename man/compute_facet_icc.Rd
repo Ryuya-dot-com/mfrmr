@@ -10,7 +10,7 @@ compute_facet_icc(
   score,
   person = NULL,
   reml = TRUE,
-  ci_method = c("none", "profile", "boot"),
+  ci_method = c("none", "boot"),
   ci_level = 0.95,
   ci_boot_reps = 1000L,
   ci_boot_seed = NULL,
@@ -32,16 +32,11 @@ out.}
 \item{reml}{Logical; whether to fit with REML. Default \code{TRUE}.}
 
 \item{ci_method}{Confidence-interval method for the ICC column.
-One of \code{"none"} (default, point estimate only), \code{"profile"}
-(a \strong{first-order approximation}: marginal likelihood-profile
-bounds for each variance-component SD via
-\code{\link[lme4:confint.merMod]{lme4::confint.merMod()}} with \code{method = "profile"}, squared to
-variances, then plugged into the ICC ratio while holding the
-other components at their point estimate; fast and deterministic,
-the default recommendation for reporting), or \code{"boot"}
-(parametric bootstrap via \code{\link[lme4:bootMer]{lme4::bootMer()}}; slower but robust
-to non-normal ICC sampling distributions because each bootstrap
-replicate resamples the full variance decomposition jointly).}
+One of \code{"none"} (default, point estimate only) or \code{"boot"}
+(parametric percentile bootstrap via \code{\link[lme4:bootMer]{lme4::bootMer()}}). Each
+simulated data set is refitted and its full variance decomposition
+used to calculate the ICC ratios. The former \code{"profile"} method
+is no longer supported; see Updating saved intervals below.}
 
 \item{ci_level}{Confidence level when \code{ci_method != "none"}; default
 \code{0.95}. Koo & Li (2016) recommend banding the CI rather than the
@@ -49,23 +44,23 @@ point estimate when classifying reliability as Poor / Moderate /
 Good / Excellent.}
 
 \item{ci_boot_reps}{Number of bootstrap replicates used when
-\code{ci_method = "boot"}. Default \code{1000}.}
+\code{ci_method = "boot"}. An integer of at least 2; default \code{1000}.
+Small counts give imprecise tail quantiles; choose enough replicates
+for the precision required in the application.}
 
 \item{ci_boot_seed}{Optional integer seed for the bootstrap path
-(\code{NULL} leaves the RNG state untouched).}
+(between 0 and \code{.Machine$integer.max}). \code{NULL} uses the current
+random-number state. Bootstrap simulation advances that state.}
 
 \item{ci_boot_parallel}{Parallelisation strategy for the
 parametric-bootstrap CI path, passed through to
 \code{\link[lme4:bootMer]{lme4::bootMer()}}: \code{"no"} (default), \code{"multicore"} (POSIX
 \code{mclapply}), or \code{"snow"} (PSOCK cluster). \code{"multicore"} does
-nothing on Windows and falls back to serial; in that case use
-\code{"snow"} with \code{\link[parallel:makeCluster]{parallel::makeCluster()}} in scope.}
+nothing on Windows and falls back to serial; use \code{"snow"} there.}
 
 \item{ci_boot_ncpus}{Number of CPUs to use for the parallel
-bootstrap path (ignored when \code{ci_boot_parallel = "no"}). The
-per-replicate progress bar is suppressed under parallel
-execution because worker processes cannot push updates to the
-parent's cli console.}
+bootstrap path (ignored when \code{ci_boot_parallel = "no"}). A positive
+integer. Interactive progress is available for serial execution.}
 }
 \value{
 A data.frame of class \code{mfrm_facet_icc} with one row per
@@ -78,11 +73,19 @@ variance component (including a \code{"Residual"} row) and columns:
 \item \code{InterpretationScale}: \code{"Koo-Li reliability"} for the person
 facet, \code{"Variance share"} for others.
 \item \code{ICC_CI_Lower} / \code{ICC_CI_Upper} / \code{ICC_CI_Level} / \code{ICC_CI_Method}:
-CI bounds, level, and method (populated when \code{ci_method != "none"};
-\code{NA_real_} otherwise).
-\item \code{ICC_CI_NReps}: bootstrap replicate count when
-\code{ci_method = "boot"} (absent otherwise).
+CI bounds (unavailable bounds are \code{NA}), requested level, and method.
+\item \code{ICC_CI_Status}: whether intervals are available and, otherwise, why.
+\item \code{ICC_CI_NRequested} / \code{ICC_CI_NReps} / \code{ICC_CI_NUnavailable}: requested
+bootstrap count, number of converged refits with all ICCs finite, and
+number without such a result (absent for \code{"none"}). Counts are \code{NA} when
+the bootstrap aborts without returning its draws. Warnings can withhold
+intervals even when all draws are finite and all refits converge.
 }
+
+The \code{icc_ci} attribute retains the original fit's convergence and singularity
+diagnostics and warnings. When bootstrap results are returned, its \code{bootstrap}
+entry contains every draw, per-refit convergence and singularity indicators,
+the number of refit errors, and lme4's message/warning/error tables.
 }
 \description{
 Fits a random-effects variance-components model
@@ -118,17 +121,33 @@ the Rasch metric instead of an ICC; mfrmr surfaces both, with the
 Rasch-metric version in \code{diagnostics$reliability} and this
 variance-share view here.
 
-Note: Koo & Li (2016) recommend applying the reliability bands to
-the \strong{95\% confidence interval} of the ICC rather than to the point
-estimate alone. Set \code{ci_method = "profile"} (default \code{"none"}) to
-obtain likelihood-profile CI bounds alongside the point estimate,
-or \code{ci_method = "boot"} for a parametric bootstrap with
-\code{ci_boot_reps} replicates. The returned data frame gains
-\code{ICC_CI_Lower} / \code{ICC_CI_Upper} columns so downstream reporting can
-apply the band to the CI rather than the point estimate. The
-\code{Interpretation} column still uses the point estimate so
-callers who want CI-aware banding can implement it externally from
-the supplied bounds.
+Set \code{ci_method = "boot"} to request intervals alongside the point
+estimates. The \code{Interpretation} column still uses point estimates.
+The bootstrap simulates Gaussian random effects and errors from the
+fitted model; it does not correct model misspecification or missing-data
+bias. Percentile coverage can be unreliable near zero variance components
+or with few grouping levels.
+
+Intervals are withheld if the original fit has convergence problems or
+warnings, or if any requested bootstrap refit fails, has convergence
+problems or warnings, or produces an undefined ICC. Finite draws are
+retained but never silently selected to calculate an interval. Singular
+fits (zero random-effect components) are recorded separately and retained
+when they converge; they are not automatically treated as failures.
+Inspect \code{ICC_CI_Status} and \code{attr(x, "icc_ci")} before reporting intervals.
+}
+
+\section{Updating saved intervals}{
+
+The former \code{ci_method = "profile"} transformed separate standard-deviation
+intervals while holding other variance components fixed. These are not
+profile-likelihood intervals for the ICC ratio and should not be reported
+as ICC confidence intervals. Requests now stop with an explanation.
+Rerun \code{\link[=compute_facet_icc]{compute_facet_icc()}} or \code{\link[=analyze_hierarchical_structure]{analyze_hierarchical_structure()}} with the
+original data and settings, choosing \code{ci_method = "boot"} explicitly if
+intervals are needed. Saved bootstrap results from earlier versions must
+also be rerun to obtain complete failure accounting. Printing, summarizing,
+or plotting old interval results cannot correct their calculations.
 }
 
 \section{Typical workflow}{

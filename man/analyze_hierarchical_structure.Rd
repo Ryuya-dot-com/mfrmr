@@ -10,7 +10,7 @@ analyze_hierarchical_structure(
   person = "Person",
   score = "Score",
   compute_icc = TRUE,
-  ci_method = c("none", "profile", "boot"),
+  ci_method = c("none", "boot"),
   ci_level = 0.95,
   ci_boot_reps = 1000L,
   ci_boot_seed = NULL,
@@ -37,7 +37,8 @@ ICC and design-effect tables.}
 
 \item{ci_method}{ICC confidence-interval method passed through to
 \code{\link[=compute_facet_icc]{compute_facet_icc()}}. One of \code{"none"} (default, point estimate
-only), \code{"profile"}, or \code{"boot"}. Deprecated alias:
+only) or \code{"boot"}. The former \code{"profile"} method is refused because it
+did not calculate an ICC profile-likelihood interval. Deprecated alias:
 \code{icc_ci_method} (kept for backward compatibility, emits a
 lifecycle warning).}
 

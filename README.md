@@ -989,6 +989,23 @@ describe sensitivity to the imputations, conditional on the chosen model and
 clustering settings; they are not membership probabilities or sampling
 stability. No automatic missing-score correction is performed.
 
+## ICC intervals
+
+`compute_facet_icc()` reports observed-score variance shares from a Gaussian
+random-intercept model. In this development version, request parametric
+percentile intervals with `ci_method = "boot"` and a recorded `ci_boot_seed`.
+Read `ICC_CI_Status`, the requested/available replicate counts, and
+`attr(icc, "icc_ci")` before reporting them. Failed or nonconverged refits and
+fit warnings withhold intervals. Converged zero-variance components remain in
+the bootstrap distribution; coverage can be unreliable at such boundaries or
+with few grouping levels. The bootstrap does not correct missing-data bias.
+
+The former `"profile"` method transformed separate variance-component bounds
+and did not calculate a profile-likelihood interval for the ICC ratio. It is
+now refused. Rerun saved ICC interval analyses from their original data and
+settings; reprinting old results cannot fix their intervals or recover omitted
+bootstrap diagnostics. See `help("compute_facet_icc")` for details.
+
 ## Model scope
 
 For GPCM, *bounded* refers to the documented model and workflow scope; it does

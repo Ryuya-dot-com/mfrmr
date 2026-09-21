@@ -21,6 +21,7 @@ cran_light_tests <- c(
   "feature-clustering",
   "gauss-hermite-weights",
   "generalizability-missing",
+  "icc-ci-method",
   "posterior-intervals",
   "mml-cpp11-backend",
   "missing-codes-integration",
