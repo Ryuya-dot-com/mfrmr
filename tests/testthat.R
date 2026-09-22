@@ -20,6 +20,7 @@ cran_light_tests <- c(
   "compatibility-aliases",
   "compiled-header-contract",
   "data-and-citation",
+  "design-evaluation-denominators",
   "d-study-plots",
   "example-datasets",
   "facet-dashboard",

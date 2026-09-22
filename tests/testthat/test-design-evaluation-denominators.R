@@ -71,6 +71,34 @@ test_that("design recommendations retain failed runs in convergence denominators
   expect_error(recommend_mfrm_design(x), "No design summary rows")
 })
 
+test_that("design decisions preserve full precision through summaries and saved results", {
+  boundaries <- c(Separation = 1.9999996, Reliability = .7999996,
+                  SeverityRMSE = .5000004, MisfitRate = .1000004)
+  for (metric in names(boundaries)) {
+    x <- design_evaluation_denominator_fixture()
+    x$results[[metric]][x$results$design_id == "D2"] <- boundaries[[metric]]
+    expect_equal(nrow(recommend_mfrm_design(x)$recommended), 0L, info = metric)
+    for (digits in c(0L, 3L, 10L)) {
+      s <- summary(x, digits = digits)
+      column <- paste0("Mean", metric)
+      expect_equal(s$design_summary[[column]][s$design_summary$design_id == "D2"],
+                   rep(boundaries[[metric]], 2), tolerance = 1e-14)
+      expect_equal(nrow(recommend_mfrm_design(s)$recommended), 0L, info = metric)
+    }
+    saved <- tempfile(fileext = ".rds")
+    saveRDS(s, saved)
+    expect_identical(recommend_mfrm_design(readRDS(saved)), recommend_mfrm_design(s))
+    unlink(saved)
+  }
+  x <- design_evaluation_denominator_fixture()
+  x$results$Reliability[x$results$design_id == "D2"] <- .8
+  expect_identical(recommend_mfrm_design(x)$recommended$design_id, "D2")
+  s <- summary(x, digits = 0)
+  expect_identical(recommend_mfrm_design(s)$recommended$design_id, "D2")
+  s$summary_precision <- NULL
+  expect_error(recommend_mfrm_design(s), "Rebuild it with summary\\(original_evaluation\\)")
+})
+
 test_that("workload limits include failed runs and preserve ranking within limits", {
   x <- design_evaluation_denominator_fixture()
   # D1 has a costly failed run; its mean workload would conceal the overrun.

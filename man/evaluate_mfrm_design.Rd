@@ -202,6 +202,14 @@ When \code{sim_spec} is supplied, the function uses it as the explicit
 data-generating mechanism. This is the recommended route when you want a
 design study to stay close to a previously fitted run while still varying the
 candidate sample sizes or rater-assignment counts.
+The specification supplies the generator, not the analysis settings:
+explicitly match \code{fit_method}, \code{model}, \code{step_facet}, \code{maxit}, and
+\code{quad_points} to the intended analysis. The defaults (\code{JML}, 25 iterations;
+seven quadrature points if \code{MML} is selected) are small exploratory settings,
+not an accuracy recommendation. This helper does not automatically inherit
+anchors, interactions, adaptive integration, or optimizer controls from a
+source fit. If those are essential to the analysis, generate data with
+\code{\link[=simulate_mfrm_data]{simulate_mfrm_data()}} and use the intended \code{\link[=fit_mfrm]{fit_mfrm()}} call in each replicate.
 
 Sparse linked simulation specifications and direct
 \code{assignment = "sparse_linked"} calls are carried into the design-evaluation
@@ -237,8 +245,9 @@ Facet-level simulation results include:
 \itemize{
 \item \code{Separation} (\eqn{G = \mathrm{SD_{adj}} / \mathrm{RMSE}}):
 how many statistically distinct strata the facet resolves.
-\item \code{Reliability} (\eqn{G^2 / (1 + G^2)}): analogous to Cronbach's
-\eqn{\alpha} for the reproducibility of element ordering.
+\item \code{Reliability} (\eqn{G^2 / (1 + G^2)}): model-based separation reliability
+for the facet levels in that fit, not Cronbach's alpha, a G-theory
+coefficient, or the accuracy of an individual pass/fail decision.
 \item \code{Strata} (\eqn{(4G + 1) / 3}): number of distinguishable groups.
 \item Mean \code{Infit} and \code{Outfit}: average fit mean-squares across elements.
 \item \code{MisfitRate}: share of elements with \eqn{|\mathrm{ZSTD}| > 2}.
@@ -267,10 +276,12 @@ Higher separation/reliability is generally better, whereas lower
 
 When choosing among designs, look for the point where increasing
 \code{n_person} or \code{raters_per_person} yields diminishing returns in
-separation and RMSE---this identifies the cost-effective design
-frontier.  \code{ConvergedRuns / reps} should be near 1.0; low
-convergence rates indicate the design is too small for the chosen
-estimation method.
+separation and RMSE, then compare the actual rating workload.
+Inspect failed-run reasons when convergence is low: iteration limits,
+weak identification, sparse categories and model mismatch require different
+remedies. Increasing sample size alone does not resolve every failure.
+Read Monte Carlo errors and available-result counts alongside the means;
+passing thresholds on simulation means is not a guarantee for a future sample.
 
 This is a Monte Carlo design-evaluation helper. It can visualize how
 separation, reliability, strata, RMSE, and fit-screen rates change when

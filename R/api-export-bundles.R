@@ -4553,7 +4553,9 @@ export_summary_appendix <- function(x,
 #' @param include Components to export. Supported values are
 #'   `"core_tables"`, `"checklist"`, `"dashboard"`, `"apa"`, `"anchors"`,
 #'   `"manifest"`, `"visual_summaries"`, `"predictions"`, `"summary_tables"`,
-#'   `"script"`, and `"html"`.
+#'   `"script"`, and `"html"`. By default, export all listed components
+#'   except predictions when no prediction or plausible-value object is supplied.
+#'   Explicitly requesting `"predictions"` requires at least one such object.
 #' @param facet Optional facet for [facet_quality_dashboard()].
 #' @param include_person_anchors If `TRUE`, include person measures in the
 #'   exported anchor table.
@@ -4710,6 +4712,10 @@ export_mfrm_bundle <- function(fit,
                                zip_bundle = FALSE,
                                zip_name = NULL,
                                data = NULL) {
+  if (missing(include) && is.null(population_prediction) &&
+      is.null(unit_prediction) && is.null(plausible_values)) {
+    include <- setdiff(include, "predictions")
+  }
   include <- unique(tolower(as.character(include)))
   allowed <- c("core_tables", "checklist", "dashboard", "apa", "anchors", "manifest", "visual_summaries", "predictions", "summary_tables", "script", "html")
   bad <- setdiff(include, allowed)

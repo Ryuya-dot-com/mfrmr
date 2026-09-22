@@ -59,7 +59,9 @@ export bundle.}
 \item{include}{Components to export. Supported values are
 \code{"core_tables"}, \code{"checklist"}, \code{"dashboard"}, \code{"apa"}, \code{"anchors"},
 \code{"manifest"}, \code{"visual_summaries"}, \code{"predictions"}, \code{"summary_tables"},
-\code{"script"}, and \code{"html"}.}
+\code{"script"}, and \code{"html"}. By default, export all listed components
+except predictions when no prediction or plausible-value object is supplied.
+Explicitly requesting \code{"predictions"} requires at least one such object.}
 
 \item{facet}{Optional facet for \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}.}
 

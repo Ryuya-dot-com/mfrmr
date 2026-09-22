@@ -17,6 +17,15 @@ before the final integration decision, following the
 
 ### September 21: selected additions in the integrated candidate
 
+September 22 follow-through: the original sixteen-action audit is now
+reconciled in the [active roadmap](internal-roadmap-0.2.3.md#current-work-plan).
+Subsequent C15/C17 repairs prevent rounded design-threshold decisions and
+restore default fit archives without optional predictions. A prespecified
+selection/refit study and an observed writing-assessment workflow add bounded
+evidence, without qualifying automatic rater removal or broad diagnostic
+error rates. The new locally checked source is separate from the published
+`4a6f8fb` candidate and its platform checks.
+
 The source now identifies itself as candidate 0.2.4, not a published release.
 The original 18-group table remains historical. The additional retained claims
 are reconciled here; their implementation records are in the current work plan.

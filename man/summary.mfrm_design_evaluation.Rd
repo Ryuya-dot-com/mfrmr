@@ -9,7 +9,8 @@
 \arguments{
 \item{object}{Output from \code{\link[=evaluate_mfrm_design]{evaluate_mfrm_design()}}.}
 
-\item{digits}{Number of digits used in the returned numeric summaries.}
+\item{digits}{Number of digits used when printing the summary. Returned
+numeric tables retain full precision for plotting and design decisions.}
 
 \item{...}{Reserved for generic compatibility.}
 }
@@ -54,7 +55,8 @@ counts the replications with returned results for that facet; performance
 means still use the available metric values. Designs with no returned
 facet results have no performance-summary rows and cannot be recommended.
 To update an older saved summary, call \code{summary()} again on the original
-evaluation object; no simulation or refitting is needed.
+evaluation object; no simulation or refitting is needed. Rebuilding also
+restores full precision when an older summary stored rounded metrics.
 
 \code{MaxRatings} and \code{MaxRatingsPerRater} are the largest total rating count
 and individual rater workload across all recorded replications, including

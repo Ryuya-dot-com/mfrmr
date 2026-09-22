@@ -193,6 +193,8 @@
 #'   cutoff rules, not calibrated rapid-guessing or low-effort classifications.
 #' - **Simulation and design summaries:** re-summarize saved evaluation objects
 #'   to retain attempted-run denominators and unavailable residual-DIF rates.
+#'   Rebuilding design summaries also restores unrounded metrics for threshold
+#'   decisions; rounded saved summaries alone cannot recover that precision.
 #'   Missing workload or connectivity records cannot be reconstructed by
 #'   summary formatting. If those records are required for a recommendation,
 #'   repeat the original evaluation with its recorded design, settings and seeds.

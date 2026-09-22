@@ -5299,6 +5299,14 @@ simulation_evaluate_design_cell <- function(design,
 #' data-generating mechanism. This is the recommended route when you want a
 #' design study to stay close to a previously fitted run while still varying the
 #' candidate sample sizes or rater-assignment counts.
+#' The specification supplies the generator, not the analysis settings:
+#' explicitly match `fit_method`, `model`, `step_facet`, `maxit`, and
+#' `quad_points` to the intended analysis. The defaults (`JML`, 25 iterations;
+#' seven quadrature points if `MML` is selected) are small exploratory settings,
+#' not an accuracy recommendation. This helper does not automatically inherit
+#' anchors, interactions, adaptive integration, or optimizer controls from a
+#' source fit. If those are essential to the analysis, generate data with
+#' [simulate_mfrm_data()] and use the intended [fit_mfrm()] call in each replicate.
 #'
 #' Sparse linked simulation specifications and direct
 #' `assignment = "sparse_linked"` calls are carried into the design-evaluation
@@ -5332,8 +5340,9 @@ simulation_evaluate_design_cell <- function(design,
 #' Facet-level simulation results include:
 #' - `Separation` (\eqn{G = \mathrm{SD_{adj}} / \mathrm{RMSE}}):
 #'   how many statistically distinct strata the facet resolves.
-#' - `Reliability` (\eqn{G^2 / (1 + G^2)}): analogous to Cronbach's
-#'   \eqn{\alpha} for the reproducibility of element ordering.
+#' - `Reliability` (\eqn{G^2 / (1 + G^2)}): model-based separation reliability
+#'   for the facet levels in that fit, not Cronbach's alpha, a G-theory
+#'   coefficient, or the accuracy of an individual pass/fail decision.
 #' - `Strata` (\eqn{(4G + 1) / 3}): number of distinguishable groups.
 #' - Mean `Infit` and `Outfit`: average fit mean-squares across elements.
 #' - `MisfitRate`: share of elements with \eqn{|\mathrm{ZSTD}| > 2}.
@@ -5359,10 +5368,12 @@ simulation_evaluate_design_cell <- function(design,
 #'
 #' When choosing among designs, look for the point where increasing
 #' `n_person` or `raters_per_person` yields diminishing returns in
-#' separation and RMSE---this identifies the cost-effective design
-#' frontier.  `ConvergedRuns / reps` should be near 1.0; low
-#' convergence rates indicate the design is too small for the chosen
-#' estimation method.
+#' separation and RMSE, then compare the actual rating workload.
+#' Inspect failed-run reasons when convergence is low: iteration limits,
+#' weak identification, sparse categories and model mismatch require different
+#' remedies. Increasing sample size alone does not resolve every failure.
+#' Read Monte Carlo errors and available-result counts alongside the means;
+#' passing thresholds on simulation means is not a guarantee for a future sample.
 #'
 #' This is a Monte Carlo design-evaluation helper. It can visualize how
 #' separation, reliability, strata, RMSE, and fit-screen rates change when
@@ -5772,7 +5783,8 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' Summarize a design-simulation study
 #'
 #' @param object Output from [evaluate_mfrm_design()].
-#' @param digits Number of digits used in the returned numeric summaries.
+#' @param digits Number of digits used when printing the summary. Returned
+#'   numeric tables retain full precision for plotting and design decisions.
 #' @param ... Reserved for generic compatibility.
 #'
 #' @details
@@ -5790,7 +5802,8 @@ evaluate_mfrm_design <- function(n_person = c(30, 50, 100),
 #' means still use the available metric values. Designs with no returned
 #' facet results have no performance-summary rows and cannot be recommended.
 #' To update an older saved summary, call `summary()` again on the original
-#' evaluation object; no simulation or refitting is needed.
+#' evaluation object; no simulation or refitting is needed. Rebuilding also
+#' restores full precision when an older summary stored rounded metrics.
 #'
 #' `MaxRatings` and `MaxRatingsPerRater` are the largest total rating count
 #' and individual rater workload across all recorded replications, including
@@ -5850,16 +5863,8 @@ summary.mfrm_design_evaluation <- function(object, digits = 3, ...) {
     design_variable_aliases = simulation_object_design_variable_aliases(object)
   )
 
-  round_df <- function(df) {
-    if (!is.data.frame(df) || nrow(df) == 0) return(df)
-    num_cols <- vapply(df, is.numeric, logical(1))
-    df[num_cols] <- lapply(df[num_cols], round, digits = digits)
-    df
-  }
-
-  out$overview <- round_df(out$overview)
-  out$design_summary <- round_df(out$design_summary)
-  out$sparse_review <- round_df(simulation_sparse_design_review_summary(out$design_summary))
+  out$sparse_review <- simulation_sparse_design_review_summary(out$design_summary)
+  out$summary_precision <- "full"
   out$ademp <- object$ademp %||% NULL
   out$facet_names <- object$settings$facet_names %||% stats::setNames(simulation_default_output_facet_names(), c("rater", "criterion"))
   out$design_variable_aliases <- simulation_object_design_variable_aliases(object)
@@ -6157,6 +6162,10 @@ plot.mfrm_design_evaluation <- function(x,
 #' The convergence threshold uses all recorded replications, including
 #' failures that returned no facet metrics, as summarized by
 #' [summary.mfrm_design_evaluation()].
+#' Threshold checks use unrounded metrics. Summaries saved by earlier
+#' versions may contain only rounded values; rebuild them with
+#' `summary(original_evaluation)` before requesting a recommendation.
+#' The original evaluation can be reused without generating or fitting new data.
 #'
 #' The connectivity screen uses generated assignments, including failed fits
 #' and diagnostic runs. `ConnectivityStatus` is `"disconnected"` if any
@@ -6258,8 +6267,12 @@ recommend_mfrm_design <- function(x,
     }
   }
   if (inherits(x, "mfrm_design_evaluation")) {
-    design_summary <- summary.mfrm_design_evaluation(x, digits = 6)$design_summary
+    design_summary <- summary.mfrm_design_evaluation(x)$design_summary
   } else if (inherits(x, "summary.mfrm_design_evaluation")) {
+    if (!identical(x$summary_precision, "full")) {
+      stop("This saved summary may contain rounded metrics. Rebuild it with ",
+           "summary(original_evaluation) before recommending a design.", call. = FALSE)
+    }
     design_summary <- x$design_summary
   } else {
     stop("`x` must be output from evaluate_mfrm_design() or summary.mfrm_design_evaluation().")

@@ -96,6 +96,10 @@ then fewer raters, then fewer criteria).
 The convergence threshold uses all recorded replications, including
 failures that returned no facet metrics, as summarized by
 \code{\link[=summary.mfrm_design_evaluation]{summary.mfrm_design_evaluation()}}.
+Threshold checks use unrounded metrics. Summaries saved by earlier
+versions may contain only rounded values; rebuild them with
+\code{summary(original_evaluation)} before requesting a recommendation.
+The original evaluation can be reused without generating or fitting new data.
 
 The connectivity screen uses generated assignments, including failed fits
 and diagnostic runs. \code{ConnectivityStatus} is \code{"disconnected"} if any

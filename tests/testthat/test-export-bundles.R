@@ -3726,6 +3726,21 @@ test_that("export_summary_appendix applies appendix presets to future arbitrary-
   ))
 })
 
+test_that("default fit archives work without optional prediction objects", {
+  out_dir <- tempfile("mfrmr-default-archive-")
+  on.exit(unlink(out_dir, recursive = TRUE), add = TRUE)
+  bundle <- suppressWarnings(export_mfrm_bundle(
+    export_core_fixture$fit, diagnostics = export_core_fixture$diagnostics,
+    output_dir = out_dir, acknowledge_sensitive = TRUE
+  ))
+  expect_s3_class(bundle, "mfrm_export_bundle")
+  expect_true(all(file.exists(bundle$written_files$Path)))
+  expect_true(any(grepl("person_estimates", basename(bundle$written_files$Path))))
+  expect_true(any(grepl("bundle.html", basename(bundle$written_files$Path), fixed = TRUE)))
+  expect_false(bundle$privacy_notice$Deidentified)
+  expect_false(bundle$privacy_notice$ShareableWithoutReview)
+})
+
 test_that("export_mfrm_bundle requires explicit prediction objects for prediction export", {
   out_dir <- file.path(tempdir(), "mfrmr-export-bundle-predictions-missing")
   if (dir.exists(out_dir)) unlink(out_dir, recursive = TRUE, force = TRUE)

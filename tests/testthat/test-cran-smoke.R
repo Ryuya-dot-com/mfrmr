@@ -141,6 +141,14 @@ test_that("CRAN smoke covers the primary MML review and export route", {
   expect_true(all(file.exists(written$Path)))
   expect_true(all(!written$Deidentified))
   expect_true(all(!written$ShareableWithoutReview))
+  # Exercise the default archive route, including absence of optional predictions.
+  bundle <- export_mfrm_bundle(
+    fit, diagnostics = diagnostics, output_dir = file.path(output_dir, "archive"),
+    acknowledge_sensitive = TRUE
+  )
+  expect_s3_class(bundle, "mfrm_export_bundle")
+  expect_true(all(file.exists(bundle$written_files$Path)))
+  expect_false(bundle$privacy_notice$Deidentified)
 })
 
 test_that("the executable fit_mfrm example remains short and inference-ready", {

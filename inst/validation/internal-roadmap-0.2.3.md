@@ -23,45 +23,54 @@ In particular, the September 18 DRF-first queue, automatic full-suite/matrix
 requirements, old numbered feature releases and research-prototype gates do
 not override this plan. Their original protocols and results remain intact.
 
-Publication is paused at the user's request. Educational performance
-assessment is the representative application, with generality across music,
-psychology, medical/health-professions assessment and judged sports. The
-primary practical outcome is useful feedback to raters. The current work is
-local refinement of the integrated workflows, not another model-expansion
-cycle. P0 defects interrupt the sequence; W1/W2 then provide the core paths,
-with W1 judged by whether a user can reach defensible rater feedback.
+The user's later explicit instruction authorized publication of commit
+`4a6f8fb`. Its five ordinary platform cells succeeded, and `v0.2.4-rc.2`,
+its verified asset and the matching site were published. Evidence is in
+`validation-results/github-publication-20260922/publication.json` and the
+linked CI/site receipts. The earlier publication pause is historical.
+Publication completed that operation, not the supplied audit roadmap.
 
-Priority correction after the user's September 22 global review: the completed
-capacity/integration probes and 120-fit interval pilot are bounded P2 evidence,
-not a reason to automatically begin another simulation. Different ability
-distributions between rater panels are a relevant robustness question, but
-were proposed from the pilot; they are not an independently established next
-release requirement in the supplied HTML. The dated pilot's follow-up is a
-candidate for later work, not the active queue. Pause additional distribution,
-coverage-confirmation and scale experiments here.
+The user's subsequent correction requires following all sixteen original
+actions against their actual completion conditions. The active acceptance
+unit is a whole workflow, not an individual patch or test count. Do not
+substitute universal coverage, every export combination, or a human-usability
+study for conditions the original audit did not set. Do not move an unmet
+condition into a future release merely to close this list. Reuse the evidence
+for completed paths and keep remaining work explicit in the table below.
 
-The representative W1/W2 paths now have the bounded local evidence mapped to
-A04–A10 below: executable tutorials, refusal/identity checks, saved restrictions,
-feedback and export contents, ordinary package checking and full site generation
-with examples/articles. The portable tutorial now explains corrective actions;
-the executed site exposed export-example display defects that were repaired.
-The current archive is the documentation closeout `8231cc3c...dbf863` recorded
-below. Its executable and test sources match the dashboard/CI follow-up.
-Reuse the completed tests for unchanged paths; do not
-restart unchanged checks or simulations merely because publication is paused.
+Educational performance assessment and useful rater feedback remain the
+representative purpose; roles and assumptions retain their meaning in other
+fields. P0 defects interrupt the sequence, followed by the P1 W1/W2 routes
+and cross-cutting W5/W6 checks, then the stated P2 questions and P3 adoption
+choices. The earlier ability-distribution and capacity proposals are not an
+automatic queue: the next statistical work must answer an original action or
+a specified current-use question. No general capacity guarantee is required.
 
-Local technical integration is checked for these stated paths. Whole-path
-beginner comprehension, all export combinations and hosted source/help/site
-identities remain outside that conclusion. Keep the publication pause. A later
-publication decision must bind the reviewed source to its commit, hosted checks
-and deployed site. The local integration commit records the archive identity
-below; older hosted checks and site builds do not qualify that commit.
-Reopen a P2 study when it addresses a named current-use
-failure or a specific broader claim selected for the release, with a bounded
-decision and stopping condition. A general capacity or coverage guarantee is
-not a release completion condition.
+The September 22 follow-through found two defects outside the previously
+selected paths: design recommendations compared rounded summaries with
+thresholds, and default fit archives demanded optional prediction objects.
+Their whole summary/save/recommend and default export paths now have focused
+regressions, including the ordinary test selector. The frozen
+candidate's CI does not validate these later source changes. Do not alter
+the published tag or its asset when recording these corrections.
 
-### September 22 local candidate freeze
+The original A12 selection/refit study has now run under the bounded protocol
+below, and A14's empirical writing route has executed. These complete the
+named checks, not broad rater-diagnosis, domain-validity or coverage claims.
+The remaining integration decision concerns this corrected source and its
+distribution checks; the existing broader research/model questions remain
+identified under their own scope, rather than being silently counted complete.
+
+The current stage-4 step is to bind the reviewed corrections to a local commit
+and to the already checked archive, then qualify that commit for distribution.
+Do not repeat unchanged numerical studies or the completed local package check.
+A10 remains open for the corrected source: five-platform CI, any new release
+asset and the corresponding site must identify that source. The current
+local checkpoint does not publish a successor or alter `v0.2.4-rc.2`.
+The sixteen-action assessment is scoped to the original acceptance conditions;
+it does not close every research question or future feature in the public roadmap.
+
+### Historical September 22 freeze of the subsequently published candidate
 
 The integration diff was reviewed across optimizer selection and fallback,
 pairwise diagnostic assembly, dashboard availability/readiness, plot settings,
@@ -81,8 +90,10 @@ the resulting commit/archive mapping with the existing local evidence. The
 prior scoped checks below remain the validation record; this source-identity
 review does not repeat them or constitute a new hosted check.
 
-Local refinement is closed for the stated scope. Publication remains paused.
-On a later publication decision, the five ordinary platform cells must check
+At this historical checkpoint, local refinement was closed for its stated
+scope and publication was paused. The later authorization and publication of
+`4a6f8fb` superseded that pause, as recorded above. For a later candidate,
+the five ordinary platform cells must check
 the selected commit, and the site must be generated from the intended published
 source. The current workflow uses macOS release as the prerequisite, followed
 by Windows release and Ubuntu release/devel/oldrel-1. The complete Ubuntu suite
@@ -318,16 +329,129 @@ The supplied `mfrmr_integrated_audit_roadmap_20260922.html` audited main
 checkout and its existing evidence before assigning new work. The HTML's
 algebra and static inspection do not constitute execution of this package.
 
-| Audit item | Current source finding | Remaining local task |
+| Original action and completion condition | Status and applicable evidence | Remaining work / decision |
 | --- | --- | --- |
-| F01 / A01, zero prior variance | `R/api-shrinkage.R` and its Rd already describe complete pooling and the limits of zero plug-in SE. Existing shrinkage tests cover this interpretation. | Preserve the correction in integration and ensure feedback never substitutes shrunken columns for a refitted calibration. |
-| F03 / A02, rounded variance | `R/api-generalizability.R` retains `as.numeric(vc$vcov)` for calculations and D-study; the help describes full-precision storage. | Reuse the existing scale-change evidence for unchanged calculation paths; distinguish this repair from display rounding and from sparse-design reliability validation. |
-| F02 / A03, portable interactions | The capability table, API description and current public ROADMAP include stored two-way facet interactions. | The ordinary-package public RSM/PCM interaction test passed on a local installation on September 22: reviewed extraction, save/load, and artifact scores agree with fitted-object scoring at 1e-12. Preserve this bounded scope; it does not qualify higher-order interactions. |
-| A04/A05, representative paths and restrictions | W1 executes from input review to rater feedback; the shared-criterion restriction remains visible. W2's installed fresh-process test preserves CSV IDs and refuses unknown facet levels/scores; extraction refuses unsupported models and incomplete integration reviews. | Reuse these scoped records and the existing disconnected-input refusal. The portable tutorial now adds corrective actions for input errors and returned review/unavailable states. No new wrapper is needed. |
-| A06/A09, saved restrictions and shared output | Dashboard settings, missing diagnostics, readiness, plots and RDS roundtrips have focused checks. Representative CSV/text/HTML exports retain context, and the analysis archive restores the original result. | Preserve these paths in the frozen candidate. Real-data disclosure review and untested export combinations remain distinct from the synthetic checks; no anonymization guarantee is made. |
-| A07, identities and equivalent input representations | The domain-label probe preserves keyed estimates, ModelSE, likelihood and intervals; portable CSV testing distinguishes `001`, `1` and literal `NA`. Existing interaction save/load checks preserve fitted/artifact scoring. | Reuse the named evidence for those transformations. These are software checks, not validation across application domains or all possible transformations. |
-| A08, complete beginner route | Both W1/W2 tutorials execute. W1 connects the question, estimates, uncertainty, flags and rating-case review; W2's refusal/review guidance is present in the executed final site. | Beginner comprehension remains unmeasured; code execution is not a human usability study. |
-| A10, package/help/site identity | Frozen source archives, ordinary package checks, installed help and executed full-site content have the records above. The ordinary CI selector now includes the existing portable-calibration, dashboard and optimizer-curvature regressions; those added files pass on the current installed archive. Source links are configured to use the generating commit when the site is eventually built on GitHub. | Keep the checked local identity separate from Git HEAD, hosted CI, publication and any release decision. Do not rerun local integration without a relevant change or failure. |
+| A01: Tau2=0 means complete pooling; zero conditional SE is not calibrated precision | Met for the stated help/calculation contract: `api-shrinkage.R`, installed Rd, ordinary shrinkage replay tests. | Preserve original estimates and the warning when reusing shrinkage output. |
+| A02: unrounded variance enters G/Phi/D-study; positive scale invariance | Met by retained `as.numeric(vc$vcov)` and existing G-study scale tests. | No re-run of unchanged G-study estimators. The newly found design-summary rounding defect is separately repaired under A06/A13. |
+| A03: portable interaction promise agrees across API, scorer, tests and roadmap | Met for stored two-way RSM/PCM interactions; public calibration tests ran in the ordinary five-platform source check. | Higher-order interactions are not included in this promise. |
+| A04: representative W1/W2 positive and refusal routes, without unnecessary diagnostics | Existing executable tutorials, input/readiness refusals and fresh-process CSV scoring cover the core. Default fit archive failure newly reproduced and repaired. | Completed the default-archive regression, empirical full route and saved-result checks; default export is now part of the ordinary smoke test. |
+| A05: optimization, integration, inference and scoring states remain distinct | Existing readiness checks and portable extraction refusals retained in the ordinary candidate; numerical/interval targets documented. | Preserve the distinctions; large q and optimizer success alone do not certify inference. |
+| A06: restrictions and numerical meaning survive display/save/reload | Existing dashboard/readiness/export tests retained. New full-precision design summaries and legacy-summary refusal prevent rounded threshold decisions. | Targeted boundary and RDS checks qualify the repair; regenerate old summaries from evaluations. |
+| A07: row/ID/facet order, allowed scale changes and serial/future invariance | Existing user-data stress and fixed-calibration records cover row/ID/scale/replay. New RSM/PCM facet-order comparisons agree within 1e-5. Existing serial/future test explicitly fixes RNG inputs. | The existing serial/future block passed all nine expectations on this source. Preserve these named transformations, not arbitrary transform invariance. |
+| A08: question -> input -> result -> interpretation -> next action | W1/W2 tutorials execute and connect these steps; human comprehension is explicitly unmeasured. This distinction meets the original condition. | The executed empirical-writing example is in the existing workflow guide. Human comprehension remains unmeasured; a new human study is not silently made a release prerequisite. |
+| A09: inspect IDs, background data, paths and provenance per output | Existing replay/background-data and summary-privacy checks plus the current per-file default-archive inspection. Synthetic archives retain person IDs and are explicitly not anonymized. | 103 default-archive artifacts are recorded individually; ten contain source-person-label matches. This synthetic inspection is not a guarantee for arbitrary users' data. |
+| A10: release/site/installed help identity and ordinary/research test distinction | Met for `4a6f8fb`: five CI receipts, asset hash and deployed-site identity are retained in the publication evidence. | Later changes require their own applicable checks. Historical/current status must agree in the public roadmap and active plan. |
+| A11: matched likelihood/gradient/SE/score accuracy and cost | Met for the stated 5,000-person workload and q61/q121 comparison; time and OS RSS were measured. | No new engine or capacity limit is claimed; larger workloads are not automatically required to close this action. |
+| A12: prespecified null/alternative/assignment study of flags, selection and final scores | Completed the prespecified 400-replication screen/removal/refit study below, with null/alternative crossed and rotating conditions. | The named rule has measured operating characteristics; it is not a generally calibrated rater-diagnosis rule. No automatic rater-exclusion API is authorized by this study. |
+| A13: planning matches analysis settings, resampling target, failures and MCSE | Existing per-run records, denominator/MCSE and RNG regressions retained. New rounding repair corrects decisions; help now separates generator settings from analysis controls and gives the explicit-fit alternative. | Full-precision threshold and RDS checks passed; both lower and upper thresholds are covered. Continue to distinguish conditional metric means from all attempted runs. |
+| A14: independent matched calculations and representative empirical use are separate | Existing independent kernel/information/G-study records supply numerical evidence. `sirt::data.ratings1` is documented observed German-writing data; the current check runs PCM -> feedback -> default archive on 135 persons, 7 raters, 5 criteria. | The empirical route, exact tutorial with its verified fit reused, saved dashboard and default archive passed. Empirical use and independent numerical calculations remain separate evidence. |
+| A15: observed-scale joint covariances -> D projections -> coefficients/intervals | Met for implemented crossed/nested points and two-crossed-facet normal plan-difference intervals, with independent calculations and retained nonnormal failures. | Nested/robust/simultaneous intervals are separate extensions; no claim of complete G-theory coverage. |
+| A16: adopt/defer a new model for a concrete use, considering alternatives and maintenance | The selected task-specific-rater-team G/D model is implemented. Existing model-extension decisions retain shared-rater MFRM, testlets and other axes separately; the supplied audit explicitly permits no-build decisions. | No generic registry or blanket model expansion. Adoption decisions remain distinct from implemented methods. |
+
+Current follow-through evidence: `validation-results/roadmap-followthrough-20260922/`.
+The original HTML remains a dated audit of main `299cdfcf`; its text and
+historical checks are not overwritten. This table is the current disposition
+against its actual sixteen conditions, not a new competing roadmap.
+
+### September 22 original-action follow-through results
+
+The functional changes are user-visible: unrounded design decisions with
+explicit legacy-summary migration, and default archives that do not demand
+optional predictions. `NEWS`, help, README migration instructions and ordinary
+tests describe those changes. The new empirical example extends the existing
+workflow vignette; it does not add a competing tutorial or a package dependency.
+All new outputs and the copied published evidence remain under ignored
+`validation-results/`; no raw empirical ratings are added to the package.
+
+A07: reversing the Rater/Criterion order in RSM and PCM fits preserves likelihood,
+keyed facet estimates/SEs and Person estimates/SEs. Maximum absolute differences
+are 1.71e-13 for likelihood and 1.56e-15 for the parameter/SE comparisons, below
+the prespecified 1e-5 limit. Existing row-order, ID, scale and replay evidence
+is reused. The current serial/future block passes nine expectations.
+
+A14: installed `sirt` 4.2.133 documents `data.ratings1` as observed Austrian
+German-writing ratings, with 135 persons, seven observed raters and five
+criteria. The public guide links the author's dataset documentation. The
+1,370-row PCM/MML analysis returns ready status (terminal gradient 4.49e-5),
+seven dashboard rows and a complete default archive. Source labels are replaced
+by display aliases in the example; this is not anonymization. R7's low-Infit
+flag illustrates why a flag does not mean inaccuracy. One-dimensionality,
+local independence and substantive rater quality are not established by the
+successful workflow. The original empirical fit is retained and reused when
+checking the exact tutorial, rather than refitted merely to render prose.
+
+A12 asks whether a fixed misfit screen can identify one specified deviation and
+what happens to Person scores if screened raters are removed. The protocol
+uses 120 Persons, six fixed raters and three fixed criteria; Persons are drawn
+from N(0,1), with an independent RSM response generator. R6's alternative
+replaces half its ratings, in probability, by independent uniform category
+scores. Other raters obey the response model. The screen is Infit or Outfit
+outside [0.5, 1.5]. Remove flagged raters, then refit remaining rows, or reuse
+the baseline fit when there is no flag. Every model uses fixed-normal RSM MML,
+q61, maxit400. There are 100 prespecified seeds per null/alternative and
+crossed/rotating condition, with the same underlying Persons/ratings paired
+where the designs overlap. No cutoffs, effects, seeds or stopping counts were
+changed after execution began.
+
+| Assignment and scenario | False flag in any model-consistent rater | Target R6 flag | Mean paired change in centered Person RMSE (MCSE) | Cases requiring refit |
+| --- | --- | --- | --- | --- |
+| Crossed, null | 0/100 | 0/100 | 0 (0) | 0 |
+| Rotating pair, null | 0/100 | 0/100 | 0 (0) | 0 |
+| Crossed, contaminated R6 | 0/100 | 90/100 | -0.04118 (0.00260) | 90 |
+| Rotating pair, contaminated R6 | 0/100 | 6/100 | -0.00108 (0.00079) | 6 |
+
+All 400 unique protocol cells returned a screen and completed the procedure;
+all before/after fits were ready and all 120 Persons retained scores. Zero
+false-flag events in 100 runs has a two-sided exact 95% upper bound of 3.62%,
+not a known error probability of zero; the plug-in MCSE of zero must not be
+read as certainty. The target detection intervals are 82.38–95.10% and
+2.23–12.60%. The unit for uncertainty is an independent replication, not each
+of six dependent raters. Score errors are centered on the retained Persons;
+they do not assess absolute decisions or calibration-transfer uncertainty.
+
+Crossed assignments contain 2,160 ratings versus 720 for rotating pairs. This
+is not an equal-cost comparison or an isolated sparsity effect. The result
+supports cautious case review: an unflagged rater can have poor sensitivity
+under a particular assignment. It does not establish an optimal assignment,
+a universal threshold, or a beneficial automatic-removal policy under other
+deviations. No production exclusion feature or new inferential claim is added.
+
+Evidence is `roadmap-followthrough-20260922/selection-study/` under
+`validation-results`, particularly `protocol.rds`, all 400 cell RDS files,
+`replicates.csv`, `summary.csv` and `verification.txt`. The initial runner's
+source-file regex omitted R files; the supplementary inventory captures all
+95 unchanged R files whose modification times predate the protocol. Their
+hashes still match at completion. The executed runner and initial summary
+are retained. The maintained runner corrects that index, protects existing
+protocols and names unchanged cases separately from actual refits. Summary
+labels were corrected without repeating fits. Seed-range workers used the
+same generator/protocol and per-cell seeds; no duplicate cell is counted.
+The initial empirical-guide assertion compared character inputs with internal
+factor columns and failed; the final check verifies identical per-column
+values and the exact fitting arguments, then executes the remaining tutorial
+with the already checked fit/diagnostics. These harness incidents are not
+production estimation failures or extra successful replicates.
+
+The corrected distribution archive is
+`397782b19cb8957fb976cac58591027cc9d8686e429c2e5120679121e66b54d5`.
+Its 571 matching local source files were compared byte for byte; no
+maintainer directories or local paths appear in the checked documentation.
+All nine vignettes were built. One local `R CMD check --no-manual
+--no-vignettes` finished with Status OK (zero errors, warnings or notes).
+The ordinary tests report 2,419 passes, zero failures/warnings and three
+intentional CRAN skips; the vignettes were not redundantly rebuilt during
+check. The exact new empirical tutorial was checked separately with its
+already verified fit and diagnostics reused. This archive is not the source
+of the earlier five-platform CI or GitHub tag: those still identify `4a6f8fb`.
+No new hosted check, publication or CRAN submission is claimed here.
+
+The integration review also found that the maintained study runner supplied
+the source-identity list as an error handler, shadowing `base::identity`.
+It now uses an explicit error-return function so failed fits remain recorded
+replications. A forced-error check qualifies that path without repeating the
+400 completed cells, which did not take this handler. This repository-only
+repair does not change the checked package archive or its numerical results.
+
 
 Use the following distinctions when implementing the feedback path:
 

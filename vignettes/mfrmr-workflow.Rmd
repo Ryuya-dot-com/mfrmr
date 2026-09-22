@@ -644,3 +644,77 @@ they do not estimate operating characteristics adequately for a paper. A
 simulation's assumptions and results also do not replace evidence from the
 observed assessment. Keep these analyses in the report only when their role
 in answering the study question is clear.
+
+## An observed writing-assessment example
+
+The optional `sirt` package supplies `data.ratings1`, observed German-writing
+ratings from a 2009 Austrian educational standards survey. Its 274 rows contain
+135 students, seven observed raters and five rubric criteria scored 0 to 3.
+The [data documentation](https://alexanderrobitzsch.r-universe.dev/sirt/doc/manual.html#data.ratings)
+describes the source. This dataset is separate from mfrmr's synthetic examples.
+
+The practical question is which differences in severity, category use or
+consistency merit discussion with a rater. The example below uses a PCM so
+criteria can have different category thresholds. It assumes a common writing
+scale and conditionally independent ratings; inspecting the output does not
+establish those assumptions. Repeated rubric ratings of one performance may
+still share influences that this model does not represent.
+
+Run this optional example after installing `sirt`. It is not run when building
+this vignette. Display aliases replace source identifiers in the example's
+tables; aliases do not make a rating archive anonymous.
+
+```{r observed-writing-example, eval = FALSE}
+library(mfrmr)
+data("data.ratings1", package = "sirt")
+wide <- data.ratings1
+persons <- match(wide$idstud, unique(wide$idstud))
+raters <- match(wide$rater, unique(wide$rater))
+writing <- do.call(rbind, lapply(paste0("k", 1:5), function(criterion) {
+  data.frame(
+    Person = sprintf("P%03d", persons), Rater = paste0("R", raters),
+    Criterion = criterion, Score = wide[[criterion]]
+  )
+}))
+review <- describe_mfrm_data(
+  writing, person = "Person", facets = c("Rater", "Criterion"), score = "Score",
+  rating_min = 0, rating_max = 3
+)
+review$row_retention
+review$design_connectivity
+
+writing_fit <- fit_mfrm(
+  writing, "Person", c("Rater", "Criterion"), "Score",
+  method = "MML", model = "PCM", step_facet = "Criterion",
+  rating_min = 0, rating_max = 3, quad_points = 61, maxit = 400
+)
+writing_diagnostics <- diagnose_mfrm(writing_fit, residual_pca = "none")
+feedback <- facet_quality_dashboard(
+  writing_fit, diagnostics = writing_diagnostics, facet = "Rater"
+)
+feedback$detail[, c("Level", "N", "Estimate", "SE", "Infit", "Outfit", "MisfitFlag")]
+feedback$settings
+plot_rater_severity_profile(
+  writing_fit, diagnostics = writing_diagnostics, facet = "Rater", show_bands = FALSE
+)
+saveRDS(feedback, "writing-feedback.rds")
+archive <- export_mfrm_bundle(
+  writing_fit, diagnostics = writing_diagnostics, facet = "Rater",
+  output_dir = "writing-analysis", data = writing, acknowledge_sensitive = TRUE
+)
+```
+
+Reshaping gives 1,370 criterion ratings; the 274 original rows are not the
+number of students. Each rater has 185 to 205 criterion ratings here. The
+example produces a low-Infit flag for R7: unusually predictable ratings also
+trigger this screen. This is a prompt to inspect rubric use and individual
+ratings, not evidence that R7 is inaccurate or should be removed. Severity
+and consistency answer different questions, and this dataset supplies no
+known true rater quality against which to validate either interpretation.
+
+The quadrature setting belongs to this example; use
+`mml_quadrature_sensitivity()` when numerical sensitivity matters to a
+comparison. Preserve the dashboard's notes, review rating-category use and
+common-person coverage, and use the actual scripts or rubric descriptors in
+feedback discussions. A different-looking result alone does not establish
+that a rater needs training or that training would improve the scores.
