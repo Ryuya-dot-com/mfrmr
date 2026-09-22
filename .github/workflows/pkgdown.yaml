@@ -39,6 +39,8 @@ jobs:
           needs: website
 
       - name: Build site
+        # Deployment below builds the site itself; PRs need a build without deployment.
+        if: github.event_name == 'pull_request'
         run: |
           # pkgdown uses this R-process value for source links.
           Sys.setenv(GITHUB_HEAD_REF = Sys.getenv("GITHUB_SHA"))

@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this package, please cite it as follows."
 title: "mfrmr: Estimation and Diagnostics for Many-Facet Measurement Models"
 version: "0.2.4"
-date-released: "2026-09-21"
+date-released: "2026-09-22"
 license: "MIT"
 authors:
   - family-names: "Komuro"

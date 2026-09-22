@@ -79,12 +79,26 @@ source links point to `31e9197`, and the 334-page inspection found no internal
 paths. Evidence is `validation-results/github-publication-31e9197-20260922/`.
 The earlier candidate/tag and its evidence remain intact.
 
-This completes candidate integration and publication for the selected scope.
-The final release decision, main-branch integration and CRAN submission have
-not occurred; GitHub's stable latest release remains `v0.2.2`. Broader
-research/model questions remain identified under their own scope. Do not
-repeat unchanged numerical studies or package checks merely to update these
-repository-only records; no package or site input is changed by this update.
+That checkpoint completed candidate integration and publication for the selected
+scope. The user's subsequent instruction now requires consolidating all current
+implemented workflows on `main` as 0.2.4. The integration branch merges the
+existing main history into the complete development line; the three conflicts
+concern citation date, package date and the superseded public roadmap, not
+estimation code. Preserve the main-side historical validation records and all
+current R/native code, exported APIs, tests, help, examples and data.
+
+The integrated source has its own five-platform check before the exact checked
+commit advances `main`. Use a manual dispatch for that source and a skip marker
+on the integration commit so branch promotion does not repeat the same matrix.
+Dispatch the site update from the resulting main source. Deployment already
+builds the site, so the separate build step is needed only for pull requests.
+README and ROADMAP identify the implemented main scope and distinguish source
+tags/commits even when their package version is the same. Evidence belongs in
+`validation-results/main-integration-20260922/`.
+
+The final release decision and CRAN submission remain separate; GitHub's stable
+latest release remains `v0.2.2`. Broader research/model questions remain
+identified under their own scope. Do not repeat unchanged numerical studies.
 The sixteen-action assessment is scoped to the original acceptance conditions;
 it does not close every research question or future feature in the public roadmap.
 

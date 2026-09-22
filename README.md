@@ -32,11 +32,13 @@ Questions and bug reports:
 
 ## Installation
 
-This README describes the unreleased `0.2.4` release candidate, including
+This README describes the integrated `0.2.4` source on `main`, including
 portable calibration, exploratory external-feature groups and multivariate
 G/D-studies. See [the roadmap](ROADMAP.md) for supported scope and future work.
-Functions and options shown here may differ from an installed release; check
-`packageVersion("mfrmr")` and the help shipped with that installation.
+The version remains a release candidate pending the final release decision.
+Functions and options shown here may differ from an installed release; retain
+the installed source tag or commit and use its matching help. Earlier candidates
+also report `0.2.4`, so `packageVersion("mfrmr")` alone cannot distinguish them.
 For an existing analysis, read [Updating saved analyses](#updating-saved-analyses)
 before reusing saved diagnostics, scores or reports.
 
@@ -46,21 +48,24 @@ Install the published CRAN release with:
 install.packages("mfrmr")
 ```
 
-The CRAN release and the default GitHub branch do not select the development
-candidate described here. To install a local copy of this source, use the
-directory containing this README and a `DESCRIPTION` file with
-`Version: 0.2.4`:
+To install the integrated 0.2.4 source from GitHub's `main` branch:
 
 ```r
 if (!requireNamespace("remotes", quietly = TRUE)) {
   install.packages("remotes")
 }
 
-remotes::install_local(
-  "path/to/mfrmr",
+remotes::install_github(
+  "Ryuya-dot-com/mfrmr",
+  ref = "main",
   build_vignettes = TRUE
 )
 ```
+
+For a reproducible installation, replace `"main"` with a specific commit or
+published tag. The [release pages](https://github.com/Ryuya-dot-com/mfrmr/releases)
+provide fixed candidate archives and their validation records. A local checkout
+can also be installed with `remotes::install_local("path/to/mfrmr")`.
 
 ## Quick start
 
