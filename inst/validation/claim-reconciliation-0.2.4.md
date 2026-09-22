@@ -23,10 +23,15 @@ Subsequent C15/C17 repairs prevent rounded design-threshold decisions and
 restore default fit archives without optional predictions. A prespecified
 selection/refit study and an observed writing-assessment workflow add bounded
 evidence, without qualifying automatic rater removal or broad diagnostic
-error rates. The new locally checked source is separate from the published
-`4a6f8fb` candidate and its platform checks.
+error rates. The corrected source is `31e9197`, separate from the earlier
+`4a6f8fb` candidate. Its own five-platform checks, verified release archive and
+matching site now support `v0.2.4-rc.3`; the active roadmap records the source
+identities and the additional oldrel-1 README-content skip. This completes that
+candidate's distribution checks, without closing the broader statistical claims
+or making a final/CRAN release decision. This post-publication record update
+changes no package or site input.
 
-The source now identifies itself as candidate 0.2.4, not a published release.
+The source identifies itself as candidate 0.2.4, not a final release.
 The original 18-group table remains historical. The additional retained claims
 are reconciled here; their implementation records are in the current work plan.
 

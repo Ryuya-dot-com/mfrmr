@@ -51,22 +51,40 @@ selected paths: design recommendations compared rounded summaries with
 thresholds, and default fit archives demanded optional prediction objects.
 Their whole summary/save/recommend and default export paths now have focused
 regressions, including the ordinary test selector. The frozen
-candidate's CI does not validate these later source changes. Do not alter
+candidate `4a6f8fb`'s CI does not validate these later source changes. Do not alter
 the published tag or its asset when recording these corrections.
 
 The original A12 selection/refit study has now run under the bounded protocol
 below, and A14's empirical writing route has executed. These complete the
 named checks, not broad rater-diagnosis, domain-validity or coverage claims.
-The remaining integration decision concerns this corrected source and its
-distribution checks; the existing broader research/model questions remain
-identified under their own scope, rather than being silently counted complete.
+The corrected source is now commit `31e9197`, published as
+[`v0.2.4-rc.3`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.3).
+Its [five-platform CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35719312033)
+completed with zero package-check errors, warnings and notes in every cell;
+international-input and moved-folder replay checks also passed. Four cells
+reported 2,419 passing expectations and three intentional CRAN skips.
+Ubuntu oldrel-1 reported 2,400 passes and four skips: the same three plus the
+README-content test requiring a source-tree file on that R installation.
+That test ran in the other four cells; its absence is not counted as a pass.
 
-The current stage-4 step is to bind the reviewed corrections to a local commit
-and to the already checked archive, then qualify that commit for distribution.
-Do not repeat unchanged numerical studies or the completed local package check.
-A10 remains open for the corrected source: five-platform CI, any new release
-asset and the corresponding site must identify that source. The current
-local checkpoint does not publish a successor or alter `v0.2.4-rc.2`.
+A10 is met for this corrected candidate. All five archives match its 571
+packaged Git source files, allowing only Windows text line endings. The release
+asset is the unchanged Ubuntu release archive, SHA256
+`6f2914235129db86f9f5445be7ccf8fc7d867f252124dd1a8147c6e79b3d77e5`;
+the downloaded public copy and checksum file match. The
+[site workflow](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35722169146)
+checked out the same tag; deployed commit `7309aa3` and the completed Pages
+build identify that source. Six updated live pages match the deployed files,
+source links point to `31e9197`, and the 334-page inspection found no internal
+paths. Evidence is `validation-results/github-publication-31e9197-20260922/`.
+The earlier candidate/tag and its evidence remain intact.
+
+This completes candidate integration and publication for the selected scope.
+The final release decision, main-branch integration and CRAN submission have
+not occurred; GitHub's stable latest release remains `v0.2.2`. Broader
+research/model questions remain identified under their own scope. Do not
+repeat unchanged numerical studies or package checks merely to update these
+repository-only records; no package or site input is changed by this update.
 The sixteen-action assessment is scoped to the original acceptance conditions;
 it does not close every research question or future feature in the public roadmap.
 
@@ -340,7 +358,7 @@ algebra and static inspection do not constitute execution of this package.
 | A07: row/ID/facet order, allowed scale changes and serial/future invariance | Existing user-data stress and fixed-calibration records cover row/ID/scale/replay. New RSM/PCM facet-order comparisons agree within 1e-5. Existing serial/future test explicitly fixes RNG inputs. | The existing serial/future block passed all nine expectations on this source. Preserve these named transformations, not arbitrary transform invariance. |
 | A08: question -> input -> result -> interpretation -> next action | W1/W2 tutorials execute and connect these steps; human comprehension is explicitly unmeasured. This distinction meets the original condition. | The executed empirical-writing example is in the existing workflow guide. Human comprehension remains unmeasured; a new human study is not silently made a release prerequisite. |
 | A09: inspect IDs, background data, paths and provenance per output | Existing replay/background-data and summary-privacy checks plus the current per-file default-archive inspection. Synthetic archives retain person IDs and are explicitly not anonymized. | 103 default-archive artifacts are recorded individually; ten contain source-person-label matches. This synthetic inspection is not a guarantee for arbitrary users' data. |
-| A10: release/site/installed help identity and ordinary/research test distinction | Met for `4a6f8fb`: five CI receipts, asset hash and deployed-site identity are retained in the publication evidence. | Later changes require their own applicable checks. Historical/current status must agree in the public roadmap and active plan. |
+| A10: release/site/installed help identity and ordinary/research test distinction | Met for corrected `31e9197` / `v0.2.4-rc.3`: five CI receipts, downloaded asset hash, installed help source and deployed/live site identity are verified above. The earlier `4a6f8fb` record is retained. | Future package/site changes require their own applicable checks. The oldrel-1 README-content skip and three CRAN skips remain explicit, not relabeled as passes. |
 | A11: matched likelihood/gradient/SE/score accuracy and cost | Met for the stated 5,000-person workload and q61/q121 comparison; time and OS RSS were measured. | No new engine or capacity limit is claimed; larger workloads are not automatically required to close this action. |
 | A12: prespecified null/alternative/assignment study of flags, selection and final scores | Completed the prespecified 400-replication screen/removal/refit study below, with null/alternative crossed and rotating conditions. | The named rule has measured operating characteristics; it is not a generally calibrated rater-diagnosis rule. No automatic rater-exclusion API is authorized by this study. |
 | A13: planning matches analysis settings, resampling target, failures and MCSE | Existing per-run records, denominator/MCSE and RNG regressions retained. New rounding repair corrects decisions; help now separates generator settings from analysis controls and gives the explicit-fit alternative. | Full-precision threshold and RDS checks passed; both lower and upper thresholds are covered. Continue to distinguish conditional metric means from all attempted runs. |
@@ -443,7 +461,9 @@ intentional CRAN skips; the vignettes were not redundantly rebuilt during
 check. The exact new empirical tutorial was checked separately with its
 already verified fit and diagnostics reused. This archive is not the source
 of the earlier five-platform CI or GitHub tag: those still identify `4a6f8fb`.
-No new hosted check, publication or CRAN submission is claimed here.
+This was the local checkpoint, before the hosted verification and successor
+publication now recorded in the current work plan above. No CRAN submission
+has occurred.
 
 The integration review also found that the maintained study runner supplied
 the source-identity list as an error handler, shadowing `base::identity`.
