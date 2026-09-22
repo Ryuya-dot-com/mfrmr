@@ -60,7 +60,7 @@ Build an MFRM network review
 \details{
 \code{build_mfrm_network_review()} is a synthesis layer over
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}. It keeps the measurement model and graph view in
-separate lanes: MFRM estimates remain the measurement results, while the
+separate sections: MFRM estimates remain the measurement results, while the
 network review summarizes co-observation connectedness and linking
 vulnerability in the observed design. This is especially useful for sparse
 or incomplete rater-mediated designs, where common-person links, connected

@@ -158,7 +158,7 @@ plot_local_dependence_heatmap <- function(fit,
   if (isTRUE(draw)) {
     apply_plot_preset(style)
     cols <- grDevices::hcl.colors(20L, "RdBu", rev = TRUE)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 5, 3, 2))
     graphics::image(
@@ -280,7 +280,7 @@ plot_reliability_snapshot <- function(fit,
 
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 6, 3, 2))
     bar_max <- if (identical(metric, "reliability")) {
@@ -435,7 +435,7 @@ plot_residual_matrix <- function(fit,
     apply_plot_preset(style)
     cols <- grDevices::hcl.colors(40L, "RdBu", rev = TRUE)
     zmax <- max(3, max(abs(mat), na.rm = TRUE))
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 6, 3, 2))
     graphics::image(
@@ -605,7 +605,7 @@ plot_shrinkage_funnel <- function(fit,
   style <- resolve_plot_preset(preset)
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(5, 6, 3, 2))
     x_values <- c(payload$RawEstimate, payload$ShrunkEstimate)

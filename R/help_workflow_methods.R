@@ -19,6 +19,9 @@
 #' [build_apa_outputs()] ->
 #' [build_summary_table_bundle()] -> [apa_table()] or
 #' [export_summary_appendix()].
+#' The `"facets"` profile name is historical: it provides a comprehensive
+#' measurement review and does not require FACETS, TAM, or sirt knowledge or
+#' software.
 #'
 #' Use `JML` only when its fixed-person-parameter estimand is methodologically
 #' intended, for example for a JMLE-oriented external comparison, descriptive
@@ -77,6 +80,9 @@
 #' If the intended rating scale includes categories not observed in the current
 #' data, make that support explicit. For example, use
 #' `rating_min = 1, rating_max = 5` for a 1-5 scale with only 2-5 observed.
+#' This preserves the declaration in the data-support review. A zero-count
+#' boundary is review evidence for the separate element-boundary contract; it
+#' is not by itself an unsupported free-step contrast.
 #' If an intermediate category is unobserved (for example 1, 2, 4, 5 with no
 #' 3), also set `keep_original = TRUE` if the zero-count category should remain
 #' in the fitted support. `summary(describe_mfrm_data(...))` reports retained
@@ -84,8 +90,9 @@
 #' `summary(fit)` carries full structured rows into printed `Caveats` and
 #' `$caveats`, with `Key warnings` as a short triage subset. Summary-table
 #' exports route those rows through `score_category_caveats` or
-#' `analysis_caveats`. Adjacent threshold estimates should still be treated as
-#' weakly identified when an intermediate category is unobserved.
+#' `analysis_caveats`. In a polytomous fitted ladder, a retained zero-count
+#' internal category creates an unsupported adjacent-step contrast and stops
+#' fitting before optimization.
 #'
 #' @section Planned assignment and structural missingness:
 #' A long-format table alone does not reveal whether an absent Person x facet
@@ -223,6 +230,8 @@
 #'   [compute_information()] / [plot_information()] when you want to inspect
 #'   whether bounded `GPCM` is introducing substantively acceptable
 #'   discrimination-based reweighting relative to the Rasch-family reference.
+#'   Use one selectable q>=31 grid for every candidate and a denser common-grid
+#'   sensitivity check when the comparison is close or consequential.
 #' - Design planning and forecasting:
 #'   [build_mfrm_sim_spec()] or [extract_mfrm_sim_spec()] ->
 #'   [evaluate_mfrm_recovery()] -> [assess_mfrm_recovery()] for
@@ -327,43 +336,33 @@
 #'
 #' @examples
 #' \donttest{
-#' toy_full <- load_mfrmr_data("example_core")
-#' keep_people <- unique(toy_full$Person)[1:12]
-#' toy <- toy_full[toy_full$Person %in% keep_people, , drop = FALSE]
-#'
+#' ratings <- load_mfrmr_data("example_operational")
 #' fit <- fit_mfrm(
-#'   toy,
+#'   data = ratings,
 #'   person = "Person",
 #'   facets = c("Rater", "Criterion"),
 #'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
 #'   method = "MML",
+#'   model = "RSM",
 #'   quad_points = 7,
-#'   maxit = 30
+#'   maxit = 30,
+#'   reltol = 1e-11
 #' )
-#' summary(fit)$next_actions
+#' fit_review <- summary(fit, profile = "fit", detail = "brief")
+#' fit_review$decision
 #'
-#' diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-#' summary(diag)$next_actions
-#'
-#' chk <- reporting_checklist(fit, diagnostics = diag)
-#' subset(
-#'   chk$checklist,
-#'   Section == "Visual Displays",
-#'   c("Item", "DraftReady", "NextAction")
+#' full_review <- summary(
+#'   fit,
+#'   profile = "facets", # Historical profile name; FACETS is not required.
+#'   detail = "brief"
 #' )
+#' results <- full_review$results
+#' plot(results, type = "wright", show_ci = TRUE, draw = FALSE)$name
 #'
-#' qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
-#' qc$data$preset
-#' p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-#' p_marg$data$preset
-#'
-#' sc <- subset_connectivity_report(fit, diagnostics = diag)
-#' p_design <- plot(sc, type = "design_matrix", draw = FALSE, preset = "publication")
-#' p_design$data$plot
-#'
-#' bundle <- build_summary_table_bundle(chk, appendix_preset = "recommended")
-#' summary(bundle)$role_summary
-#' plot(bundle, type = "appendix_presets", draw = FALSE)$data$plot
+#' report <- mfrm_report(results)
+#' summary(report, view = "reader")
 #' }
 #'
 #' @name mfrmr_workflow_methods

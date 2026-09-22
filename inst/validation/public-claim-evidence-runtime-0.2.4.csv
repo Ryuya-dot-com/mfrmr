@@ -1,0 +1,13 @@
+"Method","Model","EquivalenceBound","FitReadiness","FormalInference","PrecisionTier","SupportsFormalInference","SlopeSEEligible","EquivalenceDecision","EquivalencePairs","UnsupportedPositiveDecision"
+"MML","RSM",0.5,"ready","Yes","model_based",TRUE,NA,"partial_pairwise_equivalence",2,FALSE
+"MML","RSM",5,"ready","Yes","model_based",TRUE,NA,"all_pairs_equivalent",6,FALSE
+"MML","PCM",0.5,"ready","Yes","model_based",TRUE,NA,"partial_pairwise_equivalence",2,FALSE
+"MML","PCM",5,"ready","Yes","model_based",TRUE,NA,"all_pairs_equivalent",6,FALSE
+"MML","GPCM",0.5,"review","No","model_based",FALSE,FALSE,"partial_pairwise_equivalence",2,TRUE
+"MML","GPCM",5,"review","No","model_based",FALSE,FALSE,"all_pairs_equivalent",6,TRUE
+"JML","RSM",0.5,"ready","No","exploratory",FALSE,NA,"partial_pairwise_equivalence",2,TRUE
+"JML","RSM",5,"ready","No","exploratory",FALSE,NA,"all_pairs_equivalent",6,TRUE
+"JML","PCM",0.5,"ready","No","exploratory",FALSE,NA,"partial_pairwise_equivalence",2,TRUE
+"JML","PCM",5,"ready","No","exploratory",FALSE,NA,"all_pairs_equivalent",6,TRUE
+"JML","GPCM",0.5,"review","No","exploratory",FALSE,FALSE,"partial_pairwise_equivalence",2,TRUE
+"JML","GPCM",5,"review","No","exploratory",FALSE,FALSE,"all_pairs_equivalent",6,TRUE

@@ -38,6 +38,10 @@ bias/DFF reporting templates, misfit/pathway reporting templates,
 linking/anchor reporting templates, ZSTD-convention table,
 evidence-boundary table, next-action table, and optional Markdown or HTML
 report.
+The object and its table list retain the exact source-fit
+\verb{fit_readiness*} tables from \code{mfrm_results()}; report synthesis does not
+reinterpret or upgrade them. The \code{decision} table translates that same
+record into interpretation, formal-inference, reason, and next-action text.
 }
 \details{
 The intended workflow is:
@@ -99,7 +103,7 @@ stored precision review and \code{diagnostics$reliability}. The
 \code{bias_reporting_templates} table is
 available when the source result was built with \code{include = "bias"} and keeps
 facet-level screens, interaction-bias contrasts, DFF follow-up, and fairness
-conclusions in separate lanes. The \code{misfit_reporting_templates} table is
+conclusions in separate sections. The \code{misfit_reporting_templates} table is
 available when the source result was built with \code{include = "misfit_review"}
 and keeps unexpected responses, displacement, pathway-map evidence, and
 case-review actions separate. The \code{linking_reporting_templates} table is
@@ -112,28 +116,25 @@ and drift/equating claims require multiple fitted forms or waves.
 }
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:6], , drop = FALSE]
-fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-                method = "JML", maxit = 30)
-res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
+)
+results <- mfrm_results(fit)
 
-report <- mfrm_report(res, style = "qc")
-summary(report)
-report$first_screen
-report$report_index[, c("Area", "Readiness", "PrimaryTable",
-                        "TemplateTable", "PlotRoute")]
-report$template_index[, c("Area", "Topic", "BoundaryType",
-                          "ClaimStrength", "EvidenceRoute")]
-
-# Open detailed evidence only after the index points to it.
-fit_primary <- report$report_index$PrimaryTable[
-  report$report_index$Area == "Fit"
-][1]
-report$tables[[fit_primary]]
-
-mfrm_report(res, output = "markdown")
-mfrm_report(res, output = "html")
+report <- mfrm_report(results)
+summary(report, view = "reader")
+report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 }
 }
 \seealso{

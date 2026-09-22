@@ -1,0 +1,46 @@
+file,context,test,nb,failed,skipped,error,warning,user,system,real,passed
+test-plot-device-state.R,plot-device-state,single-panel plots advance through caller layouts and restore style,18,0,FALSE,FALSE,0,2.592,0.022,2.623,18
+test-plot-device-state.R,plot-device-state,Wright and CCC layouts do not shrink subsequent standalone plots,20,0,FALSE,FALSE,0,3.028,0.038,3.082,20
+test-plot-device-state.R,plot-device-state,APA composite draws four panels on one page,3,0,FALSE,FALSE,0,0.521,0.00299999999999997,0.526,3
+test-plot-device-state.R,plot-device-state,native labels remain distinct without moving or discarding fitted data,73,0,FALSE,FALSE,0,4.229,0.032,4.285,73
+test-plot-device-state.R,plot-device-state,long and Japanese names stay distinguishable when abbreviated,12,0,FALSE,FALSE,0,0.016,0.003,0.0200000000000014,12
+test-plot-device-state.R,plot-device-state,numerous PCM thresholds do not erase the default facet display,14,0,FALSE,FALSE,0,2.223,0.031,2.27,14
+test-plot-device-state.R,plot-device-state,an overcrowded canvas reports its limit without deleting labels,3,0,FALSE,FALSE,0,0.0180000000000007,0.001,0.0179999999999989,3
+test-plot-device-state.R,plot-device-state,pathway and CCC disclose the same reference profile in data and drawing,7,0,FALSE,FALSE,0,0.633000000000001,0.004,0.638,7
+test-plotting-extras.R,plotting-extras,plot_threshold_ladder returns structured payload,5,0,FALSE,FALSE,0,0.004999999999999,0.001,0.004999999999999,5
+test-plotting-extras.R,plotting-extras,plot_threshold_ladder draw = TRUE runs without error,1,0,FALSE,FALSE,0,0.00300000000000011,0,0.00300000000000011,1
+test-plotting-extras.R,plotting-extras,plot_threshold_ladder honours highlight_disorder = FALSE,1,0,FALSE,FALSE,0,0.00199999999999889,0.000999999999999945,0.00199999999999889,1
+test-plotting-extras.R,plotting-extras,plot_person_fit returns one row per Person,7,0,FALSE,FALSE,0,0.0230000000000015,0.001,0.0240000000000009,7
+test-plotting-extras.R,plotting-extras,plot_person_fit honours custom fit envelope,2,0,FALSE,FALSE,0,0.109,0.002,0.109999999999999,2
+test-plotting-extras.R,plotting-extras,plot_person_fit draws without error,1,0,FALSE,FALSE,0,0.016,0,0.017000000000003,1
+test-plotting-extras.R,plotting-extras,plot_person_fit exposes log-likelihood report view and monochrome preset,6,0,FALSE,FALSE,0,0.0180000000000007,0.002,0.0190000000000019,6
+test-plotting-extras.R,plotting-extras,plot_rater_severity_profile produces CI whiskers,5,0,FALSE,FALSE,0,0.00599999999999845,0.001,0.00600000000000023,5
+test-plotting-extras.R,plotting-extras,plot_rater_severity_profile validates ci_level,2,0,FALSE,FALSE,0,0.00500000000000256,0.001,0.004999999999999,2
+test-plotting-extras.R,plotting-extras,plot_rater_severity_profile errors on unknown facet,1,0,FALSE,FALSE,0,0.388999999999999,0.003,0.391999999999999,1
+test-plotting-extras.R,plotting-extras,plot_dif_summary accepts mfrm_dff output,3,0,FALSE,FALSE,0,0.0310000000000024,0.001,0.0350000000000001,3
+test-plotting-extras.R,plotting-extras,plot_dif_summary rejects non-DIF inputs,1,0,FALSE,FALSE,0,0.0410000000000004,0.001,0.0410000000000004,1
+test-plotting-extras.R,plotting-extras,plot_dif_summary validates top_n,3,0,FALSE,FALSE,0,0.108000000000001,0.001,0.116,3
+test-plotting-extras.R,plotting-extras,plot_dif_summary supports CI and threshold guides,8,0,FALSE,FALSE,0,0.0450000000000017,0.003,0.0569999999999986,8
+test-plotting-extras.R,plotting-extras,plot_dif_summary sort_by = 'effect' orders by signed contrast,1,0,FALSE,FALSE,0,0.027000000000001,0.001,0.0279999999999987,1
+test-plotting-extras.R,plotting-extras,plot_apa_figure_one bundles the four panels,14,0,FALSE,FALSE,0,0.0799999999999983,0.003,0.0899999999999999,14
+test-plotting-extras.R,plotting-extras,plot_apa_figure_one draws the 2x2 composite,3,0,FALSE,FALSE,0,0.0820000000000007,0.001,0.0819999999999972,3
+test-plotting-extras.R,plotting-extras,"plot(fit, type = 'ccc_overlay') carries overlay rows",5,0,FALSE,FALSE,0,0.0279999999999987,0.001,0.0289999999999999,5
+test-plotting-extras.R,plotting-extras,"plot(fit, type = 'wright') subgroup overlay via group_data",4,0,FALSE,FALSE,0,0.0249999999999986,0.001,0.0249999999999986,4
+test-plotting-extras.R,plotting-extras,"plot(fit, type = 'wright') without group has no group payload",1,0,FALSE,FALSE,0,0.0230000000000032,0,0.0240000000000009,1
+test-plotting-extras.R,plotting-extras,plot_bias_interaction heatmap mode returns bundle,16,0,FALSE,FALSE,0,0.277999999999999,0.005,0.283999999999999,16
+test-plotting-extras.R,plotting-extras,plot_anchor_drift forest draws from mfrm_anchor_drift,3,0,FALSE,FALSE,0,0.861999999999998,0.004,0.867000000000001,3
+test-plotting-extras.R,plotting-extras,plot.mfrm_equating_chain common_anchors falls back cleanly,2,0,FALSE,FALSE,0,0.914999999999999,0.00800000000000001,0.959,2
+test-equating-graph.R,equating-graph,"graph preserves isolated waves, pair screening and shared identities",13,0,FALSE,FALSE,0,0.0209999999999999,0.004,0.0269999999999999,13
+test-equating-graph.R,equating-graph,zero common elements and zero links still produce wave vertices,10,0,FALSE,FALSE,0,0.119,0.005,0.125,10
+test-equating-graph.R,equating-graph,unknown retention and retained-but-flagged are not called unflagged retention,3,0,FALSE,FALSE,0,0.0069999999999999,0.001,0.006,3
+test-equating-graph.R,equating-graph,wave and element identity survives duplicate names and delimiter punctuation,7,0,FALSE,FALSE,0,0.014,0.001,0.0149999999999999,7
+test-equating-graph.R,equating-graph,malformed graph references and flags fail explicitly,4,0,FALSE,FALSE,0,0.00800000000000001,0.000999999999999987,0.00800000000000001,4
+test-equating-graph.R,equating-graph,monochrome and clean drawing preserve data and the caller's panel sequence,10,0,FALSE,FALSE,0,0.0110000000000001,0.002,0.0130000000000001,10
+test-equating-graph.R,equating-graph,supported paths do not bypass excluded pair-specific links,2,0,FALSE,FALSE,0,0.022,0.002,0.03,2
+test-equating-graph.R,equating-graph,removal deletes an element across all links and counts only new losses,12,0,FALSE,FALSE,0,0.028,0.003,0.0310000000000001,12
+test-equating-graph.R,equating-graph,alternative paths preserve connectivity after a direct link disappears,5,0,FALSE,FALSE,0,0.03,0.002,0.0319999999999998,5
+test-equating-graph.R,equating-graph,one shared element can disconnect every baseline pair,5,0,FALSE,FALSE,0,0.0109999999999999,0.001,0.012,5
+test-equating-graph.R,equating-graph,topology retains unknown and flagged provenance without asserting support,7,0,FALSE,FALSE,0,0.0109999999999999,0.002,0.012,7
+test-equating-graph.R,equating-graph,empty chains and duplicate labels remain valid topology inputs,9,0,FALSE,FALSE,0,0.0450000000000002,0.002,0.046,9
+test-equating-graph.R,equating-graph,new topology views preserve clean payloads and graphics state,15,0,FALSE,FALSE,0,0.0229999999999999,0.00299999999999999,0.0250000000000001,15
+test-equating-graph.R,equating-graph,narrow topology plots warn before replacing wide labels with IDs,4,0,FALSE,FALSE,0,0.0110000000000001,0.001,0.0129999999999999,4

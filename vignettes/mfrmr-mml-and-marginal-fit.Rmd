@@ -97,10 +97,10 @@ setting, objective, terminal gradient, parameter change, and evaluation
 counts. For L-BFGS-B, the stage table also records the actual `factr` and
 `pgtol` controls; `EffectiveReltol` is not itself a native L-BFGS-B argument.
 EM retains its relative log-likelihood stopping result but must also pass the
-same terminal-gradient gate; use the direct engine for bounded gradient
+same terminal-gradient check; use the direct engine for bounded gradient
 polishing when an EM fit remains under numerical review.
 
-Read `summary(fit)$readiness` as separate gates. `InferenceReady` and the
+Read `summary(fit)$readiness` as separate criteria. `InferenceReady` and the
 Numerical row describe numerical optimization, not the design, stability,
 diagnostic, or reporting decision. A small gradient cannot repair a
 disconnected measurement graph or a boundary-separated facet level.
@@ -332,6 +332,12 @@ order:
 4. If bounded `GPCM` fits better, report what changed: slopes, information
    redistribution, bias-screening rows, fair averages, or conclusions. Do not
    let fit improvement alone decide the operational model.
+
+After fitting candidates, `build_model_choice_review()` places the reported
+step/slope coordinate counts, identified free-parameter counts, and each fit's
+stored readiness decision in `review$model_roles`. Read those fields before
+the information criteria: a more flexible fit that is not inference-ready
+cannot become the selected operational model through AIC or BIC alone.
 
 This sequence keeps the interpretation aligned with the validation boundary:
 `RSM`/`PCM` support the full manuscript/reporting route, while bounded `GPCM`

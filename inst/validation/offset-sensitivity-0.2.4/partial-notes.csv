@@ -1,0 +1,5 @@
+"Type","Text"
+"definition","Each scenario removes one common facet/level identity from all adjacent links, then recomputes preliminary offsets, screening, final offsets and cumulative offsets using the recorded threshold and fixed source estimates/SEs."
+"interpretation","Changes are conditional linking-offset changes, not refitted item, rater or person measures. Missing link offsets propagate to later cumulative offsets. The first wave is a fixed zero reference and is excluded from maximum cumulative changes."
+"screening","Screening can re-admit other elements. If it would exclude every finite difference, the existing method falls back to all finite differences; ScreeningFallback reports this. Retained elements with unusable SEs may not contribute when inverse-variance weighting is active. Support includes facets whose last element was removed."
+"uncertainty","No source model is refitted and no new SE, covariance or confidence interval is estimated. Finite offsets, small changes and retained connections do not establish anchor invariance, adequate support, comparable scales or inferential readiness."

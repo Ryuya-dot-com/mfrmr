@@ -38,6 +38,59 @@ expect_public_console_output <- function(lines, person_ids = character(0)) {
   )))
 }
 
+test_that("fit output leads with a plain-language decision", {
+  fit <- make_toy_fit(method = "JML", maxit = 25)
+  fit_lines <- capture.output(print(fit))
+  brief <- summary(fit, profile = "fit", detail = "brief")
+  brief_lines <- capture.output(print(brief))
+
+  expect_identical(
+    names(brief$decision),
+    c(
+      "Interpretation", "FormalInference", "FitReadiness", "Why",
+      "NextAction"
+    )
+  )
+  expect_identical(brief$decision$Interpretation, "Do not interpret this fit")
+  expect_identical(brief$decision$FormalInference, "No")
+  expect_match(brief$decision$Why, "Numerical convergence failed", fixed = TRUE)
+  expect_lt(
+    which(grepl("^Decision$", fit_lines)),
+    which(grepl("^  Scale:", fit_lines))
+  )
+  expect_lt(
+    which(grepl("^Decision$", brief_lines)),
+    which(grepl("^Visual workflow", brief_lines))
+  )
+  expect_false(any(grepl("^  Summary status:", fit_lines)))
+  expect_false(any(grepl("^  Key warning:", fit_lines)))
+  expect_public_console_output(
+    fit_lines,
+    person_ids = unique(as.character(fit$facets$person$Person))
+  )
+})
+
+test_that("MML console output states its integration and population contracts", {
+  fit <- make_toy_fit(method = "MML", maxit = 25)
+
+  for (lines in list(
+    capture.output(print(fit)),
+    capture.output(print(summary(fit, detail = "brief")))
+  )) {
+    text <- gsub("[[:space:]]+", " ", paste(lines, collapse = " "))
+    expect_match(text, "fixed non-adaptive Gauss-Hermite", fixed = TRUE)
+    expect_match(text, "q=31", fixed = TRUE)
+    expect_match(text, "latent dimensions=1", fixed = TRUE)
+    expect_match(text, "Population identification: fixed N(0,1)", fixed = TRUE)
+    expect_match(text, "discrimination=1", fixed = TRUE)
+    contract_start <- grep("MML engine:", lines, fixed = TRUE)
+    contract_end <- grep("Population identification:", lines, fixed = TRUE)
+    expect_length(contract_start, 1L)
+    expect_length(contract_end, 1L)
+    expect_public_console_output(lines[contract_start:contract_end])
+  }
+})
+
 test_that("major beginner-facing summaries respect the 80-column privacy contract", {
   old_options <- options(width = 80L)
   on.exit(options(old_options), add = TRUE)
@@ -81,6 +134,13 @@ test_that("major beginner-facing summaries respect the 80-column privacy contrac
       ids = conquest_person_ids
     )
   )
+
+  diagnostics_lines <- outputs$diagnostics$lines
+  results_lines <- outputs$results_brief$lines
+  expect_true(any(grepl("^Decision$", diagnostics_lines)))
+  expect_true(any(grepl("Formal inference:", diagnostics_lines, fixed = TRUE)))
+  expect_true(any(grepl("^Decision$", results_lines)))
+  expect_true(any(grepl("Formal inference:", results_lines, fixed = TRUE)))
 
   conquest_lines <- outputs$conquest_bundle$lines
   expect_false(conquest_bundle$summary$MfrmrInferenceReady[[1]])

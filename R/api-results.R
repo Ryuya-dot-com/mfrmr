@@ -73,6 +73,7 @@ mfrm_results_readiness_is_ready <- function(domain, status) {
   }
   switch(
     domain,
+    Fit = identical(status, "ready"),
     Numerical = identical(status, "pass"),
     Data = identical(status, "pass"),
     Design = identical(status, "pass_linked"),
@@ -87,10 +88,12 @@ mfrm_results_add_readiness_status <- function(status, readiness) {
   status <- as.data.frame(status %||% data.frame(), stringsAsFactors = FALSE)
   specs <- data.frame(
     Section = c(
-      "data_readiness", "design_readiness", "stability_readiness",
-      "plot_interpretation", "reporting_readiness"
+      "fit_readiness", "numerical_readiness", "data_readiness", "design_readiness",
+      "stability_readiness", "plot_interpretation", "reporting_readiness"
     ),
-    Domain = c("Data", "Design", "Stability", "Plot", "Reporting"),
+    Domain = c(
+      "Fit", "Numerical", "Data", "Design", "Stability", "Plot", "Reporting"
+    ),
     stringsAsFactors = FALSE
   )
   rows <- lapply(seq_len(nrow(specs)), function(i) {
@@ -126,11 +129,63 @@ mfrm_results_component_class <- function(x) {
   paste(class(x), collapse = ", ")
 }
 
+mfrm_results_unavailable_error <- function(message, call = NULL) {
+  structure(
+    list(message = as.character(message[1] %||% ""), call = call),
+    class = c("mfrmr_results_unavailable_error", "error", "condition")
+  )
+}
+
+stop_mfrm_results_unavailable <- function(message) {
+  stop(mfrm_results_unavailable_error(message))
+}
+
+mfrm_results_failure_detail <- function(result) {
+  condition_class <- as.character(result$condition_class %||% "")
+  condition_call <- as.character(result$condition_call %||% "")
+  metadata <- condition_class[nzchar(condition_class)]
+  if (nzchar(condition_call)) {
+    metadata <- c(metadata, paste0("call: ", condition_call))
+  }
+  paste0(
+    as.character(result$message %||% ""),
+    if (length(metadata) > 0L) {
+      paste0(" [", paste(metadata, collapse = "; "), "]")
+    } else {
+      ""
+    }
+  )
+}
+
 mfrm_results_safe <- function(expr) {
   tryCatch(
-    list(ok = TRUE, value = expr, message = ""),
+    list(
+      ok = TRUE,
+      value = expr,
+      message = "",
+      condition_class = "",
+      condition_call = ""
+    ),
     error = function(e) {
-      list(ok = FALSE, value = NULL, message = conditionMessage(e))
+      soft_failure <- inherits(
+        e,
+        c("mfrmr_results_unavailable_error", "mfrmr_gpcm_scope_error")
+      )
+      if (!isTRUE(soft_failure)) {
+        stop(e)
+      }
+      condition_call <- conditionCall(e)
+      list(
+        ok = FALSE,
+        value = NULL,
+        message = conditionMessage(e),
+        condition_class = paste(class(e), collapse = ", "),
+        condition_call = if (is.null(condition_call)) {
+          ""
+        } else {
+          paste(deparse(condition_call), collapse = " ")
+        }
+      )
     }
   )
 }
@@ -268,10 +323,11 @@ mfrm_results_maybe_response_time_column <- function(data) {
 
 mfrm_results_resolve_response_time_column <- function(data, response_time = NULL) {
   if (!is.data.frame(data)) {
-    stop(
-      "Response-time review requires `response_time_data` or data-frame input ",
-      "with the timing column.",
-      call. = FALSE
+    stop_mfrm_results_unavailable(
+      paste0(
+        "Response-time review requires `response_time_data` or data-frame input ",
+        "with the timing column."
+      )
     )
   }
   if (!is.null(response_time) && length(response_time) > 0L &&
@@ -291,11 +347,12 @@ mfrm_results_resolve_response_time_column <- function(data, response_time = NULL
       call. = FALSE
     )
   }
-  stop(
-    "No response-time column was supplied or safely detected. ",
-    "Use `response_time = \"ResponseTime\"` and, for fitted objects, ",
-    "`response_time_data = original_data`.",
-    call. = FALSE
+  stop_mfrm_results_unavailable(
+    paste0(
+      "No response-time column was supplied or safely detected. ",
+      "Use `response_time = \"ResponseTime\"` and, for fitted objects, ",
+      "`response_time_data = original_data`."
+    )
   )
 }
 
@@ -577,6 +634,11 @@ mfrm_results_validate_diagnostics_identity <- function(fit, diagnostics,
     }
     return(invisible("imported_identity_match"))
   }
+  if (!identical(as.character(diagnostics$fit_readiness$ReadinessContractVersion),
+                 mfrmr_readiness_contract_version())) {
+    stop("The supplied diagnostics lack the current readiness contract. Recompute them with diagnose_mfrm(fit, ...).",
+         call. = FALSE)
+  }
   if (!isTRUE(mfrm_results_native_diagnostics_match(fit, diagnostics))) {
     stop(
       "fit/diagnostics mismatch in `", helper, "`: the supplied diagnostics ",
@@ -662,7 +724,8 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL,
         "diagnostics", "ok",
         paste0(
           "Computed automatically with residual_pca = 'none'. ",
-          "The broader diagnostic_mode route was unavailable: ", first$message
+          "The broader diagnostic_mode route was unavailable: ",
+          mfrm_results_failure_detail(first)
         )
       )
     ))
@@ -673,7 +736,10 @@ mfrm_results_diagnose <- function(fit, diagnostics = NULL,
     identity = "not_applicable",
     status = mfrm_results_status_row(
       "diagnostics", "not_available",
-      paste0("Automatic diagnostics failed: ", second$message)
+      paste0(
+        "Automatic diagnostics were unavailable: ",
+        mfrm_results_failure_detail(second)
+      )
     )
   )
 }
@@ -751,7 +817,11 @@ mfrm_results_add_component <- function(name, result, components, tables, status,
   } else {
     status <- rbind(
       status,
-      mfrm_results_status_row(name, "not_available", result$message)
+      mfrm_results_status_row(
+        name,
+        "not_available",
+        mfrm_results_failure_detail(result)
+      )
     )
   }
   list(components = components, tables = tables, status = status)
@@ -830,10 +900,11 @@ mfrm_results_misfit_review_bundle <- function(fit, diagnostics, top_n = 50L) {
 mfrm_results_linking_review_bundle <- function(fit) {
   anchor_review <- fit$config$anchor_review %||% NULL
   if (!inherits(anchor_review, "mfrm_anchor_review")) {
-    stop(
-      "Anchor-review metadata is not available in this fit. ",
-      "Run review_mfrm_anchors() directly with the source data, or refit with fit_mfrm().",
-      call. = FALSE
+    stop_mfrm_results_unavailable(
+      paste0(
+        "Anchor-review metadata is not available in this fit. ",
+        "Run review_mfrm_anchors() directly with the source data, or refit with fit_mfrm()."
+      )
     )
   }
 
@@ -1192,6 +1263,10 @@ mfrm_results_triage <- function(status, plot_map, components, table_index,
     )
   }
   add_readiness_domain(
+    "Numerical", "Numerical fit", "pass", "numerical_readiness_pass",
+    "numerical_fit_review_required"
+  )
+  add_readiness_domain(
     "Data", "Data review", "pass", "data_readiness_pass",
     "data_review_required"
   )
@@ -1466,6 +1541,29 @@ mfrm_results_next_actions <- function(status, plot_map, components, table_index,
     "summary(res)",
     "Confirms input mode, model, method, section status, table coverage, and available figures."
   )
+  numerical_review <- nrow(triage) > 0L &&
+    all(c("Area", "Severity", "Detail") %in% names(triage)) &&
+    any(
+      triage$Area %in% "Numerical fit" &
+        triage$Severity %in% c("not_available", "review"),
+      na.rm = TRUE
+    )
+  if (isTRUE(numerical_review)) {
+    numerical_row <- triage[
+      triage$Area %in% "Numerical fit" &
+        triage$Severity %in% c("not_available", "review"),
+      ,
+      drop = FALSE
+    ][1L, , drop = FALSE]
+    add(
+      1L,
+      "Numerical fit",
+      "Keep the fit review-only and resolve the numerical convergence issue.",
+      "summary(res$fit)$next_actions; summary(res)$readiness",
+      as.character(numerical_row$Detail[1L] %||%
+        "The numerical-readiness criteria were not satisfied.")
+    )
+  }
   if (nrow(plot_map) > 0L && any(plot_map$Type %in% "wright" & plot_map$Available %in% TRUE)) {
     wright_ready <- !"InterpretationReady" %in% names(plot_map) || any(
       plot_map$Type %in% "wright" &
@@ -1677,7 +1775,14 @@ mfrm_results_build <- function(ctx, include) {
       tables <- c(tables, mfrm_results_flatten_data_frames(fit_sum$value, "fit_summary"))
       status <- rbind(status, mfrm_results_status_row("fit_summary", "ok", "Available."))
     } else {
-      status <- rbind(status, mfrm_results_status_row("fit_summary", "not_available", fit_sum$message))
+      status <- rbind(
+        status,
+        mfrm_results_status_row(
+          "fit_summary",
+          "not_available",
+          mfrm_results_failure_detail(fit_sum)
+        )
+      )
     }
   }
 
@@ -1688,7 +1793,14 @@ mfrm_results_build <- function(ctx, include) {
       tables <- c(tables, mfrm_results_flatten_data_frames(diag_sum$value, "diagnostics_summary"))
       status <- rbind(status, mfrm_results_status_row("diagnostics_summary", "ok", "Available."))
     } else {
-      status <- rbind(status, mfrm_results_status_row("diagnostics_summary", "not_available", diag_sum$message))
+      status <- rbind(
+        status,
+        mfrm_results_status_row(
+          "diagnostics_summary",
+          "not_available",
+          mfrm_results_failure_detail(diag_sum)
+        )
+      )
     }
   }
 
@@ -1838,6 +1950,7 @@ mfrm_results_build <- function(ctx, include) {
     fit = fit,
     fit_summary = summaries$fit %||% NULL
   )
+  fit_readiness_record <- mfrmr_get_readiness_record(fit)
   status <- mfrm_results_add_readiness_status(status, readiness)
 
   table_index <- mfrm_results_table_index(tables)
@@ -1880,6 +1993,18 @@ mfrm_results_build <- function(ctx, include) {
     table_index = table_index,
     plot_map = plot_map,
     readiness = readiness,
+    fit_readiness = as.data.frame(
+      fit_readiness_record$fit, stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      fit_readiness_record$components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      fit_readiness_record$parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     triage = triage,
     next_actions = next_actions,
     status = status,
@@ -2048,7 +2173,7 @@ mfrm_report_section_plan <- function(x, sx, style) {
   add(
     "Fit, separation, and precision",
     mfrm_report_component_status(x, "precision_review", available = "review"),
-    "Precision review keeps fit size, standardized fit, separation, and reliability in separate lanes.",
+    "Precision review keeps fit size, standardized fit, separation, and reliability as separate quantities.",
     "summary(res$components$precision_review); precision_review_report(fit, diagnostics)",
     "Use for cautious wording about fit, precision, and separation.",
     "Do not collapse fit, separation, reliability, and ZSTD into one pass/fail rule."
@@ -3122,7 +3247,7 @@ mfrm_report_precision_reporting_templates <- function(style,
       " under the Wright/Masters G/R/H convention."
     ),
     "diagnostics$reliability$Strata; precision_basis",
-    "Use strata as a precision-spread summary; do not turn it into an independent quality gate.",
+    "Use strata as a precision-spread summary; do not turn it into an independent quality criterion.",
     "report$precision_basis"
   )
 
@@ -4576,6 +4701,9 @@ mfrm_report_markdown <- function(report) {
     c(
       paste0("# ", report$title),
       "",
+      "## Fit Decision",
+      mfrm_report_markdown_table(report$decision, max_rows = 1L),
+      "",
       "## Narrative",
       narrative_lines,
       "",
@@ -4722,10 +4850,30 @@ mfrm_report_build <- function(x, style) {
     report_index = report_index,
     template_index = template_index
   )
+  decision <- as.data.frame(
+    sx$decision %||% mfrm_fit_decision_summary(
+      x$fit_readiness %||% data.frame(),
+      next_action = first_screen$NextAction[1L] %||% NA_character_
+    ),
+    stringsAsFactors = FALSE
+  )
   narrative <- mfrm_report_narrative(x, sx, style, sections)
   actions <- mfrm_report_action_items(sx, sections, style)
   tables <- list(
     overview = sx$overview,
+    decision = decision,
+    fit_readiness = as.data.frame(
+      x$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      x$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      x$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     first_screen = first_screen,
     report_index = report_index,
     template_index = template_index,
@@ -4765,6 +4913,19 @@ mfrm_report_build <- function(x, style) {
     title = mfrm_report_title(style),
     source_include = as.character(x$include %||% character(0)),
     summary = sx,
+    decision = decision,
+    fit_readiness = as.data.frame(
+      x$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      x$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      x$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     first_screen = first_screen,
     report_index = report_index,
     template_index = template_index,
@@ -4960,6 +5121,25 @@ summary.mfrm_report <- function(object, top_n = 8,
 
   out <- list(
     overview = overview,
+    decision = as.data.frame(
+      object$decision %||% mfrm_fit_decision_summary(
+        object$fit_readiness %||% data.frame(),
+        next_action = overview$FirstAction[1L] %||% NA_character_
+      ),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness = as.data.frame(
+      object$fit_readiness %||% data.frame(), stringsAsFactors = FALSE
+    ),
+    fit_readiness_components = as.data.frame(
+      object$fit_readiness_components %||% data.frame(),
+      stringsAsFactors = FALSE
+    ),
+    fit_readiness_parameters = as.data.frame(
+      object$fit_readiness_parameters %||%
+        mfrmr_readiness_empty_parameter_table(),
+      stringsAsFactors = FALSE
+    ),
     first_screen = first_rows,
     status_counts = status_counts,
     immediate_actions = immediate_actions,
@@ -4991,6 +5171,7 @@ mfrm_report_html_tables <- function(report) {
   sx <- summary(report)
   summary_tables <- list(
     report_summary_overview = sx$overview,
+    report_summary_decision = sx$decision,
     report_summary_first_screen = sx$first_screen,
     report_summary_status_counts = sx$status_counts,
     report_summary_immediate_actions = sx$immediate_actions,
@@ -5039,6 +5220,10 @@ mfrm_report_html <- function(report) {
 #' linking/anchor reporting templates, ZSTD-convention table,
 #' evidence-boundary table, next-action table, and optional Markdown or HTML
 #' report.
+#' The object and its table list retain the exact source-fit
+#' `fit_readiness*` tables from `mfrm_results()`; report synthesis does not
+#' reinterpret or upgrade them. The `decision` table translates that same
+#' record into interpretation, formal-inference, reason, and next-action text.
 #'
 #' @param x An [mfrm_results()] object.
 #' @param style Report emphasis. `"qc"` is the default first-screen report.
@@ -5107,7 +5292,7 @@ mfrm_report_html <- function(report) {
 #' `bias_reporting_templates` table is
 #' available when the source result was built with `include = "bias"` and keeps
 #' facet-level screens, interaction-bias contrasts, DFF follow-up, and fairness
-#' conclusions in separate lanes. The `misfit_reporting_templates` table is
+#' conclusions in separate sections. The `misfit_reporting_templates` table is
 #' available when the source result was built with `include = "misfit_review"`
 #' and keeps unexpected responses, displacement, pathway-map evidence, and
 #' case-review actions separate. The `linking_reporting_templates` table is
@@ -5125,28 +5310,25 @@ mfrm_report_html <- function(report) {
 #'   [mfrmr_output_guide()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
-#' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' results <- mfrm_results(fit)
 #'
-#' report <- mfrm_report(res, style = "qc")
-#' summary(report)
-#' report$first_screen
-#' report$report_index[, c("Area", "Readiness", "PrimaryTable",
-#'                         "TemplateTable", "PlotRoute")]
-#' report$template_index[, c("Area", "Topic", "BoundaryType",
-#'                           "ClaimStrength", "EvidenceRoute")]
-#'
-#' # Open detailed evidence only after the index points to it.
-#' fit_primary <- report$report_index$PrimaryTable[
-#'   report$report_index$Area == "Fit"
-#' ][1]
-#' report$tables[[fit_primary]]
-#'
-#' mfrm_report(res, output = "markdown")
-#' mfrm_report(res, output = "html")
+#' report <- mfrm_report(results)
+#' summary(report, view = "reader")
+#' report$first_screen[, c("Area", "Status", "MainIssue", "NextAction")]
 #' }
 #' @export
 mfrm_report <- function(x,
@@ -5310,7 +5492,11 @@ mfrm_results_export_summary_tables <- function(x) {
   )
   tables <- list(
     overview = sx$overview,
+    decision = sx$decision,
     status = sx$status,
+    fit_readiness = sx$fit_readiness,
+    fit_readiness_components = sx$fit_readiness_components,
+    fit_readiness_parameters = sx$fit_readiness_parameters,
     component_index = sx$component_index,
     table_index = as.data.frame(x$table_index %||% sx$table_index, stringsAsFactors = FALSE),
     plot_map = sx$plot_map,
@@ -5425,18 +5611,29 @@ mfrm_results_export_add_written <- function(written_files, component, format, pa
 #'   [export_mfrm_bundle()], [export_summary_appendix()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:6], , drop = FALSE]
-#' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' res <- mfrm_results(fit, include = c("fit", "diagnostics", "tables"))
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' results <- mfrm_results(fit)
 #'
 #' exported <- export_mfrm_results(
-#'   res,
+#'   results,
 #'   output_dir = tempdir(),
 #'   prefix = "mfrmr_results_example",
 #'   preset = "starter",
-#'   overwrite = TRUE
+#'   overwrite = TRUE,
+#'   acknowledge_sensitive = TRUE # The packaged example is synthetic.
 #' )
 #' exported$summary[, c("FilesWritten", "CsvWritten", "HtmlWritten")]
 #' }
@@ -5868,7 +6065,12 @@ export_mfrm_results <- function(x,
 #' @section What to inspect first:
 #' Start with `summary(res)`. The most useful fields are:
 #' - `overview`: input mode, model, method, table count, and plot-route count
-#' - `readiness`: separate analysis and plot-interpretation gates
+#' - `decision`: plain-language interpretation, formal-inference, reason, and
+#'   next-action text derived from the source-fit readiness record
+#' - `readiness`: separate analysis and plot-interpretation checks
+#' - `fit_readiness`, `fit_readiness_components`, and
+#'   `fit_readiness_parameters`: the exact source-fit readiness record retained
+#'   separately from the workflow-level `readiness` table
 #' - `triage`: first-screen signals ordered by unavailable/review/info/ok
 #' - `status`: which sections were available, skipped, or unsupported
 #' - `plot_map`: supported plot routes, availability, and interpretation status
@@ -5956,36 +6158,26 @@ export_mfrm_results <- function(x,
 #'   [launch_mfrmr_viewer()], [mfrmr_output_guide()]
 #' @examples
 #' \donttest{
-#' toy <- load_mfrmr_data("example_core")
-#' toy_small <- toy[toy$Person %in% unique(toy$Person)[1:8], , drop = FALSE]
+#' ratings <- load_mfrmr_data("example_operational")
+#' fit <- fit_mfrm(
+#'   data = ratings,
+#'   person = "Person",
+#'   facets = c("Rater", "Criterion"),
+#'   score = "Score",
+#'   rating_min = 1,
+#'   rating_max = 4,
+#'   method = "MML",
+#'   model = "RSM",
+#'   quad_points = 7,
+#'   maxit = 30,
+#'   reltol = 1e-11
+#' )
+#' results <- mfrm_results(fit)
 #'
-#' # JML keeps the help example fast; use the recommended workflow settings
-#' # for final analyses.
-#' fit <- fit_mfrm(toy_small, "Person", c("Rater", "Criterion"), "Score",
-#'                 method = "JML", maxit = 30)
-#' res <- mfrm_results(fit)
-#'
-#' wright <- plot(res, draw = FALSE)
-#' wright$name
-#' fit_bundle <- plot(res, type = "fit", draw = FALSE)
-#'
-#' sx <- summary(res)
-#' sx$overview
-#' sx$readiness
-#' sx$triage
-#' sx$plot_map
-#' sx$next_actions
-#' mfrm_results(fit, include = "validation", output = "summary")$status
-#'
-#' plot(res, type = "qc", draw = FALSE)
-#'
-#' # Direct data-frame input is available only after selecting unambiguous
-#' # measurement columns. Extra study/group columns require an explicit fit.
-#' mfrm_results(
-#'   toy_small[, c("Person", "Rater", "Criterion", "Score")],
-#'   include = c("fit", "diagnostics"),
-#'   output = "summary"
-#' )$mapping
+#' results_review <- summary(results, view = "brief")
+#' results_review$decision
+#' results_review$next_actions
+#' plot(results, type = "wright", draw = FALSE)$name
 #' }
 #' @export
 mfrm_results <- function(fit,
@@ -6134,11 +6326,11 @@ mfrm_results_render_code <- function(person, facets, score, weight, include, out
 #' columns, prints reproducible code for the selected roles, then fits the
 #' documented `RSM`/`MML` starting route before calling
 #' [mfrm_results()]. Use explicit [fit_mfrm()] calls in scripts, Quarto
-#' documents, tests, and reproducible analyses.
+#' documents, batch workflows, and reproducible analyses.
 #'
 #' @section Why this helper is opt-in:
 #' Interactive prompts are useful at the console but are unsafe defaults for
-#' reproducible analysis, package checks, batch scripts, and manuscripts. The
+#' reproducible analysis, unattended workflows, and manuscripts. The
 #' helper therefore prints replay code and leaves the scripted route explicit.
 #'
 #' @return The selected [mfrm_results()] output.
@@ -6240,18 +6432,49 @@ summary.mfrm_results <- function(object, digits = 3, top_n = 10,
       fit_summary = object$summaries$fit %||% NULL
     )
   }
+  fit_readiness_record <- mfrmr_get_readiness_record(fit)
+  fit_readiness <- as.data.frame(
+    object$fit_readiness %||% fit_readiness_record$fit,
+    stringsAsFactors = FALSE
+  )
+  fit_readiness_components <- as.data.frame(
+    object$fit_readiness_components %||% fit_readiness_record$components %||%
+      data.frame(),
+    stringsAsFactors = FALSE
+  )
+  fit_readiness_parameters <- as.data.frame(
+    object$fit_readiness_parameters %||% fit_readiness_record$parameters %||%
+      mfrmr_readiness_empty_parameter_table(),
+    stringsAsFactors = FALSE
+  )
   triage <- as.data.frame(object$triage %||% data.frame(), stringsAsFactors = FALSE)
   next_actions <- as.data.frame(object$next_actions %||% data.frame(), stringsAsFactors = FALSE)
   mapping <- mfrm_results_mapping_table(object$input$mapping %||% NULL)
   reproducible_code <- mfrm_results_code_table(object$input$reproducible_code %||% "")
+  next_action <- if (
+    nrow(next_actions) > 0L && "RecommendedAction" %in% names(next_actions)
+  ) {
+    as.character(next_actions$RecommendedAction[1L])
+  } else if (nrow(next_actions) > 0L && "Action" %in% names(next_actions)) {
+    as.character(next_actions$Action[1L])
+  } else {
+    NA_character_
+  }
+  decision <- mfrm_fit_decision_summary(
+    fit_readiness, next_action = next_action
+  )
 
   out <- list(
     overview = round_numeric_df(overview, digits = digits),
+    decision = decision,
     status = status,
     component_index = component_index,
     table_index = table_index,
     plot_map = plot_map,
     readiness = readiness,
+    fit_readiness = fit_readiness,
+    fit_readiness_components = fit_readiness_components,
+    fit_readiness_parameters = fit_readiness_parameters,
     triage = triage,
     next_actions = next_actions,
     mapping = mapping,
@@ -6272,6 +6495,7 @@ print.summary.mfrm_results <- function(x, ...) {
     cat("\nOverview\n")
     print(as.data.frame(x$overview), row.names = FALSE)
   }
+  print_fit_decision_section(x$decision)
   if (!brief &&
       !is.null(x$status) && nrow(x$status) > 0L) {
     cat("\nSection status\n")
@@ -6377,6 +6601,7 @@ print.mfrm_report <- function(x, ...) {
   if (length(x$source_include %||% character(0)) > 0L) {
     cat("  Source include: ", paste(x$source_include, collapse = ", "), "\n", sep = "")
   }
+  print_fit_decision_section(x$decision)
   cat("  Read order: summary(report) -> report$first_screen -> report$report_index -> report$template_index\n", sep = "")
   first_screen <- as.data.frame(x$first_screen %||% data.frame(), stringsAsFactors = FALSE)
   if (nrow(first_screen) > 0L) {
@@ -6420,6 +6645,7 @@ print.summary.mfrm_report <- function(x, ...) {
     cat("\nOverview\n")
     print(as.data.frame(x$overview), row.names = FALSE)
   }
+  print_fit_decision_section(x$decision)
   if (!is.null(x$first_screen) && nrow(x$first_screen) > 0L) {
     cat("\nFirst screen\n")
     print(as.data.frame(x$first_screen), row.names = FALSE)

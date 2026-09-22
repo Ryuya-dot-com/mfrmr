@@ -1,0 +1,4 @@
+"Cell","Model","Persons","Exposure","Stage","Planned","Attempted","Errors","Warnings","Ready","NumericalConflicts","Seconds","SecondaryErrors","TotalSeconds","AvailableMin","CoverageMin","CoverageMax","SERatioMin","SERatioMax","MaxAbsStandardizedBias","Supported","Review","Concern","PrimaryDisposition","MechanismDisposition"
+1,"RSM",80,3,"confirmation",10000,10000,0,2,9998,0,2848.25100000002,0,2857.98,9998,0.946689337867573,0.951990398079616,0.991581793351947,1.00422726623774,0.0721433077170474,11,0,0,"supported","supported"
+5,"PCM",80,3,"confirmation",10000,10000,0,1,9999,0,3303.12900000001,0,3312.068,9999,0.948394839483948,0.956495649564956,0.982831325745389,1.00738252010583,0.0558719850588725,13,0,0,"supported","supported"
+7,"PCM",320,3,"confirmation",10000,10000,0,9,9991,0,7722.07900000003,0,7747.47200000003,9991,0.947953157842058,0.95175658092283,0.991543665583721,1.00152656093846,0.0290660603853714,13,0,0,"supported","supported"

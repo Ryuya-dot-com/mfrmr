@@ -46,12 +46,61 @@ evidence.
 }
 }
 
+\section{Keep anchor roles separate}{
+
+\itemize{
+\item A common-element or common-rating link is observed overlap in the design.
+\item \code{anchors} are direct equality constraints on selected parameter values.
+\item \code{group_anchors} constrain declared group means and require an externally
+defensible target or equal-mean assumption.
+\item \code{\link[=make_anchor_table]{make_anchor_table()}} exports candidate direct constraints mechanically;
+by default it requires a current inference-ready source fit, but it does
+not select invariant elements. \code{readiness_policy = "review"} is for
+review-only extraction, not anchor reuse.
+}
+
+Constraint-based coordinate transfer does not create empirical overlap.
+Before reuse, also verify consistent model/score/orientation/population
+conventions, cross-run element identity, and the relevant assignment
+connectedness. \code{\link[=review_mfrm_anchors]{review_mfrm_anchors()}} checks syntax and receiving-data
+support, not those substantive assumptions.
+}
+
+\section{Design the link, not only the anchor count}{
+
+There is no universal adequate anchor count or percentage. Linking quality
+also depends on where overlap occurs, whether links are distributed or rely
+on one critical bridge, the rating workload and coverage, and model--data
+fit within the linking set. Inspect both Rater-centered and Person/task-
+centered assignment graphs when the design is sparse. The package's
+five-element \code{LinkSupportAdequate} screen is therefore a local warning, not
+a design recommendation or proof of a common scale.
+
+Fixed anchor values also carry uncertainty from their source calibration.
+Current anchor, drift, and chain summaries do not propagate all source-fit,
+offset, or cross-fit covariance. Compare substantively defensible anchor
+sets and report sensitivity when conclusions depend on the selected set.
+}
+
+\section{Drift and chain inference boundary}{
+
+\code{\link[=detect_anchor_drift]{detect_anchor_drift()}} and \code{\link[=build_equating_chain]{build_equating_chain()}} currently estimate one
+pooled offset across all selected common elements and facets. Their
+element-level SE ratios omit estimated-offset uncertainty and cross-fit
+covariance, and chain output does not propagate uncertainty across adjacent
+links. \code{Offset_SD} is residual spread, not an offset SE. Treat flags,
+support counts, and cumulative offsets as review screens; when a common
+shift across facet blocks is not defensible, analyze one coherent linking
+facet at a time.
+}
+
 \section{Which helper answers which task}{
 
 \describe{
 \item{\code{\link[=subset_connectivity_report]{subset_connectivity_report()}}}{Summarizes connected subsets,
 bottleneck facets, and design-matrix coverage.}
-\item{\code{\link[=make_anchor_table]{make_anchor_table()}}}{Extracts reusable anchor candidates from a fit.}
+\item{\code{\link[=make_anchor_table]{make_anchor_table()}}}{Extracts candidate direct-anchor values from a
+fit without certifying them for reuse.}
 \item{\code{\link[=anchor_to_baseline]{anchor_to_baseline()}}}{Anchors new raw data to a baseline fit and
 returns anchored diagnostics plus a consistency check against the baseline
 scale.}
@@ -71,11 +120,16 @@ because their uncertainty is conditional on baseline anchors.}
 
 \itemize{
 \item Check connectedness before interpreting subgroup or wave differences.
-\item Use DFF outputs as screening results when common-scale linking is weak.
+\item Use \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} for assignment/co-observation connectedness.
+Agreement, severity-direction, and halo networks describe score relations;
+they do not establish an empirical link or a common measurement scale.
+\item Use residual and refit DFF outputs as screening results. Even with an
+adequate link, refit SEs condition on baseline anchors and omit their
+uncertainty and cross-refit covariance; formal inference remains unavailable.
 \item Always name the facet, facet level, and group pair involved in a DFF
 contrast. A generic "DIF exists" statement is not interpretable in a
 many-facet design.
-\item Residual and refit DFF classifications are screening labels in 0.2.2;
+\item Residual and refit DFF classifications are currently screening labels;
 current refit output does not assign ETS A/B/C labels.
 \item Treat drift flags as prompts for review, not automatic evidence that an
 anchor must be removed.
@@ -136,4 +190,23 @@ head(dff$dif_table[, c("Level", "Group1", "Group2",
                        "Classification", "ClassificationSystem")])
 }
 
+}
+\references{
+Myford, C. M., & Wolfe, E. W. (2000). Strengthening the ties that bind:
+Improving the linking network in sparsely connected rating designs.
+\emph{ETS Research Report Series}, 2000(1).
+\doi{10.1002/j.2333-8504.2000.tb01832.x}
+
+Uto, M. (2021). Accuracy of performance-test linking based on a many-facet
+Rasch model. \emph{Behavior Research Methods}, 53(4), 1440--1454.
+\doi{10.3758/s13428-020-01498-x}
+
+Wind, S. A., & Jones, E. (2018). The stabilizing influences of linking set
+size and model--data fit in sparse rater-mediated assessment networks.
+\emph{Educational and Psychological Measurement}, 78(4), 679--707.
+\doi{10.1177/0013164417703733}
+
+Robitzsch, A. (2024). Bias and linking error in fixed item parameter
+calibration. \emph{AppliedMath}, 4(3), 1181--1191.
+\doi{10.3390/appliedmath4030063}
 }

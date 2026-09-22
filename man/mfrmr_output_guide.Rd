@@ -7,7 +7,8 @@
 mfrmr_output_guide(
   scope = c("all", "public", "beginner", "psychometric", "entry", "viewer", "binary",
     "tables", "reports", "reviews", "bundles", "exports", "compatibility", "gpcm",
-    "simulation", "linking", "network", "response_time", "facets", "conquest", "r")
+    "calibration", "simulation", "linking", "network", "response_time", "facets",
+    "conquest", "r")
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ local-viewer routes built around \code{mfrm_results(include = ...)}. \code{"bina
 returns the two-category person-item Rasch route and checks. Other values
 filter to one output family or to bounded-\code{GPCM}-relevant routes.
 \code{"linking"} returns anchor, drift, and equating route rows.
+\code{"calibration"} returns the portable fixed-calibration lifecycle and
+artifact-only scoring route.
 \code{"simulation"} and \code{"network"} return advanced design-review rows.
 \code{"response_time"} returns descriptive response-time QC rows.
 \code{"facets"}, \code{"conquest"}, and \code{"r"} return user-pathway rows for people
@@ -65,7 +68,8 @@ Naming convention used by the guide:
 Use \code{mfrmr_output_guide("public")} or
 \code{mfrmr_output_guide("beginner")} for the shortest top-level API map:
 an explicit \code{\link[=describe_mfrm_data]{describe_mfrm_data()}} check and \code{\link[=fit_mfrm]{fit_mfrm()}} MML fit, the lightweight fit summary, the
-comprehensive FACETS-organized summary, the required native Wright map
+comprehensive measurement review (whose historical profile name is
+\code{"facets"}; no FACETS software knowledge or installation is required), the native Wright map
 with SE/CI, optional FACETS-style Wright and person-inclusive Infit views,
 and finally report/export. Use \code{mfrmr_output_guide("entry")} when you
 specifically need alternative first-screen creation routes, including
@@ -90,24 +94,12 @@ and the table that explains how out-of-scope routes are handled.
 }
 
 \examples{
-public <- mfrmr_output_guide("public")
-public[, c("Question", "APILayer", "ObjectRole", "MainFunction")]
+beginner <- mfrmr_output_guide("beginner")
+beginner[, c("Question", "MainFunction", "NextStep")]
 
-entry <- mfrmr_output_guide("entry")
-entry[, c("Question", "Lifecycle", "UserLevel", "MainFunction")]
-
-reviews <- mfrmr_output_guide("reviews")
-reviews[, c("Question", "MainFunction", "UseWhen")]
-
-mfrmr_output_guide("gpcm")[, c("Question", "MainFunction", "GPCMStatus")]
-mfrmr_output_guide("simulation")[, c("Question", "Lifecycle")]
-mfrmr_output_guide("linking")[, c("Question", "MainFunction")]
-mfrmr_output_guide("facets")[, c("Question", "MainFunction")]
-mfrmr_output_guide("binary")[, c("Question", "MainFunction")]
-mfrmr_output_guide("viewer")[, c("Question", "MainFunction")]
-mfrmr_output_guide("response_time")[, c("Question", "MainFunction")]
-mfrmr_output_guide("beginner")[, c("Question", "MainFunction")]
-mfrmr_output_guide("psychometric")[, c("Question", "DecisionBoundary")]
+# Ask for a specialist map only when that question arises.
+linking <- mfrmr_output_guide("linking")
+linking[, c("Question", "MainFunction", "UseWhen")]
 }
 \concept{GPCM boundaries}
 \concept{reporting workflow}

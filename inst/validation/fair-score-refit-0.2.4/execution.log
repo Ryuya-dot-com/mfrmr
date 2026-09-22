@@ -1,0 +1,187 @@
+RSM 1 error:  
+RSM 2 error:  
+RSM 3 error:  
+RSM 4 error:  
+RSM 5 error:  
+RSM 6 error:  
+RSM 7 error:  
+RSM 8 error:  
+RSM 9 error:  
+RSM 10 error:  
+RSM 11 error:  
+RSM 12 error:  
+RSM 13 error:  
+RSM 14 error:  
+RSM 15 error:  
+RSM 16 error:  
+RSM 17 error:  
+RSM 18 error:  
+RSM 19 error:  
+RSM 20 error:  
+PCM 1 error:  
+PCM 2 error:  
+PCM 3 error:  
+PCM 4 error:  
+PCM 5 error:  
+PCM 6 error:  
+PCM 7 error:  
+PCM 8 error:  
+PCM 9 error:  
+PCM 10 error:  
+PCM 11 error:  
+PCM 12 error:  
+PCM 13 error:  
+PCM 14 error:  
+PCM 15 error:  
+PCM 16 error:  
+PCM 17 error:  
+PCM 18 error:  
+PCM 19 error:  
+PCM 20 error:  
+                                            Model       Target
+PCM.Criterion:C1.conditional_measure          PCM Criterion:C1
+RSM.Criterion:C1.conditional_measure          RSM Criterion:C1
+PCM.Criterion:C2.conditional_measure          PCM Criterion:C2
+RSM.Criterion:C2.conditional_measure          RSM Criterion:C2
+PCM.Rater:R1.conditional_measure              PCM     Rater:R1
+RSM.Rater:R1.conditional_measure              RSM     Rater:R1
+PCM.Rater:R2.conditional_measure              PCM     Rater:R2
+RSM.Rater:R2.conditional_measure              RSM     Rater:R2
+PCM.Rater:R3.conditional_measure              PCM     Rater:R3
+RSM.Rater:R3.conditional_measure              RSM     Rater:R3
+PCM.Criterion:C1.joint_structural_candidate   PCM Criterion:C1
+RSM.Criterion:C1.joint_structural_candidate   RSM Criterion:C1
+PCM.Criterion:C2.joint_structural_candidate   PCM Criterion:C2
+RSM.Criterion:C2.joint_structural_candidate   RSM Criterion:C2
+PCM.Rater:R1.joint_structural_candidate       PCM     Rater:R1
+RSM.Rater:R1.joint_structural_candidate       RSM     Rater:R1
+PCM.Rater:R2.joint_structural_candidate       PCM     Rater:R2
+RSM.Rater:R2.joint_structural_candidate       RSM     Rater:R2
+PCM.Rater:R3.joint_structural_candidate       PCM     Rater:R3
+RSM.Rater:R3.joint_structural_candidate       RSM     Rater:R3
+                                                                Method Assigned
+PCM.Criterion:C1.conditional_measure               conditional_measure       20
+RSM.Criterion:C1.conditional_measure               conditional_measure       20
+PCM.Criterion:C2.conditional_measure               conditional_measure       20
+RSM.Criterion:C2.conditional_measure               conditional_measure       20
+PCM.Rater:R1.conditional_measure                   conditional_measure       20
+RSM.Rater:R1.conditional_measure                   conditional_measure       20
+PCM.Rater:R2.conditional_measure                   conditional_measure       20
+RSM.Rater:R2.conditional_measure                   conditional_measure       20
+PCM.Rater:R3.conditional_measure                   conditional_measure       20
+RSM.Rater:R3.conditional_measure                   conditional_measure       20
+PCM.Criterion:C1.joint_structural_candidate joint_structural_candidate       20
+RSM.Criterion:C1.joint_structural_candidate joint_structural_candidate       20
+PCM.Criterion:C2.joint_structural_candidate joint_structural_candidate       20
+RSM.Criterion:C2.joint_structural_candidate joint_structural_candidate       20
+PCM.Rater:R1.joint_structural_candidate     joint_structural_candidate       20
+RSM.Rater:R1.joint_structural_candidate     joint_structural_candidate       20
+PCM.Rater:R2.joint_structural_candidate     joint_structural_candidate       20
+RSM.Rater:R2.joint_structural_candidate     joint_structural_candidate       20
+PCM.Rater:R3.joint_structural_candidate     joint_structural_candidate       20
+RSM.Rater:R3.joint_structural_candidate     joint_structural_candidate       20
+                                            Available Availability
+PCM.Criterion:C1.conditional_measure               20            1
+RSM.Criterion:C1.conditional_measure               20            1
+PCM.Criterion:C2.conditional_measure               20            1
+RSM.Criterion:C2.conditional_measure               20            1
+PCM.Rater:R1.conditional_measure                   20            1
+RSM.Rater:R1.conditional_measure                   20            1
+PCM.Rater:R2.conditional_measure                   20            1
+RSM.Rater:R2.conditional_measure                   20            1
+PCM.Rater:R3.conditional_measure                   20            1
+RSM.Rater:R3.conditional_measure                   20            1
+PCM.Criterion:C1.joint_structural_candidate        20            1
+RSM.Criterion:C1.joint_structural_candidate        20            1
+PCM.Criterion:C2.joint_structural_candidate        20            1
+RSM.Criterion:C2.joint_structural_candidate        20            1
+PCM.Rater:R1.joint_structural_candidate            20            1
+RSM.Rater:R1.joint_structural_candidate            20            1
+PCM.Rater:R2.joint_structural_candidate            20            1
+RSM.Rater:R2.joint_structural_candidate            20            1
+PCM.Rater:R3.joint_structural_candidate            20            1
+RSM.Rater:R3.joint_structural_candidate            20            1
+                                                     Bias EmpiricalSD
+PCM.Criterion:C1.conditional_measure         0.0056911129  0.03820426
+RSM.Criterion:C1.conditional_measure        -0.0050203055  0.03260055
+PCM.Criterion:C2.conditional_measure         0.0004804229  0.04964913
+RSM.Criterion:C2.conditional_measure         0.0050203055  0.03260055
+PCM.Rater:R1.conditional_measure             0.0049477225  0.06343604
+RSM.Rater:R1.conditional_measure            -0.0148815086  0.06949270
+PCM.Rater:R2.conditional_measure            -0.0104487115  0.04436836
+RSM.Rater:R2.conditional_measure             0.0221811221  0.05101301
+PCM.Rater:R3.conditional_measure             0.0055528592  0.05289382
+RSM.Rater:R3.conditional_measure            -0.0067208521  0.07471770
+PCM.Criterion:C1.joint_structural_candidate  0.0056911129  0.03820426
+RSM.Criterion:C1.joint_structural_candidate -0.0050203055  0.03260055
+PCM.Criterion:C2.joint_structural_candidate  0.0004804229  0.04964913
+RSM.Criterion:C2.joint_structural_candidate  0.0050203055  0.03260055
+PCM.Rater:R1.joint_structural_candidate      0.0049477225  0.06343604
+RSM.Rater:R1.joint_structural_candidate     -0.0148815086  0.06949270
+PCM.Rater:R2.joint_structural_candidate     -0.0104487115  0.04436836
+RSM.Rater:R2.joint_structural_candidate      0.0221811221  0.05101301
+PCM.Rater:R3.joint_structural_candidate      0.0055528592  0.05289382
+RSM.Rater:R3.joint_structural_candidate     -0.0067208521  0.07471770
+                                                 RMSSE   SERatio Coverage
+PCM.Criterion:C1.conditional_measure        0.03417764 0.8946029     0.90
+RSM.Criterion:C1.conditional_measure        0.03703207 1.1359338     0.95
+PCM.Criterion:C2.conditional_measure        0.04240441 0.8540816     0.90
+RSM.Criterion:C2.conditional_measure        0.03703207 1.1359338     0.95
+PCM.Rater:R1.conditional_measure            0.05419475 0.8543211     0.95
+RSM.Rater:R1.conditional_measure            0.05219643 0.7511067     0.90
+PCM.Rater:R2.conditional_measure            0.05525338 1.2453329     0.95
+RSM.Rater:R2.conditional_measure            0.05303344 1.0396060     0.95
+PCM.Rater:R3.conditional_measure            0.05482131 1.0364406     1.00
+RSM.Rater:R3.conditional_measure            0.05280817 0.7067693     0.80
+PCM.Criterion:C1.joint_structural_candidate 0.03456351 0.9047030     0.90
+RSM.Criterion:C1.joint_structural_candidate 0.03634780 1.1149442     0.95
+PCM.Criterion:C2.joint_structural_candidate 0.04288931 0.8638483     0.90
+RSM.Criterion:C2.joint_structural_candidate 0.03634780 1.1149442     0.95
+PCM.Rater:R1.joint_structural_candidate     0.05391768 0.8499535     0.95
+RSM.Rater:R1.joint_structural_candidate     0.05185015 0.7461237     0.90
+PCM.Rater:R2.joint_structural_candidate     0.05521579 1.2444855     0.95
+RSM.Rater:R2.joint_structural_candidate     0.05294895 1.0379498     0.95
+PCM.Rater:R3.joint_structural_candidate     0.05466571 1.0334990     1.00
+RSM.Rater:R3.joint_structural_candidate     0.05265277 0.7046894     0.80
+                                            CoverageLower CoverageUpper
+PCM.Criterion:C1.conditional_measure            0.6830173     0.9876515
+RSM.Criterion:C1.conditional_measure            0.7512672     0.9987349
+PCM.Criterion:C2.conditional_measure            0.6830173     0.9876515
+RSM.Criterion:C2.conditional_measure            0.7512672     0.9987349
+PCM.Rater:R1.conditional_measure                0.7512672     0.9987349
+RSM.Rater:R1.conditional_measure                0.6830173     0.9876515
+PCM.Rater:R2.conditional_measure                0.7512672     0.9987349
+RSM.Rater:R2.conditional_measure                0.7512672     0.9987349
+PCM.Rater:R3.conditional_measure                0.8315665     1.0000000
+RSM.Rater:R3.conditional_measure                0.5633860     0.9426660
+PCM.Criterion:C1.joint_structural_candidate     0.6830173     0.9876515
+RSM.Criterion:C1.joint_structural_candidate     0.7512672     0.9987349
+PCM.Criterion:C2.joint_structural_candidate     0.6830173     0.9876515
+RSM.Criterion:C2.joint_structural_candidate     0.7512672     0.9987349
+PCM.Rater:R1.joint_structural_candidate         0.7512672     0.9987349
+RSM.Rater:R1.joint_structural_candidate         0.6830173     0.9876515
+PCM.Rater:R2.joint_structural_candidate         0.7512672     0.9987349
+RSM.Rater:R2.joint_structural_candidate         0.7512672     0.9987349
+PCM.Rater:R3.joint_structural_candidate         0.8315665     1.0000000
+RSM.Rater:R3.joint_structural_candidate         0.5633860     0.9426660
+                                            MeanWidth CoveredPerAssigned
+PCM.Criterion:C1.conditional_measure        0.1336588               0.90
+RSM.Criterion:C1.conditional_measure        0.1451029               0.95
+PCM.Criterion:C2.conditional_measure        0.1660206               0.90
+RSM.Criterion:C2.conditional_measure        0.1451029               0.95
+PCM.Rater:R1.conditional_measure            0.2122839               0.95
+RSM.Rater:R1.conditional_measure            0.2045221               0.90
+PCM.Rater:R2.conditional_measure            0.2164548               0.95
+RSM.Rater:R2.conditional_measure            0.2077897               0.95
+PCM.Rater:R3.conditional_measure            0.2147597               1.00
+RSM.Rater:R3.conditional_measure            0.2069084               0.80
+PCM.Criterion:C1.joint_structural_candidate 0.1351749               0.90
+RSM.Criterion:C1.joint_structural_candidate 0.1424077               0.95
+PCM.Criterion:C2.joint_structural_candidate 0.1679058               0.90
+RSM.Criterion:C2.joint_structural_candidate 0.1424077               0.95
+PCM.Rater:R1.joint_structural_candidate     0.2111806               0.95
+RSM.Rater:R1.joint_structural_candidate     0.2031551               0.90
+PCM.Rater:R2.joint_structural_candidate     0.2163053               0.95
+RSM.Rater:R2.joint_structural_candidate     0.2074574               0.95
+PCM.Rater:R3.joint_structural_candidate     0.2141403               1.00
+RSM.Rater:R3.joint_structural_candidate     0.2062943               0.80

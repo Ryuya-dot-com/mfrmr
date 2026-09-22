@@ -11,19 +11,29 @@ with a documented bounded `GPCM` extension. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
 
+For GPCM, *bounded* refers to the documented model and workflow scope; it does
+not mean finite parameter box constraints. Unsupported combinations and
+inference states are reported explicitly rather than silently treated as
+ordinary estimates.
+
 The package extends Rasch-family RSM/PCM work with MML, modern diagnostics,
 reproducibility, network review, and reporting support. It is not a general
 FACETS replacement: each `fit_mfrm()` call uses one response-model family and
 one observed score scale, and the current public API does not provide mixed
 response families, multiple independent rating scales, general threshold
-anchoring, or fixed-calibration operational scoring.
+anchoring, or online calibration updates. Portable fixed-calibration artifacts
+are available only for one-scale `RSM`/`PCM` `MML` fits under the fixed
+standard-normal scoring basis. Posterior scoring from an existing fitted
+object is a separate, wider analysis route.
 
 The recommended workflow is:
 
 ```text
 long-format data + describe_mfrm_data()
   -> fit_mfrm(method = "MML")
-  -> summary(profile = "facets")
+  -> print(fit) / summary(fit)$decision
+  -> if ready: summary(profile = "facets")
+     if review/blocked: follow summary(fit)$decision$NextAction
   -> native Wright map with uncertainty
   -> focused diagnostics
   -> report and export
@@ -33,6 +43,15 @@ The native Wright map is the required first fitted-scale figure in this
 workflow. A separate FACETS-style renderer is available when a familiar
 asterisk ruler and labelled category transitions are useful.
 
+The three basic fitted-object methods have deliberately different jobs:
+`print(fit)` is a compact triage view, `summary(fit)` is the canonical
+structured review surface, and `plot(fit, draw = FALSE)` returns reusable plot
+data. The printed `Decision` and structured `summary(fit)$decision` are the
+common first-read for RSM, PCM, and bounded GPCM. All three methods carry the
+same model/readiness basis; fitted-model plots also
+retain a `scale_contract` table so the latent-coordinate and discrimination
+scales are not inferred from axis labels alone.
+
 Package website: <https://ryuya-dot-com.github.io/mfrmr/>
 
 Source code: <https://github.com/Ryuya-dot-com/mfrmr>
@@ -41,6 +60,10 @@ Questions and bug reports:
 <https://github.com/Ryuya-dot-com/mfrmr/issues>
 
 ## Installation
+
+This README describes the `0.2.4.9000` development version. Functions and
+options shown here may differ from an installed release; check
+`packageVersion("mfrmr")` and the help shipped with that installation.
 
 Install the CRAN package with:
 
@@ -61,12 +84,71 @@ remotes::install_github(
 )
 ```
 
-Load the package and list its installed guides:
+Load the package, inspect the six-step beginner route, and list the installed
+guides:
 
 ```r
 library(mfrmr)
+mfrmr_output_guide("beginner")[, c(
+  "Question", "MainFunction", "NextStep"
+)]
 browseVignettes("mfrmr")
 ```
+
+For the shortest end-to-end explanation, open
+`help("mfrmr_workflow_methods", package = "mfrmr")` or
+`vignette("mfrmr-workflow", package = "mfrmr")`. Use
+`help("mfrmr_visual_diagnostics", package = "mfrmr")` when choosing a figure
+and `help("mfrmr_reporting_and_apa", package = "mfrmr")` when moving from a
+reviewed fit to tables and manuscript-draft output.
+
+## Portable fixed calibration
+
+An eligible `RSM` or `PCM` `MML` fit can be converted into a versioned
+calibration artifact, validated, frozen, saved, and applied to new Persons
+without retaining the source fit or training responses:
+
+The following template assumes an eligible `fit`, its original `training_data`,
+and `new_responses` with matching facet labels and score coding. The portable
+calibration vignette below supplies a complete example defining these objects.
+
+```r
+q_review <- mml_quadrature_sensitivity(
+  fit, training_data, quad_points = c(31, 61)
+)
+summary(q_review) # You decide whether the observed movement is acceptable.
+fit_for_calibration <- q_review$fits$q61
+
+draft <- extract_mfrm_calibration(
+  fit_for_calibration, quadrature_review = q_review
+)
+review_mfrm_calibration(draft)
+
+validated <- validate_mfrm_calibration(draft)
+calibration <- freeze_mfrm_calibration(validated)
+save_mfrm_calibration(calibration, "reviewed-calibration.rds")
+
+# This can run in a new R session.
+calibration <- load_mfrm_calibration("reviewed-calibration.rds")
+scores <- score_mfrm_calibration(calibration, new_responses)
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
+```
+
+Use `mfrm_calibration_capabilities()` for the exact portable support envelope,
+and see `vignette("mfrmr-portable-calibration")` for a complete synthetic
+example. See `help("mfrm_calibration_methods", package = "mfrmr")` for the
+artifact display contract and `help("mfrm_calibration_score_methods",
+package = "mfrmr")` for score summaries and plots. Estimated-population and
+latent-regression MML, JML, and bounded GPCM
+remain fitted-object-only routes; they do not create portable calibration
+artifacts in 0.2.4. Artifact scores are posterior EAP values conditional on the
+frozen point calibration and recorded prior. Their intervals exclude
+calibration-parameter uncertainty, and loading validates consistency rather
+than authenticating files from untrusted sources. Review every
+`scored_review` or `not_scored` disposition before using estimates. The score
+plot is a batch-review display, not evidence that the source calibration fits
+or transports to a new population.
 
 ## Data format
 
@@ -93,6 +175,29 @@ ordered categories. Use `NA` for missing responses, or document and recode
 special missing-value codes before fitting. The design need not be fully
 crossed, but it must contain enough links among persons and facet levels to
 support the intended comparisons.
+
+### Response type and frequencies
+
+The current response likelihood is ordered categorical. Binary scores are the
+two-category special case, and RSM, PCM, and bounded GPCM cover ordered
+polytomous scores. Although their category probabilities form a vector that
+sums to one, they are not unordered nominal-response or multinomial-logit
+models. Poisson, negative-binomial, and grouped binomial-trial count responses
+are also outside the current `fit_mfrm()` scope. Integer counts supplied as
+`Score` are interpreted as ordered category codes, not as Poisson or related
+counts.
+
+A positive numeric `weight` weights one row's conditional ordered-category
+likelihood and can represent a defensible row-replication weight. It is not a
+general collapsed-person frequency table. Under MML, powering responses within
+one Person's conditional pattern is not equivalent to replicating a complete
+Person response pattern after marginalization. It also does not change the
+response family or model dependence among repeated ratings. Non-unit
+observation-weight fits are excluded from the common MML information-criterion
+panel and remain review-only for ordinary inference: their SEs and intervals
+have not been qualified for the weighted objective. FACETS has separate `Bn`
+binomial-trial and `P` Poisson response models;
+those are not reproduced by mfrmr's binary ordered-score route.
 
 Each row should represent a distinguishable rating event. Exact duplicate
 Person-by-facet combinations are retained but trigger a warning and a Data
@@ -158,11 +263,16 @@ connected. Without `expected_design`, structural missingness is reported as
 not assessed because an absent row may simply mean that the cell was never
 assigned.
 
-`rating_min` and `rating_max` retain unobserved boundary categories. If an
-intended intermediate category is also unobserved, use `keep_original = TRUE`
-in both `describe_mfrm_data()` and `fit_mfrm()`. Otherwise non-consecutive
-observed scores such as `1, 2, 4, 5` are mapped to a contiguous internal scale;
-always review the reported score map before interpreting steps.
+`rating_min` and `rating_max` retain unobserved boundary categories in the
+data-support review. A boundary gap remains review evidence for the separate
+element-boundary contract; it is not by itself an unsupported free-step
+contrast. If an intended intermediate category is unobserved, use
+`keep_original = TRUE` in both `describe_mfrm_data()` and `fit_mfrm()`. In a
+polytomous fitted ladder, that retained internal gap creates an exact
+adjacent-step recession direction, so fitting stops before optimization.
+Otherwise non-consecutive observed scores such as `1, 2, 4, 5` are mapped to a
+contiguous internal scale; always review the reported score map before
+interpreting steps.
 
 ### 2. Fit the model
 
@@ -183,7 +293,36 @@ fit <- fit_mfrm(
 
 `MML` integrates over the person distribution and returns posterior person
 summaries. The default uses 31 quadrature points. Record that setting and
-examine quadrature sensitivity when the application requires it.
+examine same-data quadrature sensitivity before portable calibration and
+whenever numerical movement could affect a consequential result. Eligible
+fits below 15 points retain raw AIC/BIC/SABIC for screening, and fits at
+15--30 points retain them for review, but automatic deltas, criterion weights,
+preferred-model labels, evidence ratios, and LRT are disabled below 31 points.
+Use 31--60 points as a comparison starting grid and 61 or more as a denser
+sensitivity grid. A close or consequential comparison still requires a
+prespecified common-grid sensitivity check; q>=31 alone is not evidence that
+integration error is negligible.
+
+For the fitted MML model and the same data, request the comparison explicitly.
+`mml_quadrature_sensitivity()` refits each requested grid; `summary(q_review)`
+only summarizes the returned review:
+
+```r
+q_review <- mml_quadrature_sensitivity(
+  fit,
+  data = dat,
+  quad_points = c(31, 61)
+)
+summary(q_review)
+apa_table(q_review)
+```
+
+The review works for RSM, PCM, and bounded GPCM. It reports changes in marginal
+likelihood per Person, measurement coordinates, probabilities, EAP, posterior
+SD, and, when present, relative slopes, raw local-curvature SEs, and population
+SD. The GPCM-specific `gpcm_mml_quadrature_sensitivity()` name remains
+available. Neither route assigns a universal stable/unstable cutoff, makes raw
+slope SEs inferentially eligible, or changes the fit-readiness decision.
 
 Use `model = "PCM", step_facet = "Criterion"` when category steps differ
 across that facet. Choose the model from the scoring design and measurement
@@ -200,6 +339,7 @@ fit_summary <- summary(
   detail = "brief"
 )
 
+fit_summary$decision
 fit_summary$overview
 fit_summary$status
 fit_summary$readiness
@@ -210,7 +350,29 @@ fit_summary$person_overview
 fit_summary$step_overview
 ```
 
-Start with convergence and estimation settings. When optimizer code zero is
+Read `fit_summary$decision` first. It translates the stored readiness contract
+into four practical questions: are the fit-readiness requirements satisfied, has formal precision
+support been evaluated, what evidence prevents formal use, and what should be
+done next. A fit-only summary deliberately returns
+`FormalInference = "No"` even when `InferenceReady = TRUE`, because convergence
+and estimability do not by themselves validate standard errors, confidence
+intervals, or reliability. Evaluate that separate contract with diagnostics:
+
+```r
+diag <- diagnose_mfrm(fit, residual_pca = "none")
+summary(fit, diagnostics = diag)$decision
+# Equivalent precision-aware decision:
+summary(diag)$decision
+```
+
+The decision is a presentation of existing evidence, not a new statistical
+test or an automatic model-selection rule. `FormalInference = "No"` still
+permits explicitly labelled diagnostic inspection, but not formal SE/CI,
+reliability, or significance claims. It does not mean that changing optimizer
+settings until the answer becomes `"Yes"` is appropriate. Follow `NextAction`
+and retain the original reason in reports.
+
+Then review convergence and estimation settings. When optimizer code zero is
 reached before the common terminal-gradient check passes, `fit_mfrm()` makes a
 bounded sequence of warm-started polishing attempts when the requested setting
 is at least as strict as the public default (`reltol <= 1e-9`). It retains the
@@ -227,17 +389,28 @@ checks. Prespecify the estimator and controls before inspecting results. If a
 fit ends with `ConvergenceStatus = "iteration_limit"`, do not interpret or
 compare its estimates. Refit the same data, model, method, anchors, optimizer,
 tolerance, and quadrature rule using the next ceiling in a prespecified
-sequence. Use a result only after `Converged = TRUE`, `InferenceReady = TRUE`,
-and `Numerical = pass`; do not select among runs by coefficient size, fit
-statistics, significance, or agreement with an expected answer. Material
+sequence. Use a result only after `FitReadiness = ready`,
+`InferenceReady = TRUE`, and `Numerical = pass`; do not select among runs by
+coefficient size, fit statistics, significance, or agreement with an expected answer. Material
 differences between separately ready runs indicate numerical instability that
 requires review.
 
-`InferenceReady` is deliberately a numerical status, not a publication
-decision. Require `Numerical = pass`, then inspect the separate Data, Design,
-and Stability rows in `fit_summary$readiness`. A disconnected design or a
-boundary-constant facet level remains a reporting hold even when the optimizer
-gradient is small. In an otherwise supported fit, a Reporting status such as
+`InferenceReady` is deliberately a conservative fit-level first screen, not a
+publication decision. It is `TRUE` only when Input, Estimability, Category,
+Boundary, and Numerical components all pass. Then inspect the separate Design,
+Stability, Diagnostics, and Reporting workflow rows in
+`fit_summary$readiness`. A fit object saved before this versioned record existed
+is labelled `legacy_unknown`; an older `InferenceReady = TRUE` value does not
+make its summaries, results, or plots interpretation-ready. Refit it under the
+current version to establish current readiness. Before optimization, mfrmr now
+checks the estimator-specific constrained RSM/PCM free-coordinate design.
+Exact rank deficiency stops with a structured `mfrmr_estimability_error`;
+optimization cannot turn it into a usable fit. A disconnected design that is
+full rank only under its declared constraints, an MML panel linked through a
+common latent-population assumption rather than shared Persons, or a boundary-
+constant facet level remains a reporting hold or review even when the optimizer
+gradient is small. Inspect `fit$data_review$estimability` for the rank,
+nullity, parameter blocks, and check scope. In an otherwise supported fit, a Reporting status such as
 `ready_for_diagnostics_and_reporting_follow_up` means that fitting succeeded
 and the next diagnostic stage is pending; it does not mean that optimization
 failed or that the result is already manuscript-ready. Plots can still be
@@ -248,7 +421,7 @@ call warns before substantive or cross-subset interpretation. The remaining
 tables describe the fitted scale; they do not create universal acceptance
 thresholds.
 
-### 4. Request the comprehensive FACETS-organized summary
+### 4. Request the comprehensive measurement summary
 
 Use the `facets` profile for the main review:
 
@@ -272,12 +445,12 @@ res$plot_map[, c(
 ```
 
 This profile organizes model information, measures, uncertainty, fit evidence,
-precision, category/step information, and plot routes in a reading order that
-will be familiar to FACETS users. It computes the documented diagnostics when
-they are needed and returns the resulting `mfrm_results` object in
-`facets_summary$results`.
+precision, category/step information, and plot routes in one reading order. No
+experience with FACETS, TAM, or sirt is required. It computes the documented
+diagnostics when they are needed and returns the resulting `mfrm_results`
+object in `facets_summary$results`.
 
-The profile name describes organization, not software execution:
+The historical profile name describes organization, not software execution:
 
 - FACETS is not called;
 - all estimates remain `mfrmr` estimates;
@@ -330,9 +503,12 @@ orientation in the figure caption.
 Set `draw = FALSE` to obtain the fitted coordinates for a custom `ggplot2`,
 Quarto, or accessibility-aware figure.
 
-`top_n = Inf` retains every fitted coordinate. The native text layer remains
-collision-aware, so a dense map may leave some retained points unlabeled;
-the returned plot data and retention table remain the complete record.
+`top_n = Inf` retains and labels every fitted coordinate. The native text layer
+keeps the fitted points fixed, moves only colliding labels, and connects them
+with leader lines; `label_points` records both coordinates. Step thresholds
+share a vertical ladder and are labelled with both the score transition and
+the fitted logit. For genuinely dense maps, use the finite `top_n` compact view
+or a larger output device rather than silently omitting interior labels.
 
 When the fit review diagnoses boundary-separated facet levels and no explicit
 `wright_range` is supplied, the native and FACETS-style renderers use the same
@@ -488,6 +664,44 @@ The separate `type = "pathway"` route displays expected scores and
 dominant-category regions across theta; `type = "fit_pathway"` displays Infit
 or Outfit against the fitted measure.
 
+### Fair Scores and figures without embedded notes
+
+`plot_fair_average()` offers observed-versus-fair (`"scatter"`),
+observed-minus-fair (`"difference"`), and measure-to-score (`"measure"`) views.
+FairM uses mean reference measures; FairZ uses zero reference measures.
+**FairZ is an expected score, not a z-score.** These transformations do not
+average predictions over the observed assignment distribution, and gaps also
+reflect person mix and assignment; they do not by themselves establish bias.
+
+```r
+p_fair <- plot_fair_average(
+  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
+  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
+  show_title = FALSE, show_notes = FALSE, draw = FALSE
+)
+p_fair$data$notes
+p_fair$data$plot_data
+# With ggplot2 installed:
+# as_ggplot(p_fair)
+```
+
+Use `draw = TRUE` for a base-R figure. The returned object retains notes even
+when annotations are hidden. Wright, expected-score pathway, and CCC plots
+also accept `show_title`, `show_notes`, and `preset = "monochrome"`; see
+`help("mfrmr_visual_diagnostics")` for the reusable-data route and display limits.
+
+| Fair-score interval route | What is propagated | Current interpretation |
+| --- | --- | --- |
+| `plot_fair_average(fit, show_ci = TRUE)` for RSM/PCM | Focal measure SE, with thresholds and reference measures fixed | Conditional diagnostic interval |
+| `fair_average_table(fit_gpcm, fair_se = TRUE)` for GPCM-MML | Joint structural covariance, with Person EAP/reference means fixed; non-Person rows only | Structural diagnostic interval |
+
+The table's `fair_se` option does not supply RSM/PCM fair-score SEs. Historical
+`SE`/`ModelBasedSE` columns describe measures, not fair scores. Plot intervals
+carry `CI_Eligible = FALSE`; requested table intervals carry
+`FairCIEligible = FALSE`. Neither finite limits nor a ready fit establishes
+full-refit coverage. Difference-view whiskers also hold the observed mean
+fixed and are not confidence intervals for the observed-minus-fair gap.
+
 ### 8. Build a report and export the results
 
 Start with the brief result summary:
@@ -604,7 +818,8 @@ Within that scope, comparison targets include the population regression
 slope, residual variance, centered item estimates, and case-level EAP
 estimates.
 
-The handoff is:
+The handoff is explicit: mfrmr prepares the analysis files, the user runs
+ConQuest separately, and mfrmr then normalizes the requested exports.
 
 ```r
 # fit_lr must satisfy the documented overlap conditions.
@@ -613,8 +828,8 @@ bundle <- build_conquest_overlap_bundle(
   output_dir = "conquest-overlap"
 )
 
-# Run the generated .cqc file in ConQuest separately, then normalize
-# the four CSV files requested by that command.
+# Run the generated .cqc file in ConQuest separately, then normalize its
+# parameter, regression, covariance, and case-EAP CSV files.
 conquest_tables <- normalize_conquest_overlap_exports(
   bundle,
   parameter_file = "conquest-overlap/conquest_overlap_conquest_parameters.csv",
@@ -623,7 +838,7 @@ conquest_tables <- normalize_conquest_overlap_exports(
   case_file = "conquest-overlap/conquest_overlap_conquest_cases_eap.csv",
   conquest_version = "5.47.5",
   conquest_edition = "demo/free",
-  run_date = "2026-07-23"
+  run_date = Sys.Date()
 )
 
 conquest_review <- review_conquest_overlap(
@@ -637,26 +852,23 @@ conquest_review$attention_items
 
 `mfrmr` does not execute or control ConQuest, and it does not parse arbitrary
 raw ConQuest reports. The user runs ConQuest separately; mfrmr can normalize
-the four native CSV exports requested by its generated command. The comparison
-reports differences and does not declare software equivalence from a fixed
-tolerance.
+the native comparison CSV exports requested by its generated command. The
+review reports coordinate-level differences; it does not declare general
+software equivalence from a single dataset or tolerance.
 
 The generated ConQuest command uses the fitted mfrmr quadrature-point count;
 the bundle records both values. Record the actual ConQuest version, edition,
 and run date during normalization so the external comparison remains
 reproducible.
 
-A public
-[aggregate comparison record](https://github.com/Ryuya-dot-com/mfrmr/blob/main/inst/validation/conquest-mml-overlap-0.2.2.md)
-of a matched 31-node check with ConQuest 5.47.5 is available in the source
-repository. The record is excluded from
-the installed CRAN package and supports only the overlap case stated above;
-identifier-bearing response and case-level files are not included in the
-package.
-
-This route does not cover multidimensional models, arbitrary imported design
-matrices, bounded `GPCM` latent regression, JML latent regression, or the full
-ConQuest plausible-values workflow.
+This public bundle route does not cover multidimensional models, arbitrary
+imported design matrices, bounded `GPCM` latent regression, JML latent
+regression, or the full ConQuest plausible-values workflow. Separately, the
+item-only bounded-GPCM parameterization can be compared only after the response
+kernel, slope grouping, threshold coordinates, latent-scale identification,
+retained rows, and category map have been matched. A result in that restricted
+overlap does not extend automatically to a multifacet ConQuest generalized-item
+design.
 
 The ConQuest overlap bundle is also a controlled analysis bundle. Its long and
 wide response files contain person identifiers and responses; the person-data
@@ -674,7 +886,7 @@ before sharing.
 | Facets | Multiple observed facet roles | The design must remain connected for the intended contrasts |
 | `RSM` | Shared step structure | The common rating-scale assumption must be substantively defensible |
 | `PCM` | Step structure associated with `step_facet` | Specify the step facet explicitly when the default is not intended |
-| Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet` | Not an unrestricted many-facet GPCM implementation |
+| Bounded `GPCM` | Documented slope-aware core with `slope_facet == step_facet`; MML estimates the common scale by default | Not an unrestricted many-facet GPCM implementation |
 | Estimation | `MML` and `JML`/`JMLE` | Estimator choice changes person summaries and residual-fit basis |
 | Latent regression | Conditional-normal, unidimensional MML population model | Not arbitrary ConQuest design-matrix or multidimensional population modeling |
 | Diagnostics | Residual/EAP and strict marginal screening routes | A flag is not a deletion, fairness, or validity decision |
@@ -687,6 +899,108 @@ helper:
 gpcm_capability_matrix()
 vignette("mfrmr-gpcm-scope", package = "mfrmr")
 ```
+
+Free-slope GPCM fits can be estimation-converged while parameter-level
+inference remains review-only. Read `print(fit)`, `summary(fit)$decision`, and
+the slope table's `ParameterStatus` and `PrimaryEstimate` before interpreting
+the finite optimizer trace in `OptimizerEstimate`. `Optimizer*SE` and
+`Optimizer*CI` are diagnostic quantities; ordinary slope SEs and confidence
+intervals are currently unavailable for free slopes (`SEEligible = FALSE`,
+`CIEligible = FALSE`). Convergence or quadrature stability does not change
+that eligibility. The GPCM scope vignette explains each status and the
+appropriate next action.
+
+For MML, the default `gpcm_mml_identification = "free_population"` estimates
+an intercept-only population distribution while relative slopes satisfy a
+geometric-mean-one constraint. The corresponding fixed-latent-SD optimizer
+coordinate is retained in `FixedLatentSDOptimizerEstimate`. Use
+`gpcm_mml_identification = "fixed_standard_normal"` only when a deliberately
+matched legacy or external comparison requires that identification.
+
+The bounded GPCM is an **aligned single-owner relative-slope GPCM**:
+
+$$
+\log\frac{P(Y_o=k)}{P(Y_o=k-1)}
+ = \alpha_{g(o)}\{\eta_o-\tau_{g(o),k}\},
+\qquad \prod_g\alpha_g=1.
+$$
+
+Exactly one facet owns both slopes and steps, because
+`slope_facet == step_facet`. Setting all slopes to one recovers the
+equal-discrimination PCM kernel. This is narrower than the generalized MFRM of
+[Uto and Ueno (2020)](https://doi.org/10.1007/s41237-020-00115-7), whose task
+and rater slopes enter multiplicatively as `alpha_i * alpha_r` and whose step
+owner is stated separately. The current
+criterion-owned and rater-owned fits are therefore separate restricted
+many-facet GPCM strata, not interchangeable fits of the full Uto--Ueno model.
+
+The selected facet receives one slope per level, not one common slope for the
+whole fit. For example, `slope_facet = "Criterion"` estimates a relative slope
+for every criterion; `slope_facet = "Rater"` estimates one for every rater.
+The other facets retain additive location effects but no slope block. Those
+effects are still inside the complete adjacent-category predictor multiplied
+by the selected slope; the current kernel is not a loading-only model with
+unscaled facet intercepts. Criterion and rater slopes cannot be estimated
+simultaneously in this model.
+
+`plot(fit_gpcm, type = "ccc")` and `category_curves_report(fit_gpcm)` retain
+the estimated slope for each step-facet level. These are reference-profile
+curves, however: additive facet main effects and fitted interactions are fixed
+at zero. The native plot facets multiple curve groups instead of overlaying
+unlabelled traces, and both native and ggplot displays state the reference
+profile condition. Inspect `CurveBasis`, `PredictorOffset`, and
+`settings$curve_basis` before interpreting a curve as if it represented a
+particular observed Person-by-facet cell.
+
+For unpenalized JML, all-minimum or all-maximum Person patterns can have an
+unbounded primary ability estimate. A finite adjusted display, when supplied,
+is kept separate from the likelihood-based primary status. The same principle
+applies to any GPCM slope whose boundary status has not been resolved: a finite
+optimizer iterate is not automatically a finite maximum suitable for ordinary
+inference.
+
+PCM and bounded GPCM can be reviewed on the same data with
+`compare_mfrm(fit_pcm, fit_gpcm)`, `build_weighting_review(fit_pcm, fit_gpcm)`,
+or `build_model_choice_review(..., run_weighting_review = TRUE)`. Selectable
+information-criterion ranking requires comparable, inference-ready MML fits
+on a common quadrature grid with at least 31 points. Although PCM is the
+all-unit-slope reduction of the aligned GPCM kernel, the current automatic
+nesting contract withholds the PCM-versus-GPCM chi-square LRT and records
+`PCM_in_GPCM_ic_only` instead.
+
+The practical comparison is available without reconstructing the model
+matrices manually. After fitting the same data as `fit_pcm` and `fit_gpcm`
+(see the GPCM scope vignette), use:
+
+```r
+choice <- build_model_choice_review(PCM = fit_pcm, GPCM = fit_gpcm)
+choice$model_roles[, c(
+  "Model", "StepCoordinates", "FreeStepParameters",
+  "SlopeCoordinates", "FreeSlopeParameters",
+  "FitReadiness", "FormalInference", "Interpretation"
+)]
+```
+
+The coordinate columns count reported values; the free-parameter columns also
+apply the fitted constraints. `build_weighting_review()` keeps JML and MML
+evidence separate. Comparable, inference-ready MML fits can contribute
+information criteria, whereas an unpenalized JML likelihood difference is not
+turned into an automatic PCM-versus-GPCM choice.
+
+Cross-software slope values are not automatically matched estimands. FACETS
+does not jointly fit Muraki's free-slope polytomous GPCM. FACETS' reported
+element discrimination is a post-fit diagnostic computed after the Rasch
+measures and does not feed back into the other estimates; it must not be
+treated as a free-GPCM slope estimate
+from `mfrmr`. TAM can estimate GPCM
+slopes through its 2PL/GPCM MML route, but its many-facet fitting route does
+not estimate those slopes. The current `immer` estimation routes provide PCM-
+design and hierarchical-rater references rather than a matched free-GPCM fit.
+Consequently, FACETS and `immer` are appropriate only for documented
+equal-discrimination overlaps or deliberately different-model sensitivity
+checks. A TAM GPCM comparison is numerical only after the response kernel,
+slope grouping, threshold parameterization, latent-scale identification,
+retained rows, category map, and covariance information have been matched.
 
 For strict MML diagnostics, keep the two evidence bases distinct:
 
@@ -710,6 +1024,7 @@ The package includes the following vignettes:
 
 - [End-to-end workflow](vignettes/mfrmr-workflow.Rmd)
 - [MML estimation and marginal-fit diagnostics](vignettes/mfrmr-mml-and-marginal-fit.Rmd)
+- [Portable calibration and fresh-session scoring](vignettes/mfrmr-portable-calibration.Rmd)
 - [Migrating from FACETS](vignettes/mfrmr-facets-migration.Rmd)
 - [Visual diagnostics](vignettes/mfrmr-visual-diagnostics.Rmd)
 - [Reporting and APA-oriented output](vignettes/mfrmr-reporting-and-apa.Rmd)

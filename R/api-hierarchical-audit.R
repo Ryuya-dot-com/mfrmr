@@ -369,7 +369,7 @@ detect_facet_nesting <- function(data, facets, person = NULL,
 #'
 #' @references
 #' Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
-#' Winsteps.com. <https://www.winsteps.com/facets.htm>
+#' Winsteps.com.
 #'
 #' Linacre, J. M. (1994). Sample size and item calibration stability.
 #' *Rasch Measurement Transactions, 7*(4), 328.
@@ -1188,7 +1188,7 @@ compute_facet_design_effect <- function(data, facets, icc_table = NULL,
 #' Brigham Young University). <https://scholarsarchive.byu.edu/etd/6689/>
 #'
 #' Linacre, J. M. (2026). *A User's Guide to FACETS, Version 4.5.0*.
-#' Winsteps.com. <https://www.winsteps.com/facets.htm>
+#' Winsteps.com.
 #'
 #' Kish, L. (1965). *Survey Sampling*. New York: Wiley.
 #'
@@ -1467,7 +1467,7 @@ plot.mfrm_facet_sample_review <- function(x, top_n = NULL,
   thr <- x$thresholds %||% list(sparse = 10, marginal = 30, standard = 50)
   xmax <- max(c(tbl$N, as.numeric(thr$standard), 1), na.rm = TRUE) * 1.1
 
-  old_par <- graphics::par(no.readonly = TRUE)
+  old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(4, max(8, min(18, max(nchar(labels)) * 0.55)), 3, 1))
   graphics::barplot(
@@ -1540,7 +1540,7 @@ plot.mfrm_facet_nesting <- function(x,
   diag(m) <- 1
 
   cols <- grDevices::hcl.colors(20, palette = "Blues 3", rev = TRUE)
-  old_par <- graphics::par(no.readonly = TRUE)
+  old_par <- graphics::par()["mar"]
   on.exit(graphics::par(old_par), add = TRUE)
   graphics::par(mar = c(5, 5, 3, 2))
   graphics::image(

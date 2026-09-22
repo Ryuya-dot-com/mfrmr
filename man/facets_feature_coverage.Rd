@@ -21,6 +21,10 @@ A data.frame with columns:
 \item \code{FACETSReference}
 \item \code{mfrmrRoute}
 \item \code{Status}
+\item \code{SurfaceCoverage}
+\item \code{StatisticalContract}
+\item \code{ValidationEvidence}
+\item \code{OperationalStatus}
 \item \code{Capability}
 \item \code{Limitation}
 \item \code{Alternative}
@@ -51,7 +55,8 @@ plot data over exact FACETS line-printer output.
 The current software reference target is FACETS 64-bit 4.5.1 (July 2026).
 Bibliographic references retain the title and edition of the consulted
 manual rather than silently relabelling a 4.5.0 manual as 4.5.1. External
-numerical validation is a separate evidence contract.
+numerical agreement must be evaluated separately for a matched model and
+estimand.
 
 Status meanings:
 \itemize{
@@ -67,6 +72,20 @@ the documented package scope.
 \item \code{not_targeted}: the feature is tied to FACETS UI, Web/Excel handoff, or
 another external program format and is outside the package scope.
 }
+
+The four contract axes are deliberately independent:
+\itemize{
+\item \code{SurfaceCoverage} records whether a corresponding package surface exists;
+familiar visual grammar belongs only to this axis.
+\item \code{StatisticalContract} records the package-native statistical scope and
+never implies a FACETS-matched estimand.
+\item \code{ValidationEvidence} records whether this table establishes matched
+external numerical evidence. It currently does not; that conclusion
+requires a separate comparison using a matched model and estimand.
+\item \code{OperationalStatus} records route availability. A package route being
+available does not make \code{mfrmr} operationally interchangeable with
+FACETS.
+}
 }
 \examples{
 facets_feature_coverage()
@@ -76,10 +95,8 @@ facets_feature_coverage("not_implemented")
 }
 \references{
 Linacre, J. M. (2026). \emph{A user's guide to FACETS, version 4.5.0}.
-Current FACETS software release:
-\url{https://www.winsteps.com/facets.htm}.
-Output tables - files - plots - graphs:
-\url{https://www.winsteps.com/facetman64/outputtableindex.htm}.
+Winsteps.com. See the guide's output-table index for the documented
+FACETS files, plots, and graphs.
 }
 \seealso{
 \code{\link[=facets_positioning_guide]{facets_positioning_guide()}}, \code{\link[=mfrmr_output_guide]{mfrmr_output_guide()}},

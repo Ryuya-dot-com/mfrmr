@@ -1,0 +1,114 @@
+RSM-null error:  
+RSM-group_mean_only error:  
+RSM-drf error:  
+RSM-interaction error:  
+RSM-combined error:  
+RSM-connected_incomplete error:  
+RSM-no_common_raters error:  
+RSM-linked_null error:  
+RSM-linked_drf error:  
+RSM-five_anchor_null error:  
+RSM-five_anchor_drf error:  
+PCM-null error:  
+PCM-group_mean_only error:  
+PCM-drf error:  
+PCM-interaction error:  
+PCM-combined error:  
+PCM-connected_incomplete error:  
+PCM-no_common_raters error:  
+PCM-linked_null error:  
+PCM-linked_drf error:  
+PCM-five_anchor_null error:  
+PCM-five_anchor_drf error:  
+                       Cell     Seed GroupMeanShift DRFAmplitude
+1                  RSM-null 75010001            0.0          0.0
+2       RSM-group_mean_only 75010002            0.6          0.0
+3                   RSM-drf 75010003            0.0          0.4
+4           RSM-interaction 75010004            0.0          0.0
+5              RSM-combined 75010005            0.6          0.4
+6  RSM-connected_incomplete 75010006            0.0          0.4
+7      RSM-no_common_raters 75010007            0.0          0.4
+8           RSM-linked_null 75010008            0.0          0.0
+9            RSM-linked_drf 75010009            0.0          0.4
+10     RSM-five_anchor_null 75010010            0.0          0.0
+11      RSM-five_anchor_drf 75010011            0.0          0.4
+12                 PCM-null 75020001            0.0          0.0
+13      PCM-group_mean_only 75020002            0.6          0.0
+14                  PCM-drf 75020003            0.0          0.4
+15          PCM-interaction 75020004            0.0          0.0
+16             PCM-combined 75020005            0.6          0.4
+17 PCM-connected_incomplete 75020006            0.0          0.4
+18     PCM-no_common_raters 75020007            0.0          0.4
+19          PCM-linked_null 75020008            0.0          0.0
+20           PCM-linked_drf 75020009            0.0          0.4
+21     PCM-five_anchor_null 75020010            0.0          0.0
+22      PCM-five_anchor_drf 75020011            0.0          0.4
+   InteractionAmplitude Observations ProbabilityError     EtaError FitSeconds
+1                   0.0          480     4.440892e-16 0.000000e+00      0.781
+2                   0.0          480     4.440892e-16 6.661338e-16      0.198
+3                   0.0          480     2.220446e-16 0.000000e+00      0.201
+4                   0.3          480     3.330669e-16 0.000000e+00      0.196
+5                   0.3          480     4.440892e-16 8.881784e-16      0.193
+6                   0.0          320     3.330669e-16 0.000000e+00      0.188
+7                   0.0          240     3.330669e-16 0.000000e+00      0.179
+8                   0.0          720     3.330669e-16 0.000000e+00      0.232
+9                   0.0          720     6.661338e-16 0.000000e+00      0.212
+10                  0.0         1200     4.440892e-16 0.000000e+00      0.279
+11                  0.0         1200     4.440892e-16 0.000000e+00      0.249
+12                  0.0          480     3.330669e-16 0.000000e+00      0.204
+13                  0.0          480     4.440892e-16 4.440892e-16      0.204
+14                  0.0          480     3.330669e-16 0.000000e+00      0.200
+15                  0.3          480     4.440892e-16 0.000000e+00      0.200
+16                  0.3          480     6.661338e-16 8.881784e-16      0.202
+17                  0.0          320     4.440892e-16 0.000000e+00      0.184
+18                  0.0          240     2.220446e-16 0.000000e+00      0.201
+19                  0.0          720     4.440892e-16 0.000000e+00      0.234
+20                  0.0          720     4.440892e-16 0.000000e+00      0.268
+21                  0.0         1200     4.440892e-16 0.000000e+00      0.339
+22                  0.0         1200     4.440892e-16 0.000000e+00      0.320
+   TotalSeconds Error
+1         5.076      
+2         7.799      
+3         2.733      
+4         4.058      
+5         3.964      
+6         1.950      
+7         1.716      
+8         4.123      
+9         4.131      
+10        8.077      
+11        7.851      
+12        2.581      
+13        7.699      
+14        2.755      
+15        3.798      
+16        3.857      
+17        1.919      
+18        1.637      
+19        4.082      
+20        4.072      
+21        8.221      
+22        8.143      
+                                                                                                                                                                                                                                                                          Warnings
+1                                                                                                                                                                                                                                                                                 
+2                                                                                                                                                                                                                                                                                 
+3                                                                                                                                                                                                                                                                                 
+4                                                                                                                                                                                                                                                                                 
+5                                                                                                                                                                                                                                                                                 
+6                                                                                                                                                                                                                                                                                 
+7  The MML fixed-effect design is full rank, but the corresponding free-Person JML design is rank deficient. Cross-panel identification therefore relies on the common latent-population assumption; review assignment and population invariance before reporting facet contrasts.
+8                                                                                                                                                                                                                                                                                 
+9                                                                                                                                                                                                                                                                                 
+10                                                                                                                                                                                                                                                                                
+11                                                                                                                                                                                                                                                                                
+12                                                                                                                                                                                                                                                                                
+13                                                                                                                                                                                                                                                                                
+14                                                                                                                                                                                                                                                                                
+15                                                                                                                                                                                                                                                                                
+16                                                                                                                                                                                                                                                                                
+17                                                                                                                                                                                                                                                                                
+18 The MML fixed-effect design is full rank, but the corresponding free-Person JML design is rank deficient. Cross-panel identification therefore relies on the common latent-population assumption; review assignment and population invariance before reporting facet contrasts.
+19                                                                                                                                                                                                                                                                                
+20                                                                                                                                                                                                                                                                                
+21                                                                                                                                                                                                                                                                                
+22                                                                                                                                                                                                                                                                                

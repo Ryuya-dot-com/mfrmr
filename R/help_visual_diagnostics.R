@@ -35,11 +35,19 @@
 #' Use [gpcm_capability_matrix()] for the formal per-helper boundary
 #' before choosing a `GPCM` follow-up plot route.
 #'
+#' Portable fixed-calibration score batches have a separate review route.
+#' Use `summary(scores)` and `plot(scores)` as described in
+#' [mfrm_calibration_score_methods]. Those displays review returned scores;
+#' they do not replace source-fit diagnostics or establish calibration fit.
+#'
 #' @section Start with the question:
 #' - "Do persons and facet levels overlap on the same logit scale?"
 #'   Use `plot(fit, type = "wright")` or [plot_wright_unified()].
 #' - "Where do score categories transition across theta?"
 #'   Use `plot(fit, type = "pathway")` and `plot(fit, type = "ccc")`.
+#' - "How do measures and observed scores relate to Fair Scores?"
+#'   Use [plot_fair_average()] with `plot_type = "measure"`, `"scatter"`, or
+#'   `"difference"`. FairZ is a zero-reference expected score, not a z-score.
 #' - "Is the design linked well enough across subsets or administrations?"
 #'   Use `plot(subset_connectivity_report(...), type = "design_matrix")`,
 #'   [mfrm_network_analysis()], [build_mfrm_network_review()],
@@ -50,9 +58,10 @@
 #'   Use [plot_marginal_fit()].
 #' - "Which level pairs drive strict local-dependence follow-up?"
 #'   Use [plot_marginal_pairwise()].
-#' - "Do raters agree and do facets separate meaningfully?"
-#'   Use [plot_interrater_agreement()], [rater_network_analysis()], and
-#'   [plot_facets_chisq()].
+#' - "Do raters agree within observed shared scoring contexts?"
+#'   Use [plot_interrater_agreement()] and [rater_network_analysis()].
+#' - "Do facet levels separate meaningfully?"
+#'   Use [plot_facets_chisq()].
 #' - "Do criteria within the same rater move together in a halo-like way?"
 #'   Use [rater_halo_network_analysis()] and
 #'   `plot(..., type = "edge_distribution")`.
@@ -97,6 +106,12 @@
 #'   branch can also call [plot_qc_dashboard()], but its fair-average
 #'   panel reports an explicit unavailability indicator because that
 #'   panel's score-metric semantics are limited to the Rasch-family branch.
+#' - "I scored new Persons from a frozen portable calibration; which scores
+#'    require review and how wide are their conditional intervals?"
+#'   Use `summary(scores)` followed by
+#'   `plot(scores, type = "interval")`. Continue with `type = "precision"`
+#'   or `type = "edge_mass"` when response-count precision or quadrature-edge
+#'   behavior needs follow-up.
 #' - "Which figures are already supported by my current run?"
 #'   Use [reporting_checklist()] and review the `"Visual Displays"` rows before
 #'   choosing the next plot.
@@ -108,6 +123,17 @@
 #'   theta-by-category-by-probability plot data for exploratory teaching or
 #'   downstream interactive rendering. Keep 2D pathway/CCC plots as the
 #'   default reporting figures.
+#'
+#' @section Keep the network questions separate:
+#' [mfrm_network_analysis()] describes the assignment/co-observation graph and
+#' is the relevant network route for disconnected measurement subsets.
+#' [rater_network_analysis()] describes pairwise score agreement,
+#' disagreement, or severity direction, while [rater_halo_network_analysis()]
+#' describes rater-by-criterion score-profile correlations. The latter two do
+#' not establish assignment connectedness or a common scale. In all three,
+#' degree, strength, betweenness, and closeness are graph-theoretic quantities;
+#' they are not rating-scale central tendency, MFRM severity logits, or causal
+#' halo evidence.
 #'
 #' @section Recommended visual route:
 #' 1. If you are drafting a report, run [reporting_checklist()] first and read
@@ -125,10 +151,13 @@
 #'    follow-up.
 #' 6. Use `plot(..., draw = FALSE)` when you want reusable plot data instead
 #'    of immediate graphics.
-#' 7. Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you need
+#' 7. For an artifact-scored batch, use `summary(scores)` and `plot(scores)`;
+#'    keep its conditional-uncertainty note with the figure and inspect every
+#'    `scored_review` or `not_scored` disposition.
+#' 8. Use `plot(fit, type = "ccc_surface", draw = FALSE)` only when you need
 #'    3D-ready category-probability data; `mfrmr` intentionally does not add a
 #'    package-native plotly/rgl renderer for this route.
-#' 8. Use `preset = "publication"` when you want the package's cleaner
+#' 9. Use `preset = "publication"` when you want the package's cleaner
 #'    manuscript-oriented styling, or `preset = "monochrome"` when journals,
 #'    accessibility requirements, or print workflows require grayscale output.
 #'
@@ -170,6 +199,10 @@
 #'   `mfrm_plot_data` objects for downstream review and export. When step
 #'   estimates are available, `build_visual_summaries()` also exposes
 #'   `$plot_payloads$category_probability_surface`.
+#' - Portable score-batch review:
+#'   `plot(scores, type = "interval")`, `"precision"`, or `"edge_mass"`
+#'   after [score_mfrm_calibration()]. These views retain selection accounting,
+#'   review dispositions, and Persons that could not be scored.
 #' - 3D-ready exploratory handoff:
 #'   `plot(fit, type = "ccc_surface", draw = FALSE)` returns a
 #'   theta-by-category-by-probability `mfrm_plot_data` object. This is not a
@@ -260,6 +293,10 @@
 #'   funnel showing raw versus shrunken facet estimates. Best on fits
 #'   produced via [apply_empirical_bayes_shrinkage()] for reviewing how
 #'   much each level moved under the prior.}
+#'   \item{`plot(scores, type = "interval")`}{Posterior EAP intervals for a
+#'   portable fixed-calibration score batch, with review dispositions
+#'   highlighted. The intervals are conditional on the frozen point
+#'   calibration and exclude calibration-parameter uncertainty.}
 #' }
 #'
 #' @section Cross-reference to FACETS / Winsteps tables:
@@ -318,6 +355,10 @@
 #'   whether facet elements are statistically distinguishable.
 #' - Residual PCA and bias plots should be interpreted as follow-up layers
 #'   after the main fit screen, not as first-pass diagnostics.
+#' - Portable score plots review returned score batches only. Inspect the
+#'   source calibration separately, retain `not_scored` Persons in the audit
+#'   trail, and do not interpret conditional intervals as including
+#'   calibration-parameter uncertainty.
 #' - DFF residual- and refit-method plots are screening visuals. Current refit
 #'   rows do not receive ETS A/B/C labels because their plug-in uncertainty
 #'   omits baseline-anchor uncertainty and cross-refit covariance.
@@ -347,6 +388,32 @@
 #'   inspect the explicit facet, level, and group-pair columns before
 #'   writing interpretation.
 #'
+#' @section Figures with separate titles and interpretation:
+#' Wright, expected-score pathway, CCC, and [plot_fair_average()] displays
+#' accept `show_title = FALSE` and `show_notes = FALSE`. These options hide
+#' figure annotations while retaining axes, legends, structural panel labels,
+#' and the original title and notes in the returned `mfrm_plot_data` object.
+#' With `p <- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE,
+#' show_notes = FALSE)`, inspect `p$data$notes` before writing a caption.
+#' [as_ggplot()] respects the display options and retains notes in
+#' `attr(as_ggplot(p), "mfrmr_notes")`. Hiding annotations does not change
+#' readiness or interval eligibility.
+#'
+#' Use `preset = "monochrome"` for grayscale. Expected-score and CCC curves
+#' have six line types: solid, dashed, dotted, dotdash, longdash, and twodash.
+#' Fair-score plots have six point shapes. Encodings repeat beyond six series;
+#' use panels or select a facet instead of relying on gray levels alone.
+#' These controls are documented for the named routes, not every plotting
+#' helper in the package. Check the individual help page for other plots.
+#'
+#' Fair-score intervals remain diagnostic-only with full-refit coverage
+#' unverified. RSM/PCM plots propagate the focal measure SE while holding
+#' thresholds and reference measures fixed. GPCM-MML plots can use structural
+#' table SEs for non-Person rows, conditioning on Person EAP/reference means.
+#' `fair_average_table(fair_se = TRUE)` does not provide RSM/PCM fair-score
+#' SEs. See [mfrmr_interval_guide()] and [plot_fair_average()] for the status
+#' columns and the observed-minus-fair gap caveat.
+#'
 #' @section Companion vignette:
 #' For a longer, plot-first walkthrough, run
 #' `vignette("mfrmr-visual-diagnostics", package = "mfrmr")`.
@@ -373,6 +440,8 @@
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
+#' # A balanced slice retains every Rater and Criterion while running quickly.
+#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' fit <- fit_mfrm(
 #'   toy,
 #'   person = "Person",
@@ -709,7 +778,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Unified Wright map uncertainty overlay",
       "Rater severity profile",
       "Manuscript Figure 1 composite",
-      "Fair-average structural interval",
+      "Fair-average diagnostic interval",
       "Bias-interaction interval overlay",
       "Displacement interval overlay",
       "DFF / DIF contrast summary",
@@ -743,7 +812,7 @@ mfrmr_interval_guide <- function(scope = c(
       "plot_wright_unified(fit, show_ci = TRUE, ci_level = 0.95)",
       "plot_rater_severity_profile(fit, ci_level = 0.95)",
       "plot_apa_figure_one(fit, ci_level = 0.95)",
-      "fair_average_table(fair_se = TRUE, ci_level = 0.95)",
+      "plot_fair_average(fit, show_ci = TRUE, ci_level = 0.95); fair_average_table(fit_gpcm, fair_se = TRUE, ci_level = 0.95)",
       "plot_bias_interaction(..., show_ci = TRUE, ci_level = 0.95)",
       "plot_displacement(..., show_ci = TRUE, ci_level = 0.95)",
       "plot_dif_summary(..., ci_level = 0.95)",
@@ -760,11 +829,11 @@ mfrmr_interval_guide <- function(scope = c(
       "Use plot_wright_unified(..., draw = FALSE)$locations or draw the base-R map.",
       "Use draw = FALSE to reuse the ranked severity table and band labels.",
       "Use draw = FALSE to reuse wright, severity, threshold, and summary panels.",
-      "Use plot_fair_average(..., show_ci = TRUE, draw = FALSE) for CI-ready plot data.",
+      "Use plot_fair_average(..., show_ci = TRUE, draw = FALSE)$data; inspect plot_data and notes.",
       "Use ranked or scatter views; heatmap and profile views intentionally omit intervals.",
       "Use plot_type = \"lollipop\" with draw = FALSE for interval-ready data.",
       "Use draw = FALSE when rebuilding the summary figure.",
-      "Use forest/ROPE review output for equivalence-focused reporting.",
+      "Use eligible MML forest/ROPE output for grand-mean proximity; read pairwise TOST separately.",
       "Use draw = FALSE to inspect CI_Lower / CI_Upper before plotting.",
       "Use linked-wave fit lists only; the helper does not perform linking.",
       "Use on fits augmented by empirical-Bayes shrinkage columns; draw = FALSE returns CI-ready table columns.",
@@ -778,11 +847,11 @@ mfrmr_interval_guide <- function(scope = c(
       "CI_Lower, CI_Upper, CI_Level in locations",
       "Level, Estimate, SE, CI_Lower, CI_Upper, Band",
       "severity panel includes CI_Lower, CI_Upper, ci_level",
-      "AdjustedAverageCI_Lower, AdjustedAverageCI_Upper, AdjustedAverageCI_Level; plot data also uses CI_Lower / CI_Upper / CI_Level",
+      "AdjustedAverageCI_* / StandardizedAdjustedAverageCI_*, FairCIEligible, FairCIReportingUse in tables; CI_Lower / CI_Upper / CI_Level, CI_Eligible, CI_ReportingUse in plot data",
       "CI_Lower, CI_Upper, CI_Level on ranked_table and scatter_data",
       "CI_Lower, CI_Upper, CI_Level",
       "CI_Lower, CI_Upper, CI_Level when contrast SEs are available",
-      "CI_Lower, CI_Upper, CI_Level plus equivalence / ROPE status columns",
+      "CI_Lower, CI_Upper; DeviationCI_Lower, DeviationCI_Upper for plots; CI90_Lower, CI90_Upper for TOST",
       "CI_Lower, CI_Upper, CI_Level",
       "CI_Lower, CI_Upper, CI_Level",
       "RawCI_Lower, RawCI_Upper, ShrunkCI_Lower, ShrunkCI_Upper, CI_Level when show_ci = TRUE",
@@ -795,11 +864,11 @@ mfrmr_interval_guide <- function(scope = c(
       "Approximate facet-level SE overlay on the shared logit scale.",
       "Approximate Wald interval around centered facet severity using ModelSE.",
       "Composite overview; interval evidence comes from the rater severity panel.",
-      "Structural delta-method fair-average interval when the MML covariance route is available; otherwise interval status remains explicit.",
+      "RSM/PCM plot: focal-measure delta-method interval with thresholds/references fixed. GPCM-MML table/plot: joint structural covariance for non-Person rows, with Person EAP/reference means fixed.",
       "Profile-likelihood limits for bounded GPCM bias rows when available, otherwise per-cell SE fallback.",
       "Approximate Wald interval around displacement using DisplacementSE.",
-      "Approximate contrast interval from the DFF / DIF contrast table when SE evidence exists.",
-      "Model-based interval compared with the requested equivalence bounds.",
+      "Residual contrast approximation or refit conditional plug-in interval; refit SEs omit baseline-anchor uncertainty and cross-refit covariance.",
+      "Joint MML covariance for pair differences and deviations from the equally weighted facet mean.",
       "Approximate drift interval using supplied anchor-drift SE columns.",
       "Approximate per-rater severity interval across already linked waves.",
       "Approximate Wald-style whiskers around original and shrunken estimates using SE / ShrunkSE.",
@@ -812,7 +881,7 @@ mfrmr_interval_guide <- function(scope = c(
       "Show targeting and uncertainty across persons, facets, and thresholds.",
       "Give rater-training feedback with uncertainty and gentle / strict severity bands.",
       "Build a manuscript Figure 1 overview while preserving reusable panel data.",
-      "Report slope-aware fair-average uncertainty separately from historical measure-level SE columns.",
+      "Inspect fair-score uncertainty separately from historical measure-level SE columns; FairZ is not a z-score.",
       "Screen interaction-bias cells while showing uncertainty around the bias-size estimate.",
       "Review anchor or calibration tension without treating displacement as a binary decision.",
       "Display group-by-facet contrast uncertainty before writing DFF / DIF interpretation.",
@@ -829,11 +898,11 @@ mfrmr_interval_guide <- function(scope = c(
       "Use for targeting and uncertainty context; it is not global model-fit proof.",
       "Severity bands are calibration feedback, not automatic operational removal decisions.",
       "Composite figures orient readers; panel intervals should be interpreted through the source helper.",
-      "Keep structural fair-average intervals distinct from historical FACETS-style measure SE columns.",
+      "Diagnostic-only: CI_Eligible / FairCIEligible remain FALSE; finite or regularized covariance does not establish full-refit coverage. Gap whiskers hold the observed mean fixed.",
       "Bias intervals remain screening evidence unless the study design supports stronger inferential wording.",
       "Intervals support follow-up review; they do not decide anchor validity by themselves.",
-      "DFF / DIF wording still depends on grouping design, linking support, and the chosen analysis route.",
-      "Equivalence is a practical review against stated bounds, not a universal validity claim.",
+      "Both routes remain screening-only; adequate linking does not make refit uncertainty formally eligible. Inspect ContrastDirection because residual and severity contrasts use different units and signs.",
+      "Requires inference-ready MML and unregularized covariance; pairwise TOST is unadjusted and ROPE is descriptive.",
       "Drift claims require explicit multi-fit wave or form designs.",
       "Trajectory movement is interpretable only after the supplied fits are on a common scale.",
       "Shrinkage intervals describe estimation stability, not automatic rater-quality decisions.",
@@ -850,7 +919,7 @@ mfrmr_interval_guide <- function(scope = c(
       "supported_with_caveat",
       "exploratory_only",
       "supported_with_caveat",
-      "rsm_pcm_route; use GPCM only as documented sensitivity context",
+      "unavailable_when_gpcm_inference_is_ineligible",
       "exploratory_for_gpcm; linking synthesis supported_with_caveat",
       "exploratory_for_gpcm; linking synthesis supported_with_caveat",
       "not_gpcm_specific",
@@ -863,7 +932,7 @@ mfrmr_interval_guide <- function(scope = c(
       "This explicit helper is useful for publication-style maps.",
       "Use facet = ... for non-Rater severity facets.",
       "Designed for RSM/PCM manuscript routes; inspect returned panel data before publication.",
-      "Under bounded GPCM this is slope-aware direct output with caveats.",
+      "The table fair_se option provides bounded GPCM-MML structural SEs, not RSM/PCM fair-score SEs; RSM/PCM conditional plot intervals require a fitted model, not only a stored table bundle.",
       "Heatmaps remain pattern displays and do not draw intervals.",
       "Best used after reviewing the underlying displacement table.",
       "Use together with dif_report() for narrative boundaries.",

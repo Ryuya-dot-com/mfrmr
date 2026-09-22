@@ -30,7 +30,8 @@ to serialize.}
 A bundle of class \code{mfrm_network_analysis} containing:
 \itemize{
 \item \code{summary}: graph-level connectedness and vulnerability metrics
-\item \code{node_metrics}: node-level degree, strength, centrality, and cutpoint flags
+\item \code{node_metrics}: node-level degree, strength, graph-theoretic centrality,
+and cutpoint flags
 \item \code{edge_metrics}: edge-level weights, betweenness, and bridge flags
 \item \code{facet_summary}: facet-level aggregation of node/bridge indicators
 \item \code{cut_nodes}: articulation-point rows from \code{node_metrics}
@@ -45,7 +46,11 @@ Analyze the MFRM design network
 an undirected weighted graph. Nodes are person or facet levels; edges connect
 levels that co-occur in at least one observed rating; edge weights are
 co-observation counts. The resulting network metrics are design diagnostics,
-not psychometric measures of person ability or rater quality.
+not psychometric measures of person ability or rater quality. This is the
+package's assignment/co-observation network: unlike the score-relation
+networks returned by \code{\link[=rater_network_analysis]{rater_network_analysis()}} and
+\code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}, it can expose disconnected measurement
+subsets relevant to common-scale interpretation.
 \code{plot(net, type = "centrality")}, \code{plot(net, type = "facet_summary")}, and
 \code{plot(net, type = "network")} provide immediate visual checks; use
 \code{draw = FALSE} to extract reusable plot data.

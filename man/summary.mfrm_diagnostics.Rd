@@ -33,6 +33,11 @@ person-level rows remain available in the returned object.}
 An object of class \code{summary.mfrm_diagnostics} with:
 \itemize{
 \item \code{overview}: design-level counts and residual-PCA mode
+\item \code{decision}: the same plain-language fit-readiness decision used by
+\code{summary(fit)}, retained ahead of diagnostic screening results
+\item \code{fit_readiness}, \code{fit_readiness_components}, and
+\code{fit_readiness_parameters}: readiness provenance inherited from the source
+fit and retained separately from diagnostic-screening status
 \item \code{status}: concise front-door status block for quick review
 \item \code{key_warnings}: highest-priority warnings to review first
 \item \code{next_actions}: recommended follow-up helpers
@@ -86,6 +91,8 @@ This method returns a compact diagnostics summary designed for quick review:
 
 \itemize{
 \item \code{overview}: analysis scale, subset count, and residual-PCA mode.
+\item \code{fit_readiness}: the source fit's versioned readiness row. Diagnostics do
+not promote a blocked or review-only fit to inferential use.
 \item \code{diagnostic_basis}: plain-language map of which fit path was computed and
 what each path means statistically.
 \item \code{overall_fit}: global fit indices.
@@ -109,21 +116,25 @@ before comparing legacy and strict outputs.
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy <- toy[toy$Person \%in\% unique(toy$Person)[1:4], ]
-fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score", method = "JML", maxit = 30)
-diag <- diagnose_mfrm(fit, residual_pca = "none")
+ratings <- load_mfrmr_data("example_operational")
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
+)
+diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
 s <- summary(diag, top_n = 3)
+s$decision
 s$key_warnings
-# Look for: lines beginning with "MnSq misfit:" name the worst
-#   element + Infit / Outfit values; "Unexpected responses flagged"
-#   counts how many cell-level surprises the screen returned.
 s$top_fit
-# Large absolute standardized values identify rows for follow-up; they do
-# not create a universal accept/reject rule.
-s$facets_chisq
-# Read the fixed-effect chi-square as a heterogeneity screen in the context
-# of the design and intended score use.
 }
 }
 \seealso{

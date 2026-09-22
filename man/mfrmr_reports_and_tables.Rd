@@ -128,8 +128,9 @@ supported for the fitted result.
 substitutes for overall fit review.
 \item Treat zero-count score categories as scale-functioning caveats. Boundary
 zero-count categories can be retained with explicit \code{rating_min} /
-\code{rating_max}; intermediate zero-count categories require
-\code{keep_original = TRUE} and make adjacent thresholds weakly identified.
+\code{rating_max}; retaining an intermediate zero-count category with
+\code{keep_original = TRUE} creates an unsupported adjacent-step contrast in a
+polytomous fitted ladder, so new fits stop before optimization.
 \code{summary(describe_mfrm_data(...))} exposes these in \code{Notes}, printed
 \code{Caveats}, and \verb{$caveats}; \code{summary(fit)} carries full structured caveats
 into printed \code{Caveats} and \verb{$caveats}, with \verb{Key warnings} as a short
@@ -180,16 +181,19 @@ or \code{\link[=export_summary_appendix]{export_summary_appendix()}} /
 
 \examples{
 \donttest{
-toy <- load_mfrmr_data("example_core")
-toy_small <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy_small,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML",
+  model = "RSM",
   quad_points = 7,
-  maxit = 30
+  maxit = 30,
+  reltol = 1e-11
 )
 diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
 

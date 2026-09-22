@@ -1,0 +1,5 @@
+File,MD5
+tests/testthat/test-as-ggplot.R,3f225f4dce2f305e005dfb4e0298e56c
+tests/testthat/test-namespace-contract.R,d791ddfe5091a25fad17c108a716db97
+tests/testthat/test-plot-comparison.R,712cb3b753ca05f9b5568ed933c431cb
+tests/testthat/test-plot-device-state.R,145f677a957be046c970baf7ceba59bf

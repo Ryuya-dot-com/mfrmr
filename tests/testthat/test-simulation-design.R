@@ -2757,6 +2757,7 @@ test_that("fit-derived GPCM specs generate data and support caveated design fore
     n_criterion = spec$n_criterion,
     raters_per_person = spec$raters_per_person,
     reps = 1,
+    fit_method = "MML",
     maxit = 20,
     sim_spec = spec,
     seed = 720,
@@ -3550,6 +3551,81 @@ test_that("evaluate_mfrm_design returns usable summary and plot data", {
   expect_equal(p$metric_col, "MeanSeparation")
 })
 
+test_that("evaluate_mfrm_design future route matches serial stochastic inputs", {
+  skip_if_not_installed("future")
+  skip_if_not_installed("future.apply")
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+  future::plan(future::sequential)
+
+  old_rng_kind <- RNGkind()
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  if (had_seed) {
+    old_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  }
+  on.exit({
+    do.call(RNGkind, as.list(old_rng_kind))
+    if (had_seed) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
+
+  RNGkind(kind = "L'Ecuyer-CMRG")
+  set.seed(90210)
+  ambient_seed <- get(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  args <- list(
+    n_person = 12,
+    n_rater = 2,
+    n_criterion = 2,
+    raters_per_person = 2,
+    reps = 2,
+    maxit = 5,
+    seed = 17,
+    progress = FALSE
+  )
+
+  serial <- suppressWarnings(
+    do.call(evaluate_mfrm_design, c(args, list(parallel = "no")))
+  )
+  expect_identical(
+    get(".Random.seed", envir = .GlobalEnv, inherits = FALSE),
+    ambient_seed
+  )
+
+  expect_message(
+    future_result <- suppressWarnings(
+      do.call(evaluate_mfrm_design, c(args, list(parallel = "future")))
+    ),
+    "dispatches replications"
+  )
+  expect_identical(
+    get(".Random.seed", envir = .GlobalEnv, inherits = FALSE),
+    ambient_seed
+  )
+
+  without_elapsed <- function(x) {
+    x[, setdiff(names(x), "ElapsedSec"), drop = FALSE]
+  }
+  expect_identical(serial$design_grid, future_result$design_grid)
+  expect_equal(
+    without_elapsed(serial$results),
+    without_elapsed(future_result$results)
+  )
+  expect_equal(
+    without_elapsed(serial$rep_overview),
+    without_elapsed(future_result$rep_overview)
+  )
+  expect_identical(future_result$settings$parallel, "future")
+  expect_identical(
+    future_result$settings$parallel_seed_policy,
+    "preallocated_design_rep_cell_v1"
+  )
+  expect_identical(future_result$settings$parallel_rng_kind, RNGkind())
+})
+
 test_that("recommend_mfrm_design returns threshold tables", {
   sim_eval <- suppressWarnings(
     evaluate_mfrm_design(
@@ -3683,7 +3759,7 @@ test_that("evaluate_mfrm_design and predict_mfrm_population accept latent-regres
 
 test_that("evaluate_mfrm_design carries PCM step_facet into fitted recovery contract", {
   spec <- build_mfrm_sim_spec(
-    n_person = 24,
+    n_person = 36,
     n_rater = 3,
     n_criterion = 4,
     raters_per_person = 2,
@@ -3699,7 +3775,7 @@ test_that("evaluate_mfrm_design carries PCM step_facet into fitted recovery cont
 
   sim_eval <- suppressWarnings(
     evaluate_mfrm_design(
-      n_person = 24,
+      n_person = 36,
       n_rater = 3,
       n_criterion = 4,
       raters_per_person = 2,
@@ -3714,6 +3790,61 @@ test_that("evaluate_mfrm_design carries PCM step_facet into fitted recovery cont
   expect_equal(sim_eval$settings$step_facet, "Criterion")
   expect_equal(unique(sim_eval$results$FitStepFacet), "Criterion")
   expect_true(all(sim_eval$results$RecoveryComparable))
+})
+
+test_that("evaluate_mfrm_design preserves schema and category failure provenance", {
+  spec <- build_mfrm_sim_spec(
+    n_person = 24,
+    n_rater = 3,
+    n_criterion = 4,
+    raters_per_person = 2,
+    assignment = "rotating",
+    thresholds = data.frame(
+      StepFacet = rep(c("C01", "C02", "C03", "C04"), each = 3),
+      StepIndex = rep(1:3, times = 4),
+      Estimate = c(
+        -1, 0, 1,
+        -1, 0, 1,
+        -1, 0, 1,
+        40, -40, 0
+      )
+    ),
+    model = "PCM",
+    step_facet = "Criterion"
+  )
+
+  sim_eval <- suppressWarnings(evaluate_mfrm_design(
+    n_person = 24,
+    n_rater = 3,
+    n_criterion = 4,
+    raters_per_person = 2,
+    reps = 1,
+    model = "PCM",
+    maxit = 10,
+    sim_spec = spec,
+    seed = 810
+  ))
+
+  expect_false(sim_eval$rep_overview$RunOK)
+  expect_identical(
+    sim_eval$rep_overview$ErrorClass,
+    "mfrmr_category_readiness_error"
+  )
+  expect_identical(sim_eval$rep_overview$ErrorComponent, "fit")
+  expect_identical(
+    sim_eval$rep_overview$CategoryState,
+    "unsupported_coordinate"
+  )
+  expect_match(
+    sim_eval$rep_overview$CategoryReasonCodes,
+    "unsupported_step_coordinate",
+    fixed = TRUE
+  )
+  expect_identical(nrow(sim_eval$results), 0L)
+  expect_true(all(c(
+    "FitStepFacet", "RecoveryComparable", "RecoveryBasis",
+    "SeverityRMSE", "SeverityBias"
+  ) %in% names(sim_eval$results)))
 })
 
 test_that("evaluate_mfrm_design suppresses recovery metrics when generator and fit contracts differ", {

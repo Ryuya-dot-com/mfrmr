@@ -1,0 +1,8 @@
+"File","MD5"
+"R/api-advanced.R","adbcb4715d0d21c89db38487893ac19f"
+"R/api-plotting-anchor-qc.R","742e853025f64798b1cb5dd4ec5331a2"
+"R/api-plotting.R","0895df70e034f98a0272c85776a421a3"
+"R/api-plotting-fit-family.R","d58b1b01dddecf5abc25e0ac09b997fa"
+"tests/testthat/test-offset-sensitivity.R","d20d3432a19d6c21460e3ffda45f2904"
+"inst/validation/offset-sensitivity-0.2.4.R","294e51b42d20db1b388f53ffa3b2ba09"
+"inst/validation/plot-models-0.2.4/fits.rds","cc30748325da2194057e0d1b5a5da5f1"

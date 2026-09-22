@@ -71,7 +71,9 @@ recommended use
 \item \code{precision_review}: package-native checks for SE, CI, and reliability
 \item \code{parameter_uncertainty}: MML observed-information uncertainty for
 structural parameters when available (\code{steps}, and bounded-\code{GPCM}
-\code{slopes} on both log and positive scales), plus covariance status metadata
+\code{slopes} on both log and positive scales), plus covariance status metadata.
+Step \code{CIEligible} and \code{CIUse} retain the source fit's restrictions;
+non-unit observation-weight bands are diagnostic only.
 \item \code{facet_precision}: facet-level precision summary by distribution basis and
 SE mode
 \item \code{facets_chisq}: fixed/random facet variability summary
@@ -85,6 +87,9 @@ for bounded \code{GPCM})
 \item \code{approximation_notes}: method notes for SE/CI/reliability summaries
 \item \code{diagnostic_basis}: guide to the statistical target of each diagnostic path
 \item \code{fit_standardization}: guide to the df convention behind fit ZSTD values
+\item \code{fit_readiness}, \code{fit_readiness_components}, and
+\code{fit_readiness_parameters}: the source fit's versioned readiness decision;
+diagnostic computation does not override a blocked or review-only fit
 \item \code{marginal_fit}: optional strict marginal-fit companion based on
 posterior-expected first-order category counts
 \item \code{residual_pca_overall}: optional overall PCA object
@@ -164,7 +169,7 @@ external FACETS fit comparison requires a JMLE-style residual basis
 \item MnSq < 0.5: overfit (too predictable; may inflate reliability)
 \item MnSq 0.5--1.5: productive for measurement
 \item MnSq > 1.5: underfit (noise degrades measurement)
-\item \eqn{|\mathrm{ZSTD}| > 2}: conventional approximate-normal review flag;
+\item \eqn{|\mathrm{ZSTD}| \ge 2}: package convention for the approximate-normal review flag;
 not a calibrated 5\\% hypothesis test, especially after parameter estimation
 and repeated screening across elements
 }
@@ -282,51 +287,26 @@ programs}. Winsteps.com. (WHEXACT / FACETS standardized fit df notes.)
 
 \examples{
 \donttest{
-# Minimal diagnostic example without residual PCA.
-toy <- load_mfrmr_data("example_operational")
-fit_quick <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
-)
-diag_quick <- diagnose_mfrm(fit_quick, diagnostic_mode = "both",
-                            residual_pca = "none")
-summary(diag_quick)$overview[, c("Observations", "Facets", "Categories")]
-
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy, "Person", c("Rater", "Criterion"), "Score",
-  method = "MML", model = "RSM", quad_points = 7, maxit = 30
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
+  method = "MML",
+  model = "RSM",
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
 )
 diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-s_diag <- summary(diag)
-s_diag$overview[, c("Observations", "Facets", "Categories")]
-s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+s_diag <- summary(diag, top_n = 3)
+s_diag$decision
 s_diag$key_warnings
-# Look for: lines starting with "MnSq misfit:" name the element +
-#   Infit / Outfit values outside the configured heuristic review band.
-#   Review those signals in context; an empty warning list is not an
-#   automatic all-clear decision.
-s_diag$facets_chisq
-# Look for: `FixedProb` < 0.05 is evidence against the fixed-effect
-#   "all elements equal" null under the reported chi-square approximation.
-#   Interpret the magnitude and precision as well; a non-significant result
-#   does not demonstrate homogeneous elements or negligible facet spread.
-s_diag$interrater
-# Look for: ExactAgreement >= ExpectedExactAgreement and
-#   AgreementMinusExpected >= 0 indicate raters agree at least as
-#   often as the model expects. Negative values warrant a closer
-#   look at `diag$interrater$pairs`.
-p_qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE)
-p_qc$data$plot
-
-# Optional: include residual PCA in the diagnostic bundle
-diag_pca <- diagnose_mfrm(fit, residual_pca = "overall")
-pca <- analyze_residual_pca(diag_pca, mode = "overall")
-head(pca$overall_table)
-
-# Reporting route:
-prec <- precision_review_report(fit, diagnostics = diag)
-summary(prec)
-
+s_diag$diagnostic_basis[, c("DiagnosticPath", "Status", "Basis")]
+s_diag$top_fit
 }
 }
 \seealso{

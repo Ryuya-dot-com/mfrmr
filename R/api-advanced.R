@@ -210,25 +210,125 @@ build_dff_summary <- function(tbl, method) {
 }
 
 resolve_dff_refit_controls <- function(fit) {
+  replay <- fit$config$replay_inputs %||% list()
   control <- fit$config$estimation_control %||% list()
+
+  population_active <- isTRUE(fit$config$population_active) ||
+    isTRUE(fit$config$population_spec$active) ||
+    !is.null(replay$population_formula)
+  auto_gpcm_population <- population_active &&
+    identical(as.character(fit$population$source %||% ""),
+              "gpcm_mml_default_identification") &&
+    identical(as.character(fit$config$model %||% ""), "GPCM") &&
+    identical(as.character(fit$config$method %||% ""), "MML")
+  if (population_active && !auto_gpcm_population) {
+    stop(
+      "`analyze_dff(method = \"refit\")` cannot currently reproduce an active ",
+      "latent-regression population model within subgroup fits without changing ",
+      "the fitted population contract. Use `method = \"residual\"` for screening, ",
+      "or fit and link a prespecified subgroup population model outside ",
+      "`analyze_dff()`.",
+      call. = FALSE
+    )
+  }
+
+  interaction_terms <- unique(c(
+    as.character(fit$config$facet_interactions %||% character(0)),
+    names(fit$config$interaction_specs %||% list())
+  ))
+  interaction_terms <- interaction_terms[!is.na(interaction_terms) & nzchar(interaction_terms)]
+  if (length(interaction_terms) > 0L) {
+    stop(
+      "`analyze_dff(method = \"refit\")` cannot currently reproduce fitted ",
+      "facet interactions and anchor their subgroup interaction coordinates on ",
+      "a common scale. Use `method = \"residual\"` for screening, or refit and ",
+      "link the interaction model explicitly outside `analyze_dff()`.",
+      call. = FALSE
+    )
+  }
+
+  anchor_tables <- tryCatch(
+    extract_anchor_tables(fit$config),
+    error = function(e) list(groups = data.frame())
+  )
+  group_anchors <- as.data.frame(
+    replay$group_anchors %||% anchor_tables$groups %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(group_anchors) > 0L) {
+    stop(
+      "`analyze_dff(method = \"refit\")` cannot currently preserve a baseline ",
+      "group-anchor constraint while constructing its separate subgroup-linking ",
+      "anchors. Use `method = \"residual\"` for screening, or specify and audit ",
+      "the subgroup linking model outside `analyze_dff()`.",
+      call. = FALSE
+    )
+  }
+
+  rating_min <- suppressWarnings(as.numeric(
+    fit$config$rating_min %||% fit$prep$rating_min %||% NA_real_
+  )[1])
+  rating_max <- suppressWarnings(as.numeric(
+    fit$config$rating_max %||% fit$prep$rating_max %||% NA_real_
+  )[1])
+  if (!is.finite(rating_min) || !is.finite(rating_max) || rating_min >= rating_max) {
+    stop(
+      "`analyze_dff(method = \"refit\")` requires the baseline fit's resolved ",
+      "finite `rating_min` and `rating_max` so subgroup fits cannot redefine the ",
+      "observed score scale. Refit the baseline model with the current mfrmr ",
+      "version or use `method = \"residual\"`.",
+      call. = FALSE
+    )
+  }
+
   list(
     model = fit$config$model %||% fit$summary$Model[1] %||% "RSM",
     method = fit$config$method %||% fit$summary$Method[1] %||% "JML",
     step_facet = fit$config$step_facet %||% NULL,
+    slope_facet = fit$config$slope_facet %||% NULL,
+    gpcm_mml_identification = as.character(
+      replay$gpcm_mml_identification %||%
+        fit$config$gpcm_mml_identification %||%
+        if (identical(as.character(fit$config$model %||% ""), "GPCM") &&
+            identical(as.character(fit$config$method %||% ""), "MML") &&
+            !population_active) {
+          "fixed_standard_normal"
+        } else {
+          "free_population"
+        }
+    )[1],
+    rating_min = rating_min,
+    rating_max = rating_max,
     weight = fit$config$weight_col %||% NULL,
+    keep_original = isTRUE(replay$keep_original %||% fit$config$keep_original),
+    missing_codes = replay$missing_codes %||% NULL,
     noncenter_facet = fit$config$noncenter_facet %||% "Person",
     dummy_facets = fit$config$dummy_facets %||% NULL,
     positive_facets = fit$config$positive_facets %||% NULL,
-    quad_points = as.integer(control$quad_points %||% 15L),
-    maxit = max(25L, min(as.integer(control$maxit %||% 50L), 100L)),
-    reltol = as.numeric(control$reltol %||% 1e-6)
+    min_obs_per_element = as.numeric(replay$min_obs_per_element %||% 30),
+    min_obs_per_category = as.numeric(replay$min_obs_per_category %||% 10),
+    quad_points = as.integer(replay$quad_points %||% control$quad_points %||% 31L),
+    maxit = as.integer(replay$maxit %||% control$maxit %||% 400L),
+    reltol = as.numeric(replay$reltol %||% control$reltol %||% 1e-9),
+    optimizer = as.character(
+      replay$optimizer %||% control$optimizer_requested %||% "auto"
+    )[1],
+    mml_engine = as.character(
+      replay$mml_engine %||% control$mml_engine_requested %||% "direct"
+    )[1],
+    identity_contract = "baseline_response_and_estimation_controls_v1"
   )
 }
 
 build_dff_linking_setup <- function(fit, facet, facet_names) {
   linking_facets <- setdiff(as.character(facet_names), as.character(facet))
   anchor_tbl <- if (length(linking_facets) > 0) {
-    make_anchor_table(fit, facets = linking_facets, include_person = FALSE)
+    make_anchor_table(
+      fit,
+      facets = linking_facets,
+      include_person = FALSE,
+      readiness_policy = "review"
+    )
   } else {
     tibble::tibble(Facet = character(0), Level = character(0), Anchor = numeric(0))
   }
@@ -437,6 +537,15 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' covariance. Refit statistics therefore remain screening evidence and set
 #' `FormalInferenceEligible`, `SupportsFormalInference`,
 #' `PrimaryReportingEligible`, and `ETS_Eligible` to `FALSE`.
+#' The subgroup fits replay the baseline response family, resolved score range,
+#' step/slope facets, weighting, optimizer, MML engine, and numerical controls;
+#' the non-target anchors are the intentional linking change. Refit analysis
+#' fails closed when the baseline uses a user-specified active latent-regression
+#' population model, facet interactions, or group-anchor constraints, because
+#' those structures do not yet have a complete subgroup-replay and linking
+#' contract. The automatically generated intercept-only population model used
+#' for default GPCM-MML scale identification is replayed and is not treated as
+#' a substantive covariate model.
 #'
 #' When `facet` refers to an item-like facet (for example `Criterion`), this
 #' recovers the familiar DIF case. When `facet` refers to raters or
@@ -455,9 +564,12 @@ extract_dff_group_estimates <- function(sub_fit, sub_diag, facet, fallback_level
 #' In most first-pass DFF screening, start with `method = "residual"`. It is
 #' faster, reuses the fitted model, and is less fragile in smaller subsets.
 #' Use `method = "refit"` when you specifically want group-specific parameter
-#' estimates and can tolerate extra computation.  Both methods should yield
-#' similar conclusions when sample sizes are adequate (\eqn{N \ge 100} per
-#' group is a useful guideline for stable differential-functioning detection).
+#' estimates and can tolerate extra computation. Agreement between methods is
+#' not guaranteed by a universal per-group sample-size threshold: stability and
+#' detection depend jointly on effect size, category support, response-pattern
+#' overlap, linking strength, slope heterogeneity, and estimator behavior.
+#' `min_obs` is only a cell-computability/sparsity guard; it is not evidence of
+#' power, parameter stability, or sample-size adequacy.
 #'
 #' @section Interpreting output:
 #' - `$dif_table`: one row per facet-level x group-pair with contrast,
@@ -1117,18 +1229,29 @@ analyze_dif <- function(...) {
       person = person_col,
       facets = facet_names,
       score = score_col,
+      rating_min = refit_controls$rating_min,
+      rating_max = refit_controls$rating_max,
       weight = refit_controls$weight,
+      keep_original = refit_controls$keep_original,
+      missing_codes = refit_controls$missing_codes,
       method = refit_controls$method,
       model = refit_controls$model,
       step_facet = refit_controls$step_facet,
+      slope_facet = refit_controls$slope_facet,
+      gpcm_mml_identification = refit_controls$gpcm_mml_identification,
       anchors = if (nrow(linking_setup$anchor_tbl) > 0) linking_setup$anchor_tbl else NULL,
       noncenter_facet = refit_controls$noncenter_facet,
       dummy_facets = refit_controls$dummy_facets,
       positive_facets = refit_controls$positive_facets,
       anchor_policy = "silent",
+      min_common_anchors = linking_setup$min_common_anchors,
+      min_obs_per_element = refit_controls$min_obs_per_element,
+      min_obs_per_category = refit_controls$min_obs_per_category,
       quad_points = refit_controls$quad_points,
       maxit = refit_controls$maxit,
-      reltol = refit_controls$reltol
+      reltol = refit_controls$reltol,
+      optimizer = refit_controls$optimizer,
+      mml_engine = refit_controls$mml_engine
     )
     # Capture the anchor-review issue messages emitted while refitting
     # the subgroup so a silent anchor_policy no longer hides
@@ -1367,12 +1490,34 @@ analyze_dif <- function(...) {
                   focal = focal, group_levels = group_levels,
                   linking_facets = linking_setup$linking_facets,
                   linking_threshold = linking_setup$min_common_anchors,
+                  refit_identity_contract = refit_controls$identity_contract,
+                  refit_rating_range = c(refit_controls$rating_min,
+                                         refit_controls$rating_max),
+                  refit_slope_facet = refit_controls$slope_facet,
+                  refit_optimizer = refit_controls$optimizer,
+                  refit_mml_engine = refit_controls$mml_engine,
                   functioning_label = functioning_label)
   )
   class(out) <- c("mfrm_dff", "mfrm_dif", class(out))
   out
 }
 
+#' Review differential-functioning results
+#'
+#' `summary()` returns the contrast, cell, summary, and configuration tables
+#' without refitting. A summary from [analyze_dff()] keeps its DFF label when
+#' printed; a summary from [analyze_dif()] keeps its DIF label.
+#'
+#' @param object,x An `mfrm_dff` or `mfrm_dif` result, or its summary.
+#' @param ... Reserved for generic compatibility.
+#' @return `summary()` returns a structured differential-functioning summary.
+#'   `print()` returns its input invisibly.
+#' @seealso [analyze_dff()], [analyze_dif()]
+#' @name mfrm_dff_methods
+NULL
+
+#' @rdname mfrm_dff_methods
+#' @method summary mfrm_dif
 #' @export
 summary.mfrm_dif <- function(object, ...) {
   out <- list(
@@ -1386,11 +1531,17 @@ summary.mfrm_dif <- function(object, ...) {
   out
 }
 
+#' @rdname mfrm_dff_methods
+#' @method summary mfrm_dff
 #' @export
 summary.mfrm_dff <- function(object, ...) {
-  summary.mfrm_dif(object, ...)
+  out <- summary.mfrm_dif(object, ...)
+  class(out) <- c("summary.mfrm_dff", class(out))
+  out
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print summary.mfrm_dif
 #' @export
 print.summary.mfrm_dif <- function(x, ...) {
   label <- x$config$functioning_label %||% "DFF"
@@ -1439,17 +1590,24 @@ print.summary.mfrm_dif <- function(x, ...) {
   invisible(x)
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print summary.mfrm_dff
 #' @export
 print.summary.mfrm_dff <- function(x, ...) {
   print.summary.mfrm_dif(x, ...)
+  invisible(x)
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print mfrm_dif
 #' @export
 print.mfrm_dif <- function(x, ...) {
   .print_dif_overview(x, label = "DIF")
   invisible(x)
 }
 
+#' @rdname mfrm_dff_methods
+#' @method print mfrm_dff
 #' @export
 print.mfrm_dff <- function(x, ...) {
   .print_dif_overview(x, label = "DFF")
@@ -2938,9 +3096,11 @@ plot_information <- function(x,
 #' @param top_n Maximum number of facet/step locations retained by the native
 #'   renderer for a compact display. Step transitions are always retained and
 #'   omitted facet locations are reported in `retention`; use `Inf` for the
-#'   complete final map. Native text labels remain collision-aware even when
-#'   all coordinates are retained. The FACETS-style payload retains and labels
-#'   every fitted location, grouping coincident labels when needed.
+#'   complete final map. Every retained native location is labelled using
+#'   collision-aware displaced text and leader lines; step transitions are
+#'   shown as one vertical ladder with fitted logits in their labels. The
+#'   FACETS-style payload retains and labels every fitted location, grouping
+#'   coincident labels when needed.
 #' @param show_ci Logical or `NULL`. `NULL` (the default) draws available
 #'   uncertainty intervals for the native renderer and omits them from the
 #'   FACETS-style renderer. Explicit `TRUE` with `renderer = "facets"` creates
@@ -3118,7 +3278,21 @@ plot_wright_unified <- function(fit,
     extreme_placement = extreme_placement,
     persons_per_star = persons_per_star
   )
-  plot_core$person_hist <- graphics::hist(plot_core$person$Estimate, breaks = bins, plot = FALSE)
+  person_hist_values <- plot_core$person$Estimate[
+    is.finite(plot_core$person$Estimate)
+  ]
+  plot_core$person_hist <- if (length(person_hist_values) > 0L) {
+    graphics::hist(person_hist_values, breaks = bins, plot = FALSE)
+  } else {
+    structure(
+      list(
+        breaks = c(-0.5, 0.5), counts = 0L, density = 0,
+        intensities = 0, mids = 0, xname = "finite Person estimates",
+        equidist = TRUE
+      ),
+      class = "histogram"
+    )
+  }
   plot_data <- c(
     list(
       persons = plot_core$person$Estimate,
@@ -3227,7 +3401,9 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
       residual = rep(NA_real_, length(diffs)),
       retained = rep(FALSE, length(diffs)),
       n_retained = 0L,
-      weighting = "none"
+      weighting = "none",
+      contributing = rep(FALSE, length(diffs)),
+      screening_fallback = FALSE
     ))
   }
 
@@ -3241,13 +3417,20 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
   } else {
     mean(diffs[ok])
   }
+  if (!is.finite(offset_prelim)) {
+    return(list(offset_prelim = offset_prelim, offset = NA_real_,
+      residual = rep(NA_real_, length(diffs)), retained = rep(FALSE, length(diffs)),
+      n_retained = 0L, weighting = "none", contributing = rep(FALSE, length(diffs)),
+      screening_fallback = FALSE))
+  }
 
   residual_prelim <- diffs - offset_prelim
   retained <- ok
   if (!is.null(drift_threshold) && is.finite(drift_threshold)) {
     retained <- retained & abs(residual_prelim) <= drift_threshold
   }
-  if (!any(retained)) {
+  screening_fallback <- !any(retained)
+  if (screening_fallback) {
     retained <- ok
   }
 
@@ -3264,7 +3447,11 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
     residual = diffs - offset,
     retained = retained,
     n_retained = sum(retained, na.rm = TRUE),
-    weighting = if (any(weight_retained)) "inverse_variance" else "unweighted"
+    weighting = if (any(weight_retained)) "inverse_variance" else "unweighted",
+    contributing = if (any(weight_retained)) {
+      weight_retained & is.finite(weights) & weights > 0
+    } else retained,
+    screening_fallback = screening_fallback
   )
 }
 
@@ -3303,7 +3490,11 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 
 .compute_drift <- function(fit, anchor_tbl, diagnostics = NULL, baseline_diagnostics = NULL) {
   # Get new estimates
-  new_est <- make_anchor_table(fit, include_person = FALSE)
+  new_est <- make_anchor_table(
+    fit,
+    include_person = FALSE,
+    readiness_policy = "review"
+  )
 
   # Join with baseline anchors
   joined <- dplyr::inner_join(
@@ -3362,26 +3553,29 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #'
 #' Re-estimates a fitted many-facet model on new data while holding selected
 #' facet parameters fixed at the values from a previous (baseline) calibration.
-#' This is the standard workflow for placing new data onto an existing scale,
-#' linking test forms, or carrying a baseline calibration across
-#' administration windows.
+#' This transfers baseline coordinates into a new fit through direct equality
+#' constraints. Common-scale interpretation is conditional on a defensible
+#' baseline and invariant cross-run element identity.
 #' For bounded `GPCM`, treat this as direct exploratory anchor/drift support
 #' rather than as the package's formal linking-synthesis route.
 #'
 #' @param new_data Data frame in long format (one row per rating).
-#' @param baseline_fit An `mfrm_fit` object from a previous calibration.
+#' @param baseline_fit An inference-ready `mfrm_fit` object from a previous
+#'   calibration under the current readiness contract.
 #' @param person Character column name for person/examinee.
 #' @param facets Character vector of facet column names.
 #' @param score Character column name for the rating score.
 #' @param anchor_facets Character vector of facets to anchor (default: all
 #'   non-Person facets).
-#' @param include_person If `TRUE`, also anchor person estimates.
+#' @param include_person If `TRUE`, also anchor person estimates. Use only when
+#'   the same persons are intentionally constrained across runs.
 #' @param weight Optional character column name for observation weights.
 #' @param model Scale model override; defaults to baseline model.
 #' @param method Estimation method override; defaults to baseline method.
 #' @param anchor_policy How to handle anchor issues: `"warn"`, `"error"`,
 #'   `"silent"`.
-#' @param ... Additional arguments passed to [fit_mfrm()].
+#' @param ... For `anchor_to_baseline()`, additional arguments passed to
+#'   [fit_mfrm()]. Ignored by the S3 print and summary methods on this page.
 #'
 #' @details
 #' This function automates the baseline-anchored calibration workflow:
@@ -3392,6 +3586,14 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' 3. Runs [diagnose_mfrm()] on the anchored fit.
 #' 4. Computes element-level differences (new estimate minus baseline
 #'    estimate) for every common element.
+#'
+#' The helper refuses a baseline unless its current readiness record has
+#' `InferenceReady = TRUE`. Also confirm compatible model, score coding,
+#' orientation, and population conventions, and document that anchor labels
+#' denote the same elements with invariant meaning. The function checks object
+#' shape and receiving-data anchor compatibility, but does not establish those
+#' substantive conditions. Fixing parameters can identify coordinates; it does
+#' not create observed common-rating links.
 #'
 #' The `model` and `method` arguments default to the baseline fit's settings
 #' so the calibration framework remains consistent.  Elements present in the
@@ -3411,6 +3613,11 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' An element is **flagged** when \eqn{|\Delta_e| > 0.5} logits or
 #' \eqn{|\Delta_e / SE_{\Delta_e}| > 2.0}, where
 #' \eqn{SE_{\Delta_e} = \sqrt{SE_{\mathrm{base}}^2 + SE_{\mathrm{new}}^2}}.
+#' `SE_Diff` is a plug-in independence calculation. It does not propagate
+#' baseline-anchor uncertainty or cross-fit covariance, and anchored estimates
+#' in the new fit are constrained rather than independently re-estimated.
+#' Consequently, `Drift_SE_Ratio` and `Flag` are descriptive consistency
+#' screens, not formal z tests or calibrated error-rate decisions.
 #'
 #' @section Which function should I use?:
 #' - Use `anchor_to_baseline()` when you have one new dataset and want to place
@@ -3460,8 +3667,9 @@ compute_equating_offset <- function(diffs, se_from = NULL, se_to = NULL,
 #' # criterion identities from one synthetic calibration design.
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+#' # Two balanced 12-Person waves retain every Rater and Criterion.
+#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", quad_points = 7, maxit = 30)
 #' res <- anchor_to_baseline(d2, fit1, "Person",
@@ -3523,7 +3731,6 @@ anchor_to_baseline <- function(new_data, baseline_fit,
 
 #' @rdname anchor_to_baseline
 #' @param x An `mfrm_anchored_fit` object.
-#' @param ... Ignored.
 #' @export
 print.mfrm_anchored_fit <- function(x, ...) {
   print(summary(x))
@@ -3584,7 +3791,7 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' Detect anchor drift across multiple calibrations
 #'
 #' Compares facet estimates across two or more calibration waves to identify
-#' elements whose difficulty/severity has shifted beyond acceptable thresholds.
+#' elements whose difficulty/severity has shifted beyond supplied screening thresholds.
 #' Useful for monitoring rater drift over time or checking the stability of
 #' item banks.
 #'
@@ -3592,11 +3799,13 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'   `list(Year1 = fit1, Year2 = fit2)`).
 #' @param facets Character vector of facets to compare (default: all
 #'   non-Person facets).
-#' @param drift_threshold Absolute drift threshold for flagging (logits,
+#' @param drift_threshold Absolute screening threshold for flagging (logits,
 #'   default 0.5).
-#' @param flag_se_ratio Drift/SE ratio threshold for flagging (default 2.0).
+#' @param flag_se_ratio Drift/SE ratio screening threshold for flagging
+#'   (default 2.0).
 #' @param reference Index or name of the reference fit (default: first).
-#' @param include_person Include person estimates in comparison.
+#' @param include_person Include person estimates in comparison. Use only when
+#'   the person identifiers refer to the same persons across fitted waves.
 #'
 #' @details
 #' For each non-reference wave, the function extracts facet-level estimates
@@ -3609,13 +3818,33 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' overall shift between calibrations. The function also records how many
 #' common elements survive the screening step within each linking facet and
 #' treats fewer than 5 retained common elements per facet as thin support.
+#' This count is a package screening convention, not a universal adequacy
+#' threshold.
+#'
+#' One `LinkOffset` is pooled across all selected common elements and facets.
+#' If at least one pair has finite positive SEs, only pairs with such SEs
+#' contribute to the inverse-variance weighted offset; rows without usable SEs
+#' can still appear in retained/support counts. If preliminary residual
+#' screening would retain no row, the current implementation falls back to all
+#' finite differences. Use a single substantively coherent facet when a common
+#' shift across facet blocks is not defensible, and inspect `drift_table` rather
+#' than treating `LinkSupportAdequate` as sufficient evidence.
+#'
+#' Matching `Facet` and `Level` labels are treated as common elements; the
+#' helper cannot verify that they have invariant meaning across waves. The
+#' input fits must therefore use compatible model, score, orientation, and
+#' population conventions and must be independently reviewed for fit readiness.
+#' Offset removal aligns coordinates conditionally on those assumptions; it is
+#' not proof of scale equivalence.
 #'
 #' An element is **flagged** when either condition is met:
 #' \deqn{|\Delta_e| > \texttt{drift\_threshold}}
 #' \deqn{|\Delta_e / SE_{\Delta_e}| > \texttt{flag\_se\_ratio}}
-#' The dual-criterion approach guards against flagging elements with large
-#' but imprecise estimates, and against missing small but precisely estimated
-#' shifts.
+#' The two criteria are joined by `OR`: a large absolute residual is flagged
+#' even when imprecise, while a smaller residual can be flagged by its SE ratio.
+#' The ratio uses only the two element SEs and omits uncertainty in the
+#' estimated `LinkOffset` and any cross-fit covariance. It is therefore a
+#' descriptive screen, not a formal z test with a calibrated error rate.
 #'
 #' When `facets` is `NULL`, all non-Person facets are compared.  Providing a
 #' subset (e.g., `facets = "Criterion"`) restricts comparison to those facets
@@ -3662,8 +3891,8 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #'     \item{summary}{Drift summary aggregated by facet and wave.}
 #'     \item{common_elements}{Tibble of pairwise common-element counts.}
 #'     \item{common_vs_reference}{Tibble of common-element counts
-#'       between each wave and the reference wave (i.e., which
-#'       elements remain comparable across the entire chain).}
+#'       between each wave and the reference wave (i.e., which labels remain
+#'       available as candidate common elements).}
 #'     \item{n_common_all_waves}{Integer count of elements that are
 #'       common across every wave; used by `summary()` to gauge how
 #'       robust the chain is to chained linking error.}
@@ -3680,8 +3909,9 @@ print.summary.mfrm_anchored_fit <- function(x, ...) {
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+#' # Two balanced 12-Person waves retain every Rater and Criterion.
+#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", quad_points = 7, maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -3707,7 +3937,12 @@ detect_anchor_drift <- function(fits,
 
   # Extract estimates from each fit
   est_list <- lapply(fits, function(f) {
-    make_anchor_table(f, facets = facets, include_person = include_person)
+    make_anchor_table(
+      f,
+      facets = facets,
+      include_person = include_person,
+      readiness_policy = "review"
+    )
   })
 
   # Get SE from diagnostics$measures for each fit
@@ -3970,9 +4205,10 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' Links a series of calibration waves by computing mean offsets between
 #' adjacent pairs of fits. Common linking elements (e.g., raters or items
 #' that appear in consecutive administrations) are used to estimate the
-#' scale shift. Cumulative offsets place all waves on a common metric
-#' anchored to the first wave. The procedure is intended as a practical
-#' screened linking aid, not as a full general-purpose equating framework.
+#' scale shift. Cumulative offsets express all waves relative to the first
+#' wave, conditional on the common-element assumptions. The procedure is a
+#' practical screened linking aid, not a full general-purpose equating
+#' framework or proof of common-scale comparability.
 #'
 #' @param fits Named list of `mfrm_fit` objects in chain order.
 #' @param anchor_facets Character vector of facets to use as linking
@@ -3998,8 +4234,27 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' 6. Flags links with fewer than 5 retained common elements in any linking
 #'    facet as having thin support.
 #'
+#' The five-element rule is a package screening convention, not a universal
+#' adequacy threshold. Matching labels are assumed to identify the same
+#' invariant elements, and input fits are assumed to use compatible model,
+#' score, orientation, and population conventions. The helper does not verify
+#' those assumptions or source-fit readiness. In particular, adjacent label
+#' overlap and a finite offset do not by themselves establish a common scale.
+#'
+#' Each adjacent `Offset` is one value pooled across all selected facets. When
+#' any common rows have finite positive SEs, only those rows contribute to the
+#' inverse-variance weighted offset; retained/support counts can still include
+#' rows without usable SEs. If preliminary screening would remove every row,
+#' the implementation falls back to all finite differences. Prefer one
+#' substantively coherent `anchor_facets` block unless a common shift across
+#' facets is justified.
+#'
 #' Cumulative offsets are computed by chaining link offsets from Wave 1
 #' forward, placing all waves onto the metric of the first wave.
+#' `Offset_SD` is retained-element residual spread, not the standard error of
+#' `Offset`. No offset SE, confidence interval, cross-fit covariance, or
+#' cumulative uncertainty propagation is currently returned, so uncertainty
+#' can compound along the chain without appearing in `cumulative`.
 #'
 #' Elements whose per-link residual exceeds `drift_threshold` are flagged
 #' in `$element_detail$Flag`.  A high `Offset_SD`, many flagged elements, or a
@@ -4031,6 +4286,113 @@ print.summary.mfrm_anchor_drift <- function(x, ...) {
 #' - `$config`: records wave names and analysis parameters.
 #' - Read `links` before `cumulative`: weak adjacent links can make later
 #'   cumulative offsets less trustworthy.
+#'
+#' @section Common-element graph:
+#' `plot(chain, type = "graph")` displays waves as squares and common elements
+#' as circles, including waves without retained connections. Each element node
+#' belongs to one reviewed link: `[L1]` refers to link 1 in the returned links
+#' table. The same element can have different screening results in different
+#' comparisons, so it is repeated per link. Solid lines denote retained,
+#' unflagged elements; dot-dash denotes retained elements with a drift flag or
+#' an unavailable flag; dashed denotes excluded elements; dotted denotes
+#' unknown retention. These distinctions also apply in monochrome.
+#'
+#' This is a graph of screened common-element comparisons, not an inventory
+#' of fixed anchors or an all-pairs assessment. Retention does not guarantee
+#' positive weight in the offset, invariance, adequate support or precision.
+#' New chains store positional `FromID`/`ToID` in `links` and `LinkID` in
+#' `element_detail`; display names may repeat or contain punctuation. Older
+#' chains are matched by their complete link labels; ambiguous references
+#' require rebuilding the chain.
+#'
+#' With `draw = FALSE`, the plot returns an `mfrm_plot_data` object. Its
+#' `$data$data` contains `nodes`, `edges`, `links`, `elements`, `n_waves`,
+#' `n_anchors` (unique facet/level identities), and `n_element_nodes`
+#' (link-specific nodes). Edge `from`/`to` refer to node `NodeId`; `AnchorId`
+#' identifies the same facet/level across links. `Retained`, `Flag`, `Status`
+#' and `Reason` preserve screening information. `RetainedDegree` counts
+#' retained incidences, not statistical information. Interpretation notes
+#' remain in `$data$notes` and in `print()` even when `show_notes = FALSE`.
+#' Full labels remain in the node table if the device is too narrow. Base
+#' graphics are sufficient; no optional graph package is needed.
+#'
+#' @section Wave links and common-element removal:
+#' `plot(chain, type = "links")` summarizes the recorded wave-to-wave
+#' comparisons. Numbers count common elements with `Retained = TRUE`, including
+#' flagged retained elements. A dotted comparison has no recorded retained
+#' element; this is not proof that the original rating design is disconnected.
+#' Missing retention is counted separately. Dot-dash connections have flagged
+#' retained elements or inadequate/unknown recorded link support.
+#'
+#' `plot(chain, type = "anchor_removal")` removes each facet/level identity,
+#' one at a time, from all recorded comparisons. Other retention decisions stay
+#' fixed. The horizontal axis counts newly disconnected unordered wave pairs,
+#' including indirect paths. Pairs already disconnected at baseline are not
+#' counted. Losing a direct link need not disconnect its endpoints if another
+#' path remains. Zero means no new graph disconnection, not negligible impact
+#' on estimates or adequate linking support. No screening, offsets, estimates,
+#' SEs or confidence intervals are recomputed by either view.
+#'
+#' Both views return `$data$data$nodes`, `links`, `elements` and `summary`.
+#' The removal view additionally returns `removal` (one row per common-element
+#' identity), `lost_links` (recorded comparisons losing their last retained
+#' element), `lost_pairs` (newly disconnected wave pairs), and `components_after`
+#' (baseline and post-removal membership for every wave). Use `AnchorId` to
+#' join the removal table to these details; `FromID`/`ToID` and `WaveID` identify
+#' waves independently of display labels. Component numbers are local to each
+#' partition: compare membership relations, not numeric labels across Before,
+#' After or different removal scenarios. Removal counts
+#' include `RetainedOccurrences`, `UnknownOccurrences`, `LostLinks`,
+#' `ComponentsAfter` and `NewlyDisconnectedPairs`.
+#'
+#' These calculations reuse the recorded common-element graph; they do not
+#' search for new links or assess statistical influence. The full lost-pair
+#' table can be large for chains with many waves and common elements. Compact
+#' plots abbreviate long labels and warn when IDs or a larger device are needed;
+#' full identities and interpretation notes remain in the returned tables.
+#'
+#' @section Conditional offset sensitivity:
+#' `plot(chain, type = "offset_sensitivity")` removes each common `(Facet,
+#' Level)` identity from every adjacent link, then reruns the existing offset
+#' calculation with its recorded drift threshold. Preliminary offsets,
+#' screening, final weighted/unweighted offsets and cumulative offsets are
+#' recomputed. The source wave estimates and SEs remain fixed: this is a
+#' conditional linking sensitivity calculation, not a refit of item, rater or
+#' person parameters or a new uncertainty estimate.
+#'
+#' The view requires an ordered adjacent chain with the recorded method,
+#' threshold, support guideline, source estimate/SE columns and offsets.
+#' Recomputed baseline offsets must agree with recorded offsets within
+#' `1e-8 * max(1, abs(recorded_offset))`; inconsistent or incomplete source
+#' records require rebuilding the chain. Numerical overflow/underflow that
+#' prevents a finite preliminary offset is reported as a numerical failure.
+#'
+#' The figure shows each deletion's maximum absolute cumulative offset change
+#' over finite comparisons, excluding the fixed-zero first wave. Shapes
+#' distinguish complete comparisons, partial comparisons and no finite
+#' comparison. An unavailable comparison remains `NA`, not zero. If one link
+#' becomes unavailable, later cumulative offsets also become unavailable.
+#' Read the detailed tables when a figure marks an incomplete comparison.
+#'
+#' The `$data$data` payload contains `settings`, `baseline_links`, `baseline_cumulative`,
+#' `baseline_elements`, `removal`, `links`, `cumulative`, `retention_changes`
+#' and `common_by_facet`. Join `RemovedAnchorId` in scenario tables to
+#' `removal$AnchorId`. Signed `Change` is recalculated minus baseline offset.
+#' `Status` distinguishes `computed`, `no_common`, `no_finite_differences`
+#' and `numerical_failure`. `N_Contributing` and element `Contributing` identify
+#' positive finite weight contributors (or retained rows in an unweighted
+#' offset). `retention_changes` records other elements whose retention,
+#' contribution or residual flag changes; the deliberately removed element is
+#' omitted. Facets whose last element is removed remain in support tables with
+#' zero counts. No support failure is converted into a statement of readiness.
+#'
+#' `ScreeningFallback` identifies the existing rule that restores all finite
+#' differences if preliminary screening would remove every one. SEs may be
+#' missing, in which case the existing unweighted fallback is used. No offset
+#' SE, confidence interval, cross-fit covariance, or uncertainty propagation
+#' is supplied. A small conditional change is not evidence of anchor invariance
+#' or negligible change under a full model refit. Notes remain available when
+#' figure titles and footers are omitted.
 #'
 #' @section Typical workflow:
 #' 1. Fit each administration wave separately: `fit_a <- fit_mfrm(...)`.
@@ -4081,7 +4443,12 @@ build_equating_chain <- function(fits,
 
   # Extract estimates
   est_list <- lapply(fits, function(f) {
-    make_anchor_table(f, facets = anchor_facets, include_person = include_person)
+    make_anchor_table(
+      f,
+      facets = anchor_facets,
+      include_person = include_person,
+      readiness_policy = "review"
+    )
   })
   se_list <- lapply(fits, function(f) {
     measure_se_table(f, include_person = include_person)
@@ -4171,6 +4538,7 @@ build_equating_chain <- function(fits,
       common <- common |>
         dplyr::mutate(
           Link = paste0(wave_names[i], " -> ", wave_names[i + 1]),
+          LinkID = i,
           Diff = .data$Est_To - .data$Est_From,
           Offset_Prelim = offset_info$offset_prelim,
           Offset = offset,
@@ -4183,6 +4551,7 @@ build_equating_chain <- function(fits,
 
     links <- c(links, list(tibble::tibble(
       Link = i,
+      FromID = i, ToID = i + 1L,
       From = wave_names[i], To = wave_names[i + 1],
       N_Common = as.integer(n_common),
       N_Retained = if (n_common > 0) offset_info$n_retained else 0L,
@@ -4245,101 +4614,102 @@ print.mfrm_equating_chain <- function(x, ...) {
 
 #' @rdname build_equating_chain
 #' @param y Unused (S3 plot signature requirement).
-#' @param type One of `"graph"` (bipartite Wave x anchor-element graph;
-#'   requires the `igraph` package), `"common_anchors"` (default; bar
-#'   chart of common-anchor counts per wave pair), or `"chain"`.
+#' @param type One of `"graph"` (bipartite wave x link-specific common-element
+#'   graph), `"common_anchors"` (default; bar
+#'   chart of common-anchor counts per wave pair), `"chain"` (cumulative
+#'   offsets), `"links"` (recorded wave comparisons), or `"anchor_removal"`
+#'   (newly disconnected wave pairs after deleting each common element), or
+#'   `"offset_sensitivity"` (conditional rescreened linking-offset changes).
 #' @param preset Visual preset.
 #' @param draw If `TRUE`, draw the plot with base graphics.
+#' @param show_title Logical; display the main title.
+#' @param show_notes Logical; display graph/topology interpretation footers.
+#'   Returned notes and ordinary R warnings are unaffected. Axes, legends and
+#'   data labels remain visible; other chain views have no interpretation footer.
 #' @export
 plot.mfrm_equating_chain <- function(x, y = NULL,
-                                     type = c("common_anchors", "graph", "chain"),
+                                     type = c("common_anchors", "graph", "chain", "links", "anchor_removal", "offset_sensitivity"),
                                      preset = c("standard", "publication", "compact", "monochrome"),
-                                     draw = TRUE, ...) {
+                                     draw = TRUE, show_title = TRUE, show_notes = TRUE, ...) {
   if (!inherits(x, "mfrm_equating_chain")) {
     stop("`x` must be an mfrm_equating_chain object.", call. = FALSE)
+  }
+  for (arg in c("show_title", "show_notes")) {
+    value <- get(arg)
+    if (!is.logical(value) || length(value) != 1L || is.na(value)) {
+      stop(sprintf("`%s` must be TRUE or FALSE.", arg), call. = FALSE)
+    }
   }
   type <- match.arg(type)
   style <- resolve_plot_preset(preset)
   if (identical(type, "chain")) {
     if (isTRUE(draw)) apply_plot_preset(style)
-    return(.plot_equating_chain(x, draw = draw, style = style, ...))
+    return(.plot_equating_chain(x, draw = draw, style = style,
+      show_title = show_title, show_notes = show_notes, ...))
+  }
+  if (identical(type, "offset_sensitivity")) {
+    sensitivity <- .equating_offset_sensitivity(x)
+    key <- data.frame(Label = c("All cumulative comparisons available", "Some comparisons unavailable", "No finite cumulative comparison"),
+      Shape = c(19, 17, 4), Color = unname(.plot_series_colors(1:3, style$name)))
+    out <- new_mfrm_plot_data("equating_chain_offset_sensitivity", list(
+      data = sensitivity$data, notes = sensitivity$notes, styles = key,
+      title = "Common-element offset sensitivity",
+      subtitle = "Rescreened linking offsets; source estimates and SEs held fixed",
+      display = list(show_title = show_title, show_notes = show_notes),
+      legend = new_plot_legend(key$Label, rep("availability", 3), rep("shape", 3), key$Shape),
+      preset = style$name
+    ))
+    if (isTRUE(draw)) .draw_equating_offset_sensitivity(out, style)
+    return(invisible(out))
+  }
+  if (type %in% c("links", "anchor_removal")) {
+    removal <- identical(type, "anchor_removal")
+    topology <- .equating_link_topology(.equating_graph_data(x), removal = removal)
+    if (removal) {
+      key <- data.frame(Status = c("disconnected", "unchanged", "not_retained"),
+        Label = c("New disconnection", "No new disconnection", "No retained occurrence"),
+        Shape = c(19, 1, 4), stringsAsFactors = FALSE)
+    } else {
+      key <- data.frame(Status = c("retained", "retained_review", "no_retained"),
+        Label = c("Retained connection", "Retained; review support", "No recorded retained connection"),
+        Linetype = c("solid", "dotdash", "dotted"), stringsAsFactors = FALSE)
+    }
+    key$Color <- unname(.plot_series_colors(key$Status, style$name))
+    out <- new_mfrm_plot_data(paste0("equating_chain_", type), list(
+      data = topology$data, notes = topology$notes, styles = key,
+      title = if (removal) "Common-element removal" else "Recorded wave links",
+      subtitle = "Connectivity of recorded retained elements; no re-estimation",
+      display = list(show_title = show_title, show_notes = show_notes),
+      legend = new_plot_legend(key$Label, rep("topology", 3),
+        rep(if (removal) "shape" else "linetype", 3),
+        if (removal) key$Shape else key$Linetype),
+      preset = style$name
+    ))
+    if (isTRUE(draw)) .draw_equating_topology(out, style, removal = removal)
+    return(invisible(out))
   }
   if (identical(type, "graph")) {
-    if (!requireNamespace("igraph", quietly = TRUE)) {
-      message("`plot(..., type = \"graph\")` requires the `igraph` package ",
-              "(in Suggests). Falling back to type = \"common_anchors\".")
-      type <- "common_anchors"
-    } else {
-      detail <- as.data.frame(x$element_detail %||% data.frame(),
-                              stringsAsFactors = FALSE)
-      if (nrow(detail) == 0L ||
-          !all(c("Facet", "Level") %in% names(detail))) {
-        stop("Graph view requires Facet/Level columns in element_detail.",
-             call. = FALSE)
-      }
-      detail$AnchorId <- paste0(detail$Facet, ":", detail$Level)
-      if ("Wave" %in% names(detail)) {
-        edges <- unique(detail[, c("Wave", "AnchorId")])
-      } else if ("Link" %in% names(detail)) {
-        # Parse "<from> -> <to>" / "<from> | <to>" / "<from> <-> <to>"
-        # link strings into both endpoints so each wave-anchor pair
-        # becomes an edge.
-        link_str <- as.character(detail$Link)
-        parts <- strsplit(link_str, "\\s*(->|<->|<-|\\|)\\s*", perl = TRUE)
-        endpoints <- do.call(rbind, lapply(seq_along(parts), function(i) {
-          p <- parts[[i]]
-          if (length(p) >= 2L) {
-            data.frame(
-              Wave = c(p[1], p[2]),
-              AnchorId = rep(detail$AnchorId[i], 2L),
-              stringsAsFactors = FALSE
-            )
-          } else if (length(p) == 1L) {
-            data.frame(Wave = p[1], AnchorId = detail$AnchorId[i],
-                       stringsAsFactors = FALSE)
-          } else NULL
-        }))
-        edges <- if (!is.null(endpoints)) unique(endpoints) else
-          data.frame(Wave = character(0), AnchorId = character(0),
-                     stringsAsFactors = FALSE)
-      } else {
-        stop("Graph view requires either a Wave column or a Link column ",
-             "(parseable as 'WaveA -> WaveB').", call. = FALSE)
-      }
-      g <- igraph::graph_from_data_frame(
-        d = edges, directed = FALSE,
-        vertices = data.frame(
-          name = c(unique(edges$Wave), unique(edges$AnchorId)),
-          type = c(rep(TRUE, length(unique(edges$Wave))),
-                   rep(FALSE, length(unique(edges$AnchorId))))
-        )
-      )
-      out <- new_mfrm_plot_data(
-        "equating_chain_graph",
-        list(
-          data = list(edges = edges, n_waves = length(unique(edges$Wave)),
-                       n_anchors = length(unique(edges$AnchorId))),
-          title = "Equating chain (bipartite graph)",
-          subtitle = sprintf("%d wave(s), %d anchor element(s)",
-                              length(unique(edges$Wave)),
-                              length(unique(edges$AnchorId))),
-          preset = style$name
-        )
-      )
-      if (isTRUE(draw)) {
-        apply_plot_preset(style)
-        igraph::V(g)$color <- ifelse(igraph::V(g)$type,
-                                      style$accent_primary,
-                                      style$accent_tertiary)
-        igraph::V(g)$shape <- ifelse(igraph::V(g)$type, "square", "circle")
-        igraph::V(g)$label.cex <- 0.7
-        plot(g, layout = igraph::layout_as_bipartite(g),
-             vertex.size = 14, vertex.label.color = "black",
-             edge.color = style$grid, edge.width = 1,
-             main = "Equating chain (bipartite graph)")
-      }
-      return(invisible(out))
-    }
+    graph_data <- .equating_graph_data(x)
+    status <- c("retained", "retained_review", "excluded", "candidate")
+    colors <- .plot_series_colors(status, style$name)
+    key <- data.frame(
+      Status = status,
+      Label = c("Retained", "Retained; review drift", "Excluded", "Retention unknown"),
+      Linetype = c("solid", "dotdash", "dashed", "dotted"),
+      Color = unname(colors), stringsAsFactors = FALSE
+    )
+    out <- new_mfrm_plot_data("equating_chain_graph", list(
+      data = graph_data$data, notes = graph_data$notes,
+      styles = key,
+      title = "Screened common-element links",
+      subtitle = sprintf("%d waves; %d unique elements; %d link-specific element nodes",
+        graph_data$data$n_waves, graph_data$data$n_anchors, graph_data$data$n_element_nodes),
+      display = list(show_title = show_title, show_notes = show_notes),
+      legend = new_plot_legend(key$Label, rep("screening", 4), rep("linetype", 4), key$Linetype),
+      preset = style$name
+    ))
+    if (isTRUE(draw)) .draw_equating_graph(out, style)
+    return(invisible(out))
   }
   # type == "common_anchors": bar chart of pairwise common anchor counts.
   links <- as.data.frame(x$links %||% data.frame(), stringsAsFactors = FALSE)
@@ -4361,13 +4731,15 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
     list(
       data = links,
       title = "Common anchors per wave pair",
+      display = list(show_title = show_title, show_notes = show_notes),
       subtitle = sprintf("%d pairwise comparison(s)", nrow(links)),
       preset = style$name
     )
   )
+  out$data$notes <- .mfrm_plot_notes(out$data)
   if (isTRUE(draw)) {
     apply_plot_preset(style)
-    old_par <- graphics::par(no.readonly = TRUE)
+    old_par <- graphics::par()["mar"]
     on.exit(graphics::par(old_par), add = TRUE)
     graphics::par(mar = c(8, 5, 3, 1))
     graphics::barplot(
@@ -4375,7 +4747,7 @@ plot.mfrm_equating_chain <- function(x, y = NULL,
       names.arg = links$Pair,
       las = 2,
       col = style$accent_primary,
-      main = "Common anchors per wave pair",
+      main = .mfrm_plot_display_title(out$data),
       ylab = "N common"
     )
   }
@@ -4843,6 +5215,9 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' The helper keeps the current conservative interpretation policy:
 #' anchor drift and screened links are operational review tools, not automatic
 #' proofs of scale equivalence or score comparability.
+#' It also does not verify source-fit readiness, cross-wave element identity,
+#' invariance, or the external assumptions behind group anchors; these must be
+#' established before promoting the synthesized review.
 #'
 #' @section Recommended input route:
 #' Use existing package-native outputs in this order:
@@ -4873,8 +5248,9 @@ print.summary.mfrm_equating_chain <- function(x, ...) {
 #' # same rater and criterion identities by construction.
 #' toy <- load_mfrmr_data("example_core")
 #' people <- unique(toy$Person)
-#' d1 <- toy[toy$Person %in% people[1:24], , drop = FALSE]
-#' d2 <- toy[toy$Person %in% people[25:48], , drop = FALSE]
+#' # Two balanced 12-Person waves retain every Rater and Criterion.
+#' d1 <- toy[toy$Person %in% people[1:12], , drop = FALSE]
+#' d2 <- toy[toy$Person %in% people[13:24], , drop = FALSE]
 #' fit1 <- fit_mfrm(d1, "Person", c("Rater", "Criterion"), "Score",
 #'                  method = "MML", quad_points = 7, maxit = 30)
 #' fit2 <- fit_mfrm(d2, "Person", c("Rater", "Criterion"), "Score",
@@ -6120,6 +6496,8 @@ print.summary.mfrm_linking_review <- function(x, ...) {
 #' @examples
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
+#' # A balanced slice retains every Rater and Criterion while running quickly.
+#' toy <- toy[toy$Person %in% unique(toy$Person)[1:12], , drop = FALSE]
 #' fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                 method = "MML", model = "RSM", quad_points = 5)
 #' diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
@@ -6607,6 +6985,132 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
     dplyr::ungroup()
 }
 
+.weighting_review_comparison_contract <- function(rasch_fit,
+                                                  gpcm_fit,
+                                                  comparison,
+                                                  reference_model,
+                                                  aligned_pcm_owner,
+                                                  pcm_gpcm_lrt) {
+  basis <- comparison$comparison_basis %||% list()
+  comparison_tbl <- as.data.frame(
+    comparison$table %||% data.frame(),
+    stringsAsFactors = FALSE
+  )
+  reference_method <- public_mfrm_method_label(
+    as.character(rasch_fit$config$method %||% NA_character_)[1]
+  )
+  comparison_method <- public_mfrm_method_label(
+    as.character(gpcm_fit$config$method %||% NA_character_)[1]
+  )
+  same_method <- identical(reference_method, comparison_method)
+  both_jml <- same_method && identical(reference_method, "JML")
+  both_mml <- same_method && identical(reference_method, "MML")
+  same_data <- isTRUE(basis$same_data)
+  both_ready <- isTRUE(
+    basis$all_inference_ready %||% basis$all_converged
+  )
+  ic_comparable <- isTRUE(basis$ic_comparable)
+  ic_selectable <- isTRUE(basis$all_ic_selectable)
+
+  loglik_difference <- NA_real_
+  if (nrow(comparison_tbl) >= 2L && "LogLik" %in% names(comparison_tbl)) {
+    loglik <- suppressWarnings(as.numeric(comparison_tbl$LogLik[seq_len(2L)]))
+    if (length(loglik) == 2L && all(is.finite(loglik))) {
+      loglik_difference <- loglik[2] - loglik[1]
+    }
+  }
+
+  evidence_tier <- if (ic_comparable) {
+    "same_basis_mml_information_criteria"
+  } else if (both_jml && same_data && !both_ready) {
+    "jml_optimizer_trace_only_not_inference_ready"
+  } else if (both_jml && same_data) {
+    "jml_descriptive_reweighting_only"
+  } else if (both_mml && same_data && !both_ready) {
+    "mml_optimizer_trace_only_not_inference_ready"
+  } else if (both_mml && same_data && !ic_selectable) {
+    "mml_screening_or_review_grid_only"
+  } else if (both_mml && same_data) {
+    "mml_noncomparable_descriptive_only"
+  } else {
+    "cross_method_or_data_not_comparable"
+  }
+
+  loglik_status <- if (!is.finite(loglik_difference)) {
+    "unavailable"
+  } else if (!both_ready) {
+    "optimizer_trace_only_not_inference_ready"
+  } else if (both_jml) {
+    "descriptive_unpenalized_gain_not_selection"
+  } else if (ic_comparable) {
+    "available_but_read_with_information_criterion_penalties"
+  } else {
+    "descriptive_noncomparable"
+  }
+
+  formal_selection <- ic_comparable
+  selection_route <- if (formal_selection) {
+    "AIC_PersonBIC_SABIC_candidate_set_review"
+  } else if (both_jml) {
+    "withheld_JML_has_no_automatic_PCM_GPCM_selection"
+  } else {
+    "withheld_comparison_basis_not_selectable"
+  }
+
+  facets_role <- if (identical(reference_model, "PCM") && both_jml &&
+                      aligned_pcm_owner) {
+    "PCM_JML_side_only_no_FACETS_free_slope_GPCM_counterpart"
+  } else if (identical(reference_model, "PCM") && both_jml) {
+    "PCM_JML_side_only_owner_mismatch_blocks_reduction"
+  } else {
+    "not_an_internal_free_slope_comparator"
+  }
+
+  preferred_value <- function(criterion) {
+    if (!formal_selection) return(NA_character_)
+    as.character(comparison$preferred[[criterion]] %||% NA_character_)[1]
+  }
+
+  recommended_use <- if (both_jml) {
+    paste(
+      "Treat the likelihood difference and slopes as descriptive optimizer",
+      "evidence only; use declared unit- and non-unit-slope recovery conditions",
+      "before making a PCM-versus-GPCM claim."
+    )
+  } else if (formal_selection) {
+    paste(
+      "Read candidate-set information criteria together with slope stability,",
+      "information redistribution, and a denser common quadrature sensitivity check."
+    )
+  } else {
+    paste(
+      "Repair inference readiness, integration selectability, or comparison",
+      "identity before using this pair for model selection."
+    )
+  }
+
+  tibble::tibble(
+    ReferenceModel = reference_model,
+    ComparisonModel = as.character(gpcm_fit$config$model %||% NA_character_)[1],
+    ReferenceMethod = reference_method,
+    ComparisonMethod = comparison_method,
+    SameMethod = same_method,
+    SamePreparedData = same_data,
+    BothInferenceReady = both_ready,
+    EvidenceTier = evidence_tier,
+    FormalModelSelectionAvailable = formal_selection,
+    SelectionRoute = selection_route,
+    ObservedLogLikDifference = loglik_difference,
+    LogLikDifferenceStatus = loglik_status,
+    AICPreferred = preferred_value("AIC"),
+    PersonBICPreferred = preferred_value("BIC"),
+    SABICPreferred = preferred_value("SABIC"),
+    PCMvsGPCMLRT = pcm_gpcm_lrt,
+    FACETSComparisonRole = facets_role,
+    RecommendedUse = recommended_use
+  )
+}
+
 #' Build a weighting-policy review between Rasch-family and bounded GPCM fits
 #'
 #' @param rasch_fit Output from [fit_mfrm()] using `model = "RSM"` or `"PCM"`.
@@ -6635,6 +7139,20 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #' The result is intended for substantive review, not for automatic model
 #' selection. In particular, a better-fitting `GPCM` should not by itself be
 #' interpreted as a reason to discard an equal-weighting Rasch-family route.
+#' The fitted GPCM contains one slope for every level of one designated facet,
+#' not one common slope and not simultaneous criterion-by-rater slope blocks.
+#' The overview records the slope owner, step owner, level count, free relative
+#' slope contrasts, and whether the supplied reference is the exact unit-slope
+#' PCM response-kernel reduction. A formal PCM-versus-GPCM chi-square LRT is
+#' intentionally withheld in the current comparison contract.
+#' The returned `comparison_contract` separates three evidence channels:
+#' selectable same-basis MML information criteria, descriptive JML
+#' reweighting, and non-ready optimizer traces. In particular, a JML
+#' log-likelihood increase is not promoted to automatic PCM-versus-GPCM model
+#' selection because it is unpenalized and the GPCM contains additional slope
+#' parameters. FACETS may serve as a direct comparator for the PCM/JML side
+#' only; its post-fit discrimination statistic is not a jointly estimated
+#' free-slope GPCM counterpart.
 #'
 #' @section Recommended input route:
 #' 1. Fit an equal-weighting reference model with `model = "RSM"` or `"PCM"`.
@@ -6645,6 +7163,12 @@ print.summary.mfrm_misfit_casebook <- function(x, ...) {
 #'
 #' @section What the returned tables mean:
 #' - `model_comparison`: same-data model-comparison bundle from [compare_mfrm()].
+#'   AIC/Person-BIC/SABIC ranking is available only when
+#'   `model_comparison$table$ICComparable` is true. PCM-versus-GPCM LRT remains
+#'   unavailable even though PCM is the aligned GPCM's unit-slope reduction.
+#' - `comparison_contract`: one-row evidence-tier table stating whether formal
+#'   model selection is available, how any observed log-likelihood difference
+#'   may be read, and the bounded role of FACETS in a JML review.
 #' - `facet_shift`: how non-person facet estimates move under bounded `GPCM`.
 #' - `slope_profile`: which `slope_facet` levels are upweighted or downweighted.
 #' - `information_redistribution`: within-facet information-share changes
@@ -6800,12 +7324,51 @@ build_weighting_review <- function(rasch_fit,
 
   support_status <- .weighting_review_support_status()
   comparison_mode <- if (isTRUE(basis$ic_comparable)) "same_basis_fit_comparison" else "descriptive_model_contrast_only"
+  reference_model <- as.character(
+    rasch_fit$config$model %||% NA_character_
+  )[1]
+  reference_step_facet <- as.character(
+    rasch_fit$config$step_facet %||% NA_character_
+  )[1]
+  aligned_pcm_owner <- identical(reference_model, "PCM") &&
+    !is.na(reference_step_facet) && nzchar(reference_step_facet) &&
+    identical(reference_step_facet, step_facet) &&
+    identical(step_facet, slope_facet)
+  pcm_gpcm_lrt <- if (!identical(reference_model, "PCM")) {
+    "not_applicable_reference_is_not_pcm"
+  } else if (aligned_pcm_owner) {
+    "withheld_current_scope"
+  } else {
+    "not_available_owner_mismatch"
+  }
+  comparison_contract <- .weighting_review_comparison_contract(
+    rasch_fit = rasch_fit,
+    gpcm_fit = gpcm_fit,
+    comparison = comparison,
+    reference_model = reference_model,
+    aligned_pcm_owner = aligned_pcm_owner,
+    pcm_gpcm_lrt = pcm_gpcm_lrt
+  )
+  slope_level_count <- nrow(slope_profile)
   overview <- tibble::tibble(
-    ReferenceModel = as.character(rasch_fit$config$model %||% NA_character_)[1],
+    ReferenceModel = reference_model,
     ComparisonModel = as.character(gpcm_fit$config$model %||% NA_character_)[1],
     ReferenceMethod = public_mfrm_method_label(as.character(rasch_fit$config$method %||% NA_character_)[1]),
     ComparisonMethod = public_mfrm_method_label(as.character(gpcm_fit$config$method %||% NA_character_)[1]),
     SlopeFacet = slope_facet,
+    StepFacet = step_facet,
+    ReferenceStepFacet = reference_step_facet,
+    AlignedStepSlopeOwner = aligned_pcm_owner,
+    SlopeLevelCount = as.integer(slope_level_count),
+    FreeRelativeSlopeContrasts = as.integer(max(slope_level_count - 1L, 0L)),
+    SlopeComposition = "single_aligned_facet_level_specific_relative_slopes",
+    SimultaneousCriterionRaterSlopeBlocks = FALSE,
+    UnitSlopePCMReduction = aligned_pcm_owner,
+    PCMvsGPCMLRT = pcm_gpcm_lrt,
+    EvidenceTier = comparison_contract$EvidenceTier,
+    FormalModelSelectionAvailable = comparison_contract$FormalModelSelectionAvailable,
+    ObservedLogLikDifference = comparison_contract$ObservedLogLikDifference,
+    LogLikDifferenceStatus = comparison_contract$LogLikDifferenceStatus,
     ReviewStatus = review_status,
     ComparisonMode = comparison_mode,
     MaxAbsLogSlope = max_abs_log_slope,
@@ -6815,7 +7378,15 @@ build_weighting_review <- function(rasch_fit,
   status <- make_summary_block(
     "Overall status" = review_status,
     "Weighting principle" = "Rasch-family equal weighting vs bounded GPCM discrimination-based reweighting",
-    "Comparison basis" = comparison_mode
+    "Slope ownership" = paste0(
+      slope_facet, " levels; one aligned slope/step owner only"
+    ),
+    "Comparison basis" = comparison_mode,
+    "Evidence tier" = comparison_contract$EvidenceTier,
+    "Formal model selection" = if (isTRUE(
+      comparison_contract$FormalModelSelectionAvailable
+    )) "available" else "withheld",
+    "PCM vs GPCM LRT" = pcm_gpcm_lrt
   )
 
   key_warnings <- character(0)
@@ -6823,6 +7394,36 @@ build_weighting_review <- function(rasch_fit,
     key_warnings <- c(
       key_warnings,
       "Model-comparison weights are descriptive only because the two fits do not share a fully comparable formal MML basis."
+    )
+  }
+  if (identical(comparison_contract$ReferenceMethod, "JML") &&
+      identical(comparison_contract$ComparisonMethod, "JML")) {
+    key_warnings <- c(
+      key_warnings,
+      paste(
+        "The JML log-likelihood difference is unpenalized and cannot select",
+        "PCM versus GPCM; when either fit is not inference-ready it is only an",
+        "optimizer-trace difference."
+      )
+    )
+  }
+  if (aligned_pcm_owner) {
+    key_warnings <- c(
+      key_warnings,
+      paste(
+        "PCM is the all-unit-slope response-kernel reduction of this aligned",
+        "GPCM, but the current automatic comparison does not authorize a",
+        "PCM-versus-GPCM chi-square LRT."
+      )
+    )
+  } else if (identical(reference_model, "PCM")) {
+    key_warnings <- c(
+      key_warnings,
+      paste(
+        "PCM and GPCM do not share the same explicit aligned step/slope owner;",
+        "the unit-slope response-kernel reduction and a PCM-versus-GPCM LRT",
+        "are unavailable for this pair."
+      )
     )
   }
   if (nrow(slope_profile) > 0L) {
@@ -6862,6 +7463,15 @@ build_weighting_review <- function(rasch_fit,
 
   next_actions <- clean_summary_lines(c(
     "Read summary(model_comparison) before interpreting any fit advantage as a scoring recommendation.",
+    if (identical(comparison_contract$ReferenceMethod, "JML") &&
+        identical(comparison_contract$ComparisonMethod, "JML")) {
+      paste(
+        "Use evaluate_mfrm_recovery() under declared unit_slopes and non-unit",
+        "slope regimes before treating JML reweighting as evidence for GPCM."
+      )
+    } else {
+      "For MML selection, require ICComparable and repeat consequential comparisons on a denser common quadrature grid."
+    },
     paste0("Use slope_profile and top_reweighted_levels to inspect whether ", slope_facet, " levels are being upweighted or downweighted in substantively acceptable ways."),
     paste0("Use plot_information(compute_information(rasch_fit), type = \"iif\", facet = \"", slope_facet, "\", draw = FALSE) and the bounded GPCM analogue to inspect precision redistribution visually."),
     "If equal contributions of items and raters are part of the score interpretation, retain the Rasch-family fit as the operational reference even when bounded GPCM fits better."
@@ -6878,7 +7488,7 @@ build_weighting_review <- function(rasch_fit,
     Trigger = c(
       "Use to inspect the equal-weighting reference precision split across slope-facet levels.",
       "Use to inspect how bounded GPCM redistributes precision across the same levels.",
-      "Use to review AIC/BIC and evidence ratios before making a model-choice argument."
+      "Use to review q>=31 comparable AIC/Person-BIC/SABIC and relative candidate-set weights before making a model-choice argument; close decisions need a denser common-grid check."
     )
   )
 
@@ -6898,6 +7508,12 @@ build_weighting_review <- function(rasch_fit,
 
   notes <- clean_summary_lines(c(
     "Observation weights and discrimination-based reweighting are separate concepts in this package.",
+    paste0(
+      "The fitted slopes vary across levels of `", slope_facet,
+      "`; other facets have no separate slope block."
+    ),
+    "Criterion-owned and rater-owned GPCM fits are separate restricted models; both blocks cannot be estimated together by the current bounded-GPCM interface.",
+    "FACETS is a direct JML comparator only for the aligned equal-discrimination PCM side; its reported discrimination is a post-fit diagnostic, not the fitted free-slope GPCM parameter.",
     "The review is intended to make reweighting visible; it does not decide by itself whether bounded GPCM should replace the Rasch-family operational model.",
     "Information-share changes are computed within each facet because the same total information is partitioned separately by facet."
   ))
@@ -6908,6 +7524,7 @@ build_weighting_review <- function(rasch_fit,
     key_warnings = key_warnings,
     next_actions = next_actions,
     model_comparison = comparison,
+    comparison_contract = comparison_contract,
     facet_shift = facet_shift,
     top_measure_shifts = top_measure_shifts,
     slope_profile = slope_profile,
@@ -6941,7 +7558,8 @@ print.mfrm_weighting_review <- function(x, ...) {
 #' @param top_n Number of top rows to retain in compact summary tables.
 #' @param ... Reserved for generic compatibility.
 #'
-#' @return An object of class `summary.mfrm_weighting_review`.
+#' @return An object of class `summary.mfrm_weighting_review`, including the
+#'   evidence-tier `comparison_contract` table.
 #' @seealso [build_weighting_review()]
 #' @export
 summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
@@ -6955,6 +7573,9 @@ summary.mfrm_weighting_review <- function(object, digits = 3, top_n = 10, ...) {
   out <- list(
     overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
     status = tibble::as_tibble(object$status %||% tibble::tibble()),
+    comparison_contract = tibble::as_tibble(
+      object$comparison_contract %||% tibble::tibble()
+    ),
     key_warnings = clean_summary_lines(object$key_warnings %||% character(0), max_n = 4L),
     next_actions = clean_summary_lines(object$next_actions %||% character(0), max_n = 4L),
     top_measure_shifts = tibble::as_tibble(object$top_measure_shifts %||% tibble::tibble()) |>
@@ -6985,6 +7606,16 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
   if (nrow(x$status) > 0) {
     cat("\nStatus\n")
     print(as.data.frame(x$status), row.names = FALSE)
+  }
+  if (nrow(x$comparison_contract) > 0) {
+    cat("\nComparison Contract\n")
+    print(
+      round_numeric_df(
+        as.data.frame(x$comparison_contract),
+        digits = digits
+      ),
+      row.names = FALSE
+    )
   }
   print_bullet_section("Key Warnings", x$key_warnings)
   print_bullet_section("Next Actions", x$next_actions)
@@ -7045,9 +7676,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     RSM = "Common threshold structure; equal discrimination fixed at 1.",
     PCM = "Step thresholds vary by the designated step facet; equal discrimination fixed at 1.",
     GPCM = paste(
-      "Positive slopes are estimated for the designated slope facet;",
-      "the current bounded route requires slope_facet == step_facet and",
-      "identifies slopes with geometric mean 1."
+      "One positive relative slope is estimated for every level of one",
+      "designated slope facet; the current bounded route requires",
+      "slope_facet == step_facet, identifies slopes with geometric mean 1,",
+      "and does not combine criterion and rater slope blocks."
     ),
     "Ordered-response model; inspect the fitted configuration before reporting."
   )
@@ -7133,12 +7765,33 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
     method <- public_mfrm_method_label(as.character(fit$config$method %||% NA_character_)[1])
     step_facet <- as.character(fit$config$step_facet %||% NA_character_)[1]
     slope_facet <- as.character(fit$config$slope_facet %||% NA_character_)[1]
+    sizes <- build_param_sizes(fit$config)
+    readiness <- mfrmr_get_readiness_record(fit)$fit
+    decision <- mfrm_fit_decision_summary(readiness)
     tibble::tibble(
       Label = labels[[i]],
       Model = model,
       Method = method,
       StepFacet = step_facet,
+      StepStructure = if (identical(model, "RSM")) {
+        "shared_ladder"
+      } else {
+        "step_facet_specific_ladders"
+      },
+      StepCoordinates = nrow(as.data.frame(fit$steps %||% data.frame())),
+      FreeStepParameters = as.integer(sizes$steps %||% 0L),
       SlopeFacet = slope_facet,
+      SlopeStructure = if (identical(model, "GPCM")) {
+        "relative_by_slope_facet_geometric_mean_1"
+      } else {
+        "fixed_equal_at_1"
+      },
+      SlopeCoordinates = nrow(as.data.frame(fit$slopes %||% data.frame())),
+      FreeSlopeParameters = as.integer(sizes$log_slopes %||% 0L),
+      FitReadiness = decision$FitReadiness[1L],
+      FormalInference = decision$FormalInference[1L],
+      Interpretation = decision$Interpretation[1L],
+      ReadinessReason = decision$Why[1L],
       RecommendedRole = .model_choice_role(model),
       ScoreContract = .model_choice_score_contract(model),
       ReportTemplate = .model_choice_report_template(model)
@@ -7197,7 +7850,7 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
       "build_summary_table_bundle(); export_summary_appendix()"
     ),
     Interpretation = c(
-      "Use AIC/BIC/logLik as fit evidence, not as a standalone scoring decision.",
+      "Use q>=31 comparable AIC/Person-BIC/SABIC/logLik as candidate-set fit evidence, not as a standalone scoring decision; close decisions need a denser common-grid check.",
       "Use only when comparing an RSM/PCM reference to bounded GPCM.",
       "Review item/rater/criterion information redistribution before changing the operational model.",
       "Supported for RSM/PCM; available with explicit sensitivity-reporting caveats for bounded GPCM.",
@@ -7252,8 +7905,13 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' `build_model_choice_review()` is a user-facing synthesis helper. It does not
 #' estimate new models. It bundles:
 #'
-#' - [compare_mfrm()] for AIC/BIC/log-likelihood comparison;
+#' - [compare_mfrm()] for verified AIC/Person-BIC/SABIC/log-likelihood
+#'   comparison;
+#' - comparison-boundary warnings captured from [compare_mfrm()] and retained
+#'   in `comparison_warnings` for printing and appendix export;
 #' - model-role guidance for `RSM`, `PCM`, and bounded `GPCM`;
+#' - reported step/slope coordinate counts, identified free-parameter counts,
+#'   and the stored fit-readiness decision for every supplied model;
 #' - downstream-route availability for APA output, score-side export, linking,
 #'   recovery, fair averages, bias screening, and summary-appendix handoff;
 #' - report wording templates that avoid treating better bounded-`GPCM` fit as
@@ -7262,11 +7920,15 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' - optionally, [build_weighting_review()] for the first Rasch-family reference
 #'   versus bounded-`GPCM` pair.
 #'
-#' The word "bounded" is intentional: the package implements a bounded GPCM
-#' route, not every possible generalized partial-credit many-facet extension.
-#' The current route uses positive slopes, requires `slope_facet == step_facet`,
-#' identifies slopes on the log scale with geometric mean 1, and keeps several
-#' downstream score-side/reporting helpers outside the documented boundary.
+#' The word "bounded" describes the documented model and workflow scope: the
+#' package does not implement every possible generalized partial-credit
+#' many-facet extension. It does **not** mean that finite optimizer box bounds
+#' define the estimator. The current route uses positive slopes, requires
+#' `slope_facet == step_facet`, identifies slopes on the log scale with
+#' geometric mean 1, and keeps several downstream score-side/reporting helpers
+#' outside the documented boundary.
+#' Model-choice ranking also requires the current selectable IC contract:
+#' q<31 fits retain raw criteria but produce a screening/review-only bundle.
 #'
 #' @return An object of class `mfrm_model_choice_review`.
 #' @seealso [compare_mfrm()], [build_weighting_review()],
@@ -7275,10 +7937,10 @@ print.summary.mfrm_weighting_review <- function(x, ...) {
 #' \donttest{
 #' toy <- load_mfrmr_data("example_core")
 #' fit_rsm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
-#'                     method = "MML", model = "RSM", quad_points = 7)
+#'                     method = "MML", model = "RSM", quad_points = 31)
 #' fit_pcm <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 #'                     method = "MML", model = "PCM", step_facet = "Criterion",
-#'                     quad_points = 7)
+#'                     quad_points = 31)
 #' review <- build_model_choice_review(RSM = fit_rsm, PCM = fit_pcm)
 #' summary(review)
 #' }
@@ -7305,10 +7967,18 @@ build_model_choice_review <- function(...,
   }
 
   labels <- .model_choice_fit_labels(fits, labels = labels)
-  comparison <- suppressWarnings(do.call(
-    compare_mfrm,
-    c(fits, list(labels = labels, warn_constraints = warn_constraints, nested = FALSE))
-  ))
+  comparison_warnings <- character(0)
+  comparison <- withCallingHandlers(
+    do.call(
+      compare_mfrm,
+      c(fits, list(labels = labels, warn_constraints = warn_constraints, nested = FALSE))
+    ),
+    warning = function(w) {
+      comparison_warnings <<- c(comparison_warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+  comparison_warnings <- clean_summary_lines(comparison_warnings)
   role_table <- .model_choice_role_table(fits, labels)
   downstream_routes <- .model_choice_downstream_table(role_table)
   report_templates <- .model_choice_report_templates(role_table)
@@ -7341,7 +8011,7 @@ build_model_choice_review <- function(...,
   if (!isTRUE(basis$ic_comparable)) {
     key_warnings <- c(
       key_warnings,
-      "Information-criterion ranking is descriptive because the compared fits do not all share a comparable formal MML basis, observation set, and convergence status."
+      "Information-criterion ranking is suppressed because the compared fits do not all share one current, selectable, verified MML likelihood, observation, constraint, integration, and readiness basis. q<31 fits remain screening/review-only."
     )
   }
   if (isTRUE(has_gpcm) && is.na(ref_labels$reference)) {
@@ -7411,6 +8081,7 @@ build_model_choice_review <- function(...,
   out <- list(
     overview = overview,
     key_warnings = key_warnings,
+    comparison_warnings = comparison_warnings,
     next_actions = next_actions,
     comparison = comparison,
     comparison_table = comparison$table,
@@ -7457,6 +8128,7 @@ summary.mfrm_model_choice_review <- function(object, digits = 3, ...) {
   out <- list(
     overview = tibble::as_tibble(object$overview %||% tibble::tibble()),
     key_warnings = clean_summary_lines(object$key_warnings %||% character(0)),
+    comparison_warnings = clean_summary_lines(object$comparison_warnings %||% character(0)),
     next_actions = clean_summary_lines(object$next_actions %||% character(0)),
     comparison_table = tibble::as_tibble(object$comparison_table %||% tibble::tibble()),
     model_roles = tibble::as_tibble(object$model_roles %||% tibble::tibble()),
@@ -7483,15 +8155,60 @@ print.summary.mfrm_model_choice_review <- function(x, ...) {
     print(round_numeric_df(as.data.frame(x$overview), digits = digits), row.names = FALSE)
   }
   print_bullet_section("Key Warnings", x$key_warnings)
+  print_bullet_section("Comparison Warnings", x$comparison_warnings)
   print_bullet_section("Next Actions", x$next_actions)
   if (nrow(x$comparison_table) > 0L) {
     cat("\nComparison Table\n")
-    print(round_numeric_df(as.data.frame(x$comparison_table), digits = digits), row.names = FALSE)
+    comparison <- round_numeric_df(
+      as.data.frame(x$comparison_table),
+      digits = digits
+    )
+    keep <- intersect(
+      c(
+        "Label", "Model", "Method", "Persons", "Npar", "LogLik",
+        "AIC", "BIC", "SABIC", "Delta_AIC", "Delta_BIC",
+        "Delta_SABIC", "ICStatus", "ICIntegrationTier", "ICSelectable",
+        "ICComparable", "SABICComparable", "InferenceReady"
+      ),
+      names(comparison)
+    )
+    print(comparison[, keep, drop = FALSE], row.names = FALSE)
+    cat("  Full IC audit fields remain available in `$comparison_table`.\n")
   }
   if (nrow(x$model_roles) > 0L) {
-    cat("\nModel Roles\n")
-    print(as.data.frame(x$model_roles[, c("Label", "Model", "RecommendedRole", "ScoreContract"), drop = FALSE]),
-          row.names = FALSE)
+    cat("\nModel Contracts and Readiness\n")
+    roles <- as.data.frame(x$model_roles, stringsAsFactors = FALSE)
+    roles$StepStructure <- dplyr::recode(
+      roles$StepStructure,
+      shared_ladder = "shared ladder",
+      step_facet_specific_ladders = "facet-specific ladders"
+    )
+    roles$SlopeStructure <- dplyr::recode(
+      roles$SlopeStructure,
+      fixed_equal_at_1 = "fixed at 1",
+      relative_by_slope_facet_geometric_mean_1 =
+        "relative by slope facet (GM = 1)"
+    )
+    cat("\nStep parameters (reported values versus independent parameters)\n")
+    steps <- roles[, c(
+      "Label", "Model", "StepStructure", "StepCoordinates",
+      "FreeStepParameters"
+    ), drop = FALSE]
+    names(steps)[4:5] <- c("Reported", "Free")
+    print(steps, row.names = FALSE)
+    cat("\nSlope parameters (reported values versus independent parameters)\n")
+    slopes <- roles[, c(
+      "Label", "Model", "SlopeStructure", "SlopeCoordinates",
+      "FreeSlopeParameters"
+    ), drop = FALSE]
+    names(slopes)[4:5] <- c("Reported", "Free")
+    print(slopes, row.names = FALSE)
+    cat("\nFit readiness\n")
+    print(roles[, c(
+      "Label", "Model", "FitReadiness", "FormalInference",
+      "Interpretation"
+    ), drop = FALSE], row.names = FALSE)
+    cat("  Full score contracts and readiness reasons remain in `$model_roles`.\n")
   }
   if (nrow(x$downstream_routes) > 0L) {
     cat("\nDownstream Routes\n")

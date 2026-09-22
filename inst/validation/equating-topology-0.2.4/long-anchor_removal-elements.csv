@@ -1,0 +1,6 @@
+"LinkID","Facet","Level","Retained","Flag","Status","Reason","AnchorId","NodeId"
+"1","Item","Common prefix with a long item name I1",TRUE,FALSE,"retained","Retained; no residual drift flag","anchor_1","element_1"
+"1","Item","Common prefix with a long item name I2",TRUE,TRUE,"retained_review","Retained; drift flagged or flag unavailable","anchor_2","element_2"
+"2","Item","Common prefix with a long item name I1",TRUE,FALSE,"retained","Retained; no residual drift flag","anchor_1","element_3"
+"2","Item","Common prefix with a long item name I3",FALSE,TRUE,"excluded","Excluded from the retained set","anchor_3","element_4"
+"2","Item","Common prefix with a long item name I4",NA,NA,"candidate","Retention not recorded","anchor_4","element_5"

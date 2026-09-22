@@ -78,6 +78,63 @@ test_that("FACETS positioning distinguishes native estimates from visual emulati
                      fixed = TRUE))
 })
 
+test_that("public documentation does not advertise later-release routes as current", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  docs <- read_public_text(pkg_root, public_documentation_files(pkg_root))
+  text <- tolower(paste(unlist(docs, use.names = FALSE), collapse = "\n"))
+  flat <- gsub("[[:space:]]+", " ", text)
+
+  prohibited_claims <- c(
+    "supports unrestricted gpcm",
+    "supports an unrestricted gpcm",
+    "provides unrestricted gpcm",
+    "supports multiple observed scales",
+    "supports multiple independent rating scales",
+    "supports general threshold anchors",
+    "supports threshold anchoring",
+    "supports native multidimensional estimation",
+    "provides native multidimensional estimation"
+  )
+  hits <- prohibited_claims[vapply(
+    prohibited_claims,
+    grepl,
+    logical(1),
+    x = flat,
+    fixed = TRUE
+  )]
+
+  expect_identical(hits, character(0))
+  expect_match(flat, "one observed score scale", fixed = TRUE)
+  expect_match(flat, "portable fixed-calibration artifacts are available only", fixed = TRUE)
+  expect_match(flat, "estimated-population and latent-regression mml", fixed = TRUE)
+  expect_match(flat, "posterior scoring from an existing fitted object is a separate", fixed = TRUE)
+})
+
+test_that("public estimator vocabulary keeps JMLE as an input alias only", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  docs <- read_public_text(pkg_root, public_documentation_files(pkg_root))
+  public_text <- paste(unlist(docs, use.names = FALSE), collapse = "\n")
+
+  fit_help <- paste(readLines(
+    file.path(pkg_root, "man", "fit_mfrm.Rd"),
+    warn = FALSE,
+    encoding = "UTF-8"
+  ), collapse = "\n")
+  package_help <- paste(readLines(
+    file.path(pkg_root, "man", "mfrmr-package.Rd"),
+    warn = FALSE,
+    encoding = "UTF-8"
+  ), collapse = "\n")
+
+  expect_match(fit_help, 'method = c("MML", "JML", "JMLE")', fixed = TRUE)
+  expect_match(fit_help, '"JMLE"} is accepted as a', fixed = TRUE)
+  expect_match(package_help, '"JMLE"} as a backward-compatible alias', fixed = TRUE)
+  expect_false(grepl('method = "MMLE"', public_text, fixed = TRUE))
+  expect_false(grepl("\\bMMLE\\b", public_text, perl = TRUE))
+})
+
 test_that("ConQuest guidance states the external MML comparison boundary", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
@@ -120,6 +177,24 @@ test_that("public maxit guidance prevents result-driven tuning", {
   expect_false(grepl("fast exploratory JML pass", docs_flat, fixed = TRUE))
 })
 
+test_that("first-use guides share one decision-first readiness route", {
+  pkg_root <- documentation_source_root()
+  testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
+  paths <- c(
+    file.path(pkg_root, "README.md"),
+    file.path(pkg_root, "vignettes", "mfrmr-workflow.Rmd"),
+    file.path(pkg_root, "vignettes", "mfrmr-gpcm-scope.Rmd"),
+    file.path(pkg_root, "vignettes", "mfrmr-facets-migration.Rmd")
+  )
+  docs <- read_public_text(pkg_root, paths)
+
+  for (path in names(docs)) {
+    text <- paste(docs[[path]], collapse = "\n")
+    expect_match(text, "$decision", fixed = TRUE, info = path)
+    expect_match(text, "FormalInference", fixed = TRUE, info = path)
+  }
+})
+
 test_that("CRAN-facing documentation excludes development-process language", {
   pkg_root <- documentation_source_root()
   testthat::skip_if(is.na(pkg_root), "source documentation files are not available")
@@ -129,6 +204,10 @@ test_that("CRAN-facing documentation excludes development-process language", {
   blocked <- c(
     "release evidence map",
     "release-readiness",
+    "repository roadmap",
+    "repository-level",
+    "validation record",
+    "CRAN checks",
     "pre-release status",
     "checked locally",
     "regression fixture",
@@ -154,9 +233,25 @@ test_that("CRAN-facing documentation excludes development-process language", {
     "planner-schema contract",
     "second-wave visual layer",
     "package-test coverage",
+    "repository theorem-only",
+    "internal analytic prototype",
+    "retrospective 40-dataset owner panel",
+    "predeclared deterministic challenge",
     "roadmap_only",
     "schema-only future branch",
-    "future-branch active planning scaffold"
+    "future-branch active planning scaffold",
+    "regression-tested default",
+    "focused regression test",
+    "test code mechanics",
+    "0.2.3 evidence map",
+    "repository audit",
+    "candidate-linked evidence contract",
+    "optional local execution",
+    "for final evidence",
+    "executable examples shorten package checks",
+    "keeps CRAN example time short",
+    "reproducible analysis, package checks",
+    "documents, tests, and reproducible analyses"
   )
 
   hits <- character(0)
@@ -167,6 +262,24 @@ test_that("CRAN-facing documentation excludes development-process language", {
       if (length(idx) > 0L) {
         hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
       }
+    }
+    idx <- grep("\\bP[0-9]+[a-z]\\b", lines, perl = TRUE)
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
+    }
+    idx <- grep(
+      "\\b(lane|lanes|gate|gates|preflight)\\b",
+      lines, ignore.case = TRUE, perl = TRUE
+    )
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
+    }
+    idx <- grep(
+      "(CORE-[0-9]+|OPT-[0-9]+|Draft[.][0-9]+|(?<![[:alnum:]-])G[0-9](?![[:alnum:]]))",
+      lines, perl = TRUE
+    )
+    if (length(idx) > 0L) {
+      hits <- c(hits, paste0(path, ":", idx, ": ", trimws(lines[idx])))
     }
   }
   expect_identical(hits, character(0))
@@ -199,6 +312,19 @@ test_that("the shipped source excludes development-stage contract names", {
   source_files <- source_files[
     basename(source_files) != "test-documentation-terminology.R"
   ]
+  ignore_path <- file.path(pkg_root, ".Rbuildignore")
+  if (file.exists(ignore_path)) {
+    ignore <- readLines(ignore_path, warn = FALSE)
+    ignore <- ignore[nzchar(ignore) & !startsWith(trimws(ignore), "#")]
+    relative <- substring(
+      normalizePath(source_files, winslash = "/", mustWork = FALSE),
+      nchar(normalizePath(pkg_root, winslash = "/", mustWork = TRUE)) + 2L
+    )
+    ignored <- vapply(relative, function(path) {
+      any(vapply(ignore, grepl, logical(1), x = path, perl = TRUE))
+    }, logical(1))
+    source_files <- source_files[!ignored]
+  }
   bad_file_names <- grep(
     "coverage-(push|boost|gaps)|final-coverage|remaining-coverage",
     basename(source_files),
@@ -221,7 +347,21 @@ test_that("the shipped source excludes development-stage contract names", {
     "coverage-boost",
     "coverage-gaps",
     "final-coverage",
-    "remaining-coverage"
+    "remaining-coverage",
+    "P1z compactification",
+    "P2b lexicographic-limit",
+    "P2c parameter",
+    "P2d finite-sequence",
+    "P2e contract",
+    "P2e oracle",
+    "P2e flag",
+    "P2f global-existence",
+    "P2g source contract",
+    "P2g scope",
+    "P2h binary",
+    "P2i fixture",
+    "P2i envelope",
+    "P2j face chart"
   )
   hits <- character(0)
   for (path in names(source_text)) {

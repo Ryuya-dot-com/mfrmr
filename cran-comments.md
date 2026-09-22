@@ -1,63 +1,39 @@
 ## Submission
 
-This is an update to mfrmr 0.2.1, the version currently on CRAN. This
-submission is version 0.2.2. The maintainer and license are unchanged.
+This is an update from mfrmr 0.2.3.1 to 0.2.4. The maintainer and license are
+unchanged.
 
-The principal user-facing changes are:
+The release adds portable calibration and scoring for eligible one-scale RSM
+and PCM MML fits under a fixed standard-normal scoring basis. Calibration
+review, validation, freezing, persistence, and scoring are separate public
+operations. Portable calibration for GPCM and JML is not supported in this
+release; their documented fitted-model workflows remain available.
 
-- reader-oriented `summary()` profiles for concise fit review,
-  FACETS-oriented review, and reporting;
-- improved native and FACETS-style Wright maps, an Infit-versus-measure
-  pathway, and reusable draw-free plot data;
-- convergence guidance that treats `maxit` as a prespecified computational
-  ceiling and withholds interpretation from iteration-limited fits;
-- `JML` as the canonical joint maximum likelihood label, with `JMLE` retained
-  as a backward-compatible input alias;
-- corrected bounded-GPCM score-side delta-method uncertainty, with explicit
-  capability limits for unsupported score-side workflows; and
-- reproducible data-review, diagnostic, export, replay, and reporting
-  workflows, including a scoped ConQuest overlap route for supported
-  unidimensional binary, RSM, and PCM designs.
+The release also strengthens fitted-model scoring, replay of interaction
+models, and MML EM checkpoint compatibility and resumption checks.
 
-FACETS-style graphics reproduce the relevant visual grammar; no claim of
-numerical identity with proprietary software is made. ConQuest is not required
-to install or check the package. The two examples that require separately
-generated ConQuest files remain under `dontrun`.
+## Test environments
 
-## R CMD check results
+The unchanged package payload was checked on:
 
-The exact source tarball intended for submission was checked with:
+- macOS with R-release;
+- Windows with R-release;
+- Ubuntu with R-devel;
+- Ubuntu with R-release, including the full package test suite; and
+- Ubuntu with R-oldrel-1.
 
-```sh
-R CMD check --as-cran --run-donttest mfrmr_0.2.2.tar.gz
-```
+All five jobs completed successfully. A local arm64 macOS source-package build
+and `R CMD check --no-manual` completed with 0 errors, 0 warnings, and 0 notes.
+Package tests, examples, complete vignette rebuilding, and fresh-process
+installed-package scoring also passed.
 
-Local environment:
+The exact 0.2.4 source tarball will be rebuilt and checked after these
+version-only changes. The results above are not represented as that final
+source-tarball check or as authorization to submit.
 
-- macOS Tahoe 26.5.2
-- aarch64-apple-darwin23
-- R 4.6.1 (2026-06-24)
+The CRAN dependency index reported no reverse Depends, Imports, LinkingTo,
+Suggests, or Enhances relationships for mfrmr 0.2.3.1, so there was no
+reverse-dependent package suite to run.
 
-Result: 0 errors, 0 warnings, and 0 notes (`Status: OK`). The CRAN incoming
-feasibility checks, PDF manual, and HTML manual all completed successfully.
-Examples, including `donttest` blocks, took 147 seconds; no individual example
-exceeded 4.71 seconds. The installed-package CRAN test selection completed
-with 392 passes, no failures or warnings, and 3 intentional skips for longer
-GPCM coverage.
-
-The same tagged source tree also passed GitHub Actions on macOS release,
-Windows release, Ubuntu release, Ubuntu oldrel-1, and Ubuntu R-devel. The
-complete `NOT_CRAN=true` regression suite ran separately on Ubuntu release
-with 10,127 passes, 8 source-package-context skips, no failures, and no
-warnings.
-
-Official Win-builder R-devel also returned `Status: OK` on Windows Server
-2022 x64 with R Under development (2026-07-25 r90301 ucrt). Installation took
-55 seconds and the check took 335 seconds. Its CRAN test selection likewise
-reported 392 passes, 3 intentional skips, no failures, and no warnings.
-
-## Current CRAN status and downstream dependencies
-
-The CRAN check page for mfrmr 0.2.1 showed all 13 listed flavors as `OK` when
-reviewed on 2026-07-27. No reverse dependencies are listed on the CRAN package
-page for mfrmr.
+External proprietary software is not required to install, check, or use the
+package.

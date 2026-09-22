@@ -80,6 +80,11 @@ facet uncertainty and fitted step locations visible. For a closer FACETS-facing 
 renderer and leave `show_ci` at its default `FALSE`. The fitted coordinates do
 not change.
 
+Every retained native facet level is labelled. Only label coordinates are
+displaced for collision avoidance, with leader lines back to the fitted
+points. Step thresholds form one vertical ladder and their labels include the
+fitted transition logits.
+
 ```{r wright-facets-style}
 plot(
   fit,
@@ -178,9 +183,9 @@ Interpretation:
 
 When you need the package's latent-integrated follow-up path, switch to `MML`
 and request `diagnostic_mode = "both"` so the legacy and strict branches stay
-visible side by side. The chunk below uses compact quadrature for optional
-local execution; final reporting should be refit with the package default or a
-higher quadrature setting.
+visible side by side. The chunk below uses compact quadrature for a shorter
+runtime; final reporting should be based on a refit with the package default or
+a higher quadrature setting.
 
 ```{r strict-marginal}
 fit_strict <- fit_mfrm(
@@ -235,6 +240,14 @@ Interpretation:
 
 - Sparse rows or columns indicate weak subset coverage.
 - Facets with low overlap are weaker anchors for cross-subset comparisons.
+
+Keep three uses of *network* separate. `mfrm_network_analysis()` analyzes the
+assignment/co-observation graph and can expose disconnected measurement
+subsets. `rater_network_analysis()` analyzes pairwise score relations, and
+`rater_halo_network_analysis()` analyzes rater-by-criterion score-profile
+correlations. The latter two do not establish assignment connectedness or a
+common scale. Their centrality statistics are graph-theoretic quantities, not
+rating-scale central tendency, MFRM severity logits, or causal halo evidence.
 
 If you are working across administrations, follow up with anchor-drift plots:
 
@@ -326,6 +339,52 @@ Those metadata are the guardrails for captions and interpretation. They let
 you change colors, labels, panels, or rendering technology while preserving the
 same measurement scale, reference lines, caveats, and reporting role used by
 the package-native plot.
+
+### Fair Scores and annotations outside the figure
+
+Use `plot_type = "measure"` to relate measures to fair scores, `"scatter"`
+to compare observed and fair scores, or `"difference"` to rank their gaps.
+FairM uses mean reference measures; FairZ uses zero reference measures.
+FairZ is an expected score on the internal score scale, not a z-score.
+Observed-minus-fair gaps also reflect assignment and person mix, so they do
+not by themselves establish rater bias.
+
+```{r fair-score-data, eval=FALSE}
+p_fair <- plot_fair_average(
+  fit, diagnostics = diag, facet = "Rater", metric = "FairZ",
+  plot_type = "measure", show_ci = TRUE, preset = "monochrome",
+  show_title = FALSE, show_notes = FALSE, draw = FALSE
+)
+p_fair$data$notes
+p_fair$data$plot_data
+p_fair$data$excluded
+# Requires ggplot2:
+g_fair <- as_ggplot(p_fair)
+g_fair
+attr(g_fair, "mfrmr_notes")
+```
+
+Use `draw = TRUE` to draw the base-R version. Titles and notes remain in the
+returned object when hidden in the figure. The same annotation controls apply
+to Wright, expected-score pathway, and CCC plots; they do not change readiness
+or interval eligibility. Keep the applicable notes in the surrounding caption
+or report. Other plotting helpers have their own documented options.
+
+Fair-score intervals remain diagnostic-only (`CI_Eligible = FALSE`), with
+full-refit coverage unverified. RSM/PCM plots propagate only the focal measure
+SE, holding thresholds and reference measures fixed; they require a fitted
+model, not just a stored fair-average bundle. GPCM-MML plots use available
+structural delta-method SEs for non-Person rows, conditioning on Person
+EAP/reference means. The table option `fair_se = TRUE` supplies the GPCM route,
+not RSM/PCM fair-score SEs. Historical table `SE` columns describe measures.
+Difference-view whiskers hold observed means fixed and are not confidence
+intervals for the observed-minus-fair gap.
+
+Expected-score and CCC curves use six line types: solid, dashed, dotted,
+dotdash, longdash, and twodash. Fair-score plots use six point shapes. These
+encodings repeat for larger sets; select facets or use panels to keep a
+grayscale figure readable. Check labels and line separation at the intended
+output size rather than relying on color or gray levels alone.
 
 ## 6. Secondary visual layer
 
@@ -431,6 +490,28 @@ Interpretation:
 - Wide raw whiskers that narrow after pooling indicate estimation instability, not automatic rater-quality failure.
 - Report the shrinkage method and keep this display separate from bias, fit, or validity claims.
 
+## Portable score-batch review
+
+A batch returned by `score_mfrm_calibration()` is not a fitted-model diagnostic
+object. Review it through its own methods:
+
+```{r eval = FALSE}
+summary(scores)
+plot(scores, type = "interval", preset = "publication")
+plot(scores, type = "precision", preset = "publication")
+plot(scores, type = "edge_mass", preset = "publication")
+```
+
+The interval view highlights `scored_review` Persons. The precision view shows
+valid response rows against posterior SD, and the edge-mass view compares
+outer-node posterior mass with the artifact's recorded review threshold.
+Persons with no valid responses remain in the summary and draw-free plot
+payload rather than being assigned an artificial coordinate. These displays
+do not replace source-fit diagnostics, and their uncertainty is conditional on
+the frozen point calibration. See
+`vignette("mfrmr-portable-calibration", package = "mfrmr")` for the complete
+fresh-session workflow.
+
 ## Recommended sequence
 
 For a compact visual workflow:
@@ -442,7 +523,9 @@ For a compact visual workflow:
 5. `plot_residual_pca()`, `plot_bias_interaction()`, and `plot_information()` for deeper structural review.
 6. `response_time_review()` and `plot_response_time_review()` when response-time metadata are available.
 7. `plot_shrinkage_funnel(show_ci = TRUE)` when empirical-Bayes shrinkage was applied.
-8. `plot_guttman_scalogram()`, `plot_residual_qq()`,
+8. `summary(scores)` and `plot(scores)` for a separately created portable
+   score batch; do not use these as source-fit diagnostics.
+9. `plot_guttman_scalogram()`, `plot_residual_qq()`,
    `plot_rater_trajectory()`, and `plot_rater_agreement_heatmap()` as
    the teaching / drift / agreement-heatmap follow-up layer.
 

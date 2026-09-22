@@ -1,0 +1,61 @@
+"Case","Type","View","Preset","Notes","Device","File","Error","Warnings","UnexpectedWarnings"
+"paired","wright","comparison","publication",TRUE,"png","paired-wright-comparison-publication-annotated.png","","",0
+"paired","wright","comparison","publication",TRUE,"pdf","paired-wright-comparison-publication-annotated.pdf","","",0
+"paired","wright","comparison","publication",FALSE,"png","paired-wright-comparison-publication-clean.png","","",0
+"paired","wright","comparison","publication",FALSE,"pdf","paired-wright-comparison-publication-clean.pdf","","",0
+"paired","wright","comparison","monochrome",TRUE,"png","paired-wright-comparison-monochrome-annotated.png","","",0
+"paired","wright","comparison","monochrome",TRUE,"pdf","paired-wright-comparison-monochrome-annotated.pdf","","",0
+"paired","wright","comparison","monochrome",FALSE,"png","paired-wright-comparison-monochrome-clean.png","","",0
+"paired","wright","comparison","monochrome",FALSE,"pdf","paired-wright-comparison-monochrome-clean.pdf","","",0
+"paired","wright","difference","publication",TRUE,"png","paired-wright-difference-publication-annotated.png","","",0
+"paired","wright","difference","publication",TRUE,"pdf","paired-wright-difference-publication-annotated.pdf","","",0
+"paired","wright","difference","publication",FALSE,"png","paired-wright-difference-publication-clean.png","","",0
+"paired","wright","difference","publication",FALSE,"pdf","paired-wright-difference-publication-clean.pdf","","",0
+"paired","wright","difference","monochrome",TRUE,"png","paired-wright-difference-monochrome-annotated.png","","",0
+"paired","wright","difference","monochrome",TRUE,"pdf","paired-wright-difference-monochrome-annotated.pdf","","",0
+"paired","wright","difference","monochrome",FALSE,"png","paired-wright-difference-monochrome-clean.png","","",0
+"paired","wright","difference","monochrome",FALSE,"pdf","paired-wright-difference-monochrome-clean.pdf","","",0
+"paired","ccc","comparison","publication",TRUE,"png","paired-ccc-comparison-publication-annotated.png","","",0
+"paired","ccc","comparison","publication",TRUE,"pdf","paired-ccc-comparison-publication-annotated.pdf","","",0
+"paired","ccc","comparison","publication",FALSE,"png","paired-ccc-comparison-publication-clean.png","","",0
+"paired","ccc","comparison","publication",FALSE,"pdf","paired-ccc-comparison-publication-clean.pdf","","",0
+"paired","ccc","comparison","monochrome",TRUE,"png","paired-ccc-comparison-monochrome-annotated.png","","",0
+"paired","ccc","comparison","monochrome",TRUE,"pdf","paired-ccc-comparison-monochrome-annotated.pdf","","",0
+"paired","ccc","comparison","monochrome",FALSE,"png","paired-ccc-comparison-monochrome-clean.png","","",0
+"paired","ccc","comparison","monochrome",FALSE,"pdf","paired-ccc-comparison-monochrome-clean.pdf","","",0
+"paired","ccc","difference","publication",TRUE,"png","paired-ccc-difference-publication-annotated.png","","",0
+"paired","ccc","difference","publication",TRUE,"pdf","paired-ccc-difference-publication-annotated.pdf","","",0
+"paired","ccc","difference","publication",FALSE,"png","paired-ccc-difference-publication-clean.png","","",0
+"paired","ccc","difference","publication",FALSE,"pdf","paired-ccc-difference-publication-clean.pdf","","",0
+"paired","ccc","difference","monochrome",TRUE,"png","paired-ccc-difference-monochrome-annotated.png","","",0
+"paired","ccc","difference","monochrome",TRUE,"pdf","paired-ccc-difference-monochrome-annotated.pdf","","",0
+"paired","ccc","difference","monochrome",FALSE,"png","paired-ccc-difference-monochrome-clean.png","","",0
+"paired","ccc","difference","monochrome",FALSE,"pdf","paired-ccc-difference-monochrome-clean.pdf","","",0
+"eleven","wright","comparison","publication",FALSE,"png","eleven-wright-comparison-publication-clean.png","","",0
+"eleven","wright","comparison","publication",FALSE,"pdf","eleven-wright-comparison-publication-clean.pdf","","",0
+"eleven","wright","comparison","monochrome",FALSE,"png","eleven-wright-comparison-monochrome-clean.png","","",0
+"eleven","wright","comparison","monochrome",FALSE,"pdf","eleven-wright-comparison-monochrome-clean.pdf","","",0
+"eleven","wright","difference","publication",FALSE,"png","eleven-wright-difference-publication-clean.png","","",0
+"eleven","wright","difference","publication",FALSE,"pdf","eleven-wright-difference-publication-clean.pdf","","",0
+"eleven","wright","difference","monochrome",FALSE,"png","eleven-wright-difference-monochrome-clean.png","","",0
+"eleven","wright","difference","monochrome",FALSE,"pdf","eleven-wright-difference-monochrome-clean.pdf","","",0
+"eleven","ccc","comparison","publication",FALSE,"png","eleven-ccc-comparison-publication-clean.png","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","comparison","publication",FALSE,"pdf","eleven-ccc-comparison-publication-clean.pdf","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","comparison","monochrome",FALSE,"png","eleven-ccc-comparison-monochrome-clean.png","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","comparison","monochrome",FALSE,"pdf","eleven-ccc-comparison-monochrome-clean.pdf","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","difference","publication",FALSE,"png","eleven-ccc-difference-publication-clean.png","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","difference","publication",FALSE,"pdf","eleven-ccc-difference-publication-clean.pdf","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","difference","monochrome",FALSE,"png","eleven-ccc-difference-monochrome-clean.png","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"eleven","ccc","difference","monochrome",FALSE,"pdf","eleven-ccc-difference-monochrome-clean.pdf","","Many comparison panels; select curve_groups or enlarge the export. All selected panels are retained.",0
+"singleton","wright","comparison","monochrome",FALSE,"png","singleton-wright-comparison-monochrome-clean.png","","",0
+"singleton","wright","comparison","monochrome",FALSE,"pdf","singleton-wright-comparison-monochrome-clean.pdf","","",0
+"singleton","wright","difference","monochrome",FALSE,"png","singleton-wright-difference-monochrome-clean.png","","",0
+"singleton","wright","difference","monochrome",FALSE,"pdf","singleton-wright-difference-monochrome-clean.pdf","","",0
+"unmatched","wright","comparison","monochrome",FALSE,"png","unmatched-wright-comparison-monochrome-clean.png","","",0
+"unmatched","wright","comparison","monochrome",FALSE,"pdf","unmatched-wright-comparison-monochrome-clean.pdf","","",0
+"unmatched","wright","difference","monochrome",FALSE,"png","unmatched-wright-difference-monochrome-clean.png","","",0
+"unmatched","wright","difference","monochrome",FALSE,"pdf","unmatched-wright-difference-monochrome-clean.pdf","","",0
+"long","ccc","comparison","monochrome",FALSE,"png","long-ccc-comparison-monochrome-clean.png","","",0
+"long","ccc","comparison","monochrome",FALSE,"pdf","long-ccc-comparison-monochrome-clean.pdf","","",0
+"long","ccc","difference","monochrome",FALSE,"png","long-ccc-difference-monochrome-clean.png","","",0
+"long","ccc","difference","monochrome",FALSE,"pdf","long-ccc-difference-monochrome-clean.pdf","","",0

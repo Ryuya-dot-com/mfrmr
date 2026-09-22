@@ -1,0 +1,5 @@
+File,MD5
+tests/testthat/test-plot-customization.R,d561ce9d42132afdb22d13295aa2d49a
+man/plot.mfrm_fit.Rd,8ef6fb05d57bc0de86a9ebef9d64c54c
+man/as_ggplot.Rd,f835ae2aec350179546feb58bd40079e
+inst/validation/plot-presentation-0.2.4/tests.R,a56d300189cd8d96556630a2619e1436

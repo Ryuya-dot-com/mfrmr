@@ -1,0 +1,189 @@
+---
+title: "Portable calibration and fresh-session scoring"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Portable calibration and fresh-session scoring}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+is_cran_check <- !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4.5,
+  eval = !is_cran_check
+)
+options(width = 78)
+```
+
+This workflow creates a portable calibration from an eligible fitted model,
+validates and freezes it, saves it, and then scores new Persons without the
+source fit or training responses. The scoring phase uses only the saved
+artifact and the new response rows.
+
+The portable workflow is deliberately narrower than fitted-object scoring.
+It supports one observed score scale and one latent dimension for `RSM` or
+`PCM` fitted by `MML` under the fixed standard-normal scoring basis. It does
+not currently create portable artifacts for estimated-population or latent-
+regression fits, `JML`, or bounded `GPCM`.
+
+```{r capabilities}
+library(mfrmr)
+
+mfrm_calibration_capabilities()[, c(
+  "Model", "Estimator", "ScoringBasis", "PortableCalibration"
+)]
+```
+
+## Calibration session
+
+The bundled `example_core` data are synthetic. This example uses 18 Persons
+to keep vignette runtime modest; a substantive analysis should use its planned
+sample and design rather than copying that count.
+
+```{r create-calibration}
+synthetic <- load_mfrmr_data("example_core")
+person_ids <- unique(as.character(synthetic$Person))
+training_ids <- person_ids[seq_len(18L)]
+training <- synthetic[
+  as.character(synthetic$Person) %in% training_ids,
+  ,
+  drop = FALSE
+]
+
+fit <- suppressWarnings(fit_mfrm(
+  training,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  model = "RSM",
+  method = "MML",
+  quad_points = 5,
+  maxit = 20
+))
+
+quadrature_review <- suppressWarnings(mml_quadrature_sensitivity(
+  fit,
+  training,
+  quad_points = c(5, 7),
+  theta_points = 41
+))
+summary(quadrature_review)
+fit <- quadrature_review$fits$q7
+
+draft <- extract_mfrm_calibration(
+  fit,
+  calibration_id = "portable-rsm-example",
+  source_fit_id = "synthetic-rsm-fit",
+  scoring_quad_points = 31,
+  quadrature_review = quadrature_review
+)
+review_mfrm_calibration(draft)
+
+validated <- validate_mfrm_calibration(draft)
+frozen <- freeze_mfrm_calibration(validated)
+frozen
+
+artifact_file <- tempfile(fileext = ".rds")
+save_mfrm_calibration(frozen, artifact_file)
+```
+
+The fit-time quadrature and the scoring-time quadrature are distinct. The two
+small fit grids above keep this example quick; they are not recommendations
+for substantive work. Inspect the continuous movement on grids chosen for the
+application and extend them when needed. Public extraction accepts the exact
+highest-grid fit in that review but does not decide whether its movement is
+small enough. The artifact separately records the 31-point grid used for later
+posterior scoring, and the response-linked review should be archived outside
+the portable artifact when it is needed for an audit trail.
+
+## Fresh scoring session
+
+In operational use, start a new R process and supply only the artifact path and
+new response rows. The following chunk removes the fit, draft, validation
+object, and training data before loading the artifact, so none can influence
+the score.
+
+```{r score-from-artifact, fig.alt = "Posterior EAP intervals for two newly scored Persons. A blue circle marks a conditionally ready score, an orange triangle marks a score requiring review, and a dashed vertical line marks the zero-logit scale origin."}
+new_rows <- synthetic[
+  as.character(synthetic$Person) %in% person_ids[19:20],
+  c("Person", "Rater", "Criterion", "Score"),
+  drop = FALSE
+]
+new_ids <- stats::setNames(
+  c("NEW_PERSON_1", "NEW_PERSON_2"), person_ids[19:20]
+)
+new_rows$Person <- unname(new_ids[as.character(new_rows$Person)])
+rownames(new_rows) <- NULL
+
+# Create one explicit review case for the tutorial figure. In operational
+# scoring, never alter observed responses to manufacture a disposition.
+new_rows$Score[new_rows$Person == "NEW_PERSON_2"] <- max(training$Score)
+
+rm(fit, quadrature_review, draft, validated, frozen, training, synthetic)
+invisible(gc())
+
+calibration <- load_mfrm_calibration(artifact_file)
+scores <- score_mfrm_calibration(calibration, new_rows)
+summary(scores)
+
+plot(
+  scores,
+  type = "interval",
+  preset = "publication"
+)
+
+unlink(artifact_file)
+```
+
+The base and optional ggplot2 renderers distinguish scored and review states
+by shape as well as colour. The complete score and review tables remain in the
+summary object even though its console printout shows only a compact preview.
+
+The interval figure is the first score-batch review. Orange triangles identify
+Persons whose `Disposition` is `scored_review`; inspect their `ReasonCodes`
+before using the estimate. A Person with no valid response has no score
+coordinate and therefore appears in `summary(scores)$review` and in the
+draw-free plot payload's `unplotted_dispositions`, not as an artificial point.
+
+Two focused follow-up views use the same score object without consulting the
+source fit:
+
+```{r score-review-payload, eval = FALSE}
+# Valid response rows versus posterior SD.
+plot(scores, type = "precision", preset = "publication")
+
+# Posterior mass on the outer quadrature nodes versus the recorded threshold.
+edge_review <- plot(scores, type = "edge_mass", draw = FALSE)
+edge_review$data$selection_summary
+edge_review$data$unplotted_dispositions
+```
+
+These displays review a returned score batch. They do not establish source-fit
+quality, reliability, calibration transport, or validity. Every interval and
+posterior SD remains conditional on the frozen point calibration and excludes
+calibration-parameter uncertainty.
+
+For a separate scoring script, the essential code is:
+
+```r
+library(mfrmr)
+
+calibration <- load_mfrm_calibration("reviewed-calibration.rds")
+new_rows <- read.csv("new-responses.csv", stringsAsFactors = FALSE)
+scores <- score_mfrm_calibration(calibration, new_rows)
+print(scores)
+plot(scores, type = "interval", preset = "publication")
+write.csv(scores$estimates, "person-scores.csv", row.names = FALSE)
+```
+
+Unknown facet levels, unknown score values, invalid weights, ambiguous
+duplicates, and malformed artifacts fail closed. Missing responses require an
+explicit `missing_response = "omit"` policy. Every returned estimate is a
+posterior EAP conditional on the recorded fixed point calibration and prior;
+its uncertainty interval excludes calibration-parameter uncertainty. Validate
+the intended score use, population transport, and decision consequences
+outside this numerical workflow.

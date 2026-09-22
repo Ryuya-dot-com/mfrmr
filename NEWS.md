@@ -1,3 +1,332 @@
+# mfrmr 0.2.4
+
+## Reliability and reproducibility
+
+* Fair-average summaries now use FairZ values and SEs when `reference = "zero"`,
+  with an explicit `FairMetric`. Requested fair-score intervals carry separate
+  diagnostic-only eligibility metadata through tables, summaries and plots.
+  GPCM fair-score SEs remain unavailable if any gradient component is missing,
+  rather than replacing the missing uncertainty with zero.
+* `plot_fair_average(plot_type = "measure")` connects person/facet measures
+  to Fair Scores alongside the observed-score and gap views. Base/ggplot
+  share colours and six point shapes, grayscale, and title/note controls;
+  full notes and excluded rows remain available in the returned data.
+  FairZ documentation now correctly describes a zero-reference expected
+  score, not a z-score. Conditional RSM/PCM interval derivatives now use the
+  actual FairM/FairZ profile and undo measure-unit scaling. GPCM bundle
+  intervals honor the requested confidence level. These approximate intervals
+  do not establish full-refit coverage; gap whiskers hold observed means fixed.
+* `plot_compare_mfrm()` adds paired Wright distributions/locations and CCCs,
+  plus matched-location and probability-difference views. Existing source
+  coordinates and probability calculations are reused, with explicit group
+  selection, original score labels, source readiness and returned notes.
+  Monochrome/many-category CCCs use category panels by default. Incompatible
+  recorded comparison bases fail without automatic alignment. Drawing uses
+  optional ggplot2; draw-free data need no renderer. No difference SEs or CIs
+  are calculated. The shared Wright builder also handles a single person
+  without calling the undefined one-observation FD histogram rule.
+* Linking-chain plots add `type = "offset_sensitivity"`. Each common-element
+  deletion reruns preliminary offsets, screening, weighted/unweighted offsets
+  and cumulative offsets with source estimates/SEs fixed. Returned tables expose
+  signed changes, rescreened elements, actual weight contributors, screening
+  fallback and unavailable comparisons. Missing offsets propagate rather than
+  becoming zero changes; plots distinguish complete, partial and unavailable
+  comparisons. Inconsistent source offsets require rebuilding the chain. No
+  source model is refitted and no new uncertainty interval is calculated.
+* The shared link-offset helper records contributors and the all-finite-row
+  screening fallback. Non-finite preliminary weighted offsets now return an
+  unavailable result rather than failing during the subsequent screening test.
+* Linking chains add `type = "links"` and `type = "anchor_removal"` plot views.
+  They summarize recorded retained connections and remove each common-element
+  identity across all comparisons, holding screening fixed. Returned tables
+  distinguish lost direct links from newly disconnected wave pairs, preserve
+  existing disconnections and unknown-retention information, and retain all
+  waves. Monochrome line/point encodings and title/note controls are supported.
+  These are graph calculations; offsets, estimates and SEs are not recomputed,
+  and zero new disconnections does not establish negligible statistical impact.
+* The screened linking-chain graph retains isolated waves and handles no-common-
+  element cases. Elements are shown separately for each reviewed link so that
+  retained/excluded decisions cannot be merged across comparisons. Returned
+  node/edge tables preserve source IDs, screening flags and interpretation notes;
+  explicit IDs handle repeated names and punctuation. Four line types distinguish
+  retention states in colour and monochrome. `show_title` and `show_notes` allow
+  clean figures while notes remain printable. Drawing now uses base graphics
+  without requiring `igraph`. This graph does not establish anchor invariance,
+  precision or common-scale comparability.
+* Fit-family Wright, pathway, and CCC plots now share CUD-informed series
+  colours across base and ggplot. Bright yellow is omitted from line defaults;
+  small data labels use neutral dark text. Expected-score/CCC curves vary line
+  type even in colour, CCC overlays vary point shape, and Wright subgroup
+  densities vary line type. ggplot conversion preserves category order, custom
+  palettes, and monochrome presets. Large series sets still need suitable
+  labels, panels, and canvas size; a palette alone cannot ensure readability.
+* Fit plots accept `show_title` and `show_notes` (both default to `TRUE`).
+  Users can omit figure titles and explanatory annotations while retaining
+  axes, legends, and structural panel headings. Interpretation, curve-profile,
+  and retention/display notes remain in `data$notes` and are printed by
+  `print()`; ggplot conversions honor the flags and retain a `mfrmr_notes`
+  attribute. Readiness and R warnings are unchanged by these display flags.
+* Clean native pathways reserve enough bottom space for their axis title.
+  FACETS-style Wright maps retain every column heading, split scale headings
+  over two lines, and wrap facet cells and footnotes to the available width. Crowded headings and
+  overflowing frequency stars warn about the needed width or star-count setting.
+* Expected-score pathways now display the same reference-profile condition as
+  CCC plots: fitted steps/slopes are retained and additive facet main effects
+  and interactions are fixed at zero. Their returned `curve_basis` tables
+  match, including in plot bundles; numerical curves are unchanged.
+* ggplot conversions wrap titles, subtitles, and captions at 72 text columns
+  and omit missing labels, preventing ordinary-width subtitle clipping and
+  spurious `NA` captions. Users can override labels with `ggplot2::labs()`.
+  Multi-group native CCC plots now share a margin legend even with five or
+  fewer categories, keeping repeated keys off the fitted curves.
+* Replay scripts with person-data CSV files now locate those files beside the
+  replay script when invoked through nested `source()` or `sys.source()`.
+  They no longer mistake the outer Rscript driver for the replay file.
+* Native Wright `top_n` now limits non-person facet locations independently
+  of step thresholds. Many PCM thresholds no longer consume the limit and
+  silently remove every item/rater location; returned locations and retention
+  counts reflect this corrected selection.
+* Plot label abbreviations now respect display width and distinguish long
+  common-prefix names, including Japanese. Crowded native Wright/pathway
+  labels prioritize fitted-point visibility and warn when more space is
+  needed. Wider Wright maps keep their legend inside the page.
+* Native CCC plots use a shared margin legend beyond five categories and
+  distinct default colours beyond eight categories. Long panel names remain
+  distinguishable, and single-group legends stay within the caller's panel.
+* Native Wright and expected-score pathway labels now account for text width,
+  text height, nearby labels, and fitted points when choosing their positions.
+  Leader lines retain the link to each unchanged estimate; off-screen pathway
+  thresholds stay off-screen. Drawing moves text without changing fitted
+  coordinates; initial annotation positions remain available to custom renderers.
+* Plot styling now restores only the graphical settings it changes, allowing
+  single-panel plots to advance through a caller's grid. Native Wright maps
+  and multi-group CCC plots clean up their own layouts before subsequent plots.
+  Wright titles, pathway endpoint labels, and plot footnotes have more room;
+  subgroup densities now draw in the Wright map's person panel.
+  `plot_apa_figure_one()` uses a single-panel FACETS-style Wright map without
+  CI whiskers (also reflected in its returned Wright payload), so all four
+  panels share one page; its summary text wraps within the panel.
+* Estimated-population individual scoring now requires explicit
+  `readiness_policy = "review"`; an active population model no longer bypasses
+  incomplete source-identification checks. The same guard applies to plausible
+  values, whose notes now retain the source review restriction. Earlier
+  population predictions claiming scoring readiness must be regenerated before
+  summary, printing or structured export. Numerical calculations are unchanged;
+  local rank and optimizer convergence do not establish population-scoring validity.
+* Non-unit observation weights now prevent ordinary-inference approval in the
+  shared fit-readiness record. Diagnostic SE/normal-band calculations remain
+  available, but do not license formal inference or facet-equivalence decisions.
+  Explicit all-unit weights preserve the unweighted estimation/inference path.
+  Readiness contract `mfrmr-readiness-0.2.4-v1` requires older saved fits and
+  diagnostics to be refitted/re-audited and old equivalence bundles to be
+  recomputed; their former inference approval is not reused.
+* Facet equivalence now requires an inference-ready MML fit, matching supplied
+  diagnostics, and unregularized covariance with estimable joint contrasts.
+  Contrast rank is checked from the model constraints so covariance roundoff
+  cannot admit a singular anchored comparison.
+  Pairwise TOST SEs include covariance between facet effects. The heterogeneity
+  summary uses a joint Wald test; the former unsupported Bayes-factor heuristic
+  is unavailable. Forest plots show deviations from the equally weighted facet
+  mean with uncertainty in that mean included. Old equivalence bundles must be
+  recomputed before summary, printing, or plotting. These corrections do not
+  establish finite-sample coverage or extend GPCM/JML inference support.
+* MML `print()` and `summary()` output now states the optimization engine,
+  fixed non-adaptive Gauss--Hermite rule, quadrature order, one-dimensional
+  latent structure, and the fitted population-scale identification.
+* Generalizability-study and D-study results now state explicitly that their
+  G/Phi coefficients are estimated on the observed numeric score scale, not on
+  the fitted MFRM latent scale. Ordered scores continue to use the documented
+  Gaussian linear mixed-model approximation in this complementary analysis.
+* `evaluate_mfrm_design(parallel = "future")` now dispatches replications
+  through the active future plan while preserving the same preallocated
+  design-replication seeds and stochastic inputs as serial execution.
+* Corrected the G/Phi interpretation example: under the implemented
+  nonnegative main-effect decomposition, `Phi <= G`; `Phi < G`, not `G < Phi`,
+  indicates that absolute decisions carry additional facet-main-effect error.
+  A D-study regression check now preserves this ordering.
+* Added a public portable-calibration workflow for eligible one-scale RSM/PCM
+  MML fits under the fixed standard-normal scoring basis. Draft extraction,
+  review, validation, freezing, persistence, and artifact-only scoring are
+  separate operations; `mfrm_calibration_capabilities()` reports the narrower
+  portable support envelope and the fitted-object alternatives for unavailable
+  routes.
+* Added `mml_quadrature_sensitivity()` for explicit same-data RSM, PCM, and
+  bounded-GPCM refits across user-selected integration grids. It reports
+  continuous changes in likelihood, measurement coordinates, probabilities,
+  EAP, and posterior SD without assigning a stability cutoff; the existing
+  GPCM-specific function remains available.
+* Portable calibration extraction now requires the reviewed object's exact
+  highest-grid fit together with its quadrature-sensitivity result. Users
+  choose the evaluated grids and judge the observed movement; response-linked
+  fits remain outside the portable artifact and should be archived separately
+  when needed.
+* FACETS-facing scope guidance now distinguishes the supported native
+  portable-calibration workflow from unsupported FACETS or third-party
+  calibration-file import, and removes stale version-number wording from
+  current capability statements.
+* Fitted-object scoring now uses an explicit scoring quadrature grid rather
+  than inheriting the fit-time grid. It refuses a one-point grid, rejects
+  invalid weights, and fails closed when the source is not scoring-ready unless
+  the user explicitly requests a labelled review-only calculation.
+* Anchor candidate export and baseline reuse now fail closed unless the source
+  fit is inference-ready under the current readiness contract. Explicit
+  `readiness_policy = "review"` extraction remains available for inspection,
+  while anchor application and anchor CSV export retain the strict default.
+* Replay scripts now preserve facet-interaction specifications and their
+  support policy.
+* MML EM checkpoints now bind the data, model, parameter layout, quadrature,
+  package version, and engine stage. Incompatible checkpoints and completed
+  pure-EM re-entry are refused, hybrid warm-start checkpoints are honored, and
+  writes use checked same-directory replacement.
+* Portable calibration artifacts now record an explicit scoring algorithm and
+  a scoring grid independent of the source fit's integration grid.
+* Portable score `print()` and `summary()` output now stays compact at ordinary
+  console widths, direct calibration-method help is available, and base and
+  ggplot2 score displays both distinguish review states by colour and shape.
+  Differential-functioning summaries also retain their DFF-specific display.
+* Portable calibration artifacts record an explicit `support_profile_id`, and
+  calibration summaries label it as `Support profile`.
+* Portable calibration score batches now have concise `print()` and structured
+  `summary()` methods plus interval, precision, and quadrature-edge review
+  plots. The displays retain review and not-scored dispositions and state that
+  posterior uncertainty excludes calibration-parameter uncertainty.
+* Latent-regression reference benchmarks no longer attempt Person scoring when
+  their fitted model is not scoring-ready. The posterior-shift check is kept as
+  an explicit unevaluated warning instead of using a review-only score.
+* Facet-level category avoidance is now documented separately from global
+  score support and from GPCM model choice. The legacy facet-dashboard
+  `CentralTendencyFlag` is disabled by default because proximity of a severity
+  estimate to the fitted origin does not diagnose restricted category use;
+  `data_quality_report()` remains the response-based screening route.
+* Front-door and first diagnostic help examples now follow one explicit,
+  inference-ready workflow: the applied synthetic data, named column roles and
+  score support, RSM-MML fitting, fit review, Wright map, diagnostic summary,
+  data/rating-scale/precision review, results, and report/export handoff. The
+  historical `profile = "facets"` name no longer assumes experience with
+  FACETS, TAM, or sirt, and examples no longer choose JML merely for speed.
+
+# mfrmr 0.2.3.1
+
+mfrmr 0.2.3.1 was a focused CRAN maintenance release. It did not change the
+public R API or fitted-model contracts introduced in 0.2.3.
+
+* Corrected the compiled-header configuration used under link-time
+  optimization so all C++ translation units use R's configured `Rboolean`
+  definition.
+* Removed expired FACETS/Winsteps hyperlinks while retaining the substantive
+  model distinctions and bibliographic references.
+
+# mfrmr 0.2.3
+
+mfrmr 0.2.3 improves the reliability and interpretation of the existing
+many-facet workflows, with particular emphasis on the bounded GPCM introduced
+before this release. No existing exported function has been removed.
+
+## Bounded GPCM
+
+* Clarified the supported GPCM as an aligned, single-owner relative-slope
+  model. A slope multiplies the complete adjacent-category predictor, including
+  the ability, facet, interaction, and owned-step terms. This is distinct from
+  loading-only GPCM variants and multiplicative generalized MFRM families.
+* Corrected the default scale identification for GPCM marginal maximum
+  likelihood fits. When no population formula is supplied, an intercept-only
+  population model now provides the latent location and scale while relative
+  slopes use their documented geometric-mean constraint.
+* Added parameter-level status for free GPCM slopes. Standard errors and
+  confidence intervals are reported as ordinary inferential results only when
+  the fitted solution and the parameter both satisfy the relevant readiness
+  checks. Optimizer- and Hessian-based quantities remain available as clearly
+  labelled diagnostic evidence when formal inference is not supported.
+* Improved handling of extreme response patterns. Joint-maximum-likelihood
+  Person estimates can retain an unbounded primary status, while finite
+  adjusted displays remain explicitly separate. Prior-regularized marginal
+  EAP estimates remain available but do not override a blocked source fit.
+* Added `gpcm_mml_quadrature_sensitivity()` for explicit same-data comparison of
+  a fitted GPCM-MML result across quadrature grids. It reports changes in the
+  marginal likelihood, relative slopes, raw observed-information quantities,
+  population scale, and fitted probabilities without silently refitting during
+  `summary()` or `print()`. Results support `summary()`, `print()`,
+  `as.data.frame()`, and `apa_table()`.
+
+## Estimation and readiness
+
+* Added pre-fit checks for category and step support and strengthened
+  constrained-estimability checks for sparse many-facet designs. Unsupported
+  step contrasts and structurally unidentified comparisons now stop or fail
+  closed before they can be presented as ordinary estimates.
+* Strengthened numerical and boundary reporting for JML and GPCM fits.
+  Optimizer convergence, terminal gradients, local rank, curvature, boundary
+  evidence, and formal inference readiness are retained as separate concepts.
+* Corrected the alignment of MML Person EAP estimates and posterior standard
+  deviations when observations or Person rows are filtered during fitting.
+* Fit-level readiness is propagated to Person results, plots, model-choice
+  reviews, reports, and exported tables. A finite value from a blocked fit is
+  no longer presented as an unrestricted inferential estimate.
+
+## Summaries, diagnostics, and plots
+
+* `print()` and `summary()` for fitted models now begin with a plain-language
+  interpretation status, the availability of formal inference, the main reason
+  for any hold, and a suggested next action.
+* Formal-inference reporting now distinguishes satisfied fit-readiness
+  requirements from the
+  separate precision contract. A fit-only summary does not claim formal
+  inference until matching diagnostics support the standard-error,
+  confidence-interval, and reliability basis.
+* GPCM uncertainty labels are consistent across fitted objects, summaries, and
+  plots. Intervals calculated for observation-table Wright or facet displays
+  are labelled `screening_only` and are not described as confidence intervals.
+* PCM/GPCM model-choice reviews retain comparison warnings and keep information
+  criteria, automatic preferences, and likelihood-ratio results unavailable
+  when the compared fits do not share an eligible basis. Model-choice warnings
+  can also be included in exported summary appendices.
+* Differential-facet-functioning refits now replay the baseline response
+  family, scoring range, estimator, weighting, and numerical settings. They
+  fail closed for model structures that do not yet have a valid subgroup replay
+  and linking contract. `min_obs` remains a computability guard rather than a
+  claim about power or adequate sample size.
+* Residual-PCA results now carry machine-readable exploratory-use guards.
+  Returned components and warnings are descriptive diagnostics and do not
+  automatically support dimensionality or subscore decisions.
+* Corrected Person-involving bias-screen collection for explicitly requested
+  facet pairs and expanded machine-readable FACETS feature-coverage guidance.
+* FACETS table import retains the reported numeric text and displayed decimal
+  precision so rounded output is not silently treated as hidden full-precision
+  data.
+* The Infit-versus-measure pathway now places Infit on the horizontal axis and
+  the fitted measure on the vertical axis by default. GPCM category curves
+  retain estimated step-facet slopes and now state
+  explicitly that additive facet effects and interactions are fixed at zero.
+  Multiple GPCM curve groups are shown in separate panels with category
+  legends instead of as unlabelled overlaid traces.
+* Native Wright maps label every retained facet level using displaced text and
+  leader lines. Step thresholds are displayed as a vertical ladder with the
+  score transition and fitted logit in each label.
+
+## Reporting and reproducibility
+
+* Reproducibility manifests describe inputs through semantic summaries such as
+  class, dimensions, fields, and missingness instead of environment-sensitive
+  serialization hashes. The `digest` package is no longer required by the
+  distributed package.
+* Reporting, APA tables, model summaries, and plots use the same readiness and
+  estimate-use vocabulary. Added fields may affect code that assumes an exact
+  number of rows or columns in a summary component; selecting fields by name is
+  recommended.
+* APA output is described as an APA/JARS-informed drafting aid rather than a
+  compliance certificate. The reporting guide now lists study-level fields
+  that the fitted model cannot supply, and weighted-method prose distinguishes
+  row-level likelihood weighting from replicated Person response patterns.
+* External programs are not required to install or use mfrmr. Comparisons with
+  FACETS, ConQuest, TAM, or immer remain model- and estimator-specific and are
+  not general interchangeability claims.
+
+## Scope
+
+* This release does not add unrestricted GPCM, loading-only or multiplicative
+  generalized MFRM estimation, native multidimensional estimation, or new
+  public multivariate G-theory and D-study functionality.
+
 # mfrmr 0.2.2
 
 * Standardized the package's canonical joint-maximum-likelihood label as
@@ -11,21 +340,14 @@
 * Clarified that `maxit` is a prespecified computational ceiling rather than a
   result-selection control. Iteration-limited fits now direct users to keep the
   specification fixed, follow a prespecified ceiling sequence, and withhold
-  interpretation until the numerical-readiness gate passes.
+  interpretation until the numerical-readiness criteria are satisfied.
 
 * Replaced blanket `\dontrun{}` and `@examplesIf interactive()` guards with
   checkable examples or `\donttest{}` blocks. Only the two workflows that need
   separately generated ConQuest files remain `\dontrun{}`, and only the local
-  Shiny viewer remains interactive-only. The release-readiness review now
-  enforces that allowlist and flags CRAN-side package workload above ten
-  minutes, based on ordinary examples, `donttest` examples, tests, and vignette
-  rebuilding. Other top-level check components remain visible as diagnostics
-  but do not inflate that package-controlled threshold.
-
-- Added one authoritative repository roadmap and aligned release metadata and
-  validation notes with the accepted 0.2.2 boundary. External numerical
-  comparison and calibrated MML joint-stationarity gates are explicitly 0.2.3
-  work rather than retroactive 0.2.2 requirements.
+  Shiny viewer remains interactive-only. This makes most examples executable
+  while keeping workflows that require separately generated files clearly
+  marked.
 - Corrected bounded-GPCM score-side delta-method uncertainty to use the
   expected-score derivative `ScoreSlope * Var`. `ScoreSideLogitSE` remains the
   logit-side component SE, while `ScoreSideSE` and its interval columns now
@@ -58,7 +380,7 @@
   threshold anchoring, and fixed-calibration scoring remain outside 0.2.2.
 - Corrected the `interrater_agreement_table()` documentation: `ExpectedExact`
   is computed from fitted category-probability vectors, not marginal-frequency
-  chance agreement. A focused regression test now guards that definition.
+  chance agreement.
 - Clarified that exact Person-by-facet duplicate rows are retained but place
   Data readiness under review; legitimate repeated ratings should carry a
   distinguishing event or occasion facet.
@@ -77,7 +399,7 @@
   objective, terminal gradient, maximum parameter change, evaluations, and
   elapsed time; the best non-worsening stage is retained rather than assuming
   that stricter controls improve every fit monotonically.
-- Direct, hybrid, and EM MML engines now apply the same terminal-gradient gate
+- Direct, hybrid, and EM MML engines now apply the same terminal-gradient check
   to `InferenceReady`. EM relative log-likelihood convergence remains visible
   as an engine-specific stopping condition but no longer overrides the common
   numerical-readiness contract.
@@ -156,8 +478,8 @@
   compact output. Without a roster, structural missingness is reported as not
   assessed rather than inferred from a hypothetical complete crossing.
 - `list_mfrmr_data(details = TRUE)` now explains the design and intended role
-  of every bundled synthetic dataset. Fixed-seed generators for the compact
-  examples are tracked in the public source repository. Combined-study
+  of every bundled synthetic dataset. The compact examples can be regenerated
+  with fixed seeds. Combined-study
   objects now explain that relabeling prevents identifier collisions but does
   not establish a common scale without an explicit anchor/linking design.
 - Precomputed vignette tables now follow the same successful operational MML
@@ -168,7 +490,7 @@
 
 - The public default remains `reltol = 1e-9` for the initial optimizer stage;
   bounded polishing is invoked only when `reltol <= 1e-9` and code zero
-  precedes the terminal-gradient gate. The fitted object records requested and
+  precedes the terminal-gradient check. The fitted object records requested and
   selected-stage controls for replay. Model specification, design,
   identification, and inferential assumptions remain separate review
   questions.
@@ -202,18 +524,6 @@
   and avoids presenting a generic facet as a rater.
 - Latent regression rejects a non-person-centered parameterization that would
   confound the population intercept with the measurement scale.
-- CRAN checks now exercise the complete introductory workflow once and
-  use the exact README/default MML controls rather than a reduced quadrature
-  setting. They retain lightweight compatibility/backend/artifact contracts.
-  Repeated
-  estimation, detailed plotting, simulation, and broad regression coverage
-  remain in the complete local and GitHub Actions suite.
-- A repository-level first-use workflow stress protocol covers linked, sparse,
-  disconnected, shared-link, PCM, bounded-GPCM, extreme-score, separation,
-  missing-code, and weighted scenarios across deterministic seeds. It keeps
-  expectation matching separate from actual report readiness and is excluded
-  from routine CRAN checks.
-
 ## Interpretation and compatibility boundaries
 
 - Optimizer code zero is no longer treated as sufficient evidence of a clean
@@ -230,11 +540,10 @@
   `normalize_conquest_overlap_exports()` reads those files, reconstructs the
   sum-constrained item location, trims fixed-width person identifiers, and
   prepares them for `review_conquest_overlap()`.
-- A matched 31-node run with ConQuest 5.47.5 Demonstration Version is recorded
-  in the public source repository's validation record (excluded from the
-  installed CRAN package) for the documented binary, item-only, one-covariate
-  MML overlap case. The result supports that narrow handoff and is not a claim
-  of general numerical equivalence.
+- The documented binary, item-only, one-covariate MML handoff was compared in
+  a matched 31-node run with ConQuest 5.47.5 Demonstration Version. The result
+  supports that narrow handoff and is not a claim of general numerical
+  equivalence.
 - `export_mfrm_results()` now labels every preset as a potentially identifying
   analysis archive, warns before writing unless the risk is explicitly
   acknowledged, and records privacy status in its summary, HTML index, and

@@ -1,0 +1,9 @@
+"ContractId","ContractHash","BindingOrdinal","BindingLayer","StratumCount","ComponentId","ConditionSetRelationship","ObservationEventRelationship","StructureClass","ConditionIncidenceIdentity","ObservationEventMapIdentity","MappingIdentity","ConfirmationRole","Confirmed","EvidenceIdentity","Ready","ExecutionAllowed"
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",1,"observation_event",2,,,,,"","",,"practical_owner",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",2,"observation_event",3,,,,,"","",,"practical_owner",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",3,"random_block",2,"Object",,,,,,"","independent_methodologist",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",4,"random_block",2,"Rater",,,,,,"","independent_methodologist",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",5,"random_block",2,"Object:Rater",,,,,,"","independent_methodologist",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",6,"random_block",3,"Object",,,,,,"","independent_methodologist",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",7,"random_block",3,"Rater",,,,,,"","independent_methodologist",FALSE,"",FALSE,FALSE
+"MFRMR-GTHEORY-MV-DSIM0-MULTIVERSE-V3","f5e2cff2e470f6ad0ab592a2c49597a873b7286f5b9f7f8e4669069635788905",8,"random_block",3,"Object:Rater",,,,,,"","independent_methodologist",FALSE,"",FALSE,FALSE

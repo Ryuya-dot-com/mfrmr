@@ -20,7 +20,9 @@ bounded \code{GPCM}, simulation, and planning notes:
 as \code{expected_design} so absent rows are not confused with unassigned cells
 \item Fit with \code{\link[=fit_mfrm]{fit_mfrm()}} using \code{method = "MML"}
 \item Read \code{summary(fit, profile = "fit")}, then request the comprehensive
-FACETS-organized view with \code{summary(fit, profile = "facets")}
+measurement review with \code{summary(fit, profile = "facets")}. The profile
+name describes a familiar organization; FACETS knowledge or software is
+not required
 \item Create the required native Wright map with
 \code{plot(fit, type = "wright", show_ci = TRUE)}; use the FACETS renderer
 only as an optional familiar presentation
@@ -62,6 +64,8 @@ Guide pages:
 \item \link{mfrmr_reports_and_tables}
 \item \link{mfrmr_reporting_and_apa}
 \item \link{mfrmr_linking_and_dff}
+\item \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} and \link{mfrm_calibration_workflow} for
+portable fixed calibration
 \item \link{gpcm_capability_matrix}
 \item \link{mfrmr_compatibility_layer}
 }
@@ -73,6 +77,7 @@ Companion vignettes:
 \item \code{vignette("mfrmr-visual-diagnostics", package = "mfrmr")}
 \item \code{vignette("mfrmr-reporting-and-apa", package = "mfrmr")}
 \item \code{vignette("mfrmr-linking-and-dff", package = "mfrmr")}
+\item \code{vignette("mfrmr-portable-calibration", package = "mfrmr")}
 }
 
 A printable landscape cheatsheet of the public API ships at
@@ -81,6 +86,21 @@ A printable landscape cheatsheet of the public API ships at
 reference card, or knit the source with \code{rmarkdown::render()} when
 you want a customised version.
 }
+\section{Portable fixed calibration}{
+
+A saved, versioned calibration artifact can be created from an eligible
+one-scale \code{RSM} or \code{PCM} MML fit under the fixed standard-normal scoring
+basis. Use \code{\link[=mfrm_calibration_capabilities]{mfrm_calibration_capabilities()}} before extraction, then follow
+\link{mfrm_calibration_workflow} to review, validate, freeze, save, load, and
+score the artifact. Review the returned batch with
+\link{mfrm_calibration_score_methods} before using its estimates. Estimated-
+population or latent-regression MML, JML, and
+bounded \code{GPCM} remain fitted-object-only scoring routes in 0.2.4. Artifact
+score uncertainty is conditional on the frozen point calibration and its
+recorded prior; loading validates consistency but does not authenticate an
+untrusted file.
+}
+
 \section{First 5-minute route}{
 
 Use this order before exploring the broader feature surface:
@@ -185,7 +205,7 @@ Function families:
 \code{\link[=evaluate_mfrm_signal_detection]{evaluate_mfrm_signal_detection()}}, \code{\link[=predict_mfrm_population]{predict_mfrm_population()}},
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}}, \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}} (including
 fit-derived empirical / resampled / skeleton-based simulation
-specifications; fixed-calibration unit scoring supports \code{MML} fits
+specifications; fitted-object posterior scoring supports \code{MML} fits
 directly, latent-regression \code{MML} fits through the fitted population
 model when scored units also provide one-row-per-person background data,
 and \code{JML} fits through a post hoc reference-prior EAP layer;
@@ -234,15 +254,21 @@ to a contiguous internal scale and the mapping is stored in
 \code{fit$prep$score_map}.
 \item If the intended scale has unused boundary categories, such as a 1-5 scale
 with only 2-5 observed, set \verb{rating_min = 1, rating_max = 5} so the
-zero-count boundary category remains in the fitted support. If unused
-intermediate categories should also remain in the original scale, set
-\code{keep_original = TRUE}.
+zero-count boundary category remains explicit in the data-support review.
+A missing boundary remains review evidence for the separate element-
+boundary contract. If unused intermediate categories should remain in the
+original scale, set \code{keep_original = TRUE}; a retained zero-count internal
+category in a polytomous fitted ladder creates an unsupported adjacent-
+step contrast, and \code{\link[=fit_mfrm]{fit_mfrm()}} returns a structured pre-optimization error.
 \item \code{summary(describe_mfrm_data(...))} reports retained zero-count categories
 in \code{Notes}, printed \code{Caveats}, and \verb{$caveats}; \code{summary(fit)} carries full
 structured rows into printed \code{Caveats} and \verb{$caveats}, with \verb{Key warnings}
 as a short triage subset. Summary-table exports route those rows through
-\code{score_category_caveats} or \code{analysis_caveats}. Treat adjacent thresholds
-as weakly identified when an intermediate category is unobserved.
+\code{score_category_caveats} or \code{analysis_caveats}.
+\item A category can be observed globally but unused by one rater or other facet
+level. Review that local pattern with \code{\link[=data_quality_report]{data_quality_report()}} rather than
+treating it as a globally missing step or an automatic reason to select
+\code{GPCM}.
 \item Optional columns such as \code{Subset}, \code{Weight}, and \code{Group} support linking,
 weighted analysis, and fairness-focused follow-up workflows.
 \item Packaged synthetic data is available via \code{\link[=load_mfrmr_data]{load_mfrmr_data()}} or \code{data()}.
@@ -301,7 +327,7 @@ not the latent-regression estimator.
 \item For future-unit scoring, retain an \code{MML} calibration when you want the
 fitted marginal model directly, use an active latent-regression \code{MML}
 fit when scored units also provide one-row-per-person background data, or
-use a \code{JML} calibration when a post hoc fixed-calibration EAP layer is
+use a \code{JML} calibration when a post hoc fitted-object EAP layer is
 acceptable; then score with
 \code{\link[=predict_mfrm_units]{predict_mfrm_units()}} or \code{\link[=sample_mfrm_plausible_values]{sample_mfrm_plausible_values()}}.
 \item For bounded \code{GPCM}, use \code{\link[=summary.mfrm_fit]{summary.mfrm_fit()}},
@@ -374,6 +400,24 @@ The current implementation requires \code{slope_facet == step_facet} and
 identifies slopes on the log scale with geometric mean 1. This makes bounded
 \code{GPCM} a slope-aware sensitivity/extension route, not a replacement for the
 equal-weighting \code{RSM}/\code{PCM} interpretation.
+It is an aligned single-owner many-facet GPCM rather than the broader
+Uto--Ueno generalized MFRM: it does not jointly estimate multiplicative task
+and rater slope blocks or allow a distinct step owner. Unit slopes reduce to
+the equal-discrimination PCM kernel.
+Under default MML, an intercept-only person distribution
+\eqn{N(\beta_0,\sigma^2)} is estimated. The geometric-mean-one slopes are
+relative discriminations and \eqn{\sigma\alpha_g} are their equivalent
+fixed-latent-standard-deviation values, so the conventional common
+discrimination degree of freedom is retained. The legacy
+\code{gpcm_mml_identification = "fixed_standard_normal"} mode fixes both
+\eqn{\sigma=1} and the slope geometric mean to one and is therefore a
+narrower relative-discrimination model. Under JML, geometric-mean-one is
+required to resolve the scale of jointly estimated person coordinates.
+"Bounded" refers to this deliberately limited model/workflow scope, not to
+finite optimizer box constraints. The GPCM JML objective is unpenalized.
+Certified extreme-person or facet recession is reported through typed
+primary boundary results; a finite optimizer iterate is retained only as a
+numerical trace and is not a finite JML maximum.
 
 \strong{Ordered-response scope}
 
@@ -383,7 +427,16 @@ so they are handled through the ordinary ordered-score interface. This means
 \code{mfrmr} supports ordered binary and ordered polytomous data under \code{RSM} and
 \code{PCM}, plus a narrow bounded \code{GPCM} branch with one designated
 \code{slope_facet} that currently must equal \code{step_facet}. Unordered
-nominal/multinomial response models are outside the documented model scope.
+nominal/multinomial response models are outside the documented model scope,
+as are Poisson, negative-binomial, and grouped binomial-trial count-response
+families. A positive observation \code{weight} weights the conditional
+ordered-rating contribution; it is not a general collapsed-person frequency
+table and does not change the response family or model dependence among
+replicated ratings. Under MML, powering conditional responses within one
+Person is not the same as replicating a complete Person pattern after
+marginalization. Consequently, integer count values supplied as scores are
+modeled as ordered category codes, not as counts from a Poisson or related
+distribution.
 }
 
 \section{Estimation methods}{
@@ -500,7 +553,7 @@ mean-square chi-square ratio to an approximate standard normal deviate:
                            {\sqrt{2/(9\,\mathit{df})}}}
 
 Values near 0 indicate expected fit. The conventional
-\eqn{|\mathrm{ZSTD}| > 2} and \eqn{|\mathrm{ZSTD}| > 3} cutoffs are heuristic
+\eqn{|\mathrm{ZSTD}| \ge 2} and \eqn{|\mathrm{ZSTD}| \ge 3} cutoffs are heuristic
 two- and three-standard-deviation reference bands (Wright & Linacre, 1994;
 see also Wilson & Hilferty, 1931), not calibrated 5\\% and 1\\% hypothesis
 tests. Parameter estimation, sparse cells, the selected df convention, and
@@ -725,22 +778,34 @@ incomplete, or arbitrary imported designs.
 }
 
 \examples{
-mfrm_threshold_profiles()
-list_mfrmr_data(details = TRUE)
-
-\donttest{
-toy <- load_mfrmr_data("example_operational")
-fit <- fit_mfrm(
-  toy,
+ratings <- load_mfrmr_data("example_operational")
+head(ratings)
+review <- describe_mfrm_data(
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1,
+  rating_max = 4
+)
+summary(review)$overview
+
+\donttest{
+fit <- fit_mfrm(
+  data = ratings,
+  person = "Person",
+  facets = c("Rater", "Criterion"),
+  score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML",
   model = "RSM",
-  quad_points = 7
+  quad_points = 7,
+  maxit = 30,
+  reltol = 1e-11
 )
-diag <- diagnose_mfrm(fit, diagnostic_mode = "both", residual_pca = "none")
-summary(diag)
+summary(fit, profile = "fit", detail = "brief")$decision
+plot(fit, type = "wright", show_ci = TRUE, draw = FALSE)$name
 }
 
 }

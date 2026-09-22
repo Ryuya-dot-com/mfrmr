@@ -1,0 +1,8 @@
+File,MD5
+tests/testthat/test-bundle-dispatch-contracts.R,467ff7eae1034652509c946572c6e56f
+tests/testthat/test-fair-score-plots.R,d6cd84fe4b87d2268e71db7ca04ff226
+tests/testthat/test-observation-weight-readiness.R,18fc9908b2a26081c2973005e1c17cd5
+tests/testthat/test-readiness-propagation.R,304a92e5c2a82fa11bd9b4c69d9df66a
+tests/testthat/test-results-readiness-propagation.R,55c9a513ef43af6e5fcc0a779caf0918
+tests/testthat/test-fair-interval-contract.R,79e39c178d943e89f6755126460053c1
+tests/testthat/test-gpcm-fair-average.R,ea0f1c30c26d087b2405922043ce6890

@@ -23,6 +23,9 @@ residual PCA or other custom settings are needed ->
 \code{\link[=build_apa_outputs]{build_apa_outputs()}} ->
 \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}} -> \code{\link[=apa_table]{apa_table()}} or
 \code{\link[=export_summary_appendix]{export_summary_appendix()}}.
+The \code{"facets"} profile name is historical: it provides a comprehensive
+measurement review and does not require FACETS, TAM, or sirt knowledge or
+software.
 
 Use \code{JML} only when its fixed-person-parameter estimand is methodologically
 intended, for example for a JMLE-oriented external comparison, descriptive
@@ -91,6 +94,9 @@ helper rather than the latent-regression estimator itself.
 If the intended rating scale includes categories not observed in the current
 data, make that support explicit. For example, use
 \verb{rating_min = 1, rating_max = 5} for a 1-5 scale with only 2-5 observed.
+This preserves the declaration in the data-support review. A zero-count
+boundary is review evidence for the separate element-boundary contract; it
+is not by itself an unsupported free-step contrast.
 If an intermediate category is unobserved (for example 1, 2, 4, 5 with no
 3), also set \code{keep_original = TRUE} if the zero-count category should remain
 in the fitted support. \code{summary(describe_mfrm_data(...))} reports retained
@@ -98,8 +104,9 @@ zero-count categories in \code{Notes}, printed \code{Caveats}, and \verb{$caveat
 \code{summary(fit)} carries full structured rows into printed \code{Caveats} and
 \verb{$caveats}, with \verb{Key warnings} as a short triage subset. Summary-table
 exports route those rows through \code{score_category_caveats} or
-\code{analysis_caveats}. Adjacent threshold estimates should still be treated as
-weakly identified when an intermediate category is unobserved.
+\code{analysis_caveats}. In a polytomous fitted ladder, a retained zero-count
+internal category creates an unsupported adjacent-step contrast and stops
+fitting before optimization.
 }
 
 \section{Planned assignment and structural missingness}{
@@ -246,6 +253,8 @@ bounded \code{GPCM}:
 \code{\link[=compute_information]{compute_information()}} / \code{\link[=plot_information]{plot_information()}} when you want to inspect
 whether bounded \code{GPCM} is introducing substantively acceptable
 discrimination-based reweighting relative to the Rasch-family reference.
+Use one selectable q>=31 grid for every candidate and a denser common-grid
+sensitivity check when the comparison is close or consequential.
 \item Design planning and forecasting:
 \code{\link[=build_mfrm_sim_spec]{build_mfrm_sim_spec()}} or \code{\link[=extract_mfrm_sim_spec]{extract_mfrm_sim_spec()}} ->
 \code{\link[=evaluate_mfrm_recovery]{evaluate_mfrm_recovery()}} -> \code{\link[=assess_mfrm_recovery]{assess_mfrm_recovery()}} for
@@ -356,43 +365,33 @@ plots from component tables.
 
 \examples{
 \donttest{
-toy_full <- load_mfrmr_data("example_core")
-keep_people <- unique(toy_full$Person)[1:12]
-toy <- toy_full[toy_full$Person \%in\% keep_people, , drop = FALSE]
-
+ratings <- load_mfrmr_data("example_operational")
 fit <- fit_mfrm(
-  toy,
+  data = ratings,
   person = "Person",
   facets = c("Rater", "Criterion"),
   score = "Score",
+  rating_min = 1,
+  rating_max = 4,
   method = "MML",
+  model = "RSM",
   quad_points = 7,
-  maxit = 30
+  maxit = 30,
+  reltol = 1e-11
 )
-summary(fit)$next_actions
+fit_review <- summary(fit, profile = "fit", detail = "brief")
+fit_review$decision
 
-diag <- diagnose_mfrm(fit, residual_pca = "none", diagnostic_mode = "both")
-summary(diag)$next_actions
-
-chk <- reporting_checklist(fit, diagnostics = diag)
-subset(
-  chk$checklist,
-  Section == "Visual Displays",
-  c("Item", "DraftReady", "NextAction")
+full_review <- summary(
+  fit,
+  profile = "facets", # Historical profile name; FACETS is not required.
+  detail = "brief"
 )
+results <- full_review$results
+plot(results, type = "wright", show_ci = TRUE, draw = FALSE)$name
 
-qc <- plot_qc_dashboard(fit, diagnostics = diag, draw = FALSE, preset = "publication")
-qc$data$preset
-p_marg <- plot_marginal_fit(diag, draw = FALSE, preset = "publication")
-p_marg$data$preset
-
-sc <- subset_connectivity_report(fit, diagnostics = diag)
-p_design <- plot(sc, type = "design_matrix", draw = FALSE, preset = "publication")
-p_design$data$plot
-
-bundle <- build_summary_table_bundle(chk, appendix_preset = "recommended")
-summary(bundle)$role_summary
-plot(bundle, type = "appendix_presets", draw = FALSE)$data$plot
+report <- mfrm_report(results)
+summary(report, view = "reader")
 }
 
 }

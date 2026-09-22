@@ -1,0 +1,4 @@
+"Type","Text"
+"warning","Review-only display: Fit=review, Numerical=pass, Data=review, Design=pass_linked, Stability=pass. Inspect `summary(fit)$readiness` and `fit$data_review` before substantive or cross-subset interpretation."
+"description","REVIEW ONLY - Expected score and dominant categories across theta; reference profile fixes additive facet effects and fitted interactions at zero"
+"reference_profile","Estimated step and, for GPCM, slope parameters are retained; additive facet main effects and fitted interactions are fixed at zero."

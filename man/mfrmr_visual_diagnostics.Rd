@@ -38,6 +38,11 @@ stay outside the documented \code{GPCM} boundary.
 
 Use \code{\link[=gpcm_capability_matrix]{gpcm_capability_matrix()}} for the formal per-helper boundary
 before choosing a \code{GPCM} follow-up plot route.
+
+Portable fixed-calibration score batches have a separate review route.
+Use \code{summary(scores)} and \code{plot(scores)} as described in
+\link{mfrm_calibration_score_methods}. Those displays review returned scores;
+they do not replace source-fit diagnostics or establish calibration fit.
 }
 \section{Start with the question}{
 
@@ -46,6 +51,9 @@ before choosing a \code{GPCM} follow-up plot route.
 Use \code{plot(fit, type = "wright")} or \code{\link[=plot_wright_unified]{plot_wright_unified()}}.
 \item "Where do score categories transition across theta?"
 Use \code{plot(fit, type = "pathway")} and \code{plot(fit, type = "ccc")}.
+\item "How do measures and observed scores relate to Fair Scores?"
+Use \code{\link[=plot_fair_average]{plot_fair_average()}} with \code{plot_type = "measure"}, \code{"scatter"}, or
+\code{"difference"}. FairZ is a zero-reference expected score, not a z-score.
 \item "Is the design linked well enough across subsets or administrations?"
 Use \code{plot(subset_connectivity_report(...), type = "design_matrix")},
 \code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}}, \code{\link[=build_mfrm_network_review]{build_mfrm_network_review()}},
@@ -56,9 +64,10 @@ Use \code{\link[=plot_unexpected]{plot_unexpected()}} and \code{\link[=plot_disp
 Use \code{\link[=plot_marginal_fit]{plot_marginal_fit()}}.
 \item "Which level pairs drive strict local-dependence follow-up?"
 Use \code{\link[=plot_marginal_pairwise]{plot_marginal_pairwise()}}.
-\item "Do raters agree and do facets separate meaningfully?"
-Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}}, \code{\link[=rater_network_analysis]{rater_network_analysis()}}, and
-\code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
+\item "Do raters agree within observed shared scoring contexts?"
+Use \code{\link[=plot_interrater_agreement]{plot_interrater_agreement()}} and \code{\link[=rater_network_analysis]{rater_network_analysis()}}.
+\item "Do facet levels separate meaningfully?"
+Use \code{\link[=plot_facets_chisq]{plot_facets_chisq()}}.
 \item "Do criteria within the same rater move together in a halo-like way?"
 Use \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}} and
 \code{plot(..., type = "edge_distribution")}.
@@ -103,6 +112,12 @@ Use \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}} for \code{RSM} / \code
 branch can also call \code{\link[=plot_qc_dashboard]{plot_qc_dashboard()}}, but its fair-average
 panel reports an explicit unavailability indicator because that
 panel's score-metric semantics are limited to the Rasch-family branch.
+\item "I scored new Persons from a frozen portable calibration; which scores
+require review and how wide are their conditional intervals?"
+Use \code{summary(scores)} followed by
+\code{plot(scores, type = "interval")}. Continue with \code{type = "precision"}
+or \code{type = "edge_mass"} when response-count precision or quadrature-edge
+behavior needs follow-up.
 \item "Which figures are already supported by my current run?"
 Use \code{\link[=reporting_checklist]{reporting_checklist()}} and review the \code{"Visual Displays"} rows before
 choosing the next plot.
@@ -115,6 +130,19 @@ theta-by-category-by-probability plot data for exploratory teaching or
 downstream interactive rendering. Keep 2D pathway/CCC plots as the
 default reporting figures.
 }
+}
+
+\section{Keep the network questions separate}{
+
+\code{\link[=mfrm_network_analysis]{mfrm_network_analysis()}} describes the assignment/co-observation graph and
+is the relevant network route for disconnected measurement subsets.
+\code{\link[=rater_network_analysis]{rater_network_analysis()}} describes pairwise score agreement,
+disagreement, or severity direction, while \code{\link[=rater_halo_network_analysis]{rater_halo_network_analysis()}}
+describes rater-by-criterion score-profile correlations. The latter two do
+not establish assignment connectedness or a common scale. In all three,
+degree, strength, betweenness, and closeness are graph-theoretic quantities;
+they are not rating-scale central tendency, MFRM severity logits, or causal
+halo evidence.
 }
 
 \section{Recommended visual route}{
@@ -135,6 +163,9 @@ interaction, differential-functioning, linking, or precision
 follow-up.
 \item Use \code{plot(..., draw = FALSE)} when you want reusable plot data instead
 of immediate graphics.
+\item For an artifact-scored batch, use \code{summary(scores)} and \code{plot(scores)};
+keep its conditional-uncertainty note with the figure and inspect every
+\code{scored_review} or \code{not_scored} disposition.
 \item Use \code{plot(fit, type = "ccc_surface", draw = FALSE)} only when you need
 3D-ready category-probability data; \code{mfrmr} intentionally does not add a
 package-native plotly/rgl renderer for this route.
@@ -186,6 +217,10 @@ fitted object contains the required data:
 \code{mfrm_plot_data} objects for downstream review and export. When step
 estimates are available, \code{build_visual_summaries()} also exposes
 \verb{$plot_payloads$category_probability_surface}.
+\item Portable score-batch review:
+\code{plot(scores, type = "interval")}, \code{"precision"}, or \code{"edge_mass"}
+after \code{\link[=score_mfrm_calibration]{score_mfrm_calibration()}}. These views retain selection accounting,
+review dispositions, and Persons that could not be scored.
 \item 3D-ready exploratory handoff:
 \code{plot(fit, type = "ccc_surface", draw = FALSE)} returns a
 theta-by-category-by-probability \code{mfrm_plot_data} object. This is not a
@@ -281,6 +316,10 @@ the residual sign and magnitude matter, not just the response code.}
 funnel showing raw versus shrunken facet estimates. Best on fits
 produced via \code{\link[=apply_empirical_bayes_shrinkage]{apply_empirical_bayes_shrinkage()}} for reviewing how
 much each level moved under the prior.}
+\item{\code{plot(scores, type = "interval")}}{Posterior EAP intervals for a
+portable fixed-calibration score batch, with review dispositions
+highlighted. The intervals are conditional on the frozen point
+calibration and exclude calibration-parameter uncertainty.}
 }
 }
 
@@ -344,6 +383,10 @@ agreement concerns scoring consistency, whereas variability concerns
 whether facet elements are statistically distinguishable.
 \item Residual PCA and bias plots should be interpreted as follow-up layers
 after the main fit screen, not as first-pass diagnostics.
+\item Portable score plots review returned score batches only. Inspect the
+source calibration separately, retain \code{not_scored} Persons in the audit
+trail, and do not interpret conditional intervals as including
+calibration-parameter uncertainty.
 \item DFF residual- and refit-method plots are screening visuals. Current refit
 rows do not receive ETS A/B/C labels because their plug-in uncertainty
 omits baseline-anchor uncertainty and cross-refit covariance.
@@ -379,6 +422,33 @@ writing interpretation.
 }
 }
 
+\section{Figures with separate titles and interpretation}{
+
+Wright, expected-score pathway, CCC, and \code{\link[=plot_fair_average]{plot_fair_average()}} displays
+accept \code{show_title = FALSE} and \code{show_notes = FALSE}. These options hide
+figure annotations while retaining axes, legends, structural panel labels,
+and the original title and notes in the returned \code{mfrm_plot_data} object.
+With \code{p <- plot(fit, type = "ccc", draw = FALSE, show_title = FALSE, show_notes = FALSE)}, inspect \code{p$data$notes} before writing a caption.
+\code{\link[=as_ggplot]{as_ggplot()}} respects the display options and retains notes in
+\code{attr(as_ggplot(p), "mfrmr_notes")}. Hiding annotations does not change
+readiness or interval eligibility.
+
+Use \code{preset = "monochrome"} for grayscale. Expected-score and CCC curves
+have six line types: solid, dashed, dotted, dotdash, longdash, and twodash.
+Fair-score plots have six point shapes. Encodings repeat beyond six series;
+use panels or select a facet instead of relying on gray levels alone.
+These controls are documented for the named routes, not every plotting
+helper in the package. Check the individual help page for other plots.
+
+Fair-score intervals remain diagnostic-only with full-refit coverage
+unverified. RSM/PCM plots propagate the focal measure SE while holding
+thresholds and reference measures fixed. GPCM-MML plots can use structural
+table SEs for non-Person rows, conditioning on Person EAP/reference means.
+\code{fair_average_table(fair_se = TRUE)} does not provide RSM/PCM fair-score
+SEs. See \code{\link[=mfrmr_interval_guide]{mfrmr_interval_guide()}} and \code{\link[=plot_fair_average]{plot_fair_average()}} for the status
+columns and the observed-minus-fair gap caveat.
+}
+
 \section{Companion vignette}{
 
 For a longer, plot-first walkthrough, run
@@ -388,6 +458,8 @@ For a longer, plot-first walkthrough, run
 \examples{
 \donttest{
 toy <- load_mfrmr_data("example_core")
+# A balanced slice retains every Rater and Criterion while running quickly.
+toy <- toy[toy$Person \%in\% unique(toy$Person)[1:12], , drop = FALSE]
 fit <- fit_mfrm(
   toy,
   person = "Person",

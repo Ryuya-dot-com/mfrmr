@@ -125,7 +125,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
     Area = c(
       "Core fitting and summaries",
       "Exploratory diagnostics and residual follow-up",
-      "Fixed-calibration scoring and information",
+      "Fitted-object posterior scoring and information",
       "Core curve and category views",
       "Checklist and summary-table appendix route",
       "Operational misfit casebook",
@@ -163,7 +163,12 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "compare_mfrm(); build_model_choice_review(); build_weighting_review(); compute_information(); plot_information(); build_summary_table_bundle(); export_summary_appendix()",
       "build_linking_review()",
       "build_mfrm_sim_spec(); extract_mfrm_sim_spec(); simulate_mfrm_data(); evaluate_mfrm_recovery(); assess_mfrm_recovery()",
-      "build_apa_outputs(); build_visual_summaries(); run_qc_pipeline(); build_mfrm_manifest(); build_mfrm_replay_script(); export_mfrm_bundle()",
+      paste(
+        "mfrm_results(include = \"gpcm_review\"); mfrm_report();",
+        "export_mfrm_results(); build_apa_outputs(); build_visual_summaries();",
+        "run_qc_pipeline(); build_mfrm_manifest(); build_mfrm_replay_script();",
+        "export_mfrm_bundle()"
+      ),
       "fair_average_table()",
       "evaluate_mfrm_design(); predict_mfrm_population()",
       "evaluate_mfrm_diagnostic_screening(); evaluate_mfrm_signal_detection()",
@@ -175,7 +180,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       "estimation_iteration_report()"
     ),
     Status = c(
-      "supported",
+      "supported_with_caveat",
       "supported_with_caveat",
       "supported",
       "supported",
@@ -199,7 +204,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
       paste(
         "Requires an explicit step facet and currently keeps",
         "`slope_facet == step_facet`; MML direct is the documented and verified default,",
-        "and EM/hybrid fall back to direct."
+        "and EM/hybrid fall back to direct. Free-slope fits retain optimizer",
+        "values as numerical traces, while estimator-specific global boundary",
+        "readiness and inferential slope uncertainty remain under review."
       ),
       paste(
         "Residual-based mean-square and strict-marginal outputs remain",
@@ -208,8 +215,10 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "unavailability status when the underlying fit is GPCM."
       ),
       paste(
-        "Covers fixed-calibration posterior scoring and information only;",
-        "population forecasting is a separate layer outside this row."
+        "`predict_mfrm_units()` and `sample_mfrm_plausible_values()` consume",
+        "the fitted model and hold its non-Person parameters fixed. This is",
+        "not scoring from a saved, versioned calibration artifact; population",
+        "forecasting is a separate layer outside this row."
       ),
       paste(
         "Limited to the slope-aware probability kernel that is already",
@@ -242,9 +251,11 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "before RMSE or bias can be interpreted as adequate."
       ),
       paste(
-        "Supported with caveat as a partial reporting/export bundle over",
+        "Supported with caveat as a connected public reporting/export route over",
         "already-supported GPCM diagnostics, direct tables, plots, manifests,",
-        "and replay scripts. Full FACETS-style score-side contract review,",
+        "and replay scripts. The mfrm_results -> mfrm_report -> export/replay",
+        "route preserves the model, step/slope owners, and MML identification.",
+        "Full FACETS-style score-side contract review,",
         "design forecasting, and automatic operational scoring claims remain",
         "outside this route."
       ),
@@ -255,7 +266,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "The historical SE columns in the output are scaled facet-measure SEs,",
         "not fair-average SEs. Use `fair_se = TRUE` to request structural",
         "delta-method fair-average SEs for non-person rows when the MML",
-        "observed-information Hessian is available."
+        "observed-information Hessian is available. These remain diagnostic-only:",
+        "FairCIEligible is FALSE, including with computable or regularized",
+        "covariance, and full-refit coverage remains unverified."
       ),
       paste(
         "Supported with caveat as a role-based person x rater-like x",
@@ -271,14 +284,14 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "screening evidence for the current role-based person x rater-like x",
         "criterion-like design layer. The summaries are Type I proxy,",
         "sensitivity proxy, DIF target-flag, and bias-screening readouts,",
-        "not calibrated inferential tests, operational screening gates, or",
+        "not calibrated inferential tests, operational screening criteria, or",
         "arbitrary-facet planning validation."
       ),
       paste(
         "Supported with caveat as direct DFF/DIF screening over the fitted",
         "bounded-GPCM expected-score and residual scale. Residual-method",
         "contrasts and interaction cells remain screening evidence; refit",
-        "contrasts must retain explicit linking and precision gates before",
+        "contrasts must retain explicit linking and precision requirements before",
         "any stronger subgroup-comparison wording is used."
       ),
       paste(
@@ -330,8 +343,9 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "unexpected-response, displacement, and category tables before writing claims."
       ),
       paste(
-        "Use fixed-calibration scoring and `compute_information()` /",
-        "`plot_information()`; keep population forecasting on a separate route."
+        "Use fitted-object posterior scoring and `compute_information()` /",
+        "`plot_information()`; keep portable calibration and population",
+        "forecasting on their separately documented routes."
       ),
       paste(
         "Use draw-free plot objects and category reports for GPCM sensitivity",
@@ -359,7 +373,8 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "bias, and uncertainty thresholds."
       ),
       paste(
-        "Use the APA/QC/export bundle for caveated GPCM sensitivity reporting;",
+        "Use `mfrm_results(fit, include = \"gpcm_review\")`, `mfrm_report()`,",
+        "and `export_mfrm_results()` for caveated GPCM sensitivity reporting;",
         "use package-native scorefile export, design forecasting, and full",
         "FACETS score-side review only through their separate caveated or",
         "blocked rows."
@@ -389,7 +404,7 @@ print.mfrmr_gpcm_capabilities <- function(x, ...) {
         "`plot_dif_summary()` before writing claims."
       ),
       paste(
-        "Use the current MML fitting and fixed-calibration scoring routes, or",
+        "Use the current MML fitting and fitted-object posterior scoring routes, or",
         "use external Bayesian software when posterior sampling is required."
       ),
       paste(
@@ -529,7 +544,7 @@ gpcm_score_side_contract <- function(status = "all") {
       "Expected-score fields use the fitted slope structure and therefore depend on the declared step and slope facets.",
       "Uncertainty fields require the relevant MML diagnostics; otherwise the scorefile reports an explicit unavailable status.",
       "No FACETS-compatible free-discrimination score-side uncertainty definition is currently available.",
-      "Structural fair-average SEs are a separate table route and do not establish FACETS score-side equivalence.",
+      "Structural fair-average SEs condition on Person EAP/reference means and remain diagnostic-only (FairCIEligible = FALSE); full-refit coverage and FACETS score-side equivalence are unverified.",
       "Unit-slope agreement with PCM is an interpretation reference, not evidence that every free-slope score quantity is Rasch-equivalent.",
       "The exported scorefile is package-native and must retain its bounded-GPCM caveat fields.",
       "The full FACETS-style score-side review is unavailable for free-discrimination bounded GPCM.",
@@ -540,7 +555,7 @@ gpcm_score_side_contract <- function(status = "all") {
       "Inspect the fitted step and slope summaries before interpreting exported expected scores or residuals.",
       "Use an MML fit when uncertainty is required, or report the explicit unavailable status without substituting another SE.",
       "Use the package-native scorefile with caveats; use an `RSM` or `PCM` fit when a full FACETS score-side review is required.",
-      "Use `fair_average_table(fair_se = TRUE)` directly and label the result as slope-aware element-conditional.",
+      "Use `fair_average_table(fit, fair_se = TRUE)` directly and label the result as slope-aware element-conditional diagnostic uncertainty.",
       "Fit a `PCM` reference when equal-discrimination score semantics are required for comparison.",
       "Use `facets_output_file_bundle(include = \"score\")` and retain all status and caveat columns.",
       "Keep full `facets_output_contract_review()` work on the `RSM` or `PCM` route.",

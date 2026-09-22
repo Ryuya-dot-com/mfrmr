@@ -100,7 +100,7 @@ head(run$fair_average)
 
 `method = "JML"` is shown here for a JMLE-oriented migration comparison.
 Do not infer readiness from `Converged` alone: require `InferenceReady = TRUE`
-for the numerical gate and review the terminal-gradient guidance when severity
+for the numerical-readiness criteria and review the terminal-gradient guidance when severity
 is `"review"` or `"fail"`. Numerical readiness does not override a Data,
 Design, or Stability hold; use the readiness table before interpreting or
 reporting the fit. For new analysis scripts, prefer `fit_mfrm(method = "MML")`
@@ -146,7 +146,12 @@ fit_mfrm(
 declaration becomes `rating_min = 1, rating_max = 5`. For a partial-credit
 specification, pass `model = "PCM"` and identify the facet that carries the
 step thresholds with `step_facet = "Rater"` (or the appropriate facet
-name).
+name). The declaration preserves the intended category map, but it is not a
+threshold anchor. A missing boundary category remains review evidence for the
+separate element-boundary contract. A missing internal category in a
+polytomous fitted ladder creates an unsupported adjacent-step contrast and
+stops fitting before optimization. Review or revise the data support rather
+than copying FACETS category-dropping behavior implicitly.
 
 ### Anchoring
 
@@ -170,8 +175,11 @@ anchors <- data.frame(
 fit <- fit_mfrm(..., anchors = anchors)
 ```
 
-`review_mfrm_anchors()` validates and reports on the anchor block before the
-fit runs, surfacing connectivity, overlap, and minimum-sample issues.
+`review_mfrm_anchors()` normalizes and reports on the constraint block before
+the fit runs, surfacing duplicate/direct-group overlap and local support-count
+issues. It does not evaluate assignment connectedness, source-fit readiness,
+or cross-run element invariance; use the design-network route and substantive
+identity evidence separately.
 
 ### Bias and interaction
 
@@ -195,12 +203,20 @@ object:
 
 ```r
 review <- summary(fit, profile = "facets", detail = "brief")
+review$decision
 res <- review$results
 
 # Primary final-scale figure: all locations and available facet uncertainty.
 plot(res, type = "wright", renderer = "native", show_ci = TRUE,
      top_n = Inf, preset = "publication")
 ```
+
+Read `review$decision` before using the FACETS-organized tables. It reports the
+same stored mfrmr readiness decision shown by `print(fit)`; the `facets`
+profile changes the organization of the review, not the estimator and not the
+evidence threshold. `FormalInference = "No"` therefore remains a stop on
+substantive reporting even when a familiar FACETS-style table or plot is
+available.
 
 `plot_wright_unified()` is the corresponding explicit helper when the Wright
 map is the main figure. For readers who expect the FACETS Table 6-style
@@ -276,6 +292,10 @@ fit_g <- fit_mfrm(..., group_anchors = group_anchors)
 dff <- analyze_dff(fit_g, diag, facet = "Criterion",
                    group = "FirstLanguage", method = "refit")
 ```
+
+A group-anchor target is an external mean constraint, not an empirical link.
+Its use requires a defensible equal-mean or known-target assumption for the
+declared elements and does not connect otherwise unobserved rating subsets.
 
 ## Reviewing output contracts and fit tables
 

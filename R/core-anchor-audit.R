@@ -3,7 +3,7 @@
 # ==============================================================================
 #
 # Internal helpers for reading anchor / group-anchor tables, normalizing
-# their structure, and generating the connectivity / overlap audit
+# their structure, and generating the constraint / overlap audit
 # bundle consumed by `fit_mfrm()`. Split out of `mfrm_core.R` for
 # so the anchor-table layer lives in a single file. All
 # functions here are internal (no @export); they are called from the
@@ -118,7 +118,7 @@ build_anchor_recommendations <- function(facet_summary,
     n_group_conf <- issue_counts$N[issue_counts$Issue == "group_value_conflicts"]
 
     if (length(n_overlap) > 0 && n_overlap > 0) {
-      rec <- c(rec, "Levels listed in both anchor and group-anchor tables are directly anchored (fixed anchors take precedence).")
+      rec <- c(rec, "Levels listed in both direct- and group-anchor tables retain both constraints; verify that the fixed value and group mean are jointly compatible.")
     }
     if (length(n_missing) > 0 && n_missing > 0) {
       rec <- c(rec, "Some group anchors had missing GroupValue; default 0 was applied using the legacy-compatible group-centering rule.")
@@ -141,8 +141,8 @@ build_anchor_recommendations <- function(facet_summary,
       rec <- c(
         rec,
         paste0(
-          "FACETS linking guideline: consider >= ", min_common_anchors,
-          " common anchor levels per linking facet. Low-anchor facets: ",
+          "Package count screen: consider >= ", min_common_anchors,
+          " directly anchored levels per facet. This does not verify cross-run identity or empirical connectedness. Low-count facets: ",
           paste(link_tbl$Facet, collapse = ", "), "."
         )
       )
@@ -168,8 +168,8 @@ build_anchor_recommendations <- function(facet_summary,
       rec <- c(
         rec,
         paste0(
-          "Linacre guideline: about ", fmt_count(min_obs_per_element),
-          " observations per element are desirable. Low-observation facets: ",
+          "Package observation-count screen: about ", fmt_count(min_obs_per_element),
+          " observations per element are used for review. Low-observation facets: ",
           paste(low_facets, collapse = ", "), "."
         )
       )
@@ -179,8 +179,8 @@ build_anchor_recommendations <- function(facet_summary,
       rec <- c(
         rec,
         paste0(
-          "Linacre guideline: about ", fmt_count(min_obs_per_category),
-          " observations per rating category are desirable. Low categories: ", cats, "."
+          "Package observation-count screen: about ", fmt_count(min_obs_per_category),
+          " observations per rating category are used for review. Low categories: ", cats, "."
         )
       )
     }

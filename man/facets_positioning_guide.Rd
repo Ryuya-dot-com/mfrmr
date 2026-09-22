@@ -30,10 +30,13 @@ FACETS output is explicitly supplied;
 handoff, and report-organization surfaces;
 \item external comparison: FACETS comparisons require a supplied external table
 and should separate MnSq differences from df/ZSTD convention differences;
-\item current model boundary: one response-model family and one observed score
-scale are used per fit; mixed families, multiple independent scales,
-general threshold anchoring, and fixed-calibration scoring are not part of
-the current public estimator;
+\item current model boundary: one ordered-categorical response-model family and
+one observed score scale are used per fit; nominal and count-response
+families, mixed families, multiple independent scales,
+general threshold anchoring, and importing FACETS or third-party frozen
+calibrations are not part of the current public estimator; native portable
+calibration is available for the narrower documented RSM/PCM MML route,
+and posterior scoring from an existing fitted object remains separate;
 \item extension surface: native R tables, plot data, GPCM diagnostics,
 network views, and G/D-study helpers are package extensions, not promises
 of FACETS menu-level reproduction.

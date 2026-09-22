@@ -122,7 +122,11 @@ uses \code{future.apply::future_lapply} and respects whatever
 \code{future::plan()} is currently active. The Suggests package
 \code{future.apply} must be installed for the parallel path to
 activate; otherwise the call falls back to serial execution with a single
-message. Parallel execution applies to replications within each design row.}
+message. A fixed explicit \code{seed} preallocates the same per-cell simulation
+seeds before either route, so serial and future execution receive identical
+stochastic inputs for the same ordered design grid. Parallel dispatch
+applies to replications within each design row; actual worker concurrency
+depends on the active future plan.}
 }
 \value{
 An object of class \code{mfrm_design_evaluation} with components:
@@ -133,7 +137,10 @@ alongside the standard result columns.
 \item \code{results}: facet-level replicate results, with the same design-variable
 alias columns when applicable.
 \item \code{rep_overview}: run-level status and timing, with the same design-variable
-alias columns when applicable.
+alias columns when applicable. Failed fits retain the condition class,
+failure component, and category-support state/reason codes when available;
+a completely failed design still returns the documented zero-row
+\code{results} schema rather than a zero-column table.
 \item \code{design_descriptor}: role-based design-variable metadata used by planning
 summaries and plots
 \item \code{planning_scope}: explicit record of the current planning contract
@@ -290,7 +297,7 @@ reporting}. Psychological Methods.
 \examples{
 \donttest{
 sim_eval <- suppressWarnings(evaluate_mfrm_design(
-  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 1),
+  design = list(person = c(8, 12), rater = 2, criterion = 2, assignment = 2),
   reps = 1,
   maxit = 30,
   seed = 123

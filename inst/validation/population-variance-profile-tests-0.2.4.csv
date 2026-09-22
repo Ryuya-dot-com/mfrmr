@@ -1,0 +1,48 @@
+"Suite","test","nb","failed","skipped","error","warning","passed"
+"helper","P1c pins exact zero-limit and bounded execution plans",20,0,FALSE,FALSE,0,20
+"helper","P1c boundary envelope excludes nonstationary finite rows",9,0,FALSE,FALSE,0,9
+"helper","P1c pairwise aggregation remains typed with a missing arm",6,0,FALSE,FALSE,0,6
+"helper","P1c decision fails closed without a qualified boundary fit",11,0,FALSE,FALSE,0,11
+"helper","P1c decision signatures preserve upstream blockers",7,0,FALSE,FALSE,0,7
+"helper","P1c full four-scenario boundary audit remains explicitly opt-in",1,0,TRUE,FALSE,0,0
+"roadmap","public roadmap and current NEWS exclude internal release operations",48,0,FALSE,FALSE,0,48
+"roadmap","internal draft.62 roadmap and GPCM work remain explicit and private",277,0,FALSE,FALSE,0,277
+"roadmap","WP0 readiness contract freezes scoped fail-closed semantics",27,0,FALSE,FALSE,0,27
+"roadmap","WP0 fixture validator rejects post-hoc readiness upgrades",2,0,FALSE,FALSE,0,2
+"roadmap","FACETS and diagnostic stress registries retain prior edge cells under draft.31",15,0,FALSE,FALSE,0,15
+"roadmap","FACETS divergence audit fails closed on rank and category contracts",8,0,FALSE,FALSE,0,8
+"roadmap","release-readiness protocol exposes review steps and parses check logs",24,0,FALSE,FALSE,0,24
+"roadmap","release-readiness timing excludes check infrastructure overhead",4,0,FALSE,FALSE,0,4
+"roadmap","release-readiness protocol flags check timing above ten minutes",8,0,FALSE,FALSE,0,8
+"roadmap","release-readiness protocol rejects a check log without Status",8,0,FALSE,FALSE,0,8
+"roadmap","release-readiness protocol rejects stale check logs by version",3,0,FALSE,FALSE,0,3
+"roadmap","release-readiness protocol requires --as-cran provenance",3,0,FALSE,FALSE,0,3
+"roadmap","release-readiness binds a 0.2.3 candidate to frozen hashed inputs",26,0,FALSE,FALSE,0,26
+"roadmap","release-readiness reconstructs checklist decisions from hashed result rows",16,0,FALSE,FALSE,0,16
+"roadmap","release-readiness keeps the 0.2.3 current/future API truth explicit",7,0,FALSE,FALSE,0,7
+"roadmap","release-readiness rejects stale numeric pass counts in current prose",8,0,FALSE,FALSE,0,8
+"roadmap","release-readiness protocol rejects stale tarball and check evidence",14,0,FALSE,FALSE,0,14
+"roadmap","release-readiness protocol finds common check-log locations",2,0,FALSE,FALSE,0,2
+"roadmap","release-readiness prefers candidate check logs over newer archives",1,0,FALSE,FALSE,0,1
+"roadmap","release-readiness prefers submission and checked tarballs over backups",2,0,FALSE,FALSE,0,2
+"roadmap","release-readiness protocol checks CI workflow contract",12,0,FALSE,FALSE,0,12
+"roadmap","release-readiness follows local reusable CI workflows",9,0,FALSE,FALSE,0,9
+"roadmap","release-readiness accepts check-only runner and rejects legacy G4",9,0,FALSE,FALSE,0,9
+"roadmap","release-readiness protocol checks source-truth alignment",36,0,FALSE,FALSE,0,36
+"roadmap","release-readiness protocol enforces semantic example guards",8,0,FALSE,FALSE,0,8
+"roadmap","release-readiness protocol checks GPCM scope alignment",11,0,FALSE,FALSE,0,11
+"roadmap","release-readiness protocol reviews the source tree shape",26,0,FALSE,FALSE,0,26
+"roadmap","GPCM stress manifest covers every prespecified axis pair",15,0,FALSE,FALSE,0,15
+"roadmap","GPCM stress smoke generator is deterministic and fails closed",12,0,FALSE,FALSE,0,12
+"roadmap","GPCM local-dependence corner reaches exploratory residual PCA",7,0,FALSE,FALSE,0,7
+"roadmap","target-scale sparse feasibility execution is fixed and guarded",19,0,FALSE,FALSE,0,19
+"roadmap","target-scale completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"roadmap","target baseline and bridge execution is fixed and guarded",18,0,FALSE,FALSE,0,18
+"roadmap","target baseline completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"roadmap","JML bottleneck decomposition manifest is fixed and guarded",24,0,FALSE,FALSE,0,24
+"roadmap","JML profile completion markers fail closed on artifact changes",2,0,FALSE,FALSE,0,2
+"roadmap","GPCM attribution manifest isolates one axis and four fit routes",21,0,FALSE,FALSE,0,21
+"roadmap","GPCM attribution routes retain identical paired data and fail closed",14,0,FALSE,FALSE,0,14
+"roadmap","GPCM replicated pilot prespecifies tiers and uncertainty summaries",23,0,FALSE,FALSE,0,23
+"roadmap","GPCM replicated checkpoints resume atomically and fail closed",31,0,FALSE,FALSE,0,31
+"roadmap","MML metamorphic grid is prespecified, guarded, and fail closed",30,0,FALSE,FALSE,0,30
