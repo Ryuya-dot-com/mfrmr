@@ -124,11 +124,14 @@ exported <- export_mfrm_results(
   acknowledge_sensitive = TRUE # These data are synthetic; exports retain IDs
 )
 
-# Locate the files and check whether any plots could not be exported
-output_dir
-exported$written_files[, c("Component", "Path")]
+# Preview filenames and check whether any plots could not be exported
+head(data.frame(
+  Component = exported$written_files$Component,
+  File = basename(exported$written_files$Path)
+))
 exported$plot_errors
-# Open index.html in this folder to read the report
+# Full paths remain in exported$written_files$Path.
+# Open index.html in output_dir to read the report.
 }
 }
 \seealso{

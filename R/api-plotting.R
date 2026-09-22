@@ -3508,9 +3508,9 @@ plot_bubble <- function(x,
 #'   acknowledge_sensitive = TRUE # Synthetic data; exported tables retain person IDs
 #' )
 #'
-#' # Locate the CSV files
-#' files[, c("Table", "Path")]
-#' # Open a listed Path in a spreadsheet app or read it with read.csv()
+#' # Preview filenames; full paths remain in files$Path
+#' data.frame(Table = files$Table, File = basename(files$Path))
+#' # Open a path from files$Path in a spreadsheet app or with read.csv()
 #' }
 #' @export
 export_mfrm <- function(fit,

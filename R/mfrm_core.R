@@ -7828,7 +7828,8 @@ calc_marginal_pairwise_bundle <- function(expected_core,
         usable <- all(is.finite(c(pair_weight, exp_exact, exp_adjacent, obs_exact, obs_adjacent)))
 
         pair_idx <- pair_idx + 1L
-        pair_rows[[pair_idx]] <- tibble(
+        # Collect scalar rows cheaply; bind_rows() constructs the table once.
+        pair_rows[[pair_idx]] <- list(
           Facet = facet,
           Level1 = level_pair[1],
           Level2 = level_pair[2],

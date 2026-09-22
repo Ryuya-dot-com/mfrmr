@@ -13,6 +13,7 @@ is_cran_check <- local({
 cran_light_tests <- c(
   "adaptive-fitting",
   "adaptive-quadrature-review",
+  "calibration-public-api",
   "cran-smoke",
   "cluster-comparison",
   "cluster-plots",
@@ -21,6 +22,7 @@ cran_light_tests <- c(
   "data-and-citation",
   "d-study-plots",
   "example-datasets",
+  "facet-dashboard",
   "feature-clustering",
   "hierarchical-clustering",
   "gauss-hermite-weights",
@@ -38,6 +40,7 @@ cran_light_tests <- c(
   "bundle-summary-privacy",
   "gpcm-capability-matrix",
   "namespace-contract",
+  "optimizer-curvature",
   "vignette-artifacts"
 )
 
@@ -50,10 +53,11 @@ cran_light_filter <- paste0(
 if (is_cran_check) {
   # Exercise the public data -> declared-design review -> fit -> summary ->
   # Wright/pathway plot -> export route once, plus lightweight compatibility,
-  # backend, privacy, and installed-artifact contracts. Detailed plotting,
-  # repeated estimation/diagnostics, simulation/recovery, documentation scans,
-  # and broad regression tests remain in the complete local/CI suite, which
-  # must be run with NOT_CRAN=true.
+  # backend, privacy, and installed-artifact contracts. Portable scoring,
+  # dashboard restrictions, and guarded optimizer restarts are included.
+  # Detailed plotting, repeated estimation/diagnostics, simulation/recovery,
+  # documentation scans and broad regression tests remain in the complete
+  # local/CI suite, which must be run with NOT_CRAN=true.
   test_check("mfrmr", filter = cran_light_filter)
 } else {
   test_check("mfrmr")

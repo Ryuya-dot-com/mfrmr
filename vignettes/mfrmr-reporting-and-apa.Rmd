@@ -538,9 +538,17 @@ bundle <- export_mfrm_bundle(
   ),
   acknowledge_sensitive = TRUE
 )
-subset(bundle$written_files, Component %in% c("core_measures", "replay_script", "html"))
+selected_files <- subset(
+  bundle$written_files,
+  Component %in% c("core_measures", "replay_script", "bundle_html")
+)
+data.frame(
+  Component = selected_files$Component,
+  File = basename(selected_files$Path)
+)
 ```
 
+Full paths and data-handling notes remain in `bundle$written_files`.
 `data = toy` includes the original input CSV needed by the fit replay script.
 Omitting `data` leaves a `your_data.csv` placeholder to replace manually.
 The bundle's core step CSV contains point estimates; save the diagnostic
@@ -574,7 +582,7 @@ writeLines(c(
   "The display does not test rater contrasts or establish unidimensionality."
 ), file.path(output_dir, "Figure1-Wright-caption.txt"))
 
-output_dir
+# Filenames are shown here; output_dir retains the folder location.
 list.files(output_dir, pattern = "^(Table1|Step-uncertainty|Planned|Figure1|Methods-Results)")
 ```
 

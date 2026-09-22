@@ -98,6 +98,16 @@ dashboard does not justify automatic row, person, or rater exclusion.
 Default thresholds are screening heuristics. Prespecify and justify any
 application-specific alternatives rather than treating them as universal
 validity or acceptance criteria.
+\code{MissingMetrics} lists unavailable estimate, SE, Infit or Outfit values.
+A severity or misfit flag is \code{NA} when it cannot be evaluated (an observed
+misfit exceedance still flags even if the other fit index is unavailable).
+\code{FlagCount} counts observed flags only; zero is not a complete pass.
+\code{IncompleteLevels} counts levels with any missing diagnostic. Bias counts
+describe supplied results only, not tests of absence of bias.
+Fit-readiness restrictions are retained in \code{fit_readiness},
+\code{interpretation_status} and \code{notes}. Review overlap with
+\code{\link[=subset_connectivity_report]{subset_connectivity_report()}} and category use with \code{\link[=data_quality_report]{data_quality_report()}}
+before interpreting between-rater differences.
 }
 \section{Output}{
 

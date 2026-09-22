@@ -1,6 +1,6 @@
 # mfrmr internal development and validation roadmap
 
-Status: repository-only maintainer plan, refined 2026-09-21.
+Status: repository-only maintainer plan, refined 2026-09-22.
 
 The repository-root `ROADMAP.md` is the single source of truth for public
 release direction. This file owns internal sequencing, candidate gates, local
@@ -11,7 +11,8 @@ The roadmap is repository-only and is excluded from source-package tarballs.
 
 ## Current work plan
 
-Updated 2026-09-21 after the user's sequencing decision: finish implemented
+Updated 2026-09-22 after the user's local-refinement decision. Preserve the
+sequencing decision: finish implemented
 development functions, extend statistical support, extend models, then integrate
 them as 0.2.4. This replaces the previous release-first recommendation. This
 section is the active execution order. Update it in place when a decision
@@ -22,6 +23,826 @@ In particular, the September 18 DRF-first queue, automatic full-suite/matrix
 requirements, old numbered feature releases and research-prototype gates do
 not override this plan. Their original protocols and results remain intact.
 
+Publication is paused at the user's request. Educational performance
+assessment is the representative application, with generality across music,
+psychology, medical/health-professions assessment and judged sports. The
+primary practical outcome is useful feedback to raters. The current work is
+local refinement of the integrated workflows, not another model-expansion
+cycle. P0 defects interrupt the sequence; W1/W2 then provide the core paths,
+with W1 judged by whether a user can reach defensible rater feedback.
+
+Priority correction after the user's September 22 global review: the completed
+capacity/integration probes and 120-fit interval pilot are bounded P2 evidence,
+not a reason to automatically begin another simulation. Different ability
+distributions between rater panels are a relevant robustness question, but
+were proposed from the pilot; they are not an independently established next
+release requirement in the supplied HTML. The dated pilot's follow-up is a
+candidate for later work, not the active queue. Pause additional distribution,
+coverage-confirmation and scale experiments here.
+
+The representative W1/W2 paths now have the bounded local evidence mapped to
+A04–A10 below: executable tutorials, refusal/identity checks, saved restrictions,
+feedback and export contents, ordinary package checking and full site generation
+with examples/articles. The portable tutorial now explains corrective actions;
+the executed site exposed export-example display defects that were repaired.
+The current archive is the documentation closeout `8231cc3c...dbf863` recorded
+below. Its executable and test sources match the dashboard/CI follow-up.
+Reuse the completed tests for unchanged paths; do not
+restart unchanged checks or simulations merely because publication is paused.
+
+Local technical integration is checked for these stated paths. Whole-path
+beginner comprehension, all export combinations and hosted source/help/site
+identities remain outside that conclusion. Keep the publication pause. A later
+publication decision must bind the reviewed source to its commit, hosted checks
+and deployed site. The local integration commit records the archive identity
+below; older hosted checks and site builds do not qualify that commit.
+Reopen a P2 study when it addresses a named current-use
+failure or a specific broader claim selected for the release, with a bounded
+decision and stopping condition. A general capacity or coverage guarantee is
+not a release completion condition.
+
+### September 22 local candidate freeze
+
+The integration diff was reviewed across optimizer selection and fallback,
+pairwise diagnostic assembly, dashboard availability/readiness, plot settings,
+HTML/CSV exports, CSV identities, migration guidance and CI/site configuration.
+No additional code correction was identified in this review. The new
+optimizer-curvature test and existing public-calibration/dashboard regressions
+belong to the ordinary selector. The sparse pilot script and its limitations
+remain repository-only; validation outputs, local libraries and site previews
+are not commit or package contents.
+
+The local integration commit binds these changes to the documentation-closeout
+archive `8231cc3cebc6796c6bb3bac4bd8322ed57671a4322b7d94c807c6e4d87dbf863`.
+Before recording it, compare all 540 included source files to the staged Git
+blobs, plus the site/workflow configuration to the reviewed local files. After
+recording it, verify the same committed blobs and a clean working tree. Keep
+the resulting commit/archive mapping with the existing local evidence. The
+prior scoped checks below remain the validation record; this source-identity
+review does not repeat them or constitute a new hosted check.
+
+Local refinement is closed for the stated scope. Publication remains paused.
+On a later publication decision, the five ordinary platform cells must check
+the selected commit, and the site must be generated from the intended published
+source. The current workflow uses macOS release as the prerequisite, followed
+by Windows release and Ubuntu release/devel/oldrel-1. The complete Ubuntu suite
+is a separate manual option; no new dispatch, deployment, tag or release is
+part of this local commit.
+
+### September 22 public scope and saved-workflow closeout
+
+The G/D-study roadmap previously described the paired plan-comparison method
+both as implemented and as a method still to be selected. Its decision table
+now distinguishes the implemented two-crossed-facet normal-theory approximation
+from separate extensions. The clustering section likewise identifies the
+existing executable workflow rather than assigning its implementation again.
+
+README now points beginners to the existing runnable bundled-data G/D example.
+README and workflow help distinguish changing future counts/weights (reuse
+the G-study and recalculate projections) from changing source data or the
+G-study model (estimate a new G-study). They also retain the need to rerun an
+earlier G-study affected by the single-score MINQUE(0) or interaction-ID
+corrections. These observed-score and feature workflows do not require a native
+MFRM fit. Changed clustering settings require new partitions and then a new
+comparison; imputed settings preserve the same fitted model/completion pairing.
+
+The existing examples, saved-result and failure checks were reviewed, not
+rerun: the ordinary 1,902-expectation record includes multivariate G/D/nested/
+plan-comparison and clustering/MI files, and the full-site record executes
+the external-feature tutorial and G/D reference examples. Named checks cover
+nested G-study save/load projections, paired-interval save/load and plot values,
+unavailable metrics, same-completion comparisons and mismatched-pair refusal.
+These remain scoped software evidence, not beginner comprehension, calibrated
+cluster decisions or broad sampling guarantees. No new API, numerical method,
+example dataset or statistical study was introduced.
+
+Evidence: `validation-results/final-integration-20260922/documentation-closeout/`.
+Archive SHA256:
+`8231cc3cebc6796c6bb3bac4bd8322ed57671a4322b7d94c807c6e4d87dbf863`.
+All 540 checked included sources match the working tree. Relative to the
+preceding archive, only generated DESCRIPTION, NEWS, README, the workflow
+help's R comments and its generated Rd differ. Parsed R expressions are
+unchanged; tests/native sources and all existing vignette outputs are identical.
+The archive contains 601 files with the same internal-file exclusions.
+Build reused the unchanged vignette outputs, installation succeeds, and
+installed help contains the migration clarifications with no Rd issues.
+
+Only home/roadmap/NEWS and the changed help page are regenerated for the local
+site, followed by its generated text/search. Examples and articles are not
+re-executed. The site check passes; all 334 HTML pages and 16,115 local
+link/asset references have no unresolved targets/fragments. Four README
+redirect anchors match the local homepage; hosted redirect navigation was
+not exercised. Changed-page text is verified, and HTML/Markdown/JSON/text
+contain no developer home/temp/results paths.
+This closes the scoped public-description/migration reconciliation;
+reuse prior executable checks rather than reopening unchanged full-package
+tests. Publication remains paused, with no new commit, push or hosted action.
+
+### September 22 dashboard boundary and ordinary-CI follow-up
+
+The ordinary push/PR matrix uses `NOT_CRAN=false`; its selector previously
+excluded the existing public-calibration, facet-dashboard and optimizer-curvature
+files. These three files are now selected without removing existing coverage.
+The extended suite remains a separate manual option. This closes an ordinary
+CI selection gap; it is not evidence of a hosted run.
+
+A saved-fit boundary check exposed a dashboard error: an infinite Infit/Outfit
+could suppress a finite counterpart's exceedance, or negative infinity could
+create a flag when the finite counterpart was within the band. Screening now
+uses finite indices only. An observed exceedance remains TRUE; otherwise an
+unavailable index leaves the result NA. Raw diagnostics remain available.
+Regression coverage exercises NA, NaN and both infinities in either index,
+with finite values above, below and within the band. The dashboard file has
+77 passing expectations; the saved-fit reproduction now matches its expected
+flags and retains the affected rows in the flagged-level plot.
+
+Evidence: `validation-results/final-integration-20260922/ci-selector/`.
+The current archive under `candidate/` has SHA256
+`22d7c81954df4efa2034e40cf014359f472bafa6a3d91a655c75a4459d6614fc`.
+Its 601 files include 540 checked source files matching the working tree.
+Relative to the preceding repaired archive, only generated DESCRIPTION,
+NEWS, `R/api-dashboards.R`, `tests/testthat.R` and the dashboard test differ.
+Internal validation/results and Rplots remain excluded. The archive builds
+with its nine vignettes and installs successfully.
+
+The three newly selected files run through the archived ordinary runner's
+`test_check()` against this exact installation: 331 expectations pass, with
+zero failures, warnings or skips, in 3.732 seconds. The runner's selected set
+is checked before narrowing execution to these three files. The prior 1,902
+ordinary expectations are retained as earlier evidence, not reported as
+rerun on this candidate. The exact new archive also passes `R CMD check
+--no-tests --no-examples --no-vignettes --no-manual` with `Status: OK`.
+
+The existing full site is reused; NEWS, generated text and search are updated,
+and pkgdown's site check passes. The NEWS correction appears in HTML, and the
+site text contains no developer home/temp/results paths. No full-suite rerun,
+additional simulation, commit, push, hosted CI, deployment or release occurs.
+
+### September 22 preceding frozen local integration result
+
+Evidence: `validation-results/final-integration-20260922/`. The initial frozen
+archive has SHA256 `38529334fa9cdfa92a9e052d94e644c6f24e934bed9ea8c0c2700cf84a4dd6ed`.
+Its ordinary `NOT_CRAN=false R CMD check` finishes with `Status: OK`, including
+1,902 passing expectations, zero test failures/warnings, three intentional
+CRAN skips, vignette rebuild and PDF manual generation. This is the configured
+ordinary/CRAN-light selector, not the extended `NOT_CRAN=true` test suite.
+The full local pkgdown build separately executes reference examples and all
+nine articles with `NOT_CRAN=true`; its only warning is an interactive example
+that is intentionally not executed.
+
+The executed site exposed absolute temporary paths in five export-help examples
+and the reporting article. Example displays now show filenames while complete
+paths remain in the returned objects. The reporting article also selected
+`html` instead of the actual `bundle_html` component, hiding its HTML entry;
+that filter is corrected. These are documentation/example changes. Parsed
+expressions in all four changed R files are identical to the checked source;
+all packaged test and native-source files are byte-identical. The portable
+tutorial's new refusal/review action table was already present in the initial
+checked archive and the full article execution.
+
+The repaired archive under `repaired/` has SHA256
+`5001f0445a97640759b1d254d097ebeb37702e6fd453af07bb1a5e5c6249082b`.
+All 540 included R/man/test/native/vignette/README/NEWS/NAMESPACE source files
+match the working source. Generated DESCRIPTION differs from the initial
+archive only in its packaging timestamp; other archive changes are the four
+R comment blocks, five Rd files and reporting vignette/source/output. Both
+archives contain 601 files, excluding internal validation/results and Rplots.
+The repaired archive installs and passes `NOT_CRAN=false R CMD check
+--no-tests --no-vignettes --no-examples` with `Status: OK`, including code/Rd
+consistency and PDF manual generation. The initial ordinary tests are reused
+for the identical executable/test source, not relabeled as a repeated run on
+the repaired archive.
+
+Only the five changed reference examples and reporting article are re-executed
+after repair. Search and generated text are rebuilt, and pkgdown's site check
+passes. The final local site has 334 HTML pages including redirects; 14,828
+local link/asset references have no missing targets or HTML fragments.
+HTML/Markdown/JSON/text contain no developer home/temp/results paths; the
+reporting article lists its HTML output, and the portable guide retains the
+correct public `event_id` argument. Local source links are omitted because
+the source is uncommitted. No new statistical study, extended-suite run,
+GitHub write, hosted check, site deployment or release was performed.
+
+### September 22 audit reconciliation and feedback priorities
+
+W1/W2 completion follow-up: the introductory CSV route in README and
+`mfrmr-workflow.Rmd` now preserves literal `NA` IDs and recodes the missing-score
+marker only in the score column, using the existing `recode_missing_codes()`.
+The workflow vignette now connects the existing coverage/category/case reviews
+to a rater-severity plot, selected estimate/fit and availability/flag columns,
+stored settings and wrapped interpretation notes. Full metadata remain in the
+dashboard. The export example previews six filenames instead of printing all
+172 full paths; the complete file manifest remains in the export object.
+NEWS explains the import correction and when reimport/refitting is necessary.
+
+Both `mfrmr-workflow.Rmd` and `mfrmr-portable-calibration.Rmd` rendered with
+evaluation enabled against a fresh local installation of the current R code.
+The workflow was rerendered after concrete display fixes; the unchanged portable
+example was not repeated. Actual CSV-import code preserved `001`, `1`, and `NA`
+identities while recoding missing scores. Six rater outputs, the documented
+141/282 unexpected responses, and one scored/one review portable result were
+confirmed. The embedded severity and portable-score figures were inspected;
+Safari also displayed the workflow, although further UI inspection was limited
+by clipboard/window availability. Final HTML text contains no local build paths
+or the dashboard's internal contract columns. This is execution and limited
+display evidence, not a human usability study or a complete sharing audit.
+Evidence: `validation-results/workflow-finish-20260922/`. No estimator changes,
+new simulation study, full-suite rerun or publication occurred in this follow-up.
+
+Export/package follow-up (A06/A09/A10): fit-level dashboard HTML previously
+showed every internal column for flagged levels, while unflagged levels with
+missing diagnostics had no individual HTML row. It now includes the overview
+and every level's estimate/SE/fit/missingness, plus focused flagged-level
+columns. Full CSV detail and interpretation/settings records remain intact.
+One regression verifies that unflagged missing diagnostics remain visible
+while an internal-contract marker is retained in CSV but absent from HTML.
+The initial fixture incorrectly changed fitted estimates and was rightly
+rejected by the diagnostics-identity guard; the final fixture changes only
+diagnostic availability/metadata and preserves that guard. The full dashboard
+test file passed on source and on the installed archive (61 assertions each).
+
+Reused a saved 48-Person fit/diagnostics to check a dashboard/HTML bundle and
+the default analysis archive with report. The latter wrote 172 files; its RDS
+matched the original results object exactly. File inventories, complete CSV
+identities, settings/notes and explicit non-deidentified/non-shareable-without-
+review notices were preserved. These checks cover the exercised synthetic
+routes, not every export combination or anonymization of real data.
+
+Ordinary `R CMD build` completed including vignette creation; the resulting
+`mfrmr_0.2.4.tar.gz` installed successfully. Its 601 files exclude internal
+validation/results directories and generated Rplots; 530 included R/help/test,
+README/NEWS and selected vignette sources match the working tree byte for byte.
+The expected ordinary dashboard, optimizer-curvature and public calibration
+tests are included. Packaged HTML has no developer home/temp/results paths.
+Installed help contains the updated export contract and both W1/W2 vignettes
+are installed. A direct development-directory installation is not evidence
+for these exclusions; this inspection used the built tarball itself.
+Archive SHA256: `e260b7dbd4931422f104dd334c6c63851d0489dc688b96d3512635ddcc789258`.
+Evidence: `validation-results/export-package-review-20260922/`. This is a local
+build/install and focused export regression, not a new full `R CMD check`,
+whole-suite/CI pass, source-branch reconciliation, site update or publication.
+
+Site/integration follow-up: the same archive passes `NOT_CRAN=false R CMD check
+--no-tests --no-vignettes --no-manual` with `Status: OK`. Namespace loading,
+code analysis, Rd/codoc consistency and ordinary examples pass. Tests,
+vignette execution/rebuild and PDF manual generation were deliberately omitted;
+this is not an as-CRAN or full-suite result. Repository-index queries were
+unavailable in the sandbox, while the installed dependency checks passed.
+Logs: `validation-results/export-package-review-20260922/integration-check/`.
+
+Local pkgdown generation exposed an omitted `plot_compare_mfrm` index entry;
+adding that existing public topic fixes the reference-build error. The old
+automatic development mode also classified the three-part candidate version
+as released. `_pkgdown.yml` now explicitly uses `unreleased`; change this only
+with the eventual release decision. The site workflow sets pkgdown's source
+reference to `GITHUB_SHA` in each build/deploy R process, so source links will
+remain tied to the documented commit. A local configuration probe checks both
+steps, including an overriding PR branch and preservation of the deployment
+destination; it does not execute GitHub Actions or deploy the site.
+
+All 238 help topics plus the reference index render. The 239 reference pages
+have 7,390 local reference links with no missing files/fragments, display
+`Unreleased version`, and contain no developer home/temp/results paths.
+Home and NEWS also render after the public CRAN lookups are permitted; the
+earlier offline lookup failures are retained in their logs. The only reference
+warning is an intentionally unexecuted interactive example. Local preview
+source links are omitted because the source is uncommitted; this preview is
+not a published commit identity. Examples are displayed without execution in
+the reference build, and articles are not regenerated. The package archive's
+distributed sources remain unchanged; only excluded site configuration and
+this record changed in this follow-up, so no repeated package build/tests are
+needed. Evidence stays in `validation-results/export-package-review-20260922/`.
+
+The supplied `mfrmr_integrated_audit_roadmap_20260922.html` audited main
+`299cdfcf`, not this expanded candidate. Reconcile each finding against this
+checkout and its existing evidence before assigning new work. The HTML's
+algebra and static inspection do not constitute execution of this package.
+
+| Audit item | Current source finding | Remaining local task |
+| --- | --- | --- |
+| F01 / A01, zero prior variance | `R/api-shrinkage.R` and its Rd already describe complete pooling and the limits of zero plug-in SE. Existing shrinkage tests cover this interpretation. | Preserve the correction in integration and ensure feedback never substitutes shrunken columns for a refitted calibration. |
+| F03 / A02, rounded variance | `R/api-generalizability.R` retains `as.numeric(vc$vcov)` for calculations and D-study; the help describes full-precision storage. | Reuse the existing scale-change evidence for unchanged calculation paths; distinguish this repair from display rounding and from sparse-design reliability validation. |
+| F02 / A03, portable interactions | The capability table, API description and current public ROADMAP include stored two-way facet interactions. | The ordinary-package public RSM/PCM interaction test passed on a local installation on September 22: reviewed extraction, save/load, and artifact scores agree with fitted-object scoring at 1e-12. Preserve this bounded scope; it does not qualify higher-order interactions. |
+| A04/A05, representative paths and restrictions | W1 executes from input review to rater feedback; the shared-criterion restriction remains visible. W2's installed fresh-process test preserves CSV IDs and refuses unknown facet levels/scores; extraction refuses unsupported models and incomplete integration reviews. | Reuse these scoped records and the existing disconnected-input refusal. The portable tutorial now adds corrective actions for input errors and returned review/unavailable states. No new wrapper is needed. |
+| A06/A09, saved restrictions and shared output | Dashboard settings, missing diagnostics, readiness, plots and RDS roundtrips have focused checks. Representative CSV/text/HTML exports retain context, and the analysis archive restores the original result. | Preserve these paths in the frozen candidate. Real-data disclosure review and untested export combinations remain distinct from the synthetic checks; no anonymization guarantee is made. |
+| A07, identities and equivalent input representations | The domain-label probe preserves keyed estimates, ModelSE, likelihood and intervals; portable CSV testing distinguishes `001`, `1` and literal `NA`. Existing interaction save/load checks preserve fitted/artifact scoring. | Reuse the named evidence for those transformations. These are software checks, not validation across application domains or all possible transformations. |
+| A08, complete beginner route | Both W1/W2 tutorials execute. W1 connects the question, estimates, uncertainty, flags and rating-case review; W2's refusal/review guidance is present in the executed final site. | Beginner comprehension remains unmeasured; code execution is not a human usability study. |
+| A10, package/help/site identity | Frozen source archives, ordinary package checks, installed help and executed full-site content have the records above. The ordinary CI selector now includes the existing portable-calibration, dashboard and optimizer-curvature regressions; those added files pass on the current installed archive. Source links are configured to use the generating commit when the site is eventually built on GitHub. | Keep the checked local identity separate from Git HEAD, hosted CI, publication and any release decision. Do not rerun local integration without a relevant change or failure. |
+
+Use the following distinctions when implementing the feedback path:
+
+- Identify the rated unit, rater, task, criterion, occasion and original
+  category map explicitly. A solo performer, ensemble, candidate or observed
+  subject can occupy the rated-unit role when the model and estimand justify
+  it. A renamed column is a software-invariance check, not evidence of domain
+  validity. Repeated performances and multiple domains need their dependency
+  and construct assumptions retained.
+- Start with coverage, assignment and information. Show signed severity,
+  reference constraints and uncertainty separately from consistency,
+  category use and differential functioning. Existing dashboard flags are
+  heuristic review prompts; they are not validated diagnoses of a poor rater.
+- Preserve original observed/expected ratings and relevant rubric context
+  when selecting cases for discussion. Non-significance or no flag is not
+  evidence that a sparsely observed rater is satisfactory. A higher raw mean
+  may reflect assigned performance mix rather than leniency.
+- Training follow-up requires a linked scale and an explicit comparison
+  target. Pre/post changes alone do not identify a causal training effect.
+  Retain eligibility restrictions, settings and uncertainty in saved reports.
+- Reuse `plot_rater_severity_profile()` (with guide bands omitted in the
+  introductory example), `facet_quality_dashboard()`,
+  `data_quality_report()` and `subset_connectivity_report()`. Require an
+  explicit facet name for unfamiliar domain labels. Do not create a new
+  universal rater-quality score or a parallel reporting framework.
+
+### Sparse-design and capacity evaluation for rater feedback
+
+The table below defines research questions, not an automatic execution queue.
+The September 22 records below include a 5,000-person capacity probe and its
+limited repair, integration checks and a 120-fit rater-interval pilot. Broader
+feedback-error calibration, population challenges and capacity studies remain
+prospective and paused under the current prioritization above. First reuse
+the existing [user-data stress record](user-data-stress-0.2.4.md), the
+[sparse target-scale pilot](target-scale-sparse-stress-pilot-record-0.2.3.md),
+and the [retained rater-anchor smoke failure](rater-anchor-sparse-prospective-smoke-record-0.2.3.md).
+The user-data record includes 500 persons, 12 raters, five criteria and
+7,500 rating rows, with one run of about 21.5 seconds on its stated machine.
+It is not a throughput limit, a replicated coverage result or evidence of
+capacity parity with TAM/ConQuest. The older 400-person pilot and 160-person
+anchor study retain their original source, estimator and failure boundaries.
+
+| Question | Targeted comparison | Required evidence |
+| --- | --- | --- |
+| Can raters be compared at the same rating budget? | Common linking set, overlapping/rotating panels, weak bridge, then disconnected panels; preserve paired generated truth and observations where possible. Keep a small complete design as a reference, not as an equal-cost competitor. | Constrained identification, reliance on population assumptions, rater bias/RMSE, interval availability and coverage. Person-score accuracy is a separate outcome. |
+| Can a flag support useful feedback? | Severity-only, inconsistency, category restriction and differential severity separately; include no-DRF conditions with person-group ability differences and nonrandom rater assignment. | False flags, detection and unavailable results by rater and design; inspect workload and group coverage. Existing thresholds are not promoted to calibrated rules. |
+| What does missingness change? | Keep planned nonassignment separate from missing assigned ratings; challenge random loss, selective loss and bridge loss separately. | Effective rating budget, retained category support, identification and changed feedback. Planned unassigned cells are not targets for imputation; observed data alone do not certify MAR/MNAR. |
+| How far does computation scale? | Reuse the 500-person baseline, then propose 5,000 and 50,000 rated-unit workloads with a fixed per-unit workload; increase rater count, category count and response-pattern length separately. | Actual rows/patterns, elapsed time, OS peak RSS, fit/diagnostic/export sizes, convergence, unavailable SEs, and numerical agreement. Larger probes depend on measured resource limits set before execution. These sizes are probes, not minimum sample recommendations. |
+| Is a computational shortcut acceptable? | Same model, constraints, score map and numerical target; check fixed-parameter likelihood/gradient and then refit comparisons separately. Use TAM/ConQuest only in their verified overlap. | Changes in likelihood, rater estimates, SEs and person scores alongside time/memory; do not trade precision for speed without reporting the tradeoff. |
+
+Use a small paired pilot to establish feasibility and measure Monte Carlo
+error before fixing confirmation replication counts. Report all attempted
+replicates and each unavailable-result reason. Report conditional coverage
+among eligible outputs alongside output availability; never silently treat
+missing intervals or skipped cells as correct feedback. Fix effect sizes,
+decision rules and acceptable error/MCSE before confirmation. Do not run a
+full Cartesian product or repeat unchanged full-package tests to advance this
+plan. Feature clustering/MI remains exploratory context for feedback; cluster
+membership is not a verified rater type or an explanation of bias. G/D-study
+planning remains a distinct observed-score question, not an individual-rater
+quality verdict.
+
+### Literature used for the September 22 decisions
+
+This pass read Zotero metadata/abstracts and publisher or author-repository
+pages. It did not read every full paper, reproduce their simulations or
+import/edit library records. Detailed reproductions require the method and
+design tables before translating conditions into a runner. The following
+design choices are our prospective implications, not claims that those
+papers validated mfrmr.
+
+| Source / Zotero item | Evidence relevant to the next decision |
+| --- | --- |
+| Wind, Engelhard, and Wesolowski (2016), [music linking and fit](https://doi.org/10.1080/10627197.2016.1236676), `7A4TD4QE` | Music performance is a real application; insufficient linking or model fit can undermine rater-adjusted achievement interpretation. Use it as a domain example and design challenge. |
+| Wind, Wesolowski, and Jones (2026 issue; 2025 online), [music connectedness](https://doi.org/10.1177/00224294251363327), `6XRW3TKY` | Different overlap and adjustment conditions changed performance estimates/rankings. The Zotero record lacked a date; the publisher establishes the publication distinction. |
+| DeMars, Shapovalov, and Hathcoat (2025), [JAM 26(1/2), 67–86](https://www.jamntnu.net/issues_vol26-1_abstracts.html), `L9CTTW8C` | At fixed rating budgets, common links and repeated versus changing rater pairs can affect precision; differences were small in some conditions. The journal page supplies the missing date; distinguish the 2023 conference version. No universally optimal overlap pattern follows. |
+| Wind and Jones (2018), [link size and fit](https://doi.org/10.1177/0013164417703733), `F3CVK9EA` | Link size, location and fit matter; rater estimates can be more sensitive than person estimates. Measure both rather than inferring feedback quality from person-score stability. |
+| Wind and Ge (2021), [sparse DRF](https://doi.org/10.1177/0013164420988108), `MQHND89Z` | Detection sensitivity depends on rating design. Include rater/group coverage and no-DRF controls. |
+| Wind, Jones, and Grajeda (2023), [G theory versus MFR in sparse designs](https://doi.org/10.1177/01466216231182148), `NBA428KJ` | The approaches provided different information about rater effects in the studied simulations. A G coefficient alone does not validate feedback to individual raters. |
+| Macmillan (2000), [large sparse rating data](https://doi.org/10.1080/00220970009598501), `TUDXIKWK` | Reports 4,930 students, nine scales and three raters drawn from 70. This motivates a roughly 5,000-unit workload; it is not a capacity result for this implementation. |
+| Looney (2004), [Evaluating judge performance in sport](https://pubmed.ncbi.nlm.nih.gov/14757990/) | PubMed abstract describes nine judges and 20 figure-skating pairs at the 2002 Olympics, with detailed scoring-pattern feedback and judge-varying scale structure. This is neither a current scoring-rule specification nor a demonstration that the exact fitted model is supported by this package. Not located in the Zotero title search. |
+
+The main-based HTML findings are retained as audit input; the current
+execution plan remains here and user-facing scope remains in `ROADMAP.md`.
+Do not add another registry or competing checklist for this refinement.
+
+Local verification, 2026-09-22: the exact README quick-start, diagnostic and
+new feedback blocks executed. A copy of the same synthetic data with columns
+renamed to `Performance`, `Judge`, `Dimension` and `Rating` preserved keyed
+estimates, diagnostic `ModelSE`, log likelihood and severity intervals at
+tolerance `1e-8`. Explicit `facet = "Judge"` selected the intended dashboard.
+This is a software mapping check, not a music, medical or sports validation.
+The initial example exposed an imprecise return-value description: the table
+is in `severity$data$data`, inside the plot's metadata list. The roxygen
+description/example and generated Rd now match it. A subsequent check-harness
+failure incorrectly expected SE in `as.data.frame(fit)`; the final check uses
+the actual diagnostic `ModelSE` and preserves that failed log separately.
+Rd validation and a parsed-expression comparison confirmed documentation-only
+R changes. Logs and the paired synthetic objects are under
+`validation-results/rater-feedback-refinement-20260922/`. No new large-scale
+study, full package suite, CI run, GitHub write or release was performed.
+
+
+### September 22 feedback implementation follow-up
+
+The subsequent bounded code review found three user-facing defects: unavailable
+severity/fit diagnostics could appear unflagged; plotting a fit used a different
+default misfit band from the dashboard table, and plotting a saved dashboard
+used new default guide lines; dashboard exports omitted settings and notes.
+These are now repaired locally. Missing severity/misfit decisions retain `NA`
+(with an observed fit exceedance still flagged), `MissingMetrics` names missing
+values, and the overview counts incomplete levels. Flag totals remain counts
+of observed flags, not complete diagnostic passes. Flag plots also retain
+misfit-flagged levels whose severity estimate is unavailable. Bias counts remain
+counts from supplied results; a new note explicitly rules out interpreting zero
+as evidence of no bias. This does not implement a new bias test or calibrate
+screening cutoffs.
+
+The existing fit-readiness helper now carries restrictions into the dashboard
+and rater-severity profile; restricted plots show `REVIEW ONLY`. Saved dashboard
+thresholds define the plot guides, and default table/plot misfit bands agree.
+CSV/text and HTML exports retain settings and notes. README now connects
+coverage, observed category patterns and case review without a new wrapper API.
+No fitting algorithm changed. Older dashboards need rebuilding from existing
+fits/diagnostics for the added fields; fits do not need re-estimation.
+
+Verification: `test-facet-dashboard.R` and `test-plotting-extras.R` passed,
+including missing/partial fit diagnostics, an unavailable severity estimate
+with observed misfit, custom saved thresholds, default-band agreement,
+restricted-design propagation, RDS roundtrip and CSV/text/HTML retention.
+The expanded README feedback block and both base plots executed using the
+previously saved synthetic fit/diagnostics. One existing `shared_criterion_link`
+scenario (seed 20260913, 24 persons) was refitted specifically to verify the
+new output propagation: its expected population-assumption warning remained,
+and dashboard/plot/RDS outputs remained review-only. The unchanged disconnected
+rejection is supported by the earlier user-data stress record, not a new run.
+Four updated Rd files and `git diff --check` passed. Evidence is in the same
+`validation-results/rater-feedback-refinement-20260922/` directory, particularly
+`feedback-tests-final.log`, `workflow-check.log` and `check-feedback-workflow.R`.
+This later work includes executable changes and supersedes the earlier
+**documentation-only** scope for the current working tree. No full suite,
+large-scale or repeated-sampling study, CI run or GitHub publication was done.
+At that point, the next empirical work was the bounded capacity pilot and
+calibration of feedback errors across rating designs; the later capacity
+follow-up below updates that position without establishing feedback accuracy.
+
+
+### September 22 portable-scoring workflow follow-up
+
+W2/A03/A04/A07: reconciled the portable interaction promise against ordinary
+package tests (neither `test-calibration-public-api.R` nor
+`test-fixed-calibration-lifecycle.R` is excluded by `.Rbuildignore`). The
+existing public RSM/PCM interaction test was run, unchanged, against a local
+installation: reviewed extraction, freezing, RDS restoration and new-Person
+scores matched fitted-object predictions at tolerance `1e-12`. This is the
+stated two-way-interaction scope, not arbitrary model equivalence.
+
+The operational CSV example exposed a separate input defect: default
+`read.csv()` converted the distinct Person identifiers `001` and `1` to the
+same integer and literal `NA` to missing. The vignette now reads text columns,
+preserves column names and literal IDs, and explains score-column-specific
+missing tokens and complete result preservation. The existing fresh-process
+test now uses a CSV with those three IDs, checks exact score agreement with
+the in-memory input, and refuses unknown facet levels and unknown categories.
+Only the artifact and response file enter the child process; no fit or
+training data are supplied. This changes the documented import route, not the
+scorer or calibration model. Affected users should reimport original CSVs and
+rescore, without refitting the calibration.
+
+`R CMD INSTALL --no-multiarch --no-docs` succeeded into an isolated local
+library. The two selected installed-package tests passed (22 assertions),
+including the fresh process rather than a skipped installed-only check.
+Evidence and the exact selection script are under
+`validation-results/portable-workflow-refinement-20260922/`. This was not a
+full package check or a rendered-vignette check. No GitHub write was made.
+
+
+### September 22 capacity probe and diagnostic assembly repair
+
+One local capacity probe reused the earlier rotating-assignment specification,
+increasing only the Person count to 5,000: 12 raters, five criteria, three
+raters per Person, 15 rows per Person and 75,000 response rows. There were
+4,996 distinct observed design-plus-response patterns. Seed 20260913,
+fixed-grid RSM MML, direct optimization, q=31 and maxit=400 were explicit.
+Limits were 300 seconds for the complete child process and `R_MAX_VSIZE=4Gb`
+(an R vector-heap bound, not an OS RSS cap). No 50,000-person run was started.
+The exact installed baseline source is identified by HEAD plus per-file hashes
+in `validation-results/rater-capacity-20260922/source.json`; this working tree
+included the earlier dashboard changes and is not the old CI source alone.
+
+The application completed simulation, fitting, default `diagnostic_mode="both"`
+diagnostics (no residual PCA), rater dashboard and dashboard/HTML export:
+
+| Stage | Elapsed seconds | Returned object bytes |
+| --- | ---: | ---: |
+| Simulation | 0.269 | 3,358,424 |
+| Fit | 27.018 | 10,034,320 |
+| Diagnostics before repair | 257.617 | 23,305,624 |
+| Dashboard | 0.007 | 23,371,592 |
+| Export result | 0.084 | 76,560 |
+
+Object sizes overlap and are not process memory. The enclosing `/usr/bin/time
+-l` returned exit 1 after the successful R script because sandbox access to
+`sysctl kern.clockrate` was denied. Its 286.25-second wall total and the raw
+wrapper failure are retained, but OS peak RSS was **not obtained**. Do not call
+the wrapper an application failure or treat missing RSS as a measured limit.
+
+Numerical qualification did not pass: optimizer code 0, terminal gradient
+sup-norm 0.00176948 versus tolerance 0.0001, six attempted polishing stages,
+`FitReadiness="review"`, `InferenceReady=FALSE`. All 12 rater SEs were finite
+and no dashboard metrics were missing, but dashboard/export interpretation
+remained `review_only`. Finite SEs and computation completion are not statistical
+qualification; no sampling-accuracy or quadrature-adequacy claim follows.
+
+A partial profile of diagnostics on the **saved fit**, manually interrupted,
+contained 45.19 sampled seconds: 29.98 inside pairwise marginal diagnostics
+and 20.77 inside tibble construction (nested totals, not additive). The first
+profiling harness placed a transient time limit in a separate top-level
+expression, so its intended 20-second limit did not stop the next expression;
+the run was interrupted and the retained script was corrected without rerunning
+that profile. This was not another model fit.
+
+The repair replaces per-pair `tibble()` construction with scalar lists and
+uses the already-existing final `bind_rows()` once. No formula, grouping,
+weight, invalid-opportunity handling or threshold changed. Recomputing only
+diagnostics from the same saved fit took **111.863 seconds**, versus 257.617
+before (56.6% less elapsed time in this single comparison). `identical()` on
+the **entire** returned diagnostic object passed; object size was unchanged.
+The existing marginal-fit-availability test file passed 81 assertions covering
+unavailable probabilities/posteriors, invalid and zero weights, classifications,
+plots and exported coverage. This is a local workload comparison, not a median
+benchmark or a universal speedup. Baseline and repair logs/objects/scripts remain
+in the same ignored evidence directory; the estimator was not rerun for the
+repair. `git diff --check` passed.
+
+The next priority at that point was the remaining terminal-gradient review;
+the follow-up below resolves it for this workload. Further capacity and
+feedback-error evaluation retain their separate statistical targets.
+Publication remains paused.
+
+
+### September 22 terminal-gradient repair and OS memory measurement
+
+The user correctly identified the sandbox as the reason for the missing OS
+memory measurement. An escalated `/usr/bin/time -l /usr/bin/true` succeeded,
+confirming that distinction without repeating the assessment calculation.
+The previous unavailable measurement remains historical; it was not evidence
+that system memory could not be measured.
+
+Using the saved 5,000-person fit and the same 31-point fixed quadrature,
+central differences of the analytical gradient gave a positive-definite
+17-parameter Hessian (minimum eigenvalue 877.1654). One Newton proposal reduced
+the gradient sup-norm from 0.00176948 to 3.19e-10, with maximum coordinate
+movement 4.973e-7 (2.35e-5 of a free-parameter SE). Relative free-parameter SE
+movement was 4.09e-8. Finite-difference directional derivatives at several
+step sizes were recorded separately; cancellation/truncation prevents treating
+them as exact equality. The evidence indicates ordinary polishing stalled very
+near a stationary point, rather than material parameter instability.
+
+Implemented one guarded curvature restart **after** the existing polishing
+ladder, limited to fixed-grid, fixed-standard-normal RSM/PCM MML and at most
+64 free parameters. The Hessian must be finite, positive definite and have
+reciprocal condition number at least 1e-10. A proposal must strictly reduce
+the gradient sup-norm without increasing the objective beyond 64 machine
+epsilons times its magnitude. The selected ordinary optimizer then restarts
+from that point and is judged by the unchanged convergence/gradient criteria.
+Rejected proposals preserve the prior selected stage and their error reason.
+Successful proposal evaluations and elapsed time enter the stage accounting.
+This is not an acceptance-threshold relaxation or a new public optimizer.
+
+One full local run outside the sandbox measured the repaired path (same seed,
+5,000 Persons, 75,000 rows, q=31, direct MML). Results:
+
+| Quantity | Result |
+| --- | ---: |
+| Fit elapsed | 38.202 seconds |
+| Diagnostics elapsed | 110.441 seconds |
+| Whole R process elapsed, including loading/export/comparison | 152.04 seconds |
+| Maximum resident set size | 2,639,593,472 bytes (2.4583 GiB) |
+| Peak memory footprint (separate macOS metric) | 2,485,537,456 bytes |
+| Final gradient sup-norm | 2.02576e-10 |
+| Unchanged gradient tolerance | 1e-4 |
+| Maximum free-parameter / reported measure movement | 4.97296e-7 |
+| Objective change | -1.61526e-9 |
+| Maximum relative reported ModelSE movement | 1.21005e-7 |
+
+The additional curvature-restart stage took 8.727 seconds. The fit's recorded
+readiness became `ready` / `InferenceReady=TRUE`; all 12 rater SEs remained
+available. The full workflow and the measurement wrapper both exited zero.
+The memory peak is for this entire validation process (including R/package
+loading and comparison objects), not an isolated matrix or universal minimum
+RAM requirement. `R_MAX_VSIZE=4Gb` remained an R vector-heap limit, not an RSS
+cap. This is one condition/run, not a replicated benchmark. The same q=31
+calculation was preserved; quadrature adequacy and repeated-sampling interval
+coverage were not established by resolving optimizer stationarity.
+
+Focused validation passed: guarded-curvature unit/integration regressions
+(29 assertions), the existing three RSM/PCM first-use smoke tests (51), and
+the existing deterministic iteration-limit refusal (9). Guards cover invalid,
+indefinite, singular and out-of-domain curvature, objective deterioration,
+large parameter vectors, nonzero optimizer termination and excluded JML.
+Updated fit help was regenerated and checked; `git diff --check` passed.
+The full numerical run preceded a bookkeeping-only restoration of `NA` counts
+for failed optimizer stages; the rejection tests then ran on final code.
+Successful-stage numerical behavior was unchanged by that restoration.
+Evidence, original saved fit, independent proposal audit, full OS measurement,
+stage history and focused test scripts remain under
+`validation-results/rater-capacity-20260922/gradient-review/`.
+
+The following integration review reuses this saved fit and evaluates a
+prespecified accuracy question before another scale increase.
+No full suite, 50,000-person run, GitHub write or publication was performed.
+
+### September 22 integration accuracy before coverage or further scale
+
+Question: did the 5,000-person run merely optimize its 31-point approximation,
+or are its rater estimates, SEs and person scores insensitive to a denser grid?
+Reused the saved repaired fit, all 75,000 original rows and its model/settings.
+Fixed-parameter evaluations used q=31, 61 and 121; only q=61 required a new
+fit. No diagnostics or complete package tests were repeated.
+
+Before comparison, retained the existing numerical budgets of 0.001 for
+relative facet-SE movement and covariance-scaled displacement in free-parameter
+SE units, and specified 1e-4 logits for EAP, posterior SD and endpoint changes.
+These are numerical review budgets, not clinical/educational effect thresholds
+or sampling-coverage criteria. Person scoring used 60 observed patterns:
+five raw-total positions spanning each of 12 rotating panels. This selection
+covers a range of observed patterns, not all Persons or a random sample.
+
+At the saved q31 parameters, increasing to q121 changed total negative log
+likelihood by 0.521714, facet SEs by at most 0.1788%, EAP by 0.005544 logits
+and posterior SD by 0.009689 logits. The gradient was 2.03e-10 on q31 but
+0.722816 on q121; the latter implied a local Newton displacement of 0.019986
+free-parameter SEs. Thus optimizer stationarity at q31 did not demonstrate
+adequate integration under the chosen budgets. It does not follow that the
+observed rater differences were substantively large.
+
+The q61-to-q121 rule change was much smaller: at the same q31 parameters,
+its covariance-scaled gradient difference was 9.60e-5 SE units. The fixed-grid
+table distinguishes that pairwise change from the remaining Newton displacement
+from the q31 optimum; conflating them would incorrectly reject both higher
+grids simply because q31 parameters were held fixed.
+
+One q61 refit preserved identical prepared data and converged with gradient
+5.08479e-10, using the unchanged 1e-4 gradient threshold. Results:
+
+| Quantity | Result |
+| --- | ---: |
+| q61 fit elapsed | 49.151 seconds |
+| Whole refit/review process elapsed | 86.22 seconds |
+| Whole-process maximum RSS outside sandbox | 2,915,188,736 bytes (about 2.72 GiB) |
+| Maximum rater-severity change from q31 fit | 0.00042944 logits (0.01990045 SEs) |
+| Maximum relative rater-SE change from q31 fit | 0.180608% |
+| Calibration-only EAP change, both scored at q121 | 0.00039727 logits |
+| Calibration-only interval endpoint change, both scored at q121 | 0.00040319 logits |
+
+At the q61 optimum, evaluating q121 gave relative facet-SE movement 6.41e-6,
+local Newton displacement 9.63e-5 SE units, EAP change 3.88e-5 logits and
+posterior-SD change 8.48e-5 logits. These met the prespecified movement budgets;
+no q121 refit was needed for this question. The q121 gradient was 0.005722:
+this was an evaluation at the q61 optimum, **not** a converged q121 fit, and
+the displacement is a local curvature approximation. Total objective movement
+was 0.00089336. This review does not qualify every IC comparison or establish
+that still denser integration would make no further difference.
+
+For a fixed calibration the interval endpoints were identical across scoring
+grids because this API computes continuous equal-tail posterior quantiles by
+a separate integration routine. Zero endpoint movement is therefore not an
+independent quadrature-accuracy check. Those intervals condition on the point
+calibration and prior; they are not the rater-severity confidence intervals
+whose repeated-sampling coverage is still to be assessed.
+
+Saved results, scripts, source hashes, OS receipts and consistency assertions
+are under `validation-results/rater-capacity-20260922/quadrature-review/`.
+README now explains that recorded readiness does not certify integration
+accuracy, and correctly states that the public sensitivity API reuses the
+original fit at its own grid. Public defaults/readiness rules were unchanged.
+
+Next: a bounded rater-severity coverage pilot under known generating truth
+and matching reference constraints, with a small complete-design reference
+and sparse linked designs. Check integration for those conditions before
+confirmation replications. Report bias, interval width, interval availability,
+conditional coverage and coverage over all attempts with Monte Carlo error;
+retain failures and assess weak linking separately. This workload's q61 result
+does not select a universally adequate grid or justify a universal capacity
+or coverage guarantee. Larger capacity probes follow that accuracy review.
+
+### September 22 sparse rater-interval pilot: prespecified scope
+
+This pilot extends the September 9 structural-coverage study, whose three-rater
+assignments did not cover weak links between rater panels. It does not repeat
+that 20,000-dataset study or replace its source-specific findings.
+
+Question: under a correctly specified RSM and N(0,1) Person population, how do
+the current rater-severity normal intervals behave with six raters and sparse
+or weak linking? Use 120 Persons, three Criteria and categories 0--3. Fixed
+zero-sum rater truth is (-0.8,-0.4,-0.1,0.1,0.4,0.8), criterion truth
+(-0.3,0,0.3), and thresholds (-1,0,1). Each seed draws new independent normal
+abilities and ordinal responses using a separate explicit probability formula.
+Neither abilities nor fitted estimates are recentered after generation/fitting.
+
+Three assignments subset the same potential response dataset per seed:
+
+- Complete crossing: 2,160 rows, 18 responses per Person, a precision reference
+  with a larger rating budget, not a cost-matched competitor.
+- Rotating adjacent rater pairs around a six-rater cycle: 720 rows, six
+  responses per Person.
+- Two panels of three raters, cycling pairs within each panel: the first four
+  predetermined Persons instead receive R3 and R4, connecting the panels.
+  This also has 720 rows and six responses per Person. Selection is independent
+  of ability and response. It is planned nonassignment, not an imputation or
+  missing-at-random test. The fixed common population also supplies information;
+  results cannot be generalized to different ability distributions by panel.
+
+Targets are the six constrained rater effects and the difference between the
+two panel mean severities, with full covariance used for the latter. Evaluate
+estimate +/- qnorm(.975) * observed-information SE, matching the public severity
+plot for individual raters. Unit weights, no anchors, interactions, shrinkage
+or estimated population; direct q61 MML, maxit 400, reltol 1e-10. For every fit,
+evaluate q121 information and gradient at the same parameters. Require relative
+target-SE movement and local Newton displacement in free-parameter SE units to
+be at most .001. Record objective movement without an additional cutoff.
+These are the preceding review's numerical budgets, not coverage guarantees.
+Numerical disagreement is reported, never used to remove intervals from the
+primary coverage denominator or silently trigger a replacement fit.
+
+One separate preflight seed (202609220) checks all three pipelines, mapping and
+public interval agreement. Planned pilot seeds 202610001--202610040 give 40
+independent datasets per design (120 fits). At .95 coverage, the planned
+per-target MCSE is about .0345: this can expose large problems and measure
+costs, but cannot establish that coverage is within two percentage points of
+.95. Raters and design arms within a seed are dependent, not extra independent
+replications. No supported/unsupported coverage verdict will be selected from
+this pilot. Report exact binomial MC intervals including boundary rates, bias
+and its MCSE, RMSE, width, empirical SD, RMS SE, both tail misses, availability
+and available-and-covered divided by all attempts. Retain nonready fits and
+errors; no replacement seeds. A 15-minute process budget is checked after each
+fit; checkpoint every completed fit and report incompleteness if reached.
+
+Runner: `inst/validation/rater-severity-sparse-pilot-0.2.4.R`. Evidence:
+`validation-results/rater-severity-sparse-20260922/`. No full-suite testing or
+publication is part of this pilot.
+
+### September 22 sparse rater-interval pilot: results and decision
+
+All three excluded preflight fits passed, including agreement of each individual
+rater estimate, SE and lower interval endpoint with the public severity plot.
+All 120 planned pilot fits completed: 40 paired seeds per design, no fit errors
+or warnings, all inference ready with unregularized covariance, and every
+declared target interval available. All-attempt available-and-covered rates
+therefore equal conditional coverage in this pilot. These are marginal
+per-target intervals, not simultaneous coverage for all raters.
+
+| Design | Rating rows | Individual-rater coverage range | Mean individual-rater interval width | Panel-mean difference coverage | Panel-mean difference mean width |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Complete | 2,160 | .900–1.000 | .24805 | 1.000 | .23305 |
+| Rotating pair cycle | 720 | .900–.975 | .55381 | .975 | .58729 |
+| Weak bridge | 720 | .900–.975 | .58002 | .925 | .78326 |
+
+Widths are in logits. Individual-rater coverage ranges summarize six separate
+40-replication estimates; they are not a pooled 240-replication result. Exact
+95% Monte Carlo intervals for panel-difference coverage are [.9119,1.0000],
+[.8684,.9994] and [.7961,.9843], respectively. An individual .900 estimate has
+interval [.7634,.9721]. These wide intervals do not establish undercoverage,
+nominal coverage, or a difference in coverage between assignments. Even 40/40
+availability has a lower exact bound of .9119, not a guarantee of availability.
+
+The weak-bridge panel-difference interval was 1.33369 times as wide on average
+as the cycle interval. Across matched seeds, mean width increase was .19597
+logits (MCSE .00208). Individual-rater mean widths increased more modestly,
+from .55381 to .58002. This supports inspecting the uncertainty of the intended
+between-panel comparison rather than only individual rater SEs. The comparison
+holds total ratings fixed but changes the allocation and rater workloads as
+part of the design; it does not isolate a single graph metric causally.
+The complete design has three times as many ratings and is only a reference.
+
+Panel-difference biases (with MCSE) were .01365 (.00833), -.00837 (.02013),
+and -.05132 (.03202). The weak-bridge bias estimate is too imprecise to certify
+negligible bias or a systematic design effect. Full per-target bias, RMSE,
+tail misses, empirical SD, RMS SE, widths and exact MC intervals are retained
+in `summary.csv`; `intervals.csv` retains each target/seed, and `runs.csv`
+retains numerical outcomes and failures. No outcome-selected seeds were added.
+
+One numerical exception must remain visible. The complete-design fit at seed
+202610015 had q121 local Newton displacement .001018986 SE units, slightly
+above the prespecified .001 budget, despite being ready at q61. Its target-SE
+change was 3.572e-5, below the separate .001 budget. This fit and its intervals
+remain in all primary results. All 80 sparse fits passed both numerical budgets.
+The saved exceptional fit was subsequently evaluated at q121 and q241 without
+refitting: the rule-to-rule covariance-scaled gradient change was 7.44e-8 SE
+units and relative free-coordinate SE change 2.77e-8. This supports locating
+the discrepancy in the q61 approximation; it does not retrospectively change
+the budget or turn the original fit into a q121 optimum. No replacement fit
+or additional coverage replication was used.
+
+The pilot process took 100.06 seconds and reached maximum RSS 845,807,616 bytes
+(about .79 GiB), measured outside the sandbox. Preflight took 15.60 seconds
+including public diagnostics. These small-workload measurements do not update
+the 5,000-Person capacity result. Source hashes agree across all pilot results.
+Focused checks confirmed connected assignments, exactly four bridge Persons,
+failure-denominator retention, retention of numerical conflicts, correct tail
+direction and summary values. The synthetic summary check uses a 1e-12 numeric
+tolerance after CSV round trips. `git diff --check` passed; no full suite ran.
+
+Decision: the pilot provides usable execution and precision evidence, but is
+not a coverage certification. Before a confirmatory run, use a denser fitting
+grid and preflight it, and challenge differing Person populations/nonrandom
+assignment between panels. The present fixed common N(0,1) population is
+correctly specified and can contribute linking information; weak physical
+overlap under that model does not establish robustness when the assumption
+fails. Choose confirmation replication counts from a declared coverage margin
+and desired Monte Carlo precision, preserving failure and numerical accounting.
+Do not spend more replications merely to turn these point estimates into a
+pass. Public defaults and inferential eligibility rules were not changed.
+
 ### Release boundary and evidence available now
 
 - The separate 0.2.4 candidate is the clean checkout at
@@ -30,9 +851,15 @@ not override this plan. Their original protocols and results remain intact.
   Preserve it as a baseline. Its final check or publication is no longer the
   next task; the expanded release follows stages 1–3 below. A later integration
   must reconcile its corrections with the development features deliberately.
-- This checkout is now candidate 0.2.4, HEAD `5721fa6` plus uncommitted changes including
-  metric-specific multivariate D-study output. HEAD alone does not identify
-  that changed implementation. These development features now target the
+- This checkout is candidate 0.2.4, based on `9f187ca`. That commit's
+  [five-environment package CI](https://github.com/Ryuya-dot-com/mfrmr/actions/runs/35605866852)
+  passed; all five downloaded receipts report zero errors, warnings and notes.
+  Subsequent local implementation, documentation and test changes are not part of those receipts.
+  The public `rc.1` still identifies earlier source `29cd589`; no `rc.2` was
+  published. Main `299cdfcf` and candidate-v4 `2b12b82` diverge from this
+  expanded branch and do not include its additional public APIs. Reconcile
+  source content before any future integration or publication.
+  These development features still target the
   expanded 0.2.4, not an automatically deferred feature release. The final
   integrated source needs its own identity and checks; the old candidate's
   receipts cannot cover it. Stage 4 has aligned DESCRIPTION/CITATION/NEWS and
@@ -62,7 +889,7 @@ not override this plan. Their original protocols and results remain intact.
 | 1. Finish implemented development functions — current supported workflows reviewed | Finish the metric-specific multivariate G/D-study workflow and clustering/MI setting comparisons. Reconcile help, examples, plots/ggplot conversion, exports, exclusions and saved-object migration against the actual APIs. | Each supported data-to-result route works with coherent identities, units, omissions and failure behavior. Close concrete defects with affected tests/examples and reuse existing stress evidence. A repeated full suite or a new estimator is not required merely to declare this stage complete. |
 | 2. Extend statistical support — initial two-facet normal-theory comparison implemented | `mfrm_multivariate_d_compare()` now supplies prespecified paired differences and approximate intervals, with plots/help, for complete ANOVA or incomplete MINQUE(0) sources under explicit normal random effects. Preserve the limitations and failure evidence below. One-facet, nonnormal-robust and simultaneous inference remain separate extensions. | The selected initial scope has a working API, matching assumptions, paired covariance, boundary/failure accounting, targeted coverage evidence and focused numerical/rendered checks. This completes the initial scoped deliverable, not all inferential support. Stage 4 must still verify the combined package; model work next requires its own concrete design. |
 | 3. Extend models — initial nested point workflow implemented | Person-by-(Child-within-Parent) now has five-component ANOVA/MINQUE(0), balanced future projections, local child identities, help and plots. Nested intervals, nesting within persons, partial sharing and random-facet MFRM remain separate extensions. | The selected extension has independent QR/kernel calculations, identifiable incomplete/unequal examples, direct composite reduction, saved-result and plot checks. This is a bounded point-estimation workflow, not population recovery evidence for arbitrary sparse designs or full G-theory support. |
-| 4. Integrate as 0.2.4 — local candidate verified | The selected extensions now share version/NEWS, migration help, website index and standard packaged tests. The [claim ledger](claim-reconciliation-0.2.4.md) includes added scope. The repaired archive is bound to the initial package/example/vignette results, the corrected namespace test and unchanged executable content. | Local integration is complete within the recorded check scope below. The release decision remains open; no remote CI, commit, submission or publication occurred. Broaden verification only for an identified outstanding risk, not to replay successful unchanged checks. |
+| 4. Integrate as 0.2.4 — candidate checked; local refinement reopened | Preserve the selected extensions, repairs and [claim ledger](claim-reconciliation-0.2.4.md). Apply the September 22 feedback priorities and reconcile the main/candidate branch differences before publication. | The checks for `9f187ca` remain valid for their source and scope. Publication is paused by the user; newly changed paths need focused verification. Broaden testing only for an identified outstanding risk, not to replay successful unchanged checks. |
 
 A reproduced user-facing calculation or interpretation defect interrupts this
 order. Finishing a study, test file or document is not by itself completion of

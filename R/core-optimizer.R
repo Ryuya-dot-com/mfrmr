@@ -487,6 +487,36 @@ make_mfrm_em_mstep_evaluator <- function(cache, idx, config, sizes, quad,
   )
 }
 
+# One local curvature proposal after ordinary polishing stalls. Keep dense
+# curvature work bounded; a failed proposal leaves the previous stage intact.
+mfrm_optimizer_curvature_proposal <- function(par, fn, gr) {
+  counts <- c("function" = 0L, "gradient" = 0L)
+  value <- function(p) { counts[1L] <<- counts[1L] + 1L; fn(p) }
+  gradient <- function(p) { counts[2L] <<- counts[2L] + 1L; gr(p) }
+  proposal <- tryCatch({
+    if (!length(par) || length(par) > 64L) stop("Curvature restart is limited to 1-64 free parameters.")
+    f0 <- value(par)
+    g0 <- gradient(par)
+    h <- stats::optimHess(par, fn = value, gr = gradient)
+    if (!all(is.finite(c(f0, g0, h))) || rcond(h) < 1e-10) {
+      stop("Curvature was nonfinite or ill-conditioned.")
+    }
+    root <- chol(h)
+    candidate <- par - backsolve(root, forwardsolve(t(root), g0))
+    f1 <- value(candidate)
+    g1 <- gradient(candidate)
+    slack <- 64 * .Machine$double.eps * max(1, abs(f0))
+    if (!all(is.finite(c(candidate, f1, g1))) || f1 > f0 + slack ||
+        max(abs(g1)) >= max(abs(g0))) {
+      stop("Curvature proposal did not improve the gradient without worsening the objective.")
+    }
+    candidate
+  }, error = identity)
+  list(par = if (inherits(proposal, "error")) NULL else proposal,
+       error = if (inherits(proposal, "error")) conditionMessage(proposal) else "",
+       counts = counts)
+}
+
 run_mfrm_direct_optimization <- function(start,
                                          method,
                                          idx,
@@ -528,7 +558,9 @@ run_mfrm_direct_optimization <- function(start,
   gr <- function(par, ...) safe_objective$gradient(par)
 
   run_stage <- function(par, stage_method, stage_reltol, index, label,
-                        fail_hard = FALSE) {
+                        fail_hard = FALSE, curvature_restart = FALSE) {
+    input_par <- par
+    proposal_counts <- c("function" = 0L, "gradient" = 0L)
     # The finite penalty applies only to proposals from a valid starting point.
     cache$ensure(par)
     started <- proc.time()[["elapsed"]]
@@ -537,16 +569,20 @@ run_mfrm_direct_optimization <- function(start,
       maxit = maxit,
       reltol = stage_reltol
     )
-    stage_opt <- tryCatch(
-      optim(
-        par = par,
-        fn = fn,
-        gr = gr,
-        method = stage_method,
-        control = stage_control
-      ),
-      error = function(e) e
-    )
+    stage_opt <- tryCatch({
+      if (isTRUE(curvature_restart)) {
+        proposal <- mfrm_optimizer_curvature_proposal(
+          par, evaluator$value, evaluator$gradient
+        )
+        proposal_counts <- proposal$counts
+        if (is.null(proposal$par)) stop(proposal$error)
+        par <- proposal$par
+      }
+      result <- optim(par = par, fn = fn, gr = gr, method = stage_method,
+                      control = stage_control)
+      result$counts <- result$counts + proposal_counts
+      result
+    }, error = function(e) e)
     elapsed <- proc.time()[["elapsed"]] - started
     if (inherits(stage_opt, "error")) {
       if (isTRUE(fail_hard)) {
@@ -607,7 +643,7 @@ run_mfrm_direct_optimization <- function(start,
       diagnostics = diagnostics,
       elapsed = elapsed,
       max_parameter_change = if (length(stage_opt$par) > 0L) {
-        max(abs(as.numeric(stage_opt$par) - as.numeric(par)), na.rm = TRUE)
+        max(abs(as.numeric(stage_opt$par) - as.numeric(input_par)), na.rm = TRUE)
       } else {
         0
       },
@@ -674,6 +710,22 @@ run_mfrm_direct_optimization <- function(start,
         }
         if (identical(selected$diagnostics$ConvergenceSeverity, "pass")) break
       }
+    }
+  }
+
+  if (isTRUE(polish_triggered) &&
+      identical(selected$diagnostics$ConvergenceReason, "code_zero_large_gradient") &&
+      identical(method, "MML") && config$model %in% c("RSM", "PCM") &&
+      !mfrmr_adaptive_integration(config) && !isTRUE(config$population_spec$active) &&
+      length(start) <= 64L) {
+    candidate <- run_stage(
+      par = selected$opt$par, stage_method = selected$method,
+      stage_reltol = selected$reltol, index = length(stages) + 1L,
+      label = "curvature_restart", curvature_restart = TRUE
+    )
+    stages[[length(stages) + 1L]] <- candidate
+    if (!nzchar(candidate$error) && mfrm_optimizer_stage_is_better(candidate, selected)) {
+      selected <- candidate
     }
   }
 

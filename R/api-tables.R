@@ -5375,7 +5375,11 @@ mfrm_default_node_path <- function(path, format) {
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' path <- tempfile(fileext = ".csv")
 #' out <- write_mfrm_residual_file(fit, diag, path, overwrite = TRUE)
-#' out$written_files
+#' data.frame(
+#'   Component = out$written_files$Component,
+#'   File = basename(out$written_files$Path)
+#' )
+#' # Full paths remain in out$written_files$Path.
 #' }
 #' @export
 write_mfrm_residual_file <- function(fit,
@@ -5462,7 +5466,11 @@ write_mfrm_residual_file <- function(fit,
 #' diag <- diagnose_mfrm(fit, residual_pca = "none")
 #' path <- tempfile(fileext = ".csv")
 #' out <- write_mfrm_subset_file(fit, diag, path, overwrite = TRUE)
-#' out$written_files
+#' data.frame(
+#'   Component = out$written_files$Component,
+#'   File = basename(out$written_files$Path)
+#' )
+#' # Full paths remain in out$written_files$Path.
 #' }
 #' @export
 write_mfrm_subset_file <- function(fit,

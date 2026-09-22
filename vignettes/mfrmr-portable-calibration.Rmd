@@ -264,17 +264,60 @@ For a separate scoring script, the essential code is:
 library(mfrmr)
 
 calibration <- load_mfrm_calibration("reviewed-calibration.rds")
-new_rows <- read.csv("new-responses.csv", stringsAsFactors = FALSE)
+new_rows <- read.csv(
+  "new-responses.csv",
+  colClasses = "character",
+  na.strings = "",
+  check.names = FALSE,
+  fileEncoding = "UTF-8-BOM"
+)
 scores <- score_mfrm_calibration(calibration, new_rows)
 print(scores)
 plot(scores, type = "interval", preset = "publication")
 write.csv(scores$estimates, "person-scores.csv", row.names = FALSE)
 ```
 
+Read identifiers as text: `001` and `1` can identify different Persons, and
+`NA` can be a literal identifier. The example treats empty cells as missing;
+if your response file uses another missing-score token, convert it only in
+the score column before scoring. Do not let automatic CSV type conversion
+merge people or change the frozen facet labels. Numeric score strings are
+validated against the frozen score map by the scorer.
+
+Keep `scores` with `saveRDS()` when the full review and numerical settings are
+needed. The CSV above preserves per-score identities and uncertainty labels,
+but does not contain the complete row review or optional integration review.
+When reading that CSV back, also preserve identifier columns as text.
+
 Unknown facet levels, unknown score values, invalid weights, ambiguous
 duplicates, and malformed artifacts fail closed. Missing responses require an
-explicit `missing_response = "omit"` policy. Every returned estimate is a
-posterior EAP conditional on the recorded fixed point calibration and prior;
+explicit `missing_response = "omit"` policy.
+
+## If scoring stops or asks for review
+
+An input error stops the scoring call. A returned `scored_review` result has
+an estimate that needs review; `not_scored` means no estimate is available.
+Inspect `summary(scores)$review`, including Persons absent from the interval
+plot. The printed review translates the reason codes into descriptions.
+
+| What you see | What to check or change |
+| --- | --- |
+| An unseen rater, task, or other facet level | Check spelling and preserve IDs as text. A genuinely new level has no parameter in this calibration: return to calibration with an appropriate linking design. Do not rename it as an existing level or edit the frozen artifact. |
+| A score outside the frozen map | Check the original rubric and missing-score codes. Correct an entry error or explicitly recode a documented missing marker. A changed rubric requires calibration review; widening a score range cannot update the saved map. |
+| Missing scores or IDs | Correct unintended missing values. Explicit omission applies to missing scores, not missing Person or facet IDs, and does not correct selective nonresponse. Review omitted counts after rescoring. |
+| Duplicate response cells | Check whether rows are accidental copies or distinct rating events. Correct copies; use the documented `event_id` argument only for genuine distinct events under the intended model. New event IDs do not model dependence between repeated performances. |
+| A missing, nonfinite, or nonpositive weight on a scored row | Check the weight column and its intended meaning. Correct erroneous values; do not replace them with arbitrary constants just to obtain scores. |
+| A malformed or incompatible artifact | Restore the original file and use a compatible package version. If it must be recreated, return to the source fit and the documented extraction/review workflow. Do not edit schema or validation fields to bypass the refusal. |
+| Review because responses are very few, omitted, or all at one endpoint | Check the original ratings and valid/omitted counts. Interpret precision and dependence on the prior before using the estimate; further ratings may be needed. These flags do not by themselves diagnose an invalid Person or justify changing responses. |
+| Review because posterior mass is near integration limits | Examine the numerical comparisons described above. Increasing optimizer iterations cannot alter a frozen calibration. If scoring settings need revision, return to the calibration workflow and retain a new artifact and its review. |
+| No valid responses (`not_scored`) | Correct missing-score coding if erroneous, or obtain valid ratings. Retain the unavailable result; do not substitute a zero-logit score. |
+
+A completed numerical comparison does not automatically clear these review
+states. Record the reason, the action taken, and the calibration used with the
+score batch.
+
+Every returned estimate is a posterior EAP conditional on the recorded fixed
+point calibration and prior;
 its uncertainty interval excludes calibration-parameter uncertainty. Validate
 the intended score use, population transport, and decision consequences
 outside this numerical workflow.

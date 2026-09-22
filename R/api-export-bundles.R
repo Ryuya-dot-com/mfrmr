@@ -4616,7 +4616,9 @@ export_summary_appendix <- function(x,
 #' Depending on `include`, the exporter can write:
 #' - core CSV tables via [export_mfrm()]
 #' - checklist CSVs via [reporting_checklist()]
-#' - facet-dashboard CSVs via [facet_quality_dashboard()]
+#' - facet-dashboard CSVs and interpretation notes via [facet_quality_dashboard()],
+#'   including screening settings in CSV and HTML; HTML tables show every
+#'   level's estimates and unavailable diagnostics, while CSVs retain full detail
 #' - APA text files via [build_apa_outputs()]
 #' - manuscript-summary CSVs via [build_summary_table_bundle()]
 #' - anchor CSV via [make_anchor_table()]
@@ -4684,7 +4686,11 @@ export_summary_appendix <- function(x,
 #'   acknowledge_sensitive = TRUE
 #' )
 #' bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
-#' head(bundle$written_files)
+#' head(data.frame(
+#'   Component = bundle$written_files$Component,
+#'   File = basename(bundle$written_files$Path)
+#' ))
+#' # Full paths and data-handling notes remain in bundle$written_files.
 #' }
 #' @export
 export_mfrm_bundle <- function(fit,
@@ -5069,14 +5075,24 @@ export_mfrm_bundle <- function(fit,
     write_csv(dash$overview, paste0(prefix, "_facet_dashboard_overview.csv"), "dashboard_overview")
     write_csv(dash$summary, paste0(prefix, "_facet_dashboard_summary.csv"), "dashboard_summary")
     write_csv(dash$detail, paste0(prefix, "_facet_dashboard_detail.csv"), "dashboard_detail")
+    write_csv(dash$settings, paste0(prefix, "_facet_dashboard_settings.csv"), "dashboard_settings")
+    write_text(dash$notes, paste0(prefix, "_facet_dashboard_notes.txt"), "dashboard_notes")
     if (nrow(as.data.frame(dash$flagged, stringsAsFactors = FALSE)) > 0) {
       write_csv(dash$flagged, paste0(prefix, "_facet_dashboard_flagged.csv"), "dashboard_flagged")
     }
     if (nrow(as.data.frame(dash$bias_sources, stringsAsFactors = FALSE)) > 0) {
       write_csv(dash$bias_sources, paste0(prefix, "_facet_dashboard_bias_sources.csv"), "dashboard_bias_sources")
     }
+    html_tables$facet_dashboard_settings <- dash$settings
+    html_text$facet_dashboard_notes <- paste(dash$notes, collapse = "\n")
+    html_tables$facet_dashboard_overview <- dash$overview
     html_tables$facet_dashboard_summary <- dash$summary
-    html_tables$facet_dashboard_flagged <- dash$flagged
+    html_tables$facet_dashboard_detail <- dash$detail[, intersect(
+      c("Facet", "Level", "N", "Estimate", "SE", "Infit", "Outfit", "MissingMetrics"),
+      names(dash$detail)), drop = FALSE]
+    html_tables$facet_dashboard_flagged <- dash$flagged[, intersect(
+      c("Facet", "Level", "MissingMetrics", "FlagLabel", "BiasCount"),
+      names(dash$flagged)), drop = FALSE]
   }
 
   if ("apa" %in% include) {

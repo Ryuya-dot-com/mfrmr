@@ -4,7 +4,7 @@ template:
   bootstrap: 5
 
 development:
-  mode: auto
+  mode: unreleased
 
 redirects:
   - [README.html, index.html]
@@ -217,6 +217,7 @@ reference:
       - plot.mfrm_recovery_simulation
       - plot.mfrm_signal_detection
       - plot.mfrm_summary_table_bundle
+      - plot_compare_mfrm
       - plot_displacement
       - plot_interrater_agreement
       - plot_residual_matrix

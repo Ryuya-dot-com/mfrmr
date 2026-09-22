@@ -56,6 +56,16 @@
 #' Default thresholds are screening heuristics. Prespecify and justify any
 #' application-specific alternatives rather than treating them as universal
 #' validity or acceptance criteria.
+#' `MissingMetrics` lists unavailable estimate, SE, Infit or Outfit values.
+#' A severity or misfit flag is `NA` when it cannot be evaluated (an observed
+#' misfit exceedance still flags even if the other fit index is unavailable).
+#' `FlagCount` counts observed flags only; zero is not a complete pass.
+#' `IncompleteLevels` counts levels with any missing diagnostic. Bias counts
+#' describe supplied results only, not tests of absence of bias.
+#' Fit-readiness restrictions are retained in `fit_readiness`,
+#' `interpretation_status` and `notes`. Review overlap with
+#' [subset_connectivity_report()] and category use with [data_quality_report()]
+#' before interpreting between-rater differences.
 #'
 #' @return An object of class `mfrm_facet_dashboard` (also inheriting from
 #'   `mfrm_bundle` and `list`). The object summarizes one target facet:
@@ -177,12 +187,20 @@ facet_quality_dashboard <- function(fit,
   detail$Infit <- first_existing(detail, c("Infit", "InfitMnSq", "Infit Mnsq"))
   detail$Outfit <- first_existing(detail, c("Outfit", "OutfitMnSq", "Outfit Mnsq"))
   detail$AbsEstimate <- abs(detail$Estimate)
-  detail$SeverityFlag <- is.finite(detail$AbsEstimate) & detail$AbsEstimate >= abs(severity_warn)
-  fit_hi <- pmax(detail$Infit, detail$Outfit, na.rm = TRUE)
-  fit_lo <- pmin(detail$Infit, detail$Outfit, na.rm = TRUE)
-  detail$MisfitFlag <- is.finite(fit_hi) & (
-    fit_hi >= abs(misfit_warn) | fit_lo <= misfit_lower_band
-  )
+  detail$MissingMetrics <- vapply(seq_len(nrow(detail)), function(i) {
+    metrics <- c("Estimate", "SE", "Infit", "Outfit")
+    paste(metrics[!is.finite(as.numeric(detail[i, metrics]))], collapse = ", ")
+  }, character(1))
+  detail$SeverityFlag <- ifelse(is.finite(detail$AbsEstimate),
+                                detail$AbsEstimate >= abs(severity_warn), NA)
+  fit_indices <- as.matrix(detail[c("Infit", "Outfit")])
+  fit_indices[!is.finite(fit_indices)] <- NA_real_
+  detail$MisfitFlag <- rowSums(
+    fit_indices >= abs(misfit_warn) | fit_indices <= misfit_lower_band,
+    na.rm = TRUE
+  ) > 0L
+  detail$MisfitFlag[!detail$MisfitFlag &
+    (!is.finite(detail$Infit) | !is.finite(detail$Outfit))] <- NA
   central_tendency_value <- suppressWarnings(as.numeric(central_tendency_max[1]))
   central_tendency_enabled <- length(central_tendency_value) == 1L &&
     is.finite(central_tendency_value)
@@ -247,6 +265,7 @@ facet_quality_dashboard <- function(fit,
     FacetSource = if (is.null(facet_input) || !nzchar(as.character(facet_input[1]))) "inferred" else "user",
     Levels = nrow(detail),
     FlaggedLevels = sum(detail$AnyFlag, na.rm = TRUE),
+    IncompleteLevels = sum(nzchar(detail$MissingMetrics)),
     BiasSourceBundles = nrow(bias_meta$sources[bias_meta$sources$Used %in% TRUE, , drop = FALSE]),
     stringsAsFactors = FALSE
   )
@@ -274,6 +293,7 @@ facet_quality_dashboard <- function(fit,
     facet_source = overview$FacetSource[1],
     severity_warn = abs(severity_warn),
     misfit_warn = abs(misfit_warn),
+    misfit_lower = misfit_lower_band,
     central_tendency_max = central_tendency_value,
     bias_count_warn = as.integer(bias_count_warn),
     bias_abs_t_warn = abs(bias_abs_t_warn),
@@ -282,7 +302,14 @@ facet_quality_dashboard <- function(fit,
     bias_source_bundles = nrow(bias_meta$sources[bias_meta$sources$Used %in% TRUE, , drop = FALSE])
   ))
 
-  notes <- character(0)
+  readiness <- .mfrm_fit_plot_readiness(fit)
+  notes <- c(
+    "Flags are screening prompts, not evidence of invalid ratings or grounds for automatic exclusion.",
+    "Severity is relative to the fitted reference; inspect workload, category use and common ratings before comparing levels.",
+    "FlagCount counts observed flags only. MissingMetrics identifies unavailable diagnostics; zero flags does not mean all checks passed.",
+    "BiasCount counts flagged cells in supplied bias results only; zero does not establish absence of bias.",
+    readiness$detail
+  )
   notes <- c(
     notes,
     if (isTRUE(central_tendency_enabled)) {
@@ -321,6 +348,8 @@ facet_quality_dashboard <- function(fit,
     flagged = flagged,
     bias_sources = bias_meta$sources,
     settings = settings,
+    fit_readiness = readiness$table,
+    interpretation_status = readiness$status,
     notes = notes,
     diagnostics = diagnostics,
     bias_results = bias_results
@@ -572,10 +601,10 @@ dashboard_draw_plot <- function(tbl,
   if (nrow(tbl) == 0) {
     graphics::plot.new()
     graphics::title(main = main %||% paste0("Facet quality: ", facet))
-    graphics::text(0.5, 0.5, "No flagged levels")
+    graphics::text(0.5, 0.5, "No observed flags; inspect missing diagnostics and notes")
     return(invisible(NULL))
   }
-  ord <- order(tbl$FlagCount, abs(tbl$Estimate), decreasing = TRUE, na.last = NA)
+  ord <- order(tbl$FlagCount, abs(tbl$Estimate), decreasing = TRUE, na.last = TRUE)
   tbl <- tbl[ord, , drop = FALSE]
   labels <- utils::head(as.character(tbl$Level), n = nrow(tbl))
   cols <- ifelse(tbl$BiasFlag %in% TRUE, pal["bias"], pal["flag"])
@@ -700,6 +729,11 @@ print.summary.mfrm_facet_dashboard <- function(x, ...) {
 #' @param draw If `TRUE`, draw with base graphics.
 #' @param ... Reserved for generic compatibility.
 #'
+#' @details When `x` is a dashboard, its stored screening settings define both
+#' flags and plot guides; threshold arguments apply only when `x` is a fit.
+#' Returned plot data retain those settings, interpretation notes and fit
+#' readiness. Restricted or older dashboards without readiness are labeled
+#' `REVIEW ONLY`. Zero observed flags is not a complete diagnostic pass.
 #' @return A plotting-data object of class `mfrm_plot_data`.
 #' @seealso [facet_quality_dashboard()], [summary.mfrm_facet_dashboard()]
 #' @examples
@@ -716,7 +750,7 @@ plot_facet_quality_dashboard <- function(x,
                                          facet = NULL,
                                          bias_results = NULL,
                                          severity_warn = 1.0,
-                                         misfit_warn = 1.5,
+                                         misfit_warn = NULL,
                                          central_tendency_max = NULL,
                                          bias_count_warn = 1L,
                                          bias_abs_t_warn = 2,
@@ -752,6 +786,19 @@ plot_facet_quality_dashboard <- function(x,
     stop("`x` must be an mfrm_fit object or a facet dashboard bundle.", call. = FALSE)
   }
 
+  # A saved dashboard's settings generated its flags and must also define its guides.
+  threshold_names <- c("severity_warn", "misfit_warn", "misfit_lower",
+                       "central_tendency_max", "bias_count_warn", "bias_abs_t_warn",
+                       "bias_abs_size_warn", "bias_p_max")
+  thresholds <- lapply(threshold_names, function(key) {
+    suppressWarnings(as.numeric(bundle$settings$Value[match(key, bundle$settings$Setting)]))
+  })
+  names(thresholds) <- threshold_names
+  plot_title <- main %||% paste0("Facet quality: ", bundle$facet)
+  if (!identical(bundle$interpretation_status, "ready_for_diagnostic_interpretation")) {
+    plot_title <- paste("REVIEW ONLY -", plot_title)
+  }
+
   tbl <- as.data.frame(bundle$detail, stringsAsFactors = FALSE)
   if (nrow(tbl) == 0) {
     stop("Facet dashboard does not contain any level rows.", call. = FALSE)
@@ -766,7 +813,7 @@ plot_facet_quality_dashboard <- function(x,
   } else {
     tbl <- tbl[tbl$AnyFlag %in% TRUE, , drop = FALSE]
     if (nrow(tbl) > 0) {
-      ord <- order(tbl$FlagCount, abs(tbl$Estimate), decreasing = TRUE, na.last = NA)
+      ord <- order(tbl$FlagCount, abs(tbl$Estimate), decreasing = TRUE, na.last = TRUE)
       tbl <- tbl[ord, , drop = FALSE]
       if (nrow(tbl) > top_n) tbl <- tbl[seq_len(top_n), , drop = FALSE]
     }
@@ -780,13 +827,8 @@ plot_facet_quality_dashboard <- function(x,
       tbl = tbl,
       plot_type = plot_type,
       facet = bundle$facet %||% bundle$overview$Facet[1],
-      thresholds = list(
-        severity_warn = severity_warn,
-        misfit_warn = misfit_warn,
-        central_tendency_max = central_tendency_max,
-        bias_count_warn = bias_count_warn
-      ),
-      main = main,
+      thresholds = thresholds,
+      main = plot_title,
       palette = palette,
       label_angle = label_angle
     )
@@ -803,15 +845,11 @@ plot_facet_quality_dashboard <- function(x,
       settings = bundle$settings,
       flagged = bundle$flagged,
       ranked = bundle$ranked,
-      thresholds = list(
-        severity_warn = severity_warn,
-        misfit_warn = misfit_warn,
-        central_tendency_max = central_tendency_max,
-        bias_count_warn = bias_count_warn,
-        bias_abs_t_warn = bias_abs_t_warn,
-        bias_abs_size_warn = bias_abs_size_warn,
-        bias_p_max = bias_p_max
-      )
+      thresholds = thresholds,
+      title = plot_title,
+      notes = data.frame(Type = "Interpretation", Text = bundle$notes),
+      fit_readiness = bundle$fit_readiness,
+      interpretation_status = bundle$interpretation_status
     )
   )
   invisible(out)

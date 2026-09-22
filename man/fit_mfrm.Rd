@@ -210,7 +210,14 @@ the fit. When this setting is at least as strict as the public default
 terminal-gradient review triggers a bounded warm-started polish ladder.
 The best non-worsening stage under the recorded selection rule is
 retained. Requested and selected-stage settings remain in \code{fit$summary},
-and the complete stage history remains in \code{fit$opt$optimizer_polish}.}
+and the complete stage history remains in \code{fit$opt$optimizer_polish}.
+If ordinary polishing still stalls, fixed-grid, fixed-standard-normal
+RSM/PCM MML fits with at most 64 free parameters can use one local
+curvature step to restart the selected optimizer. The step requires
+positive-definite, well-conditioned curvature, a smaller gradient and
+an objective that does not worsen beyond floating-point roundoff.
+The original convergence and terminal-gradient criteria still apply;
+failed proposals retain their reasons in the stage history.}
 
 \item{optimizer}{Direct-optimization method. \code{"auto"} (default) uses the
 limited-memory \code{"L-BFGS-B"} method for MML and for larger JML parameter

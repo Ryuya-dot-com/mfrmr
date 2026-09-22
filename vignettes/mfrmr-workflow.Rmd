@@ -168,21 +168,23 @@ Both routes now use the same import and analysis code:
 ratings <- read.csv(
   csv_path,
   colClasses = "character",
-  na.strings = c("", "NA"),
+  na.strings = "",
   check.names = FALSE,
   fileEncoding = "UTF-8-BOM"
 )
+# Treat the documented missing-score marker only in the score column
+ratings <- recode_missing_codes(ratings, columns = "Score", codes = "NA")
 head(ratings)
 names(ratings)
 table(ratings$Score, useNA = "ifany")
 ```
 
-Reading columns as text preserves IDs such as `001`; `mfrmr` converts numeric
-score strings such as `"3"` for estimation. `check.names = FALSE` preserves the
-headers. The missing tokens above apply to all columns; adjust them if, for
-example, `NA` is a legitimate identifier. Leave unobserved scores blank or
-mark them `NA`. Zero is a score when the rubric includes zero, and must not be
-used to fill unassigned rating cells.
+Reading columns as text preserves distinct IDs such as `001`, `1`, and `NA`;
+`mfrmr` converts numeric score strings such as `"3"` for estimation.
+`check.names = FALSE` preserves the headers. Empty cells are missing in every
+column; the literal marker `NA` is recoded only in `Score`. Use the
+missing-score markers declared for your data. Zero is a score when the rubric
+includes zero, and must not be used to fill unassigned rating cells.
 
 The quoted column names in the next two steps must match `names(ratings)`,
 including capitalization and spaces. You do not have to rename your file's
@@ -195,7 +197,8 @@ arguments in **both** `describe_mfrm_data()` and `fit_mfrm()` as follows:
 | `facets` | `c("Rater", "Criterion")` | `c("Judge", "Task")` |
 | `score` | `"Score"` | `"Rating"` |
 
-Also inspect `ratings$Rating` instead of `ratings$Score`. Extra columns such
+Also use `columns = "Rating"` in the recoding call and inspect `ratings$Rating`
+instead of `ratings$Score`. Extra columns such
 as the practice file's `Study` and `Group` are unused by this model.
 
 ### 2. Review the rows and the rubric
@@ -504,6 +507,49 @@ the screen; residual PCA alone does not establish unidimensionality. See
 `vignette("mfrmr-mml-and-marginal-fit", package = "mfrmr")` and
 `vignette("mfrmr-visual-diagnostics", package = "mfrmr")` for these follow-ups.
 
+**What should I discuss with a rater?** Start from the coverage and category
+checks above, then view severity and its uncertainty alongside the screening
+results. Reuse the same fit and diagnostics:
+
+```{r rater-feedback, fig.alt = "Rater severity estimates with 95% normal intervals on the fitted logit scale. Positive estimates indicate stricter ratings relative to the fitted reference."}
+plot_rater_severity_profile(
+  fit_toy, diagnostics = diag_toy, facet = "Rater", show_bands = FALSE
+)
+rater_review <- facet_quality_dashboard(
+  fit_toy, diagnostics = diag_toy, facet = "Rater"
+)
+knitr::kable(
+  rater_review$detail[, c("Level", "N", "Estimate", "SE", "Infit", "Outfit")],
+  digits = 3, row.names = FALSE, caption = "Rater estimates and fit"
+)
+knitr::kable(
+  rater_review$detail[, c("Level", "MissingMetrics", "SeverityFlag", "MisfitFlag")],
+  row.names = FALSE, caption = "Availability and screening flags"
+)
+rater_review$settings
+writeLines(strwrap(rater_review$notes, width = 72))
+```
+
+A stricter rater is not necessarily inconsistent or incorrect. Individual
+interval overlap is not a test of the difference between two raters. Read
+`MissingMetrics` before interpreting flags: zero observed flags is not a
+complete pass when diagnostics are unavailable. A `REVIEW ONLY` label retains
+the fit's restrictions; the plot does not override them.
+
+In this synthetic example, none of the six raters has a severity or misfit
+flag under the displayed settings. The earlier response-level screen still
+selected 141 ratings: the two screens assess different units and use different
+rules. Neither result establishes that every rating is appropriate.
+
+Use the selected unexpected ratings to discuss the rubric and scoring context,
+not to automatically exclude a rater. Limited overlap may call for more shared
+ratings before comparing raters. A change after training alone does not
+establish a training effect. For your own analysis, use `csv_fit` and
+`csv_diagnostics`, and replace `"Rater"` with your actual facet name.
+Keep the whole dashboard with `saveRDS()` to retain its settings and notes;
+`export_mfrm_bundle(..., include = c("dashboard", "html"))` includes them
+with the exported tables. See `?facet_quality_dashboard` for that export route.
+
 ### 4. Assemble the evidence for a report
 
 ```{r primary-route}
@@ -560,13 +606,17 @@ export_toy <- export_mfrm_results(
   include = c("default", "report"),
   acknowledge_sensitive = TRUE
 )
-export_toy$written_files[, c("Component", "Format", "Path")]
+export_preview <- head(export_toy$written_files[, c("Component", "Format", "Path")])
+export_preview$Path <- basename(export_preview$Path)
+knitr::kable(export_preview, row.names = FALSE,
+             caption = "First six exported files (filenames only)")
 ```
 
 This archive retains the collected results. `acknowledge_sensitive = TRUE` is used
 because the example contains synthetic data; it does not remove identifiers
 or local paths from real analyses. Review the files before sharing them.
-Use `export_toy$written_files$Path` to locate the generated files. Temporary
+The table previews six filenames; `export_toy$written_files` retains the full
+list, and its `Path` column locates the generated files. Temporary
 files are for practice; choose a study directory for an archive you will keep.
 With a precomputed fit as input, this archive's replay code assumes that
 `fit` and `diagnostics` already exist. Keep your original data-to-fit script.

@@ -669,7 +669,7 @@ test_that("public documentation surfaces share the bounded calibration wording",
                      public_text, perl = TRUE))
 })
 
-test_that("installed public API scores a saved artifact in a fresh process", {
+test_that("installed public API preserves CSV identities and refusals in a fresh process", {
   package_path <- normalizePath(find.package("mfrmr"), winslash = "/")
   library_roots <- normalizePath(.libPaths(), winslash = "/", mustWork = FALSE)
   package_is_installed <- dirname(package_path) %in% library_roots
@@ -680,22 +680,35 @@ test_that("installed public API scores a saved artifact in a fresh process", {
 
   fixture <- calibration_public_fixture()
   artifact_path <- tempfile(fileext = ".rds")
-  rows_path <- tempfile(fileext = ".rds")
+  rows_path <- tempfile(fileext = ".csv")
   result_path <- tempfile(fileext = ".rds")
   script_path <- tempfile(fileext = ".R")
   paths <- c(artifact_path, rows_path, result_path, script_path)
   on.exit(unlink(paths), add = TRUE)
   save_mfrm_calibration(fixture$frozen, artifact_path)
-  saveRDS(fixture$rows, rows_path, version = 3)
+  rows <- fixture$rows
+  rows$Person <- ifelse(rows$Person == "NEW_LOW", "001", "1")
+  literal_na <- rows[rows$Person == "001", , drop = FALSE]
+  literal_na$Person <- "NA"
+  rows <- rbind(rows, literal_na)
+  utils::write.csv(rows, rows_path, row.names = FALSE, na = "")
 
   script <- c(
     "args <- commandArgs(trailingOnly = TRUE)",
     ".libPaths(c(args[1L], .libPaths()))",
     "library(mfrmr)",
     "calibration <- load_mfrm_calibration(args[2L])",
-    "rows <- readRDS(args[3L])",
+    'rows <- read.csv(args[3L], colClasses = "character", na.strings = "",',
+    '                 check.names = FALSE, fileEncoding = "UTF-8-BOM")',
+    'stopifnot(identical(unique(rows$Person), c("001", "1", "NA")))',
     "result <- score_mfrm_calibration(calibration, rows, adaptive_quad_points = c(15L, 31L))",
-    "saveRDS(result, args[4L], version = 3)"
+    "saveRDS(result, args[4L], version = 3)",
+    'unknown <- rows; unknown$Rater[1L] <- "unseen-rater"',
+    'err <- tryCatch(score_mfrm_calibration(calibration, unknown), mfrm_calibration_error = identity)',
+    'stopifnot(inherits(err, "mfrm_calibration_error"), identical(err$code, "SCORING_FACET_LEVEL_UNKNOWN"))',
+    'unknown <- rows; unknown$Score[1L] <- "999"',
+    'err <- tryCatch(score_mfrm_calibration(calibration, unknown), mfrm_calibration_error = identity)',
+    'stopifnot(inherits(err, "mfrm_calibration_error"), identical(err$code, "SCORING_SCORE_UNKNOWN"))'
   )
   expect_false(any(grepl(":::|mfrmr_", script)))
   writeLines(script, script_path, useBytes = TRUE)
@@ -717,13 +730,14 @@ test_that("installed public API scores a saved artifact in a fresh process", {
   expect_true(file.exists(result_path))
   result <- readRDS(result_path)
   expect_s3_class(result, "mfrm_calibration_score")
+  expect_setequal(result$estimates$Person, c("001", "1", "NA"))
   expect_identical(result$settings$calibration_id, "public-api-rsm")
   expect_identical(result$settings$engine_identity, "artifact_coordinates_v1")
   expect_identical(unique(result$estimates$ScoringAlgorithm),
                    fixture$frozen$scoring_basis$scoring_algorithm)
   expect_identical(unique(result$estimates$IntervalLevel), 0.95)
   expect_equal(result$estimates,
-               score_mfrm_calibration(fixture$frozen, fixture$rows)$estimates,
+               score_mfrm_calibration(fixture$frozen, rows)$estimates,
                tolerance = 0)
   expect_equal(nrow(result$quadrature_review), nrow(result$estimates) * 2L)
   expect_true(all(result$quadrature_review$Status == "computed"))

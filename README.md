@@ -11,6 +11,14 @@ with a documented bounded `GPCM` extension. A facet can represent a rater,
 item, task, criterion, form, occasion, or another observed role that affects
 an ordered score.
 
+Educational performance assessment is a recurring example, but the column
+names and facet roles are configurable. The same analysis questions can arise
+when judges rate musical performances, clinicians rate observed performance,
+or observers apply a psychological rating rubric. Define the unit being rated,
+the ordered categories and the modeled construct for each application. A
+competition total or a continuous clinical measurement is not automatically
+an ordered-category response.
+
 Start with the quick start below: load data, fit a model, draw a plot, and
 inspect the summary. The complete workflow then covers data checks,
 diagnostics, and reporting.
@@ -149,6 +157,60 @@ For a guide to the next steps, open
 and `help("mfrmr_reporting_and_apa", package = "mfrmr")` when moving from a
 reviewed fit to tables and manuscript-draft output.
 
+### Give feedback to raters
+
+Use the fitted model and diagnostics above to ask which rating patterns need
+discussion with a rater. First read `diagnostic_summary$decision`; a plot does
+not override its restrictions. Then inspect signed severity estimates and
+their uncertainty, followed by the detailed screening results:
+
+```r
+# Review severity on the fitted scale without heuristic guide bands
+severity <- plot_rater_severity_profile(
+  fit, diagnostics = diagnostics, facet = "Rater",
+  show_bands = FALSE, draw = FALSE
+)
+severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
+
+# Keep the screening settings and interpretation notes with the results
+rater_review <- facet_quality_dashboard(
+  fit, diagnostics = diagnostics, facet = "Rater"
+)
+rater_review$detail[, c("Level", "N", "Estimate", "SE", "Infit", "Outfit")]
+rater_review$detail[, c("Level", "MissingMetrics", "SeverityFlag", "MisfitFlag")]
+rater_review$settings
+writeLines(strwrap(rater_review$notes, width = 72))
+
+# Inspect rating coverage and category use before selecting feedback cases
+coverage <- subset_connectivity_report(fit, diagnostics = diagnostics)
+summary(coverage)
+usage <- data_quality_report(fit)
+usage$category_usage_summary
+usage$facet_response_patterns
+cases <- build_misfit_casebook(fit, diagnostics = diagnostics)
+summary(cases)
+```
+
+For a column named `Judge` or `Examiner`, pass that modeled facet name instead
+of `"Rater"`. Severity describes scoring relative to the fitted reference;
+being stricter does not by itself mean being inconsistent or incorrect.
+Individual interval overlap is not a test of the difference between two
+raters. Dashboard flags use the displayed screening settings and require
+follow-up; they do not establish bias or justify automatic exclusion.
+`MissingMetrics` identifies unavailable diagnostics: zero observed flags is
+not a complete pass. A `REVIEW ONLY` plot retains the fit's interpretation
+restrictions. Keep the complete dashboard when saving with `saveRDS()`;
+`export_mfrm_bundle(..., include = c("dashboard", "html"))` also retains
+screening settings and interpretation notes with the exported tables.
+
+Check each rater's workload, category use and overlap with other raters before
+discussing flagged cases. Compare selected ratings with the rubric and shared
+calibration performances. Insufficient overlap may call for additional common
+ratings before comparing raters. For a training follow-up, compare explicitly
+linked occasions; a change in severity alone does not establish a training
+effect. See `help("facet_quality_dashboard")`, `help("data_quality_report")`
+and `help("subset_connectivity_report")` for the supporting checks.
+
 ## Data format
 
 Each row records **one score given by one rater to one person on one
@@ -185,10 +247,12 @@ csv_path <- file.choose()
 ratings <- read.csv(
   csv_path,
   colClasses = "character",
-  na.strings = c("", "NA"),
+  na.strings = "",
   check.names = FALSE,
   fileEncoding = "UTF-8-BOM"
 )
+# Treat the documented missing-score marker only in the score column
+ratings <- recode_missing_codes(ratings, columns = "Score", codes = "NA")
 head(ratings)
 names(ratings)
 table(ratings$Score, useNA = "ifany")
@@ -196,14 +260,16 @@ table(ratings$Score, useNA = "ifany")
 
 For a reusable script, replace `file.choose()` with a quoted path such as
 `"data/ratings.csv"`, relative to the folder shown by `getwd()`.
-Reading columns as text preserves IDs such as `001`; `mfrmr` converts numeric
-score strings such as `"3"` for estimation. The missing tokens above apply to
-all columns; adjust them if, for example, `NA` is a legitimate identifier.
+Reading columns as text preserves distinct IDs such as `001`, `1`, and `NA`;
+`mfrmr` converts numeric score strings such as `"3"` for estimation. Empty
+cells are missing in every column; the literal marker `NA` is recoded only
+in `Score`. Use the missing-score markers declared for your data.
 
 The names in `person`, `facets`, and `score` must match `names(ratings)` exactly.
 For a file headed `Student`, `Judge`, `Task`, and `Rating`, use
 `person = "Student"`, `facets = c("Judge", "Task")`, and `score = "Rating"`
-in **both** calls below, and inspect `ratings$Rating` above.
+in **both** calls below. Also use `columns = "Rating"` in the recoding call
+and inspect `ratings$Rating` above.
 
 ### Check the data before fitting
 
@@ -407,8 +473,9 @@ prespecified common-grid sensitivity check; q>=31 alone is not evidence that
 integration error is negligible.
 
 For the fitted MML model and the same data, request the comparison explicitly.
-`mml_quadrature_sensitivity()` refits each requested grid; `summary(q_review)`
-only summarizes the returned review:
+`mml_quadrature_sensitivity()` reuses the supplied fit at its stored grid and
+refits the other requested grids; `summary(q_review)` only summarizes the
+returned review:
 
 ```r
 q_review <- mml_quadrature_sensitivity(
@@ -426,6 +493,14 @@ SD, and, when present, relative slopes, raw local-curvature SEs, and population
 SD. The GPCM-specific `gpcm_mml_quadrature_sensitivity()` name remains
 available. Neither route assigns a universal stable/unstable cutoff, makes raw
 slope SEs inferentially eligible, or changes the fit-readiness decision.
+
+A fit marked `ready` has passed its recorded checks at the chosen grid; that
+status does not establish that a denser grid would give the same answer.
+Review changes in rater estimates and SEs separately from changes in person
+scores, using tolerances appropriate to the intended interpretation. If the
+first comparison shows meaningful movement, compare against a further denser
+grid. Numerical agreement does not establish repeated-sampling interval
+coverage.
 
 Use `model = "PCM", step_facet = "Criterion"` when category steps differ
 across that facet. Choose the model from the scoring design and measurement
@@ -1069,6 +1144,12 @@ guards, not performance or memory guarantees; multiply imputed analyses also
 retain every completed result. Reuse saved results when comparing settings.
 
 ## Multivariate G-theory
+
+For a first runnable example, start with the bundled two-score data under
+[Common tasks and crossed facets](#common-tasks-and-crossed-facets). It follows
+the question of adding tasks through data import, G-study estimation, D-study
+tables, plots and interpretation. Use the design table below to check whether
+that model matches your assessment before adapting the example.
 
 Choose the G-study model before comparing designs. The existing
 `mfrm_generalizability()` / `mfrm_d_study()` route fits main effects and uses
@@ -1753,13 +1834,16 @@ Older saved G/D results cannot recover that accounting by reprinting; rerun
 the G-study with the original data if it is needed.
 
 Installing 0.2.4 does not recalculate saved diagnostics, scores or reports.
-Keep the originals and the settings used to create them. First print
-`summary(fit)` with the updated package. A native fit lacking the current
+Keep the originals and the settings used to create them. For analyses based on
+a native MFRM fit, first print `summary(fit)` with the updated package.
+A native fit lacking the current
 estimation checks must be refitted from its original data and settings before
 inferential reuse; computing diagnostics alone cannot supply those fit checks.
+Observed-score G/D studies and external-feature groups use their own source
+objects and do not require an MFRM fit.
 
-For a fit that already has current estimation checks, start at the affected
-step and rebuild everything that depends on it:
+Start at the affected step below and rebuild everything that depends on it.
+For an MFRM-based analysis, this assumes a fit with current estimation checks:
 
 | Saved result | Required action |
 | --- | --- |
@@ -1768,8 +1852,8 @@ step and rebuild everything that depends on it:
 | Residual group comparisons or facet equivalence | Recreate residual comparisons from the fit and original group data. Recompute equivalence from an eligible MML fit with matching diagnostics and the original practical bound. |
 | ICC and design effects | Rerun `compute_facet_icc()` or `analyze_hierarchical_structure()` from the original data/settings, explicitly choosing how to handle missing values. Recreate design effects from the new ICC result's row accounting. Choose `"boot"` explicitly for intervals and inspect all failure diagnostics. The former `"profile"` method is withdrawn; reprinting cannot correct saved intervals. |
 | Main-effects G/D studies | Rerun the observed-score G-study and D-study using the original settings. The G-study fits a separate mixed model; the MFRM need not be refitted for these corrections. |
-| Multivariate G/D studies | Recompute the D-study from its saved G-study, planned counts and weights to update metric-specific availability. Replotting preserves stored values. A changed design, corrected data or incompatible design metadata requires a new G-study; adding nesting requires refitting, not relabeling. Keep the G-study and its data for plan-comparison intervals. |
-| External-feature groups | Replot saved results for updated labels; memberships and trees are preserved. Changed features, weights, group counts or methods require new clustering. Reuse the same fitted imputation object when comparing settings across completions. Use `plot()` or `plot_data()`; automatic ggplot conversion is unsupported. |
+| Multivariate G/D studies | Recompute the D-study from its saved G-study to update metric-specific availability or change future counts/weights; then recreate dependent comparisons and plots. Replotting alone preserves stored values. Changed source data, a changed G-study model (including nesting), incompatible design metadata or an earlier G-study affected by the single-score MINQUE(0) or interaction-ID corrections requires a new G-study. Keep the G-study and its data for plan-comparison intervals. |
+| External-feature groups | Replot saved results for updated labels; memberships and trees are preserved. Changed features, weights, group counts or methods require new clustering, followed by a new comparison of those results. Reuse the same fitted imputation object when comparing settings across completions. Use `plot()` or `plot_data()`; automatic ggplot conversion is unsupported. |
 | Shrinkage | Reapply using the original prior and explicit Person settings, then regenerate reports and replay scripts. Switching Person shrinkage off removes old adjustment columns. No MFRM refit is needed to refresh these results. |
 | Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |

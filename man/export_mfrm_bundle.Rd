@@ -143,7 +143,9 @@ Depending on \code{include}, the exporter can write:
 \itemize{
 \item core CSV tables via \code{\link[=export_mfrm]{export_mfrm()}}
 \item checklist CSVs via \code{\link[=reporting_checklist]{reporting_checklist()}}
-\item facet-dashboard CSVs via \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}}
+\item facet-dashboard CSVs and interpretation notes via \code{\link[=facet_quality_dashboard]{facet_quality_dashboard()}},
+including screening settings in CSV and HTML; HTML tables show every
+level's estimates and unavailable diagnostics, while CSVs retain full detail
 \item APA text files via \code{\link[=build_apa_outputs]{build_apa_outputs()}}
 \item manuscript-summary CSVs via \code{\link[=build_summary_table_bundle]{build_summary_table_bundle()}}
 \item anchor CSV via \code{\link[=make_anchor_table]{make_anchor_table()}}
@@ -214,7 +216,11 @@ bundle <- export_mfrm_bundle(
   acknowledge_sensitive = TRUE
 )
 bundle$summary[, c("FilesWritten", "HtmlWritten", "ScriptWritten")]
-head(bundle$written_files)
+head(data.frame(
+  Component = bundle$written_files$Component,
+  File = basename(bundle$written_files$Path)
+))
+# Full paths and data-handling notes remain in bundle$written_files.
 }
 }
 \seealso{

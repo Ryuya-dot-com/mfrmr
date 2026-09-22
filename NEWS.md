@@ -4,6 +4,32 @@ Unreleased release candidate. This version combines reusable calibration and
 new-Person scoring, external-feature clustering and multivariate G/D-studies,
 with corrections to uncertainty, subgroup comparisons and design planning.
 
+## Rater feedback
+
+* The introductory CSV examples preserve literal `NA` identifiers and recode
+  missing-score markers only in the score column. If an earlier import
+  removed valid IDs, reimport the original file and rerun the analysis.
+* The workflow tutorial connects coverage and category review to rater
+  severity, uncertainty and screening flags, with focused tables and guidance
+  on interpreting individual ratings separately from rater-level summaries.
+* Reduced overhead when assembling strict pairwise diagnostic summaries for
+  large rating datasets, preserving statistics and unavailable-result flags.
+
+* Facet dashboards identify unavailable diagnostics and preserve fit-readiness
+  restrictions in summaries and plots. Zero observed flags is not a complete
+  diagnostic pass. Rater severity profiles label restricted fits `REVIEW ONLY`.
+  A nonfinite Infit or Outfit value cannot hide a flag from the other,
+  finite index or create a flag on its own.
+  Rebuild saved dashboards from existing fits and diagnostics to obtain the
+  added availability and readiness fields; a model refit is unnecessary.
+* Dashboard plots now use the same default misfit band as dashboard tables and
+  retain a saved dashboard's thresholds for their guide lines. Recreate plots
+  to correct earlier defaults or guide lines; no model refit is needed.
+* Dashboard exports include screening settings and interpretation notes in
+  CSV/text and HTML. Re-export existing fits to retain this context.
+  HTML also shows unflagged levels with unavailable diagnostics and uses
+  focused columns; the CSV files retain the full diagnostic detail.
+
 ## Multivariate G-theory and assessment planning
 
 * Added `mfrm_multivariate_gstudy()` and `mfrm_multivariate_d_study()` for
@@ -44,6 +70,9 @@ with corrections to uncertainty, subgroup comparisons and design planning.
   not pass/fail accuracy or latent MFRM reliability. Omitting missing rows does
   not impute scores or correct informative assignment. Guidance explains raw
   negative-component conventions when comparing GENOVA-family results.
+  Updating only future counts or composite weights reuses the G-study;
+  changing its source data or model requires a new G-study. Saved-result
+  guidance distinguishes these actions from replotting stored values.
 * D-study base plots and ggplot exports preserve selected scores, weights,
   planned counts, metric-specific omissions and component diagnostics. Nested
   child counts are labeled per parent. Plan-comparison plots show differences
@@ -118,6 +147,12 @@ and action needed for each affected workflow.
   from saved source-package fits without re-estimation.
 
 ## Portable calibration and scoring
+
+* The separate-session CSV scoring example now preserves text identifiers
+  such as `001`, `1` and literal `NA`. Earlier automatic CSV conversion could
+  merge or replace identifiers before scoring. Reimport affected response
+  files with the corrected column types and rescore; the calibration does
+  not need refitting.
 
 * Added portable calibration for one-scale RSM/PCM MML fits with a fixed
   standard-normal Person distribution. A reviewed calibration can be saved,
@@ -553,6 +588,12 @@ and action needed for each affected workflow.
   diagnostics remain reusable; recompute diagnostics after refitting.
 
 ## Estimation and numerical accuracy
+
+* Fixed-grid, fixed-standard-normal RSM/PCM MML fits with up to 64 free
+  parameters can use a guarded curvature restart when ordinary optimizer
+  polishing stalls. Convergence and gradient tolerances are unchanged;
+  failed proposals retain the previous solution and their review history.
+  Refit an affected saved analysis to recompute its numerical status.
 
 * `fit_mfrm(mml_integration = "adaptive")` uses posterior-mode/curvature
   Gauss-Hermite integration with moving-node gradients for direct MML.

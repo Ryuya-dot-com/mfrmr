@@ -35,9 +35,12 @@ subtitle and legend. Set to \code{FALSE} to omit both bands and their labels.}
 \item{draw}{If \code{TRUE}, draw with base graphics.}
 }
 \value{
-An \code{mfrm_plot_data} object whose \code{data} slot contains
-columns \code{Level}, \code{Estimate}, \code{SE}, \code{CI_Lower}, \code{CI_Upper},
-\code{Band}.
+An \code{mfrm_plot_data} object. Its \code{data$data} table contains
+columns \code{Level}, \code{Estimate}, \code{SE}, \code{CI_Lower}, \code{CI_Upper}, and \code{Band}.
+The enclosing \code{data} list retains the facet, confidence level and plot
+annotations; keep these with the table when reporting the results.
+Fit readiness and interpretation notes are retained; restricted fits
+are labeled \verb{REVIEW ONLY} in the title.
 }
 \description{
 Ranks the levels of a chosen rater facet by estimated severity and
@@ -76,7 +79,10 @@ fit <- fit_mfrm(
 diagnostics <- diagnose_mfrm(fit)
 
 # Compare signed severity estimates and their intervals
-plot_rater_severity_profile(fit, diagnostics = diagnostics, show_bands = FALSE)
+severity <- plot_rater_severity_profile(
+  fit, diagnostics = diagnostics, show_bands = FALSE
+)
+severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
 # Higher estimates mean stricter ratings with this example's default orientation
 # The optional magnitude bands are omitted from this first comparison
 }

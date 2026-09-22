@@ -1,6 +1,6 @@
 # mfrmr roadmap
 
-Status: public roadmap, updated 2026-09-21. This document sets priorities and
+Status: public roadmap, updated 2026-09-22. This document sets priorities and
 completion conditions; it does not promise release dates or unimplemented APIs.
 See [NEWS](NEWS.md) for changes and the [README](README.md) for use and examples.
 
@@ -45,6 +45,11 @@ questions; they must retain their own scales, assumptions and interpretations.
 
 ## Focus for 0.2.4
 
+Before publication, the integrated candidate is undergoing local refinement
+of its existing analysis, rater-feedback and scoring workflows. Previously
+completed checks remain evidence for their stated source and scope; the
+following priorities do not imply that new stress studies have already run.
+
 The release combines finished exploratory-feature and multivariate G/D-study
 workflows, statistical support and selected model extensions with portable
 calibration. Current functionality and planned additions remain distinct until
@@ -55,7 +60,7 @@ implementation and validation are complete.
 | 1. Finish implemented functions | Consistent clustering/MI comparisons and G/D-study APIs, beginner examples, plots, exports and saved-result behavior. | Supported data-to-result workflows execute; units, identities, exclusions and metric-specific availability are consistent. Remaining defects are corrected with focused checks. |
 | 2. Extend statistical support | A justified uncertainty method for prespecified G/Phi/SEM planning comparisons, preserving dependence between plans and composites. | Implemented output matches a declared sampling target; boundary/failure handling and coverage or decision error are evaluated under explicit conditions. An uncertainty statement alone does not complete this stage. |
 | 3. Extend models | Person-by-(Child-within-Parent) G/D-study point estimates, such as task-specific rater teams, with fitting, projections and user guidance. | The selected design has identifiable components, working raw-data estimation and D-study rules, independent calculation checks and an executable assessment example. Nested intervals, other nesting structures and other model families remain separate extensions. |
-| 4. Integrate as 0.2.4 — local verification complete | The selected work now forms one candidate with consistent APIs, documentation, migration guidance and a distributable archive. | Make the release decision on this source, preserving supported scope and the distinction between local verification and publication. |
+| 4. Integrate as 0.2.4 — candidate checked; local refinement continues | Preserve the selected features and corrections while refining the complete analysis and rater-feedback routes. | Resolve remaining workflow and source-integration issues, then make the release decision using checks for that source and its supported scope. |
 
 Selected methods must meet their stated statistical requirements before
 inclusion; changes to the planned scope will be reflected here. Model extensions
@@ -79,6 +84,65 @@ expanded 0.2.4 needs its own source identity and final verification. See
 [updating saved analyses](README.md#updating-saved-analyses) and
 `vignette("mfrmr-portable-calibration", package = "mfrmr")`.
 
+## Rater feedback across application areas
+
+The first application is educational performance assessment, with feedback
+to raters as a central use. The APIs should also support appropriately modeled
+ratings in music, psychology, health-professions education and judged sports.
+Column names identify roles such as the rated unit, judge, task, criterion and
+occasion. Application-specific score maps, model assumptions and reference
+constraints must remain explicit. Repeated performances by one person do not
+become independent merely by giving each performance a new ID.
+
+Music assessment provides evidence that linking design and model fit affect
+the interpretation of rater-adjusted results
+([Wind, Engelhard, and Wesolowski, 2016](https://doi.org/10.1080/10627197.2016.1236676)).
+A figure-skating study illustrates detailed feedback to individual judges
+([Looney, 2004](https://pubmed.ncbi.nlm.nih.gov/14757990/)). These applications
+motivate examples and validation questions; they do not establish support for
+every scoring system or every model used in those papers. Preserve individual
+ordered ratings rather than substituting weighted competition totals.
+
+The feedback workflow should connect rater coverage and overlap, signed
+severity with its reference and uncertainty, category use, fit and selected
+rating discrepancies. Existing diagnostics and plots provide the components.
+Local refinement now preserves unavailable diagnostics, screening settings
+and fit restrictions across dashboard tables, plots and exported reports;
+the README connects coverage, category use and case review using existing
+APIs. A single 5,000-person rotating-rater probe completed and exposed costly
+pairwise diagnostic assembly; that path now runs faster with identical outputs
+on the saved fit. A guarded final optimizer restart subsequently resolved the
+terminal-gradient review in this workload without relaxing its tolerance;
+OS memory use was also measured. A subsequent same-data integration review
+found changes beyond the chosen numerical budgets at 31 points. One 61-point
+refit followed by a 121-point evaluation met those movement budgets for facet
+SEs, local parameter displacement and the selected person-score probes.
+This is evidence for that workload, not a sufficient grid for all data or a
+guarantee of interval coverage or capacity. A small paired simulation pilot
+now supplies preliminary rater-interval evidence for complete, rotating-pair
+and weakly linked assignments under a matching response/population model.
+Confirmation of coverage, challenges to the shared-population assumption,
+calibration of feedback flags and broader capacity evaluation remain pending.
+Severity, inconsistency and differential functioning answer different questions. Screening flags
+support rubric review and additional common ratings, not automatic rater
+exclusion or a demonstrated effect of training.
+
+Stress evaluation will distinguish computational capacity from the accuracy
+of rater feedback. At comparable rating budgets, vary common linking sets,
+overlapping panels, weak bridges and disconnected assignments, then examine
+rater precision and false flags as well as person scores. Separate planned
+nonassignment from missing assigned ratings and selective nonresponse.
+Larger samples cannot repair a design that does not identify the intended
+contrast. Design-dependent sensitivity is documented for sparse rater-bias
+screening ([Wind and Ge, 2021](https://doi.org/10.1177/0013164420988108)).
+
+Increase person counts, facet counts and response-pattern length separately,
+recording elapsed time, memory, convergence, unavailable results and numerical
+agreement. Comparisons with TAM or ConQuest require a shared model and
+estimand; their capacity is not a demonstrated capacity of mfrmr. Existing
+tests and stress results will be reused where applicable, with additional
+work directed at the remaining feedback and scale questions.
+
 ## Generalizability theory
 
 The planning question is how tasks, raters or score weights affect the
@@ -86,7 +150,7 @@ dependability of a score used for ranking or for absolute decisions. For
 component and composite scores, between-score covariances matter; averaging
 separate reliability coefficients does not answer the composite question.
 
-The development functions `mfrm_multivariate_gstudy()` and
+The candidate includes `mfrm_multivariate_gstudy()` and
 `mfrm_multivariate_d_study()` provide the following scope:
 
 | Part | Implemented scope | Interpretation boundary |
@@ -102,15 +166,16 @@ remains separate. Neither workflow estimates reliability on the MFRM latent
 scale or pass/fail classification accuracy. Explicit missing-row omission
 records exclusions; it does not correct selective assignment or nonresponse.
 
-The next work is organized around decisions, rather than more reference-software
-comparisons:
+The implemented workflows answer the following questions within their stated
+scope. Integration preserves these paths; extensions require a named need and
+evidence for the additional claim.
 
-| User question | Next deliverable | Evidence needed to consider it complete |
+| User question | Available in the candidate | Integration requirement or separate extension |
 | --- | --- | --- |
-| Can I use the current point projections correctly? | Consolidate the existing data → G-study → scenario/composite → table/plot workflow and saved-result behavior. | Examples use supported designs; metric-specific omissions, score units and limitations survive printing, export and replay. No new estimator is required for this step. |
-| How uncertain is the improvement between two feasible plans? | Specify and evaluate joint uncertainty in G/Phi/SEM differences using the same estimated components. | A declared sampling target, design/missingness assumptions and treatment of boundaries/failures; assessment of interval coverage or decision error for that target before offering an inferential API. |
-| Does a sparse source design estimate the quantities needed for planning? | Reuse existing recovery results; investigate only a named unresolved allocation, score-distribution or missingness condition. | Bias/error, unavailable attempts and decision consequences reported together. Rank, graph connectivity or a returned coefficient alone cannot establish adequacy. |
-| Does my assessment require local raters, nested tasks or partial sharing? | Use the implemented Person-by-(Child-within-Parent) model when appropriate, such as separate rater teams for tasks. Specify other nesting/partial-sharing designs separately. | The implemented five-component point workflow has independent QR/kernel and projection checks. These do not establish precision or recovery for arbitrary sparse allocations, nor provide nested-design intervals. |
+| Can I use the current point projections correctly? | Data → G-study → future scenarios/composites → tables and plots, with saved-result reuse. | Preserve metric-specific omissions, score units, weights and limitations in displayed and saved output. Changing only future counts or score weights reuses the G-study. |
+| How uncertain is the improvement between two feasible plans? | `mfrm_multivariate_d_compare()` supplies approximate paired-delta intervals for prespecified G/Phi/SEM differences under normal random effects with two crossed facets. | Preserve the sampling target, explicit assumption and unavailable-interval reasons. Existing bounded checks do not qualify nonnormal-robust, nested or simultaneous intervals; these remain separate extensions. |
+| Does a sparse source design estimate the quantities needed for planning? | MINQUE(0) estimates separable covariance components from supported incomplete designs; D-studies project explicit complete future plans. | Reuse existing recovery evidence. Investigate a named unresolved allocation, distribution or missingness condition only when needed for the intended use. Rank, connectivity or a returned coefficient alone cannot establish precision or correct selective missingness. |
+| Does my assessment require task-specific rater teams? | Person-by-(Child-within-Parent) point estimation and projections, with independent QR/kernel and projection checks. | Preserve the meaning of child counts per parent. Other nesting, partly shared raters and nested intervals remain separate extensions; current checks do not establish recovery for arbitrary sparse allocations. |
 
 For planning uncertainty, preserve dependence between scenarios and composites;
 separate intervals cannot simply be treated as uncertainty in their difference.
@@ -122,12 +187,12 @@ under an explicit normal random-effects assumption. Existing saved-result
 comparisons and targeted distribution checks support this bounded method;
 they do not establish robustness across score distributions and designs.
 
-The first uncertainty scope should use the existing common-facet model and
-prespecified complete future plans. It does not automatically include automatic
-weight selection, optimal sparse assignments, simultaneous guarantees or
-informative-missingness correction. If no method is adequately supported,
-keep current output explicitly at the point-projection scope while revising
-the method or proposed inclusion; do not present an unqualified interval.
+The implemented uncertainty scope uses the common-facet model and prespecified
+complete future plans. Automatic weight selection, optimal sparse assignments,
+simultaneous guarantees and informative-missingness correction are outside
+that scope. When the assumptions or supported design do not match the intended
+use, do not interpret the returned approximation as a qualified interval.
+Point projections retain their own model and design requirements.
 Equal rating counts need not imply equal examinee burden or cost.
 
 See [the G-theory workflow](README.md#multivariate-g-theory). The existing
@@ -136,7 +201,7 @@ conventions; full software equivalence is not a development or release goal.
 
 ## External features, grouping, and missing values
 
-The implemented development workflow reviews one row per Person, rater or task
+The implemented workflow reviews one row per Person, rater or task
 and clusters those entities separately. Gower/PAM supports mixed features;
 Gower with average or complete linkage supplies hierarchical partitions and
 dendrograms. Profiles, silhouettes and setting comparisons help users interpret
@@ -154,9 +219,9 @@ methods on the same entities. Imputed comparisons use paired completions from
 the same retained model. Removing a clustering feature does not remove it from
 the imputation model. No setting or consensus partition is selected automatically.
 
-| User need | Next action and completion condition |
+| User need | Current workflow or condition for an extension |
 | --- | --- |
-| Use the existing descriptive workflow | Consolidate the tutorial, ID/omission accounting, plots and imputation-pairing behavior for stage 1 of the planned 0.2.4 integration. Reuse existing stress evidence within its tested workload; input caps are not runtime or memory guarantees. |
+| Use the existing descriptive workflow | The executable tutorial connects ID/omission accounting, profiles, plots and paired imputation comparisons. Preserve these paths during integration and reuse existing stress evidence within its tested workload; input caps are not runtime or memory guarantees. |
 | Relate person, rater and task groups | Preserve separate feature tables and join classifications to planned/observed ratings by ID. Descriptive relationships must not become causal group effects or a joint clustering model. |
 | Use many features or numeric PCA/k-means | Add a specific workflow only after stating its purpose, scaling, distance and the role of PCA. Assess redundant/irrelevant features and interpretation of the transformed space; more features or another algorithm is not itself an improvement. |
 | Make claims about stable groups or classify new entities | Specify the sampling or prediction target separately from imputation sensitivity. Evaluate it before adding a stability statistic or assignment API. |

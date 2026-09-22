@@ -10,7 +10,7 @@ plot_facet_quality_dashboard(
   facet = NULL,
   bias_results = NULL,
   severity_warn = 1,
-  misfit_warn = 1.5,
+  misfit_warn = NULL,
   central_tendency_max = NULL,
   bias_count_warn = 1L,
   bias_abs_t_warn = 2,
@@ -74,6 +74,13 @@ A plotting-data object of class \code{mfrm_plot_data}.
 }
 \description{
 Plot a facet-quality dashboard
+}
+\details{
+When \code{x} is a dashboard, its stored screening settings define both
+flags and plot guides; threshold arguments apply only when \code{x} is a fit.
+Returned plot data retain those settings, interpretation notes and fit
+readiness. Restricted or older dashboards without readiness are labeled
+\verb{REVIEW ONLY}. Zero observed flags is not a complete diagnostic pass.
 }
 \examples{
 \donttest{

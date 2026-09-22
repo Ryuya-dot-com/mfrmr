@@ -557,9 +557,12 @@ plot_person_fit <- function(fit,
 #' @param preset Visual preset.
 #' @param draw If `TRUE`, draw with base graphics.
 #'
-#' @return An `mfrm_plot_data` object whose `data` slot contains
-#'   columns `Level`, `Estimate`, `SE`, `CI_Lower`, `CI_Upper`,
-#'   `Band`.
+#' @return An `mfrm_plot_data` object. Its `data$data` table contains
+#'   columns `Level`, `Estimate`, `SE`, `CI_Lower`, `CI_Upper`, and `Band`.
+#'   The enclosing `data` list retains the facet, confidence level and plot
+#'   annotations; keep these with the table when reporting the results.
+#'   Fit readiness and interpretation notes are retained; restricted fits
+#'   are labeled `REVIEW ONLY` in the title.
 #'
 #' @section Interpreting output:
 #' Zero is the sum-to-zero reference for the default centered facet; describe
@@ -597,7 +600,10 @@ plot_person_fit <- function(fit,
 #' diagnostics <- diagnose_mfrm(fit)
 #'
 #' # Compare signed severity estimates and their intervals
-#' plot_rater_severity_profile(fit, diagnostics = diagnostics, show_bands = FALSE)
+#' severity <- plot_rater_severity_profile(
+#'   fit, diagnostics = diagnostics, show_bands = FALSE
+#' )
+#' severity$data$data[, c("Level", "Estimate", "SE", "CI_Lower", "CI_Upper")]
 #' # Higher estimates mean stricter ratings with this example's default orientation
 #' # The optional magnitude bands are omitted from this first comparison
 #' }
@@ -616,6 +622,7 @@ plot_rater_severity_profile <- function(fit,
       !is.finite(ci_level) || ci_level <= 0 || ci_level >= 1) {
     stop("`ci_level` must be a single number in (0, 1).", call. = FALSE)
   }
+  readiness <- .mfrm_fit_plot_readiness(fit)
   style <- resolve_plot_preset(preset)
   if (is.null(diagnostics)) {
     diagnostics <- suppressMessages(suppressWarnings(
@@ -638,6 +645,7 @@ plot_rater_severity_profile <- function(fit,
                    ifelse(abs(m$Estimate) <= 1.0, "moderate", "strict"))
   m <- m[order(m$Estimate), , drop = FALSE]
   plot_title <- sprintf("%s severity profile", facet)
+  if (!isTRUE(readiness$ready)) plot_title <- paste("REVIEW ONLY -", plot_title)
   plot_subtitle <- sprintf(
     "Zero reference; %g%% normal CI from ModelSE%s",
     round(100 * ci_level),
@@ -707,6 +715,10 @@ plot_rater_severity_profile <- function(fit,
       data = payload,
       facet = facet,
       ci_level = ci_level,
+      notes = data.frame(Type = "Interpretation", Text = c(
+        readiness$detail,
+        "Individual intervals are not pairwise tests. Review common ratings and assignment before comparing raters."
+      )),
       title = plot_title,
       subtitle = plot_subtitle,
       legend = new_plot_legend(
@@ -722,6 +734,7 @@ plot_rater_severity_profile <- function(fit,
       preset = style$name
     )
   )
+  out <- .mfrm_attach_plot_readiness(out, readiness)
   invisible(out)
 }
 

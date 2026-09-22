@@ -138,3 +138,127 @@ test_that("plot_facet_quality_dashboard returns mfrm_plot_data for severity and 
   expect_true(is.data.frame(severity_plot$data$table))
   expect_true(is.data.frame(flags_plot$data$table))
 })
+
+
+test_that("unavailable diagnostics cannot silently pass screening", {
+  dx <- facet_dashboard_fixture$diagnostics
+  dx$measures <- as.data.frame(dx$measures)
+  rows <- which(dx$measures$Facet == "Rater")
+  dx$measures$Estimate[rows[1]] <- NA_real_
+  dx$measures$Infit[rows] <- 1
+  dx$measures$Outfit[rows] <- NA_real_
+  dx$measures$Infit[rows[1]] <- 2
+  dash <- facet_quality_dashboard(facet_dashboard_fixture$fit, diagnostics = dx)
+  expect_true(is.na(dash$detail$SeverityFlag[1]))
+  expect_true(dash$detail$MisfitFlag[1])
+  expect_true(all(is.na(dash$detail$MisfitFlag[-1])))
+  expect_true(all(grepl("Outfit", dash$detail$MissingMetrics)))
+  expect_equal(dash$overview$IncompleteLevels, length(rows))
+  p <- plot_facet_quality_dashboard(dash, plot_type = "flags", draw = FALSE)
+  expect_true(dash$detail$Level[1] %in% p$data$table$Level)
+  expect_identical(p$data$notes$Text, dash$notes)
+})
+
+test_that("nonfinite fit indices cannot hide or create observed misfit flags", {
+  dx <- facet_dashboard_fixture$diagnostics
+  dx$measures <- as.data.frame(dx$measures)
+  rows <- which(dx$measures$Facet == "Rater")
+  expected <- rep(c(TRUE, TRUE, NA), length.out = length(rows))
+  for (unavailable in c(NA_real_, NaN, Inf, -Inf)) {
+    for (missing_metric in c("Infit", "Outfit")) {
+      observed_metric <- setdiff(c("Infit", "Outfit"), missing_metric)
+      dx$measures[[missing_metric]][rows] <- unavailable
+      dx$measures[[observed_metric]][rows] <- rep(c(2, 0.2, 1), length.out = length(rows))
+      dash <- facet_quality_dashboard(facet_dashboard_fixture$fit, diagnostics = dx)
+      expect_identical(dash$detail$MisfitFlag, expected)
+      expect_true(all(grepl(missing_metric, dash$detail$MissingMetrics, fixed = TRUE)))
+    }
+  }
+})
+
+test_that("dashboard plots and saved outputs retain the screening basis", {
+  dx <- facet_dashboard_fixture$diagnostics
+  dx$measures <- as.data.frame(dx$measures)
+  rows <- which(dx$measures$Facet == "Rater")
+  dx$measures$Infit[rows] <- 0.6
+  dx$measures$Outfit[rows] <- 1
+  dash <- facet_quality_dashboard(facet_dashboard_fixture$fit, diagnostics = dx,
+                                  severity_warn = 2.25)
+  p <- plot_facet_quality_dashboard(dash, severity_warn = 99, draw = FALSE)
+  expect_equal(p$data$thresholds$severity_warn, 2.25)
+  expect_equal(p$data$thresholds$misfit_lower, 0.5)
+  direct <- plot_facet_quality_dashboard(facet_dashboard_fixture$fit,
+                                         diagnostics = dx, draw = FALSE)
+  expect_false(any(direct$data$table$MisfitFlag))
+  expect_identical(p$data$fit_readiness, dash$fit_readiness)
+  saved <- tempfile(fileext = ".rds")
+  on.exit(unlink(saved), add = TRUE)
+  saveRDS(p, saved)
+  expect_identical(readRDS(saved), p)
+  expect_output(print(p), "screening prompts")
+
+  out_dir <- tempfile("dashboard-export-")
+  on.exit(unlink(out_dir, recursive = TRUE), add = TRUE)
+  bundle <- export_mfrm_bundle(facet_dashboard_fixture$fit, diagnostics = dx,
+    output_dir = out_dir, prefix = "feedback", include = c("dashboard", "html"),
+    acknowledge_sensitive = TRUE)
+  settings <- read.csv(file.path(out_dir, "feedback_facet_dashboard_settings.csv"))
+  expect_equal(as.numeric(settings$Value[settings$Setting == "misfit_lower"]), 0.5)
+  notes <- readLines(file.path(out_dir, "feedback_facet_dashboard_notes.txt"))
+  expect_true(any(grepl("zero flags does not mean", notes, fixed = TRUE)))
+  html <- paste(readLines(file.path(out_dir, "feedback_bundle.html")), collapse = "\n")
+  expect_match(html, "zero flags does not mean", fixed = TRUE)
+  expect_match(html, "misfit_lower", fixed = TRUE)
+  expect_true(all(c("dashboard_settings", "dashboard_notes") %in%
+                    bundle$written_files$Component))
+})
+
+
+test_that("dashboard HTML retains unflagged missing diagnostics without internal columns", {
+  dx <- facet_dashboard_fixture$diagnostics
+  dx$measures <- as.data.frame(dx$measures)
+  rows <- which(dx$measures$Facet == "Rater")
+  dx$measures$Infit[rows] <- 1
+  dx$measures$Outfit[rows] <- NA_real_
+  dx$measures$ReadinessContractVersion <- "dashboard-internal-test"
+  dash <- facet_quality_dashboard(facet_dashboard_fixture$fit, diagnostics = dx,
+                                  facet = "Rater")
+  expect_true(any(!dash$detail$AnyFlag & nzchar(dash$detail$MissingMetrics)))
+  out_dir <- tempfile("dashboard-html-")
+  on.exit(unlink(out_dir, recursive = TRUE), add = TRUE)
+  export_mfrm_bundle(facet_dashboard_fixture$fit, diagnostics = dx, facet = "Rater",
+    output_dir = out_dir, prefix = "review", include = c("dashboard", "html"),
+    acknowledge_sensitive = TRUE)
+  html <- paste(readLines(file.path(out_dir, "review_bundle.html")), collapse = "\n")
+  detail <- strsplit(html, "<h2>facet_dashboard_detail</h2>", fixed = TRUE)[[1]][2]
+  detail <- strsplit(detail, "</table>", fixed = TRUE)[[1]][1]
+  expect_true(all(vapply(dash$detail$Level, grepl, logical(1), x = detail, fixed = TRUE)))
+  expect_match(detail, "MissingMetrics", fixed = TRUE)
+  expect_match(detail, "Outfit", fixed = TRUE)
+  expect_match(html, "IncompleteLevels", fixed = TRUE)
+  expect_false(grepl("dashboard-internal-test|ReadinessContractVersion|N[.]x", html))
+  csv <- read.csv(file.path(out_dir, "review_facet_dashboard_detail.csv"))
+  expect_true(all(csv$ReadinessContractVersion == "dashboard-internal-test"))
+  expect_identical(csv$MissingMetrics, dash$detail$MissingMetrics)
+})
+
+test_that("rater feedback preserves a restricted design after saving", {
+  fit <- facet_dashboard_fixture$fit
+  fit$data_review$status$Status[fit$data_review$status$Domain == "Design"] <-
+    "review_population_assumption_linked"
+  dx <- facet_dashboard_fixture$diagnostics
+  dash <- facet_quality_dashboard(fit, diagnostics = dx)
+  severity <- plot_rater_severity_profile(fit, diagnostics = dx, draw = FALSE)
+  expect_identical(dash$interpretation_status, "review_only")
+  expect_identical(severity$data$interpretation_status, "review_only")
+  expect_match(severity$data$title, "REVIEW ONLY", fixed = TRUE)
+  expect_true(any(grepl("review_population_assumption_linked", dash$notes, fixed = TRUE)))
+  saved <- tempfile(fileext = ".rds")
+  on.exit(unlink(saved), add = TRUE)
+  saveRDS(dash, saved)
+  restored <- readRDS(saved)
+  expect_output(print(summary(restored)), "review_population_assumption_linked")
+  p <- plot_facet_quality_dashboard(restored, draw = FALSE)
+  expect_match(p$data$title, "REVIEW ONLY", fixed = TRUE)
+  expect_identical(p$data$fit_readiness, severity$data$fit_readiness)
+})

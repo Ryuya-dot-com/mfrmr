@@ -84,18 +84,22 @@ ability classes or rater-quality judgments.
 \section{Updating saved analyses for 0.2.4}{
 
 Keep the original objects, data and analysis settings. Installing an update
-does not recalculate saved tables, figures or reports. Start by printing
-\code{summary(fit)} under the updated package and reading its interpretation
+does not recalculate saved tables, figures or reports. For analyses based
+on a native MFRM fit, start by printing \code{summary(fit)} under the updated
+package and reading its interpretation
 decision. If the saved native fit lacks the current estimation checks,
 refit from the original data with the same intended model, category coding,
 anchors, weights and numerical settings. Running \code{\link[=diagnose_mfrm]{diagnose_mfrm()}} alone
 cannot establish checks missing from that fit. If the original data or
 settings are unavailable, retain the old result as historical output;
 its previous approval is not evidence for current inferential use.
+Observed-score G/D studies and external-feature groups instead use their
+own source objects; they do not require an MFRM fit.
 
-For a fit with current estimation checks, update the affected result at
-the earliest step below, then rebuild its dependent summaries, plots and
-exports. A request to recompute diagnostics or scoring does not itself
+Update the affected result at the earliest step below, then rebuild its
+dependent summaries, plots and exports. For an MFRM-based analysis, this
+assumes a fit with current estimation checks. A request to recompute
+diagnostics or scoring does not itself
 require a new calibration fit.
 \itemize{
 \item \strong{Display wording only:} reprint a saved fit summary. This updates labels
@@ -148,10 +152,13 @@ switching Person shrinkage off removes its old adjustment columns.
 Regenerate replay scripts to retain the post-fit adjustment step.
 \item \strong{Multivariate G/D studies:} to apply metric-specific G/Phi/SEM
 availability rules, rerun \code{\link[=mfrm_multivariate_d_study]{mfrm_multivariate_d_study()}} from the saved
-G-study with the original planned counts and score weights. Replotting
-alone preserves stored numbers. Refit \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} only
-when changing the measurement design, correcting the source data, or
-replacing an object with missing or incompatible design metadata. In
+G-study with the original planned counts and score weights. Changing only
+future counts or weights also reuses that G-study. Recreate dependent
+plan comparisons, plots and exports after recalculation; replotting alone
+preserves stored numbers. Refit \code{\link[=mfrm_multivariate_gstudy]{mfrm_multivariate_gstudy()}} when changing
+the source data or G-study model, replacing an object with missing or
+incompatible design metadata, or correcting an earlier G-study affected
+by the single-score MINQUE(0) or period-containing interaction-ID bugs. In
 particular, a crossed result cannot be converted to a nested model by
 editing its labels; refit with an explicit \code{nesting} specification.
 Retain the G-study object and its data to calculate new prespecified
@@ -161,7 +168,8 @@ table alone does not contain the information needed for those intervals.
 memberships and fitted hierarchy. Replot them to update labels; use
 \code{\link[=plot_data]{plot_data()}} for their stored values. Automatic \code{\link[=as_ggplot]{as_ggplot()}} conversion
 is not supported for these plots. A change to features, weights, group
-counts or method requires a new clustering call. For imputation
+counts or method requires a new clustering call, followed by
+\code{\link[=mfrm_cluster_compare]{mfrm_cluster_compare()}} on the updated results. For imputation
 comparisons, reuse the original \code{mice} object to preserve pairing across
 completed datasets; do not generate unrelated completions for each setting.
 \item \strong{Fitted-object Person scores:} re-summarize the original prediction object

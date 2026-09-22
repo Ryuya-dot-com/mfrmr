@@ -58,7 +58,11 @@ fit <- fit_mfrm(toy, "Person", c("Rater", "Criterion"), "Score",
 diag <- diagnose_mfrm(fit, residual_pca = "none")
 path <- tempfile(fileext = ".csv")
 out <- write_mfrm_subset_file(fit, diag, path, overwrite = TRUE)
-out$written_files
+data.frame(
+  Component = out$written_files$Component,
+  File = basename(out$written_files$Path)
+)
+# Full paths remain in out$written_files$Path.
 }
 }
 \seealso{
