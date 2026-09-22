@@ -7,6 +7,22 @@ and new-Person scoring, external-feature clustering and multivariate
 G/D-studies, with corrections to uncertainty, subgroup comparisons and
 design planning.
 
+### Design decisions and saved output
+
+- Design-evaluation summaries retain full-precision metrics; `digits`
+  now controls printing only. Rounding can no longer turn a value just
+  below a minimum, or above a maximum, into a passing design
+  recommendation. Rebuild older saved summaries from the original
+  evaluation before requesting recommendations; no new simulation or
+  model fitting is required.
+- The default fit-level archive works without optional prediction
+  objects. Predictions are included by default when supplied; explicitly
+  requesting them without supplying an object still gives an explanatory
+  error.
+- Design-planning help distinguishes generating assumptions from
+  analysis settings and explains numerical failures and separation
+  reliability.
+
 ### Rater feedback
 
 - The introductory CSV examples preserve literal `NA` identifiers and

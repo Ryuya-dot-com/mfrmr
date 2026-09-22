@@ -12,9 +12,12 @@ and examples.
 mfrmr 0.2.4 is a release candidate and has not been released on CRAN. It
 integrates the selected work from stages 1–3 below. GitHub pre-releases
 are available for evaluation; their release pages link to the applicable
-CI results. The final release decision remains pending. Use
-`packageVersion("mfrmr")` and installed help to identify available
-functionality.
+CI results. The final release decision remains pending. The GitHub
+candidate
+[`v0.2.4-rc.2`](https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.2)
+has passed its five-environment package checks; that does not close this
+roadmap. Use `packageVersion("mfrmr")` and installed help to identify
+available functionality.
 
 | Workflow | Current position | Role in the planned 0.2.4 |
 |----|----|----|
@@ -53,11 +56,11 @@ assumptions and interpretations.
 
 ## Focus for 0.2.4
 
-Before publication, the integrated candidate is undergoing local
-refinement of its existing analysis, rater-feedback and scoring
-workflows. Previously completed checks remain evidence for their stated
-source and scope; the following priorities do not imply that new stress
-studies have already run.
+The published candidate remains under review across the complete
+analysis, rater-feedback, planning and saved-output workflows.
+Subsequent corrections must retain their own validation record before a
+new release. Previously completed checks remain evidence for their
+stated source and scope.
 
 The release combines finished exploratory-feature and multivariate
 G/D-study workflows, statistical support and selected model extensions
@@ -69,7 +72,7 @@ remain distinct until implementation and validation are complete.
 | 1\. Finish implemented functions | Consistent clustering/MI comparisons and G/D-study APIs, beginner examples, plots, exports and saved-result behavior. | Supported data-to-result workflows execute; units, identities, exclusions and metric-specific availability are consistent. Remaining defects are corrected with focused checks. |
 | 2\. Extend statistical support | A justified uncertainty method for prespecified G/Phi/SEM planning comparisons, preserving dependence between plans and composites. | Implemented output matches a declared sampling target; boundary/failure handling and coverage or decision error are evaluated under explicit conditions. An uncertainty statement alone does not complete this stage. |
 | 3\. Extend models | Person-by-(Child-within-Parent) G/D-study point estimates, such as task-specific rater teams, with fitting, projections and user guidance. | The selected design has identifiable components, working raw-data estimation and D-study rules, independent calculation checks and an executable assessment example. Nested intervals, other nesting structures and other model families remain separate extensions. |
-| 4\. Integrate as 0.2.4 — candidate checked; local refinement continues | Preserve the selected features and corrections while refining the complete analysis and rater-feedback routes. | Resolve remaining workflow and source-integration issues, then make the release decision using checks for that source and its supported scope. |
+| 4\. Integrate as 0.2.4 — candidate published; final decision open | Preserve the selected features and corrections while refining the complete analysis and rater-feedback routes. | Resolve remaining workflow and evidence gaps, then make the release decision using checks for that source and its supported scope. |
 
 Selected methods must meet their stated statistical requirements before
 inclusion; changes to the planned scope will be reflected here. Model
@@ -368,7 +371,7 @@ extension.
 
 | Horizon | Outcome and sequencing |
 |----|----|
-| 0.2.4, release candidate | The selected function, statistical-support and model extensions are implemented. Integrate and verify their combined source before publication. |
+| 0.2.4, release candidate | The selected extensions have been integrated and published for evaluation. Finish the remaining workflow and evidence review; verify subsequent corrections before the final release decision. |
 | Further releases | Address needs beyond the selected 0.2.4 scope while maintaining supported APIs, saved-object compatibility and reproducible performance. |
 
 ## Compatibility principles

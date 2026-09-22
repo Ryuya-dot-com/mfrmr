@@ -134,6 +134,11 @@ person, then fewer raters, then fewer criteria). The convergence
 threshold uses all recorded replications, including failures that
 returned no facet metrics, as summarized by
 [`summary.mfrm_design_evaluation()`](https://ryuya-dot-com.github.io/mfrmr/reference/summary.mfrm_design_evaluation.md).
+Threshold checks use unrounded metrics. Summaries saved by earlier
+versions may contain only rounded values; rebuild them with
+`summary(original_evaluation)` before requesting a recommendation. The
+original evaluation can be reused without generating or fitting new
+data.
 
 The connectivity screen uses generated assignments, including failed
 fits and diagnostic runs. `ConnectivityStatus` is `"disconnected"` if
@@ -210,12 +215,12 @@ rec <- recommend_mfrm_design(
 )
 rec$recommended
 #> # A tibble: 0 × 26
-#> # ℹ 26 variables: design_id <chr>, n_person <dbl>, n_rater <dbl>,
-#> #   n_criterion <dbl>, raters_per_person <dbl>, FacetsChecked <chr>,
+#> # ℹ 26 variables: design_id <chr>, n_person <int>, n_rater <int>,
+#> #   n_criterion <int>, raters_per_person <int>, FacetsChecked <chr>,
 #> #   FacetsMissing <chr>, MinSeparation <dbl>, MinReliability <dbl>,
 #> #   MaxSeverityRMSE <dbl>, MaxMisfitRate <dbl>, MinConvergenceRate <dbl>,
-#> #   MaxRatings <dbl>, MaxRatingsPerRater <dbl>, MaxRaterComponents <dbl>,
-#> #   MaxCriterionComponents <dbl>, DisconnectedReps <dbl>,
+#> #   MaxRatings <int>, MaxRatingsPerRater <int>, MaxRaterComponents <int>,
+#> #   MaxCriterionComponents <int>, DisconnectedReps <int>,
 #> #   LinkReviewStatus <chr>, LinkReviewReason <chr>, FacetsPassing <int>, …
 # }
 ```

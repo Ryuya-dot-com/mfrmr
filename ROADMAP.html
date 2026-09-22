@@ -40,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="logo.png" class="logo" alt=""><h1>mfrmr roadmap</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/ROADMAP.md" class="external-link"><code>ROADMAP.md</code></a></small>
     </div>
 
 <div id="mfrmr-roadmap" class="section level1">
@@ -48,7 +48,7 @@
 <p>Status: public roadmap, updated 2026-09-22. This document sets priorities and completion conditions; it does not promise release dates or unimplemented APIs. See <a href="NEWS.html">NEWS</a> for changes and the <a href="README.html">README</a> for use and examples.</p>
 <div class="section level2">
 <h2 id="current-releases">Current releases<a class="anchor" aria-label="anchor" href="#current-releases"></a></h2>
-<p>mfrmr 0.2.4 is a release candidate and has not been released on CRAN. It integrates the selected work from stages 1–3 below. GitHub pre-releases are available for evaluation; their release pages link to the applicable CI results. The final release decision remains pending. Use <code>packageVersion("mfrmr")</code> and installed help to identify available functionality.</p>
+<p>mfrmr 0.2.4 is a release candidate and has not been released on CRAN. It integrates the selected work from stages 1–3 below. GitHub pre-releases are available for evaluation; their release pages link to the applicable CI results. The final release decision remains pending. The GitHub candidate <a href="https://github.com/Ryuya-dot-com/mfrmr/releases/tag/v0.2.4-rc.2" class="external-link"><code>v0.2.4-rc.2</code></a> has passed its five-environment package checks; that does not close this roadmap. Use <code>packageVersion("mfrmr")</code> and installed help to identify available functionality.</p>
 <table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Workflow</th>
 <th>Current position</th>
 <th>Role in the planned 0.2.4</th>
@@ -77,7 +77,7 @@
 </div>
 <div class="section level2">
 <h2 id="focus-for-024">Focus for 0.2.4<a class="anchor" aria-label="anchor" href="#focus-for-024"></a></h2>
-<p>Before publication, the integrated candidate is undergoing local refinement of its existing analysis, rater-feedback and scoring workflows. Previously completed checks remain evidence for their stated source and scope; the following priorities do not imply that new stress studies have already run.</p>
+<p>The published candidate remains under review across the complete analysis, rater-feedback, planning and saved-output workflows. Subsequent corrections must retain their own validation record before a new release. Previously completed checks remain evidence for their stated source and scope.</p>
 <p>The release combines finished exploratory-feature and multivariate G/D-study workflows, statistical support and selected model extensions with portable calibration. Current functionality and planned additions remain distinct until implementation and validation are complete.</p>
 <table class="table"><colgroup><col width="33%"><col width="33%"><col width="33%"></colgroup><thead><tr><th>Stage</th>
 <th>Deliverable</th>
@@ -91,9 +91,9 @@
 </tr><tr><td>3. Extend models</td>
 <td>Person-by-(Child-within-Parent) G/D-study point estimates, such as task-specific rater teams, with fitting, projections and user guidance.</td>
 <td>The selected design has identifiable components, working raw-data estimation and D-study rules, independent calculation checks and an executable assessment example. Nested intervals, other nesting structures and other model families remain separate extensions.</td>
-</tr><tr><td>4. Integrate as 0.2.4 — candidate checked; local refinement continues</td>
+</tr><tr><td>4. Integrate as 0.2.4 — candidate published; final decision open</td>
 <td>Preserve the selected features and corrections while refining the complete analysis and rater-feedback routes.</td>
-<td>Resolve remaining workflow and source-integration issues, then make the release decision using checks for that source and its supported scope.</td>
+<td>Resolve remaining workflow and evidence gaps, then make the release decision using checks for that source and its supported scope.</td>
 </tr></tbody></table><p>Selected methods must meet their stated statistical requirements before inclusion; changes to the planned scope will be reflected here. Model extensions will target specified assessment designs, rather than every G-theory or MFRM model family in one version. Compatibility is maintained throughout development; stage 4 verifies how the completed features work together.</p>
 <p>Portable calibration remains part of the integrated release. Its current scope is one observed scale, fixed-standard-normal RSM/PCM MML, supported direct/group facet anchors and stored two-way facet interactions. Fitting-integration review refits at each requested order, extraction uses the reviewed highest-order fit, and scoring settings remain separate. Save/load and fresh-session scoring must preserve categories, scale, anchors and settings; incompatible inputs must be refused. No order is universally sufficient. Portable intervals condition on the saved calibration and prior, without calibration-estimation uncertainty.</p>
 <p>Existing ICC, residual-reporting and shrinkage/replay corrections must also survive integration. Migration guidance must distinguish reprinting, recomputing, rescoring and refitting. Earlier checks support unchanged content only; the expanded 0.2.4 needs its own source identity and final verification. See <a href="README.html#updating-saved-analyses">updating saved analyses</a> and <code><a href="articles/mfrmr-portable-calibration.html">vignette("mfrmr-portable-calibration", package = "mfrmr")</a></code>.</p>
@@ -212,7 +212,7 @@
 <table class="table"><colgroup><col width="50%"><col width="50%"></colgroup><thead><tr><th>Horizon</th>
 <th>Outcome and sequencing</th>
 </tr></thead><tbody><tr><td>0.2.4, release candidate</td>
-<td>The selected function, statistical-support and model extensions are implemented. Integrate and verify their combined source before publication.</td>
+<td>The selected extensions have been integrated and published for evaluation. Finish the remaining workflow and evidence review; verify subsequent corrections before the final release decision.</td>
 </tr><tr><td>Further releases</td>
 <td>Address needs beyond the selected 0.2.4 scope while maintaining supported APIs, saved-object compatibility and reproducible performance.</td>
 </tr></tbody></table></div>

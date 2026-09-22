@@ -44,7 +44,7 @@ The later sections describe diagnostics, reporting, and specialist routes."><met
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow and Method Map</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/help_workflow_methods.R" class="external-link"><code>R/help_workflow_methods.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/R/help_workflow_methods.R" class="external-link"><code>R/help_workflow_methods.R</code></a></small>
       <div class="d-none name"><code>mfrmr_workflow_methods.Rd</code></div>
     </div>
 
@@ -251,6 +251,8 @@ are retained as missing values. Timing rates use valid times and describe
 cutoff rules, not calibrated rapid-guessing or low-effort classifications.</p></li>
 <li><p><strong>Simulation and design summaries:</strong> re-summarize saved evaluation objects
 to retain attempted-run denominators and unavailable residual-DIF rates.
+Rebuilding design summaries also restores unrounded metrics for threshold
+decisions; rounded saved summaries alone cannot recover that precision.
 Missing workload or connectivity records cannot be reconstructed by
 summary formatting. If those records are required for a recommendation,
 repeat the original evaluation with its recorded design, settings and seeds.</p></li>

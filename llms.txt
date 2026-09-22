@@ -2069,7 +2069,7 @@ estimation checks:
 | Person scores or plausible values | Re-summarize the original scoring/draw object for updated labels and requested empirical quantiles. To change old grid-endpoint intervals or recover missing prior parameters, rerun scoring from the existing fit. Estimated-population results may require regeneration with explicit review. |
 | Portable calibration | A valid saved artifact retains its algorithm. To adopt continuous intervals, create a new artifact through the reviewed calibration workflow and score again. |
 | External imports | Re-import the saved source-package fit, then recreate derived output; source-model re-estimation is unnecessary. |
-| Simulation/design evaluations | Re-summarize retained runs for corrected denominators. Missing connectivity or workload records require repeating the original evaluation if needed for a recommendation. |
+| Simulation/design evaluations | Re-summarize retained runs for corrected denominators and unrounded recommendation metrics; older rounded summaries cannot recover precision themselves. Missing connectivity or workload records require repeating the original evaluation if needed for a recommendation. |
 
 The complete instructions, including function names and exceptions, are
 in “Updating saved analyses for 0.2.4” under

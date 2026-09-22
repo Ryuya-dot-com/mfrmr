@@ -292,7 +292,19 @@ settings before running the design evaluation.
 When `sim_spec` is supplied, the function uses it as the explicit
 data-generating mechanism. This is the recommended route when you want a
 design study to stay close to a previously fitted run while still
-varying the candidate sample sizes or rater-assignment counts.
+varying the candidate sample sizes or rater-assignment counts. The
+specification supplies the generator, not the analysis settings:
+explicitly match `fit_method`, `model`, `step_facet`, `maxit`, and
+`quad_points` to the intended analysis. The defaults (`JML`, 25
+iterations; seven quadrature points if `MML` is selected) are small
+exploratory settings, not an accuracy recommendation. This helper does
+not automatically inherit anchors, interactions, adaptive integration,
+or optimizer controls from a source fit. If those are essential to the
+analysis, generate data with
+[`simulate_mfrm_data()`](https://ryuya-dot-com.github.io/mfrmr/reference/simulate_mfrm_data.md)
+and use the intended
+[`fit_mfrm()`](https://ryuya-dot-com.github.io/mfrmr/reference/fit_mfrm.md)
+call in each replicate.
 
 Sparse linked simulation specifications and direct
 `assignment = "sparse_linked"` calls are carried into the
@@ -332,8 +344,10 @@ Facet-level simulation results include:
 - `Separation` (\\G = \mathrm{SD\_{adj}} / \mathrm{RMSE}\\): how many
   statistically distinct strata the facet resolves.
 
-- `Reliability` (\\G^2 / (1 + G^2)\\): analogous to Cronbach's
-  \\\alpha\\ for the reproducibility of element ordering.
+- `Reliability` (\\G^2 / (1 + G^2)\\): model-based separation
+  reliability for the facet levels in that fit, not Cronbach's alpha, a
+  G-theory coefficient, or the accuracy of an individual pass/fail
+  decision.
 
 - `Strata` (\\(4G + 1) / 3\\): number of distinguishable groups.
 
@@ -366,9 +380,13 @@ Higher separation/reliability is generally better, whereas lower
 
 When choosing among designs, look for the point where increasing
 `n_person` or `raters_per_person` yields diminishing returns in
-separation and RMSE—this identifies the cost-effective design frontier.
-`ConvergedRuns / reps` should be near 1.0; low convergence rates
-indicate the design is too small for the chosen estimation method.
+separation and RMSE, then compare the actual rating workload. Inspect
+failed-run reasons when convergence is low: iteration limits, weak
+identification, sparse categories and model mismatch require different
+remedies. Increasing sample size alone does not resolve every failure.
+Read Monte Carlo errors and available-result counts alongside the means;
+passing thresholds on simulation means is not a guarantee for a future
+sample.
 
 This is a Monte Carlo design-evaluation helper. It can visualize how
 separation, reliability, strata, RMSE, and fit-screen rates change when
@@ -422,13 +440,13 @@ s_eval <- summary(sim_eval)
 s_eval$design_summary[, c("Facet", "n_person", "MeanSeparation", "MeanSeverityRMSE")]
 #> # A tibble: 6 × 4
 #>   Facet     n_person MeanSeparation MeanSeverityRMSE
-#>   <chr>        <dbl>          <dbl>            <dbl>
-#> 1 Criterion        8           1.18            0.502
-#> 2 Criterion       12           1.98            0.406
-#> 3 Person           8           5.19            4.89 
-#> 4 Person          12           1.61            0.631
-#> 5 Rater            8           2.05            0.649
-#> 6 Rater           12           0               0.075
+#>   <chr>        <int>          <dbl>            <dbl>
+#> 1 Criterion        8           1.18           0.502 
+#> 2 Criterion       12           1.98           0.406 
+#> 3 Person           8           5.19           4.89  
+#> 4 Person          12           1.61           0.631 
+#> 5 Rater            8           2.05           0.649 
+#> 6 Rater           12           0              0.0747
 p_eval <- plot(sim_eval, facet = "Rater", metric = "separation", x_var = "n_person", draw = FALSE)
 names(p_eval)
 #>  [1] "plot"                    "facet"                  

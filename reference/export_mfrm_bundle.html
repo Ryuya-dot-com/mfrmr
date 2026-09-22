@@ -40,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Export a fit-level analysis archive</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/R/api-export-bundles.R" class="external-link"><code>R/api-export-bundles.R</code></a></small>
       <div class="d-none name"><code>export_mfrm_bundle.Rd</code></div>
     </div>
 
@@ -128,7 +128,9 @@ export bundle.</p></dd>
 <dd><p>Components to export. Supported values are
 <code>"core_tables"</code>, <code>"checklist"</code>, <code>"dashboard"</code>, <code>"apa"</code>, <code>"anchors"</code>,
 <code>"manifest"</code>, <code>"visual_summaries"</code>, <code>"predictions"</code>, <code>"summary_tables"</code>,
-<code>"script"</code>, and <code>"html"</code>.</p></dd>
+<code>"script"</code>, and <code>"html"</code>. By default, export all listed components
+except predictions when no prediction or plausible-value object is supplied.
+Explicitly requesting <code>"predictions"</code> requires at least one such object.</p></dd>
 
 
 <dt id="arg-facet">facet<a class="anchor" aria-label="anchor" href="#arg-facet"></a></dt>

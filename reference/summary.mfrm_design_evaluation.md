@@ -18,7 +18,8 @@ summary(object, digits = 3, ...)
 
 - digits:
 
-  Number of digits used in the returned numeric summaries.
+  Number of digits used when printing the summary. Returned numeric
+  tables retain full precision for plotting and design decisions.
 
 - ...:
 
@@ -81,7 +82,8 @@ performance means still use the available metric values. Designs with no
 returned facet results have no performance-summary rows and cannot be
 recommended. To update an older saved summary, call
 [`summary()`](https://rdrr.io/r/base/summary.html) again on the original
-evaluation object; no simulation or refitting is needed.
+evaluation object; no simulation or refitting is needed. Rebuilding also
+restores full precision when an older summary stored rounded metrics.
 
 `MaxRatings` and `MaxRatingsPerRater` are the largest total rating count
 and individual rater workload across all recorded replications,
@@ -119,12 +121,12 @@ s <- summary(sim_eval)
 s$overview
 #> # A tibble: 1 × 5
 #>   Designs Replications SuccessfulRuns ConvergedRuns MeanElapsedSec
-#>     <dbl>        <dbl>          <dbl>         <dbl>          <dbl>
-#> 1       2            2              2             1          0.817
+#>     <int>        <int>          <int>         <int>          <dbl>
+#> 1       2            2              2             1          0.706
 head(s$design_summary)
 #> # A tibble: 6 × 50
 #>   design_id Facet   n_person n_rater n_criterion raters_per_person AvailableReps
-#>   <chr>     <chr>      <dbl>   <dbl>       <dbl>             <dbl>         <dbl>
+#>   <chr>     <chr>      <int>   <int>       <int>             <int>         <int>
 #> 1 D01       Criter…        8       2           2                 2             1
 #> 2 D02       Criter…       12       2           2                 2             1
 #> 3 D01       Person         8       2           2                 2             1

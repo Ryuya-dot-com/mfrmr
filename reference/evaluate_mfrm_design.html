@@ -40,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Evaluate MFRM design conditions by repeated simulation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>evaluate_mfrm_design.Rd</code></div>
     </div>
 
@@ -288,7 +288,15 @@ settings before running the design evaluation.</p>
 <p>When <code>sim_spec</code> is supplied, the function uses it as the explicit
 data-generating mechanism. This is the recommended route when you want a
 design study to stay close to a previously fitted run while still varying the
-candidate sample sizes or rater-assignment counts.</p>
+candidate sample sizes or rater-assignment counts.
+The specification supplies the generator, not the analysis settings:
+explicitly match <code>fit_method</code>, <code>model</code>, <code>step_facet</code>, <code>maxit</code>, and
+<code>quad_points</code> to the intended analysis. The defaults (<code>JML</code>, 25 iterations;
+seven quadrature points if <code>MML</code> is selected) are small exploratory settings,
+not an accuracy recommendation. This helper does not automatically inherit
+anchors, interactions, adaptive integration, or optimizer controls from a
+source fit. If those are essential to the analysis, generate data with
+<code><a href="simulate_mfrm_data.html">simulate_mfrm_data()</a></code> and use the intended <code><a href="fit_mfrm.html">fit_mfrm()</a></code> call in each replicate.</p>
 <p>Sparse linked simulation specifications and direct
 <code>assignment = "sparse_linked"</code> calls are carried into the design-evaluation
 output. The resulting sparse-design columns report planned-missingness and
@@ -320,8 +328,9 @@ orientation and anchoring conventions across the generator and fitted model.</p>
 
 <p>Facet-level simulation results include:</p><ul><li><p><code>Separation</code> (\(G = \mathrm{SD_{adj}} / \mathrm{RMSE}\)):
 how many statistically distinct strata the facet resolves.</p></li>
-<li><p><code>Reliability</code> (\(G^2 / (1 + G^2)\)): analogous to Cronbach's
-\(\alpha\) for the reproducibility of element ordering.</p></li>
+<li><p><code>Reliability</code> (\(G^2 / (1 + G^2)\)): model-based separation reliability
+for the facet levels in that fit, not Cronbach's alpha, a G-theory
+coefficient, or the accuracy of an individual pass/fail decision.</p></li>
 <li><p><code>Strata</code> (\((4G + 1) / 3\)): number of distinguishable groups.</p></li>
 <li><p>Mean <code>Infit</code> and <code>Outfit</code>: average fit mean-squares across elements.</p></li>
 <li><p><code>MisfitRate</code>: share of elements with \(|\mathrm{ZSTD}| &gt; 2\).</p></li>
@@ -348,10 +357,12 @@ generator/fitted-model contract does not align.</p></li>
 <code>SeverityRMSE</code>, <code>MeanMisfitRate</code>, and <code>MeanElapsedSec</code> are preferable.</p>
 <p>When choosing among designs, look for the point where increasing
 <code>n_person</code> or <code>raters_per_person</code> yields diminishing returns in
-separation and RMSE—this identifies the cost-effective design
-frontier.  <code>ConvergedRuns / reps</code> should be near 1.0; low
-convergence rates indicate the design is too small for the chosen
-estimation method.</p>
+separation and RMSE, then compare the actual rating workload.
+Inspect failed-run reasons when convergence is low: iteration limits,
+weak identification, sparse categories and model mismatch require different
+remedies. Increasing sample size alone does not resolve every failure.
+Read Monte Carlo errors and available-result counts alongside the means;
+passing thresholds on simulation means is not a guarantee for a future sample.</p>
 <p>This is a Monte Carlo design-evaluation helper. It can visualize how
 separation, reliability, strata, RMSE, and fit-screen rates change when
 you vary person, rater, criterion, or assignment counts. For analytic
@@ -397,13 +408,13 @@ reporting</em>. Psychological Methods.</p></li>
 <span class="r-in"><span><span class="va">s_eval</span><span class="op">$</span><span class="va">design_summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Facet"</span>, <span class="st">"n_person"</span>, <span class="st">"MeanSeparation"</span>, <span class="st">"MeanSeverityRMSE"</span><span class="op">)</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Facet     n_person MeanSeparation MeanSeverityRMSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion        8           1.18            0.502</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Criterion       12           1.98            0.406</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Person           8           5.19            4.89 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Person          12           1.61            0.631</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater            8           2.05            0.649</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater           12           0               0.075</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Criterion        8           1.18           0.502 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Criterion       12           1.98           0.406 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Person           8           5.19           4.89  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Person          12           1.61           0.631 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Rater            8           2.05           0.649 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Rater           12           0              0.074<span style="text-decoration: underline;">7</span></span>
 <span class="r-in"><span><span class="va">p_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">sim_eval</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, metric <span class="op">=</span> <span class="st">"separation"</span>, x_var <span class="op">=</span> <span class="st">"n_person"</span>, draw <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">p_eval</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "plot"                    "facet"                  </span>

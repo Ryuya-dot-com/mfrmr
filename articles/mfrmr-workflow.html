@@ -71,7 +71,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>mfrmr Workflow</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/vignettes/mfrmr-workflow.Rmd" class="external-link"><code>vignettes/mfrmr-workflow.Rmd</code></a></small>
       <div class="d-none name"><code>mfrmr-workflow.Rmd</code></div>
     </div>
 
@@ -1280,6 +1280,81 @@ not replace evidence from the observed assessment. Keep these analyses
 in the report only when their role in answering the study question is
 clear.</p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="an-observed-writing-assessment-example">An observed writing-assessment example<a class="anchor" aria-label="anchor" href="#an-observed-writing-assessment-example"></a>
+</h2>
+<p>The optional <code>sirt</code> package supplies
+<code>data.ratings1</code>, observed German-writing ratings from a 2009
+Austrian educational standards survey. Its 274 rows contain 135
+students, seven observed raters and five rubric criteria scored 0 to 3.
+The <a href="https://alexanderrobitzsch.r-universe.dev/sirt/doc/manual.html#data.ratings" class="external-link">data
+documentation</a> describes the source. This dataset is separate from
+mfrmr’s synthetic examples.</p>
+<p>The practical question is which differences in severity, category use
+or consistency merit discussion with a rater. The example below uses a
+PCM so criteria can have different category thresholds. It assumes a
+common writing scale and conditionally independent ratings; inspecting
+the output does not establish those assumptions. Repeated rubric ratings
+of one performance may still share influences that this model does not
+represent.</p>
+<p>Run this optional example after installing <code>sirt</code>. It is
+not run when building this vignette. Display aliases replace source
+identifiers in the example’s tables; aliases do not make a rating
+archive anonymous.</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ryuya-dot-com.github.io/mfrmr/">mfrmr</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"data.ratings1"</span>, package <span class="op">=</span> <span class="st">"sirt"</span><span class="op">)</span></span>
+<span><span class="va">wide</span> <span class="op">&lt;-</span> <span class="va">data.ratings1</span></span>
+<span><span class="va">persons</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">wide</span><span class="op">$</span><span class="va">idstud</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">wide</span><span class="op">$</span><span class="va">idstud</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">raters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/match.html" class="external-link">match</a></span><span class="op">(</span><span class="va">wide</span><span class="op">$</span><span class="va">rater</span>, <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">wide</span><span class="op">$</span><span class="va">rater</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">writing</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"k"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">criterion</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>    Person <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"P%03d"</span>, <span class="va">persons</span><span class="op">)</span>, Rater <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"R"</span>, <span class="va">raters</span><span class="op">)</span>,</span>
+<span>    Criterion <span class="op">=</span> <span class="va">criterion</span>, Score <span class="op">=</span> <span class="va">wide</span><span class="op">[[</span><span class="va">criterion</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">review</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/describe_mfrm_data.html">describe_mfrm_data</a></span><span class="op">(</span></span>
+<span>  <span class="va">writing</span>, person <span class="op">=</span> <span class="st">"Person"</span>, facets <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, score <span class="op">=</span> <span class="st">"Score"</span>,</span>
+<span>  rating_min <span class="op">=</span> <span class="fl">0</span>, rating_max <span class="op">=</span> <span class="fl">3</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">review</span><span class="op">$</span><span class="va">row_retention</span></span>
+<span><span class="va">review</span><span class="op">$</span><span class="va">design_connectivity</span></span>
+<span></span>
+<span><span class="va">writing_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_mfrm.html">fit_mfrm</a></span><span class="op">(</span></span>
+<span>  <span class="va">writing</span>, <span class="st">"Person"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Rater"</span>, <span class="st">"Criterion"</span><span class="op">)</span>, <span class="st">"Score"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"MML"</span>, model <span class="op">=</span> <span class="st">"PCM"</span>, step_facet <span class="op">=</span> <span class="st">"Criterion"</span>,</span>
+<span>  rating_min <span class="op">=</span> <span class="fl">0</span>, rating_max <span class="op">=</span> <span class="fl">3</span>, quad_points <span class="op">=</span> <span class="fl">61</span>, maxit <span class="op">=</span> <span class="fl">400</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">writing_diagnostics</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/diagnose_mfrm.html">diagnose_mfrm</a></span><span class="op">(</span><span class="va">writing_fit</span>, residual_pca <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="va">feedback</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/facet_quality_dashboard.html">facet_quality_dashboard</a></span><span class="op">(</span></span>
+<span>  <span class="va">writing_fit</span>, diagnostics <span class="op">=</span> <span class="va">writing_diagnostics</span>, facet <span class="op">=</span> <span class="st">"Rater"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">feedback</span><span class="op">$</span><span class="va">detail</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Level"</span>, <span class="st">"N"</span>, <span class="st">"Estimate"</span>, <span class="st">"SE"</span>, <span class="st">"Infit"</span>, <span class="st">"Outfit"</span>, <span class="st">"MisfitFlag"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">feedback</span><span class="op">$</span><span class="va">settings</span></span>
+<span><span class="fu"><a href="../reference/plot_rater_severity_profile.html">plot_rater_severity_profile</a></span><span class="op">(</span></span>
+<span>  <span class="va">writing_fit</span>, diagnostics <span class="op">=</span> <span class="va">writing_diagnostics</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>, show_bands <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">feedback</span>, <span class="st">"writing-feedback.rds"</span><span class="op">)</span></span>
+<span><span class="va">archive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/export_mfrm_bundle.html">export_mfrm_bundle</a></span><span class="op">(</span></span>
+<span>  <span class="va">writing_fit</span>, diagnostics <span class="op">=</span> <span class="va">writing_diagnostics</span>, facet <span class="op">=</span> <span class="st">"Rater"</span>,</span>
+<span>  output_dir <span class="op">=</span> <span class="st">"writing-analysis"</span>, data <span class="op">=</span> <span class="va">writing</span>, acknowledge_sensitive <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Reshaping gives 1,370 criterion ratings; the 274 original rows are
+not the number of students. Each rater has 185 to 205 criterion ratings
+here. The example produces a low-Infit flag for R7: unusually
+predictable ratings also trigger this screen. This is a prompt to
+inspect rubric use and individual ratings, not evidence that R7 is
+inaccurate or should be removed. Severity and consistency answer
+different questions, and this dataset supplies no known true rater
+quality against which to validate either interpretation.</p>
+<p>The quadrature setting belongs to this example; use
+<code><a href="../reference/mml_quadrature_sensitivity.html">mml_quadrature_sensitivity()</a></code> when numerical sensitivity
+matters to a comparison. Preserve the dashboard’s notes, review
+rating-category use and common-person coverage, and use the actual
+scripts or rubric descriptors in feedback discussions. A
+different-looking result alone does not establish that a rater needs
+training or that training would improve the scores.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

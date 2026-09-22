@@ -287,10 +287,12 @@ diagnostics or scoring does not itself require a new calibration fit.
 
 - **Simulation and design summaries:** re-summarize saved evaluation
   objects to retain attempted-run denominators and unavailable
-  residual-DIF rates. Missing workload or connectivity records cannot be
-  reconstructed by summary formatting. If those records are required for
-  a recommendation, repeat the original evaluation with its recorded
-  design, settings and seeds.
+  residual-DIF rates. Rebuilding design summaries also restores
+  unrounded metrics for threshold decisions; rounded saved summaries
+  alone cannot recover that precision. Missing workload or connectivity
+  records cannot be reconstructed by summary formatting. If those
+  records are required for a recommendation, repeat the original
+  evaluation with its recorded design, settings and seeds.
 
 After any required recalculation, regenerate dependent
 [`mfrm_results()`](https://ryuya-dot-com.github.io/mfrmr/reference/mfrm_results.md),

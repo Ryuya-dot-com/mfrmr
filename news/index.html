@@ -40,12 +40,18 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.4" id="mfrmr-024">mfrmr 0.2.4<a class="anchor" aria-label="anchor" href="#mfrmr-024"></a></h2>
 <p>Unreleased release candidate. This version combines reusable calibration and new-Person scoring, external-feature clustering and multivariate G/D-studies, with corrections to uncertainty, subgroup comparisons and design planning.</p>
+<div class="section level3">
+<h3 id="design-decisions-and-saved-output-0-2-4">Design decisions and saved output<a class="anchor" aria-label="anchor" href="#design-decisions-and-saved-output-0-2-4"></a></h3>
+<ul><li>Design-evaluation summaries retain full-precision metrics; <code>digits</code> now controls printing only. Rounding can no longer turn a value just below a minimum, or above a maximum, into a passing design recommendation. Rebuild older saved summaries from the original evaluation before requesting recommendations; no new simulation or model fitting is required.</li>
+<li>The default fit-level archive works without optional prediction objects. Predictions are included by default when supplied; explicitly requesting them without supplying an object still gives an explanatory error.</li>
+<li>Design-planning help distinguishes generating assumptions from analysis settings and explains numerical failures and separation reliability.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="rater-feedback-0-2-4">Rater feedback<a class="anchor" aria-label="anchor" href="#rater-feedback-0-2-4"></a></h3>
 <ul><li><p>The introductory CSV examples preserve literal <code>NA</code> identifiers and recode missing-score markers only in the score column. If an earlier import removed valid IDs, reimport the original file and rerun the analysis.</p></li>

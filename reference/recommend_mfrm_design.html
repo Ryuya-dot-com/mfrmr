@@ -40,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Recommend a design condition from simulation results</h1>
-      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/4a6f8fbc1097475e281ec7fcff081f34dd428244/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Ryuya-dot-com/mfrmr/blob/31e91978e375c1e88914430864807a4bc53845bc/R/api-simulation.R" class="external-link"><code>R/api-simulation.R</code></a></small>
       <div class="d-none name"><code>recommend_mfrm_design.Rd</code></div>
     </div>
 
@@ -162,7 +162,11 @@ If multiple designs pass, the helper returns the smallest one according to
 then fewer raters, then fewer criteria).
 The convergence threshold uses all recorded replications, including
 failures that returned no facet metrics, as summarized by
-<code><a href="summary.mfrm_design_evaluation.html">summary.mfrm_design_evaluation()</a></code>.</p>
+<code><a href="summary.mfrm_design_evaluation.html">summary.mfrm_design_evaluation()</a></code>.
+Threshold checks use unrounded metrics. Summaries saved by earlier
+versions may contain only rounded values; rebuild them with
+<code>summary(original_evaluation)</code> before requesting a recommendation.
+The original evaluation can be reused without generating or fitting new data.</p>
 <p>The connectivity screen uses generated assignments, including failed fits
 and diagnostic runs. <code>ConnectivityStatus</code> is <code>"disconnected"</code> if any
 recorded graph is disconnected, <code>"connected"</code> if both graphs are connected
@@ -226,12 +230,12 @@ cost or scoring time. Ranking among passing designs still follows <code>prefer</
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">rec</span><span class="op">$</span><span class="va">recommended</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 0 × 26</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 26 variables: design_id &lt;chr&gt;, n_person &lt;dbl&gt;, n_rater &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   n_criterion &lt;dbl&gt;, raters_per_person &lt;dbl&gt;, FacetsChecked &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 26 variables: design_id &lt;chr&gt;, n_person &lt;int&gt;, n_rater &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   n_criterion &lt;int&gt;, raters_per_person &lt;int&gt;, FacetsChecked &lt;chr&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   FacetsMissing &lt;chr&gt;, MinSeparation &lt;dbl&gt;, MinReliability &lt;dbl&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxSeverityRMSE &lt;dbl&gt;, MaxMisfitRate &lt;dbl&gt;, MinConvergenceRate &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxRatings &lt;dbl&gt;, MaxRatingsPerRater &lt;dbl&gt;, MaxRaterComponents &lt;dbl&gt;,</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxCriterionComponents &lt;dbl&gt;, DisconnectedReps &lt;dbl&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxRatings &lt;int&gt;, MaxRatingsPerRater &lt;int&gt;, MaxRaterComponents &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   MaxCriterionComponents &lt;int&gt;, DisconnectedReps &lt;int&gt;,</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   LinkReviewStatus &lt;chr&gt;, LinkReviewReason &lt;chr&gt;, FacetsPassing &lt;int&gt;, …</span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>

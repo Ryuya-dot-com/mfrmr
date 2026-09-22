@@ -95,7 +95,10 @@ export_mfrm_bundle(
   Components to export. Supported values are `"core_tables"`,
   `"checklist"`, `"dashboard"`, `"apa"`, `"anchors"`, `"manifest"`,
   `"visual_summaries"`, `"predictions"`, `"summary_tables"`, `"script"`,
-  and `"html"`.
+  and `"html"`. By default, export all listed components except
+  predictions when no prediction or plausible-value object is supplied.
+  Explicitly requesting `"predictions"` requires at least one such
+  object.
 
 - facet:
 
